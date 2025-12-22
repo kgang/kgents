@@ -127,6 +127,7 @@ class MarkResult:
     author: str
     timestamp: datetime
     datum_id: str | None = None
+    parent_mark_id: str | None = None
 
 
 @dataclass
@@ -714,6 +715,7 @@ class WitnessPersistence:
         author: str = "kent",
         session_id: str | None = None,
         repository_path: str | None = None,
+        parent_mark_id: str | None = None,
     ) -> "MarkResult":
         """
         Save a mark to dual-track storage.
@@ -731,6 +733,7 @@ class WitnessPersistence:
             author: Who made the mark
             session_id: Optional session context
             repository_path: Optional repository context
+            parent_mark_id: Optional parent mark for causal lineage
 
         Returns:
             MarkResult with mark_id and storage details
@@ -738,6 +741,13 @@ class WitnessPersistence:
         from models.witness import WitnessMark
 
         mark_id = f"mark-{uuid.uuid4().hex[:12]}"
+
+        # Validate parent exists if specified
+        if parent_mark_id:
+            async with self.session_factory() as session:
+                parent = await session.get(WitnessMark, parent_mark_id)
+                if not parent:
+                    raise ValueError(f"Parent mark not found: {parent_mark_id}")
 
         # 1. Store semantic content in D-gent
         datum_metadata = {
@@ -771,6 +781,7 @@ class WitnessPersistence:
                 principles=list(principles or []),
                 author=author,
                 session_id=session_id,
+                parent_mark_id=parent_mark_id,
                 datum_id=datum_id,
                 repository_path=repository_path,
             )
@@ -785,6 +796,7 @@ class WitnessPersistence:
             author=author,
             timestamp=datetime.now(UTC),
             datum_id=datum_id,
+            parent_mark_id=parent_mark_id,
         )
 
         # Fire-and-forget trace recording
@@ -844,9 +856,142 @@ class WitnessPersistence:
                     author=row.author,
                     timestamp=row.created_at,
                     datum_id=row.datum_id,
+                    parent_mark_id=row.parent_mark_id,
                 )
                 for row in rows
             ]
+
+    async def get_mark(self, mark_id: str) -> "MarkResult | None":
+        """
+        Get a single mark by ID.
+
+        Args:
+            mark_id: The mark ID to retrieve
+
+        Returns:
+            MarkResult or None if not found
+        """
+        from models.witness import WitnessMark
+
+        async with self.session_factory() as session:
+            row = await session.get(WitnessMark, mark_id)
+            if not row:
+                return None
+
+            return MarkResult(
+                mark_id=row.id,
+                action=row.action,
+                reasoning=row.reasoning,
+                principles=list(row.principles) if row.principles else [],
+                author=row.author,
+                timestamp=row.created_at,
+                datum_id=row.datum_id,
+                parent_mark_id=row.parent_mark_id,
+            )
+
+    async def get_mark_tree(
+        self,
+        root_mark_id: str,
+        max_depth: int = 10,
+    ) -> list["MarkResult"]:
+        """
+        Get all marks in a causal tree starting from root.
+
+        Traverses children (marks that have this mark as parent) recursively.
+
+        Args:
+            root_mark_id: The root mark ID
+            max_depth: Maximum depth to traverse (default 10)
+
+        Returns:
+            List of MarkResult objects in tree order (root first, then children)
+        """
+        from models.witness import WitnessMark
+
+        results: list[MarkResult] = []
+        visited: set[str] = set()
+
+        async def traverse(mark_id: str, depth: int) -> None:
+            if depth > max_depth or mark_id in visited:
+                return
+
+            visited.add(mark_id)
+
+            async with self.session_factory() as session:
+                # Get the mark itself
+                row = await session.get(WitnessMark, mark_id)
+                if not row:
+                    return
+
+                results.append(
+                    MarkResult(
+                        mark_id=row.id,
+                        action=row.action,
+                        reasoning=row.reasoning,
+                        principles=list(row.principles) if row.principles else [],
+                        author=row.author,
+                        timestamp=row.created_at,
+                        datum_id=row.datum_id,
+                        parent_mark_id=row.parent_mark_id,
+                    )
+                )
+
+                # Get children (marks that have this as parent)
+                stmt = (
+                    select(WitnessMark)
+                    .where(WitnessMark.parent_mark_id == mark_id)
+                    .order_by(WitnessMark.created_at)
+                )
+                result = await session.execute(stmt)
+                children = result.scalars().all()
+
+            # Recursively traverse children
+            for child in children:
+                await traverse(child.id, depth + 1)
+
+        await traverse(root_mark_id, 0)
+        return results
+
+    async def get_mark_ancestry(self, mark_id: str) -> list["MarkResult"]:
+        """
+        Get ancestors of a mark (parent chain up to root).
+
+        Args:
+            mark_id: The mark ID to get ancestry for
+
+        Returns:
+            List of MarkResult objects from mark to root (mark first, root last)
+        """
+        from models.witness import WitnessMark
+
+        results: list[MarkResult] = []
+        current_id: str | None = mark_id
+        visited: set[str] = set()
+
+        while current_id and current_id not in visited:
+            visited.add(current_id)
+
+            async with self.session_factory() as session:
+                row = await session.get(WitnessMark, current_id)
+                if not row:
+                    break
+
+                results.append(
+                    MarkResult(
+                        mark_id=row.id,
+                        action=row.action,
+                        reasoning=row.reasoning,
+                        principles=list(row.principles) if row.principles else [],
+                        author=row.author,
+                        timestamp=row.created_at,
+                        datum_id=row.datum_id,
+                        parent_mark_id=row.parent_mark_id,
+                    )
+                )
+
+                current_id = row.parent_mark_id
+
+        return results
 
     # =========================================================================
     # Status Operations

@@ -2,7 +2,8 @@
 
 > *"The workshop breathes. The arena listens. Every action leaves a mark."*
 
-**Status:** Design Specification
+**Status:** 📐 Design Specification (Agent-as-Witness complete — ready for UX impl)
+**Priority:** MEDIUM (ready for implementation)
 **Date:** 2025-12-21
 **Implements:** Agent-as-Witness + Symmetric Supersession Phase 0
 **Creative Heritage:** Crown Jewels Genesis Moodboard, Punchdrunk Theater, Alive Workshop

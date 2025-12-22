@@ -1,11 +1,14 @@
 """
-Tests for ExperienceCrystal and related types.
+Tests for Crystal and related types.
 
 Tests the core crystallization concepts:
-- MoodVector derivation from thoughts
-- TopologySnapshot extraction
-- Narrative template fallback
-- ExperienceCrystal creation and serialization
+- MoodVector affective signatures
+- Crystal creation and serialization
+- CrystalLevel hierarchy
+
+The Crystal model compresses semantic content (insight, significance) with
+provenance (source_marks), unlike the old ExperienceCrystal which stored
+raw thoughts. See spec/protocols/witness-crystallization.md.
 """
 
 from __future__ import annotations
@@ -15,12 +18,13 @@ from datetime import datetime, timedelta
 import pytest
 
 from services.witness.crystal import (
-    ExperienceCrystal,
+    Crystal,
+    CrystalId,
+    CrystalLevel,
     MoodVector,
-    Narrative,
-    TopologySnapshot,
+    generate_crystal_id,
 )
-from services.witness.polynomial import Thought
+from services.witness.mark import MarkId
 
 # =============================================================================
 # Test Data Fixtures
@@ -28,85 +32,21 @@ from services.witness.polynomial import Thought
 
 
 @pytest.fixture
-def sample_thoughts() -> list[Thought]:
-    """Create sample thought stream for testing."""
-    base_time = datetime.now()
+def sample_mark_ids() -> list[MarkId]:
+    """Create sample mark IDs for testing."""
     return [
-        Thought(
-            content="Started work on routing refactor",
-            source="witness",
-            tags=("lifecycle", "start"),
-            timestamp=base_time,
-        ),
-        Thought(
-            content="Edited: protocols/cli/hollow.py (+45/-12)",
-            source="filesystem",
-            tags=("file", "modify"),
-            timestamp=base_time + timedelta(minutes=5),
-        ),
-        Thought(
-            content="Test session: 20 passed, 2 failed, 0 skipped",
-            source="tests",
-            tags=("tests", "session"),
-            timestamp=base_time + timedelta(minutes=10),
-        ),
-        Thought(
-            content="Edited: protocols/cli/hollow.py (+8/-3)",
-            source="filesystem",
-            tags=("file", "modify"),
-            timestamp=base_time + timedelta(minutes=15),
-        ),
-        Thought(
-            content="Test session: 22 passed, 0 failed, 0 skipped",
-            source="tests",
-            tags=("tests", "session", "success"),
-            timestamp=base_time + timedelta(minutes=20),
-        ),
-        Thought(
-            content="Committed: feat(cli): Path-first routing",
-            source="git",
-            tags=("git", "commit"),
-            timestamp=base_time + timedelta(minutes=25),
-        ),
+        MarkId("mark-001"),
+        MarkId("mark-002"),
+        MarkId("mark-003"),
+        MarkId("mark-004"),
     ]
 
 
 @pytest.fixture
-def empty_thoughts() -> list[Thought]:
-    """Empty thought list."""
-    return []
-
-
-@pytest.fixture
-def failure_heavy_thoughts() -> list[Thought]:
-    """Thoughts with many failures."""
+def sample_time_range() -> tuple[datetime, datetime]:
+    """Create sample time range."""
     base_time = datetime.now()
-    return [
-        Thought(
-            content="Test failed: test_routing",
-            source="tests",
-            tags=("tests", "failure"),
-            timestamp=base_time,
-        ),
-        Thought(
-            content="Error in hollow.py line 42",
-            source="filesystem",
-            tags=("error",),
-            timestamp=base_time + timedelta(minutes=1),
-        ),
-        Thought(
-            content="Test failed: test_dispatch",
-            source="tests",
-            tags=("tests", "failure"),
-            timestamp=base_time + timedelta(minutes=2),
-        ),
-        Thought(
-            content="Still failing",
-            source="witness",
-            tags=(),
-            timestamp=base_time + timedelta(minutes=3),
-        ),
-    ]
+    return (base_time, base_time + timedelta(minutes=30))
 
 
 # =============================================================================
@@ -128,34 +68,10 @@ class TestMoodVector:
         assert mood.saturation == 0.5
         assert mood.complexity == 0.5
 
-    def test_mood_from_empty_thoughts(self) -> None:
-        """Empty thoughts produce neutral mood."""
-        mood = MoodVector.from_thoughts([])
+    def test_mood_from_empty_marks(self) -> None:
+        """Empty marks produce neutral mood."""
+        mood = MoodVector.from_marks([])
         assert mood == MoodVector.neutral()
-
-    def test_mood_from_sample_thoughts(self, sample_thoughts: list[Thought]) -> None:
-        """Sample thoughts produce reasonable mood."""
-        mood = MoodVector.from_thoughts(sample_thoughts)
-
-        # Sample has 2 successes and 2 failures, so brightness should be ~0.5
-        # (22 passed, 0 failed has "pass" and "success" in tags, 2 failed has "fail")
-        assert 0.4 <= mood.brightness <= 0.6  # Near neutral
-
-        # Should have some warmth (has commit)
-        assert mood.warmth > 0.4
-
-        # Should have moderate tempo (6 events)
-        assert 0.0 < mood.tempo < 1.0
-
-    def test_mood_from_failure_heavy_thoughts(self, failure_heavy_thoughts: list[Thought]) -> None:
-        """Failure-heavy thoughts produce darker mood."""
-        mood = MoodVector.from_thoughts(failure_heavy_thoughts)
-
-        # Should have lower brightness (failures)
-        assert mood.brightness < 0.5
-
-        # Should have rougher texture
-        assert mood.texture > 0.5
 
     def test_mood_dimension_bounds(self) -> None:
         """All dimensions are clamped to [0, 1]."""
@@ -244,184 +160,296 @@ class TestMoodVector:
 
 
 # =============================================================================
-# TopologySnapshot Tests
+# CrystalLevel Tests
 # =============================================================================
 
 
-class TestTopologySnapshot:
-    """Tests for TopologySnapshot codebase position."""
+class TestCrystalLevel:
+    """Tests for CrystalLevel hierarchy."""
 
-    def test_empty_topology(self) -> None:
-        """Empty thoughts produce default topology."""
-        topo = TopologySnapshot.from_thoughts([])
-        assert topo.primary_path == "."
-        assert topo.heat == {}
+    def test_level_ordering(self) -> None:
+        """Levels are ordered SESSION < DAY < WEEK < EPOCH."""
+        assert CrystalLevel.SESSION < CrystalLevel.DAY
+        assert CrystalLevel.DAY < CrystalLevel.WEEK
+        assert CrystalLevel.WEEK < CrystalLevel.EPOCH
 
-    def test_topology_from_file_events(self, sample_thoughts: list[Thought]) -> None:
-        """Topology extracts file paths from thoughts."""
-        topo = TopologySnapshot.from_thoughts(sample_thoughts)
+    def test_level_values(self) -> None:
+        """Levels have expected integer values."""
+        assert CrystalLevel.SESSION.value == 0
+        assert CrystalLevel.DAY.value == 1
+        assert CrystalLevel.WEEK.value == 2
+        assert CrystalLevel.EPOCH.value == 3
 
-        # Should have extracted hollow.py as primary (most active)
-        assert "hollow.py" in topo.primary_path or len(topo.heat) > 0
+    def test_level_display_name(self) -> None:
+        """Levels have human-friendly display names."""
+        assert CrystalLevel.SESSION.name_display == "Session"
+        assert CrystalLevel.EPOCH.name_display == "Epoch"
 
-    def test_topology_heat_normalized(self) -> None:
-        """Heat map is normalized to [0, 1]."""
-        thoughts = [
-            Thought(content="Edited: foo.py", source="filesystem", tags=("file",)),
-            Thought(content="Edited: foo.py", source="filesystem", tags=("file",)),
-            Thought(content="Edited: bar.py", source="filesystem", tags=("file",)),
+
+# =============================================================================
+# Crystal ID Tests
+# =============================================================================
+
+
+class TestCrystalId:
+    """Tests for Crystal ID generation."""
+
+    def test_generate_crystal_id_format(self) -> None:
+        """Generated IDs have expected format."""
+        crystal_id = generate_crystal_id()
+        assert crystal_id.startswith("crystal-")
+        assert len(crystal_id) == len("crystal-") + 12  # 12 hex chars
+
+    def test_generate_crystal_id_uniqueness(self) -> None:
+        """Each generated ID is unique."""
+        ids = {generate_crystal_id() for _ in range(100)}
+        assert len(ids) == 100
+
+
+# =============================================================================
+# Crystal Tests
+# =============================================================================
+
+
+class TestCrystal:
+    """Tests for Crystal atomic memory unit."""
+
+    def test_crystal_from_crystallization_basic(
+        self,
+        sample_mark_ids: list[MarkId],
+        sample_time_range: tuple[datetime, datetime],
+    ) -> None:
+        """Create basic session crystal from crystallization."""
+        crystal = Crystal.from_crystallization(
+            insight="Completed routing refactor",
+            significance="Cleaner architecture enables future work",
+            principles=["composable", "tasteful"],
+            source_marks=sample_mark_ids,
+            time_range=sample_time_range,
+            session_id="refactor-session",
+        )
+
+        assert crystal.level == CrystalLevel.SESSION
+        assert crystal.insight == "Completed routing refactor"
+        assert crystal.significance == "Cleaner architecture enables future work"
+        assert "composable" in crystal.principles
+        assert len(crystal.source_marks) == 4
+        assert crystal.session_id == "refactor-session"
+        assert crystal.time_range is not None
+
+    def test_crystal_from_crystallization_with_options(
+        self,
+        sample_mark_ids: list[MarkId],
+        sample_time_range: tuple[datetime, datetime],
+    ) -> None:
+        """Create crystal with all optional parameters."""
+        mood = MoodVector(brightness=0.8, warmth=0.7)
+        topics = {"refactoring", "routing", "tests"}
+
+        crystal = Crystal.from_crystallization(
+            insight="Major refactor complete",
+            significance="Code is cleaner",
+            principles=["composable"],
+            source_marks=sample_mark_ids,
+            time_range=sample_time_range,
+            confidence=0.9,
+            topics=topics,
+            mood=mood,
+            session_id="test",
+        )
+
+        assert crystal.confidence == 0.9
+        assert crystal.topics == frozenset(topics)
+        assert crystal.mood.brightness == 0.8
+        assert crystal.mood.warmth == 0.7
+
+    def test_crystal_level_0_requires_source_marks(self) -> None:
+        """SESSION crystals use source_marks, not source_crystals."""
+        # This should work - SESSION with source_marks
+        crystal = Crystal.from_crystallization(
+            insight="Test",
+            significance="",
+            principles=[],
+            source_marks=[MarkId("mark-1")],
+            time_range=(datetime.now(), datetime.now()),
+        )
+        assert crystal.level == CrystalLevel.SESSION
+
+    def test_crystal_from_crystals_higher_level(self) -> None:
+        """Create higher-level crystal from source crystals."""
+        source_crystals = [
+            generate_crystal_id(),
+            generate_crystal_id(),
+            generate_crystal_id(),
         ]
-        topo = TopologySnapshot.from_thoughts(thoughts)
 
-        if topo.heat:
-            # Max should be 1.0 (foo.py edited twice)
-            assert max(topo.heat.values()) == pytest.approx(1.0)
-            # All values in [0, 1]
-            for v in topo.heat.values():
-                assert 0.0 <= v <= 1.0
-
-    def test_topology_serialization(self) -> None:
-        """Topology can be serialized and deserialized."""
-        original = TopologySnapshot(
-            primary_path="src/main.py",
-            heat={"src/main.py": 1.0, "src/utils.py": 0.5},
-            dependencies=frozenset([("src/main.py", "src/utils.py")]),
-        )
-        data = original.to_dict()
-        restored = TopologySnapshot.from_dict(data)
-
-        assert restored.primary_path == original.primary_path
-        assert restored.heat == original.heat
-        assert restored.dependencies == original.dependencies
-
-
-# =============================================================================
-# Narrative Tests
-# =============================================================================
-
-
-class TestNarrative:
-    """Tests for Narrative synthesis."""
-
-    def test_empty_narrative(self) -> None:
-        """Empty thoughts produce minimal narrative."""
-        narrative = Narrative.template_fallback([])
-        assert "Empty session" in narrative.summary
-
-    def test_template_fallback(self, sample_thoughts: list[Thought]) -> None:
-        """Template fallback produces reasonable narrative."""
-        narrative = Narrative.template_fallback(sample_thoughts)
-
-        assert len(narrative.summary) > 0
-        assert "6 observations" in narrative.summary or "observations" in narrative.summary.lower()
-        assert len(narrative.themes) <= 3  # Top 3 themes
-
-    def test_narrative_serialization(self) -> None:
-        """Narrative can be serialized and deserialized."""
-        original = Narrative(
-            summary="Great session",
-            themes=("routing", "tests"),
-            highlights=("Fixed bug", "All tests pass"),
-            dramatic_question="Can we ship today?",
-        )
-        data = original.to_dict()
-        restored = Narrative.from_dict(data)
-
-        assert restored.summary == original.summary
-        assert restored.themes == original.themes
-        assert restored.highlights == original.highlights
-
-
-# =============================================================================
-# ExperienceCrystal Tests
-# =============================================================================
-
-
-class TestExperienceCrystal:
-    """Tests for ExperienceCrystal atomic memory unit."""
-
-    def test_crystal_from_empty_thoughts(self) -> None:
-        """Empty thoughts produce empty crystal."""
-        crystal = ExperienceCrystal.from_thoughts([], session_id="test-session")
-
-        assert crystal.session_id == "test-session"
-        assert crystal.thought_count == 0
-        assert "Empty" in crystal.narrative.summary
-
-    def test_crystal_from_sample_thoughts(self, sample_thoughts: list[Thought]) -> None:
-        """Sample thoughts produce rich crystal."""
-        crystal = ExperienceCrystal.from_thoughts(
-            sample_thoughts,
-            session_id="routing-refactor",
-            markers=["Started routing", "Tests fixed"],
+        crystal = Crystal.from_crystals(
+            insight="Week summary",
+            significance="Good progress made",
+            principles=["joy-inducing"],
+            source_crystals=source_crystals,
+            level=CrystalLevel.WEEK,
         )
 
-        assert crystal.session_id == "routing-refactor"
-        assert crystal.thought_count == 6
-        assert len(crystal.markers) == 2
-        # Sample has mixed success/failure signals, so brightness near neutral
-        assert 0.4 <= crystal.mood.brightness <= 0.6
-        assert crystal.started_at is not None
-        assert crystal.ended_at is not None
-        assert crystal.duration_minutes is not None
-        assert crystal.duration_minutes > 0
+        assert crystal.level == CrystalLevel.WEEK
+        assert len(crystal.source_crystals) == 3
+        assert len(crystal.source_marks) == 0
 
-    def test_crystal_topics_extracted(self, sample_thoughts: list[Thought]) -> None:
-        """Crystal extracts topics from thoughts."""
-        crystal = ExperienceCrystal.from_thoughts(sample_thoughts)
+    def test_crystal_from_crystals_rejects_session_level(self) -> None:
+        """from_crystals raises for SESSION level."""
+        with pytest.raises(ValueError, match="Use from_crystallization"):
+            Crystal.from_crystals(
+                insight="Test",
+                significance="",
+                principles=[],
+                source_crystals=[generate_crystal_id()],
+                level=CrystalLevel.SESSION,
+            )
 
-        # Should have sources as topics
-        assert (
-            "filesystem" in crystal.topics or "git" in crystal.topics or "tests" in crystal.topics
-        )
-
-    def test_crystal_serialization_roundtrip(self, sample_thoughts: list[Thought]) -> None:
+    def test_crystal_to_dict_roundtrip(
+        self,
+        sample_mark_ids: list[MarkId],
+        sample_time_range: tuple[datetime, datetime],
+    ) -> None:
         """Crystal can be serialized and deserialized."""
-        original = ExperienceCrystal.from_thoughts(
-            sample_thoughts,
+        original = Crystal.from_crystallization(
+            insight="Test insight",
+            significance="Test significance",
+            principles=["composable", "tasteful"],
+            source_marks=sample_mark_ids,
+            time_range=sample_time_range,
+            topics={"routing", "tests"},
+            mood=MoodVector(brightness=0.8),
             session_id="test-session",
-            markers=["marker1"],
         )
 
-        json_data = original.to_json()
-        restored = ExperienceCrystal.from_json(json_data)
+        data = original.to_dict()
+        restored = Crystal.from_dict(data)
 
-        assert restored.crystal_id == original.crystal_id
+        assert str(restored.id) == str(original.id)
+        assert restored.level == original.level
+        assert restored.insight == original.insight
+        assert restored.significance == original.significance
+        assert restored.principles == original.principles
+        assert len(restored.source_marks) == len(original.source_marks)
         assert restored.session_id == original.session_id
-        assert restored.thought_count == original.thought_count
         assert restored.mood.brightness == pytest.approx(original.mood.brightness, abs=0.01)
-
-    def test_crystal_as_memory(self, sample_thoughts: list[Thought]) -> None:
-        """Crystal projects to D-gent compatible format."""
-        crystal = ExperienceCrystal.from_thoughts(sample_thoughts, session_id="test")
-        memory = crystal.as_memory()
-
-        assert memory["key"].startswith("witness:crystal:")
-        assert "metadata" in memory
-        assert memory["metadata"]["type"] == "experience_crystal"
-        assert isinstance(memory["metadata"]["topics"], list)
 
     def test_crystal_id_uniqueness(self) -> None:
         """Each crystal gets a unique ID."""
-        crystal1 = ExperienceCrystal.from_thoughts([])
-        crystal2 = ExperienceCrystal.from_thoughts([])
+        now = datetime.now()
+        crystal1 = Crystal.from_crystallization(
+            insight="Test 1",
+            significance="",
+            principles=[],
+            source_marks=[],
+            time_range=(now, now),
+        )
+        crystal2 = Crystal.from_crystallization(
+            insight="Test 2",
+            significance="",
+            principles=[],
+            source_marks=[],
+            time_range=(now, now),
+        )
 
-        assert crystal1.crystal_id != crystal2.crystal_id
+        assert crystal1.id != crystal2.id
 
-    def test_crystal_complexity_from_mood(self, sample_thoughts: list[Thought]) -> None:
-        """Crystal complexity derived from mood complexity."""
-        crystal = ExperienceCrystal.from_thoughts(sample_thoughts)
+    def test_crystal_source_count(
+        self,
+        sample_mark_ids: list[MarkId],
+        sample_time_range: tuple[datetime, datetime],
+    ) -> None:
+        """source_count returns correct count."""
+        crystal = Crystal.from_crystallization(
+            insight="Test",
+            significance="",
+            principles=[],
+            source_marks=sample_mark_ids,
+            time_range=sample_time_range,
+        )
+        assert crystal.source_count == 4
 
-        # Complexity should be between 0 and 1
-        assert 0.0 <= crystal.complexity <= 1.0
+    def test_crystal_duration_minutes(
+        self,
+        sample_mark_ids: list[MarkId],
+    ) -> None:
+        """duration_minutes computed from time_range."""
+        start = datetime.now()
+        end = start + timedelta(minutes=45)
 
-    def test_crystal_repr(self, sample_thoughts: list[Thought]) -> None:
+        crystal = Crystal.from_crystallization(
+            insight="Test",
+            significance="",
+            principles=[],
+            source_marks=sample_mark_ids,
+            time_range=(start, end),
+        )
+        assert crystal.duration_minutes == pytest.approx(45.0, abs=0.1)
+
+    def test_crystal_duration_minutes_none_without_time_range(self) -> None:
+        """duration_minutes is None without time_range."""
+        crystal = Crystal(
+            level=CrystalLevel.DAY,
+            insight="Test",
+            source_crystals=(generate_crystal_id(),),
+        )
+        assert crystal.duration_minutes is None
+
+    def test_crystal_repr(
+        self,
+        sample_mark_ids: list[MarkId],
+        sample_time_range: tuple[datetime, datetime],
+    ) -> None:
         """Crystal has informative repr."""
-        crystal = ExperienceCrystal.from_thoughts(sample_thoughts)
+        crystal = Crystal.from_crystallization(
+            insight="Test",
+            significance="",
+            principles=[],
+            source_marks=sample_mark_ids,
+            time_range=sample_time_range,
+        )
         repr_str = repr(crystal)
 
-        assert "ExperienceCrystal" in repr_str
-        assert "thoughts=6" in repr_str
+        assert "Crystal" in repr_str
+        assert "SESSION" in repr_str
+        assert "sources=4" in repr_str
+
+
+# =============================================================================
+# Crystal Law Tests
+# =============================================================================
+
+
+class TestCrystalLaws:
+    """Tests for Crystal invariant laws."""
+
+    def test_law_3_session_uses_marks(self) -> None:
+        """Law 3: SESSION crystals use source_marks, not source_crystals."""
+        now = datetime.now()
+        # Valid: SESSION with marks
+        crystal = Crystal.from_crystallization(
+            insight="Test",
+            significance="",
+            principles=[],
+            source_marks=[MarkId("m1")],
+            time_range=(now, now),
+        )
+        assert crystal.level == CrystalLevel.SESSION
+        assert len(crystal.source_marks) > 0
+
+    def test_law_3_higher_levels_use_crystals(self) -> None:
+        """Law 3: Higher-level crystals use source_crystals."""
+        crystal = Crystal.from_crystals(
+            insight="Week summary",
+            significance="",
+            principles=[],
+            source_crystals=[generate_crystal_id()],
+            level=CrystalLevel.WEEK,
+        )
+        assert crystal.level == CrystalLevel.WEEK
+        assert len(crystal.source_crystals) > 0
+        assert len(crystal.source_marks) == 0
 
 
 # =============================================================================
@@ -429,51 +457,50 @@ class TestExperienceCrystal:
 # =============================================================================
 
 
-class TestCrystallizationIntegration:
-    """Integration tests for the crystallization pipeline."""
+class TestCrystalIntegration:
+    """Integration tests for the Crystal model."""
 
-    def test_full_crystallization_pipeline(self, sample_thoughts: list[Thought]) -> None:
-        """Test complete crystallization from thoughts to memory."""
+    def test_full_crystallization_pipeline(
+        self,
+        sample_mark_ids: list[MarkId],
+        sample_time_range: tuple[datetime, datetime],
+    ) -> None:
+        """Test complete crystallization from marks to serialization."""
         # Create crystal
-        crystal = ExperienceCrystal.from_thoughts(
-            sample_thoughts,
+        crystal = Crystal.from_crystallization(
+            insight="Completed refactoring of routing module",
+            significance="Better separation of concerns",
+            principles=["composable", "tasteful"],
+            source_marks=sample_mark_ids,
+            time_range=sample_time_range,
+            topics={"routing", "refactoring"},
+            mood=MoodVector(brightness=0.8, warmth=0.7),
             session_id="integration-test",
-            markers=["milestone"],
         )
 
         # Verify all components
-        assert crystal.thought_count > 0
+        assert crystal.source_count > 0
         assert crystal.mood != MoodVector.neutral()
-        assert crystal.narrative.summary != ""
+        assert crystal.insight != ""
         assert len(crystal.topics) > 0
 
-        # Serialize to memory format
-        memory = crystal.as_memory()
-        assert memory["metadata"]["session_id"] == "integration-test"
-
-        # Deserialize back
-        restored = ExperienceCrystal.from_json(crystal.to_json())
+        # Serialize and deserialize
+        data = crystal.to_dict()
+        restored = Crystal.from_dict(data)
         assert restored.session_id == crystal.session_id
-        assert restored.thought_count == crystal.thought_count
+        assert restored.source_count == crystal.source_count
 
-    def test_mood_affects_narrative_retrieval(self) -> None:
+    def test_mood_affects_retrieval(self) -> None:
         """Similar moods should have high similarity for retrieval."""
-        # Create two similar sessions
-        happy_thoughts = [
-            Thought(content="Test passed", source="tests", tags=("success",)),
-            Thought(content="All green", source="tests", tags=("success",)),
-        ]
-        also_happy_thoughts = [
-            Thought(content="Tests successful", source="tests", tags=("success",)),
-            Thought(content="Build passed", source="ci", tags=("success",)),
-        ]
+        bright_mood = MoodVector(brightness=0.9, warmth=0.8)
+        also_bright_mood = MoodVector(brightness=0.85, warmth=0.75)
+        dark_mood = MoodVector(brightness=0.2, warmth=0.3)
 
-        crystal1 = ExperienceCrystal.from_thoughts(happy_thoughts)
-        crystal2 = ExperienceCrystal.from_thoughts(also_happy_thoughts)
+        # Similar moods should have high similarity
+        assert bright_mood.similarity(also_bright_mood) > 0.9
 
-        # Moods should be similar
-        similarity = crystal1.mood.similarity(crystal2.mood)
-        assert similarity > 0.5  # More similar than different
+        # Different moods should have lower similarity
+        assert bright_mood.similarity(dark_mood) < bright_mood.similarity(also_bright_mood)
 
 
 # =============================================================================

@@ -56,7 +56,7 @@ from .contracts import (
     TimelineRequest,
     TimelineResponse,
 )
-from .crystal import ExperienceCrystal, Narrative
+from .crystal import Crystal, CrystalLevel, MoodVector
 from .persistence import WitnessPersistence
 from .sheaf import EventSource, LocalObservation, WitnessSheaf
 
@@ -193,7 +193,7 @@ class TimeWitnessNode(BaseLogosNode):
         self._active_session: str | None = None
         self._session_started_at: datetime | None = None
         self._pending_observations: list[LocalObservation] = []
-        self._crystals: list[ExperienceCrystal] = []
+        self._crystals: list[Crystal] = []
         self._markers: list[dict[str, Any]] = []
         self._last_crystallization: datetime | None = None
 
@@ -355,19 +355,48 @@ class TimeWitnessNode(BaseLogosNode):
 
         # Get thoughts from persistence
         thoughts = await self._persistence.get_thoughts(limit=100)
+        thoughts_list = list(thoughts)
 
-        if not thoughts and not force:
+        if not thoughts_list and not force:
             return {"error": "No observations to crystallize"}
 
         # Add session markers
         session_markers = [m["content"] for m in self._markers if m.get("session_id") == session_id]
         all_markers = list(markers) + session_markers
 
-        # Create crystal
-        crystal = ExperienceCrystal.from_thoughts(
-            thoughts=list(thoughts),
+        # Extract time range and build insight from thoughts
+        now = datetime.now(UTC)
+        if thoughts_list:
+            timestamps = [
+                t.timestamp for t in thoughts_list if hasattr(t, "timestamp") and t.timestamp
+            ]
+            started_at = min(timestamps) if timestamps else now
+            ended_at = max(timestamps) if timestamps else now
+        else:
+            started_at = now
+            ended_at = now
+
+        # Build insight from thought contents
+        contents = [getattr(t, "content", str(t))[:100] for t in thoughts_list[:5]]
+        insight = "; ".join(contents[:3]) if contents else "Empty session"
+
+        # Extract topics from thought tags
+        all_tags: set[str] = set()
+        for t in thoughts_list:
+            if hasattr(t, "tags"):
+                all_tags.update(t.tags)
+
+        # Create crystal using the new API
+        crystal = Crystal.from_crystallization(
+            insight=insight,
+            significance=f"Session with {len(thoughts_list)} observations",
+            principles=list(all_tags),
+            source_marks=[],  # Would be populated from actual marks
+            time_range=(started_at, ended_at),
+            confidence=0.5,  # Template confidence
+            topics=all_tags,
+            mood=MoodVector.from_marks([]),  # Would use actual marks
             session_id=session_id,
-            markers=all_markers,
         )
 
         self._crystals.append(crystal)
@@ -378,12 +407,12 @@ class TimeWitnessNode(BaseLogosNode):
         self._markers = [m for m in self._markers if m.get("session_id") != session_id]
 
         return {
-            "crystal_id": crystal.crystal_id,
+            "crystal_id": str(crystal.id),
             "session_id": crystal.session_id,
-            "thought_count": crystal.thought_count,
+            "thought_count": crystal.source_count,
             "topics": list(crystal.topics),
             "mood": crystal.mood.to_dict(),
-            "narrative_summary": crystal.narrative.summary,
+            "narrative_summary": crystal.insight,
             "crystallized_at": crystal.crystallized_at.isoformat(),
         }
 
@@ -412,16 +441,16 @@ class TimeWitnessNode(BaseLogosNode):
         # Convert to items
         items = [
             {
-                "crystal_id": c.crystal_id,
+                "crystal_id": str(c.id),
                 "session_id": c.session_id,
-                "thought_count": c.thought_count,
-                "started_at": c.started_at.isoformat() if c.started_at else None,
-                "ended_at": c.ended_at.isoformat() if c.ended_at else None,
+                "thought_count": c.source_count,
+                "started_at": c.time_range[0].isoformat() if c.time_range else None,
+                "ended_at": c.time_range[1].isoformat() if c.time_range else None,
                 "duration_minutes": c.duration_minutes,
                 "topics": list(c.topics),
                 "mood_brightness": c.mood.brightness,
                 "mood_dominant_quality": c.mood.dominant_quality,
-                "narrative_summary": c.narrative.summary,
+                "narrative_summary": c.insight,
                 "crystallized_at": c.crystallized_at.isoformat(),
             }
             for c in crystals
@@ -438,10 +467,10 @@ class TimeWitnessNode(BaseLogosNode):
         session_id = kwargs.get("session_id")
         topics = kwargs.get("topics", [])
 
-        crystal: ExperienceCrystal | None = None
+        crystal: Crystal | None = None
 
         if crystal_id:
-            crystal = next((c for c in self._crystals if c.crystal_id == crystal_id), None)
+            crystal = next((c for c in self._crystals if str(c.id) == crystal_id), None)
         elif session_id:
             crystal = next((c for c in self._crystals if c.session_id == session_id), None)
         elif topics:
@@ -462,30 +491,26 @@ class TimeWitnessNode(BaseLogosNode):
         return {
             "found": True,
             "crystal": {
-                "crystal_id": crystal.crystal_id,
+                "crystal_id": str(crystal.id),
                 "session_id": crystal.session_id,
-                "thought_count": crystal.thought_count,
-                "started_at": crystal.started_at.isoformat() if crystal.started_at else None,
-                "ended_at": crystal.ended_at.isoformat() if crystal.ended_at else None,
+                "thought_count": crystal.source_count,
+                "started_at": crystal.time_range[0].isoformat() if crystal.time_range else None,
+                "ended_at": crystal.time_range[1].isoformat() if crystal.time_range else None,
                 "duration_minutes": crystal.duration_minutes,
                 "topics": list(crystal.topics),
                 "mood_brightness": crystal.mood.brightness,
                 "mood_dominant_quality": crystal.mood.dominant_quality,
-                "narrative_summary": crystal.narrative.summary,
+                "narrative_summary": crystal.insight,
                 "crystallized_at": crystal.crystallized_at.isoformat(),
             },
-            "thoughts": [
-                {
-                    "content": t.content,
-                    "source": t.source,
-                    "tags": list(t.tags),
-                    "timestamp": t.timestamp.isoformat() if t.timestamp else None,
-                }
-                for t in crystal.thoughts
-            ],
-            "topology": crystal.topology.to_dict(),
+            "thoughts": [],  # Thoughts are not stored in Crystal - use source_marks to retrieve
+            "topology": {"primary_path": "", "heat": {}, "clusters": []},  # Absorbed into topics
             "mood": crystal.mood.to_dict(),
-            "narrative": crystal.narrative.to_dict(),
+            "narrative": {
+                "summary": crystal.insight,
+                "key_moments": [],
+                "themes": list(crystal.topics),
+            },
         }
 
     async def _handle_territory(self, kwargs: dict[str, Any]) -> dict[str, Any]:
@@ -510,18 +535,20 @@ class TimeWitnessNode(BaseLogosNode):
                 "time_window_hours": hours,
             }
 
-        # Aggregate heat maps
+        # Aggregate heat from crystal topics (since topology is no longer stored)
+        # Note: In the new model, topology.heat is absorbed into topics
+        # For territory tracking, we'd need a separate mechanism or mark metadata
         combined_heat: dict[str, float] = {}
         for crystal in crystals:
-            for path, heat_val in crystal.topology.heat.items():
-                combined_heat[path] = combined_heat.get(path, 0) + heat_val
+            for topic in crystal.topics:
+                combined_heat[topic] = combined_heat.get(topic, 0) + 1
 
         # Normalize
         if combined_heat:
             max_heat = max(combined_heat.values())
             combined_heat = {p: h / max_heat for p, h in combined_heat.items()}
 
-        # Find primary path
+        # Find primary path (now primary topic)
         primary_path = (
             max(combined_heat.keys(), key=lambda p: combined_heat[p]) if combined_heat else "."
         )
@@ -543,7 +570,7 @@ class TimeWitnessNode(BaseLogosNode):
         """
         self._pending_observations.append(observation)
 
-    def get_crystals(self) -> list[ExperienceCrystal]:
+    def get_crystals(self) -> list[Crystal]:
         """Get all crystals (for Muse integration)."""
         return list(self._crystals)
 

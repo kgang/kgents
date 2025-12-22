@@ -44,11 +44,12 @@ from services.kgentsd.schedule import (
     create_scheduler,
 )
 from services.witness.crystal import (
-    ExperienceCrystal,
+    Crystal,
+    CrystalLevel,
     MoodVector,
-    Narrative,
-    TopologySnapshot,
+    generate_crystal_id,
 )
+from services.witness.mark import MarkId
 from services.witness.polynomial import Thought, TrustLevel
 
 # =============================================================================
@@ -77,26 +78,10 @@ class TestMoodVectorRobustness:
         assert 0.0 <= mood.texture <= 1.0
         assert 0.0 <= mood.saturation <= 1.0
 
-    def test_mood_from_empty_thoughts(self) -> None:
-        """Test mood creation from empty thought list."""
-        mood = MoodVector.from_thoughts([])
+    def test_mood_from_empty_marks(self) -> None:
+        """Test mood creation from empty marks list."""
+        mood = MoodVector.from_marks([])
         assert mood == MoodVector.neutral()
-
-    def test_mood_from_single_thought(self) -> None:
-        """Test mood from a single thought."""
-        thoughts = [
-            Thought(
-                content="Test passed successfully",
-                source="test",
-                tags=("success",),
-                timestamp=datetime.now(UTC),
-            )
-        ]
-        mood = MoodVector.from_thoughts(thoughts)
-
-        # Should not crash, should have reasonable values
-        assert 0.0 <= mood.brightness <= 1.0
-        assert 0.0 <= mood.tempo <= 1.0
 
     def test_mood_similarity_with_zero_vectors(self) -> None:
         """Test similarity computation with zero magnitude vectors."""
@@ -117,26 +102,6 @@ class TestMoodVectorRobustness:
         # Zero vs non-zero should be 0.0
         normal_mood = MoodVector.neutral()
         assert zero_mood.similarity(normal_mood) == 0.0
-
-    def test_mood_from_thoughts_with_mixed_case_tags(self) -> None:
-        """Test that tag matching is case-insensitive."""
-        thoughts = [
-            Thought(
-                content="Test FAILED",
-                source="test",
-                tags=("FAILURE", "ERROR"),
-                timestamp=datetime.now(UTC),
-            ),
-            Thought(
-                content="Test SUCCESS",
-                source="test",
-                tags=("Success", "PASS"),
-                timestamp=datetime.now(UTC),
-            ),
-        ]
-        mood = MoodVector.from_thoughts(thoughts)
-        # Should handle mixed case without crashing
-        assert mood is not None
 
     def test_mood_to_dict_from_dict_roundtrip(self) -> None:
         """Test serialization roundtrip preserves values."""
@@ -159,170 +124,57 @@ class TestMoodVectorRobustness:
 
 
 # =============================================================================
-# TopologySnapshot Edge Cases
+# Crystal Edge Cases
 # =============================================================================
 
 
-class TestTopologySnapshotRobustness:
-    """Edge cases for TopologySnapshot."""
+class TestCrystalRobustness:
+    """Edge cases for Crystal."""
 
-    def test_topology_from_empty_thoughts(self) -> None:
-        """Test topology from empty thought list."""
-        topology = TopologySnapshot.from_thoughts([])
-        assert topology.primary_path == "."
-        assert topology.heat == {}
-
-    def test_topology_from_thoughts_without_paths(self) -> None:
-        """Test topology from thoughts without file paths."""
-        thoughts = [
-            Thought(
-                content="Just some text without any paths",
-                source="general",
-                tags=(),
-                timestamp=datetime.now(UTC),
-            )
-        ]
-        topology = TopologySnapshot.from_thoughts(thoughts)
-        assert topology.primary_path == "."
-
-    def test_topology_from_thoughts_with_special_characters(self) -> None:
-        """Test topology handles paths with special characters."""
-        thoughts = [
-            Thought(
-                content="Edited: src/components/Button.tsx (with parens)",
-                source="filesystem",
-                tags=("file",),
-                timestamp=datetime.now(UTC),
-            ),
-            Thought(
-                content="Path: /tmp/test-file.py, another.ts",
-                source="filesystem",
-                tags=("file",),
-                timestamp=datetime.now(UTC),
-            ),
-        ]
-        topology = TopologySnapshot.from_thoughts(thoughts)
-        # Should extract and clean paths
-        assert len(topology.heat) > 0
-
-    def test_topology_serialization_roundtrip(self) -> None:
-        """Test topology serialization preserves dependencies."""
-        original = TopologySnapshot(
-            primary_path="/src/main.py",
-            heat={"/src/main.py": 1.0, "/src/utils.py": 0.5},
-            dependencies=frozenset([("/src/main.py", "/src/utils.py")]),
+    def test_crystal_from_crystallization_empty(self) -> None:
+        """Test crystal creation with empty sources."""
+        now = datetime.now(UTC)
+        crystal = Crystal.from_crystallization(
+            insight="Empty test",
+            significance="",
+            principles=[],
+            source_marks=[],
+            time_range=(now, now),
+            session_id="test-session",
         )
-
-        data = original.to_dict()
-        restored = TopologySnapshot.from_dict(data)
-
-        assert restored.primary_path == original.primary_path
-        assert restored.heat == original.heat
-        assert restored.dependencies == original.dependencies
-
-
-# =============================================================================
-# Narrative Edge Cases
-# =============================================================================
-
-
-class TestNarrativeRobustness:
-    """Edge cases for Narrative."""
-
-    def test_narrative_template_fallback_empty(self) -> None:
-        """Test narrative fallback with empty thoughts."""
-        narrative = Narrative.template_fallback([])
-        assert "Empty session" in narrative.summary
-
-    def test_narrative_template_fallback_with_long_content(self) -> None:
-        """Test narrative handles very long thought content."""
-        long_content = "x" * 10000
-        thoughts = [
-            Thought(
-                content=long_content,
-                source="test",
-                tags=(),
-                timestamp=datetime.now(UTC),
-            )
-        ]
-        narrative = Narrative.template_fallback(thoughts)
-        # Summary should be truncated and not crash
-        assert len(narrative.summary) < len(long_content)
-
-    def test_narrative_from_dict_with_missing_keys(self) -> None:
-        """Test narrative handles incomplete dict."""
-        partial_data = {"summary": "Test"}
-        narrative = Narrative.from_dict(partial_data)
-        assert narrative.summary == "Test"
-        assert narrative.themes == ()
-        assert narrative.highlights == ()
-
-
-# =============================================================================
-# ExperienceCrystal Edge Cases
-# =============================================================================
-
-
-class TestExperienceCrystalRobustness:
-    """Edge cases for ExperienceCrystal."""
-
-    def test_crystal_from_empty_thoughts(self) -> None:
-        """Test crystal creation from empty thoughts."""
-        crystal = ExperienceCrystal.from_thoughts([], session_id="test-session")
         assert crystal.session_id == "test-session"
-        assert crystal.thought_count == 0
-        assert "Empty" in crystal.narrative.summary
-
-    def test_crystal_from_thoughts_with_none_timestamps(self) -> None:
-        """Test crystal handles thoughts with missing timestamps."""
-        thoughts = [
-            Thought(
-                content="No timestamp",
-                source="test",
-                tags=(),
-                timestamp=datetime.now(UTC),  # Required by Thought
-            )
-        ]
-        crystal = ExperienceCrystal.from_thoughts(thoughts)
-        assert crystal is not None
-
-    def test_crystal_json_roundtrip(self) -> None:
-        """Test crystal JSON serialization roundtrip."""
-        thoughts = [
-            Thought(
-                content="Test thought",
-                source="test",
-                tags=("tag1", "tag2"),
-                timestamp=datetime.now(UTC),
-            )
-        ]
-        original = ExperienceCrystal.from_thoughts(thoughts, session_id="roundtrip")
-
-        json_data = original.to_json()
-        restored = ExperienceCrystal.from_json(json_data)
-
-        assert restored.session_id == original.session_id
-        assert restored.thought_count == original.thought_count
-
-    def test_crystal_from_json_with_missing_fields(self) -> None:
-        """Test crystal handles incomplete JSON."""
-        minimal_json = {
-            "crystal_id": "test-123",
-            "session_id": "minimal",
-        }
-        crystal = ExperienceCrystal.from_json(minimal_json)
-        assert crystal.crystal_id == "test-123"
-        assert crystal.thoughts == ()
+        assert crystal.source_count == 0
 
     def test_crystal_duration_with_same_timestamps(self) -> None:
         """Test duration when start and end are the same."""
         now = datetime.now(UTC)
-        thoughts = [
-            Thought(content="Same time", source="test", tags=(), timestamp=now),
-        ]
-        crystal = ExperienceCrystal.from_thoughts(thoughts)
+        crystal = Crystal.from_crystallization(
+            insight="Same time",
+            significance="",
+            principles=[],
+            source_marks=[MarkId("m1")],
+            time_range=(now, now),
+        )
         # Duration should be 0
         assert crystal.duration_minutes == 0.0
+
+    def test_crystal_dict_roundtrip(self) -> None:
+        """Test crystal dict serialization roundtrip."""
+        now = datetime.now(UTC)
+        original = Crystal.from_crystallization(
+            insight="Test insight",
+            significance="Test significance",
+            principles=["composable"],
+            source_marks=[MarkId("m1"), MarkId("m2")],
+            time_range=(now, now + timedelta(minutes=10)),
+            session_id="roundtrip",
+        )
+
+        data = original.to_dict()
+        restored = Crystal.from_dict(data)
+
+        assert restored.session_id == original.session_id
+        assert restored.source_count == original.source_count
 
 
 # =============================================================================
@@ -795,35 +647,24 @@ class TestIntegrationRobustness:
         assert task.status == ScheduleStatus.COMPLETED
 
     @pytest.mark.asyncio
-    async def test_crystal_from_pipeline_thoughts(self) -> None:
-        """Test creating crystal from thoughts generated during pipeline."""
-        thoughts = [
-            Thought(
-                content="Pipeline started: world.gestalt.analyze",
-                source="witness.pipeline",
-                tags=("pipeline", "start"),
-                timestamp=datetime.now(UTC),
-            ),
-            Thought(
-                content="Step 1 completed: src/main.py analyzed",
-                source="witness.pipeline",
-                tags=("step", "success"),
-                timestamp=datetime.now(UTC),
-            ),
-            Thought(
-                content="Pipeline completed successfully",
-                source="witness.pipeline",
-                tags=("pipeline", "complete", "success"),
-                timestamp=datetime.now(UTC),
-            ),
-        ]
+    async def test_crystal_from_pipeline_marks(self) -> None:
+        """Test creating crystal from marks generated during pipeline."""
+        now = datetime.now(UTC)
+        mark_ids = [MarkId("mark-1"), MarkId("mark-2"), MarkId("mark-3")]
 
-        crystal = ExperienceCrystal.from_thoughts(thoughts, session_id="pipeline-run")
+        crystal = Crystal.from_crystallization(
+            insight="Pipeline completed successfully",
+            significance="All steps passed",
+            principles=["composable"],
+            source_marks=mark_ids,
+            time_range=(now, now + timedelta(minutes=5)),
+            topics={"pipeline", "success"},
+            session_id="pipeline-run",
+        )
 
         # Crystal should capture pipeline context
-        assert crystal.thought_count == 3
+        assert crystal.source_count == 3
         assert "pipeline" in crystal.topics
-        assert crystal.mood.brightness > 0.5  # Success should be bright
 
 
 # =============================================================================
@@ -878,19 +719,14 @@ class TestDefensiveProgramming:
             "complexity",
         )
 
-    def test_topology_from_dict_with_invalid_dependencies(self) -> None:
-        """Test topology handles malformed dependencies."""
-        data = {
-            "primary_path": "/test",
-            "heat": {},
-            "dependencies": [
-                ["a", "b"],  # valid
-                ["c"],  # invalid (only 1 element)
-                ["d", "e", "f"],  # invalid (3 elements)
-            ],
-        }
-        topology = TopologySnapshot.from_dict(data)
-
-        # Should only include valid 2-element tuples
-        assert ("a", "b") in topology.dependencies
-        assert len(topology.dependencies) == 1
+    def test_crystal_source_count_empty(self) -> None:
+        """Test Crystal handles empty sources gracefully."""
+        now = datetime.now(UTC)
+        crystal = Crystal.from_crystallization(
+            insight="Test",
+            significance="",
+            principles=[],
+            source_marks=[],
+            time_range=(now, now),
+        )
+        assert crystal.source_count == 0

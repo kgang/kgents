@@ -60,6 +60,9 @@ class WitnessTopics:
     # Thought events
     THOUGHT_CAPTURED = "witness.thought.captured"
 
+    # Trail events (Context Perception integration - Phase 4)
+    TRAIL_CAPTURED = "witness.trail.captured"
+
     # Daemon lifecycle
     DAEMON_STARTED = "witness.daemon.started"
     DAEMON_STOPPED = "witness.daemon.stopped"
@@ -73,6 +76,7 @@ class WitnessTopics:
     ALL = "witness.*"
     GIT_ALL = "witness.git.*"
     THOUGHT_ALL = "witness.thought.*"
+    TRAIL_ALL = "witness.trail.*"
     DAEMON_ALL = "witness.daemon.*"
     AGENTESE_ALL = "witness.agentese.*"
 

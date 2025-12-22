@@ -38,16 +38,45 @@ from .contracts import (
     TrustResponse,
     WitnessManifestResponse,
 )
+
+# Crystal (Unified Memory Compression)
 from .crystal import (
-    ExperienceCrystal,
+    Crystal,
+    CrystalId,
+    CrystalLevel,
     MoodVector,
-    Narrative,
-    TopologySnapshot,
+    generate_crystal_id,
+)
+from .crystal_store import (
+    CrystalNotFoundError,
+    CrystalQuery,
+    CrystalStore,
+    CrystalStoreError,
+    DuplicateCrystalError as DuplicateCrystalError,
+    LevelConsistencyError,
+    get_crystal_store,
+    reset_crystal_store,
+    set_crystal_store,
+)
+
+# Phase 5: Crystal Trail Visualization
+from .crystal_trail import (
+    CrystalGraph,
+    CrystalGraphEdge,
+    CrystalGraphNode,
+    CrystalTrailAdapter,
+    crystals_to_graph,
+    format_graph_response,
+    get_hierarchy_graph,
 )
 from .crystallization_node import (
     TimeWitnessManifestRendering,
     TimeWitnessManifestResponse,
     TimeWitnessNode,
+)
+from .crystallizer import (
+    CrystallizationResult,
+    Crystallizer,
 )
 
 # Grant (renamed from Covenant)
@@ -67,6 +96,19 @@ from .grant import (
     generate_grant_id,
     get_grant_store,
     reset_grant_store,
+)
+
+# Phase 4: Integration & Streaming
+from .integration import (
+    HandoffContext,
+    NowMdProposal,
+    PromotionCandidate,
+    apply_now_proposal,
+    auto_promote_crystals,
+    identify_promotion_candidates,
+    prepare_handoff_context,
+    promote_to_brain,
+    propose_now_update,
 )
 from .intent import (
     CyclicDependencyError,
@@ -169,6 +211,13 @@ from .polynomial import (
     WitnessState,
 )
 
+# Portal Marks (Phase 2: Witness Mark Integration)
+from .portal_marks import (
+    mark_portal_collapse,
+    mark_portal_expansion,
+    mark_trail_save,
+)
+
 # Scope (renamed from Offering)
 from .scope import (
     Budget,
@@ -200,6 +249,14 @@ from .sheaf import (
     verify_associativity_law,
     verify_identity_law,
 )
+from .stream import (
+    CrystalEvent,
+    CrystalEventType,
+    create_crystal_sse_response,
+    crystal_stream,
+    publish_crystal_created,
+    stream_crystals_cli,
+)
 
 # MarkStore (renamed from TraceStore)
 from .trace_store import (
@@ -212,6 +269,16 @@ from .trace_store import (
     get_mark_store,
     reset_mark_store,
     set_mark_store,
+)
+
+# Trail Bridge (Context Perception integration)
+from .trail_bridge import (
+    EvidenceTier as TrailEvidenceTier,
+    TrailEvidence,
+    TrailMark,
+    analyze_trail,
+    convert_trail_to_mark,
+    emit_trail_as_mark,
 )
 from .trust import (
     ActionGate,
@@ -277,11 +344,25 @@ __all__ = [
     "TrustRequest",
     "TrustResponse",
     "WitnessManifestResponse",
-    # Crystal
-    "ExperienceCrystal",
+    # Crystal (Unified Memory Compression)
+    "Crystal",
+    "CrystalId",
+    "CrystalLevel",
     "MoodVector",
-    "Narrative",
-    "TopologySnapshot",
+    "generate_crystal_id",
+    # Crystal Store
+    "CrystalNotFoundError",
+    "CrystalQuery",
+    "CrystalStore",
+    "CrystalStoreError",
+    "DuplicateCrystalError",
+    "LevelConsistencyError",
+    "get_crystal_store",
+    "reset_crystal_store",
+    "set_crystal_store",
+    # Crystallizer
+    "CrystallizationResult",
+    "Crystallizer",
     # Crystallization Node
     "TimeWitnessManifestRendering",
     "TimeWitnessManifestResponse",
@@ -463,4 +544,39 @@ __all__ = [
     "WalkStore",
     "get_walk_store",
     "reset_walk_store",
+    # Portal Marks (Phase 2: Witness Mark Integration)
+    "mark_portal_collapse",
+    "mark_portal_expansion",
+    "mark_trail_save",
+    # Trail Bridge (Context Perception integration)
+    "TrailEvidenceTier",
+    "TrailEvidence",
+    "TrailMark",
+    "analyze_trail",
+    "convert_trail_to_mark",
+    "emit_trail_as_mark",
+    # Phase 4: Integration & Streaming
+    "HandoffContext",
+    "NowMdProposal",
+    "PromotionCandidate",
+    "apply_now_proposal",
+    "auto_promote_crystals",
+    "identify_promotion_candidates",
+    "prepare_handoff_context",
+    "promote_to_brain",
+    "propose_now_update",
+    "CrystalEvent",
+    "CrystalEventType",
+    "create_crystal_sse_response",
+    "crystal_stream",
+    "publish_crystal_created",
+    "stream_crystals_cli",
+    # Phase 5: Crystal Trail Visualization
+    "CrystalGraph",
+    "CrystalGraphEdge",
+    "CrystalGraphNode",
+    "CrystalTrailAdapter",
+    "crystals_to_graph",
+    "format_graph_response",
+    "get_hierarchy_graph",
 ]
