@@ -179,8 +179,17 @@ class VgentRouter(BaseVgent):
             )
 
         elif backend == VectorBackend.POSTGRES:
-            # Postgres backend (Phase 6 - not yet implemented)
-            raise NotImplementedError("PostgresVectorBackend not yet implemented")
+            from .backends.postgres import PostgresVectorBackend, is_pgvector_available
+
+            if not is_pgvector_available():
+                raise ImportError("pgvector package not installed")
+
+            # Postgres backend requires session factory - must be injected
+            # This is typically done via the TrailStorageAdapter
+            raise NotImplementedError(
+                "PostgresVectorBackend requires session_factory injection. "
+                "Use PostgresVectorBackend directly with your session factory."
+            )
 
         elif backend == VectorBackend.QDRANT:
             # Qdrant backend (Phase 6 - not yet implemented)
