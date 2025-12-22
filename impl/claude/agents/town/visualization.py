@@ -34,8 +34,11 @@ if TYPE_CHECKING:
     from agents.i.reactive.signal import Signal
     from agents.i.reactive.widget import KgentsWidget, RenderTarget
     from agents.town.citizen import Citizen, Eigenvectors
-    from agents.town.coalition import Coalition
     from agents.town.flux import TownEvent, TownPhase
+
+# Note: Coalition module archived 2025-12-21
+# Type alias for forward compatibility
+Coalition = Any
 
 # =============================================================================
 # Type Variables
