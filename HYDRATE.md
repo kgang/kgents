@@ -33,6 +33,7 @@ await logos.invoke("world.house.manifest", umwelt)  # Observer-dependent
 | **Categorical** | `agents/poly/`, `agents/operad/`, `agents/sheaf/` | PolyAgent, composition grammar, emergence |
 | **Streaming** | `agents/flux/` | Living pipelines, event-driven flows |
 | **Semantics** | `protocols/agentese/` | Logos, parser, JIT, wiring |
+| **SpecGraph** | `protocols/specgraph/` | Specs as navigable hypergraph (193 specs, 734 edges) |
 | **Services** | `services/` | Crown Jewels (Brain, Town, Witness, Liminal...) |
 | **Soul** | `agents/k/` | LLM dialogue, hypnagogia, gatekeeper |
 | **Memory** | `agents/m/` | Crystals, cartography, stigmergy |
