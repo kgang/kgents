@@ -1,31 +1,25 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Shell, UniversalProjection } from './shell';
 import { ErrorBoundary } from './components/error/ErrorBoundary';
 import { SynergyToaster } from './components/synergy';
 import { PageTransition, PersonalityLoading } from './components/joy';
 
 /**
- * AGENTESE-as-Route Architecture (AD-009 Phase 3 Complete)
+ * kgents Web - Surgical Refactor 2025-12-22
  *
- * The URL IS the AGENTESE invocation. UniversalProjection catches all paths,
- * parses them as AGENTESE, invokes via the gateway, and renders projections.
+ * Transformed from AGENTESE explorer to:
+ * 1. Timeline/Stream File Explorer (coming)
+ * 2. Swarm/Stigmergy Agent Lab (coming)
  *
- * All legacy routes have been removed - the URL IS the AGENTESE path.
- *
- * @see spec/protocols/agentese-as-route.md
+ * For now, simple gallery routes while we build new features.
  */
 
-// Gallery pages (kept as explicit routes - not AGENTESE paths)
+// Gallery pages (kept for dev/testing)
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const LayoutGallery = lazy(() => import('./pages/LayoutGallery'));
 const InteractiveTextGallery = lazy(() => import('./pages/InteractiveTextGallery'));
-const CanvasPage = lazy(() => import('./pages/Canvas'));
-const AgenteseDocs = lazy(() => import('./pages/AgenteseDocs'));
-const PortalPage = lazy(() => import('./pages/Portal'));
-const TrailPage = lazy(() => import('./pages/Trail'));
-const WitnessPage = lazy(() => import('./pages/Witness'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 function LoadingFallback() {
   return (
@@ -41,47 +35,31 @@ function App() {
   return (
     <ErrorBoundary resetKeys={[location.pathname]}>
       <Suspense fallback={<LoadingFallback />}>
-        {/* AnimatePresence enables exit animations between routes */}
         <AnimatePresence mode="wait" initial={false}>
           <PageTransition key={location.pathname} variant="fade">
             <Routes location={location}>
-              {/* OS Shell - Unified layout with three persistent layers */}
-              <Route element={<Shell />}>
-                {/*
-                 * Explicit routes (non-AGENTESE paths)
-                 * Developer galleries use /_/ prefix (not part of AGENTESE ontology)
-                 */}
+              {/* Redirect root to gallery for now */}
+              <Route path="/" element={<Navigate to="/_/gallery" replace />} />
 
-                {/* Developer Galleries - system routes (/_/) not AGENTESE ontology */}
-                <Route path="/_/gallery" element={<GalleryPage />} />
-                <Route path="/_/gallery/layout" element={<LayoutGallery />} />
-                <Route path="/_/gallery/interactive-text" element={<InteractiveTextGallery />} />
-                <Route path="/_/canvas" element={<CanvasPage />} />
-                <Route path="/_/docs/agentese" element={<AgenteseDocs />} />
-                <Route path="/_/portal" element={<PortalPage />} />
-                <Route path="/_/trail/:id?" element={<TrailPage />} />
-                <Route path="/_/witness" element={<WitnessPage />} />
+              {/* Developer Galleries */}
+              <Route path="/_/gallery" element={<GalleryPage />} />
+              <Route path="/_/gallery/layout" element={<LayoutGallery />} />
+              <Route path="/_/gallery/interactive-text" element={<InteractiveTextGallery />} />
 
-                {/*
-                 * Universal AGENTESE Projection (catch-all)
-                 *
-                 * All paths are parsed as AGENTESE invocations:
-                 *   /self.memory → logos.invoke("self.memory")
-                 *   /self.memory:capture → logos.invoke("self.memory", aspect="capture")
-                 *
-                 * Root (/) redirects to /self.memory (Brain).
-                 * Unknown paths show ConceptHome fallback.
-                 *
-                 * @see spec/protocols/agentese-as-route.md
-                 */}
-                <Route path="/*" element={<UniversalProjection />} />
-              </Route>
+              {/* Future: Timeline Explorer */}
+              {/* <Route path="/timeline/:id?" element={<TimelineExplorer />} /> */}
+
+              {/* Future: Swarm Lab */}
+              {/* <Route path="/lab/:outlineId?" element={<SwarmLab />} /> */}
+
+              {/* 404 */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </PageTransition>
         </AnimatePresence>
       </Suspense>
 
-      {/* Cross-jewel synergy notifications - Foundation 4 */}
+      {/* Cross-jewel synergy notifications */}
       <SynergyToaster />
     </ErrorBoundary>
   );

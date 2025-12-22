@@ -1,73 +1,9 @@
 /**
- * TypeScript types for Agent Town API.
+ * TypeScript types for kgents Web.
  *
- * PHASE 7.5: Contract Type Migration (autopoietic-architecture.md)
- *
- * This file contains two categories of types:
- * 1. GENERATED TYPES (re-exported from _generated/) - Contract types from AGENTESE
- * 2. LOCAL TYPES - FE-only types, constants, and UI configurations
- *
- * Migration Guide:
- * - Contract types (responses from /agentese/* endpoints) use generated types
- * - Local types (UI state, constants, configs) stay in this file
- * - New AGENTESE contracts should be added to services/<name>/contracts.py
- *   then run `npm run sync-types` to regenerate
- *
- * @see plans/autopoietic-architecture.md - Phase 7: AGENTESE Contract Protocol
+ * Surgical refactor 2025-12-22: Generated AGENTESE types removed.
+ * Only local UI types remain.
  */
-
-// =============================================================================
-// Generated Contract Types (from _generated/)
-// Run `npm run sync-types` to regenerate from backend contracts
-// =============================================================================
-
-// Export all generated types directly from their source files
-export * from './types/_generated/world-town';
-// world-town-citizen types are re-exported from world-town.ts - only export unique type
-export type { WorldTownCitizenManifestResponse } from './types/_generated/world-town-citizen';
-export * from './types/_generated/self-memory';
-export * from './types/_generated/self-chat';
-export * from './types/_generated/world-forge';
-export * from './types/_generated/world-codebase';
-// world-park types removed (module archived)
-
-// Type aliases for backwards compatibility during migration
-// These map legacy names to the new generated types
-export type { WorldTownManifestResponse as TownManifestContract } from './types/_generated/world-town';
-export type {
-  WorldTownCitizenListResponse as TownCitizenListContract,
-  WorldTownCitizenGetResponse as TownCitizenGetContract,
-} from './types/_generated/world-town-citizen';
-
-export type {
-  SelfMemoryManifestResponse as BrainManifestContract,
-  SelfMemoryTopologyResponse as BrainTopologyContract,
-  SelfMemoryCaptureRequest as BrainCaptureRequestContract,
-  SelfMemoryCaptureResponse as BrainCaptureResponseContract,
-  SelfMemorySearchRequest as BrainSearchRequestContract,
-  SelfMemorySearchResponse as BrainSearchResponseContract,
-} from './types/_generated/self-memory';
-
-export type {
-  SelfChatManifestResponse as ChatManifestContract,
-  SelfChatSessionsResponse as ChatSessionsContract,
-  SelfChatSendRequest as ChatSendRequestContract,
-  SelfChatSendResponse as ChatSendResponseContract,
-} from './types/_generated/self-chat';
-
-export type {
-  WorldCodebaseManifestResponse as GestaltManifestContract,
-  WorldCodebaseTopologyResponse as GestaltTopologyContract,
-  WorldCodebaseHealthResponse as GestaltHealthContract,
-  WorldCodebaseModuleResponse as GestaltModuleContract,
-} from './types/_generated/world-codebase';
-
-export type {
-  WorldForgeManifestResponse as ForgeManifestContract,
-  WorldForgeWorkshopListResponse as ForgeWorkshopListContract,
-} from './types/_generated/world-forge';
-
-// Park contract types removed (module archived)
 
 // =============================================================================
 // Local Types (FE-only)
@@ -1770,23 +1706,12 @@ export const PARK_EIGENVECTOR_CONFIG: Record<string, { label: string; color: str
 /**
  * Derivation tiers with confidence ceilings.
  */
-export type DerivationTier =
-  | 'bootstrap'
-  | 'functor'
-  | 'polynomial'
-  | 'operad'
-  | 'jewel'
-  | 'app';
+export type DerivationTier = 'bootstrap' | 'functor' | 'polynomial' | 'operad' | 'jewel' | 'app';
 
 /**
  * Evidence types for principle draws.
  */
-export type EvidenceType =
-  | 'categorical'
-  | 'empirical'
-  | 'stigmergic'
-  | 'axiom'
-  | 'none';
+export type EvidenceType = 'categorical' | 'empirical' | 'stigmergic' | 'axiom' | 'none';
 
 /**
  * A node in the derivation DAG.
@@ -1914,10 +1839,7 @@ export const DERIVATION_TIER_CONFIG: Record<
 /**
  * Principle visual configuration for radar charts.
  */
-export const DERIVATION_PRINCIPLE_CONFIG: Record<
-  string,
-  { color: string; icon: string }
-> = {
+export const DERIVATION_PRINCIPLE_CONFIG: Record<string, { color: string; icon: string }> = {
   Tasteful: { color: '#8b5cf6', icon: 'sparkles' },
   Curated: { color: '#ec4899', icon: 'filter' },
   Ethical: { color: '#22c55e', icon: 'shield' },

@@ -1,10 +1,8 @@
 /**
  * Barrel exports for React hooks.
  *
- * Import hooks from this module for cleaner imports:
- * ```ts
- * import { useAsyncState, useTownStreamWidget, useOnlineStatus } from '@/hooks';
- * ```
+ * Foundation hooks kept after surgical refactor.
+ * AGENTESE-specific hooks removed 2025-12-22.
  */
 
 // Async state management
@@ -16,30 +14,12 @@ export {
   type UseAsyncStateReturn,
 } from './useAsyncState';
 
-// SSE streaming hooks
+// SSE streaming (generic infrastructure)
 export {
-  useTownStreamWidget,
-  type UseTownStreamWidgetOptions,
-  type UseTownStreamWidgetResult,
-} from './useTownStreamWidget';
-
-// Town loading hook (projection-first extraction)
-export { useTownLoader } from './useTownLoader';
-
-// Brain WebSocket streaming (Phase 1 Crown Jewels completion)
-export {
-  useBrainStream,
-  type UseBrainStreamOptions,
-  type UseBrainStreamResult,
-  type BrainEvent,
-} from './useBrainStream';
-
-// Gestalt streaming (Sprint 1: Live Architecture)
-export {
-  useGestaltStream,
-  type UseGestaltStreamOptions,
-  type UseGestaltStreamReturn,
-} from './useGestaltStream';
+  useProjectedStream,
+  type StreamConfig,
+  type UseProjectedStreamResult,
+} from './useProjectedStream';
 
 // Performance optimization
 export { useBatchedEvents } from './useBatchedEvents';
@@ -52,41 +32,6 @@ export {
   LayoutContextProvider,
   DEFAULT_LAYOUT_CONTEXT,
 } from './useLayoutContext';
-
-// Design polynomial state machine (mirrors Python DESIGN_POLYNOMIAL)
-export {
-  useDesignPolynomial,
-  useAnimationCoordination,
-  densityFromWidth,
-  contentLevelFromWidth,
-  designTransition,
-  inferSyncStrategy,
-  computeTemporalOverlap,
-  DEFAULT_STATE as DEFAULT_DESIGN_STATE,
-  type Density,
-  type ContentLevel,
-  type MotionType,
-  type AnimationPhaseName,
-  type AnimationPhase,
-  type SyncStrategy,
-  type AnimationConstraint,
-  type DesignState,
-  type DesignInput,
-  type DesignOutput,
-  type UseDesignPolynomialOptions,
-  type UseDesignPolynomialResult,
-  type UseAnimationCoordinationOptions,
-  type UseAnimationCoordinationResult,
-} from './useDesignPolynomial';
-
-// Design gateway (bridges local state with AGENTESE backend)
-export {
-  useDesignGateway,
-  type OperadInfo,
-  type OperadOperationsInfo,
-  type UseDesignGatewayOptions,
-  type UseDesignGatewayResult,
-} from './useDesignGateway';
 
 // Connectivity
 export { useOnlineStatus } from './useOnlineStatus';
@@ -117,23 +62,7 @@ export {
   type TouchGesturesState,
 } from './useTouchGestures';
 
-// Note: Emergence visualization hooks (useCymatics, useGrowthAnimation) removed 2025-12-21
-
-// Teaching mode (Phase 4: Teaching Layer)
-export {
-  useTeachingMode,
-  useTeachingModeContext,
-  useTeachingModeSafe,
-  TeachingModeProvider,
-  TeachingToggle,
-  WhenTeaching,
-  WhenNotTeaching,
-  type TeachingModeState,
-  type TeachingModeProviderProps,
-  type TeachingToggleProps,
-} from './useTeachingMode';
-
-// Breathing animation (Town Renaissance: Everything Breathes)
+// Animation primitives (Everything Breathes)
 export {
   useBreathing,
   getStaggeredPhaseOffset,
@@ -142,7 +71,6 @@ export {
   type BreathingState,
 } from './useBreathing';
 
-// Crown Jewels Genesis Animation Primitives
 export {
   useGrowing,
   getStaggeredGrowthDelay,
@@ -173,186 +101,7 @@ export {
   type FlowingState,
 } from './useFlowing';
 
-// Town AGENTESE queries (Contract-Driven)
-export {
-  // Query keys
-  townQueryKeys,
-  // Town manifest
-  useTownManifest,
-  // Citizens
-  useCitizens,
-  useCitizen,
-  useCreateCitizen,
-  useUpdateCitizen,
-  // Relationships
-  useCitizenRelationships,
-  // Conversations
-  useConversationHistory,
-  useStartConversation,
-  useAddTurn,
-  // Coalitions removed (module archived)
-  // Type re-exports
-  type WorldTownManifestResponse,
-  type WorldTownCitizenListResponse,
-  type WorldTownCitizenGetResponse,
-} from './useTownQuery';
-
-// Park AGENTESE queries removed (module archived)
-
-// Forge AGENTESE queries (Contract-Driven)
-export {
-  // Query keys
-  forgeQueryKeys,
-  // Forge manifest
-  useForgeManifest,
-  // Workshops
-  useWorkshops,
-  useWorkshop,
-  useCreateWorkshop,
-  useEndWorkshop,
-  // Artisans
-  useArtisans,
-  useJoinWorkshop,
-  // Contributions
-  useContribute,
-  useContributions,
-  // Exhibitions
-  useCreateExhibition,
-  useOpenExhibition,
-  useViewExhibition,
-  // Gallery
-  useGalleryItems,
-  useAddToGallery,
-  // Festivals
-  useFestivals,
-  useCreateFestival,
-  useEnterFestival,
-  // Type re-exports
-  type WorldForgeManifestResponse,
-  type WorldForgeWorkshopListResponse,
-  type WorldForgeWorkshopGetResponse,
-  type WorldForgeArtisanListResponse,
-  type WorldForgeContributionListResponse,
-  type WorldForgeFestivalListResponse,
-} from './useForgeQuery';
-
-// Brain AGENTESE queries (Contract-Driven)
-export {
-  // Query keys
-  brainQueryKeys,
-  // Brain manifest
-  useBrainManifest,
-  // Memory queries
-  useMemorySearch,
-  useMemorySurface,
-  useMemoryCrystal,
-  useMemoryRecent,
-  useMemoryByTag,
-  useMemoryTopology,
-  // Memory mutations
-  useCaptureMemory,
-  useDeleteMemory,
-  useHealMemory,
-  // Type re-exports
-  type SelfMemoryManifestResponse,
-  type SelfMemorySearchRequest,
-  type SelfMemorySearchResponse,
-  type SelfMemoryCaptureRequest,
-  type SelfMemoryCaptureResponse,
-  type SelfMemoryTopologyResponse,
-} from './useBrainQuery';
-
-// Gestalt AGENTESE queries (Contract-Driven)
-export {
-  // Query keys
-  gestaltQueryKeys,
-  // Gestalt manifest
-  useGestaltManifest,
-  // Codebase queries
-  useCodebaseHealth,
-  useCodebaseDrift,
-  useCodebaseTopology,
-  useCodebaseModule,
-  // Codebase mutations
-  useScanCodebase,
-  // Type re-exports
-  type WorldCodebaseManifestResponse,
-  type WorldCodebaseHealthResponse,
-  type WorldCodebaseDriftResponse,
-  type WorldCodebaseTopologyResponse,
-  type WorldCodebaseModuleResponse,
-  type WorldCodebaseScanResponse,
-} from './useGestaltQuery';
-
-// Workshop AGENTESE queries (Contract-Driven)
-export {
-  // Query keys
-  workshopQueryKeys,
-  // Workshop manifest
-  useWorkshopManifest,
-  useWorkshopBuilders,
-  // Workshop mutations
-  useAssignWorkshopTask,
-  useAdvanceWorkshop,
-  useCompleteWorkshop,
-  // Type re-exports
-  type WorldTownWorkshopManifestResponse,
-  type WorldTownWorkshopBuildersResponse,
-  type WorldTownWorkshopAssignRequest,
-  type WorldTownWorkshopAssignResponse,
-  type WorldTownWorkshopAdvanceResponse,
-  type WorldTownWorkshopCompleteResponse,
-} from './useWorkshopQuery';
-
-// Differance AGENTESE queries (Contract-Driven) - Phase 5: FRUITING
-export {
-  // Query keys
-  differanceQueryKeys,
-  branchQueryKeys,
-  // Differance manifest
-  useDifferanceManifest,
-  // Heritage DAG (the crown jewel)
-  useHeritageDAG,
-  // "Why did this happen?" (explainability)
-  useWhyExplain,
-  // Ghosts (unexplored alternatives)
-  useGhosts,
-  // Navigation
-  useTraceAt,
-  useReplay,
-  // Branch operations
-  useBranchManifest,
-  useCreateBranch,
-  useExploreBranch,
-  useCompareBranches,
-  // Type re-exports
-  type DifferanceManifestResponse,
-  type BranchManifestResponse,
-  type HeritageRequest,
-  type HeritageNodeResponse,
-  type HeritageEdgeResponse,
-  type HeritageResponse,
-  type WhyRequest,
-  type WhyChosenStep,
-  type WhyResponse,
-  type GhostsRequest,
-  type GhostItem,
-  type GhostsResponse,
-  type AtRequest,
-  type AtAlternative,
-  type AtResponse,
-  type ReplayRequest,
-  type ReplayStep,
-  type ReplayResponse,
-  type BranchCreateRequest,
-  type BranchCreateResponse,
-  type BranchExploreRequest,
-  type BranchExploreResponse,
-  type BranchCompareRequest,
-  type BranchCompareResponse,
-} from './useDifferanceQuery';
-
-// Simple toast notifications (general-purpose feedback)
+// Simple toast notifications
 export {
   useSimpleToast,
   simpleToast,
@@ -360,94 +109,28 @@ export {
   type UseSimpleToastReturn,
 } from './useSimpleToast';
 
-// Chat streaming (SSE token-by-token)
+// Design polynomial state machine
 export {
-  useChatStream,
-  useChatStreamPost,
-  type StreamChunk,
-  type UseChatStreamOptions,
-  type UseChatStreamResult,
-} from './useChatStream';
-
-// Presence channel (CLI v7 Phase 4: Collaborative Canvas)
-export {
-  usePresenceChannel,
-  getCursorColor,
-  getCursorEmoji,
-  formatCursorStatus,
-  type CursorState,
-  type CursorBehavior,
-  type AgentCursor,
-  type PresenceEvent,
-  type PresenceStatus,
-  type UsePresenceChannelOptions,
-  type UsePresenceChannelReturn,
-} from './usePresenceChannel';
-
-// Circadian phase and warmth (CLI v7 Phase 5: Coworking Canvas)
-export { useCircadian, type CircadianData, type UseCircadianReturn } from './useCircadian';
-
-// =============================================================================
-// WARP Phase 2: React Projection Layer
-// =============================================================================
-
-// SceneGraph SSE streaming (world.scenery.*)
-export {
-  useSceneGraph,
-  type UseSceneGraphOptions,
-  type UseSceneGraphReturn,
-} from './useSceneGraph';
-
-// TerrariumView lens + selection management
-export {
-  useTerrariumView,
-  type UseTerrariumViewOptions,
-  type UseTerrariumViewReturn,
-} from './useTerrariumView';
-
-// VoiceGate Anti-Sausage checking (self.voice.gate.*)
-export {
-  useVoiceGate,
-  type VoiceViolation,
-  type VoiceCheckResult,
-  type VoiceReportResult,
-  type UseVoiceGateOptions,
-  type UseVoiceGateReturn,
-} from './useVoiceGate';
-
-// Lesson knowledge CRUD (self.lesson.*)
-export {
-  useTerrace,
-  type TerraceEntry,
-  type TerraceManifest,
-  type UseTerraceOptions,
-  type UseTerraceReturn,
-} from './useTerrace';
-
-// Walk Dashboard (time.walk.list → SceneGraph) - Session 7
-export {
-  useWalkDashboard,
-  type UseWalkDashboardOptions,
-  type UseWalkDashboardReturn,
-} from './useWalkDashboard';
-
-// Canvas hooks (CLI v7 Phase 5: Collaborative Canvas)
-export {
-  useCanvasLayout,
-  type LayoutOptions,
-  type DragState,
-  type UseCanvasLayoutReturn,
-} from './useCanvasLayout';
-
-export {
-  useCanvasNodes,
-  type UseCanvasNodesOptions,
-  type UseCanvasNodesReturn,
-} from './useCanvasNodes';
-
-export {
-  useUserFocus,
-  type MousePosition,
-  type UseUserFocusOptions,
-  type UseUserFocusReturn,
-} from './useUserFocus';
+  useDesignPolynomial,
+  useAnimationCoordination,
+  densityFromWidth,
+  contentLevelFromWidth,
+  designTransition,
+  inferSyncStrategy,
+  computeTemporalOverlap,
+  DEFAULT_STATE as DEFAULT_DESIGN_STATE,
+  type Density,
+  type ContentLevel,
+  type MotionType,
+  type AnimationPhaseName,
+  type AnimationPhase,
+  type SyncStrategy,
+  type AnimationConstraint,
+  type DesignState,
+  type DesignInput,
+  type DesignOutput,
+  type UseDesignPolynomialOptions,
+  type UseDesignPolynomialResult,
+  type UseAnimationCoordinationOptions,
+  type UseAnimationCoordinationResult,
+} from './useDesignPolynomial';

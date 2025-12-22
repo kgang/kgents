@@ -388,3 +388,26 @@ export const TOP_PANEL_HEIGHTS = {
   /** Maximum expanded height */
   max: 400,
 } as const;
+
+// =============================================================================
+// Animation Coordination Types (formerly in useDesignPolynomial)
+// =============================================================================
+
+/**
+ * Animation phase for temporal coherence.
+ */
+export interface AnimationPhase {
+  name: string;
+  startTime: number;
+  duration: number;
+  isPlaying: boolean;
+}
+
+/**
+ * Animation constraint for drawer coordination.
+ */
+export interface AnimationConstraint {
+  contextId: string;
+  duration: number;
+  isAnimating: boolean;
+}
