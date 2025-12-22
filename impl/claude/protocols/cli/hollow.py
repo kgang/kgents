@@ -118,9 +118,8 @@ COMMAND_REGISTRY: dict[str, str] = {
     "park": "protocols.cli.handlers.park_thin:cmd_park",
     # ==========================================================================
     # Tiny Atelier (Crown Jewel - Creative Workshop)
-    # Uses thin routing shim - all logic in services/atelier/
     # ==========================================================================
-    "atelier": "protocols.cli.handlers.atelier_thin:cmd_atelier",
+    "atelier": "protocols.cli.handlers.atelier:cmd_atelier",
     # ==========================================================================
     # Holographic Brain (Crown Jewel - Memory)
     # Uses thin routing shim - all logic in services/brain/
@@ -131,6 +130,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Uses thin routing shim - all logic in services/witness/
     # ==========================================================================
     "witness": "protocols.cli.handlers.witness_thin:cmd_witness",
+    # ==========================================================================
+    # Fusion: Symmetric Supersession (Dialectical Decision Witnessing)
+    # Captures reasoning traces for decisions as they happen
+    # ==========================================================================
+    "decide": "services.fusion.cli:main",
     # ==========================================================================
     # Shortcuts (ergonomic aliases for common operations)
     # ==========================================================================
@@ -144,14 +148,12 @@ COMMAND_REGISTRY: dict[str, str] = {
     "constrain": "protocols.cli.handlers.constrain:cmd_constrain",
     "yes-and": "protocols.cli.handlers.yes_and:cmd_yes_and",
     "surprise-me": "protocols.cli.handlers.surprise_me:cmd_surprise_me",
-    "project": "protocols.cli.handlers.project:cmd_project",
     "why": "protocols.cli.handlers.why:cmd_why",
     "tension": "protocols.cli.handlers.tension:cmd_tension",
     # ==========================================================================
-    # v3: Shortcut and Legacy Management
+    # v3: Shortcut Management
     # ==========================================================================
     "shortcut": "protocols.cli.shortcuts:cmd_shortcut",
-    "legacy": "protocols.cli.legacy:cmd_legacy",
     # ==========================================================================
     # v3: Query and Subscribe Commands
     # ==========================================================================
@@ -166,36 +168,13 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "grow": "protocols.cli.handlers.grow:cmd_grow",
     # ==========================================================================
-    # Prompt: Evergreen Prompt System (concept.prompt.*)
-    # ==========================================================================
-    "prompt": "protocols.cli.handlers.prompt:cmd_prompt",
-    # ==========================================================================
-    # Gardener: Development Session Management (concept.gardener.*)
-    # Uses thin routing shim - all logic in agents/gardener/, services/gardener/
+    # Gardener: Development Session Management
     # ==========================================================================
     "gardener": "protocols.cli.handlers.gardener_thin:cmd_gardener",
     # ==========================================================================
-    # Gardener-Logos: Garden Tending (Phase 2 CLI)
-    # ==========================================================================
-    "garden": "protocols.cli.handlers.garden:cmd_garden",
-    "tend": "protocols.cli.handlers.tend:cmd_tend",
-    "plot": "protocols.cli.handlers.plot:cmd_plot",
-    # ==========================================================================
-    # Garden Protocol: Session Management (self.forest.session.*)
-    # Sessions are the primary unit of planning. Plans emerge from sessions.
+    # Session Management
     # ==========================================================================
     "session": "protocols.cli.handlers.session:cmd_session",
-    # Tending verb aliases (shortcuts)
-    "observe": "protocols.cli.handlers.tend:cmd_observe",
-    "prune": "protocols.cli.handlers.tend:cmd_prune",
-    "graft": "protocols.cli.handlers.tend:cmd_graft",
-    "water": "protocols.cli.handlers.tend:cmd_water",
-    "rotate": "protocols.cli.handlers.tend:cmd_rotate",
-    # Note: "wait" conflicts with potential shell command, use "kg tend wait"
-    # ==========================================================================
-    # Chat: Session Management (Phase 4 - Chat Protocol Persistence)
-    # ==========================================================================
-    "chat": "protocols.cli.handlers.chat:cmd_chat",
     # ==========================================================================
     # Coffee: Morning Coffee Liminal Transition Protocol (time.coffee.*)
     # ==========================================================================

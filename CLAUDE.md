@@ -48,6 +48,63 @@ If the answer to any is "yes," revise before ending.
 
 ---
 
+## 🔮 DECISION WITNESSING: Capture Reasoning Traces
+
+> *"The proof IS the decision. The mark IS the witness."*
+
+**When to witness decisions**: Architectural choices, design trade-offs, significant implementation decisions, or any choice worth remembering.
+
+### Quick Capture (Trivial Decisions)
+
+```bash
+# Single decision with reasoning
+kg decide --fast "Use Python 3.12" --reasoning "Latest stable, team familiar"
+
+# Capture that we decided something
+kg decide --fast "Added caching layer" --reasoning "API was too slow (200ms → 20ms)"
+```
+
+### Full Dialectic (Significant Decisions)
+
+When Kent and Claude have different views, capture the synthesis:
+
+```bash
+kg decide --kent "Use LangChain" --kent-reasoning "Scale, resources, production" \
+          --claude "Build kgents" --claude-reasoning "Novel contribution, joy-inducing" \
+          --synthesis "Build minimal kernel, validate, then decide" \
+          --why "Avoids both risks: years of philosophy without validation AND abandoning ideas untested"
+```
+
+### Guided Experience (Interactive)
+
+```bash
+kg decide
+# Walks through: topic → Kent's view → Claude's view → synthesis
+```
+
+### When Claude Should Invoke This
+
+1. **After making architectural decisions** with Kent
+2. **When Kent asks "should we..."** and you reach a conclusion
+3. **When you identify a trade-off** and resolve it
+4. **Proactively** for decisions worth remembering
+
+Example during a session:
+```
+Kent: "Should we use WebSockets or SSE for real-time updates?"
+Claude: [discusses trade-offs]
+Kent: "Let's go with SSE"
+Claude: "I'll record this decision..."
+
+kg decide --kent "WebSockets" --kent-reasoning "Bidirectional, familiar" \
+          --claude "SSE" --claude-reasoning "Simpler, HTTP-native, sufficient for our use case" \
+          --synthesis "Use SSE" --why "Unidirectional is enough, simpler ops"
+```
+
+**Philosophy**: Decisions without traces are reflexes. Decisions with traces are agency.
+
+---
+
 ## 📚 SKILLS: Your First Stop
 
 > *"17 skills are necessary and sufficient to build any kgents component."*

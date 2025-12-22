@@ -117,6 +117,19 @@ class ActionResultPersisted:
 
 
 @dataclass
+class MarkResult:
+    """Result of a mark save operation."""
+
+    mark_id: str
+    action: str
+    reasoning: str | None
+    principles: list[str]
+    author: str
+    timestamp: datetime
+    datum_id: str | None = None
+
+
+@dataclass
 class WitnessStatus:
     """Witness health status."""
 
@@ -690,6 +703,152 @@ class WitnessPersistence:
             ]
 
     # =========================================================================
+    # Mark Operations (Witness-Fusion UX)
+    # =========================================================================
+
+    async def save_mark(
+        self,
+        action: str,
+        reasoning: str | None = None,
+        principles: list[str] | None = None,
+        author: str = "kent",
+        session_id: str | None = None,
+        repository_path: str | None = None,
+    ) -> "MarkResult":
+        """
+        Save a mark to dual-track storage.
+
+        AGENTESE: world.witness.mark / time.witness.mark
+
+        Dual-track storage:
+        1. Store semantic content in D-gent (for associative search)
+        2. Store queryable metadata in SQL (for fast recency queries)
+
+        Args:
+            action: What was done
+            reasoning: Why (optional but encouraged)
+            principles: Which principles honored
+            author: Who made the mark
+            session_id: Optional session context
+            repository_path: Optional repository context
+
+        Returns:
+            MarkResult with mark_id and storage details
+        """
+        from models.witness import WitnessMark
+
+        mark_id = f"mark-{uuid.uuid4().hex[:12]}"
+
+        # 1. Store semantic content in D-gent
+        datum_metadata = {
+            "type": "witness_mark",
+            "author": author,
+            "principles": ",".join(principles or []),
+        }
+
+        content_parts = [action]
+        if reasoning:
+            content_parts.append(f"Reasoning: {reasoning}")
+        if principles:
+            content_parts.append(f"Principles: {', '.join(principles)}")
+
+        datum = Datum(
+            id=f"witness-{mark_id}",
+            content="\n".join(content_parts).encode("utf-8"),
+            created_at=time.time(),
+            causal_parent=None,
+            metadata=datum_metadata,
+        )
+
+        datum_id = await self.dgent.put(datum)
+
+        # 2. Store queryable metadata in SQL
+        async with self.session_factory() as session:
+            mark_row = WitnessMark(
+                id=mark_id,
+                action=action,
+                reasoning=reasoning,
+                principles=list(principles or []),
+                author=author,
+                session_id=session_id,
+                datum_id=datum_id,
+                repository_path=repository_path,
+            )
+            session.add(mark_row)
+            await session.commit()
+
+        result = MarkResult(
+            mark_id=mark_id,
+            action=action,
+            reasoning=reasoning,
+            principles=list(principles or []),
+            author=author,
+            timestamp=datetime.now(UTC),
+            datum_id=datum_id,
+        )
+
+        # Fire-and-forget trace recording
+        self._record_trace(
+            "save_mark",
+            (action[:100],),
+            mark_id,
+            f"Mark by {author}",
+        )
+
+        return result
+
+    async def get_marks(
+        self,
+        limit: int = 20,
+        author: str | None = None,
+        session_id: str | None = None,
+        since: datetime | None = None,
+    ) -> list["MarkResult"]:
+        """
+        Get recent marks with optional filters.
+
+        AGENTESE: world.witness.marks
+
+        Args:
+            limit: Maximum marks to return (default 20)
+            author: Filter by author
+            session_id: Filter by session
+            since: Filter by created_at > since
+
+        Returns:
+            List of MarkResult objects, newest first
+        """
+        from models.witness import WitnessMark
+
+        async with self.session_factory() as session:
+            stmt = select(WitnessMark).order_by(WitnessMark.created_at.desc())
+
+            if author:
+                stmt = stmt.where(WitnessMark.author == author)
+            if session_id:
+                stmt = stmt.where(WitnessMark.session_id == session_id)
+            if since:
+                stmt = stmt.where(WitnessMark.created_at > since)
+
+            stmt = stmt.limit(limit)
+
+            result = await session.execute(stmt)
+            rows = result.scalars().all()
+
+            return [
+                MarkResult(
+                    mark_id=row.id,
+                    action=row.action,
+                    reasoning=row.reasoning,
+                    principles=list(row.principles) if row.principles else [],
+                    author=row.author,
+                    timestamp=row.created_at,
+                    datum_id=row.datum_id,
+                )
+                for row in rows
+            ]
+
+    # =========================================================================
     # Status Operations
     # =========================================================================
 
@@ -723,14 +882,22 @@ class WitnessPersistence:
             trust_count = await session.execute(select(func.count()).select_from(WitnessTrust))
             total_trust = trust_count.scalar() or 0
 
+        # Detect backend from engine dialect
+        try:
+            engine = self.session_factory.kw.get("bind")
+            if engine and hasattr(engine, "dialect"):
+                backend = engine.dialect.name
+            else:
+                backend = "unknown"
+        except Exception:
+            backend = "unknown"
+
         return WitnessStatus(
             total_thoughts=total_thoughts,
             total_actions=total_actions,
             trust_count=total_trust,
             reversible_actions=reversible_actions,
-            storage_backend=(
-                "postgres" if "postgres" in str(self.session_factory).lower() else "sqlite"
-            ),
+            storage_backend=backend,
         )
 
     # =========================================================================
@@ -771,5 +938,6 @@ __all__ = [
     "TrustResult",
     "EscalationResult",
     "ActionResultPersisted",
+    "MarkResult",
     "WitnessStatus",
 ]

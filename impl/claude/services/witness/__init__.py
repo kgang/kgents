@@ -103,12 +103,14 @@ from .lesson import (
 
 # Mark (renamed from TraceNode)
 from .mark import (
+    EvidenceTier,
     LinkRelation,
     Mark,
     MarkId,
     MarkLink,
     NPhase,
     PlanPath,
+    Proof,
     Response,
     Stimulus,
     UmweltSnapshot,
@@ -400,12 +402,14 @@ __all__ = [
     "reset_lesson_store",
     "set_lesson_store",
     # Mark (renamed from TraceNode)
+    "EvidenceTier",
     "LinkRelation",
     "Mark",
     "MarkId",
     "MarkLink",
     "NPhase",
     "PlanPath",
+    "Proof",
     "Response",
     "Stimulus",
     "UmweltSnapshot",

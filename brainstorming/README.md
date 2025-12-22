@@ -33,6 +33,29 @@ Extends Agent-as-Witness with radical evolution:
 
 Together these form the philosophical core of kgents.
 
+### Spec (Compressed)
+
+The brainstorming has been distilled into:
+
+**`spec/protocols/witness-supersession.md`** — 322 lines from 1177 lines (3.6x compression)
+
+---
+
+## Implementation Status
+
+| Phase | Delivers | Status |
+|-------|----------|--------|
+| **Phase 0** | Mark, MarkStore, `time.witness.mark`, `self.witness` | ✅ Complete |
+| Phase 1 | Walk (session streams), explicit Toulmin | Planned |
+| Phase 2 | Stigmergic memory, pattern extraction | Planned |
+| Phase 3 | ASHC integration, causal learning | Planned |
+| Phase 4 | Dialectical engine, `self.fusion.*` | Planned |
+| Phase 5 | Back-solved coherence, value drift detection | Planned |
+
+**Phase 0 was already implemented** when the PLANs were written. 47 tests pass.
+
+---
+
 ## Archive Structure
 
 ```

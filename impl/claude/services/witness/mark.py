@@ -401,6 +401,224 @@ class Response:
 
 
 # =============================================================================
+# Evidence Tier (Hierarchy of Justification)
+# =============================================================================
+
+
+class EvidenceTier(Enum):
+    """
+    Hierarchy of evidence types for justification.
+
+    From spec/protocols/witness-supersession.md:
+        CATEGORICAL = 1     # Mathematical (laws hold)
+        EMPIRICAL = 2       # Scientific (ASHC runs)
+        AESTHETIC = 3       # Hardy criteria (inevitability, unexpectedness, economy)
+        GENEALOGICAL = 4    # Pattern archaeology (git history)
+        SOMATIC = 5         # The Mirror Test (felt sense)
+
+    Higher tiers are more subjective but may trump lower tiers in human systems.
+    """
+
+    CATEGORICAL = 1  # Mathematical: proofs, laws, invariants
+    EMPIRICAL = 2  # Scientific: tests, benchmarks, measurements
+    AESTHETIC = 3  # Hardy: inevitability, unexpectedness, economy
+    GENEALOGICAL = 4  # Archaeology: git history, pattern evolution
+    SOMATIC = 5  # Mirror Test: "Does this feel like me on my best day?"
+
+
+# =============================================================================
+# Proof: Toulmin Argumentation Structure
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class Proof:
+    """
+    Defeasible reasoning structure based on Toulmin's argumentation model.
+
+    From spec/protocols/witness-supersession.md:
+        "The proof IS the decision. The mark IS the witness."
+
+    Toulmin's model captures how humans actually argue, not just formal logic:
+    - data: The evidence supporting the claim
+    - warrant: The reasoning connecting data to claim
+    - claim: The conclusion being argued for
+    - backing: Support for the warrant itself
+    - qualifier: Degree of certainty ("definitely", "probably", "possibly")
+    - rebuttals: Conditions that would defeat the argument
+
+    Why Toulmin?
+        - Captures defeasibility (can be overridden by new evidence)
+        - Models real human reasoning patterns
+        - Enables AI-human dialectical fusion
+        - Supports Article III: Supersession Rights
+
+    Example:
+        >>> proof = Proof(
+        ...     data="3 hours, 45K tokens invested",
+        ...     warrant="Infrastructure investment enables future velocity",
+        ...     claim="This refactoring was worthwhile",
+        ...     backing="CLAUDE.md: 'DI > mocking' pattern saves 30% test time",
+        ...     qualifier="almost certainly",
+        ...     rebuttals=("unless the API changes completely",),
+        ...     tier=EvidenceTier.EMPIRICAL,
+        ... )
+    """
+
+    # Core Toulmin structure
+    data: str  # Evidence: "Tests pass", "3 hours invested", "Pattern X found in git"
+    warrant: str  # Reasoning: "Passing tests indicate correctness"
+    claim: str  # Conclusion: "This refactoring was worthwhile"
+
+    # Extended Toulmin
+    backing: str = ""  # Support for warrant: "CLAUDE.md says X"
+    qualifier: str = "probably"  # Confidence: "definitely", "probably", "possibly"
+    rebuttals: tuple[str, ...] = ()  # Defeaters: "unless API changes"
+
+    # Evidence tier (from spec)
+    tier: EvidenceTier = EvidenceTier.EMPIRICAL
+
+    # Principles referenced (from Constitution)
+    principles: tuple[str, ...] = ()  # e.g., ("composable", "generative")
+
+    @classmethod
+    def categorical(
+        cls,
+        data: str,
+        warrant: str,
+        claim: str,
+        principles: tuple[str, ...] = (),
+    ) -> Proof:
+        """Create a categorical (mathematical) proof."""
+        return cls(
+            data=data,
+            warrant=warrant,
+            claim=claim,
+            qualifier="definitely",
+            tier=EvidenceTier.CATEGORICAL,
+            principles=principles,
+        )
+
+    @classmethod
+    def empirical(
+        cls,
+        data: str,
+        warrant: str,
+        claim: str,
+        backing: str = "",
+        principles: tuple[str, ...] = (),
+    ) -> Proof:
+        """Create an empirical (test/measurement) proof."""
+        return cls(
+            data=data,
+            warrant=warrant,
+            claim=claim,
+            backing=backing,
+            qualifier="almost certainly",
+            tier=EvidenceTier.EMPIRICAL,
+            principles=principles,
+        )
+
+    @classmethod
+    def aesthetic(
+        cls,
+        data: str,
+        warrant: str,
+        claim: str,
+        principles: tuple[str, ...] = (),
+    ) -> Proof:
+        """Create an aesthetic (Hardy criteria) proof."""
+        return cls(
+            data=data,
+            warrant=warrant,
+            claim=claim,
+            qualifier="arguably",
+            tier=EvidenceTier.AESTHETIC,
+            principles=principles,
+        )
+
+    @classmethod
+    def somatic(
+        cls,
+        claim: str,
+        feeling: str = "feels right",
+    ) -> Proof:
+        """
+        Create a somatic (Mirror Test) proof.
+
+        The Mirror Test: "Does this feel like me on my best day?"
+        This is Kent's absolute veto (Article IV: The Disgust Veto).
+        """
+        return cls(
+            data=feeling,
+            warrant="The Mirror Test: felt sense of authenticity",
+            claim=claim,
+            qualifier="personally",
+            tier=EvidenceTier.SOMATIC,
+            principles=("ethical", "joy-inducing"),
+        )
+
+    def strengthen(self, new_backing: str) -> Proof:
+        """Return new Proof with added backing (immutable pattern)."""
+        combined = f"{self.backing}; {new_backing}" if self.backing else new_backing
+        return Proof(
+            data=self.data,
+            warrant=self.warrant,
+            claim=self.claim,
+            backing=combined,
+            qualifier=self.qualifier,
+            rebuttals=self.rebuttals,
+            tier=self.tier,
+            principles=self.principles,
+        )
+
+    def with_rebuttal(self, rebuttal: str) -> Proof:
+        """Return new Proof with added rebuttal (immutable pattern)."""
+        return Proof(
+            data=self.data,
+            warrant=self.warrant,
+            claim=self.claim,
+            backing=self.backing,
+            qualifier=self.qualifier,
+            rebuttals=self.rebuttals + (rebuttal,),
+            tier=self.tier,
+            principles=self.principles,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for serialization."""
+        return {
+            "data": self.data,
+            "warrant": self.warrant,
+            "claim": self.claim,
+            "backing": self.backing,
+            "qualifier": self.qualifier,
+            "rebuttals": list(self.rebuttals),
+            "tier": self.tier.name,
+            "principles": list(self.principles),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Proof:
+        """Create from dictionary."""
+        return cls(
+            data=data.get("data", ""),
+            warrant=data.get("warrant", ""),
+            claim=data.get("claim", ""),
+            backing=data.get("backing", ""),
+            qualifier=data.get("qualifier", "probably"),
+            rebuttals=tuple(data.get("rebuttals", [])),
+            tier=EvidenceTier[data.get("tier", "EMPIRICAL")],
+            principles=tuple(data.get("principles", [])),
+        )
+
+    def __repr__(self) -> str:
+        """Concise representation."""
+        claim_preview = self.claim[:40] + "..." if len(self.claim) > 40 else self.claim
+        return f"Proof({self.qualifier}: '{claim_preview}', tier={self.tier.name})"
+
+
+# =============================================================================
 # Mark: The Atomic Unit
 # =============================================================================
 
@@ -455,6 +673,9 @@ class Mark:
     # N-Phase context (if within a workflow)
     phase: NPhase | None = None
     walk_id: WalkId | None = None  # If within a Walk
+
+    # Justification (Phase 1: Explicit Toulmin)
+    proof: Proof | None = None  # Toulmin argumentation structure
 
     # Metadata
     tags: tuple[str, ...] = ()
@@ -524,6 +745,24 @@ class Mark:
             timestamp=self.timestamp,
             phase=self.phase,
             walk_id=self.walk_id,
+            proof=self.proof,
+            tags=self.tags,
+            metadata=self.metadata,
+        )
+
+    def with_proof(self, proof: Proof) -> Mark:
+        """Return new Mark with proof attached (immutable pattern)."""
+        return Mark(
+            id=self.id,
+            origin=self.origin,
+            stimulus=self.stimulus,
+            response=self.response,
+            umwelt=self.umwelt,
+            links=self.links,
+            timestamp=self.timestamp,
+            phase=self.phase,
+            walk_id=self.walk_id,
+            proof=proof,
             tags=self.tags,
             metadata=self.metadata,
         )
@@ -540,6 +779,7 @@ class Mark:
             "timestamp": self.timestamp.isoformat(),
             "phase": self.phase.value if self.phase else None,
             "walk_id": str(self.walk_id) if self.walk_id else None,
+            "proof": self.proof.to_dict() if self.proof else None,
             "tags": list(self.tags),
             "metadata": self.metadata,
         }
@@ -548,6 +788,7 @@ class Mark:
     def from_dict(cls, data: dict[str, Any]) -> Mark:
         """Create from dictionary."""
         phase = NPhase(data["phase"]) if data.get("phase") else None
+        proof = Proof.from_dict(data["proof"]) if data.get("proof") else None
 
         return cls(
             id=MarkId(data["id"]),
@@ -559,6 +800,7 @@ class Mark:
             timestamp=datetime.fromisoformat(data["timestamp"]),
             phase=phase,
             walk_id=WalkId(data["walk_id"]) if data.get("walk_id") else None,
+            proof=proof,
             tags=tuple(data.get("tags", [])),
             metadata=data.get("metadata", {}),
         )
@@ -602,6 +844,9 @@ __all__ = [
     # Stimulus/Response
     "Stimulus",
     "Response",
+    # Phase 1: Toulmin Argumentation
+    "EvidenceTier",
+    "Proof",
     # Core (new name)
     "Mark",
     # Backwards compatibility

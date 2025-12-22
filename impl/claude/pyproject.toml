@@ -33,6 +33,7 @@ dependencies = [
     # SQLAlchemy ORM (async + asyncpg for Postgres, aiosqlite for SQLite)
     "sqlalchemy[asyncio]>=2.0.0",
     "pytest-asyncio>=1.3.0",
+    "psycopg2-binary>=2.9.11",
 ]
 
 [project.optional-dependencies]
@@ -60,6 +61,7 @@ packages = ["bootstrap", "agents", "runtime", "protocols", "services"]
 kg = "protocols.cli.hollow:main"
 kgents = "protocols.cli.hollow:main"
 kgentsd = "services.witness.cli:main"
+km = "protocols.cli.km:main"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

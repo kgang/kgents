@@ -1005,3 +1005,340 @@ class TestCausalGraphNavigation:
         assert store.get_continuation(node.id) == []
         assert store.get_branches(node.id) == []
         assert store.get_fulfillments(node.id) == []
+
+
+# =============================================================================
+# Phase 1: Proof (Toulmin Argumentation) Tests
+# =============================================================================
+
+from services.witness import EvidenceTier, Proof
+
+
+class TestProofCreation:
+    """Tests for Proof dataclass creation and factory methods."""
+
+    def test_proof_basic_creation(self) -> None:
+        """Create Proof with all fields."""
+        proof = Proof(
+            data="3 hours, 45K tokens invested",
+            warrant="Infrastructure investment enables future velocity",
+            claim="This refactoring was worthwhile",
+            backing="CLAUDE.md: 'DI > mocking' pattern saves 30% test time",
+            qualifier="almost certainly",
+            rebuttals=("unless the API changes completely",),
+            tier=EvidenceTier.EMPIRICAL,
+            principles=("composable", "generative"),
+        )
+
+        assert proof.data == "3 hours, 45K tokens invested"
+        assert proof.warrant == "Infrastructure investment enables future velocity"
+        assert proof.claim == "This refactoring was worthwhile"
+        assert proof.backing == "CLAUDE.md: 'DI > mocking' pattern saves 30% test time"
+        assert proof.qualifier == "almost certainly"
+        assert proof.rebuttals == ("unless the API changes completely",)
+        assert proof.tier == EvidenceTier.EMPIRICAL
+        assert proof.principles == ("composable", "generative")
+
+    def test_proof_defaults(self) -> None:
+        """Proof has sensible defaults."""
+        proof = Proof(
+            data="tests pass",
+            warrant="passing tests indicate correctness",
+            claim="code is correct",
+        )
+
+        assert proof.backing == ""
+        assert proof.qualifier == "probably"
+        assert proof.rebuttals == ()
+        assert proof.tier == EvidenceTier.EMPIRICAL
+        assert proof.principles == ()
+
+    def test_proof_categorical_factory(self) -> None:
+        """Proof.categorical() creates mathematical proof."""
+        proof = Proof.categorical(
+            data="Id >> f ≡ f ≡ f >> Id",
+            warrant="Identity law holds",
+            claim="Agent satisfies category laws",
+            principles=("composable",),
+        )
+
+        assert proof.tier == EvidenceTier.CATEGORICAL
+        assert proof.qualifier == "definitely"
+        assert proof.principles == ("composable",)
+
+    def test_proof_empirical_factory(self) -> None:
+        """Proof.empirical() creates test-based proof."""
+        proof = Proof.empirical(
+            data="47 tests pass in 0.53s",
+            warrant="Comprehensive test coverage indicates correctness",
+            claim="Mark implementation is correct",
+            backing="test_trace_node.py covers all Mark laws",
+            principles=("composable", "generative"),
+        )
+
+        assert proof.tier == EvidenceTier.EMPIRICAL
+        assert proof.qualifier == "almost certainly"
+        assert proof.backing == "test_trace_node.py covers all Mark laws"
+
+    def test_proof_aesthetic_factory(self) -> None:
+        """Proof.aesthetic() creates Hardy-criteria proof."""
+        proof = Proof.aesthetic(
+            data="Single dataclass captures justification essence",
+            warrant="Inevitability: this is the right abstraction",
+            claim="Proof design is elegant",
+            principles=("tasteful", "generative"),
+        )
+
+        assert proof.tier == EvidenceTier.AESTHETIC
+        assert proof.qualifier == "arguably"
+
+    def test_proof_somatic_factory(self) -> None:
+        """Proof.somatic() creates Mirror Test proof."""
+        proof = Proof.somatic(
+            claim="This feels like Kent on his best day",
+            feeling="deeply right",
+        )
+
+        assert proof.tier == EvidenceTier.SOMATIC
+        assert proof.qualifier == "personally"
+        assert proof.data == "deeply right"
+        assert "Mirror Test" in proof.warrant
+        assert "ethical" in proof.principles
+        assert "joy-inducing" in proof.principles
+
+
+class TestProofImmutability:
+    """Tests for Proof immutability (frozen=True)."""
+
+    def test_proof_is_frozen(self) -> None:
+        """Proof cannot be modified after creation."""
+        proof = Proof(data="test", warrant="test", claim="test")
+
+        with pytest.raises(FrozenInstanceError):
+            proof.claim = "modified"  # type: ignore[misc]
+
+    def test_proof_strengthen_returns_new_instance(self) -> None:
+        """strengthen() returns new Proof with added backing."""
+        original = Proof.empirical(
+            data="tests pass",
+            warrant="passing tests indicate correctness",
+            claim="code works",
+            backing="unit tests",
+        )
+
+        strengthened = original.strengthen("integration tests also pass")
+
+        # Original unchanged
+        assert original.backing == "unit tests"
+        # New instance has combined backing
+        assert strengthened.backing == "unit tests; integration tests also pass"
+        assert strengthened is not original
+
+    def test_proof_with_rebuttal_returns_new_instance(self) -> None:
+        """with_rebuttal() returns new Proof with added rebuttal."""
+        original = Proof.empirical(
+            data="performance improved",
+            warrant="benchmarks show 10x speedup",
+            claim="optimization was worthwhile",
+        )
+
+        with_rebuttal = original.with_rebuttal("unless memory usage is a concern")
+
+        # Original unchanged
+        assert original.rebuttals == ()
+        # New instance has rebuttal
+        assert with_rebuttal.rebuttals == ("unless memory usage is a concern",)
+        assert with_rebuttal is not original
+
+
+class TestProofSerialization:
+    """Tests for Proof serialization."""
+
+    def test_proof_to_dict(self) -> None:
+        """to_dict() serializes all fields."""
+        proof = Proof(
+            data="3 hours invested",
+            warrant="time investment pays off",
+            claim="worthwhile effort",
+            backing="historical evidence",
+            qualifier="almost certainly",
+            rebuttals=("unless project cancelled",),
+            tier=EvidenceTier.EMPIRICAL,
+            principles=("composable", "generative"),
+        )
+
+        d = proof.to_dict()
+
+        assert d["data"] == "3 hours invested"
+        assert d["warrant"] == "time investment pays off"
+        assert d["claim"] == "worthwhile effort"
+        assert d["backing"] == "historical evidence"
+        assert d["qualifier"] == "almost certainly"
+        assert d["rebuttals"] == ["unless project cancelled"]
+        assert d["tier"] == "EMPIRICAL"
+        assert d["principles"] == ["composable", "generative"]
+
+    def test_proof_from_dict(self) -> None:
+        """from_dict() restores Proof correctly."""
+        data = {
+            "data": "tests pass",
+            "warrant": "tests indicate correctness",
+            "claim": "code is correct",
+            "backing": "comprehensive suite",
+            "qualifier": "definitely",
+            "rebuttals": ["unless tests are wrong"],
+            "tier": "CATEGORICAL",
+            "principles": ["composable"],
+        }
+
+        proof = Proof.from_dict(data)
+
+        assert proof.data == "tests pass"
+        assert proof.warrant == "tests indicate correctness"
+        assert proof.claim == "code is correct"
+        assert proof.backing == "comprehensive suite"
+        assert proof.qualifier == "definitely"
+        assert proof.rebuttals == ("unless tests are wrong",)
+        assert proof.tier == EvidenceTier.CATEGORICAL
+        assert proof.principles == ("composable",)
+
+    def test_proof_roundtrip(self) -> None:
+        """Proof survives to_dict -> from_dict roundtrip."""
+        original = Proof.empirical(
+            data="complex evidence",
+            warrant="sophisticated reasoning",
+            claim="important conclusion",
+            backing="deep support",
+            principles=("tasteful", "curated", "ethical"),
+        )
+
+        restored = Proof.from_dict(original.to_dict())
+
+        assert restored.data == original.data
+        assert restored.warrant == original.warrant
+        assert restored.claim == original.claim
+        assert restored.backing == original.backing
+        assert restored.qualifier == original.qualifier
+        assert restored.tier == original.tier
+        assert restored.principles == original.principles
+
+
+class TestProofIntegrationWithMark:
+    """Tests for Mark with Proof field."""
+
+    def test_mark_with_proof(self) -> None:
+        """Mark can carry a Proof."""
+        proof = Proof.empirical(
+            data="Refactored DI container",
+            warrant="DI enables Crown Jewel pattern",
+            claim="Refactoring was worthwhile",
+            principles=("composable", "generative"),
+        )
+
+        mark = Mark(
+            origin="witness",
+            stimulus=Stimulus.from_prompt("Refactor request"),
+            response=Response.thought("Completed refactoring"),
+            proof=proof,
+        )
+
+        assert mark.proof is not None
+        assert mark.proof.claim == "Refactoring was worthwhile"
+        assert mark.proof.tier == EvidenceTier.EMPIRICAL
+
+    def test_mark_without_proof(self) -> None:
+        """Mark works without Proof (backwards compatible)."""
+        mark = Mark.from_thought("Simple thought", "git")
+
+        assert mark.proof is None
+
+    def test_mark_with_proof_method(self) -> None:
+        """with_proof() attaches Proof to existing Mark."""
+        mark = Mark.from_thought("Initial thought", "git")
+        assert mark.proof is None
+
+        proof = Proof.somatic(claim="Feels right")
+        mark_with_proof = mark.with_proof(proof)
+
+        # Original unchanged
+        assert mark.proof is None
+        # New mark has proof
+        assert mark_with_proof.proof is not None
+        assert mark_with_proof.proof.claim == "Feels right"
+        # Other fields preserved
+        assert mark_with_proof.id == mark.id
+        assert mark_with_proof.origin == mark.origin
+
+    def test_mark_with_proof_serialization(self) -> None:
+        """Mark with Proof survives serialization."""
+        proof = Proof.categorical(
+            data="Laws verified",
+            warrant="Category laws are necessary",
+            claim="Agent is valid",
+        )
+        mark = Mark(
+            origin="witness",
+            stimulus=Stimulus.from_prompt("Test"),
+            response=Response.thought("Result"),
+            proof=proof,
+        )
+
+        # Serialize and restore
+        data = mark.to_dict()
+        restored = Mark.from_dict(data)
+
+        assert restored.proof is not None
+        assert restored.proof.claim == "Agent is valid"
+        assert restored.proof.tier == EvidenceTier.CATEGORICAL
+
+    def test_mark_without_proof_serialization(self) -> None:
+        """Mark without Proof serializes correctly."""
+        mark = Mark.from_thought("No proof thought", "git")
+
+        data = mark.to_dict()
+        assert data["proof"] is None
+
+        restored = Mark.from_dict(data)
+        assert restored.proof is None
+
+
+class TestEvidenceTier:
+    """Tests for EvidenceTier enum."""
+
+    def test_all_tiers_exist(self) -> None:
+        """All five evidence tiers exist."""
+        assert EvidenceTier.CATEGORICAL.value == 1
+        assert EvidenceTier.EMPIRICAL.value == 2
+        assert EvidenceTier.AESTHETIC.value == 3
+        assert EvidenceTier.GENEALOGICAL.value == 4
+        assert EvidenceTier.SOMATIC.value == 5
+
+    def test_tier_ordering(self) -> None:
+        """Tiers have meaningful ordering."""
+        # Lower values are more objective
+        assert EvidenceTier.CATEGORICAL.value < EvidenceTier.EMPIRICAL.value
+        assert EvidenceTier.EMPIRICAL.value < EvidenceTier.AESTHETIC.value
+        assert EvidenceTier.AESTHETIC.value < EvidenceTier.GENEALOGICAL.value
+        assert EvidenceTier.GENEALOGICAL.value < EvidenceTier.SOMATIC.value
+
+
+class TestProofRepr:
+    """Tests for Proof representation."""
+
+    def test_proof_repr_short_claim(self) -> None:
+        """repr() shows short claims fully."""
+        proof = Proof(data="d", warrant="w", claim="Short claim")
+        repr_str = repr(proof)
+
+        assert "Short claim" in repr_str
+        assert "probably" in repr_str
+        assert "EMPIRICAL" in repr_str
+
+    def test_proof_repr_long_claim_truncated(self) -> None:
+        """repr() truncates long claims."""
+        long_claim = "A" * 100
+        proof = Proof(data="d", warrant="w", claim=long_claim)
+        repr_str = repr(proof)
+
+        assert "..." in repr_str
+        assert len(repr_str) < 150  # Reasonable length

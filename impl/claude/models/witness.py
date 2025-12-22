@@ -236,10 +236,57 @@ class WitnessEscalation(TimestampMixin, Base):
     )
 
 
+class WitnessMark(TimestampMixin, Base):
+    """
+    A Mark in the Witness ledger.
+
+    Marks are the atomic unit of witnessed behavior:
+    - Every action leaves a mark
+    - Marks are immutable once created
+    - Marks can have reasoning and principles
+
+    Used by the `km` CLI command for everyday mark-making.
+
+    AGENTESE: world.witness.mark / time.witness.mark
+    """
+
+    __tablename__ = "witness_marks"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+
+    # What was done
+    action: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # Why (optional but encouraged)
+    reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Which principles honored (stored as JSON array)
+    principles: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+    # Authorship
+    author: Mapped[str] = mapped_column(String(64), default="kent", nullable=False)
+
+    # Session context (for grouping marks)
+    session_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+
+    # D-gent link for semantic search
+    datum_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+
+    # Repository context
+    repository_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
+
+    __table_args__ = (  # type: ignore[assignment]
+        Index("idx_witness_marks_recent", "created_at"),
+        Index("idx_witness_marks_author", "author"),
+        Index("idx_witness_marks_session", "session_id"),
+    )
+
+
 __all__ = [
     "WitnessTrust",
     "WitnessThought",
     "WitnessAction",
     "WitnessEscalation",
+    "WitnessMark",
     "hash_email",
 ]

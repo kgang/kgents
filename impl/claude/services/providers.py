@@ -62,6 +62,7 @@ if TYPE_CHECKING:
     from services.conductor.file_guard import FileEditGuard
     from services.conductor.swarm import SwarmSpawner
     from services.foundry import AgentFoundry
+    from services.fusion import FusionService
     from services.interactive_text.service import InteractiveTextService
     from services.liminal.coffee.core import CoffeeService
     from services.metabolism.persistence import MetabolismPersistence
@@ -388,6 +389,36 @@ async def get_lemma_database() -> "PostgresLemmaDatabase":
 
 
 # =============================================================================
+# Fusion Crown Jewel (Symmetric Supersession)
+# =============================================================================
+
+
+async def get_fusion_service() -> "FusionService":
+    """
+    Get the FusionService for Symmetric Supersession.
+
+    The fusion service operationalizes the Symmetric Supersession doctrine:
+    - Kent and AI are symmetric agents
+    - Either can propose, either can be superseded
+    - Synthesis emerges from dialectical challenge
+    - The disgust veto is absolute
+
+    Used by FusionNode for self.fusion.* AGENTESE paths.
+
+    See: brainstorming/2025-12-21-symmetric-supersession.md
+    """
+    from services.fusion import FusionService
+
+    # Get witness persistence for recording fusion events
+    try:
+        witness = await get_witness_persistence()
+    except Exception:
+        witness = None
+
+    return FusionService(witness=witness)
+
+
+# =============================================================================
 # Setup Function
 # =============================================================================
 
@@ -454,8 +485,11 @@ async def setup_providers() -> None:
     # ASHC Crown Jewel (Proof-Generating Self-Hosting Compiler)
     container.register("lemma_database", get_lemma_database, singleton=True)
 
+    # Fusion Crown Jewel (Symmetric Supersession)
+    container.register("fusion_service", get_fusion_service, singleton=True)
+
     logger.info(
-        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + ASHC)"
+        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + ASHC + Fusion)"
     )
 
     # Import service nodes to trigger @node registration
@@ -508,6 +542,14 @@ async def setup_providers() -> None:
         logger.info("FoundryNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"FoundryNode not available: {e}")
+
+    # Fusion Crown Jewel (Symmetric Supersession)
+    try:
+        from services.fusion import FusionNode  # noqa: F401
+
+        logger.info("FusionNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"FusionNode not available: {e}")
 
     # Wire KgentSoul to SoulNode
     try:
@@ -590,4 +632,6 @@ __all__ = [
     "get_interactive_text_service",
     # ASHC Crown Jewel
     "get_lemma_database",
+    # Fusion Crown Jewel
+    "get_fusion_service",
 ]
