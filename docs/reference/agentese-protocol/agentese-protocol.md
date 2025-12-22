@@ -5802,26 +5802,6 @@ self.jewel.brain.flow.chat - Brain's conversational memory interface.
 
 ---
 
-## GardenerFlowNode
-
-```python
-class GardenerFlowNode(JewelFlowNode)
-```
-
-self.jewel.gardener.flow.chat - Gardener's conversational tending interface.
-
----
-
-## GestaltFlowNode
-
-```python
-class GestaltFlowNode(JewelFlowNode)
-```
-
-self.jewel.gestalt.flow.research - Gestalt's architecture exploration interface.
-
----
-
 ## create_brain_flow_node
 
 ```python
@@ -5829,26 +5809,6 @@ def create_brain_flow_node() -> BrainFlowNode
 ```
 
 Create a BrainFlowNode for self.jewel.brain.flow.chat.* paths.
-
----
-
-## create_gardener_flow_node
-
-```python
-def create_gardener_flow_node() -> GardenerFlowNode
-```
-
-Create a GardenerFlowNode for self.jewel.gardener.flow.chat.* paths.
-
----
-
-## create_gestalt_flow_node
-
-```python
-def create_gestalt_flow_node() -> GestaltFlowNode
-```
-
-Create a GestaltFlowNode for self.jewel.gestalt.flow.research.* paths.
 
 ---
 
@@ -5869,26 +5829,6 @@ async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
 ```
 
 View Brain chat flow state.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-View Gardener chat flow state.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-View Gestalt research flow state.
 
 ---
 
@@ -13061,7 +13001,7 @@ The polynomial functor structure of an agent.
 
 ### Things to Know
 
-ℹ️ Default polynomial() returns single 'default' position with all affordances as directions. Override in PolyAgent subclasses (e.g., Gardener) to expose real state machine structure.
+ℹ️ Default polynomial() returns single 'default' position with all affordances as directions. Override in PolyAgent subclasses to expose real state machine structure.
   - *Verified in: `test_node.py::test_polynomial_default`*
 
 ---

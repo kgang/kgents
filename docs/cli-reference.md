@@ -57,7 +57,7 @@ kg brain manifest                  # Display brain health metrics
 
 ### `kg town`
 
-Agent simulation and coalitions.
+Agent Town simulation.
 
 ```bash
 kg town                            # Town overview
@@ -65,7 +65,6 @@ kg town                            # Town overview
 
 **AGENTESE Paths:**
 - `world.town` - Town entry point
-- `world.coalition.*` - Coalition operations
 
 ---
 

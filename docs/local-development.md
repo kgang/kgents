@@ -52,7 +52,7 @@ npm install
 
 ### 2. PostgreSQL (Optional but Recommended)
 
-PostgreSQL enables persistent storage for Crown Jewels (Brain, Gardener). Without it, data falls back to SQLite.
+PostgreSQL enables persistent storage for Crown Jewels. Without it, data falls back to SQLite.
 
 ```bash
 cd impl/claude

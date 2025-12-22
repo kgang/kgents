@@ -2,14 +2,15 @@
 path: docs/skills/crown-jewel-patterns
 status: active
 progress: 100
-last_touched: 2025-12-19
-touched_by: claude-opus-4
+last_touched: 2025-12-21
+touched_by: claude-opus-4.5
 blocking: []
-enables: [atelier, coalition, park, domain, gestalt]
+enables: []
 session_notes: |
-  Extracted from Gardener-Logos post-implementation reflection.
+  Extracted from post-implementation reflection of the first completed Crown Jewel.
   These patterns are reusable across all Crown Jewels.
   Pattern 15 added from Morpheus/Chat debugging (hollow service anti-pattern).
+  Updated to remove references to deleted Crown Jewels (only Brain remains).
 phase_ledger:
   PLAN: complete
   REFLECT: complete
@@ -21,14 +22,13 @@ phase_ledger:
 
 **Difficulty**: Intermediate
 **Prerequisites**: `polynomial-agent.md`, `agentese-path.md`
-**Source**: Gardener-Logos post-implementation reflection
-**Spec**: `spec/protocols/gardener-logos.md` Appendix C
+**Source**: Post-implementation reflection from the first completed Crown Jewel
 
 ---
 
 ## Overview
 
-These patterns emerged from implementing Gardener-Logos (the first jewel to reach 100%). They apply broadly to all Crown Jewels and represent tested, production-ready approaches.
+These patterns emerged from implementing the first Crown Jewel to reach production maturity. They apply broadly to all Crown Jewels and represent tested, production-ready approaches.
 
 ---
 
@@ -70,10 +70,10 @@ class Container:
 **Apply to**:
 | Jewel | Container | Workflow |
 |-------|-----------|----------|
-| Gardener | Garden | Session |
-| Atelier | Gallery | Exhibition |
-| Coalition | Forge | Task |
-| Park | Scenario | Simulation |
+| Brain | Membrane | Crystal Session |
+| (Future) | Gallery | Exhibition |
+| (Future) | Team | Task |
+| (Future) | Scenario | Simulation |
 
 ---
 
@@ -132,11 +132,10 @@ class Status(Enum):
 **Apply to**:
 | Jewel | Enum | Properties |
 |-------|------|------------|
-| Gardener | GardenSeason | plasticity, entropy_multiplier, emoji |
-| Gardener | TendingVerb | base_entropy_cost, affects_state, emoji |
-| Atelier | BidState | can_outbid, min_increment |
-| Coalition | AgentRole | capabilities, cost_multiplier |
-| Park | MaskType | interactivity, visibility |
+| Brain | CrystalType | weight, entropy_cost, search_boost |
+| (Future) | BidState | can_outbid, min_increment |
+| (Future) | AgentRole | capabilities, cost_multiplier |
+| (Future) | MaskType | interactivity, visibility |
 
 ---
 
@@ -158,10 +157,10 @@ else:
 # Context modulates intent smoothly
 effective_rate = user_intent * context_factor
 
-# Gardener example:
-learning_rate = gesture.tone * season.plasticity
-# SPROUTING (0.9) × definitive (1.0) → 0.9 (aggressive)
-# DORMANT (0.1) × tentative (0.3) → 0.03 (minimal)
+# Example:
+learning_rate = input_intensity * mode_plasticity
+# HIGH_PLASTICITY (0.9) × definitive (1.0) → 0.9 (aggressive)
+# LOW_PLASTICITY (0.1) × tentative (0.3) → 0.03 (minimal)
 ```
 
 **Benefits**:
@@ -172,10 +171,10 @@ learning_rate = gesture.tone * season.plasticity
 **Apply to**:
 | Jewel | Intent | Context | Effect |
 |-------|--------|---------|--------|
-| Gardener | tone | plasticity | learning_rate |
-| Atelier | bid_amount | market_heat | effective_bid |
-| Coalition | urgency | agent_load | priority_score |
-| Park | immersion | scenario_intensity | experience |
+| Brain | capture_intensity | memory_mode | retention_strength |
+| (Future) | bid_amount | market_heat | effective_bid |
+| (Future) | urgency | agent_load | priority_score |
+| (Future) | immersion | scenario_intensity | experience |
 
 ---
 
@@ -230,10 +229,9 @@ if confidence >= THRESHOLD:
 **Apply to**:
 | Jewel | Decision | Signals |
 |-------|----------|---------|
-| Gardener | Season transition | gesture_freq, entropy, session |
-| Coalition | Agent recommendation | skill_match, availability, past_success |
-| Atelier | Bid suggestion | market_value, creator_reputation, demand |
-| Gestalt | Drift alert | dependency_freshness, breaking_changes, usage |
+| Brain | Crystal promotion | access_freq, semantic_density, age |
+| (Future) | Agent recommendation | skill_match, availability, past_success |
+| (Future) | Bid suggestion | market_value, creator_reputation, demand |
 
 ---
 
@@ -274,10 +272,10 @@ def clear_dismissals(prefix: str) -> None:
 **Apply to**:
 | Jewel | Suggestion Type | Key Format |
 |-------|-----------------|------------|
-| Gardener | Season transition | `{garden_id}:{from}→{to}` |
-| Gestalt | Drift alert | `{module}:{dependency}` |
-| Atelier | Style recommendation | `{creator}:{style}` |
-| Coalition | Team suggestion | `{task}:{agent_combo}` |
+| Brain | Crystal cleanup | `{membrane_id}:cleanup:{date}` |
+| (Future) | Drift alert | `{module}:{dependency}` |
+| (Future) | Style recommendation | `{creator}:{style}` |
+| (Future) | Team suggestion | `{task}:{agent_combo}` |
 
 ---
 
@@ -398,10 +396,10 @@ class Container:
 **Apply to**:
 | Jewel | History Type | Analysis |
 |-------|--------------|----------|
-| Gardener | Gestures | trajectory, frequency, diversity |
-| Atelier | Bids | market trends, creator patterns |
-| Coalition | Task assignments | agent utilization, success rates |
-| Park | Player actions | engagement, decision patterns |
+| Brain | Captures | trajectory, frequency, diversity |
+| (Future) | Bids | market trends, creator patterns |
+| (Future) | Task assignments | agent utilization, success rates |
+| (Future) | Player actions | engagement, decision patterns |
 
 ---
 
@@ -447,10 +445,10 @@ def can_transition(from_state: State, to_state: State) -> bool:
 **Apply to**:
 | Jewel | Cycle |
 |-------|-------|
-| Gardener | DORMANT→SPROUTING→BLOOMING→HARVEST→COMPOSTING→DORMANT |
-| Atelier | DRAFT→BIDDING→EVALUATION→AWARD→COMPLETE |
-| Coalition | FORMING→ASSIGNED→EXECUTING→REVIEWING→DISBANDED |
-| Park | SETUP→RUNNING→PAUSED→COMPLETE |
+| Brain | CAPTURING→PROCESSING→INDEXED→RECALLED→ARCHIVED→CAPTURING |
+| (Future) | DRAFT→BIDDING→EVALUATION→AWARD→COMPLETE |
+| (Future) | FORMING→ASSIGNED→EXECUTING→REVIEWING→DISBANDED |
+| (Future) | SETUP→RUNNING→PAUSED→COMPLETE |
 
 ---
 
@@ -472,22 +470,23 @@ JEWEL_OPERAD = Operad(
 
 **Right**: Spread inheritance
 ```python
-def create_emergence_operad() -> Operad:
-    from agents.design import DESIGN_OPERAD
+def create_soul_operad() -> Operad:
+    from agents.operad import AGENT_OPERAD
 
     return Operad(
-        name="EMERGENCE",
+        name="SOUL_OPERAD",
         operations={
-            # Domain-specific operations
-            "select_family": Operation(arity=1, ...),
-            "modulate_qualia": Operation(arity=2, ...),
-            # Inherit all DESIGN_OPERAD operations
-            **DESIGN_OPERAD.operations,
+            # Soul-specific operations
+            "introspect": Operation(arity=0, ...),
+            "shadow": Operation(arity=1, ...),
+            "dialectic": Operation(arity=2, ...),
+            # Inherit all AGENT_OPERAD operations
+            **AGENT_OPERAD.operations,
         },
         laws=[
-            Law(name="pattern_commutativity", ...),
-            # Inherit all DESIGN_OPERAD laws
-            *DESIGN_OPERAD.laws,
+            Law(name="introspection_idempotence", ...),
+            # Inherit all AGENT_OPERAD laws
+            *AGENT_OPERAD.laws,
         ],
     )
 ```
@@ -500,9 +499,9 @@ def create_emergence_operad() -> Operad:
 **Apply to**:
 | Child Operad | Parent | Domain-Specific Ops |
 |--------------|--------|---------------------|
-| EMERGENCE_OPERAD | DESIGN_OPERAD | select_family, tune_param, modulate_qualia |
+| SOUL_OPERAD | AGENT_OPERAD | introspect, shadow, dialectic |
 | TOWN_OPERAD | AGENT_OPERAD | greet, gossip, trade, solo |
-| WORKSHOP_OPERAD | DESIGN_OPERAD | create_piece, curate, exhibit |
+| BRAIN_OPERAD | AGENT_OPERAD | capture, recall, associate |
 
 ---
 
@@ -572,9 +571,9 @@ function useCircadian() {
 **Apply to**:
 | Jewel | What Changes | Effect |
 |-------|-------------|--------|
-| Emergence | Pattern hue, animation speed | Warmer at dusk, slower at midnight |
-| Gestalt | Dashboard accent color | Cooler in morning, warmer evening |
+| Brain | Crystal luminosity, recall speed | Warmer at dusk, slower at midnight |
 | Town | Citizen activity patterns | More active at noon, reflective at midnight |
+| (Future) | Dashboard accent color | Cooler in morning, warmer evening |
 
 ---
 
@@ -808,7 +807,7 @@ function TracePanel({ events, maxEvents }: TracePanelProps) {
 | `WhenTeaching` | Conditional render wrapper |
 | `TeachingCallout` | Gradient callout with category styling |
 
-**Apply to**: Park (crisis phases, consent debt), Town (citizen polynomial, trace).
+**Apply to**: Town (citizen polynomial, trace), Brain (crystal metadata, associations).
 
 ---
 
@@ -907,7 +906,6 @@ async def verify_services():
 | ChatServiceFactory | MorpheusPersistence for LLM composition |
 | BrainPersistence | TableAdapter + D-gent router |
 | TownPersistence | Citizen + Conversation adapters |
-| DifferanceStore | D-gent backend + DataBus |
 
 ---
 
@@ -943,8 +941,9 @@ async def verify_services():
 
 ## Changelog
 
+- 2025-12-21: Scrubbed references to deleted Crown Jewels (only Brain remains)
 - 2025-12-19: Added Pattern 15 (No Hollow Services) from Morpheus/Chat provider debugging
-- 2025-12-18: Added Pattern 14 (Teaching Mode Toggle) from Park-Town Design Overhaul Phase 5
+- 2025-12-18: Added Pattern 14 (Teaching Mode Toggle) from design overhaul
 - 2025-12-18: Added Pattern 13 (Contract-First Types) from Phase 7 Autopoietic Architecture
-- 2025-12-18: Added patterns 10-12 (Operad Inheritance, Circadian Modulation, Law Honesty) from Emergence Crown Jewel
-- 2025-12-16: Initial version from Gardener-Logos reflection
+- 2025-12-18: Added patterns 10-12 (Operad Inheritance, Circadian Modulation, Law Honesty)
+- 2025-12-16: Initial version from post-implementation reflection

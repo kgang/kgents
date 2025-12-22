@@ -129,9 +129,8 @@ def _import_node_modules() -> None:
     """Import all AGENTESE node modules to trigger @node registration."""
     try:
         from . import contexts
-        from .contexts import world_emergence      # ADD YOUR MODULE HERE
-        from .contexts import world_gestalt_live
-        from .contexts import world_park
+        from .contexts import world_myfeature      # ADD YOUR MODULE HERE
+        from .contexts import self_memory
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:
         logger.warning(f"Could not import some node modules: {e}")
@@ -145,16 +144,14 @@ def _import_node_modules() -> None:
 // Route → AGENTESE path mapping
 const routeToPath: Record<string, string> = {
   '/brain': 'self.memory',
-  '/gestalt': 'world.codebase',
-  '/emergence': 'world.emergence',     // ADD YOUR MAPPING
+  '/myfeature': 'world.myfeature',     // ADD YOUR MAPPING
   // ...
 };
 
 // AGENTESE path → Route mapping (reverse)
 const pathToRoute: Record<string, string> = {
   'self.memory': '/brain',
-  'world.codebase': '/gestalt',
-  'world.emergence': '/emergence',     // ADD YOUR MAPPING
+  'world.myfeature': '/myfeature',     // ADD YOUR MAPPING
   // ...
 };
 ```
@@ -442,30 +439,30 @@ The container respects Python's signature semantics:
 
 ```python
 @node(
-    "world.forge.commission",
-    description="Commission workflow for building agents",
-    dependencies=("commission_service",),  # REQUIRED: explicit declaration
+    "world.myfeature.action",
+    description="Action workflow for MyFeature",
+    dependencies=("myfeature_service",),  # REQUIRED: explicit declaration
     contracts={...},
 )
-class CommissionNode(BaseLogosNode):
-    def __init__(self, commission_service: CommissionService) -> None:
-        self.service = commission_service
+class MyFeatureActionNode(BaseLogosNode):
+    def __init__(self, myfeature_service: MyFeatureService) -> None:
+        self.service = myfeature_service
 ```
 
 ### 2. Register providers in `services/providers.py`
 
 ```python
 # Add provider function
-async def get_commission_service() -> "CommissionService":
-    """Get the CommissionService for the Metaphysical Forge."""
-    from services.forge.commission import CommissionService
-    return CommissionService()
+async def get_myfeature_service() -> "MyFeatureService":
+    """Get the MyFeatureService."""
+    from services.myfeature.service import MyFeatureService
+    return MyFeatureService()
 
 # Register in setup_providers()
 async def setup_providers() -> None:
     container = get_container()
     # ...existing registrations...
-    container.register("commission_service", get_commission_service, singleton=True)
+    container.register("myfeature_service", get_myfeature_service, singleton=True)
 ```
 
 ### 3. Container resolution flow
@@ -566,6 +563,91 @@ asyncio.run(check())
 
 ---
 
+## SSE Streaming Aspects
+
+When adding a streaming aspect (e.g., `stream` for real-time updates):
+
+### 1. Define the Async Generator
+
+```python
+from typing import AsyncGenerator
+
+@aspect(
+    category=AspectCategory.PERCEPTION,
+    description="SSE stream of events",
+    streaming=True,  # Mark as streaming
+)
+async def stream(
+    self, observer: "Observer", **kwargs: Any
+) -> AsyncGenerator[dict[str, Any], None]:
+    """Stream events via SSE.
+
+    Yields raw dictionaries - the gateway's _generate_sse() handles formatting.
+
+    Teaching:
+        gotcha: Don't pre-format SSE data! The gateway wraps async generator
+                output with `data: {json}\n\n`. Pre-formatting causes double-wrap.
+                (Evidence: curl shows `data: "data: {...}"` if you format here)
+    """
+    # Yield raw dicts, NOT formatted strings
+    yield {"type": "status", "data": {...}}
+    yield {"type": "heartbeat", "timestamp": datetime.now().isoformat()}
+```
+
+### 2. Handle Async Generator in _invoke_aspect
+
+```python
+async def _invoke_aspect(
+    self,
+    aspect: str,
+    observer: "Observer",
+    **kwargs: Any,
+) -> Any:
+    """Invoke an aspect method by name.
+
+    Teaching:
+        gotcha: Async generator methods (like `stream`) must NOT be awaited.
+                Calling them returns the generator directly. Awaiting fails with:
+                "object async_generator can't be used in 'await' expression"
+    """
+    method = getattr(self, aspect, None)
+    if method is not None:
+        # For stream aspect, return the generator directly (don't await)
+        if aspect == "stream":
+            return method(observer, **kwargs)  # NO await!
+        return await method(observer, **kwargs)
+    raise ValueError(f"Unknown aspect: {aspect}")
+```
+
+### 3. Frontend Connection
+
+```typescript
+// CORRECT: aspect is at /{context}/{holon}/{aspect}
+const stream = new EventSource('/agentese/self/collaboration/stream');
+
+// WRONG: don't add extra /stream suffix
+// const stream = new EventSource('/agentese/self/collaboration/stream/stream');
+
+stream.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  switch (data.type) {
+    case 'status': /* handle */ break;
+    case 'heartbeat': /* handle */ break;
+  }
+};
+```
+
+### SSE Streaming Gotchas
+
+| Issue | Symptom | Fix |
+|-------|---------|-----|
+| Await async generator | "object async_generator can't be used in 'await' expression" | `return method()` not `await method()` |
+| Pre-format SSE | Double-wrapped: `data: "data: {...}"` | Yield raw dicts, let gateway format |
+| Wrong URL | 404 or connection refused | Use `/{aspect}` not `/{aspect}/stream` |
+| Stale closures in React | Old callbacks, state doesn't update | Use refs for callbacks |
+
+---
+
 ## Related Patterns
 
 - **agentese-path.md** - Adding new AGENTESE paths
@@ -642,4 +724,4 @@ Add to `.github/workflows/ci.yml`:
 
 ---
 
-*Last updated: 2025-12-21*
+*Last updated: 2025-12-22 (SSE streaming section added)*

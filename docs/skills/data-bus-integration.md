@@ -33,17 +33,17 @@ kgents uses a layered event bus architecture with three distinct bus types:
 │                           │Listener │    │Listener │    │→Synergy │     │
 │                           └─────────┘    └─────────┘    └────┬────┘     │
 │                                                              │           │
-│   Crown Jewels (Gestalt, Brain, etc.)                        ▼           │
+│   Crown Jewels (Brain, Atelier)                               ▼           │
 │       │                                                                   │
 │       ▼                                                                   │
 │   ┌─────────────┐                                                         │
-│   │ SynergyBus  │ ──────────────┬──────────────┬──────────────┐          │
-│   └─────────────┘               │              │              │          │
-│                                 ▼              ▼              ▼          │
-│                           ┌─────────┐    ┌─────────┐    ┌─────────┐     │
-│                           │Gestalt→ │    │Atelier→ │    │Garden→  │     │
-│                           │ Brain   │    │ Brain   │    │ Brain   │     │
-│                           └─────────┘    └─────────┘    └─────────┘     │
+│   │ SynergyBus  │ ──────────────┬──────────────┐                         │
+│   └─────────────┘               │              │                         │
+│                                 ▼              ▼                         │
+│                           ┌─────────┐    ┌─────────┐                     │
+│                           │Atelier→ │    │ Brain   │                     │
+│                           │ Brain   │    │         │                     │
+│                           └─────────┘    └─────────┘                     │
 │                                                                           │
 │   Agent Town (Simulation)                                                 │
 │       │                                                                   │
@@ -184,25 +184,13 @@ The SynergyBus enables Crown Jewels to react to each other's significant operati
 ```python
 from protocols.synergy import SynergyEventType, Jewel
 
-# Gestalt events
-SynergyEventType.ANALYSIS_COMPLETE
-SynergyEventType.DRIFT_DETECTED
-
 # Brain events
 SynergyEventType.CRYSTAL_FORMED
 SynergyEventType.MEMORY_SURFACED
 
-# Gardener events
-SynergyEventType.SEASON_CHANGED
-SynergyEventType.GESTURE_APPLIED
-
 # Atelier events
 SynergyEventType.PIECE_CREATED
 SynergyEventType.BID_ACCEPTED
-
-# Coalition events
-SynergyEventType.COALITION_FORMED
-SynergyEventType.TASK_ASSIGNED
 
 # D-gent events (bridges from DataBus)
 SynergyEventType.DATA_STORED
@@ -289,48 +277,18 @@ The SynergyBus comes pre-configured with these handlers:
 
 | Handler | Event | Action |
 |---------|-------|--------|
-| `GestaltToBrainHandler` | ANALYSIS_COMPLETE | Auto-capture architecture snapshots |
 | `AtelierToBrainHandler` | PIECE_CREATED | Auto-capture created pieces |
-| `CoalitionToBrainHandler` | TASK_ASSIGNED | Auto-capture task completions |
-| `BrainToCoalitionHandler` | COALITION_FORMED | Enrich with context |
-| `GardenToBrainHandler` | SEASON_CHANGED, GESTURE_APPLIED | Auto-capture garden state |
-| `GestaltToGardenHandler` | ANALYSIS_COMPLETE | Update plot progress |
 
 ### Factory Functions (Complete List)
 
 ```python
 from protocols.synergy import (
-    # Gestalt
-    create_analysis_complete_event,
-    create_drift_detected_event,
-
     # Brain
     create_crystal_formed_event,
-
-    # Gardener
-    create_session_complete_event,
-    create_artifact_created_event,
-    create_season_changed_event,
-    create_gesture_applied_event,
-    create_plot_progress_event,
 
     # Atelier
     create_piece_created_event,
     create_bid_accepted_event,
-
-    # Coalition
-    create_coalition_formed_event,
-    create_task_complete_event,
-
-    # Domain
-    create_drill_complete_event,
-    create_drill_started_event,
-    create_timer_warning_event,
-
-    # Park
-    create_scenario_complete_event,
-    create_serendipity_injected_event,
-    create_force_used_event,
 
     # D-gent (data layer)
     create_data_stored_event,

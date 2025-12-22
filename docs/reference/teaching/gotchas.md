@@ -2507,7 +2507,7 @@ Law verification is STRUCTURAL, not behavioral. verify_law() checks composition 
 ### soul
 *Module: agents.operad.domains.soul*
 
-Domain operads EXTEND the universal AGENT_OPERAD, not replace it. SOUL_OPERAD includes all 5 universal operations (seq, par, branch, fix, trace) PLUS the soul-specific ones. Check for duplicates.
+Service operads EXTEND the universal AGENT_OPERAD, not replace it. SOUL_OPERAD includes all 5 universal operations (seq, par, branch, fix, trace) PLUS the soul-specific ones. Check for duplicates.
 
 **Evidence**: `test_domains.py::TestSoulOperad::test_has_universal_operations`
 
@@ -3095,7 +3095,7 @@ Observer is frozen (immutable). To change capabilities, create a new Observer in
 ### PolynomialManifest
 *Module: protocols.agentese.node*
 
-Default polynomial() returns single 'default' position with all affordances as directions. Override in PolyAgent subclasses (e.g., Gardener) to expose real state machine structure.
+Default polynomial() returns single 'default' position with all affordances as directions. Override in PolyAgent subclasses to expose real state machine structure.
 
 **Evidence**: `test_node.py::test_polynomial_default`
 

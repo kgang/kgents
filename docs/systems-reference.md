@@ -8,7 +8,7 @@ context: self
 
 This document inventories all production-ready **backend** infrastructure in kgents. When planning features, CHECK HERE FIRST before assuming you need to build something new.
 
-**Note (2025-12-21)**: Web UI has been pruned to focus on Brain, Galleries, and OS-Shell. Backend services (Town, Park, Forge, Gestalt, etc.) remain for future integration.
+**Note (2025-12-21)**: Web UI has been pruned to focus on Brain, Galleries, and OS-Shell.
 
 ---
 
@@ -58,44 +58,6 @@ async for event in sub:
 - `self.bus.stats` — Bus statistics
 
 **Skills**: `docs/skills/data-bus-integration.md`
-
----
-
-## Gardener-Logos (NEW 2025-12-16)
-
-**The Meta-Tending Substrate** — Unifies The Gardener Crown Jewel with Prompt Logos into a single system for tending the garden of prompts.
-
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| **Spec** | `spec/protocols/gardener-logos.md` | Full specification |
-| **Garden State** | `protocols/gardener_logos/garden.py` | Seasons, metrics, unified state |
-| **Tending Calculus** | `protocols/gardener_logos/tending.py` | 6 verbs: observe, prune, graft, water, rotate, wait |
-| **Plots** | `protocols/gardener_logos/plots.py` | Named focus regions (crown jewels, plans) |
-| **Personality** | `protocols/gardener_logos/personality.py` | Joy layer, contextual greetings |
-| **Meta-Tending** | `protocols/gardener_logos/meta/` | Self-observation prompts |
-| **ASCII Projection** | `protocols/gardener_logos/projections/ascii.py` | CLI rendering |
-
-```python
-from protocols.gardener_logos import (
-    create_garden, GardenSeason,
-    create_plot, create_crown_jewel_plots,
-    observe, prune, graft, water, rotate, wait,
-    TendingPersonality, default_personality,
-)
-from protocols.gardener_logos.projections import project_garden_to_ascii
-
-garden = create_garden(name="my-project", season=GardenSeason.SPROUTING)
-garden.plots = create_crown_jewel_plots()
-garden.add_gesture(observe("concept.prompt.*"))
-print(project_garden_to_ascii(garden))
-```
-
-**AGENTESE Paths:**
-- `concept.gardener.manifest` — Garden overview
-- `concept.gardener.tend` — Apply tending gestures
-- `concept.gardener.season.*` — Season operations
-- `concept.gardener.plot.*` — Plot management
-- `concept.prompt.*` — Prompt Logos (delegated)
 
 ---
 
@@ -450,14 +412,13 @@ card.to_json()     # API
 | `FlowParticle` | `web/src/components/three/primitives/` | Animated flow particles |
 | `NodeLabel3D` | `web/src/components/three/primitives/` | 3D text labels |
 | `GrowthRings` | `web/src/components/three/primitives/` | Concentric ring indicators |
-| **Themes** | `web/src/components/three/primitives/themes/` | Crystal (Brain), Forest (Gestalt) |
+| **Themes** | `web/src/components/three/primitives/themes/` | Crystal (Brain) |
 | **Animation** | `web/src/components/three/primitives/animation.ts` | Breathing, hover, selection presets |
 
 ```tsx
 import {
   TopologyNode3D, TopologyEdge3D,
-  CRYSTAL_THEME, FOREST_THEME,
-  ANIMATION_PRESETS
+  CRYSTAL_THEME, ANIMATION_PRESETS
 } from '@/components/three/primitives';
 
 // Generic node with crystal theme (Brain)
@@ -472,11 +433,11 @@ import {
   onClick={handleClick}
 />
 
-// Generic edge with forest theme (Gestalt)
+// Generic edge
 <TopologyEdge3D
   source={sourcePos}
   target={targetPos}
-  theme={FOREST_THEME}
+  theme={CRYSTAL_THEME}
   strength={0.8}
   showFlowParticles={isActive}
 />

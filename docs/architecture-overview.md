@@ -336,6 +336,7 @@ AGENT_OPERAD = Operad(
 **Domain-specific operads** extend the base:
 
 ```python
+# Example: Soul-specific operations extending the universal operad
 SOUL_OPERAD = Operad(
     name="SoulOperad",
     operations=AGENT_OPERAD.operations | {

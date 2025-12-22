@@ -76,7 +76,7 @@ await storage.relational.execute("INSERT INTO shapes ...")
 - Business context
 
 **Service modules know:**
-- Domain semantics
+- Service semantics
 - When to persist what
 - Business rules
 - How to compose adapters
@@ -84,9 +84,9 @@ await storage.relational.execute("INSERT INTO shapes ...")
 <details>
 <summary>🌫️ Ghost: Adapters in Infrastructure</summary>
 
-The first implementation put `CrystalAdapter` in `models/` alongside SQLAlchemy tables. Clean separation of concerns, right?
+The first implementation put persistence adapters in `models/` alongside SQLAlchemy tables. Clean separation of concerns, right?
 
-Wrong. The adapter needed Brain-specific logic: *when* to crystallize, *how* to index for semantic search, *what* metadata to surface. Generic infrastructure can't know these things.
+Wrong. The adapter needed service-specific logic: *when* to persist, *how* to index for semantic search, *what* metadata to surface. Generic infrastructure can't know these things.
 
 We tried injecting callbacks:
 ```python
@@ -95,29 +95,29 @@ class CrystalAdapter:
     on_create: Callable[[Crystal], Awaitable[None]]  # Callback injection
 ```
 
-This scattered domain logic across callback definitions. The adapter became a puppet with strings everywhere.
+This scattered service logic across callback definitions. The adapter became a puppet with strings everywhere.
 
-The ghost was laid to rest when we moved adapters to service modules. **Domain logic lives with domain knowledge.**
+The ghost was laid to rest when we moved adapters to service modules. **Service logic lives with service knowledge.**
 
 </details>
 
 ```python
 # ❌ WRONG: Adapter in infrastructure
-# models/brain.py or agents/d/adapters/
-class CrystalAdapter:
-    """Generic adapter - doesn't know Brain semantics"""
+# models/ or agents/d/adapters/
+class GenericAdapter:
+    """Generic adapter - doesn't know service semantics"""
 
 # ✅ RIGHT: Adapter in service module
 # services/brain/persistence.py
 class BrainPersistence:
-    """Knows Brain domain: when to crystal, how to index, what to surface"""
+    """Knows Brain service: when to persist, how to index, what to surface"""
 
     def __init__(self, table_adapter: TableAdapter[Crystal], dgent: DgentProtocol):
         self.table = table_adapter  # For queryable metadata
         self.dgent = dgent          # For semantic content
 
     async def capture(self, content: str, tags: list[str]) -> CaptureResult:
-        """Business logic: dual-track storage with domain awareness"""
+        """Business logic: dual-track storage with service awareness"""
         # 1. Store semantic content in D-gent (for associations)
         datum = await self.dgent.put(Datum(...))
 
@@ -138,8 +138,8 @@ services/brain/
 ├── crystal.py            # Core Brain logic
 ├── persistence.py        # TableAdapter + D-gent integration
 ├── search.py             # Semantic search
-├── web/                  # Frontend components (if any)
-│   ├── components/       # React/Svelte components
+├── web/                  # Frontend components
+│   ├── components/       # React components
 │   └── hooks/            # Frontend hooks
 └── _tests/
 ```
@@ -258,7 +258,7 @@ impl/claude/web/components/brain/CrystalViewer.tsx  # Frontend location
 impl/claude/services/brain/crystal.py               # Backend location
 ```
 
-The component and its domain logic are separated by directory structure. Change the Brain domain model? Hunt through two trees.
+The component and its service logic are separated by directory structure. Change the Brain service model? Hunt through two trees.
 
 The resolution: **frontend lives with its service**. `services/brain/web/` contains Brain's React components. The main website is a shallow container that imports and composes. When you need to understand Brain, everything is in `services/brain/`.
 
@@ -430,12 +430,7 @@ impl/claude/
 │
 ├── services/         # Crown Jewels (consumers of agents/)
 │   ├── brain/        # Memory cathedral
-│   ├── gardener/     # Cultivation practice
-│   ├── town/         # Agent simulation
-│   ├── park/         # Westworld hosts
-│   ├── atelier/      # Creative workshop
-│   ├── coalition/    # Agent collaboration
-│   └── gestalt/      # Living code garden
+│   └── town/         # Agent simulation
 │
 ├── models/           # SQLAlchemy models (generic)
 ├── protocols/        # AGENTESE, CLI projection, API gateway

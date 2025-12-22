@@ -155,8 +155,8 @@ await logos.invoke("world.house.manifest", poet_umwelt)       # → Metaphor
 
 **The Five Contexts**:
 
-| Context | Domain | Examples |
-|---------|--------|----------|
+| Context | Scope | Examples |
+|---------|-------|----------|
 | `world.*` | External | Entities, tools, environments |
 | `self.*` | Internal | Memory, state, capability |
 | `concept.*` | Abstract | Platonics, definitions, logic |

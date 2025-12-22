@@ -27,7 +27,6 @@ The result is a composed Three.js scene with consistent behavior.
 |----------|----------|-----|
 | Building new 3D visualization | `TopologyNode3D`, `TopologyEdge3D` | Full control, theme-agnostic |
 | Memory/Brain features | `OrganicCrystal`, `CrystalVine` | Pre-configured with crystal theme |
-| Codebase/Gestalt features | `OrganicNode`, `VineEdge` | Pre-configured with forest theme |
 | Custom domain visualization | Create thin wrapper | Encapsulates tier/size logic |
 
 **Rule**: Domain wrappers are thin. All logic lives in primitives.
@@ -470,7 +469,6 @@ print(f"High quality: {high_config['description']}")
 | **LOD System** | `web/src/components/three/primitives/useLOD.tsx` |
 | **Touch Hooks** | `web/src/components/three/primitives/useTouch.ts` |
 | **Brain wrappers** | `web/src/components/brain/` |
-| **Gestalt wrappers** | `web/src/components/gestalt/` |
 | **Quality hook** | `web/src/hooks/useIlluminationQuality.ts` |
 | **Lighting constants** | `web/src/constants/lighting.ts` |
 | **AGENTESE context** | `protocols/agentese/contexts/three.py` |
