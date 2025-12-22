@@ -261,11 +261,14 @@ class SnippetPane(Widget, can_focus=True):
 
     def _copy_selected(self) -> None:
         """Copy the selected snippet to clipboard."""
+        logger.warning(f"_copy_selected called, selected_snippet={self.selected_snippet}")
         snippet = self.selected_snippet
         if not snippet:
+            logger.warning("_copy_selected: No snippet selected, returning")
             return
 
         snippet_dict = snippet.to_dict()
+        logger.warning(f"_copy_selected: snippet_dict={snippet_dict}")
         content = snippet_dict.get("content")
 
         if not content:
