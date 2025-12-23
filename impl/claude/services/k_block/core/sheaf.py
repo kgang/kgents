@@ -5,11 +5,13 @@ The sheaf ensures that multiple views of the same content remain
 coherent. The gluing axiom: if views agree on overlapping semantic
 content, there exists a unique global content they all derive from.
 
-For prose-canonical model: that unique content IS the prose.
+Phase 3 Upgrade: True bidirectional editing via semantic transforms.
+Edit in any view — changes propagate through semantic deltas.
 
 Philosophy:
     "Views within K-Block glue to form coherent content."
-    — spec/protocols/k-block.md §2.4
+    "Edit anywhere, coherence everywhere."
+    — spec/protocols/k-block.md §2.4, §4.2
 
 See: spec/protocols/k-block.md
 """
@@ -20,6 +22,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from ..views.base import View, ViewType
+from ..views.sync import BidirectionalSync, SemanticDelta
 from .errors import (
     GluingError,
     PropagationError,
@@ -241,39 +244,50 @@ class KBlockSheaf:
         return self.kblock.content
 
     # -------------------------------------------------------------------------
-    # Propagation
+    # Propagation (Phase 3: Bidirectional)
     # -------------------------------------------------------------------------
 
-    def propagate(self, source: ViewType, new_content: str) -> dict[ViewType, dict[str, Any]]:
+    def propagate(
+        self,
+        source: ViewType,
+        new_content: str | Any,
+        old_state: Any | None = None,
+    ) -> dict[ViewType, dict[str, Any]]:
         """
-        Propagate change from source view to all others.
+        Propagate change from any view to all others.
 
-        For prose-canonical model:
-            - source MUST be PROSE (raises if not)
-            - Updates KBlock content
-            - Refreshes all active derived views
-            - Returns info about what changed
+        Phase 3 Upgrade: True bidirectional editing.
+            - PROSE: Direct update (canonical)
+            - GRAPH/CODE/OUTLINE: Semantic transform to prose
+            - DIFF: Read-only (raises error)
 
         Args:
             source: The view type that was edited
-            new_content: The new content from that view
+            new_content: For PROSE - string content
+                        For others - new view state object
+            old_state: Previous view state (required for non-PROSE)
+                      If None for non-PROSE, uses current view state
 
         Returns:
-            Dict mapping view types to their change info
+            Dict mapping view types to their change info, including:
+            - source: Whether this was the source view
+            - content_changed: Whether content was modified
+            - semantic_deltas: List of SemanticDelta dicts (for non-PROSE sources)
+            - tokens_added/removed: Token ID lists
 
         Raises:
-            PropagationError: If source is not PROSE
+            PropagationError: If source is DIFF (read-only)
 
-        Teaching (gotcha):
-            In prose-canonical, derived views CAN'T be edited.
-            This method is the ONLY way to update content, and it
-            must come from PROSE. Phase 2 will enable bidirectional.
+        Teaching:
+            Phase 3 enables true bidirectional editing. Edit in any view,
+            changes propagate through semantic transforms to all others.
+            The semantic delta captures MEANING, not just characters.
         """
-        if source != ViewType.PROSE:
+        # DIFF is always read-only
+        if source == ViewType.DIFF:
             raise PropagationError(
                 source=source,
-                reason="Prose-canonical model: only PROSE can be edited. "
-                "Edit the prose content, and other views will update.",
+                reason="DIFF view is read-only and cannot be edited.",
             )
 
         # Capture before state for derived views
@@ -282,21 +296,40 @@ class KBlockSheaf:
             if vtype != ViewType.PROSE:
                 before_tokens[vtype] = {t.id for t in view.tokens()}
 
-        # Update content
         old_content = self.kblock.content
-        self.kblock.set_content(new_content)
+        semantic_deltas: list[SemanticDelta] = []
 
-        # Refresh all views
-        self.refresh_all()
+        if source == ViewType.PROSE:
+            # Direct prose update (original behavior)
+            assert isinstance(new_content, str), "PROSE propagation requires string content"
+            self.kblock.set_content(new_content)
+            self.refresh_all()
+        else:
+            # Bidirectional: transform from source view to prose
+            sync = BidirectionalSync(self.kblock)
+
+            # Get old state from current view if not provided
+            if old_state is None and source in self.kblock.views:
+                old_state = self.kblock.views[source]
+
+            if old_state is None:
+                raise PropagationError(
+                    source=source,
+                    reason=f"View {source.value} not active. Activate it first with kblock.activate_view().",
+                )
+
+            semantic_deltas = sync.apply_view_edit(source, old_state, new_content)
+            # Views already refreshed by sync.apply_view_edit()
 
         # Compute what changed in each view
         changes: dict[ViewType, dict[str, Any]] = {}
         for vtype, view in self.kblock.views.items():
-            if vtype == ViewType.PROSE:
-                # Prose change is the source
+            if vtype == source:
+                # This was the source view
                 changes[vtype] = {
                     "source": True,
-                    "content_changed": old_content != new_content,
+                    "content_changed": old_content != self.kblock.content,
+                    "semantic_deltas": [d.to_dict() for d in semantic_deltas],
                 }
             elif vtype == ViewType.DIFF:
                 # Diff is read-only, just note it updated
@@ -315,6 +348,38 @@ class KBlockSheaf:
                 }
 
         return changes
+
+    def propagate_prose(self, new_content: str) -> dict[ViewType, dict[str, Any]]:
+        """
+        Convenience method for prose-only propagation (backward compatible).
+
+        This is the original Phase 2 behavior. Use propagate() for
+        bidirectional support.
+
+        Args:
+            new_content: New prose content string
+
+        Returns:
+            Dict mapping view types to change info
+        """
+        return self.propagate(ViewType.PROSE, new_content)
+
+    def can_edit_view(self, view_type: ViewType) -> bool:
+        """
+        Check if a view type supports editing.
+
+        Args:
+            view_type: The view type to check
+
+        Returns:
+            True if the view can be edited (PROSE or has transform)
+        """
+        if view_type == ViewType.PROSE:
+            return True
+        if view_type == ViewType.DIFF:
+            return False
+        sync = BidirectionalSync(self.kblock)
+        return sync.can_edit(view_type)
 
     # -------------------------------------------------------------------------
     # Refresh

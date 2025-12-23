@@ -65,6 +65,7 @@ if TYPE_CHECKING:
     from services.foundry import AgentFoundry
     from services.fusion import FusionService
     from services.interactive_text.service import InteractiveTextService
+    from services.k_block.core import Cosmos, FileOperadHarness
     from services.liminal.coffee.core import CoffeeService
     from services.metabolism.persistence import MetabolismPersistence
     from services.morpheus.persistence import MorpheusPersistence
@@ -366,6 +367,39 @@ async def get_interactive_text_service() -> "InteractiveTextService":
 
 
 # =============================================================================
+# K-Block Crown Jewel (Transactional Hyperdimensional Editing)
+# =============================================================================
+
+
+async def get_harness() -> "FileOperadHarness":
+    """
+    Get the K-Block FileOperadHarness.
+
+    The harness provides transactional file operations:
+    - lift(): Enter isolation
+    - save(): Commit to cosmos
+    - discard(): Abandon changes
+    """
+    from services.k_block.core import get_harness as kblock_get_harness
+
+    return kblock_get_harness()
+
+
+async def get_cosmos() -> "Cosmos":
+    """
+    Get the K-Block Cosmos (version store).
+
+    The cosmos stores all committed versions:
+    - Append-only log
+    - Semantic indexing
+    - Time travel
+    """
+    from services.k_block.core import get_cosmos as kblock_get_cosmos
+
+    return kblock_get_cosmos()
+
+
+# =============================================================================
 # ASHC Crown Jewel (Proof-Generating Self-Hosting Compiler)
 # =============================================================================
 
@@ -511,6 +545,10 @@ async def setup_providers() -> None:
     # Interactive Text Crown Jewel (Documents as Control Surfaces)
     container.register("interactive_text_service", get_interactive_text_service, singleton=True)
 
+    # K-Block Crown Jewel (Transactional Hyperdimensional Editing)
+    container.register("harness", get_harness, singleton=True)
+    container.register("cosmos", get_cosmos, singleton=True)
+
     # ASHC Crown Jewel (Proof-Generating Self-Hosting Compiler)
     container.register("lemma_database", get_lemma_database, singleton=True)
 
@@ -521,7 +559,7 @@ async def setup_providers() -> None:
     container.register("embedder", get_embedder, singleton=True)
 
     logger.info(
-        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + ASHC + Fusion)"
+        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion)"
     )
 
     # Import service nodes to trigger @node registration

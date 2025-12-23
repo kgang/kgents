@@ -1,11 +1,12 @@
 """View protocol and types for K-Block hyperdimensional rendering.
 
 Views are projections of canonical content into different modalities:
-- Prose: Natural language markdown
-- Graph: Concept DAG (nodes and edges)
-- Code: Type definitions as Python dataclasses
+- Prose: Natural language markdown (canonical, editable)
+- Graph: Concept DAG (nodes and edges, bidirectional)
+- Code: Type definitions as Python dataclasses (bidirectional)
 - Diff: Delta from base content (read-only)
-- Outline: Heading hierarchy tree
+- Outline: Heading hierarchy tree (bidirectional)
+- References: Loose coupling to impl/tests (read-only, discovery)
 """
 
 from dataclasses import dataclass, field
@@ -23,10 +24,11 @@ class ViewType(Enum):
     """Available view types for K-Block content."""
 
     PROSE = "prose"  # Markdown prose (canonical, editable)
-    GRAPH = "graph"  # Concept DAG (derived)
-    CODE = "code"  # Type definitions (derived)
+    GRAPH = "graph"  # Concept DAG (bidirectional)
+    CODE = "code"  # Type definitions (bidirectional)
     DIFF = "diff"  # Delta from base (read-only)
-    OUTLINE = "outline"  # Heading hierarchy (derived)
+    OUTLINE = "outline"  # Heading hierarchy (bidirectional)
+    REFERENCES = "references"  # Loose coupling to impl/tests (read-only)
 
 
 @dataclass(frozen=True)
@@ -121,5 +123,9 @@ def create_view(view_type: ViewType) -> View:
             from .outline import OutlineView
 
             return OutlineView()
+        case ViewType.REFERENCES:
+            from .references import ReferencesView
+
+            return ReferencesView()
         case _:
             raise ValueError(f"Unknown view type: {view_type}")

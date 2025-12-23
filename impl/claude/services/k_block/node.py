@@ -50,10 +50,13 @@ from .core import (
     IsolationState,
     KBlock,
     KBlockId,
+    ViewEditTrace,
+    WitnessedSheaf,
     generate_kblock_id,
     get_cosmos,
     get_harness,
 )
+from .views import ViewType
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -121,6 +124,29 @@ class ThoughtResponse:
     content: str
     isolation: str
     message_count: int
+
+
+@dataclass(frozen=True)
+class ViewEditRequest:
+    """Request to edit a K-Block via any view (Phase 3 bidirectional)."""
+
+    block_id: str
+    source_view: str  # "prose", "graph", "code", "outline"
+    content: str  # New content/state
+    reasoning: str | None = None
+
+
+@dataclass(frozen=True)
+class ViewEditResponse:
+    """Response from view edit operation."""
+
+    success: bool
+    block_id: str
+    source_view: str
+    semantic_deltas: list[dict[str, Any]]
+    content_changed: bool
+    trace: dict[str, Any] | None = None
+    error: str | None = None
 
 
 # === Rendering ===
@@ -273,6 +299,8 @@ def discard_thoughts(session_id: str) -> bool:
         # Mutations - file K-Blocks
         "create": Contract(CreateRequest, CreateResponse),
         "save": Contract(SaveRequest, SaveResponse),
+        # Phase 3: Bidirectional view editing
+        "view_edit": Contract(ViewEditRequest, ViewEditResponse),
         # Mutations - thought K-Blocks (Membrane)
         "thought": Contract(ThoughtRequest, ThoughtResponse),
     },
@@ -280,6 +308,11 @@ def discard_thoughts(session_id: str) -> bool:
         ("manifest", {}, "Show active K-Blocks"),
         ("create", {"path": "spec/protocols/witness.md"}, "Create K-Block for file"),
         ("save", {"block_id": "kb_abc123"}, "Save K-Block to cosmos"),
+        (
+            "view_edit",
+            {"block_id": "kb_abc123", "source_view": "graph", "content": "..."},
+            "Edit via graph view",
+        ),
         ("thought", {"content": "What if we...", "session_id": "membrane-1"}, "Append thought"),
     ],
 )
@@ -501,6 +534,97 @@ class KBlockNode(BaseLogosNode):
                 "rewound_to": checkpoint_id,
             }
 
+        # === Phase 3: Bidirectional View Editing ===
+
+        elif aspect_name == "view_edit":
+            block_id = kwargs.get("block_id", "")
+            source_view_str = kwargs.get("source_view", "prose")
+            content = kwargs.get("content", "")
+            reasoning = kwargs.get("reasoning")
+
+            if not block_id:
+                return ViewEditResponse(
+                    success=False,
+                    block_id="",
+                    source_view=source_view_str,
+                    semantic_deltas=[],
+                    content_changed=False,
+                    error="block_id required",
+                )
+
+            # Get the K-Block
+            edit_block = self._harness.get_block(KBlockId(block_id))
+            if not edit_block:
+                return ViewEditResponse(
+                    success=False,
+                    block_id=block_id,
+                    source_view=source_view_str,
+                    semantic_deltas=[],
+                    content_changed=False,
+                    error=f"K-Block not found: {block_id}",
+                )
+
+            # Parse view type
+            try:
+                source_view = ViewType(source_view_str)
+            except ValueError:
+                return ViewEditResponse(
+                    success=False,
+                    block_id=block_id,
+                    source_view=source_view_str,
+                    semantic_deltas=[],
+                    content_changed=False,
+                    error=f"Invalid view type: {source_view_str}",
+                )
+
+            # Check if view is editable
+            sheaf = WitnessedSheaf(edit_block, actor="membrane")
+            if not sheaf.can_edit_view(source_view):
+                return ViewEditResponse(
+                    success=False,
+                    block_id=block_id,
+                    source_view=source_view_str,
+                    semantic_deltas=[],
+                    content_changed=False,
+                    error=f"View {source_view_str} is read-only",
+                )
+
+            # Activate view if not already active
+            if source_view not in edit_block.views:
+                edit_block.activate_view(source_view)
+
+            try:
+                # Perform witnessed propagation
+                old_content = edit_block.content
+                changes = sheaf.propagate(
+                    source_view,
+                    content,
+                    reasoning=reasoning,
+                )
+
+                # Get trace from changes
+                trace = changes.get(source_view, {}).get("trace")
+                deltas = changes.get(source_view, {}).get("semantic_deltas", [])
+
+                return ViewEditResponse(
+                    success=True,
+                    block_id=block_id,
+                    source_view=source_view_str,
+                    semantic_deltas=deltas,
+                    content_changed=old_content != edit_block.content,
+                    trace=trace,
+                )
+
+            except Exception as e:
+                return ViewEditResponse(
+                    success=False,
+                    block_id=block_id,
+                    source_view=source_view_str,
+                    semantic_deltas=[],
+                    content_changed=False,
+                    error=str(e),
+                )
+
         # === Thought K-Block Operations (Membrane) ===
 
         elif aspect_name == "thought":
@@ -551,6 +675,10 @@ class KBlockNode(BaseLogosNode):
 __all__ = [
     "KBlockNode",
     "KBlockManifestRendering",
+    # Contracts
+    "ViewEditRequest",
+    "ViewEditResponse",
+    # Thought K-Block helpers
     "get_thought_block",
     "create_thought_block",
     "append_thought",

@@ -345,26 +345,62 @@ class TestPropagation:
         assert changes[ViewType.PROSE]["source"] is True
         assert block_with_views.content == new_content
 
-    def test_propagate_from_non_prose_raises(self, block_with_views: KBlock) -> None:
-        """Propagation from non-PROSE raises PropagationError."""
+    def test_propagate_from_diff_raises(self, block_with_views: KBlock) -> None:
+        """Propagation from DIFF raises PropagationError (read-only)."""
         sheaf = KBlockSheaf(block_with_views)
 
-        with pytest.raises(PropagationError, match="only PROSE can be edited"):
-            sheaf.propagate(ViewType.GRAPH, "new content")
+        with pytest.raises(PropagationError, match="read-only"):
+            sheaf.propagate(ViewType.DIFF, "new content")
 
-    def test_propagate_from_code_raises(self, block_with_views: KBlock) -> None:
-        """Propagation from CODE raises PropagationError."""
+    def test_propagate_from_graph_bidirectional(self, block_with_views: KBlock) -> None:
+        """Phase 3: Propagation from GRAPH works (bidirectional)."""
+        sheaf = KBlockSheaf(block_with_views)
+        old_graph = block_with_views.views[ViewType.GRAPH]
+
+        # Create a modified graph state (simulated)
+        from ..views.graph import GraphNode, GraphView
+
+        new_graph = GraphView()
+        new_graph._content = block_with_views.content
+        new_graph._nodes = list(old_graph.nodes) + [
+            GraphNode(id="h-999", label="New Section", kind="heading", level=2)
+        ]
+        new_graph._edges = list(old_graph.edges)
+
+        # Propagate from graph should work (Phase 3)
+        changes = sheaf.propagate(ViewType.GRAPH, new_graph, old_graph)
+
+        assert ViewType.GRAPH in changes
+        assert changes[ViewType.GRAPH]["source"] is True
+
+    def test_propagate_from_code_bidirectional(self, block_with_views: KBlock) -> None:
+        """Phase 3: Propagation from CODE works (bidirectional)."""
+        sheaf = KBlockSheaf(block_with_views)
+        old_code = block_with_views.views[ViewType.CODE]
+
+        # Create a modified code state (simulated)
+        from ..views.code import CodeView, FieldDef
+
+        new_code = CodeView()
+        new_code._content = block_with_views.content
+        new_code._class_name = old_code._class_name
+        new_code._fields = list(old_code.fields) + [FieldDef(name="extra", type_hint="str")]
+
+        # Propagate from code should work (Phase 3)
+        changes = sheaf.propagate(ViewType.CODE, new_code, old_code)
+
+        assert ViewType.CODE in changes
+        assert changes[ViewType.CODE]["source"] is True
+
+    def test_can_edit_view(self, block_with_views: KBlock) -> None:
+        """Test can_edit_view() for all view types."""
         sheaf = KBlockSheaf(block_with_views)
 
-        with pytest.raises(PropagationError):
-            sheaf.propagate(ViewType.CODE, "new content")
-
-    def test_propagate_from_outline_raises(self, block_with_views: KBlock) -> None:
-        """Propagation from OUTLINE raises PropagationError."""
-        sheaf = KBlockSheaf(block_with_views)
-
-        with pytest.raises(PropagationError):
-            sheaf.propagate(ViewType.OUTLINE, "new content")
+        assert sheaf.can_edit_view(ViewType.PROSE) is True
+        assert sheaf.can_edit_view(ViewType.GRAPH) is True
+        assert sheaf.can_edit_view(ViewType.CODE) is True
+        assert sheaf.can_edit_view(ViewType.OUTLINE) is True
+        assert sheaf.can_edit_view(ViewType.DIFF) is False
 
     def test_propagate_updates_all_views(self, block_with_views: KBlock) -> None:
         """Propagation refreshes all active views."""

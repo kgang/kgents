@@ -379,11 +379,19 @@ class KBlock:
         Returns:
             The activated View instance
         """
-        from ..views.base import View as ViewProtocol, create_view
+        from ..views.base import View as ViewProtocol, ViewType as VT, create_view
 
         if view_type not in self._views:
             self._views[view_type] = create_view(view_type)
-        self._views[view_type].render(self.content)
+
+        # Handle view-specific rendering
+        if view_type == VT.DIFF:
+            self._views[view_type].render(self.content, self.base_content)
+        elif view_type == VT.REFERENCES:
+            self._views[view_type].render(self.content, spec_path=self.path)
+        else:
+            self._views[view_type].render(self.content)
+
         return cast("ViewProtocol", self._views[view_type])
 
     def refresh_views(self) -> None:
@@ -399,6 +407,9 @@ class KBlock:
             if view_type == VT.DIFF:
                 # Diff view needs base_content too
                 view.render(self.content, self.base_content)
+            elif view_type == VT.REFERENCES:
+                # References view needs spec_path for discovery
+                view.render(self.content, spec_path=self.path)
             else:
                 view.render(self.content)
 
