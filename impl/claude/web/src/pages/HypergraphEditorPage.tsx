@@ -8,25 +8,29 @@
  * - ?memory=<crystal-id> — Context from Brain (future)
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { HypergraphEditor, useGraphNode, normalizePath } from '../hypergraph';
-import type { GraphNode } from '../hypergraph';
+import { HypergraphEditor, FileExplorer, useGraphNode, normalizePath } from '../hypergraph';
+import type { GraphNode, UploadedFile } from '../hypergraph';
+import { sovereignApi } from '../api/client';
 
 import './HypergraphEditorPage.css';
 
 export function HypergraphEditorPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const graphNode = useGraphNode();
 
-  // Get initial path from URL or use default, normalizing to strip repo prefix if present
-  const rawPath = searchParams.get('path') || 'spec/protocols/k-block.md';
-  const initialPath = normalizePath(rawPath);
+  // Get initial path from URL (no default - show FileExplorer if none)
+  const rawPath = searchParams.get('path');
+  const initialPath = rawPath ? normalizePath(rawPath) : null;
   // Future: const memoryContext = searchParams.get('memory'); // Show relevant Brain context
 
-  const [currentPath, setCurrentPath] = useState<string>(initialPath);
+  const [currentPath, setCurrentPath] = useState<string | null>(initialPath);
   const [focusedNode, setFocusedNode] = useState<GraphNode | null>(null);
+
+  // Local file cache for uploaded files
+  const localFilesRef = useRef<Map<string, GraphNode>>(new Map());
 
   // Update path when URL changes
   useEffect(() => {
@@ -36,17 +40,130 @@ export function HypergraphEditorPage() {
       if (normalized !== currentPath) {
         setCurrentPath(normalized);
       }
+    } else {
+      // No path in URL - reset to file explorer
+      setCurrentPath(null);
     }
   }, [searchParams, currentPath]);
+
+  // Handle opening a file from FileExplorer
+  const handleOpenFile = useCallback(
+    (path: string) => {
+      const normalized = normalizePath(path);
+      setCurrentPath(normalized);
+      setSearchParams({ path: normalized });
+    },
+    [setSearchParams]
+  );
+
+  // Handle file upload - ingest into sovereign store
+  const handleUploadFile = useCallback(
+    async (file: UploadedFile) => {
+      console.info(
+        '[HypergraphEditor] File uploaded:',
+        file.name,
+        `(${file.content.length} bytes)`
+      );
+
+      try {
+        // Ingest into sovereign store via AGENTESE
+        // This creates a witnessed, versioned copy with edge extraction
+        const ingestResult = await sovereignApi.ingest({
+          path: `uploads/${file.name}`, // Prefix with 'uploads/' namespace
+          content: file.content,
+          source: 'file-upload',
+        });
+
+        console.info(
+          '[HypergraphEditor] Ingested to sovereign store:',
+          ingestResult.path,
+          `v${ingestResult.version}`,
+          `(${ingestResult.edge_count} edges, mark: ${ingestResult.ingest_mark_id})`
+        );
+
+        // Store in local cache so content is available for rendering
+        // (graphNode.loadNode doesn't fetch content - it comes via K-Block)
+        const ext = file.name.split('.').pop()?.toLowerCase() || '';
+        const kind: GraphNode['kind'] =
+          ext === 'md'
+            ? 'doc'
+            : ext === 'py' || ext === 'ts' || ext === 'tsx'
+              ? 'implementation'
+              : 'unknown';
+
+        const localNode: GraphNode = {
+          path: ingestResult.path,
+          title: file.name.replace(/\.[^.]+$/, ''),
+          kind,
+          confidence: 1.0,
+          content: file.content,
+          outgoingEdges: [],
+          incomingEdges: [],
+        };
+
+        localFilesRef.current.set(ingestResult.path, localNode);
+
+        // Navigate to the ingested file
+        handleOpenFile(ingestResult.path);
+      } catch (err) {
+        console.error('[HypergraphEditor] Failed to ingest file:', err);
+
+        // Fallback: store locally in cache if ingest fails
+        // This ensures the UI remains usable even if backend is down
+        const ext = file.name.split('.').pop()?.toLowerCase() || '';
+        const kind: GraphNode['kind'] =
+          ext === 'md'
+            ? 'doc'
+            : ext === 'py' || ext === 'ts' || ext === 'tsx'
+              ? 'implementation'
+              : 'unknown';
+
+        const localNode: GraphNode = {
+          path: `uploads/${file.name}`,
+          title: file.name.replace(/\.[^.]+$/, ''),
+          kind,
+          confidence: 1.0,
+          content: file.content,
+          outgoingEdges: [],
+          incomingEdges: [],
+        };
+
+        localFilesRef.current.set(`uploads/${file.name}`, localNode);
+        handleOpenFile(`uploads/${file.name}`);
+      }
+    },
+    [handleOpenFile]
+  );
+
+  // Custom loadNode that checks local cache first
+  const loadNode = useCallback(
+    async (path: string): Promise<GraphNode | null> => {
+      // Check local cache first (for uploaded files)
+      const localNode = localFilesRef.current.get(path);
+      if (localNode) {
+        console.info('[HypergraphEditor] Loading from local cache:', path);
+        return localNode;
+      }
+
+      // Fall back to API
+      return graphNode.loadNode(path);
+    },
+    [graphNode.loadNode]
+  );
 
   const handleNodeFocus = useCallback((node: GraphNode) => {
     setFocusedNode(node);
     setCurrentPath(node.path);
   }, []);
 
-  const handleNavigate = useCallback((path: string) => {
-    setCurrentPath(path);
-  }, []);
+  const handleNavigate = useCallback(
+    (path: string) => {
+      const normalized = normalizePath(path);
+      setCurrentPath(normalized);
+      setSearchParams({ path: normalized });
+    },
+    [setSearchParams]
+  );
 
   return (
     <div className="hypergraph-editor-page">
@@ -59,10 +176,22 @@ export function HypergraphEditorPage() {
           <h4>Current Path</h4>
           <input
             type="text"
-            value={currentPath}
-            onChange={(e) => setCurrentPath(e.target.value)}
+            value={currentPath || ''}
+            onChange={(e) => setCurrentPath(e.target.value || null)}
+            placeholder="No file selected"
             className="hypergraph-editor-page__input"
           />
+          {currentPath && (
+            <button
+              className="hypergraph-editor-page__back-btn"
+              onClick={() => {
+                setCurrentPath(null);
+                setSearchParams({});
+              }}
+            >
+              Back to Explorer
+            </button>
+          )}
         </div>
 
         {focusedNode && (
@@ -159,15 +288,23 @@ export function HypergraphEditorPage() {
         )}
       </aside>
 
-      {/* Main editor */}
+      {/* Main editor or file explorer */}
       <main className="hypergraph-editor-page__main">
-        <HypergraphEditor
-          initialPath={currentPath}
-          onNodeFocus={handleNodeFocus}
-          onNavigate={handleNavigate}
-          loadNode={graphNode.loadNode}
-          loadSiblings={graphNode.loadSiblings}
-        />
+        {currentPath ? (
+          <HypergraphEditor
+            initialPath={currentPath}
+            onNodeFocus={handleNodeFocus}
+            onNavigate={handleNavigate}
+            loadNode={loadNode}
+            loadSiblings={graphNode.loadSiblings}
+          />
+        ) : (
+          <FileExplorer
+            onOpenFile={handleOpenFile}
+            onUploadFile={handleUploadFile}
+            uploadEnabled={true}
+          />
+        )}
       </main>
     </div>
   );

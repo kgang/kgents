@@ -28,7 +28,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 # pgvector is required for Trail embedding columns
-from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     JSON,
     Boolean,

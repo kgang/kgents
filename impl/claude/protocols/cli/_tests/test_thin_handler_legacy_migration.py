@@ -139,40 +139,36 @@ class TestCoffeeLegacyMappings:
         assert remaining == []
 
 
-class TestDocsLegacyMappings:
-    """Test docs command legacy mappings to concept.docs.*"""
+class TestDocsThinHandler:
+    """
+    Test docs command routing.
 
-    def test_docs_default(self) -> None:
-        """docs → concept.docs.manifest"""
+    Docs commands are NOT legacy - they route through thin handler (handlers/docs.py)
+    which properly routes subcommands (hydrate, relevant, crystallize) to the
+    living_docs service layer without going through AGENTESE aspects.
+    See legacy.py lines 90-94 for explanation of why docs was removed from legacy.
+
+    These tests verify docs does NOT expand as legacy (it's a thin handler).
+    """
+
+    def test_docs_is_not_legacy(self) -> None:
+        """docs is NOT a legacy command - it uses thin handler."""
         from protocols.cli.legacy import expand_legacy
 
         path, remaining = expand_legacy(["docs"])
-        assert path == "concept.docs.manifest"
+        # Should NOT expand - docs is handled by thin handler, not legacy
+        assert path == "docs"
         assert remaining == []
 
-    def test_docs_generate(self) -> None:
-        """docs generate → concept.docs.generate"""
+    def test_docs_subcommands_not_legacy(self) -> None:
+        """docs subcommands are NOT legacy - thin handler handles them."""
         from protocols.cli.legacy import expand_legacy
 
-        path, remaining = expand_legacy(["docs", "generate"])
-        assert path == "concept.docs.generate"
-        assert remaining == []
-
-    def test_docs_teaching(self) -> None:
-        """docs teaching → concept.docs.teaching"""
-        from protocols.cli.legacy import expand_legacy
-
-        path, remaining = expand_legacy(["docs", "teaching"])
-        assert path == "concept.docs.teaching"
-        assert remaining == []
-
-    def test_docs_verify(self) -> None:
-        """docs verify → concept.docs.verify"""
-        from protocols.cli.legacy import expand_legacy
-
-        path, remaining = expand_legacy(["docs", "verify"])
-        assert path == "concept.docs.verify"
-        assert remaining == []
+        for subcmd in ["generate", "teaching", "verify", "hydrate", "relevant"]:
+            path, remaining = expand_legacy(["docs", subcmd])
+            # Should NOT expand to concept.docs.* - thin handler routes these
+            assert path == "docs", f"docs {subcmd} should not be legacy"
+            assert remaining == [subcmd]
 
 
 class TestGraphThinHandler:
@@ -233,13 +229,15 @@ class TestRouterIntegration:
         assert str(result.input_type) == "legacy"
         assert result.agentese_path == "time.coffee.garden"
 
-    def test_docs_routes_as_legacy(self) -> None:
-        """Router should classify docs commands as LEGACY."""
+    def test_docs_not_legacy(self) -> None:
+        """Router should NOT classify docs as LEGACY - it's a thin handler."""
         from protocols.cli.agentese_router import classify_input
 
         result = classify_input(["docs", "generate"])
-        assert str(result.input_type) == "legacy"
-        assert result.agentese_path == "concept.docs.generate"
+        # Docs uses thin handler (COMMAND_REGISTRY), not legacy expansion
+        # Router classifies as UNKNOWN because it doesn't know about thin handlers
+        # The hollow.py COMMAND_REGISTRY handles "docs" before router is called
+        assert str(result.input_type) != "legacy"
 
     def test_graph_not_legacy(self) -> None:
         """Router should NOT classify graph as LEGACY - it's a thin handler."""

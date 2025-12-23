@@ -330,34 +330,539 @@ function WitnessPane({ events, connected, onReconnect }: WitnessPaneProps) {
 }
 
 // =============================================================================
+// Error/Loading/NotIngested State Components (Extracted for complexity)
+// =============================================================================
+
+interface SpecErrorViewProps {
+  error: string;
+}
+
+function SpecErrorView({ error }: SpecErrorViewProps) {
+  return (
+    <div className="spec-view spec-view--error">
+      <EmpathyError type="notfound" title="Spec not accessible" subtitle={error} />
+    </div>
+  );
+}
+
+function SpecLoadingView() {
+  return (
+    <div className="spec-view spec-view--loading">
+      <PersonalityLoading jewel="brain" action="analyze" size="md" />
+    </div>
+  );
+}
+
+interface SpecNotIngestedViewProps {
+  path: string;
+  ingestHint: string;
+  ingestError: string | null;
+  isIngesting: boolean;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  onIngestFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+function SpecNotIngestedView({
+  path,
+  ingestHint,
+  ingestError,
+  isIngesting,
+  fileInputRef,
+  onIngestFile,
+}: SpecNotIngestedViewProps) {
+  return (
+    <div className="spec-view spec-view--not-ingested">
+      <div className="spec-view__not-ingested">
+        <div className="spec-view__not-ingested-icon">📦</div>
+        <h3 className="spec-view__not-ingested-title">Content Not Ingested</h3>
+        <p className="spec-view__not-ingested-message">
+          This document hasn't been uploaded to the sovereign store yet.
+        </p>
+        <div className="spec-view__not-ingested-path">
+          <code>{path}</code>
+        </div>
+        <div className="spec-view__not-ingested-hint">{ingestHint}</div>
+        {ingestError && <div className="spec-view__not-ingested-error">{ingestError}</div>}
+        <div className="spec-view__not-ingested-actions">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={onIngestFile}
+            accept=".md,.txt,.markdown"
+            style={{ display: 'none' }}
+          />
+          <button
+            className="spec-view__upload-btn"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isIngesting}
+          >
+            {isIngesting ? 'Uploading...' : 'Upload Content'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Header Components (Extracted for complexity)
+// =============================================================================
+
+interface SpecHeaderProps {
+  node: {
+    title: string;
+    path: string;
+    tier: string;
+    confidence: number;
+    agentese_path?: string;
+    derives_from: string[];
+  } | null;
+  path: string;
+  showMetadata: boolean;
+  onNavigate?: (path: string) => void;
+}
+
+function SpecHeader({ node, path, showMetadata, onNavigate }: SpecHeaderProps) {
+  if (showMetadata && node) {
+    return (
+      <header className="spec-view__header">
+        <div className="spec-view__title-row">
+          <h2 className="spec-view__title">{node.title || node.path}</h2>
+          <span className="spec-view__tier" data-tier={node.tier}>
+            {node.tier}
+          </span>
+        </div>
+
+        <div className="spec-view__meta">
+          <span className="spec-view__path">{node.agentese_path || path}</span>
+          <ConfidenceBar confidence={node.confidence} />
+        </div>
+
+        {node.derives_from.length > 0 && (
+          <div className="spec-view__derives">
+            <span className="spec-view__derives-label">Derives from:</span>
+            {node.derives_from.map((d) => (
+              <button
+                key={d}
+                className="spec-view__derives-link"
+                onClick={() => onNavigate?.(`spec/${d}.md`)}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+        )}
+      </header>
+    );
+  }
+
+  return (
+    <header className="spec-view__header">
+      <div className="spec-view__title-row">
+        <h2 className="spec-view__title">{path.split('/').pop()}</h2>
+      </div>
+      <div className="spec-view__meta">
+        <span className="spec-view__path">{path}</span>
+      </div>
+    </header>
+  );
+}
+
+// =============================================================================
+// Content Components (Extracted for complexity)
+// =============================================================================
+
+interface SpecContentProps {
+  editMode: boolean;
+  editContent: string;
+  contentLoading: boolean;
+  contentError: string | null;
+  sceneGraph: SceneGraph | null;
+  path: string;
+  isApplyingEdit: boolean;
+  onEditChange: (content: string) => void;
+  onApplyEdit: () => void;
+  onCancelEdit: () => void;
+  onEnterEdit: () => void;
+  onTokenNavigate: (agentesePath: string) => void;
+  onTaskToggle: (newState: boolean, taskId?: string) => Promise<void>;
+}
+
+function SpecContent({
+  editMode,
+  editContent,
+  contentLoading,
+  contentError,
+  sceneGraph,
+  path,
+  isApplyingEdit,
+  onEditChange,
+  onApplyEdit,
+  onCancelEdit,
+  onEnterEdit,
+  onTokenNavigate,
+  onTaskToggle,
+}: SpecContentProps) {
+  if (editMode) {
+    return (
+      <EditPane
+        content={editContent}
+        onChange={onEditChange}
+        onSave={onApplyEdit}
+        onCancel={onCancelEdit}
+        isSaving={isApplyingEdit}
+        path={path}
+      />
+    );
+  }
+
+  if (contentLoading) {
+    return <div className="spec-view__content-loading">Loading content...</div>;
+  }
+
+  if (contentError) {
+    return (
+      <div className="spec-view__content-error">
+        <p>Failed to load content</p>
+        <p className="spec-view__content-hint">{contentError}</p>
+      </div>
+    );
+  }
+
+  if (sceneGraph) {
+    return (
+      <>
+        <InteractiveDocument
+          sceneGraph={sceneGraph}
+          onNavigate={onTokenNavigate}
+          onToggle={onTaskToggle}
+          className="spec-view__interactive"
+        />
+        <button
+          className="spec-view__edit-btn"
+          onClick={onEnterEdit}
+          title="Edit this spec (enters K-Block isolation)"
+        >
+          Edit
+        </button>
+      </>
+    );
+  }
+
+  return (
+    <div className="spec-view__content-empty">
+      <p>Content not available</p>
+      <p className="spec-view__content-hint">Use edge portals above to navigate the spec graph</p>
+    </div>
+  );
+}
+
+// =============================================================================
+// Helper: Parse AGENTESE path to navigation target
+// =============================================================================
+
+function parseAgentesePath(agentesePath: string, onNavigate?: (path: string) => void): void {
+  const parts = agentesePath.split('.');
+  const context = parts[0]; // self, world, concept, void, time
+  const isConcept = context === 'concept' && parts[1];
+
+  if (isConcept) {
+    onNavigate?.(`concept/${parts.slice(1).join('/')}`);
+  } else {
+    console.info('[SpecView] Navigate to AGENTESE path:', agentesePath);
+    onNavigate?.(agentesePath);
+  }
+}
+
+// =============================================================================
+// Helper: Extract error message from unknown error
+// =============================================================================
+
+function getErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message : fallback;
+}
+
+// =============================================================================
+// Hook: Edit mode handlers (extracted to reduce main component complexity)
+// =============================================================================
+
+interface EditHandlers {
+  handleEnterEdit: () => void;
+  handleApplyEdit: () => Promise<void>;
+  handleCancelEdit: () => void;
+  editMode: boolean;
+  editContent: string;
+  isApplyingEdit: boolean;
+  setEditContent: (content: string) => void;
+}
+
+function useEditMode(
+  kblock: ReturnType<typeof useFileKBlock>,
+  setSceneGraph: (graph: SceneGraph | null) => void
+): EditHandlers {
+  const [editMode, setEditMode] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [isApplyingEdit, setIsApplyingEdit] = useState(false);
+
+  const handleEnterEdit = useCallback(() => {
+    setEditContent(kblock.state.content);
+    setEditMode(true);
+  }, [kblock.state.content]);
+
+  const handleApplyEdit = useCallback(async () => {
+    if (!kblock.state.blockId) return;
+
+    setIsApplyingEdit(true);
+    try {
+      const result = await kblock.viewEdit('prose', editContent, 'Kent edited in Membrane');
+      if (result.success) {
+        setEditMode(false);
+        const parsed = await documentApi.parse(editContent, 'COMFORTABLE');
+        setSceneGraph(parsed.scene_graph as SceneGraph);
+      } else {
+        console.error('[SpecView] Failed to apply edit:', result.error);
+      }
+    } finally {
+      setIsApplyingEdit(false);
+    }
+  }, [kblock, editContent, setSceneGraph]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditMode(false);
+    setEditContent('');
+  }, []);
+
+  return {
+    handleEnterEdit,
+    handleApplyEdit,
+    handleCancelEdit,
+    editMode,
+    editContent,
+    isApplyingEdit,
+    setEditContent,
+  };
+}
+
+// =============================================================================
+// Hook: Ingest handlers (extracted to reduce main component complexity)
+// =============================================================================
+
+interface IngestHandlers {
+  handleIngestFile: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  isIngesting: boolean;
+  ingestError: string | null;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  clearIngestState: () => void;
+}
+
+function useIngestHandlers(
+  path: string,
+  kblock: ReturnType<typeof useFileKBlock>,
+  setNotIngested: (value: boolean) => void,
+  setIngestHint: (value: string) => void
+): IngestHandlers {
+  const [isIngesting, setIsIngesting] = useState(false);
+  const [ingestError, setIngestError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleIngestFile = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setIsIngesting(true);
+      setIngestError(null);
+
+      try {
+        const content = await file.text();
+        const result = await sovereignApi.ingest({ path, content, source: 'webapp-upload' });
+        if (result.version) {
+          setNotIngested(false);
+          setIngestHint('');
+          await kblock.create(path);
+        }
+      } catch (err) {
+        console.error('[SpecView] Ingest failed:', err);
+        setIngestError(getErrorMessage(err, 'Failed to ingest file'));
+      } finally {
+        setIsIngesting(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    },
+    [path, kblock, setNotIngested, setIngestHint]
+  );
+
+  const clearIngestState = useCallback(() => {
+    setIngestError(null);
+  }, []);
+
+  return { handleIngestFile, isIngesting, ingestError, fileInputRef, clearIngestState };
+}
+
+// =============================================================================
+// Hook: Content loading (extracted to reduce main component complexity)
+// =============================================================================
+
+interface ContentLoaderState {
+  sceneGraph: SceneGraph | null;
+  setSceneGraph: (graph: SceneGraph | null) => void;
+  contentLoading: boolean;
+  contentError: string | null;
+  notIngested: boolean;
+  ingestHint: string;
+  setNotIngested: (value: boolean) => void;
+  setIngestHint: (value: string) => void;
+}
+
+function useContentLoader(
+  path: string,
+  kblockCreate: (path: string) => Promise<KBlockCreateResult>
+): ContentLoaderState {
+  const [sceneGraph, setSceneGraph] = useState<SceneGraph | null>(null);
+  const [contentLoading, setContentLoading] = useState(false);
+  const [contentError, setContentError] = useState<string | null>(null);
+  const [notIngested, setNotIngested] = useState(false);
+  const [ingestHint, setIngestHint] = useState<string>('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadContent() {
+      setContentLoading(true);
+      setContentError(null);
+      setNotIngested(false);
+      setIngestHint('');
+
+      try {
+        const result = await kblockCreate(path);
+        if (cancelled) return;
+
+        if (result.not_ingested) {
+          setNotIngested(true);
+          setIngestHint(result.ingest_hint || 'Upload content via File Picker');
+          setContentLoading(false);
+          return;
+        }
+
+        if (!result.success || !result.content) {
+          throw new Error(result.error || 'Failed to create K-Block');
+        }
+
+        const parsed = await documentApi.parse(result.content, 'COMFORTABLE');
+        if (!cancelled) setSceneGraph(parsed.scene_graph as SceneGraph);
+      } catch (err) {
+        if (!cancelled) {
+          console.error('[SpecView] Failed to load content:', err);
+          setContentError(getErrorMessage(err, 'Failed to load content'));
+        }
+      } finally {
+        if (!cancelled) setContentLoading(false);
+      }
+    }
+
+    loadContent();
+    return () => {
+      cancelled = true;
+    };
+  }, [path, kblockCreate]);
+
+  return {
+    sceneGraph,
+    setSceneGraph,
+    contentLoading,
+    contentError,
+    notIngested,
+    ingestHint,
+    setNotIngested,
+    setIngestHint,
+  };
+}
+
+// =============================================================================
+// Hook: K-Block actions (save, discard, toggle) - extracted for complexity
+// =============================================================================
+
+interface KBlockActions {
+  handleSave: () => Promise<void>;
+  handleDiscard: () => Promise<void>;
+  handleTaskToggle: (newState: boolean, taskId?: string) => Promise<void>;
+  handleTokenNavigate: (agentesePath: string) => void;
+  isSaving: boolean;
+}
+
+function useKBlockActions(
+  path: string,
+  kblock: ReturnType<typeof useFileKBlock>,
+  onNavigate?: (path: string) => void
+): KBlockActions {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      const result = await kblock.save('Kent saved from Membrane');
+      if (!result.success) console.error('[SpecView] Failed to save:', result.error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [kblock]);
+
+  const handleDiscard = useCallback(async () => {
+    await kblock.discard();
+    await kblock.create(path);
+  }, [kblock, path]);
+
+  const handleTaskToggle = useCallback(
+    async (_newState: boolean, taskId?: string) => {
+      const canToggle = taskId && kblock.state.blockId;
+      if (!canToggle) return;
+
+      try {
+        await documentApi.toggleTask({ file_path: path, task_id: taskId });
+        await kblock.refresh();
+      } catch (err) {
+        console.error('[SpecView] Failed to toggle task:', err);
+        throw err;
+      }
+    },
+    [path, kblock]
+  );
+
+  const handleTokenNavigate = useCallback(
+    (agentesePath: string) => parseAgentesePath(agentesePath, onNavigate),
+    [onNavigate]
+  );
+
+  return { handleSave, handleDiscard, handleTaskToggle, handleTokenNavigate, isSaving };
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
 export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
   const { spec, loading, error, query } = useSpecQuery();
-  const [sceneGraph, setSceneGraph] = useState<SceneGraph | null>(null);
-  const [contentLoading, setContentLoading] = useState(false);
-  const [contentError, setContentError] = useState<string | null>(null);
   const [references, _setReferences] = useState<KBlockReference[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Edit mode state (editing IS witnessing)
-  const [editMode, setEditMode] = useState(false);
-  const [editContent, setEditContent] = useState('');
-  const [isApplyingEdit, setIsApplyingEdit] = useState(false);
-
-  // Sovereignty state: True when content not found in cosmos or sovereign store
-  // User needs to upload content via file picker to ingest
-  const [notIngested, setNotIngested] = useState(false);
-  const [ingestHint, setIngestHint] = useState<string>('');
-  const [isIngesting, setIsIngesting] = useState(false);
-  const [ingestError, setIngestError] = useState<string | null>(null);
-
-  // File input ref for sovereign ingest
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // K-Block for transactional editing
   const kblock = useFileKBlock();
+
+  // Content loading (extracted hook)
+  const contentState = useContentLoader(path, kblock.create);
+
+  // Edit mode handlers (extracted hook)
+  const editHandlers = useEditMode(kblock, contentState.setSceneGraph);
+
+  // Ingest handlers (extracted hook)
+  const ingestHandlers = useIngestHandlers(
+    path,
+    kblock,
+    contentState.setNotIngested,
+    contentState.setIngestHint
+  );
+
+  // K-Block actions (extracted hook)
+  const kblockActions = useKBlockActions(path, kblock, onNavigate);
 
   // Witness stream for real-time events
   const witness = useWitnessStream();
@@ -370,334 +875,113 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
 
   // Query SpecGraph for metadata
   useEffect(() => {
-    if (path) {
-      query(path);
-    }
+    if (path) query(path);
   }, [path, query]);
 
-  // Create K-Block and load content when path changes
-  useEffect(() => {
-    let cancelled = false;
+  // Compute render state (reduces branching in main function)
+  const hasContent = contentState.sceneGraph !== null;
+  const hasSpec = spec !== null;
+  const shouldShowError = Boolean(error) && !hasContent && !contentState.contentLoading;
+  const shouldShowLoading = loading && !hasContent;
 
-    async function loadContent() {
-      setContentLoading(true);
-      setContentError(null);
-      setNotIngested(false);
-      setIngestHint('');
+  // Early return: Error state
+  if (shouldShowError && error) return <SpecErrorView error={error} />;
 
-      try {
-        // Step 1: Create K-Block for this file (returns content immediately)
-        const result: KBlockCreateResult = await kblock.create(path);
+  // Early return: Loading state
+  if (shouldShowLoading) return <SpecLoadingView />;
 
-        if (cancelled) return;
-
-        // Step 2: Check if content not ingested (sovereign store empty)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const resultAny = result as any;
-        if (resultAny.not_ingested) {
-          setNotIngested(true);
-          setIngestHint(resultAny.ingest_hint || 'Upload content via File Picker');
-          setContentLoading(false);
-          return;
-        }
-
-        if (!result.success || !result.content) {
-          throw new Error(result.error || 'Failed to create K-Block');
-        }
-
-        // Step 3: Parse content to SceneGraph via AGENTESE self.document.parse
-        // Content is available immediately from the promise, no React state delay
-        const parsed = await documentApi.parse(result.content, 'COMFORTABLE');
-
-        if (cancelled) return;
-
-        setSceneGraph(parsed.scene_graph as SceneGraph);
-      } catch (err) {
-        if (!cancelled) {
-          console.error('[SpecView] Failed to load content:', err);
-          setContentError(err instanceof Error ? err.message : 'Failed to load content');
-        }
-      } finally {
-        if (!cancelled) {
-          setContentLoading(false);
-        }
-      }
-    }
-
-    loadContent();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path, kblock.create]);
-
-  // Handle AGENTESE path navigation
-  const handleTokenNavigate = useCallback(
-    (agentesePath: string) => {
-      // Parse AGENTESE path to determine target
-      // Format: context.service.aspect (e.g., self.brain, world.house.manifest)
-      const parts = agentesePath.split('.');
-      const context = parts[0]; // self, world, concept, void, time
-
-      if (context === 'concept' && parts[1]) {
-        // Navigate to concept view
-        onNavigate?.(`concept/${parts.slice(1).join('/')}`);
-      } else {
-        // For now, log and let parent handle
-        console.info('[SpecView] Navigate to AGENTESE path:', agentesePath);
-        onNavigate?.(agentesePath);
-      }
-    },
-    [onNavigate]
-  );
-
-  // Handle task toggle via K-Block view_edit
-  const handleTaskToggle = useCallback(
-    async (_newState: boolean, taskId?: string) => {
-      if (!taskId || !kblock.state.blockId) return;
-
-      try {
-        // Toggle task in the content
-        // For now, use the document API directly (task toggle is a special case)
-        await documentApi.toggleTask({
-          file_path: path,
-          task_id: taskId,
-        });
-
-        // Refresh K-Block content
-        await kblock.refresh();
-      } catch (err) {
-        console.error('[SpecView] Failed to toggle task:', err);
-        throw err; // Re-throw so TaskCheckboxToken can revert
-      }
-    },
-    [path, kblock]
-  );
-
-  // Handle save
-  const handleSave = useCallback(async () => {
-    setIsSaving(true);
-    try {
-      const result = await kblock.save('Kent saved from Membrane');
-      if (!result.success) {
-        console.error('[SpecView] Failed to save:', result.error);
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  }, [kblock]);
-
-  // Handle discard
-  const handleDiscard = useCallback(async () => {
-    await kblock.discard();
-    // Re-create K-Block with fresh content
-    await kblock.create(path);
-  }, [kblock, path]);
-
-  // Handle enter edit mode
-  const handleEnterEdit = useCallback(() => {
-    setEditContent(kblock.state.content);
-    setEditMode(true);
-  }, [kblock.state.content]);
-
-  // Handle apply edit via K-Block viewEdit (editing IS witnessing)
-  const handleApplyEdit = useCallback(async () => {
-    if (!kblock.state.blockId) return;
-
-    setIsApplyingEdit(true);
-    try {
-      const result = await kblock.viewEdit('prose', editContent, 'Kent edited in Membrane');
-      if (result.success) {
-        setEditMode(false);
-        // Re-parse content to update SceneGraph
-        const parsed = await documentApi.parse(editContent, 'COMFORTABLE');
-        setSceneGraph(parsed.scene_graph as SceneGraph);
-      } else {
-        console.error('[SpecView] Failed to apply edit:', result.error);
-      }
-    } finally {
-      setIsApplyingEdit(false);
-    }
-  }, [kblock, editContent]);
-
-  // Handle cancel edit
-  const handleCancelEdit = useCallback(() => {
-    setEditMode(false);
-    setEditContent('');
-  }, []);
-
-  // Handle file ingest via sovereign store
-  const handleIngestFile = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      setIsIngesting(true);
-      setIngestError(null);
-
-      try {
-        const content = await file.text();
-        const result = await sovereignApi.ingest({
-          path,
-          content,
-          source: 'webapp-upload',
-        });
-
-        if (result.version) {
-          // Success! Clear not-ingested state and reload via K-Block
-          setNotIngested(false);
-          setIngestHint('');
-          await kblock.create(path);
-        }
-      } catch (err) {
-        console.error('[SpecView] Ingest failed:', err);
-        setIngestError(err instanceof Error ? err.message : 'Failed to ingest file');
-      } finally {
-        setIsIngesting(false);
-        // Reset file input so same file can be re-selected
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      }
-    },
-    [path, kblock]
-  );
-
-  // If SpecGraph fails but we have content, show it anyway
-  // This allows testing Interactive Text before SpecGraph is wired
-  const hasContent = sceneGraph !== null;
-  const showMetadata = spec !== null;
-
-  // Only show error if we have neither spec nor content
-  if (error && !hasContent && !contentLoading) {
+  // Early return: Not ingested state
+  if (contentState.notIngested) {
     return (
-      <div className="spec-view spec-view--error">
-        <EmpathyError type="notfound" title="Spec not accessible" subtitle={error} />
-      </div>
+      <SpecNotIngestedView
+        path={path}
+        ingestHint={contentState.ingestHint}
+        ingestError={ingestHandlers.ingestError}
+        isIngesting={ingestHandlers.isIngesting}
+        fileInputRef={ingestHandlers.fileInputRef}
+        onIngestFile={ingestHandlers.handleIngestFile}
+      />
     );
   }
 
-  // Loading state - show if loading and no content yet
-  if (loading && !hasContent) {
-    return (
-      <div className="spec-view spec-view--loading">
-        <PersonalityLoading jewel="brain" action="analyze" size="md" />
-      </div>
-    );
-  }
+  return (
+    <SpecViewMain
+      path={path}
+      spec={spec}
+      hasSpec={hasSpec}
+      kblock={kblock}
+      kblockActions={kblockActions}
+      editHandlers={editHandlers}
+      contentState={contentState}
+      witness={witness}
+      pathEvents={pathEvents}
+      references={references}
+      onNavigate={onNavigate}
+      onEdgeClick={onEdgeClick}
+    />
+  );
+}
 
-  // NOT INGESTED state - content not in sovereign store
-  // User needs to upload content via file picker
-  if (notIngested) {
-    return (
-      <div className="spec-view spec-view--not-ingested">
-        <div className="spec-view__not-ingested">
-          <div className="spec-view__not-ingested-icon">📦</div>
-          <h3 className="spec-view__not-ingested-title">Content Not Ingested</h3>
-          <p className="spec-view__not-ingested-message">
-            This document hasn't been uploaded to the sovereign store yet.
-          </p>
-          <div className="spec-view__not-ingested-path">
-            <code>{path}</code>
-          </div>
-          <div className="spec-view__not-ingested-hint">{ingestHint}</div>
-          {ingestError && <div className="spec-view__not-ingested-error">{ingestError}</div>}
-          <div className="spec-view__not-ingested-actions">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleIngestFile}
-              accept=".md,.txt,.markdown"
-              style={{ display: 'none' }}
-            />
-            <button
-              className="spec-view__upload-btn"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isIngesting}
-            >
-              {isIngesting ? 'Uploading...' : 'Upload Content'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+// =============================================================================
+// Main Render Component (extracted to reduce SpecView complexity)
+// =============================================================================
 
-  // Destructure only if spec exists
-  const node = spec?.node;
+interface SpecViewMainProps {
+  path: string;
+  spec: ReturnType<typeof useSpecQuery>['spec'];
+  hasSpec: boolean;
+  kblock: ReturnType<typeof useFileKBlock>;
+  kblockActions: KBlockActions;
+  editHandlers: EditHandlers;
+  contentState: ContentLoaderState;
+  witness: ReturnType<typeof useWitnessStream>;
+  pathEvents: WitnessEvent[];
+  references: KBlockReference[];
+  onNavigate?: (path: string) => void;
+  onEdgeClick?: (target: string, edge: EdgeType) => void;
+}
+
+function SpecViewMain({
+  path,
+  spec,
+  hasSpec,
+  kblock,
+  kblockActions,
+  editHandlers,
+  contentState,
+  witness,
+  pathEvents,
+  references,
+  onNavigate,
+  onEdgeClick,
+}: SpecViewMainProps) {
+  const hasKBlock = Boolean(kblock.state.blockId);
+  const showWitnessPane = witness.connected || pathEvents.length > 0;
+  const node = spec?.node ?? null;
   const edges = spec?.edges ?? {};
   const tokens = spec?.tokens ?? {};
 
   return (
     <div className="spec-view" data-isolation={kblock.state.isolation}>
-      {/* K-Block isolation badge - shows when we have a K-Block */}
-      {kblock.state.blockId && (
+      {hasKBlock && (
         <IsolationBadge
           isolation={kblock.state.isolation}
           isDirty={kblock.state.isDirty}
-          onSave={handleSave}
-          onDiscard={handleDiscard}
-          isSaving={isSaving}
+          onSave={kblockActions.handleSave}
+          onDiscard={kblockActions.handleDiscard}
+          isSaving={kblockActions.isSaving}
         />
       )}
 
-      {/* Header with tier and confidence - only show if we have spec metadata */}
-      {showMetadata && node && (
-        <header className="spec-view__header">
-          <div className="spec-view__title-row">
-            <h2 className="spec-view__title">{node.title || node.path}</h2>
-            <span className="spec-view__tier" data-tier={node.tier}>
-              {node.tier}
-            </span>
-          </div>
+      <SpecHeader node={node} path={path} showMetadata={hasSpec} onNavigate={onNavigate} />
 
-          <div className="spec-view__meta">
-            <span className="spec-view__path">{node.agentese_path || path}</span>
-            <ConfidenceBar confidence={node.confidence} />
-          </div>
+      {hasSpec && <TokenBadges tokens={tokens} />}
 
-          {node.derives_from.length > 0 && (
-            <div className="spec-view__derives">
-              <span className="spec-view__derives-label">Derives from:</span>
-              {node.derives_from.map((d) => (
-                <button
-                  key={d}
-                  className="spec-view__derives-link"
-                  onClick={() => onNavigate?.(`spec/${d}.md`)}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-          )}
-        </header>
-      )}
+      {hasSpec && <EdgePortals edges={edges} onNavigate={onNavigate} onEdgeClick={onEdgeClick} />}
 
-      {/* Fallback header when no spec metadata */}
-      {!showMetadata && (
-        <header className="spec-view__header">
-          <div className="spec-view__title-row">
-            <h2 className="spec-view__title">{path.split('/').pop()}</h2>
-          </div>
-          <div className="spec-view__meta">
-            <span className="spec-view__path">{path}</span>
-          </div>
-        </header>
-      )}
-
-      {/* Token badges - only if we have tokens from SpecGraph */}
-      {showMetadata && <TokenBadges tokens={tokens} />}
-
-      {/* Edge portals - only if we have edges from SpecGraph */}
-      {showMetadata && (
-        <EdgePortals edges={edges} onNavigate={onNavigate} onEdgeClick={onEdgeClick} />
-      )}
-
-      {/* References panel - discovered from K-Block */}
       <ReferencesPanel references={references} onNavigate={onNavigate} />
 
-      {/* Witness stream - real-time events for this spec */}
-      {(witness.connected || pathEvents.length > 0) && (
+      {showWitnessPane && (
         <WitnessPane
           events={pathEvents}
           connected={witness.connected}
@@ -705,50 +989,22 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
         />
       )}
 
-      {/* Content — edit mode or view mode */}
       <div className="spec-view__content">
-        {editMode ? (
-          // Edit mode: show EditPane (editing IS witnessing)
-          <EditPane
-            content={editContent}
-            onChange={setEditContent}
-            onSave={handleApplyEdit}
-            onCancel={handleCancelEdit}
-            isSaving={isApplyingEdit}
-            path={path}
-          />
-        ) : contentLoading ? (
-          <div className="spec-view__content-loading">Loading content...</div>
-        ) : contentError ? (
-          <div className="spec-view__content-error">
-            <p>Failed to load content</p>
-            <p className="spec-view__content-hint">{contentError}</p>
-          </div>
-        ) : sceneGraph ? (
-          <>
-            <InteractiveDocument
-              sceneGraph={sceneGraph}
-              onNavigate={handleTokenNavigate}
-              onToggle={handleTaskToggle}
-              className="spec-view__interactive"
-            />
-            {/* Edit button - double-click or button to enter edit mode */}
-            <button
-              className="spec-view__edit-btn"
-              onClick={handleEnterEdit}
-              title="Edit this spec (enters K-Block isolation)"
-            >
-              Edit
-            </button>
-          </>
-        ) : (
-          <div className="spec-view__content-empty">
-            <p>Content not available</p>
-            <p className="spec-view__content-hint">
-              Use edge portals above to navigate the spec graph
-            </p>
-          </div>
-        )}
+        <SpecContent
+          editMode={editHandlers.editMode}
+          editContent={editHandlers.editContent}
+          contentLoading={contentState.contentLoading}
+          contentError={contentState.contentError}
+          sceneGraph={contentState.sceneGraph}
+          path={path}
+          isApplyingEdit={editHandlers.isApplyingEdit}
+          onEditChange={editHandlers.setEditContent}
+          onApplyEdit={editHandlers.handleApplyEdit}
+          onCancelEdit={editHandlers.handleCancelEdit}
+          onEnterEdit={editHandlers.handleEnterEdit}
+          onTokenNavigate={kblockActions.handleTokenNavigate}
+          onTaskToggle={kblockActions.handleTaskToggle}
+        />
       </div>
     </div>
   );

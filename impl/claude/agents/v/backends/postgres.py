@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 def is_pgvector_available() -> bool:
     """Check if pgvector package is installed."""
     try:
-        import pgvector  # type: ignore[import-untyped]  # noqa: F401
+        import pgvector  # noqa: F401
 
         return True
     except ImportError:
@@ -61,7 +61,7 @@ def is_pgvector_available() -> bool:
 
 
 # pgvector is required for PostgresVectorBackend
-from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]
+from pgvector.sqlalchemy import Vector
 
 
 class PostgresVectorBackend(BaseVgent):

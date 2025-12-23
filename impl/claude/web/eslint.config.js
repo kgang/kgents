@@ -88,10 +88,7 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
 
       // React refresh - required for HMR to work correctly
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
 
       // Type safety - prevent runtime errors
       '@typescript-eslint/no-explicit-any': 'warn', // Warn, not error - sometimes any is needed
@@ -106,7 +103,7 @@ export default tseslint.config(
       ],
 
       // Prevent common mistakes
-      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
+      'no-console': ['warn', { allow: ['warn', 'error', 'info', 'debug'] }],
       'no-debugger': 'error',
       'no-alert': 'error',
       'no-eval': 'error',
@@ -155,12 +152,12 @@ export default tseslint.config(
       // Complexity warnings
       'max-depth': ['warn', 4],
       'max-nested-callbacks': ['warn', 3],
-      'complexity': ['warn', 15],
+      complexity: ['warn', 15],
 
       // Best practices (warn, not error)
       'default-case-last': 'warn',
       'dot-notation': 'warn',
-      'eqeqeq': ['warn', 'smart'],
+      eqeqeq: ['warn', 'smart'],
       'grouped-accessor-pairs': 'warn',
       'no-caller': 'error',
       'no-constructor-return': 'error',
@@ -185,18 +182,18 @@ export default tseslint.config(
       'no-useless-concat': 'warn',
       'no-useless-return': 'warn',
       'prefer-promise-reject-errors': 'warn',
-      'radix': 'warn',
-      'yoda': 'warn',
+      radix: 'warn',
+      yoda: 'warn',
 
       // =========================================================================
       // OFF: Handled by Prettier or too pedantic
       // =========================================================================
 
       // Formatting (Prettier handles all of these)
-      'indent': 'off',
+      indent: 'off',
       'linebreak-style': 'off',
-      'quotes': 'off',
-      'semi': 'off',
+      quotes: 'off',
+      semi: 'off',
       'comma-dangle': 'off',
       'arrow-parens': 'off',
       'object-curly-spacing': 'off',
@@ -219,7 +216,12 @@ export default tseslint.config(
   // Test files - relaxed rules
   // =============================================================================
   {
-    files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', '**/tests/**/*.{ts,tsx}'],
+    files: [
+      '**/*.test.{ts,tsx}',
+      '**/*.spec.{ts,tsx}',
+      '**/tests/**/*.{ts,tsx}',
+      '**/testing/**/*.{ts,tsx}',
+    ],
     rules: {
       // Allow any in tests - testing edge cases often requires it
       '@typescript-eslint/no-explicit-any': 'off',
@@ -237,13 +239,16 @@ export default tseslint.config(
       // Relax complexity rules in tests
       'max-depth': 'off',
       'max-nested-callbacks': 'off',
-      'complexity': 'off',
+      complexity: 'off',
 
       // Allow promise executor returns in tests (e.g., setTimeout in Promise)
       'no-promise-executor-return': 'off',
 
       // Allow unused vars in tests (often for destructuring)
       '@typescript-eslint/no-unused-vars': 'off',
+
+      // Allow await in loops in tests (often testing sequential operations)
+      'no-await-in-loop': 'off',
     },
   },
 
@@ -261,6 +266,21 @@ export default tseslint.config(
       // E2E tests may have long async chains
       'no-await-in-loop': 'off',
       'max-nested-callbacks': 'off',
+    },
+  },
+
+  // =============================================================================
+  // Script files - relaxed rules for CLI/build scripts
+  // =============================================================================
+  {
+    files: ['**/scripts/**/*.{ts,tsx}'],
+    rules: {
+      // Scripts use console for output
+      'no-console': 'off',
+
+      // Scripts may have complex logic
+      complexity: 'off',
+      'max-depth': 'off',
     },
   }
 );
