@@ -419,6 +419,53 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   const commandLineRef = useRef<HTMLInputElement>(null);
   const [commandLineVisible, setCommandLineVisible] = useState(false);
   const [witnessLoading, setWitnessLoading] = useState(false);
+  const [confidenceVisible, setConfidenceVisible] = useState(false);
+
+  // =============================================================================
+  // Derivation Navigation (gD/gc)
+  // =============================================================================
+
+  /**
+   * gD - Navigate to derivation parent.
+   * Follows the derives_from edge to the parent in the derivation DAG.
+   */
+  const handleGoDerivationParent = useCallback(() => {
+    const node = state.currentNode;
+    if (!node) return;
+
+    // First, try explicit derivationParent field
+    if (node.derivationParent && loadNode) {
+      onNavigate?.(node.derivationParent);
+      loadNode(node.derivationParent).then((parentNode) => {
+        if (parentNode) {
+          focusNode(parentNode);
+          onNodeFocus?.(parentNode);
+        }
+      });
+      return;
+    }
+
+    // Fall back to derives_from edge
+    const derivesFromEdge = node.incomingEdges.find((e) => e.type === 'derives_from');
+    if (derivesFromEdge && loadNode) {
+      const parentPath = derivesFromEdge.source;
+      onNavigate?.(parentPath);
+      loadNode(parentPath).then((parentNode) => {
+        if (parentNode) {
+          focusNode(parentNode);
+          onNodeFocus?.(parentNode);
+        }
+      });
+    }
+  }, [state.currentNode, loadNode, focusNode, onNavigate, onNodeFocus]);
+
+  /**
+   * gc - Toggle confidence breakdown panel.
+   * Shows derivation confidence details and ancestor chain.
+   */
+  const handleShowConfidence = useCallback(() => {
+    setConfidenceVisible((prev) => !prev);
+  }, []);
 
   // Handle INSERT mode entry - create K-Block
   const handleEnterInsert = useCallback(async () => {
@@ -500,6 +547,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     goDefinition,
     goReferences,
     goTests,
+    // Derivation navigation (gD/gc)
+    goDerivationParent: handleGoDerivationParent,
+    showConfidence: handleShowConfidence,
     // Portal operations (zo/zc — vim fold-style)
     openPortal,
     closePortal,
@@ -739,6 +789,49 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         />
       )}
 
+      {/* Confidence breakdown panel (gc toggle) */}
+      {confidenceVisible && state.currentNode && (
+        <div className="confidence-panel">
+          <div className="confidence-panel__header">
+            <span>Derivation Confidence</span>
+            <button onClick={() => setConfidenceVisible(false)} className="confidence-panel__close">
+              ×
+            </button>
+          </div>
+          <div className="confidence-panel__content">
+            <div className="confidence-panel__row">
+              <span className="confidence-panel__label">Confidence:</span>
+              <span className="confidence-panel__value">
+                {state.currentNode.confidence !== undefined
+                  ? `${Math.round(state.currentNode.confidence * 100)}%`
+                  : 'Unknown'}
+              </span>
+            </div>
+            <div className="confidence-panel__row">
+              <span className="confidence-panel__label">Tier:</span>
+              <span className="confidence-panel__value">
+                {state.currentNode.derivationTier || state.currentNode.tier || 'Unknown'}
+              </span>
+            </div>
+            {state.currentNode.derivationParent && (
+              <div className="confidence-panel__row">
+                <span className="confidence-panel__label">Parent:</span>
+                <button
+                  className="confidence-panel__link"
+                  onClick={handleGoDerivationParent}
+                  title="gD: Go to derivation parent"
+                >
+                  {state.currentNode.derivationParent.split('/').pop()}
+                </button>
+              </div>
+            )}
+            <div className="confidence-panel__hint">
+              <kbd>gD</kbd> Navigate to parent • <kbd>Esc</kbd> Close
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Status line */}
       <StatusLine
         mode={state.mode}
@@ -747,6 +840,8 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         pendingSequence={pendingSequence}
         kblockStatus={state.kblock?.isolation}
         nodePath={state.currentNode?.path}
+        confidence={state.currentNode?.confidence}
+        derivationTier={state.currentNode?.derivationTier}
       />
     </div>
   );

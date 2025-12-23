@@ -417,6 +417,104 @@
 }
 
 /* =============================================================================
+   Confidence Panel (gc toggle)
+   ============================================================================= */
+
+.confidence-panel {
+  position: absolute;
+  bottom: 2.5rem; /* Above status line */
+  right: 1rem;
+  width: 16rem;
+  background: var(--steel-900, #1a1a1a);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+}
+
+.confidence-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--steel-850, #1f1f1f);
+  border-bottom: 1px solid var(--steel-700, #333);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--steel-300, #a0a0a0);
+}
+
+.confidence-panel__close {
+  background: none;
+  border: none;
+  color: var(--steel-500, #666);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+
+.confidence-panel__close:hover {
+  color: var(--steel-200, #ccc);
+}
+
+.confidence-panel__content {
+  padding: 0.5rem 0.75rem;
+}
+
+.confidence-panel__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  font-size: 0.75rem;
+}
+
+.confidence-panel__label {
+  color: var(--steel-500, #666);
+}
+
+.confidence-panel__value {
+  color: var(--steel-200, #ccc);
+  font-weight: 500;
+}
+
+.confidence-panel__link {
+  background: none;
+  border: none;
+  color: var(--status-normal, #4a9eff);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.confidence-panel__link:hover {
+  color: var(--steel-100, #e0e0e0);
+}
+
+.confidence-panel__hint {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--steel-800, #252525);
+  font-size: 0.625rem;
+  color: var(--steel-600, #444);
+  text-align: center;
+}
+
+.confidence-panel__hint kbd {
+  display: inline-block;
+  padding: 0.125rem 0.25rem;
+  background: var(--steel-800, #252525);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 0.625rem;
+  color: var(--steel-400, #888);
+}
+
+/* =============================================================================
    Responsive
    ============================================================================= */
 

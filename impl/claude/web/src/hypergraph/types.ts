@@ -154,6 +154,18 @@ export interface GraphNode {
   /** Confidence score (0-1) */
   confidence?: number;
 
+  /**
+   * Derivation tier (for derivation DAG navigation).
+   * AXIOM < BOOTSTRAP < FUNCTOR — lower rank = more foundational.
+   */
+  derivationTier?: 'AXIOM' | 'BOOTSTRAP' | 'FUNCTOR' | 'EMPIRICAL';
+
+  /**
+   * Derivation parent path (derives_from edge).
+   * Used by gD to navigate to parent in derivation DAG.
+   */
+  derivationParent?: string;
+
   /** Outgoing edges (from this node) */
   outgoingEdges: Edge[];
 
