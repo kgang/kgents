@@ -275,3 +275,6 @@ node_modules/
 .eslintcache
 .vite/
 impl/claude/plans/_epilogues/
+
+# Playwright test artifacts
+impl/claude/web/test-results/

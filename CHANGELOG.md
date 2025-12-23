@@ -5,6 +5,50 @@ All notable changes to kgents will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-12-23
+
+### The Hardening Release
+
+A controlled extinction, rebuilding, and hardening of the codebase.
+
+#### Removed (The Extinction)
+- **Agent Town** - Multi-agent simulation (archived to `_archive/`)
+- **Park** - Agent recreation environment
+- **Gestalt** - Emergent behavior patterns
+- **Coalition** - Agent alliance formation
+- **Muse** - Creative inspiration agent
+- **Gardener** - Codebase cultivation agent
+- ~67K lines archived to focus on core jewels
+
+#### Added (The Rebuilding)
+- **WitnessedGraph** - Edges carry evidence with confidence propagation
+- **Hypergraph Emacs** - Six-mode modal editor (NORMAL/INSERT/EDGE/VISUAL/COMMAND/WITNESS)
+- **Self-Hosting Specs** - Navigate, edit, witness specs from inside the system
+- **Derivation DAG** - Specs form confidence-propagating directed graph
+- **Living Spec** - Evidence-as-Marks unification
+- **K-Block** - Monadic isolation for spec editing
+
+#### Changed
+- **AD-014**: Self-Hosting Spec Architecture
+- **AD-015**: Proxy Handles (analysis ≠ reality)
+- **AD-016**: Fail-Fast AGENTESE Resolution (no silent fallbacks)
+- **AD-017**: Typed AGENTESE (paths have categorical types)
+- CORS now configurable via `CORS_ORIGINS` environment variable
+- Dead code audit removed ~14K additional lines
+
+#### Security
+- Fixed overly permissive CORS configuration
+- Added SECURITY.md for responsible disclosure
+- Created .env.example templates
+
+### Crown Jewel Status
+- **Brain**: 100% complete
+- **Witness**: 98% complete (678+ tests)
+- **Atelier**: 75% complete
+- **Liminal**: 50% complete
+
+---
+
 ## [1.0.0] - 2025-12-14
 
 ### Added

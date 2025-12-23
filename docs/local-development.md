@@ -313,7 +313,6 @@ kgents/
 ## Next Steps
 
 - Read [AGENTESE specification](../spec/protocols/agentese.md)
-- Explore [Agent Town](../spec/agents/town.md)
-- Visit the [Projection Gallery](http://localhost:3000/_/gallery) to see all widgets
 - Check [systems reference](systems-reference.md) for built infrastructure
-- Learn the [projection-gallery skill](skills/projection-gallery.md) pattern
+- Visit the [Projection Gallery](http://localhost:3000/_/gallery) to see all widgets
+- Learn the 21 skills in [docs/skills/](skills/)
