@@ -149,6 +149,41 @@ class ViewEditResponse:
     error: str | None = None
 
 
+@dataclass(frozen=True)
+class GetRequest:
+    """Request to get K-Block content."""
+
+    block_id: str
+
+
+@dataclass(frozen=True)
+class GetResponse:
+    """Response with full K-Block content."""
+
+    block_id: str
+    path: str
+    content: str
+    base_content: str
+    isolation: str
+    is_dirty: bool
+    active_views: list[str]
+    checkpoints: list[dict[str, Any]]
+
+
+@dataclass(frozen=True)
+class ReferencesRequest:
+    """Request to get K-Block references."""
+
+    block_id: str
+
+
+@dataclass(frozen=True)
+class ReferencesResponse:
+    """Response with discovered references."""
+
+    references: list[dict[str, Any]]
+
+
 # === Rendering ===
 
 
@@ -296,11 +331,15 @@ def discard_thoughts(session_id: str) -> bool:
     contracts={
         # Perception
         "manifest": Response(KBlockManifestResponse),
+        # Get full K-Block content
+        "get": Contract(GetRequest, GetResponse),
         # Mutations - file K-Blocks
         "create": Contract(CreateRequest, CreateResponse),
         "save": Contract(SaveRequest, SaveResponse),
         # Phase 3: Bidirectional view editing
         "view_edit": Contract(ViewEditRequest, ViewEditResponse),
+        # Phase 3: References discovery
+        "references": Contract(ReferencesRequest, ReferencesResponse),
         # Mutations - thought K-Blocks (Membrane)
         "thought": Contract(ThoughtRequest, ThoughtResponse),
     },
@@ -417,6 +456,42 @@ class KBlockNode(BaseLogosNode):
                 "path": block.path,
                 "isolation": block.isolation.name,
                 "content_preview": block.content[:200] if block.content else "",
+            }
+
+        elif aspect_name == "get":
+            block_id = kwargs.get("block_id", "")
+
+            if not block_id:
+                return {"error": "block_id required"}
+
+            get_block = self._harness.get_block(KBlockId(block_id))
+            if not get_block:
+                # Also check thought blocks
+                for tb in _thought_blocks.values():
+                    if tb.id == block_id:
+                        get_block = tb
+                        break
+
+            if not get_block:
+                return {"error": f"K-Block not found: {block_id}"}
+
+            return {
+                "block_id": get_block.id,
+                "path": get_block.path,
+                "content": get_block.content,
+                "base_content": get_block.base_content,
+                "isolation": get_block.isolation.name,
+                "is_dirty": get_block.is_dirty,
+                "active_views": [vt.value for vt in get_block.active_view_types()],
+                "checkpoints": [
+                    {
+                        "id": cp.id,
+                        "name": cp.name,
+                        "content_hash": cp.content_hash,
+                        "created_at": cp.created_at.isoformat(),
+                    }
+                    for cp in get_block.checkpoints
+                ],
             }
 
         elif aspect_name == "save":
@@ -624,6 +699,42 @@ class KBlockNode(BaseLogosNode):
                     content_changed=False,
                     error=str(e),
                 )
+
+        # === Phase 3: References Discovery ===
+
+        elif aspect_name == "references":
+            block_id = kwargs.get("block_id", "")
+
+            if not block_id:
+                return {"error": "block_id required", "references": []}
+
+            ref_block = self._harness.get_block(KBlockId(block_id))
+            if not ref_block:
+                return {"error": f"K-Block not found: {block_id}", "references": []}
+
+            # Activate REFERENCES view if not active
+            if ViewType.REFERENCES not in ref_block.views:
+                ref_block.activate_view(ViewType.REFERENCES)
+
+            # Get references from the view
+            refs_view = ref_block.views.get(ViewType.REFERENCES)
+            if refs_view and hasattr(refs_view, "references"):
+                references = [
+                    {
+                        "kind": ref.kind,
+                        "target": ref.target,
+                        "context": ref.context,
+                        "line_number": ref.line_number,
+                        "confidence": ref.confidence,
+                        "stale": ref.stale,
+                        "exists": ref.exists,
+                    }
+                    for ref in refs_view.references
+                ]
+            else:
+                references = []
+
+            return {"references": references}
 
         # === Thought K-Block Operations (Membrane) ===
 
