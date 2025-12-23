@@ -297,19 +297,28 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
         resetSequence();
       }
 
-      // Check for simple binding
-      const binding = NORMAL_MODE_BINDINGS[key];
-      if (binding) {
+      // Ctrl+o - go back (check BEFORE simple bindings so 'o' doesn't trigger insert)
+      if (e.ctrlKey && key === 'o') {
         e.preventDefault();
-
-        // Special handling for command mode
-        if (binding.action.type === 'ENTER_COMMAND') {
-          dispatch(binding.action);
-          onEnterCommand?.();
-        } else {
-          dispatch(binding.action);
-        }
+        dispatch({ type: 'GO_BACK' });
         return;
+      }
+
+      // Check for simple binding (skip if modifier keys are held)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        const binding = NORMAL_MODE_BINDINGS[key];
+        if (binding) {
+          e.preventDefault();
+
+          // Special handling for command mode
+          if (binding.action.type === 'ENTER_COMMAND') {
+            dispatch(binding.action);
+            onEnterCommand?.();
+          } else {
+            dispatch(binding.action);
+          }
+          return;
+        }
       }
 
       // G - go to end
@@ -319,14 +328,52 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
         return;
       }
 
-      // Ctrl+o - go back
-      if (e.ctrlKey && key === 'o') {
+      // } - next blank line (vim paragraph motion)
+      if (key === '}') {
         e.preventDefault();
-        dispatch({ type: 'GO_BACK' });
+        const content = state.currentNode?.content || '';
+        const lines = content.split('\n');
+        const currentLine = Math.min(state.cursor.line, lines.length - 1);
+
+        // Skip any blank lines we're currently on
+        let i = currentLine;
+        while (i < lines.length && lines[i].trim() === '') {
+          i++;
+        }
+        // Find next blank line
+        while (i < lines.length && lines[i].trim() !== '') {
+          i++;
+        }
+        if (i < lines.length) {
+          dispatch({ type: 'GOTO_LINE', line: i });
+        } else {
+          dispatch({ type: 'GOTO_END' });
+        }
+        return;
+      }
+
+      // { - previous blank line (vim paragraph motion)
+      if (key === '{') {
+        e.preventDefault();
+        const content = state.currentNode?.content || '';
+        const lines = content.split('\n');
+        const currentLine = Math.min(state.cursor.line, lines.length - 1);
+
+        // Skip any blank lines we're currently on
+        let i = currentLine;
+        while (i > 0 && lines[i].trim() === '') {
+          i--;
+        }
+        // Find previous blank line
+        while (i > 0 && lines[i].trim() !== '') {
+          i--;
+        }
+        dispatch({ type: 'GOTO_LINE', line: i });
       }
     },
     [
       dispatch,
+      state,
       goParent,
       goChild,
       goDefinition,

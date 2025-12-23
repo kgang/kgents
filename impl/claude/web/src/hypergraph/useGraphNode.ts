@@ -47,7 +47,9 @@ function convertToGraphNode(result: SpecGraphQueryResult, content?: string): Gra
   const outgoingEdges: Edge[] = [];
   const incomingEdges: Edge[] = [];
 
-  for (const [type, targets] of Object.entries(result.edges)) {
+  // Defensive: result.edges may be undefined if API returns incomplete data
+  const edges = result.edges || {};
+  for (const [type, targets] of Object.entries(edges)) {
     for (const target of targets) {
       const edge: Edge = {
         id: `${result.path}-${type}-${target}`,
@@ -66,7 +68,9 @@ function convertToGraphNode(result: SpecGraphQueryResult, content?: string): Gra
   }
 
   // Add derives_from as incoming edges
-  for (const parent of result.derives_from) {
+  // Defensive: derives_from may be undefined
+  const derivesFrom = result.derives_from || [];
+  for (const parent of derivesFrom) {
     incomingEdges.push({
       id: `${parent}-derives-${result.path}`,
       source: parent,
@@ -126,20 +130,36 @@ export function useGraphNode(): UseGraphNodeResult {
       // Query SpecGraph for node metadata
       const result = await invokeSpecGraph<SpecGraphQueryResult>('query', { path });
 
-      // Also fetch content via K-Block or document API
+      // Defensive: if API returns undefined/null metadata, create a minimal stub
+      if (!result || !result.path) {
+        console.warn(
+          '[useGraphNode] SpecGraph returned no metadata for',
+          path,
+          '- creating stub node'
+        );
+        // Return a stub node so the UI doesn't crash
+        return {
+          path,
+          title: path.split('/').pop() || path,
+          kind: path.endsWith('.md') ? 'doc' : path.endsWith('.py') ? 'implementation' : 'unknown',
+          confidence: 0,
+          outgoingEdges: [],
+          incomingEdges: [],
+          content: `[SpecGraph unavailable for: ${path}]`,
+        };
+      }
+
+      // Also fetch content via world.file.read
       let content: string | undefined;
       try {
-        const docResult = await fetch(
-          `/agentese/self/document/read?path=${encodeURIComponent(path)}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
-          }
-        );
+        const docResult = await fetch('/agentese/world.file/read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path }),
+        });
         if (docResult.ok) {
           const docData = await docResult.json();
-          content = docData.content || docData.metadata?.content;
+          content = docData.result?.content;
         }
       } catch {
         // Content loading is optional
@@ -151,7 +171,17 @@ export function useGraphNode(): UseGraphNodeResult {
       const errorMsg = e instanceof Error ? e.message : 'Failed to load node';
       setError(errorMsg);
       console.error('[useGraphNode] Error loading node:', path, e);
-      return null;
+
+      // Return a stub node so the editor is still usable
+      return {
+        path,
+        title: path.split('/').pop() || path,
+        kind: 'unknown',
+        confidence: 0,
+        outgoingEdges: [],
+        incomingEdges: [],
+        content: `[Error loading node: ${errorMsg}]`,
+      };
     } finally {
       setLoading(false);
     }

@@ -218,9 +218,12 @@ const ContentPane = memo(function ContentPane({
   mode,
   cursor,
   onContentChange,
-}: ContentPaneProps) {
+  onCursorChange,
+}: ContentPaneProps & { onCursorChange?: (line: number, column: number) => void }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const currentLineRef = useRef<HTMLDivElement>(null);
   const [localContent, setLocalContent] = useState('');
+  const prevModeRef = useRef(mode);
 
   // Sync content when node changes
   useEffect(() => {
@@ -229,12 +232,64 @@ const ContentPane = memo(function ContentPane({
     }
   }, [node?.content]);
 
-  // Focus textarea in INSERT mode
+  // Position textarea cursor when entering INSERT mode (only on mode change, not content change)
   useEffect(() => {
-    if (mode === 'INSERT' && textareaRef.current) {
+    if (mode === 'INSERT' && prevModeRef.current !== 'INSERT' && textareaRef.current) {
       textareaRef.current.focus();
+
+      // Calculate character offset from line/column
+      const lines = localContent.split('\n');
+      let offset = 0;
+      for (let i = 0; i < Math.min(cursor.line, lines.length); i++) {
+        offset += lines[i].length + 1; // +1 for newline
+      }
+      offset += Math.min(cursor.column, lines[cursor.line]?.length || 0);
+
+      textareaRef.current.setSelectionRange(offset, offset);
     }
+    // Note: prevModeRef is updated in the exit effect below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
+
+  // Read cursor position when exiting INSERT mode
+  useEffect(() => {
+    if (prevModeRef.current === 'INSERT' && mode === 'NORMAL' && textareaRef.current) {
+      const textarea = textareaRef.current;
+      const offset = textarea.selectionStart;
+      const content = textarea.value;
+
+      // Convert offset to line/column
+      let line = 0;
+      let remaining = offset;
+      const lines = content.split('\n');
+
+      for (let i = 0; i < lines.length; i++) {
+        if (remaining <= lines[i].length) {
+          line = i;
+          break;
+        }
+        remaining -= lines[i].length + 1; // +1 for newline
+        line = i + 1;
+      }
+
+      const column = Math.max(0, remaining);
+      onCursorChange?.(line, column);
+    }
+    prevModeRef.current = mode;
+  }, [mode, onCursorChange]);
+
+  // Scroll current line into view when cursor moves
+  useEffect(() => {
+    if (currentLineRef.current && mode === 'NORMAL') {
+      // Use a small delay to ensure the DOM has updated
+      requestAnimationFrame(() => {
+        currentLineRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      });
+    }
+  }, [cursor.line, mode]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -290,13 +345,17 @@ const ContentPane = memo(function ContentPane({
   // In NORMAL mode, show read-only content with line numbers
   const lines = (node.content || '').split('\n');
 
+  // Clamp cursor to valid line range (handles Infinity from GOTO_END)
+  const clampedLine = Math.min(cursor.line, lines.length - 1);
+
   return (
     <div className="content-pane content-pane--normal">
       <div className="content-pane__lines">
         {lines.map((line, i) => (
           <div
             key={i}
-            className={`content-pane__line ${i === cursor.line ? 'content-pane__line--current' : ''}`}
+            ref={i === clampedLine ? currentLineRef : null}
+            className={`content-pane__line ${i === clampedLine ? 'content-pane__line--current' : ''}`}
           >
             <span className="content-pane__line-number">{i + 1}</span>
             <span className="content-pane__line-content">{line || ' '}</span>
@@ -448,6 +507,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
             if (state.kblock) {
               dispatch({ type: 'KBLOCK_UPDATED', content });
             }
+          }}
+          onCursorChange={(line, column) => {
+            dispatch({ type: 'MOVE_CURSOR', position: { line, column } });
           }}
         />
 

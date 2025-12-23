@@ -80,13 +80,12 @@ export interface SpecGraphStats {
 const AGENTESE_BASE = '/agentese';
 
 async function invokeSpecGraph<T>(aspect: string, params: Record<string, string> = {}): Promise<T> {
-  const searchParams = new URLSearchParams(params);
-  const url = `${AGENTESE_BASE}/concept.specgraph/${aspect}${searchParams.toString() ? `?${searchParams}` : ''}`;
+  const url = `${AGENTESE_BASE}/concept.specgraph/${aspect}`;
 
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    body: JSON.stringify(params), // Pass params in body, not URL
   });
 
   if (!response.ok) {
@@ -94,7 +93,7 @@ async function invokeSpecGraph<T>(aspect: string, params: Record<string, string>
   }
 
   const data = await response.json();
-  return data.metadata as T;
+  return data.result?.metadata as T; // Backend returns result.metadata, not just metadata
 }
 
 // =============================================================================

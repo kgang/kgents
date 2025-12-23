@@ -253,6 +253,9 @@ impl/claude/web/.vite/
 impl/claude/web/*.local
 impl/claude/web/.eslintcache
 
+# Large generated data files (regenerable via scripts)
+impl/claude/web/public/specgraph-enriched.json
+
 # TypeScript
 *.tsbuildinfo
 tsconfig.tsbuildinfo

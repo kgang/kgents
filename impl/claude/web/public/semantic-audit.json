@@ -1,0 +1,160 @@
+{
+  "generated_at": "2025-12-22",
+  "generated_by": "Claude Sonnet agents (13 parallel)",
+  "summary": {
+    "total_systems_audited": 5,
+    "average_confidence": 8.5,
+    "self_hosting_readiness": "80%"
+  },
+  "audits": {
+    "k-block": {
+      "score": 7.5,
+      "tests": "~2500 lines",
+      "phase": "Core complete, advanced features pending",
+      "strengths": [
+        "Monad laws verified (3/3)",
+        "Harness laws verified (4/4)",
+        "Sheaf coherence working",
+        "Bidirectional editing (Phase 3)",
+        "Witness integration"
+      ],
+      "gaps": [
+        "Entanglement not implemented",
+        "Generators not implemented",
+        "Disk persistence (in-memory only)",
+        "DataBus event emission"
+      ],
+      "production_ready_for": [
+        "Single-file isolated editing",
+        "Hyperdimensional views",
+        "Checkpoint/rewind",
+        "Fork/merge workflows"
+      ]
+    },
+    "ashc": {
+      "score": 8.5,
+      "tests": "276 claimed",
+      "phase": "5 complete phases, research-grade",
+      "strengths": [
+        "L0 kernel complete",
+        "Evidence engine with Bayesian stopping",
+        "Causal graph learning",
+        "Economic accountability",
+        "Bootstrap regeneration"
+      ],
+      "gaps": ["Chaos testing (Phase 3) not implemented", "ChaosConfig/ChaosReport types missing"],
+      "production_ready_for": [
+        "Evidence accumulation",
+        "Adaptive sampling",
+        "Causal tracking",
+        "Proof generation"
+      ]
+    },
+    "witness": {
+      "score": 8.5,
+      "tests": "777 tests",
+      "phase": "Core complete, streaming partial",
+      "strengths": [
+        "Trust system production-grade",
+        "Evidence ladder (Phase 6)",
+        "Crystal hierarchy",
+        "AGENTESE integration",
+        "Dual-track persistence"
+      ],
+      "gaps": [
+        "WitnessFlux not implemented",
+        "Topology/territory mapping missing",
+        "Narrative synthesis missing"
+      ],
+      "production_ready_for": [
+        "Mark capture",
+        "Trust gating",
+        "Crystal generation",
+        "Brain promotion"
+      ]
+    },
+    "specgraph": {
+      "score": 7.5,
+      "tests": "90 tests",
+      "phase": "15/21 resolvers complete",
+      "strengths": [
+        "Core hypergraph solid",
+        "3 laws verified",
+        "Observer-dependent edges",
+        "AGENTESE API complete"
+      ],
+      "gaps": [
+        "CLI wrapper missing",
+        "Evidence edges (ASHC integration)",
+        "Temporal edges (git)",
+        "Embedding-based edges"
+      ],
+      "production_ready_for": [
+        "File navigation",
+        "Import/call resolution",
+        "Test discovery",
+        "Trail recording"
+      ]
+    },
+    "derivation": {
+      "score": 9.5,
+      "tests": "306 claimed, 244 verified",
+      "phase": "All 7 phases complete",
+      "strengths": [
+        "All 5 laws enforced",
+        "All 4 Phase 6 bridges implemented",
+        "Bayesian ASHC integration",
+        "Tier-based confidence",
+        "CLI + AGENTESE paths"
+      ],
+      "gaps": ["Some tests blocked by pgvector", "Frontend viz not verified"],
+      "production_ready_for": [
+        "Confidence calculation",
+        "Evidence accumulation",
+        "Cross-protocol bridges",
+        "Bootstrap seeding"
+      ]
+    }
+  },
+  "spec_analyses": {
+    "k-block": {
+      "core_claims": 7,
+      "key_types": ["KBlock", "IsolationState", "Cosmos", "KBlockSheaf", "EntangledPair"],
+      "laws": 8,
+      "integration_points": ["FILE_OPERAD", "AGENTESE", "DataBus", "Witness"]
+    },
+    "derivation": {
+      "core_claims": 7,
+      "key_types": ["Derivation", "PrincipleDraw", "DerivationTier", "EvidenceType"],
+      "laws": 10,
+      "integration_points": ["ASHC", "Witness", "Portal", "Hypergraph", "File Operad"]
+    },
+    "witness": {
+      "core_claims": 7,
+      "key_types": ["ExperienceCrystal", "WitnessState", "Mark", "Trail"],
+      "laws": 5,
+      "integration_points": ["Brain", "D-gent", "Flux", "kgentsd"]
+    }
+  },
+  "batch_enrichment": {
+    "total_specs": 340,
+    "specs_with_impl": 141,
+    "specs_with_tests": 310,
+    "total_edges_discovered": 63207,
+    "impl_coverage_percent": 41,
+    "test_coverage_percent": 91
+  },
+  "next_actions": {
+    "high_priority": [
+      "Wire kg context CLI commands",
+      "Implement K-Block disk persistence",
+      "Fix pgvector dependency for Witness tests"
+    ],
+    "medium_priority": [
+      "Implement K-Block entanglement",
+      "Add ASHC chaos testing",
+      "Complete WitnessFlux"
+    ],
+    "low_priority": ["K-Block generators", "Embedding-based hyperedges", "Temporal git edges"]
+  }
+}
