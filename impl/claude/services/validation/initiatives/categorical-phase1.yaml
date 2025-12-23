@@ -1,9 +1,12 @@
-# Categorical Phase 1: Foundations
+# Categorical Phase 1: Foundations (Enhanced Methodology)
 #
 # The core validation for kgents 2.0's hypothesis:
 #   "LLM reasoning failures follow patterns that category theory predicts."
 #
+# Enhanced 2025-12-23: Added baseline comparisons, bootstrap CIs, permutation tests
+#
 # See: plans/categorical-reinvention-phase1-foundations.md
+# See: plans/HANDOFF-categorical-phase1.md (methodology details)
 # See: docs/theory/03-monadic-reasoning.md
 # See: docs/theory/05-sheaf-coherence.md
 
@@ -14,7 +17,13 @@ description: |
   reasoning correctness. This is the gate for kgents 2.0.
 
   The Bet: If the correlation holds (r > 0.3 for monad, r > 0.4 for sheaf,
-  AUC > 0.7 combined), we have a new paradigm for LLM verification.
+  AUC > 0.7 combined) AND beats baselines, we have a new paradigm.
+
+  Enhanced methodology:
+  - Baseline comparisons (random, length, confidence)
+  - Bootstrap 95% CIs (lower bound must exceed threshold)
+  - Permutation tests for significance (p < 0.01)
+  - Hybrid symbolic+LLM sheaf detection
 
 witness_tags:
   - categorical
@@ -30,6 +39,7 @@ propositions:
     threshold: 0.3
     direction: ">"
     required: true
+    use_ci_lower_bound: true  # NEW: CI lower bound must exceed threshold
     rationale: |
       Identity law: Adding trivial prefixes ("Let me think...") shouldn't
       change answers. Violations indicate sensitivity to framing, a sign
@@ -51,6 +61,7 @@ propositions:
     threshold: 0.4
     direction: ">"
     required: true
+    use_ci_lower_bound: true  # NEW: CI lower bound must exceed threshold
     rationale: |
       Sheaf condition: Local claims must agree on overlaps.
       Violations are hallucinations. Strong predictor expected.
@@ -75,6 +86,27 @@ propositions:
       Statistical power requires sufficient samples. 500 problems
       minimum for meaningful correlation.
 
+  # NEW: Baseline comparison propositions
+  - id: beats_random_baseline
+    description: "Categorical probes outperform random baseline"
+    metric: delta
+    threshold: 0.15
+    direction: ">"
+    required: true
+    rationale: |
+      Random scores can spuriously correlate with correctness.
+      Categorical probes must beat random by Δ > 0.15 to be meaningful.
+
+  - id: significance_permutation
+    description: "Correlation is statistically significant (permutation test)"
+    metric: p_value
+    threshold: 0.01
+    direction: "<"
+    required: true
+    rationale: |
+      Permutation tests are exact (no normality assumption).
+      p < 0.01 required after considering multiple testing.
+
 # Gate is the decision checkpoint
 gate:
   id: phase1_gate
@@ -82,12 +114,15 @@ gate:
   condition: all_required
   description: |
     All required propositions must pass for Phase 1 to complete.
+    Enhanced criteria include baseline comparisons and significance tests.
     If blocked, document learnings and decide next steps.
 
 # Metadata for tracking
 metadata:
   created: "2025-12-23"
+  revised: "2025-12-23"
   owner: kgents
   timeline_weeks: 3
   dependencies: []  # Phase 1 has no dependencies
   successor: categorical_phase2  # What comes next if this passes
+  methodology_version: "2.0"  # Enhanced methodology
