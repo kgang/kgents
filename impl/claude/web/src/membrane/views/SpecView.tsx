@@ -5,17 +5,20 @@
  * - Tier badge and confidence bar (from SpecGraph)
  * - Expandable edge portals (extends, implements, tests, etc.)
  * - Interactive token counts
- * - Raw markdown content
+ * - Interactive content (AGENTESE paths, task checkboxes)
  *
  * "The spec is not description—it is generative."
+ * "Specs stop being documentation and become live control surfaces."
  */
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { documentApi, fileApi } from '../../api/client';
 import { EmpathyError } from '../../components/joy/EmpathyError';
-import { PersonalityLoading } from '../../components/joy/PersonalityLoading';
 import { GrowingContainer } from '../../components/genesis/GrowingContainer';
+import { PersonalityLoading } from '../../components/joy/PersonalityLoading';
 
+import { InteractiveDocument, type SceneGraph } from '../tokens';
 import { useSpecQuery, type EdgeType } from '../useSpecNavigation';
 
 import './SpecView.css';
@@ -148,8 +151,9 @@ function TokenBadges({ tokens }: TokenBadgesProps) {
 
 export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
   const { spec, loading, error, query } = useSpecQuery();
-  const [content, setContent] = useState<string | null>(null);
+  const [sceneGraph, setSceneGraph] = useState<SceneGraph | null>(null);
   const [contentLoading, setContentLoading] = useState(false);
+  const [contentError, setContentError] = useState<string | null>(null);
 
   // Query SpecGraph for metadata
   useEffect(() => {
@@ -158,22 +162,32 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
     }
   }, [path, query]);
 
-  // Fetch raw content separately
+  // Fetch content and parse to SceneGraph
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchContent() {
+    async function fetchAndParse() {
       setContentLoading(true);
+      setContentError(null);
+
       try {
-        const response = await fetch(`/api/files/read?path=${encodeURIComponent(path)}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (!cancelled) {
-            setContent(data.content);
-          }
+        // Step 1: Read file via AGENTESE world.file.read
+        const fileData = await fileApi.read(path);
+
+        if (cancelled) return;
+
+        // Step 2: Parse content to SceneGraph via AGENTESE self.document.parse
+        const parsed = await documentApi.parse(fileData.content, 'COMFORTABLE');
+
+        if (cancelled) return;
+
+        // Cast the scene_graph to our SceneGraph type
+        setSceneGraph(parsed.scene_graph as SceneGraph);
+      } catch (err) {
+        if (!cancelled) {
+          console.error('[SpecView] Failed to load content:', err);
+          setContentError(err instanceof Error ? err.message : 'Failed to load content');
         }
-      } catch {
-        // Content fetch failed, will show metadata only
       } finally {
         if (!cancelled) {
           setContentLoading(false);
@@ -181,23 +195,63 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
       }
     }
 
-    fetchContent();
+    fetchAndParse();
     return () => {
       cancelled = true;
     };
   }, [path]);
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="spec-view spec-view--loading">
-        <PersonalityLoading jewel="gestalt" action="analyzing" size="md" />
-      </div>
-    );
-  }
+  // Handle AGENTESE path navigation
+  const handleTokenNavigate = useCallback(
+    (agentesePath: string) => {
+      // Parse AGENTESE path to determine target
+      // Format: context.service.aspect (e.g., self.brain, world.house.manifest)
+      const parts = agentesePath.split('.');
+      const context = parts[0]; // self, world, concept, void, time
 
-  // Error state
-  if (error) {
+      if (context === 'concept' && parts[1]) {
+        // Navigate to concept view
+        onNavigate?.(`concept/${parts.slice(1).join('/')}`);
+      } else {
+        // For now, log and let parent handle
+        console.log('[SpecView] Navigate to AGENTESE path:', agentesePath);
+        onNavigate?.(agentesePath);
+      }
+    },
+    [onNavigate]
+  );
+
+  // Handle task toggle
+  const handleTaskToggle = useCallback(
+    async (_newState: boolean, taskId?: string) => {
+      if (!taskId) return;
+
+      try {
+        // Call self.document.task.toggle via AGENTESE
+        await documentApi.toggleTask({
+          file_path: path,
+          task_id: taskId,
+        });
+
+        // Refresh the SceneGraph after toggle
+        const fileData = await fileApi.read(path);
+        const parsed = await documentApi.parse(fileData.content, 'COMFORTABLE');
+        setSceneGraph(parsed.scene_graph as SceneGraph);
+      } catch (err) {
+        console.error('[SpecView] Failed to toggle task:', err);
+        throw err; // Re-throw so TaskCheckboxToken can revert
+      }
+    },
+    [path]
+  );
+
+  // If SpecGraph fails but we have content, show it anyway
+  // This allows testing Interactive Text before SpecGraph is wired
+  const hasContent = sceneGraph !== null;
+  const showMetadata = spec !== null;
+
+  // Only show error if we have neither spec nor content
+  if (error && !hasContent && !contentLoading) {
     return (
       <div className="spec-view spec-view--error">
         <EmpathyError type="notfound" title="Spec not accessible" subtitle={error} />
@@ -205,64 +259,90 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
     );
   }
 
-  // No spec found
-  if (!spec) {
+  // Loading state - show if loading and no content yet
+  if (loading && !hasContent) {
     return (
-      <div className="spec-view spec-view--empty">
-        <div className="spec-view__empty">
-          <p>Spec not found in SpecGraph</p>
-          <p className="spec-view__empty-hint">{path}</p>
-        </div>
+      <div className="spec-view spec-view--loading">
+        <PersonalityLoading jewel="gestalt" action="analyzing" size="md" />
       </div>
     );
   }
 
-  const { node, edges, tokens } = spec;
+  // Destructure only if spec exists
+  const node = spec?.node;
+  const edges = spec?.edges ?? {};
+  const tokens = spec?.tokens ?? {};
 
   return (
     <div className="spec-view">
-      {/* Header with tier and confidence */}
-      <header className="spec-view__header">
-        <div className="spec-view__title-row">
-          <h2 className="spec-view__title">{node.title || node.path}</h2>
-          <span className="spec-view__tier" data-tier={node.tier}>
-            {node.tier}
-          </span>
-        </div>
-
-        <div className="spec-view__meta">
-          <span className="spec-view__path">{node.agentese_path || path}</span>
-          <ConfidenceBar confidence={node.confidence} />
-        </div>
-
-        {node.derives_from.length > 0 && (
-          <div className="spec-view__derives">
-            <span className="spec-view__derives-label">Derives from:</span>
-            {node.derives_from.map((d) => (
-              <button
-                key={d}
-                className="spec-view__derives-link"
-                onClick={() => onNavigate?.(`spec/${d}.md`)}
-              >
-                {d}
-              </button>
-            ))}
+      {/* Header with tier and confidence - only show if we have spec metadata */}
+      {showMetadata && node && (
+        <header className="spec-view__header">
+          <div className="spec-view__title-row">
+            <h2 className="spec-view__title">{node.title || node.path}</h2>
+            <span className="spec-view__tier" data-tier={node.tier}>
+              {node.tier}
+            </span>
           </div>
-        )}
-      </header>
 
-      {/* Token badges */}
-      <TokenBadges tokens={tokens} />
+          <div className="spec-view__meta">
+            <span className="spec-view__path">{node.agentese_path || path}</span>
+            <ConfidenceBar confidence={node.confidence} />
+          </div>
 
-      {/* Edge portals */}
-      <EdgePortals edges={edges} onNavigate={onNavigate} onEdgeClick={onEdgeClick} />
+          {node.derives_from.length > 0 && (
+            <div className="spec-view__derives">
+              <span className="spec-view__derives-label">Derives from:</span>
+              {node.derives_from.map((d) => (
+                <button
+                  key={d}
+                  className="spec-view__derives-link"
+                  onClick={() => onNavigate?.(`spec/${d}.md`)}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          )}
+        </header>
+      )}
+
+      {/* Fallback header when no spec metadata */}
+      {!showMetadata && (
+        <header className="spec-view__header">
+          <div className="spec-view__title-row">
+            <h2 className="spec-view__title">{path.split('/').pop()}</h2>
+          </div>
+          <div className="spec-view__meta">
+            <span className="spec-view__path">{path}</span>
+          </div>
+        </header>
+      )}
+
+      {/* Token badges - only if we have tokens from SpecGraph */}
+      {showMetadata && <TokenBadges tokens={tokens} />}
+
+      {/* Edge portals - only if we have edges from SpecGraph */}
+      {showMetadata && (
+        <EdgePortals edges={edges} onNavigate={onNavigate} onEdgeClick={onEdgeClick} />
+      )}
 
       {/* Content */}
       <div className="spec-view__content">
         {contentLoading ? (
           <div className="spec-view__content-loading">Loading content...</div>
-        ) : content ? (
-          <pre className="spec-view__markdown">{content}</pre>
+        ) : contentError ? (
+          <div className="spec-view__content-error">
+            <p>Failed to load content</p>
+            <p className="spec-view__content-hint">{contentError}</p>
+          </div>
+        ) : sceneGraph ? (
+          <InteractiveDocument
+            sceneGraph={sceneGraph}
+            onNavigate={handleTokenNavigate}
+            onToggle={handleTaskToggle}
+            className="spec-view__interactive"
+          />
         ) : (
           <div className="spec-view__content-empty">
             <p>Content not available</p>

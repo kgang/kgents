@@ -455,18 +455,79 @@
  * Usage: <div className="scroll-breathe overflow-auto">...</div>
  * ============================================================================= */
 
+/* Calming scrollbar breath: rest → rise → hold → slow release */
 @keyframes scrollbar-breathe {
-  0%,
-  100% {
+  /* Rest */
+  0% {
     opacity: 0.6;
+  }
+  5% {
+    opacity: 0.6;
+  }
+  10% {
+    opacity: 0.61;
+  }
+  15% {
+    opacity: 0.63;
+  }
+  /* Gentle rise */
+  20% {
+    opacity: 0.67;
+  }
+  25% {
+    opacity: 0.72;
+  }
+  30% {
+    opacity: 0.77;
+  }
+  35% {
+    opacity: 0.82;
+  }
+  40% {
+    opacity: 0.85;
+  }
+  /* Brief hold */
+  45% {
+    opacity: 0.85;
   }
   50% {
     opacity: 0.85;
   }
+  /* Slow release */
+  55% {
+    opacity: 0.83;
+  }
+  60% {
+    opacity: 0.8;
+  }
+  65% {
+    opacity: 0.76;
+  }
+  70% {
+    opacity: 0.72;
+  }
+  75% {
+    opacity: 0.68;
+  }
+  80% {
+    opacity: 0.65;
+  }
+  85% {
+    opacity: 0.62;
+  }
+  90% {
+    opacity: 0.61;
+  }
+  95% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0.6;
+  }
 }
 
 .scroll-breathe::-webkit-scrollbar-thumb {
-  animation: scrollbar-breathe 4s ease-in-out infinite;
+  animation: scrollbar-breathe 3.4s linear infinite;
 }
 
 .scroll-breathe::-webkit-scrollbar-thumb:hover {
@@ -873,7 +934,7 @@ button:focus-visible,
 .empty-state-emoji {
   font-size: 2.5rem;
   margin-bottom: var(--elastic-gap-md);
-  animation: breathe 5s ease-in-out infinite; /* Slower breathing */
+  animation: breathe 4s linear infinite; /* Calming breath — linear timing */
 }
 
 .empty-state-title {

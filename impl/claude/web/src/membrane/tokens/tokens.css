@@ -1,0 +1,219 @@
+/**
+ * Token Styles — Visual semantics for Interactive Text tokens.
+ *
+ * Design principles:
+ * - Living green for AGENTESE paths (the garden grows)
+ * - Breathing animations on hover (vitality)
+ * - Ghost state for non-existent paths (potential)
+ * - Sage tones for task checkboxes (grounded)
+ *
+ * See: spec/protocols/interactive-text.md
+ */
+
+/* =============================================================================
+   Interactive Document Container
+   ============================================================================= */
+
+.interactive-document {
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-primary, #1a1a1a);
+}
+
+.interactive-document[data-mode='COMPACT'] {
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.interactive-document[data-mode='SPACIOUS'] {
+  font-size: 0.95rem;
+  line-height: 1.9;
+}
+
+/* =============================================================================
+   Text Span (Plain Text)
+   ============================================================================= */
+
+.text-span {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* =============================================================================
+   AGENTESE Path Token
+   ============================================================================= */
+
+.agentese-path-token {
+  /* Reset button styles */
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  display: inline;
+
+  /* Token styling */
+  color: var(--living-green, #2d5a27);
+  text-decoration: none;
+  border-radius: 3px;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.agentese-path-token:hover {
+  background-color: var(--living-green-bg, rgba(45, 90, 39, 0.1));
+  box-shadow: 0 0 8px var(--living-green-glow, rgba(45, 90, 39, 0.3));
+}
+
+.agentese-path-token:focus-visible {
+  outline: 2px solid var(--living-green, #2d5a27);
+  outline-offset: 2px;
+}
+
+.agentese-path-token__code {
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.3em;
+  background-color: var(--code-bg, rgba(0, 0, 0, 0.05));
+  border-radius: 3px;
+}
+
+/* Ghost state for non-existent paths */
+.agentese-path-token--ghost {
+  color: var(--ghost-text, #888);
+  opacity: 0.7;
+}
+
+.agentese-path-token--ghost .agentese-path-token__code {
+  background-color: var(--ghost-bg, rgba(0, 0, 0, 0.03));
+  text-decoration: line-through;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--ghost-line, rgba(136, 136, 136, 0.5));
+}
+
+.agentese-path-token--ghost:hover {
+  background-color: var(--ghost-hover-bg, rgba(0, 0, 0, 0.05));
+  box-shadow: none;
+}
+
+/* Breathing animation on hover */
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 4px var(--living-green-glow, rgba(45, 90, 39, 0.2));
+  }
+  50% {
+    box-shadow: 0 0 12px var(--living-green-glow, rgba(45, 90, 39, 0.4));
+  }
+}
+
+.agentese-path-token:hover:not(.agentese-path-token--ghost) {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+/* =============================================================================
+   Task Checkbox Token
+   ============================================================================= */
+
+.task-checkbox-token {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5em;
+  cursor: pointer;
+  padding: 0.2em 0;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.task-checkbox-token:hover {
+  background-color: var(--sage-bg, rgba(143, 169, 143, 0.1));
+}
+
+.task-checkbox-token__input {
+  /* Visually hidden but accessible */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.task-checkbox-token__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2em;
+  height: 1.2em;
+  border: 2px solid var(--checkbox-border, #666);
+  border-radius: 3px;
+  font-size: 0.8em;
+  color: var(--checkbox-check, #2d5a27);
+  background-color: var(--checkbox-bg, #fff);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.task-checkbox-token--checked .task-checkbox-token__box {
+  border-color: var(--checkbox-checked-border, #2d5a27);
+  background-color: var(--checkbox-checked-bg, rgba(45, 90, 39, 0.1));
+}
+
+.task-checkbox-token__input:focus-visible + .task-checkbox-token__box {
+  outline: 2px solid var(--focus-ring, #2d5a27);
+  outline-offset: 2px;
+}
+
+.task-checkbox-token__description {
+  color: inherit;
+}
+
+.task-checkbox-token--checked .task-checkbox-token__description {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.task-checkbox-token--toggling {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* =============================================================================
+   Token Placeholder (for future token types)
+   ============================================================================= */
+
+.token-placeholder {
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.3em;
+  background-color: var(--placeholder-bg, rgba(0, 0, 0, 0.05));
+  border-radius: 3px;
+}
+
+.token-placeholder--code_region {
+  display: block;
+  padding: 0.5em;
+  margin: 0.5em 0;
+  background-color: var(--code-bg, #f5f5f5);
+  border-left: 3px solid var(--code-accent, #666);
+  white-space: pre-wrap;
+}
+
+.token-placeholder--image_embed {
+  border: 1px dashed var(--image-border, #999);
+  padding: 0.25em 0.5em;
+}
+
+.token-placeholder--principle_anchor,
+.token-placeholder--requirement_trace {
+  background-color: var(--badge-bg, rgba(180, 150, 50, 0.15));
+  padding: 0.1em 0.4em;
+  font-size: 0.85em;
+}

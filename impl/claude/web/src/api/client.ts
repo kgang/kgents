@@ -1086,3 +1086,333 @@ export const documentApi = {
     return unwrapAgentese(response);
   },
 };
+
+// =============================================================================
+// File API (AGENTESE world.file.*)
+// =============================================================================
+
+/**
+ * Response from reading a file via AGENTESE world.file.read.
+ */
+export interface FileReadResponse {
+  path: string;
+  content: string;
+  size: number;
+  mtime: number;
+  encoding: string;
+  cached_at: number;
+  lines: number;
+  truncated: boolean;
+}
+
+export const fileApi = {
+  /** Read file content via AGENTESE: world.file.read */
+  read: async (path: string): Promise<FileReadResponse> => {
+    const response = await apiClient.post<AgenteseResponse<FileReadResponse>>(
+      '/agentese/world/file/read',
+      { path }
+    );
+    return unwrapAgentese(response);
+  },
+};
+
+// =============================================================================
+// K-Block API (Transactional Editing) - AGENTESE Universal Protocol
+// Routes:
+//   self.kblock.manifest - Active K-Blocks
+//   self.kblock.create - Create K-Block for file
+//   self.kblock.save - Commit K-Block to cosmos
+//   self.kblock.discard - Abandon K-Block
+//   self.kblock.view_edit - Edit via any view (Phase 3 bidirectional)
+//   self.kblock.checkpoint - Create named restore point
+//   self.kblock.rewind - Restore to checkpoint
+//
+// Philosophy:
+//   "The K-Block is not where you edit a document.
+//    It's where you edit a possible world."
+// =============================================================================
+
+/**
+ * K-Block isolation states.
+ */
+export type KBlockIsolation = 'PRISTINE' | 'DIRTY' | 'STALE' | 'CONFLICTING' | 'ENTANGLED';
+
+/**
+ * View types available in K-Block.
+ */
+export type KBlockViewType = 'prose' | 'graph' | 'code' | 'outline' | 'diff' | 'references';
+
+/**
+ * K-Block summary for manifest.
+ */
+export interface KBlockInfo {
+  id: string;
+  path: string;
+  isolation: KBlockIsolation;
+  is_dirty: boolean;
+  checkpoints: number;
+  created_at: string;
+  modified_at: string;
+}
+
+/**
+ * Response from K-Block manifest.
+ */
+export interface KBlockManifestResponse {
+  active_blocks: number;
+  blocks: KBlockInfo[];
+}
+
+/**
+ * Response from K-Block creation.
+ */
+export interface KBlockCreateResponse {
+  block_id: string;
+  path: string;
+  isolation: KBlockIsolation;
+  content_preview?: string;
+}
+
+/**
+ * Response from K-Block save.
+ */
+export interface KBlockSaveResponse {
+  success: boolean;
+  path: string;
+  version_id?: string;
+  no_changes?: boolean;
+  error?: string;
+}
+
+/**
+ * Response from K-Block discard.
+ */
+export interface KBlockDiscardResponse {
+  success: boolean;
+  discarded: string;
+}
+
+/**
+ * Semantic delta from view edit (Phase 3).
+ */
+export interface SemanticDelta {
+  kind: 'add' | 'remove' | 'modify';
+  token_id: string;
+  token_kind: string;
+  token_value: string;
+  old_value?: string;
+  new_value?: string;
+  parent_id?: string;
+  position_hint?: number;
+  timestamp: string;
+}
+
+/**
+ * Response from view edit operation.
+ */
+export interface KBlockViewEditResponse {
+  success: boolean;
+  block_id: string;
+  source_view: KBlockViewType;
+  semantic_deltas: SemanticDelta[];
+  content_changed: boolean;
+  trace?: {
+    source_view: string;
+    semantic_deltas: SemanticDelta[];
+    old_content_hash: number;
+    new_content_hash: number;
+    content_changed: boolean;
+    actor: string;
+    reasoning?: string;
+    timestamp: string;
+  };
+  error?: string;
+}
+
+/**
+ * Response from checkpoint creation.
+ */
+export interface KBlockCheckpointResponse {
+  checkpoint_id: string;
+  name: string;
+  block_id: string;
+}
+
+/**
+ * Reference discovered by ReferencesView.
+ */
+export interface KBlockReference {
+  kind: 'implements' | 'tests' | 'extends' | 'extended_by' | 'references' | 'heritage';
+  target: string;
+  context?: string;
+  line_number?: number;
+  confidence: number;
+  stale: boolean;
+  exists: boolean;
+}
+
+/**
+ * Response from getting K-Block content (for initial load).
+ */
+export interface KBlockContentResponse {
+  block_id: string;
+  path: string;
+  content: string;
+  base_content: string;
+  isolation: KBlockIsolation;
+  is_dirty: boolean;
+  active_views: KBlockViewType[];
+  checkpoints: Array<{
+    id: string;
+    name: string;
+    content_hash: string;
+    created_at: string;
+  }>;
+}
+
+export const kblockApi = {
+  /**
+   * Get active K-Blocks via AGENTESE: self.kblock.manifest
+   */
+  manifest: async (): Promise<KBlockManifestResponse> => {
+    const response = await apiClient.get<AgenteseResponse<KBlockManifestResponse>>(
+      '/agentese/self/kblock/manifest'
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Create K-Block for file via AGENTESE: self.kblock.create
+   *
+   * @param path - File path to create K-Block for
+   * @returns Created K-Block info including block_id
+   */
+  create: async (path: string): Promise<KBlockCreateResponse> => {
+    const response = await apiClient.post<AgenteseResponse<KBlockCreateResponse>>(
+      '/agentese/self/kblock/create',
+      { path }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Get K-Block content via AGENTESE: self.kblock.get
+   *
+   * @param blockId - K-Block ID
+   * @returns Full K-Block content and state
+   */
+  get: async (blockId: string): Promise<KBlockContentResponse> => {
+    const response = await apiClient.post<AgenteseResponse<KBlockContentResponse>>(
+      '/agentese/self/kblock/get',
+      { block_id: blockId }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Save K-Block to cosmos via AGENTESE: self.kblock.save
+   *
+   * Commits changes and exits isolation.
+   *
+   * @param blockId - K-Block ID
+   * @param reasoning - Optional reasoning for witness trace
+   */
+  save: async (blockId: string, reasoning?: string): Promise<KBlockSaveResponse> => {
+    const response = await apiClient.post<AgenteseResponse<KBlockSaveResponse>>(
+      '/agentese/self/kblock/save',
+      { block_id: blockId, reasoning }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Discard K-Block via AGENTESE: self.kblock.discard
+   *
+   * Abandons changes without saving. No cosmic effects.
+   *
+   * @param blockId - K-Block ID
+   */
+  discard: async (blockId: string): Promise<KBlockDiscardResponse> => {
+    const response = await apiClient.post<AgenteseResponse<KBlockDiscardResponse>>(
+      '/agentese/self/kblock/discard',
+      { block_id: blockId }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Edit via any view (Phase 3 bidirectional) via AGENTESE: self.kblock.view_edit
+   *
+   * Semantic deltas are extracted and propagated to prose.
+   * All views refresh automatically.
+   *
+   * @param blockId - K-Block ID
+   * @param sourceView - Which view was edited
+   * @param content - New content
+   * @param reasoning - Optional reasoning for witness trace
+   */
+  viewEdit: async (
+    blockId: string,
+    sourceView: KBlockViewType,
+    content: string,
+    reasoning?: string
+  ): Promise<KBlockViewEditResponse> => {
+    const response = await apiClient.post<AgenteseResponse<KBlockViewEditResponse>>(
+      '/agentese/self/kblock/view_edit',
+      {
+        block_id: blockId,
+        source_view: sourceView,
+        content,
+        reasoning,
+      }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Create checkpoint via AGENTESE: self.kblock.checkpoint
+   *
+   * Named restore point within K-Block lifetime.
+   *
+   * @param blockId - K-Block ID
+   * @param name - Checkpoint name
+   */
+  checkpoint: async (blockId: string, name: string): Promise<KBlockCheckpointResponse> => {
+    const response = await apiClient.post<AgenteseResponse<KBlockCheckpointResponse>>(
+      '/agentese/self/kblock/checkpoint',
+      { block_id: blockId, name }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Rewind to checkpoint via AGENTESE: self.kblock.rewind
+   *
+   * @param blockId - K-Block ID
+   * @param checkpointId - Checkpoint ID to restore
+   */
+  rewind: async (
+    blockId: string,
+    checkpointId: string
+  ): Promise<{ success: boolean; block_id: string; rewound_to: string }> => {
+    const response = await apiClient.post<
+      AgenteseResponse<{ success: boolean; block_id: string; rewound_to: string }>
+    >('/agentese/self/kblock/rewind', { block_id: blockId, checkpoint_id: checkpointId });
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Get references for K-Block via AGENTESE: self.kblock.references
+   *
+   * Discovers implements, tests, extends relationships.
+   *
+   * @param blockId - K-Block ID
+   */
+  references: async (blockId: string): Promise<{ references: KBlockReference[] }> => {
+    const response = await apiClient.post<AgenteseResponse<{ references: KBlockReference[] }>>(
+      '/agentese/self/kblock/references',
+      { block_id: blockId }
+    );
+    return unwrapAgentese(response);
+  },
+};

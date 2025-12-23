@@ -33,6 +33,13 @@ export function Membrane() {
   const membrane = useMembrane();
   const { density } = useWindowLayout();
 
+  // Expose membrane for testing (dev only)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      (window as unknown as { __membrane: typeof membrane }).__membrane = membrane;
+    }
+  }, [membrane]);
+
   // Auto-adjust mode based on viewport density
   const { setMode } = membrane;
   useEffect(() => {

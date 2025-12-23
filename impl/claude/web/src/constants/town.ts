@@ -99,21 +99,21 @@ export type RegionName = keyof typeof REGION_COLORS;
  * - Style: Organic, Ghibli-inspired subtle movement
  */
 export const BREATHING_ANIMATION = {
-  /** Duration of one complete breath cycle (inhale + exhale) in ms */
-  period: 3500,
+  /** Duration of one complete breath cycle in ms (synced with Tailwind breathe: 8.1s) */
+  period: 8100,
 
-  /** Scale amplitude (0.03 = 3% variation from 1.0) */
-  amplitude: 0.03,
+  /** Scale amplitude — subtle (synced with Tailwind breathe: 1.5% variation) */
+  amplitude: 0.015,
 
-  /** Timing function for organic feel */
-  easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+  /** Timing function — linear since easing is in the curve shape */
+  easing: 'linear',
 
-  /** Phases of breath cycle */
+  /** Calming breath phases (asymmetric: slow exhale) */
   phases: {
-    rest: 1.0,
-    inhale: 1.03,
-    hold: 1.0,
-    exhale: 0.97,
+    rest: 1.0, // 0-15%: stillness
+    inhale: 1.015, // 15-40%: gentle rise
+    hold: 1.015, // 40-50%: moment of fullness
+    exhale: 1.0, // 50-95%: slow release
   },
 } as const;
 
@@ -389,9 +389,8 @@ export function getBreathingScale(timeMs: number): number {
   } else if (cyclePosition < 0.75) {
     // Hold: stay at inhale
     return phases.inhale;
-  } 
-    // Exhale: interpolate from rest down to exhale
-    const t = (cyclePosition - 0.75) / 0.25;
-    return phases.rest - t * amplitude;
-  
+  }
+  // Exhale: interpolate from rest down to exhale
+  const t = (cyclePosition - 0.75) / 0.25;
+  return phases.rest - t * amplitude;
 }

@@ -66,7 +66,9 @@
     box-shadow: 0 0 5px currentColor;
   }
   50% {
-    box-shadow: 0 0 15px currentColor, 0 0 25px currentColor;
+    box-shadow:
+      0 0 15px currentColor,
+      0 0 25px currentColor;
   }
 }
 
@@ -362,20 +364,101 @@
 }
 
 /* Breathing animation for "waiting" states */
+/* Calming asymmetric breath: rest → gentle rise → hold → slow release */
+/* Subtler amplitude (0.7↔1.0 opacity, 1↔1.008 scale) */
 @keyframes breathe {
-  0%,
-  100% {
-    opacity: 0.5;
+  /* Rest (0-15%): stillness */
+  0% {
+    opacity: 0.7;
     transform: scale(1);
+  }
+  5% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  10% {
+    opacity: 0.705;
+    transform: scale(1.0005);
+  }
+  15% {
+    opacity: 0.715;
+    transform: scale(1.001);
+  }
+  /* Gentle rise (15-40%): soft inhale */
+  20% {
+    opacity: 0.76;
+    transform: scale(1.002);
+  }
+  25% {
+    opacity: 0.83;
+    transform: scale(1.004);
+  }
+  30% {
+    opacity: 0.91;
+    transform: scale(1.006);
+  }
+  35% {
+    opacity: 0.97;
+    transform: scale(1.0075);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.008);
+  }
+  /* Brief hold (40-50%): moment of fullness */
+  45% {
+    opacity: 1;
+    transform: scale(1.008);
   }
   50% {
     opacity: 1;
-    transform: scale(1.02);
+    transform: scale(1.008);
+  }
+  /* Slow release (50-95%): long, calming exhale */
+  55% {
+    opacity: 0.97;
+    transform: scale(1.0075);
+  }
+  60% {
+    opacity: 0.92;
+    transform: scale(1.006);
+  }
+  65% {
+    opacity: 0.87;
+    transform: scale(1.005);
+  }
+  70% {
+    opacity: 0.82;
+    transform: scale(1.004);
+  }
+  75% {
+    opacity: 0.78;
+    transform: scale(1.003);
+  }
+  80% {
+    opacity: 0.75;
+    transform: scale(1.002);
+  }
+  85% {
+    opacity: 0.72;
+    transform: scale(1.001);
+  }
+  90% {
+    opacity: 0.71;
+    transform: scale(1.0005);
+  }
+  95% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
   }
 }
 
 .breathe {
-  animation: breathe 3s ease-in-out infinite;
+  animation: breathe 2.7s linear infinite;
 }
 
 /* =============================================================================
@@ -406,37 +489,198 @@
  * - Organic feel, not mechanical
  * ============================================================================= */
 
+/* Calming vine breath: rest → gentle rise → hold → slow release */
+/* Subtler variation (opacity 0.7↔0.82, stroke-width 1.5↔1.6) */
 @keyframes vine-breathe {
-  0%,
-  100% {
-    opacity: 0.6;
+  /* Rest */
+  0% {
+    opacity: 0.7;
     stroke-width: 1.5;
   }
+  5% {
+    opacity: 0.7;
+    stroke-width: 1.5;
+  }
+  10% {
+    opacity: 0.705;
+    stroke-width: 1.505;
+  }
+  15% {
+    opacity: 0.71;
+    stroke-width: 1.51;
+  }
+  /* Gentle rise */
+  20% {
+    opacity: 0.73;
+    stroke-width: 1.53;
+  }
+  25% {
+    opacity: 0.76;
+    stroke-width: 1.55;
+  }
+  30% {
+    opacity: 0.79;
+    stroke-width: 1.575;
+  }
+  35% {
+    opacity: 0.81;
+    stroke-width: 1.59;
+  }
+  40% {
+    opacity: 0.82;
+    stroke-width: 1.6;
+  }
+  /* Brief hold */
+  45% {
+    opacity: 0.82;
+    stroke-width: 1.6;
+  }
   50% {
-    opacity: 0.85;
-    stroke-width: 1.8;
+    opacity: 0.82;
+    stroke-width: 1.6;
+  }
+  /* Slow release */
+  55% {
+    opacity: 0.81;
+    stroke-width: 1.59;
+  }
+  60% {
+    opacity: 0.79;
+    stroke-width: 1.575;
+  }
+  65% {
+    opacity: 0.77;
+    stroke-width: 1.56;
+  }
+  70% {
+    opacity: 0.75;
+    stroke-width: 1.545;
+  }
+  75% {
+    opacity: 0.73;
+    stroke-width: 1.53;
+  }
+  80% {
+    opacity: 0.72;
+    stroke-width: 1.52;
+  }
+  85% {
+    opacity: 0.71;
+    stroke-width: 1.51;
+  }
+  90% {
+    opacity: 0.705;
+    stroke-width: 1.505;
+  }
+  95% {
+    opacity: 0.7;
+    stroke-width: 1.5;
+  }
+  100% {
+    opacity: 0.7;
+    stroke-width: 1.5;
   }
 }
 
 .animate-vine-breathe {
-  animation: vine-breathe 4s ease-in-out infinite;
+  animation: vine-breathe 3.4s linear infinite;
 }
 
-/* Variant: faster breathing for active connections */
+/* Active connections: slightly more presence, same calming rhythm */
+/* Subtler variation (opacity 0.8↔0.92, stroke-width 1.8↔1.9) */
 @keyframes vine-breathe-active {
-  0%,
-  100% {
-    opacity: 0.7;
+  /* Rest */
+  0% {
+    opacity: 0.8;
     stroke-width: 1.8;
   }
+  5% {
+    opacity: 0.8;
+    stroke-width: 1.8;
+  }
+  10% {
+    opacity: 0.805;
+    stroke-width: 1.805;
+  }
+  15% {
+    opacity: 0.815;
+    stroke-width: 1.815;
+  }
+  /* Gentle rise */
+  20% {
+    opacity: 0.84;
+    stroke-width: 1.835;
+  }
+  25% {
+    opacity: 0.87;
+    stroke-width: 1.86;
+  }
+  30% {
+    opacity: 0.895;
+    stroke-width: 1.88;
+  }
+  35% {
+    opacity: 0.915;
+    stroke-width: 1.895;
+  }
+  40% {
+    opacity: 0.92;
+    stroke-width: 1.9;
+  }
+  /* Brief hold */
+  45% {
+    opacity: 0.92;
+    stroke-width: 1.9;
+  }
   50% {
-    opacity: 1;
-    stroke-width: 2.2;
+    opacity: 0.92;
+    stroke-width: 1.9;
+  }
+  /* Slow release */
+  55% {
+    opacity: 0.915;
+    stroke-width: 1.895;
+  }
+  60% {
+    opacity: 0.9;
+    stroke-width: 1.885;
+  }
+  65% {
+    opacity: 0.88;
+    stroke-width: 1.87;
+  }
+  70% {
+    opacity: 0.86;
+    stroke-width: 1.855;
+  }
+  75% {
+    opacity: 0.84;
+    stroke-width: 1.84;
+  }
+  80% {
+    opacity: 0.825;
+    stroke-width: 1.825;
+  }
+  85% {
+    opacity: 0.812;
+    stroke-width: 1.812;
+  }
+  90% {
+    opacity: 0.805;
+    stroke-width: 1.805;
+  }
+  95% {
+    opacity: 0.8;
+    stroke-width: 1.8;
+  }
+  100% {
+    opacity: 0.8;
+    stroke-width: 1.8;
   }
 }
 
 .animate-vine-breathe-active {
-  animation: vine-breathe-active 2s ease-in-out infinite;
+  animation: vine-breathe-active 2s linear infinite;
 }
 
 /* Flowing particle animation for data flow visualization */

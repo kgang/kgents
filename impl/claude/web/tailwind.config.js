@@ -166,30 +166,133 @@ const keyframes = {
     '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
     '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' },
   },
-  // STARK: Breathe subtle (2% amplitude, 5s period — barely perceptible)
+  // ==========================================================================
+  // STARK BIOME: BIOLUMINESCENT BREATHING
+  // "Sustained glow with ripple" — 70% peak, whisper fluctuations
+  // Amplitude -65% total (almost imperceptible)
+  // ==========================================================================
+
+  // ==========================================================================
+  // CALMING BREATH: Asymmetric timing inspired by 4-7-8 breathing
+  // Pattern: gentle rise (25%) → brief hold (10%) → slow fall (50%) → rest (15%)
+  // Subtler amplitude, organic rhythm
+  // ==========================================================================
+
+  // Breathe subtle (ambient elements — whisper-quiet presence)
+  // Opacity: 0.985 ↔ 1.0 (1.5% variation — barely perceptible)
   breathe: {
-    '0%, 100%': { opacity: '1' },
-    '50%': { opacity: '0.98' },
+    // Rest (0-15%): stillness before inhale
+    '0%': { opacity: '0.985' },
+    '5%': { opacity: '0.985' },
+    '10%': { opacity: '0.986' },
+    '15%': { opacity: '0.987' },
+    // Gentle rise (15-40%): soft inhale
+    '20%': { opacity: '0.990' },
+    '25%': { opacity: '0.994' },
+    '30%': { opacity: '0.997' },
+    '35%': { opacity: '0.999' },
+    '40%': { opacity: '1' },
+    // Brief hold (40-50%): moment of fullness
+    '45%': { opacity: '1' },
+    '50%': { opacity: '1' },
+    // Slow release (50-95%): long, calming exhale
+    '55%': { opacity: '0.999' },
+    '60%': { opacity: '0.997' },
+    '65%': { opacity: '0.995' },
+    '70%': { opacity: '0.993' },
+    '75%': { opacity: '0.991' },
+    '80%': { opacity: '0.989' },
+    '85%': { opacity: '0.987' },
+    '90%': { opacity: '0.986' },
+    '95%': { opacity: '0.985' },
+    // Return to rest
+    '100%': { opacity: '0.985' },
   },
-  // STARK: Breathe for living elements only (slightly more visible)
+
+  // Breathe for living elements (visible but calming)
+  // Opacity: 0.94 ↔ 1.0 (6% variation — noticeable but gentle)
   breatheAlive: {
-    '0%, 100%': { opacity: '1' },
-    '50%': { opacity: '0.92' },
+    // Rest
+    '0%': { opacity: '0.94' },
+    '5%': { opacity: '0.94' },
+    '10%': { opacity: '0.942' },
+    '15%': { opacity: '0.946' },
+    // Gentle rise
+    '20%': { opacity: '0.955' },
+    '25%': { opacity: '0.970' },
+    '30%': { opacity: '0.985' },
+    '35%': { opacity: '0.995' },
+    '40%': { opacity: '1' },
+    // Brief hold
+    '45%': { opacity: '1' },
+    '50%': { opacity: '1' },
+    // Slow release
+    '55%': { opacity: '0.995' },
+    '60%': { opacity: '0.988' },
+    '65%': { opacity: '0.980' },
+    '70%': { opacity: '0.972' },
+    '75%': { opacity: '0.963' },
+    '80%': { opacity: '0.955' },
+    '85%': { opacity: '0.948' },
+    '90%': { opacity: '0.943' },
+    '95%': { opacity: '0.940' },
+    '100%': { opacity: '0.94' },
   },
+
+  // Glow pulse (earned moments — warmth emerging, then gently fading)
+  // Opacity: 0.96 ↔ 1.0, brightness: 1.0 ↔ 1.012 (subtle warmth)
+  glowPulse: {
+    // Rest
+    '0%': { opacity: '0.96', filter: 'brightness(1)' },
+    '5%': { opacity: '0.96', filter: 'brightness(1)' },
+    '10%': { opacity: '0.962', filter: 'brightness(1.001)' },
+    '15%': { opacity: '0.966', filter: 'brightness(1.002)' },
+    // Gentle rise
+    '20%': { opacity: '0.974', filter: 'brightness(1.004)' },
+    '25%': { opacity: '0.984', filter: 'brightness(1.007)' },
+    '30%': { opacity: '0.993', filter: 'brightness(1.010)' },
+    '35%': { opacity: '0.998', filter: 'brightness(1.011)' },
+    '40%': { opacity: '1', filter: 'brightness(1.012)' },
+    // Brief hold — moment of warmth
+    '45%': { opacity: '1', filter: 'brightness(1.012)' },
+    '50%': { opacity: '1', filter: 'brightness(1.012)' },
+    // Slow release
+    '55%': { opacity: '0.998', filter: 'brightness(1.011)' },
+    '60%': { opacity: '0.993', filter: 'brightness(1.009)' },
+    '65%': { opacity: '0.986', filter: 'brightness(1.007)' },
+    '70%': { opacity: '0.979', filter: 'brightness(1.005)' },
+    '75%': { opacity: '0.973', filter: 'brightness(1.004)' },
+    '80%': { opacity: '0.968', filter: 'brightness(1.002)' },
+    '85%': { opacity: '0.964', filter: 'brightness(1.001)' },
+    '90%': { opacity: '0.961', filter: 'brightness(1.0005)' },
+    '95%': { opacity: '0.96', filter: 'brightness(1)' },
+    '100%': { opacity: '0.96', filter: 'brightness(1)' },
+  },
+
   pulse: {
     '0%, 100%': { opacity: '1' },
     '50%': { opacity: '0.7' },
   },
-  // STARK: Data pulse (single pulse on event)
+
+  // Data pulse (single pulse on event — not looping)
   dataPulse: {
-    '0%': { opacity: '0.5', transform: 'scale(0.95)' },
-    '50%': { opacity: '1', transform: 'scale(1.02)' },
-    '100%': { opacity: '0.5', transform: 'scale(0.95)' },
+    '0%': { opacity: '0.5', transform: 'scale(0.98)' },
+    '40%': { opacity: '1', transform: 'scale(1.01)' },
+    '100%': { opacity: '0.5', transform: 'scale(0.98)' },
   },
 };
 
-// Animation utilities (Stark Biome: mechanical precision, no spring bounce)
+// =============================================================================
+// ANIMATION UTILITIES
+// Stark Biome: mechanical precision for transitions, organic for breathing
+// =============================================================================
+
+// Custom timing function for 90/10 breathing:
+// Slow start, brief peak, gentle settle — like moss exhaling
+const BIOME_BREATHE = 'cubic-bezier(0.4, 0, 0.1, 1)';
+
 const animations = {
+  // Mechanical transitions (instant, no organic feel)
   'fade-in': 'fadeIn 250ms ease-out',
   'fade-out': 'fadeOut 200ms ease-in',
   'slide-up': 'slideUp 250ms ease-out',
@@ -198,10 +301,16 @@ const animations = {
   emerge: 'emerge 250ms ease-out',
   pop: 'pop 200ms ease-out',
   shake: 'shake 500ms ease-in-out',
-  breathe: 'breathe 5s ease-in-out infinite',
-  'breathe-alive': 'breatheAlive 4s ease-in-out infinite',
-  'pulse-slow': 'pulse 3s ease-in-out infinite',
-  'data-pulse': 'dataPulse 600ms ease-out',
+
+  // Calming breath animations
+  // Linear timing since easing is baked into keyframes
+  breathe: `breathe 8.1s linear infinite`,
+  'breathe-alive': `breatheAlive 6.75s linear infinite`,
+  'glow-pulse': `glowPulse 5.4s linear infinite`,
+  'pulse-slow': 'pulse 5.3s ease-in-out infinite',
+
+  // Single-shot data pulse (not looping)
+  'data-pulse': 'dataPulse 1.1s ease-out',
 };
 
 export default {
@@ -262,6 +371,8 @@ export default {
         standard: 'cubic-bezier(0.4, 0, 0.2, 1)',
         enter: 'cubic-bezier(0, 0, 0.2, 1)',
         exit: 'cubic-bezier(0.4, 0, 1, 1)',
+        // STARK: Organic breathing — slow start, brief peak, gentle settle
+        biome: 'cubic-bezier(0.4, 0, 0.1, 1)',
         // NOTE: bounce removed for Stark Biome
       },
     },

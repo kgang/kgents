@@ -10,7 +10,6 @@
 
 import React from 'react';
 import { useBreathing, type BreathingOptions } from '@/hooks/useBreathing';
-import { BREATHING_ANIMATION } from '@/constants';
 
 // =============================================================================
 // Types
@@ -91,13 +90,13 @@ const INTENSITY_AMPLITUDE: Record<BreathingIntensity, number> = {
   emphatic: 0.05, // 5%
 };
 
-/** Period preset mapping */
+/** Period preset mapping (synced with Tailwind breathing durations) */
 const PERIOD_MS: Record<BreathingPeriod, number> = {
-  calm: 5000,
-  normal: BREATHING_ANIMATION.period, // 3500
-  elevated: 2500,
-  urgent: 1500,
-  critical: 800,
+  calm: 8100, // Tailwind breathe: 8.1s
+  normal: 6750, // Tailwind breathe-alive: 6.75s
+  elevated: 5400, // Tailwind glow-pulse: 5.4s
+  urgent: 2700, // Half of glow-pulse
+  critical: 1350, // Quarter of glow-pulse
 };
 
 // =============================================================================

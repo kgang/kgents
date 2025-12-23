@@ -73,29 +73,95 @@
 }
 
 .dialogue-pane__thinking-dot {
-  width: 6px; /* STARK: smaller, subtler */
-  height: 6px;
+  width: 5px; /* STARK: smaller, subtler */
+  height: 5px;
   border-radius: 50%;
   background: var(--life-mint); /* organic life, not purple */
-  animation: thinking-breathe 4s ease-in-out infinite; /* STARK: slower, breathing */
+  /* Calming breath — linear timing since easing is in keyframes */
+  animation: thinking-breathe 6.75s linear infinite;
 }
 
+/* Staggered delays — offset so they don't breathe in unison (too mechanical)
+ * 0s, 2.25s, 4.5s creates organic cascade across the 6.75s cycle */
 .dialogue-pane__thinking-dot:nth-child(2) {
-  animation-delay: 0.3s;
+  animation-delay: 2.25s;
 }
 
 .dialogue-pane__thinking-dot:nth-child(3) {
-  animation-delay: 0.6s;
+  animation-delay: 4.5s;
 }
 
-/* STARK: "Stillness, then life" — subtle breathing, not bouncing */
+/* Calming Breath: rest → gentle rise → hold → slow release
+ * Asymmetric timing inspired by 4-7-8 breathing
+ * Subtle amplitude (0.88 ↔ 1.0) — whisper-quiet presence
+ */
 @keyframes thinking-breathe {
-  0%,
-  100% {
-    opacity: 0.4;
+  /* Rest (0-15%): stillness */
+  0% {
+    opacity: 0.88;
+  }
+  5% {
+    opacity: 0.88;
+  }
+  10% {
+    opacity: 0.885;
+  }
+  15% {
+    opacity: 0.89;
+  }
+  /* Gentle rise (15-40%): soft inhale */
+  20% {
+    opacity: 0.91;
+  }
+  25% {
+    opacity: 0.94;
+  }
+  30% {
+    opacity: 0.97;
+  }
+  35% {
+    opacity: 0.99;
+  }
+  40% {
+    opacity: 1;
+  }
+  /* Brief hold (40-50%): moment of fullness */
+  45% {
+    opacity: 1;
   }
   50% {
     opacity: 1;
+  }
+  /* Slow release (50-95%): long, calming exhale */
+  55% {
+    opacity: 0.99;
+  }
+  60% {
+    opacity: 0.97;
+  }
+  65% {
+    opacity: 0.95;
+  }
+  70% {
+    opacity: 0.93;
+  }
+  75% {
+    opacity: 0.915;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.89;
+  }
+  90% {
+    opacity: 0.885;
+  }
+  95% {
+    opacity: 0.88;
+  }
+  100% {
+    opacity: 0.88;
   }
 }
 
