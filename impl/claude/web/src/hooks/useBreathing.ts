@@ -126,39 +126,53 @@ export function useBreathing(options: BreathingOptions = {}): BreathingState {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, [respectReducedMotion]);
 
+  // Calculate calming breath value at given cycle position (0-1)
+  // Pattern: rest → gentle rise → hold → slow release
+  const getCalmingBreathValue = useCallback((cyclePosition: number): number => {
+    if (cyclePosition <= 0.15) {
+      // Rest phase (0-15%): stillness with tiny drift
+      return (cyclePosition / 0.15) * 0.05;
+    } else if (cyclePosition <= 0.4) {
+      // Rise phase (15-40%): gentle curve up
+      const progress = (cyclePosition - 0.15) / 0.25;
+      return 0.05 + Math.sin((progress * Math.PI) / 2) * 0.95;
+    } else if (cyclePosition <= 0.5) {
+      // Hold phase (40-50%): stay at peak
+      return 1;
+    } else if (cyclePosition <= 0.95) {
+      // Release phase (50-95%): slow descent
+      const progress = (cyclePosition - 0.5) / 0.45;
+      return Math.cos((progress * Math.PI) / 2);
+    }
+    // Return to rest (95-100%)
+    return 0;
+  }, []);
+
   // Calculate scale at given time
   const calculateScale = useCallback(
     (timeMs: number): number => {
-      // Apply phase offset (0-1 maps to one full cycle)
       const offsetMs = phaseOffset * period;
       const adjustedTime = timeMs + offsetMs;
-
-      // Cycle position (0-1)
       const cyclePosition = (adjustedTime % period) / period;
 
-      // Sinusoidal breathing: smooth wave
-      const breathFactor = Math.sin(cyclePosition * Math.PI * 2);
-
-      // Scale between (1 - amplitude) and (1 + amplitude)
-      return 1 + breathFactor * amplitude;
+      const breathValue = getCalmingBreathValue(cyclePosition);
+      return 1 + breathValue * amplitude;
     },
-    [period, amplitude, phaseOffset]
+    [period, amplitude, phaseOffset, getCalmingBreathValue]
   );
 
-  // Calculate opacity (slightly out of phase with scale)
+  // Calculate opacity (same calming curve, subtler amplitude)
   const calculateOpacity = useCallback(
     (timeMs: number): number => {
-      // Opacity variation is subtler (half the amplitude)
-      const offsetMs = (phaseOffset + 0.25) * period; // Quarter phase offset from scale
+      const offsetMs = phaseOffset * period;
       const adjustedTime = timeMs + offsetMs;
-
       const cyclePosition = (adjustedTime % period) / period;
-      const breathFactor = Math.sin(cyclePosition * Math.PI * 2);
 
-      // Opacity ranges from 0.95 to 1.0
-      return 0.975 + breathFactor * 0.025;
+      const breathValue = getCalmingBreathValue(cyclePosition);
+      // Opacity ranges from 0.985 to 1.0 (1.5% variation)
+      return 0.985 + breathValue * 0.015;
     },
-    [period, phaseOffset]
+    [period, phaseOffset, getCalmingBreathValue]
   );
 
   // Animation loop
@@ -264,20 +278,46 @@ export function getStaggeredPhaseOffset(
 
 /**
  * Generate a CSS keyframes animation string for breathing effect.
- * Useful for pure CSS fallback.
+ * Calming asymmetric pattern: rest → gentle rise → hold → slow release
+ * Use with linear timing.
  */
-export function getBreathingKeyframes(
-  amplitude: number = BREATHING_ANIMATION.amplitude
-): string {
-  const min = 1 - amplitude;
-  const max = 1 + amplitude;
+export function getBreathingKeyframes(amplitude: number = BREATHING_ANIMATION.amplitude): string {
+  // Calming breath pattern:
+  // 0-15%: rest (stillness)
+  // 15-40%: gentle rise (inhale)
+  // 40-50%: brief hold (fullness)
+  // 50-95%: slow release (exhale)
+  // 95-100%: return to rest
+  const keyframes = Array.from({ length: 21 }, (_, i) => {
+    const pct = i * 5;
+    let value: number;
+
+    if (pct <= 15) {
+      // Rest phase: stay at baseline with tiny drift
+      value = (pct / 15) * 0.05; // 0 → 0.05
+    } else if (pct <= 40) {
+      // Rise phase: gentle curve up
+      const progress = (pct - 15) / 25;
+      value = 0.05 + Math.sin((progress * Math.PI) / 2) * 0.95; // 0.05 → 1
+    } else if (pct <= 50) {
+      // Hold phase: stay at peak
+      value = 1;
+    } else if (pct <= 95) {
+      // Release phase: slow descent (longer than rise)
+      const progress = (pct - 50) / 45;
+      value = Math.cos((progress * Math.PI) / 2); // 1 → 0
+    } else {
+      // Return to rest
+      value = 0;
+    }
+
+    const scale = 1 + value * amplitude;
+    return `${pct}% { transform: scale(${scale.toFixed(4)}); }`;
+  });
 
   return `
     @keyframes breathing {
-      0%, 100% { transform: scale(1); }
-      25% { transform: scale(${max}); }
-      50% { transform: scale(1); }
-      75% { transform: scale(${min}); }
+      ${keyframes.join('\n      ')}
     }
   `;
 }
