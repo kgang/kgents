@@ -372,13 +372,27 @@ def _handle_lint(args: list[str]) -> int:
 
 
 def _handle_hydrate(args: list[str]) -> int:
-    """Generate hydration context for a task."""
+    """Generate hydration context for a task.
+
+    Enhanced with unified hydration (AD-017 Living Docs):
+    - Default: ghost hydration (includes ancestral wisdom from deleted code)
+    - Use --from-brain: unified path querying Brain directly (PREFERRED)
+    - Use --no-ghosts: skip ghost hydration (faster, no async)
+    """
     try:
-        from services.living_docs import hydrate_context
+        import asyncio
+
+        from services.living_docs import (
+            hydrate_context,
+            hydrate_context_with_ghosts,
+            hydrate_from_brain,
+        )
 
         # Extract task from args (everything after "hydrate" that's not a flag)
         task_parts = []
         skip_next = False
+        from_brain = "--from-brain" in args
+        no_ghosts = "--no-ghosts" in args
         for i, arg in enumerate(args):
             if skip_next:
                 skip_next = False
@@ -397,10 +411,30 @@ def _handle_hydrate(args: list[str]) -> int:
             print("Examples:")
             print('  kg docs hydrate "implement wasm projector"')
             print('  kg docs hydrate "fix brain persistence"')
+            print('  kg docs hydrate "town dialogue" --from-brain')
+            print('  kg docs hydrate "quick check" --no-ghosts')
             return 1
 
         task = " ".join(task_parts)
-        context = hydrate_context(task)
+
+        # Choose hydration path
+        if from_brain:
+            # AD-017 unified path: query Brain directly
+            try:
+                context = asyncio.run(hydrate_from_brain(task))
+            except Exception:
+                # Graceful degradation: fall back to ghost hydration
+                context = asyncio.run(hydrate_context_with_ghosts(task))
+        elif no_ghosts:
+            # Fast sync path: no async, no ghosts
+            context = hydrate_context(task)
+        else:
+            # Default: ghost hydration (Memory-First Docs Phase 4)
+            try:
+                context = asyncio.run(hydrate_context_with_ghosts(task))
+            except Exception:
+                # Graceful degradation: fall back to sync hydration
+                context = hydrate_context(task)
 
         if "--json" in args:
             print(json.dumps(context.to_dict(), indent=2))
@@ -599,6 +633,8 @@ Options:
   --strict                        Exit 1 if verify/lint finds issues
   --changed                       Lint only git-changed files
   --dry-run                       Preview crystallization without persisting
+  --from-brain                    Unified hydration: query Brain directly (AD-017)
+  --no-ghosts                     Skip ancestral wisdom in hydrate (faster)
   --json                          Output as JSON
   --help, -h                      Show this help message
 

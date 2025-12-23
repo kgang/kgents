@@ -37,6 +37,8 @@ from .hydrator import (
     HydrationContext,
     Hydrator,
     hydrate_context,
+    hydrate_context_with_ghosts,
+    hydrate_from_brain,
     relevant_for_file,
 )
 from .linter import (
@@ -102,6 +104,8 @@ __all__ = [
     "HydrationContext",
     "Hydrator",
     "hydrate_context",
+    "hydrate_context_with_ghosts",
+    "hydrate_from_brain",
     "relevant_for_file",
     # Brain Adapter (Metabolic Checkpoint 0.2)
     "HydrationBrainAdapter",

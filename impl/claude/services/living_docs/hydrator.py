@@ -189,7 +189,9 @@ class HydrationContext:
                         "warning": "\u26a0\ufe0f",
                         "info": "\u2139\ufe0f",
                     }.get(ghost.teaching.severity, "\u2022")
-                    lines.append(f"- {icon} **{ghost.teaching.source_symbol}**: {ghost.teaching.insight}")
+                    lines.append(
+                        f"- {icon} **{ghost.teaching.source_symbol}**: {ghost.teaching.insight}"
+                    )
                 lines.append("")
 
         # Related modules
@@ -558,12 +560,15 @@ class Hydrator:
 
     def _find_relevant_teaching(self, keywords: list[str]) -> Iterator[TeachingResult]:
         """
-        Find teaching moments relevant to keywords.
+        Find teaching moments relevant to keywords (sync, from docstrings).
 
         Matches against:
         - module path
         - symbol name
         - insight text
+
+        NOTE: This is the legacy path. Prefer hydrate_from_brain() for
+        unified hydration that queries Brain instead of re-extracting.
         """
         if not keywords:
             return
@@ -601,6 +606,99 @@ class Hydrator:
         scored.sort(key=lambda x: x[0], reverse=True)
         for _, result in scored[:15]:
             yield result
+
+    async def _find_relevant_teaching_from_brain(
+        self,
+        keywords: list[str],
+        brain: "BrainPersistence",
+    ) -> list[TeachingResult]:
+        """
+        Find teaching moments from Brain (async, unified hydration).
+
+        AGENTESE: concept.docs.hydrate (unified path)
+
+        This is the new unified path that queries Brain's crystallized
+        teaching moments instead of re-extracting from docstrings.
+
+        Args:
+            keywords: Keywords to search for
+            brain: BrainPersistence instance
+
+        Returns:
+            List of TeachingResult converted from TeachingCrystal
+        """
+        if not keywords:
+            return []
+
+        crystals = await brain.query_teaching_by_keywords(keywords)
+        return [self._crystal_to_result(c) for c in crystals]
+
+    def _crystal_to_result(self, crystal: Any) -> TeachingResult:
+        """Convert a TeachingCrystal to TeachingResult for compatibility."""
+        from .types import TeachingMoment
+
+        # Create TeachingMoment from crystal fields
+        moment = TeachingMoment(
+            severity=crystal.severity
+            if crystal.severity in ("critical", "warning", "info")
+            else "info",
+            insight=crystal.insight,
+            evidence=crystal.evidence,
+            commit=crystal.source_commit,
+        )
+
+        return TeachingResult(
+            moment=moment,
+            symbol=crystal.source_symbol,
+            module=crystal.source_module,
+            source_path=None,  # Not available from crystal
+        )
+
+    async def hydrate_from_brain(self, task: str, brain: "BrainPersistence") -> HydrationContext:
+        """
+        Generate hydration context from Brain (unified path).
+
+        AGENTESE: concept.docs.hydrate (via Brain)
+
+        This is the primary hydration path for AD-017 unified Living Docs.
+        Queries Brain's crystallized teaching instead of re-extracting
+        from docstrings on every call.
+
+        Args:
+            task: Natural language description of the task
+            brain: BrainPersistence instance
+
+        Returns:
+            HydrationContext with teaching from Brain
+
+        Teaching:
+            gotcha: This method requires teaching crystals to be bootstrapped.
+                    Run bootstrap_teaching_crystals.py first.
+                    (Evidence: test_unified_hydration.py::test_requires_bootstrap)
+        """
+        keywords = self._extract_keywords(task)
+
+        # Query Brain for teaching moments
+        relevant_teaching = await self._find_relevant_teaching_from_brain(keywords, brain)
+
+        # Query for ghost wisdom (ancestral teaching from deleted code)
+        ghosts = await brain.get_extinct_wisdom(keywords=keywords)
+
+        # Find related modules from the teaching results
+        related_modules = list(set(t.module for t in relevant_teaching))
+
+        # Select applicable voice anchors
+        voice_anchors = self._select_voice_anchors(task)
+
+        return HydrationContext(
+            task=task,
+            relevant_teaching=relevant_teaching,
+            related_modules=related_modules,
+            voice_anchors=voice_anchors,
+            has_semantic=False,  # Brain query is keyword-based for now
+            ancestral_wisdom=ghosts,
+            extinct_modules=list(set(g.teaching.source_module for g in ghosts)) if ghosts else [],
+        )
 
     def _find_related_modules(self, keywords: list[str]) -> Iterator[str]:
         """
@@ -749,4 +847,45 @@ async def hydrate_context_with_ghosts(task: str) -> HydrationContext:
     except Exception as e:
         # Graceful degradation: return basic context
         logger.warning(f"Failed to get brain for ghost hydration: {e}")
+        return hydrate_context(task)
+
+
+async def hydrate_from_brain(task: str) -> HydrationContext:
+    """
+    Generate hydration context from Brain (AD-017 unified path).
+
+    This is the PREFERRED hydration path. Queries Brain's crystallized
+    teaching moments instead of re-extracting from docstrings.
+
+    REQUIRES: Run bootstrap_teaching_crystals.py first to populate Brain.
+
+    Args:
+        task: Natural language description of the task
+
+    Returns:
+        HydrationContext with teaching from Brain + ancestral wisdom
+
+    Usage:
+        import asyncio
+        from services.living_docs import hydrate_from_brain
+
+        ctx = asyncio.run(hydrate_from_brain("implement brain search"))
+        print(ctx.to_markdown())
+
+    Teaching:
+        gotcha: Falls back to docstring extraction if Brain is unavailable.
+                This preserves functionality but loses the unified guarantee.
+                (Evidence: test_unified_hydration.py::test_fallback)
+    """
+    try:
+        from protocols.agentese.container import get_container
+
+        container = get_container()
+        brain = await container.resolve("brain_persistence")
+
+        hydrator = Hydrator()
+        return await hydrator.hydrate_from_brain(task, brain)
+    except Exception as e:
+        # Graceful degradation: fall back to docstring extraction
+        logger.warning(f"Failed to hydrate from Brain, using docstrings: {e}")
         return hydrate_context(task)

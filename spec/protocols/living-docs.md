@@ -329,6 +329,82 @@ Interactive Text integration deferred—will import from Living Docs when ready.
 
 ---
 
+## AD-017: Unified Hydration (2025-12-23)
+
+> *"One truth. One store. The soil remembers."*
+
+### The Anti-Pattern
+
+The original design has a flaw: **extraction on demand**.
+
+```python
+# CURRENT: Re-parse docstrings on every hydrate() call
+def hydrate(task: str) -> HydrationContext:
+    all_results = list(self._collector.collect_all())  # EXPENSIVE
+    ...
+```
+
+This violates:
+- **AD-015 Principle**: Single source of truth (ProxyHandleStore pattern)
+- **Memory-First Docs**: Teaching should persist in Brain, not re-extract
+
+### The Fix
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  CURRENT FLOW (Expensive, Duplicated)                                       │
+│                                                                             │
+│  Docstrings ───extract──▶ TeachingCollector ───hydrate──▶ HydrationContext │
+│       │                                                                     │
+│       └────────────crystallize──▶ Brain ────query──▶ (separate path)       │
+│                                                                             │
+│  Problem: Two paths. Extraction repeated. Brain underutilized.              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  UNIFIED FLOW                                                               │
+│                                                                             │
+│  Docstrings ───crystallize──▶ Brain (Single Source) ───query──▶ Hydration  │
+│       │                           │                                         │
+│       │                           ├── alive teaching                        │
+│       │                           ├── extinct teaching (ghosts)             │
+│       │                           └── prior evidence (ASHC)                 │
+│       │                                                                     │
+│       └───(CI/bootstrap crystallizes once)                                  │
+│                                                                             │
+│  One truth. One store. Reactive invalidation.                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Migration Phases
+
+| Phase | What | Status |
+|-------|------|--------|
+| **2B** | Bootstrap: Crystallize ~165 teaching moments to Brain | Pending |
+| **3** | Record Crown Jewel Cleanup as ExtinctionEvent | Pending |
+| **4** | Wire `/hydrate` skill to ghost hydration | Pending |
+| **5** | Radical: Hydrator queries Brain, not TeachingCollector | Pending |
+
+### Laws (Extended)
+
+| Law | Statement | Witness |
+|-----|-----------|---------|
+| **Crystallization** | `∀ TeachingMoment T: crystallize(T) → Brain.TeachingCrystal` | `test_crystallization.py` |
+| **Unified Query** | `hydrate(task) → Brain.query(task)` (not re-extract) | `test_unified_hydration.py` |
+| **Ghost Inclusion** | `hydrate(task) includes extinct teaching when keywords match` | `test_ghost_hydration.py` |
+
+### Connection to AD-015
+
+AD-015 unified LedgerCache → ProxyHandleStore. AD-017 applies the same medicine:
+
+| AD-015 | AD-017 |
+|--------|--------|
+| `LedgerCache` (ad-hoc) | `TeachingCollector.collect_all()` (re-extract) |
+| `ProxyHandleStore` (unified) | `Brain.query_teaching()` (single source) |
+| Reactive via ProxyReactor | Reactive via Brain events |
+
+*"Same medicine. Same healing."*
+
+---
+
 ## Connection to Principles
 
 | Principle | Embodiment |

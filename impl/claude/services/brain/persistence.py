@@ -1089,6 +1089,75 @@ class BrainPersistence:
 
             return ghosts
 
+    async def query_teaching_by_keywords(
+        self,
+        keywords: list[str],
+        include_extinct: bool = False,
+        limit: int = 15,
+    ) -> list[TeachingCrystal]:
+        """
+        Query teaching crystals by keyword matching.
+
+        AGENTESE: self.memory.teaching.query
+
+        This is the primary query method for unified hydration.
+        Replaces TeachingCollector.collect_all() + in-memory filtering.
+
+        Args:
+            keywords: Keywords to search for in insight, module, symbol
+            include_extinct: Include teaching from deleted code
+            limit: Maximum results
+
+        Returns:
+            List of TeachingCrystal sorted by relevance
+
+        Teaching:
+            gotcha: Keywords are matched against insight text, module, AND symbol.
+                    Module/symbol matches score higher than insight matches.
+                    (Evidence: test_query_teaching.py::test_keyword_scoring)
+        """
+        if not keywords:
+            return []
+
+        async with self.table.session_factory() as session:
+            # Get all candidate teaching crystals
+            stmt = select(TeachingCrystal)
+
+            if not include_extinct:
+                stmt = stmt.where(TeachingCrystal.died_at.is_(None))
+
+            stmt = stmt.limit(500)  # Cap for performance
+
+            result = await session.execute(stmt)
+            crystals = result.scalars().all()
+
+            # Score and rank by keyword matches
+            scored: list[tuple[int, TeachingCrystal]] = []
+            for crystal in crystals:
+                score = 0
+                insight_lower = crystal.insight.lower()
+                module_lower = crystal.source_module.lower()
+                symbol_lower = crystal.source_symbol.lower()
+
+                for kw in keywords:
+                    kw_lower = kw.lower()
+                    # Module match is high signal
+                    if kw_lower in module_lower:
+                        score += 3
+                    # Symbol match is medium signal
+                    if kw_lower in symbol_lower:
+                        score += 2
+                    # Insight match is low signal
+                    if kw_lower in insight_lower:
+                        score += 1
+
+                if score > 0:
+                    scored.append((score, crystal))
+
+            # Sort by score descending, take top N
+            scored.sort(key=lambda x: x[0], reverse=True)
+            return [crystal for _, crystal in scored[:limit]]
+
 
 __all__ = [
     "BrainPersistence",
