@@ -3,7 +3,7 @@
 > *"What's happening right now?"*
 
 **Last Updated**: 2025-12-23 (Evening)
-**Session**: Hardening Phase
+**Session**: Theory → Implementation → Hardening
 
 ---
 
@@ -18,28 +18,27 @@ Don't skip this—the gotchas you don't read are the bugs you will write.
 
 ---
 
-## The Greater Arc: Burn → Build → Harden
+## The Greater Arc: Burn → Build → Harden → Ship
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  PHASE 1: THE EXTINCTION (Dec 21)                                           │
-│  ─────────────────────────────────                                          │
-│  67K lines archived. Town, Park, Gestalt, Coalition, Muse, Gardener gone.   │
-│  Focus narrowed: Brain (100%), Witness (98%), Atelier (75%), Liminal (50%)  │
+│  PHASE 1: THE EXTINCTION (Dec 21)                                          │
+│  67K lines archived. Town, Park, Gestalt, Coalition, Muse, Gardener gone.  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  PHASE 2: THE REBUILDING (Dec 21-22)                                        │
-│  ───────────────────────────────────                                        │
-│  • Hypergraph Emacs: Six-mode modal editor for conceptual navigation        │
-│  • WitnessedGraph: Evidence-carrying edges with visual confidence           │
-│  • Inbound Sovereignty: External data ingestion with witnessing             │
-│  • Living Spec: Evidence-as-Marks unification, ledger UI                    │
+│  PHASE 2: THE REBUILDING (Dec 21-22)                                       │
+│  • Hypergraph Emacs: Six-mode modal editor for conceptual navigation       │
+│  • WitnessedGraph: Evidence-carrying edges with visual confidence          │
+│  • Inbound Sovereignty: External data ingestion with witnessing            │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  PHASE 3: THE HARDENING (Dec 23) ← YOU ARE HERE                             │
-│  ──────────────────────────────────                                         │
-│  • Dead Code Audit: ~14K more lines removed (0134babe)                      │
-│  • AD-016: Fail-fast AGENTESE resolution (0d93ea6c)                         │
-│  • AD-015 Radical Unification: LedgerCache → ProxyHandleStore (uncommitted) │
-│  • Edit→Witness→Graph→Visual loop closed (90f5d23d)                         │
+│  PHASE 3: THE HARDENING (Dec 22-23)                                        │
+│  • Dead Code Audit: ~14K more lines removed                                │
+│  • AD-015/016: Fail-fast AGENTESE + ProxyHandleStore unification           │
+│  • Validation Framework: 92 tests, witness-integrated                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PHASE 4: THEORY CRYSTALLIZATION (Dec 23) ← YOU ARE HERE                   │
+│  • 10-chapter monograph: "Categorical Foundations of Machine Reasoning"    │
+│  • Derivation DAG: CONSTITUTION as axiomatic root, confidence navigation   │
+│  • kgents 2.0 roadmap: CategoricalAgent + CPRM + SBM (15-week plan)       │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -47,68 +46,124 @@ Don't skip this—the gotchas you don't read are the bugs you will write.
 
 ## Current Focus
 
-**HARDENING**: Infrastructure robustness before feature expansion
+**CRYSTALLIZATION**: Theory meets implementation. The monograph is the map.
 
-*"One truth. One store."*
+*"The proof IS the decision. The mark IS the witness."*
 
 ---
 
-## What's Happening Now
+## What Happened Today (Dec 23)
 
-### Today's Commits (Dec 23)
+### Major Deliverables
+
+| Deliverable | Impact | Evidence |
+|-------------|--------|----------|
+| **🆕 Categorical Probes** | Phase 1 foundation for kgents 2.0 | `services/categorical/` — 41 tests |
+| **Theory Monograph** | 10 chapters on categorical machine reasoning | `docs/theory/` — complete first draft |
+| **Derivation DAG Phase 1-2** | CONSTITUTION as root, confidence navigation | 255+ tests, gD/gc keybindings |
+| **Validation Framework** | Witness-integrated validation engine | 92 tests, `services/validation/` |
+| **Proxy Handle Store** | Composite key support, event-driven invalidation | 70 tests, reactive staleness |
+| **Inbound Sovereignty** | Content access requires explicit witnessing | AD-015 enforcement live |
+
+### Categorical Probes Service (NEW)
+
+Built complete infrastructure for testing kgents 2.0's core hypothesis:
+
+```
+services/categorical/
+├── __init__.py         # Crown Jewel exports
+├── probes.py           # MonadProbe + SheafDetector + CategoricalProbeRunner
+├── study.py            # CorrelationStudy for Phase 1 gate validation
+└── _tests/             # 41 tests (all passing)
+
+protocols/agentese/contexts/
+└── concept_categorical.py  # AGENTESE paths for categorical probes
+```
+
+**Key Components:**
+- `MonadProbe`: Tests identity and associativity laws on LLM reasoning
+- `SheafDetector`: Detects coherence violations (hallucinations)
+- `CorrelationStudy`: Runs statistical correlation between laws and accuracy
+- AGENTESE: `concept.categorical.{manifest,monad,sheaf,probe,study,status}`
+
+**Phase 1 Gate Criteria (Enhanced 2025-12-23):**
+| Metric | Threshold | Status |
+|--------|-----------|--------|
+| Monad identity correlation | r > 0.3 (CI lower bound) | ⏳ Pending study |
+| Sheaf coherence correlation | r > 0.4 (CI lower bound) | ⏳ Pending study |
+| Combined AUC | > 0.7 | ⏳ Pending study |
+| **Beats random baseline** | Δ > 0.15 | ⏳ Pending study |
+| **Permutation p-value** | p < 0.01 | ⏳ Pending study |
+
+**Methodology Enhancements Added:**
+- Bootstrap 95% CIs (lower bound must exceed threshold)
+- Permutation tests for exact p-values (no normality assumption)
+- Baseline comparisons (random, length, confidence heuristics)
+- Hybrid sheaf detection (symbolic pre-filter → LLM)
+- Automatic step extraction for associativity testing
+
+### Today's Commits
 
 | Commit | What | Arc |
 |--------|------|-----|
-| `a4a0ad5c` | Sort imports in garden.py | Cleanup |
-| `0134babe` | **Dead code audit: ~14K lines removed** | HARDENING |
-| `90f5d23d` | **Close Edit→Witness→Graph→Visual loop** | BUILDING |
-| `0d93ea6c` | **AD-016 fail-fast resolution** | HARDENING |
-| `93be486c` | Proper JSON output for BasicRendering | Cleanup |
-| `87bc75be` | Hypergraph Phase 2: ContextNode.follow() | BUILDING |
+| `49ebe16d` | Formatting + composite keys in ValidationEngine | HARDENING |
+| `796e51ee` | Composite key support to ProxyHandleStore | HARDENING |
+| `517df49e` | Enforce inbound sovereignty for content access | HARDENING |
+| `32c61e1c` | **Categorical theory foundations + exploration plans** | THEORY |
+| `b6c3b8f6` | Edge evidence querying via concept.derivation.edges | BUILDING |
+| `c99c7a69` | Witnessed validation framework (Sessions 1+2 fused) | BUILDING |
+| `234ab4f9` | Edge-aware witness integration (Phase 3C) | BUILDING |
+| `db6aa302` | AppShell navigation + BrainPage memory explorer | BUILDING |
 
 ### Uncommitted Work
 
-**AD-015 Radical Unification** (just completed):
-- `LedgerCache` class DELETED (~60 lines)
-- `ensure_scanned()` → `proxy_store.get_or_raise(SourceType.SPEC_CORPUS)`
-- `analyze_now()` → `proxy_store.compute()` with reactive invalidation
-- 98 tests passing, mypy clean
-
-### Hypergraph Emacs Status
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  HYPERGRAPH EMACS                                                           │
-│  ═══════════════════════════════════════════════════════════════════════════│
-│  MODES:    NORMAL │ INSERT │ EDGE │ VISUAL │ COMMAND │ WITNESS              │
-│  NAV:      gh/gl (parent/child) │ gj/gk (siblings) │ gd/gr/gt (def/refs/test)│
-│  STATUS:   ✅ Core working │ ⏳ Portal ops │ ⏳ K-Block commit              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+- New validation initiative YAMLs (`atelier.yaml`, `liminal.yaml`)
+- Minor mypy.ini tweaks
+- Garden.py formatting
 
 ---
 
-## Active Plans (After 2025-12-23 Archive)
+## The Theory Monograph: "Categorical Foundations"
 
-**7 archived** (3 complete, 4 superseded) → **21 active plans**
+A 10-chapter work crystallizing the mathematical foundations:
 
-### Tier 1: In-Flight / Ready
+```
+Chapter 0: Overture — Why categories? The vision.
+Chapter 1: Preliminaries — Categories, functors, natural transformations
+Chapter 2: Reasoning as Morphism — Inference steps as arrows
+Chapter 3: Monadic Reasoning — Effects, context, chain-of-thought
+Chapter 4: Operadic Reasoning — Multi-input composition, proof trees
+Chapter 5: Sheaf Coherence — Local-to-global belief consistency
+Chapter 6: Neural Substrate — Attention, circuits, geometry
+Chapter 7: Neurosymbolic Bridge — Categorical meets neural
+Chapter 8: kgents Instantiation — Theory made code
+Chapter 9: Open Problems — The frontier
+```
+
+**Status**: First draft complete. Ready for iteration.
+
+**Why it matters**: This isn't just documentation—it's the **generative spec** for kgents 2.0. The four-phase plan (Foundations → Integration → Architecture → Synthesis) derives from this theory.
+
+---
+
+## Active Plans (30 total)
+
+### Tier 1: In-Flight / Recently Completed
 
 | Plan | Status | Next |
 |------|--------|------|
+| `derivation-dag-integration.md` | **Phase 1-2 ✅** | Phase 3 (WitnessedDerivation) |
+| `validation-framework-implementation.md` | **Session 1-2 ✅** | Session 3 (CLI/AGENTESE) |
+| `_proxy-handle-implementation.md` | **Phase 2 ✅** | Phase 3 (spec ledger migration) |
 | `hypergraph-emacs.md` | Phase 1-4 ✅ | E2E testing, polish |
 | `_membrane.md` | Foundation ✅ | Polish, keyboard shortcuts |
-| `SPECGRAPH-ASHC-SELF-HOSTING.md` | Phase 2 active | K-Block + Interactive Text |
-| `_inbound-sovereignty.md` | Session 1-3 ✅ | Polish, edge cases |
-
-**WitnessedGraph Integration**: Edges now carry evidence (confidence, origin, markId). Edge gutters show confidence visually.
 
 ### Tier 2: Ready to Start
 
 | Plan | Sessions | Priority |
 |------|----------|----------|
+| `categorical-reinvention-phase1-foundations.md` | 3 weeks | **EXECUTING** — probes built ✅ |
 | `witness-fusion-ux-implementation.md` | 5-7 | HIGH |
-| `witness-assurance-protocol.md` | 8-10 | HIGH |
 | `dawn-phase-4-kickoff.md` | 2-3 hrs | QUICK WIN |
 | `stark-biome-enforcement.md` | 1 hr | QUICK WIN |
 
@@ -116,61 +171,82 @@ Don't skip this—the gotchas you don't read are the bugs you will write.
 
 | Plan | Notes |
 |------|-------|
-| `witness-fusion-ux-design.md` | Design spec complete |
-| `witness-assurance-ui.md` | UX patterns defined |
-| `_k-block-implementation.md` | Phased plan ready |
+| `categorical-reinvention-phase2-integration.md` | CPRM training |
+| `categorical-reinvention-phase3-architecture.md` | SBM implementation |
+| `categorical-reinvention-phase4-synthesis.md` | Ship kgents 2.0 |
+| `_k-block-implementation.md` | K-Block commit protocol |
 | `SYNTHESIS-UI.md` | Vision doc |
 
 ### Tier 4: Backlog
 
 | Plan | Notes |
 |------|-------|
-| `stark-biome-refactor.md` | Token system ready |
 | `git-archaeology-backfill.md` | Proposed |
 | `memory-first-docs-execution.md` | Phase 2B pending |
+| `technical-debt-remediation.md` | Ongoing |
 | `visual-trail-graph-fullstack.md` | Session 2 done |
-| `technical-debt-remediation.md` | 183 mypy errors |
 
 ---
 
-## Crown Jewel Status (Post-Extinction)
+## Crown Jewel Status (Post-Crystallization)
 
-| Jewel | Status | Tests | Evidence |
-|-------|--------|-------|----------|
-| **Brain** | 100% | 200+ | TeachingCrystal, spatial cathedral |
-| **Witness** | 98% | 678 | Marks, crystals, streaming, promotion |
-| **Atelier** | 75% | — | Design forge, creative patterns |
+| Jewel | Status | Tests | Latest |
+|-------|--------|-------|--------|
+| **Brain** | 100% | 200+ | AppShell + BrainPage |
+| **Witness** | 98% | 678+ | WitnessedGraph, edge evidence |
+| **Validation** | NEW | 92 | Witnessed proposition checking |
+| **Categorical** | NEW | 41 | MonadProbe + SheafDetector |
+| **Atelier** | 75% | — | Design forge |
 | **Liminal** | 50% | — | Transition protocols |
+
+---
+
+## The kgents 2.0 Roadmap
+
+```
+Phase 1: Foundations (3 weeks) — Probes that measure law satisfaction
+Phase 2: Integration (4 weeks) — CPRM that scores reasoning steps
+Phase 3: Architecture (5 weeks) — SBM that retains bindings
+Phase 4: Synthesis (3 weeks) — Ship CategoricalAgent + pipeline
+
+Total: 15 weeks from theory to product
+```
+
+Key deliverables:
+- `CategoricalAgent[S, A, B]` with categorical guarantees
+- `SharpBindingModule` for discrete variable tracking
+- `CPRM` (Categorical Process Reward Model) for step verification
+- AGENTESE paths: `concept.reasoning.solve`, `self.binding.state`
 
 ---
 
 ## Session Entry Points
 
+**Continue current arc**:
+```bash
+# Derivation DAG Phase 3 — WitnessedDerivation
+cat plans/derivation-dag-integration.md | head -80
+
+# Validation CLI + AGENTESE
+cat plans/validation-framework-implementation.md
+```
+
 **Quick wins (< 3 hrs)**:
 ```bash
-# Dawn Phase 4 — j/k nav, copy confirmation, add modal
-cat plans/dawn-phase-4-kickoff.md | head -50
+# Dawn Phase 4 — j/k nav, copy confirmation
+cat plans/dawn-phase-4-kickoff.md
 
 # Stark Biome enforcement — ESLint rule
 cat plans/stark-biome-enforcement.md
 ```
 
-**Medium investment (1-2 sessions)**:
-```bash
-# Witness Fusion UX — Start building components
-cat plans/witness-fusion-ux-implementation.md
-
-# Inbound Sovereignty Session 3
-cat plans/_inbound-sovereignty.md
-```
-
 **Major arc (multi-session)**:
 ```bash
-# Hypergraph Emacs Phase 4-5
-cat plans/hypergraph-emacs.md
+# Categorical Phase 1 — Foundation experiments
+cat plans/categorical-reinvention-phase1-foundations.md
 
-# Witness Assurance Protocol
-cat plans/witness-assurance-protocol.md
+# kgents 2.0 — Full synthesis
+cat plans/categorical-reinvention-phase4-synthesis.md
 ```
 
 ---
@@ -184,9 +260,21 @@ cd impl/claude && uv run pytest -q && uv run mypy . 2>&1 | tail -5
 # Frontend quality gate
 cd impl/claude/web && npm run typecheck && npm run lint 2>&1 | tail -5
 
-# Active plan count
-ls -1 plans/*.md | grep -v "^plans/_" | grep -v README | wc -l
+# Theory monograph
+ls docs/theory/*.md | wc -l  # Should be 11 files
 ```
+
+---
+
+## What's Different After Today
+
+1. **Theory is crystallized** — The monograph provides intellectual foundation
+2. **Derivation DAG is live** — CONSTITUTION as root, confidence visible
+3. **Validation is witnessed** — Every check emits marks with Toulmin structure
+4. **Proxy handles are reactive** — Event-driven staleness, not just TTL
+5. **kgents 2.0 has a roadmap** — 15 weeks from theory to product
+
+*"Daring, bold, creative, opinionated but not gaudy."*
 
 ---
 
