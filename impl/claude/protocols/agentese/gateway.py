@@ -166,6 +166,12 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (k_block): {e}")
 
+        # === WitnessedGraph Crown Jewel (concept.graph.*) ===
+        try:
+            from services.witnessed_graph import node as graph_node  # noqa: F401  # concept.graph.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (witnessed_graph): {e}")
+
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:
         logger.warning(f"Could not import some node modules: {e}")
