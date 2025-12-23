@@ -1,4 +1,4 @@
-# Forest Health: 2025-12-22
+# Forest Health: 2025-12-23
 
 > *"The persona is a garden, not a museum."*
 
@@ -6,11 +6,12 @@
 
 ## Executive Summary
 
-The forest has undergone **The Great Extinction** (2025-12-21): Town, Park, Gestalt, Forge, Coalition, Muse, Gardener removed. ~52K lines archived. The focus is now razor-sharp:
+The forest has undergone **The Great Extinction** (2025-12-21): Town, Park, Gestalt, Forge, Coalition, Muse, Gardener removed. ~52K lines archived. Post-extinction, **Hypergraph Emacs** emerged as a major deliverable (2025-12-22/23).
 
 - **Active Plans**: 16 (down from 18 pre-extinction)
 - **Active Crown Jewels**: Brain (100%), Witness (98%), Atelier (75%), Liminal (50%)
-- **Dominant Theme**: **Witness Assurance** — evidence ladder, prompt archaeology, trust surfaces
+- **Dominant Theme**: **Hypergraph Navigation** — modal editing, graph visualization, EDGE mode
+- **Major Delivery**: Hypergraph Emacs core complete (six-mode editor, SpecGraph visualizer)
 
 ---
 
@@ -20,6 +21,7 @@ The forest has undergone **The Great Extinction** (2025-12-21): Town, Park, Gest
 
 | Plan | Status | Delivered |
 |------|--------|-----------|
+| `hypergraph-emacs.md` | **PHASE 1-3 COMPLETE** | Six-mode editor, CodeMirror 6, SpecGraph visualizer, EDGE mode |
 | `witness-crystallization.md` | **COMPLETE** | 678 tests, 4 phases, crystal hierarchy |
 | `witness-dashboard-tui.md` | **COMPLETE** | Textual TUI, j/k nav, level filtering |
 | `visual-trail-graph-fullstack.md` | **Session 2 Done** | Branching, validation, hierarchical reasoning |
@@ -53,6 +55,24 @@ The forest has undergone **The Great Extinction** (2025-12-21): Town, Park, Gest
 ---
 
 ## General Trends
+
+### 0. Hypergraph Emacs Emergence (NEW)
+
+The Hypergraph Emacs vision crystallized and was implemented in a single arc (2025-12-22/23):
+
+**Delivered:**
+- Six-mode modal editor (NORMAL, INSERT, EDGE, VISUAL, COMMAND, WITNESS)
+- CodeMirror 6 with custom STARK BIOME theme
+- SpecGraph Visualizer using Reactflow with tier-based coloring
+- EDGE mode for creating typed edges between nodes
+- Graph navigation: gh/gl (parent/child), gj/gk (siblings), gd/gr/gt (definition/references/tests)
+
+**Remaining:**
+- Portal operations (zo/zc for inline expansion)
+- WITNESS mode bindings
+- K-Block commit flow (:w)
+
+This is now the primary UI surface for kgents self-hosting.
 
 ### 1. Witness Dominance
 
@@ -124,16 +144,20 @@ These concepts are archived in git, and their teaching moments are being crystal
 
 Based on status and dependencies:
 
+### Hypergraph Emacs Phase 4 (Continue Current Arc)
+1. `hypergraph-emacs.md` Phase 4 — Portal operations (zo/zc), WITNESS mode bindings
+2. `hypergraph-emacs.md` Phase 5 — K-Block commit flow (:w saves)
+
 ### Quick Wins (< 3 hrs)
-1. `dawn-phase-4-kickoff.md` — j/k nav, copy confirmation, add modal
-2. `stark-biome-enforcement.md` — ESLint rule, selective migration
+3. `dawn-phase-4-kickoff.md` — j/k nav, copy confirmation, add modal
+4. `stark-biome-enforcement.md` — ESLint rule, selective migration
 
 ### Medium Investment (1-2 sessions)
-3. `witness-fusion-ux-implementation.md` Session 1 — Component primitives
-4. `memory-first-docs-execution.md` Phase 2B — Bootstrap script + CLI
+5. `witness-fusion-ux-implementation.md` Session 1 — Component primitives
+6. `memory-first-docs-execution.md` Phase 2B — Bootstrap script + CLI
 
 ### Major Arc (multi-session)
-5. `witness-assurance-protocol.md` — Full evidence ladder infrastructure
+7. `witness-assurance-protocol.md` — Full evidence ladder infrastructure
 
 ---
 
@@ -174,4 +198,4 @@ The voice is preserved.
 
 ---
 
-*Last verified: 2025-12-22 | Post-Extinction Clarity Edition*
+*Last verified: 2025-12-23 | Hypergraph Emacs Delivery Edition*

@@ -3,11 +3,21 @@
 > *"The file is a lie. There is only the graph."*
 > *"Navigation is not movement. Navigation is edge traversal."*
 
-**Status**: Vision — Ready for Implementation
-**Date**: 2025-12-22
+**Status**: ✅ Phase 1-3 Complete — Core Editor Functional
+**Date**: 2025-12-22 (updated 2025-12-23)
 **Synthesizes**: Strategy 4 (Hypergraph Navigator) + Strategy 9 (Emacs/Modal)
 **Voice anchor**: *"Daring, bold, creative, opinionated but not gaudy"*
 **Prerequisites**: Living Spec service, K-Block, Witness, SpecGraph
+
+### Implementation Status
+- ✅ Six-mode modal system (NORMAL, INSERT, EDGE, VISUAL, COMMAND, WITNESS)
+- ✅ Graph navigation (gh/gl parent/child, gj/gk siblings, gd definition, gr references)
+- ✅ EDGE mode with type selection (d/e/i/r/c/t/u/s/n keys)
+- ✅ CodeMirror 6 integration for INSERT mode
+- ✅ SpecGraph Visualizer at `/graph` route
+- ⏳ Portal operations (zo/zc) - not yet implemented
+- ⏳ WITNESS mode bindings - stub only
+- ⏳ K-Block commit flow (:w) - stub only
 
 ---
 
