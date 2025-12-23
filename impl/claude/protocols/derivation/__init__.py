@@ -187,8 +187,12 @@ from .types import (
 # Phase 3: Witness Integration
 from .witness_bridge import (
     DifferentialDenial,
+    composition_success_strengthens_edge,
     denial_weakens_derivation,
     extract_agents_from_mark,
+    # Phase 3C: Edge-aware witness integration
+    infer_edges_from_mark,
+    mark_updates_edges,
     mark_updates_stigmergy,
     sync_witness_to_derivations,
     walk_updates_derivations,
@@ -222,6 +226,10 @@ __all__ = [
     "denial_weakens_derivation",
     "walk_updates_derivations",
     "sync_witness_to_derivations",
+    # Phase 3C: Edge-aware witness integration
+    "infer_edges_from_mark",
+    "mark_updates_edges",
+    "composition_success_strengthens_edge",
     # Phase 3B: Witnessed Edges
     "EdgeType",
     "PrincipleFlow",

@@ -43,6 +43,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
+from .edges import WitnessedEdge
 from .registry import DerivationRegistry, get_registry
 from .types import EvidenceType, PrincipleDraw
 
@@ -101,9 +102,7 @@ class DifferentialDenial:
 
         # Clamp severity to [0.0, 1.0]
         if not 0.0 <= self.severity <= 1.0:
-            object.__setattr__(
-                self, "severity", max(0.0, min(1.0, self.severity))
-            )
+            object.__setattr__(self, "severity", max(0.0, min(1.0, self.severity)))
 
 
 # =============================================================================
@@ -229,6 +228,193 @@ async def mark_updates_stigmergy(
         logger.debug(f"Mark {mark.id}: {agent_name} usage count -> {new_count}")
 
     return usage_counts
+
+
+# =============================================================================
+# Mark -> Edge Strengthening (Phase 3C)
+# =============================================================================
+
+
+def infer_edges_from_mark(
+    mark: Mark,
+    registry: DerivationRegistry | None = None,
+) -> list[tuple[str, str]]:
+    """
+    Infer which derivation edges a mark provides evidence for.
+
+    When an agent emits a mark, it's evidence that the agent is working.
+    This indirectly evidences all incoming derivation edges (parent -> agent).
+
+    Example:
+        Mark with origin "brain" -> Brain derives_from ("Fix", "Compose")
+        -> Edges evidenced: [("Fix", "Brain"), ("Compose", "Brain")]
+
+    Args:
+        mark: The witness Mark to analyze
+        registry: Derivation registry (uses global if not provided)
+
+    Returns:
+        List of (source, target) edge tuples that this mark evidences
+
+    Teaching:
+        gotcha: This returns INCOMING edges (parent -> child), not outgoing.
+                The mark proves the child works, which proves the derivation is valid.
+
+        gotcha: Bootstrap agents rarely emit marks, so their edges are mostly
+                evidenced through composition successes, not direct marks.
+    """
+    if registry is None:
+        registry = get_registry()
+
+    edges: list[tuple[str, str]] = []
+
+    # Get agent names from mark
+    agents = extract_agents_from_mark(mark)
+
+    for agent_name in agents:
+        derivation = registry.get(agent_name)
+        if derivation is None:
+            continue
+
+        # Each derives_from parent creates an edge
+        for parent in derivation.derives_from:
+            edges.append((parent, agent_name))
+
+    return edges
+
+
+async def mark_updates_edges(
+    mark: Mark,
+    registry: DerivationRegistry | None = None,
+) -> dict[tuple[str, str], WitnessedEdge]:
+    """
+    Update derivation edges based on a Mark.
+
+    When a mark is emitted, it strengthens the edges from parents to the
+    agent that emitted the mark. This is the bridge between witness events
+    and derivation confidence.
+
+    Flow:
+        1. Infer which edges the mark evidences
+        2. For each edge, attach the mark ID
+        3. Return the updated edges
+
+    Args:
+        mark: The witness Mark to process
+        registry: Derivation registry (uses global if not provided)
+
+    Returns:
+        Dict of edge_key -> updated WitnessedEdge
+
+    Teaching:
+        gotcha: This is separate from mark_updates_stigmergy().
+                Stigmergy tracks raw usage counts per agent.
+                Edge updates track evidence on derivation relationships.
+                Both should be called for full witness processing.
+
+        gotcha: Categorical edges (bootstrap) accept marks but don't change
+                their strength. The mark is recorded but strength stays 1.0.
+    """
+    if registry is None:
+        registry = get_registry()
+
+    edges_inferred = infer_edges_from_mark(mark, registry)
+    updated_edges: dict[tuple[str, str], WitnessedEdge] = {}
+
+    for source, target in edges_inferred:
+        # Attach mark to edge (creates if needed)
+        updated_edge = registry.attach_mark_to_edge(source, target, mark.id)
+        updated_edges[(source, target)] = updated_edge
+
+        logger.debug(
+            f"Mark {mark.id}: edge {source} -> {target} "
+            f"strength now {updated_edge.edge_strength:.2f}"
+        )
+
+    return updated_edges
+
+
+async def composition_success_strengthens_edge(
+    source: str,
+    target: str,
+    composition_id: str | None = None,
+    registry: DerivationRegistry | None = None,
+) -> WitnessedEdge:
+    """
+    Strengthen an edge when composition succeeds.
+
+    When two agents compose successfully (A >> B), the edge from A to B
+    is strengthened. This is stronger evidence than a single mark because
+    it proves composability, not just individual functionality.
+
+    Args:
+        source: The source agent name (A in A >> B)
+        target: The target agent name (B in A >> B)
+        composition_id: Optional ID to track (mark ID or test ID)
+        registry: Derivation registry (uses global if not provided)
+
+    Returns:
+        The updated WitnessedEdge (or a local edge if not structural)
+
+    Teaching:
+        gotcha: Composition success is about A >> B working, not about
+                derivation parent -> child relationships. However, successful
+                compositions often involve derived agents, so this may be
+                called when a derived agent composes with its parent.
+
+        gotcha: If composition_id is a test ID (starts with "test_"),
+                it's recorded as L1 evidence (stronger than marks).
+
+        gotcha: Only STRUCTURAL edges (source in target.derives_from) are
+                stored in the registry. Non-structural composition edges
+                are logged but not persisted. This is by design: the DAG
+                tracks derivation, not arbitrary composition relationships.
+    """
+    if registry is None:
+        registry = get_registry()
+
+    edge = registry.get_edge(source, target)
+
+    # Determine evidence type based on ID format
+    if composition_id:
+        if composition_id.startswith("test_"):
+            updated_edge = edge.with_test(composition_id)
+        else:
+            updated_edge = edge.with_mark(composition_id)
+
+        # Only persist to registry if edge is structural (derivation edge)
+        # Non-structural composition edges are not tracked in the DAG
+        if _is_structural_edge(source, target, registry):
+            registry.update_edge(updated_edge)
+            logger.info(
+                f"Composition success: {source} >> {target} "
+                f"strength now {updated_edge.edge_strength:.2f}"
+            )
+        else:
+            # Non-structural: log but don't persist
+            logger.debug(
+                f"Composition success (non-structural): {source} >> {target} "
+                f"with ID {composition_id} (not persisted to DAG)"
+            )
+    else:
+        # No ID, just log that composition worked
+        logger.debug(f"Composition success logged (no ID): {source} >> {target}")
+        updated_edge = edge
+
+    return updated_edge
+
+
+def _is_structural_edge(source: str, target: str, registry: DerivationRegistry) -> bool:
+    """
+    Check if an edge is structural (source in target's derives_from).
+
+    Structural edges are derivation relationships that should be tracked in the DAG.
+    Non-structural edges (arbitrary compositions) are not persisted.
+    """
+    target_derivation = registry.get(target)
+    if target_derivation is None:
+        return False
+    return source in target_derivation.derives_from
 
 
 # =============================================================================
@@ -436,10 +622,7 @@ async def walk_updates_derivations(
             "confidence": derivation.total_confidence if derivation else 0.0,
         }
 
-        logger.info(
-            f"Walk {walk.id}: {agent_name} usage {before} -> {after} "
-            f"({mark_count} marks)"
-        )
+        logger.info(f"Walk {walk.id}: {agent_name} usage {before} -> {after} ({mark_count} marks)")
 
     return results
 
@@ -538,6 +721,10 @@ __all__ = [
     "mark_updates_stigmergy",
     "denial_weakens_derivation",
     "walk_updates_derivations",
+    # Phase 3C: Edge-aware witness integration
+    "infer_edges_from_mark",
+    "mark_updates_edges",
+    "composition_success_strengthens_edge",
     # Convenience
     "sync_witness_to_derivations",
 ]

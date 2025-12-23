@@ -30,8 +30,11 @@ from protocols.derivation.types import (
 )
 from protocols.derivation.witness_bridge import (
     DifferentialDenial,
+    composition_success_strengthens_edge,
     denial_weakens_derivation,
     extract_agents_from_mark,
+    infer_edges_from_mark,
+    mark_updates_edges,
     mark_updates_stigmergy,
     sync_witness_to_derivations,
     walk_updates_derivations,
@@ -695,6 +698,293 @@ class TestWitnessBridgeIntegration:
 
 
 # =============================================================================
+# Test: Phase 3C - infer_edges_from_mark
+# =============================================================================
+
+
+class TestInferEdgesFromMark:
+    """Tests for infer_edges_from_mark() - Phase 3C."""
+
+    @pytest.fixture
+    def registry(self) -> DerivationRegistry:
+        """Fresh registry with test derivations."""
+        reg = DerivationRegistry()
+
+        # Brain derives from Fix and Compose
+        reg.register(
+            agent_name="Brain",
+            derives_from=("Fix", "Compose"),
+            principle_draws=(),
+            tier=DerivationTier.JEWEL,
+        )
+
+        return reg
+
+    def test_infers_edges_from_mark_origin(self, registry: DerivationRegistry) -> None:
+        """Mark origin leads to correct edges."""
+        mark = MockMark(id="mark-1", origin="brain")
+
+        edges = infer_edges_from_mark(mark, registry)  # type: ignore
+
+        # Brain derives from Fix and Compose, so two edges
+        assert len(edges) == 2
+        assert ("Fix", "Brain") in edges
+        assert ("Compose", "Brain") in edges
+
+    def test_unknown_agent_returns_empty(self, registry: DerivationRegistry) -> None:
+        """Unknown agent origin returns no edges."""
+        mark = MockMark(id="mark-2", origin="unknown_agent")
+
+        edges = infer_edges_from_mark(mark, registry)  # type: ignore
+
+        assert edges == []
+
+    def test_bootstrap_agent_infers_constitution_edge(self, registry: DerivationRegistry) -> None:
+        """Bootstrap agents derive from CONSTITUTION."""
+        mark = MockMark(id="mark-3", origin="compose")
+
+        edges = infer_edges_from_mark(mark, registry)  # type: ignore
+
+        # Compose derives from CONSTITUTION (bootstrap)
+        assert ("CONSTITUTION", "Compose") in edges
+
+
+# =============================================================================
+# Test: Phase 3C - mark_updates_edges
+# =============================================================================
+
+
+class TestMarkUpdatesEdges:
+    """Tests for mark_updates_edges() - Phase 3C."""
+
+    @pytest.fixture
+    def registry(self) -> DerivationRegistry:
+        """Fresh registry with test derivations."""
+        reg = DerivationRegistry()
+
+        reg.register(
+            agent_name="Brain",
+            derives_from=("Fix", "Compose"),
+            principle_draws=(),
+            tier=DerivationTier.JEWEL,
+        )
+
+        return reg
+
+    @pytest.mark.asyncio
+    async def test_mark_strengthens_edges(self, registry: DerivationRegistry) -> None:
+        """A mark strengthens the edges to the mark's origin agent."""
+        mark = MockMark(id="mark-1", origin="brain")
+
+        # Get initial edge strength
+        initial_edge = registry.get_edge("Fix", "Brain")
+        initial_strength = initial_edge.edge_strength
+
+        updated_edges = await mark_updates_edges(mark, registry)  # type: ignore
+
+        assert ("Fix", "Brain") in updated_edges
+        assert ("Compose", "Brain") in updated_edges
+
+        # Edge should be strengthened
+        fix_edge = updated_edges[("Fix", "Brain")]
+        assert fix_edge.edge_strength >= initial_strength
+        assert "mark-1" in fix_edge.mark_ids
+
+    @pytest.mark.asyncio
+    async def test_multiple_marks_accumulate(self, registry: DerivationRegistry) -> None:
+        """Multiple marks accumulate on edges."""
+        for i in range(10):
+            mark = MockMark(id=f"mark-{i}", origin="brain")
+            await mark_updates_edges(mark, registry)  # type: ignore
+
+        fix_edge = registry.get_edge("Fix", "Brain")
+
+        assert len(fix_edge.mark_ids) == 10
+        # Logarithmic strengthening: 10 marks -> ~0.70
+        assert fix_edge.edge_strength > 0.65
+
+    @pytest.mark.asyncio
+    async def test_idempotent_same_mark(self, registry: DerivationRegistry) -> None:
+        """Same mark ID doesn't duplicate."""
+        mark = MockMark(id="mark-same", origin="brain")
+
+        await mark_updates_edges(mark, registry)  # type: ignore
+        await mark_updates_edges(mark, registry)  # type: ignore
+
+        fix_edge = registry.get_edge("Fix", "Brain")
+        assert len(fix_edge.mark_ids) == 1
+
+
+# =============================================================================
+# Test: Phase 3C - composition_success_strengthens_edge
+# =============================================================================
+
+
+class TestCompositionSuccessStrengthensEdge:
+    """Tests for composition_success_strengthens_edge() - Phase 3C."""
+
+    @pytest.fixture
+    def registry(self) -> DerivationRegistry:
+        """Fresh registry with test derivations including structural edge."""
+        reg = DerivationRegistry()
+
+        # Brain derives from Fix (structural edge: Fix -> Brain)
+        reg.register(
+            agent_name="Brain",
+            derives_from=("Fix",),
+            principle_draws=(),
+            tier=DerivationTier.JEWEL,
+        )
+        reg.register(
+            agent_name="Witness",
+            derives_from=("Judge",),
+            principle_draws=(),
+            tier=DerivationTier.JEWEL,
+        )
+
+        return reg
+
+    @pytest.mark.asyncio
+    async def test_structural_edge_strengthened_with_mark(
+        self, registry: DerivationRegistry
+    ) -> None:
+        """Structural edge (parent -> child derivation) is persisted."""
+        # Fix -> Brain is structural (Brain derives from Fix)
+        updated = await composition_success_strengthens_edge(
+            source="Fix",
+            target="Brain",
+            composition_id="comp-mark-1",
+            registry=registry,
+        )
+
+        assert "comp-mark-1" in updated.mark_ids
+        assert updated.edge_strength > 0.5
+
+        # Verify persisted to registry
+        registry_edge = registry.get_edge("Fix", "Brain")
+        assert "comp-mark-1" in registry_edge.mark_ids
+
+    @pytest.mark.asyncio
+    async def test_structural_edge_with_test_id_uses_l1_evidence(
+        self, registry: DerivationRegistry
+    ) -> None:
+        """Test ID (starts with test_) uses L1 evidence on structural edge."""
+        updated = await composition_success_strengthens_edge(
+            source="Fix",
+            target="Brain",
+            composition_id="test_composition_success",
+            registry=registry,
+        )
+
+        assert "test_composition_success" in updated.test_ids
+        # Tests are stronger: base 0.55 + log contribution
+        assert updated.edge_strength >= 0.55
+
+    @pytest.mark.asyncio
+    async def test_non_structural_edge_not_persisted(self, registry: DerivationRegistry) -> None:
+        """Non-structural edges (Brain -> Witness) return local edge but don't persist."""
+        # Brain -> Witness is NOT structural (Witness derives from Judge, not Brain)
+        updated = await composition_success_strengthens_edge(
+            source="Brain",
+            target="Witness",
+            composition_id="comp-non-structural",
+            registry=registry,
+        )
+
+        # Edge has the mark locally
+        assert "comp-non-structural" in updated.mark_ids
+
+        # But registry edge is unchanged (not persisted)
+        registry_edge = registry.get_edge("Brain", "Witness")
+        assert "comp-non-structural" not in registry_edge.mark_ids
+
+    @pytest.mark.asyncio
+    async def test_composition_without_id_logs_only(self, registry: DerivationRegistry) -> None:
+        """Composition without ID doesn't change edge."""
+        before = registry.get_edge("Fix", "Brain")
+
+        updated = await composition_success_strengthens_edge(
+            source="Fix",
+            target="Brain",
+            composition_id=None,
+            registry=registry,
+        )
+
+        # Edge returned but not modified
+        assert updated.edge_strength == before.edge_strength
+
+
+# =============================================================================
+# Test: Phase 3C Integration
+# =============================================================================
+
+
+class TestPhase3CIntegration:
+    """Integration tests for Phase 3C edge-aware witness integration."""
+
+    @pytest.mark.asyncio
+    async def test_full_edge_lifecycle(self) -> None:
+        """Full lifecycle: register, mark, compose, verify edge growth."""
+        registry = DerivationRegistry()
+
+        # Register agents
+        registry.register(
+            agent_name="Brain",
+            derives_from=("Fix", "Compose"),
+            principle_draws=(),
+            tier=DerivationTier.JEWEL,
+        )
+
+        # Initial state
+        initial_edge = registry.get_edge("Fix", "Brain")
+        assert initial_edge.edge_strength == 0.5  # Default
+
+        # Emit marks
+        for i in range(50):
+            mark = MockMark(id=f"mark-{i}", origin="brain")
+            await mark_updates_edges(mark, registry)  # type: ignore
+
+        # Verify edge strengthened
+        after_marks = registry.get_edge("Fix", "Brain")
+        assert len(after_marks.mark_ids) == 50
+        # 50 marks: log10(51) ≈ 1.71 → 0.5 + 0.15 * 1.71 ≈ 0.76
+        assert after_marks.edge_strength > 0.75
+
+        # Composition success adds more evidence
+        await composition_success_strengthens_edge(
+            "Fix",
+            "Brain",
+            composition_id="test_integration",
+            registry=registry,
+        )
+
+        final_edge = registry.get_edge("Fix", "Brain")
+        assert "test_integration" in final_edge.test_ids
+
+    @pytest.mark.asyncio
+    async def test_stigmergy_and_edges_together(self) -> None:
+        """Mark updates both stigmergy and edges."""
+        registry = DerivationRegistry()
+
+        registry.register(
+            agent_name="Brain",
+            derives_from=("Fix",),
+            principle_draws=(),
+            tier=DerivationTier.JEWEL,
+        )
+
+        mark = MockMark(id="mark-dual", origin="brain")
+
+        # Update both
+        usage = await mark_updates_stigmergy(mark, registry)  # type: ignore
+        edges = await mark_updates_edges(mark, registry)  # type: ignore
+
+        # Both should be updated
+        assert "Brain" in usage
+        assert ("Fix", "Brain") in edges
+
+
+# =============================================================================
 # Test Count Summary
 # =============================================================================
 
@@ -704,5 +994,9 @@ class TestWitnessBridgeIntegration:
 # denial_weakens_derivation: 5 tests
 # walk_updates_derivations: 3 tests
 # sync_witness_to_derivations: 2 tests
-# Integration: 2 tests
-# Total: 26 tests
+# Integration (original): 2 tests
+# Phase 3C - infer_edges_from_mark: 3 tests
+# Phase 3C - mark_updates_edges: 3 tests
+# Phase 3C - composition_success_strengthens_edge: 4 tests (structural vs non-structural)
+# Phase 3C - Integration: 2 tests
+# Total: 38 tests
