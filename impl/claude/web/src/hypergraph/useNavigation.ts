@@ -217,6 +217,10 @@ function edgeReducer(state: NavigationState, action: NavigationAction): Navigati
     }
 
     case 'EDGE_CONFIRM':
+      // Keep state as-is; EDGE_CONFIRMED will clear after API call
+      return state;
+
+    case 'EDGE_CONFIRMED':
       return { ...state, mode: 'NORMAL', edgePending: null };
 
     case 'EDGE_CANCEL':

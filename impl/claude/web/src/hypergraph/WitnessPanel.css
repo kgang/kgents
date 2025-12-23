@@ -1,0 +1,231 @@
+/**
+ * WitnessPanel — WITNESS mode styles
+ *
+ * Minimal, vim-like modal for capturing marks.
+ * Magenta accent (#e91e63) for WITNESS mode.
+ */
+
+/* =============================================================================
+   Overlay
+   ============================================================================= */
+
+.witness-panel__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* =============================================================================
+   Panel
+   ============================================================================= */
+
+.witness-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 90%;
+  max-width: 600px;
+  padding: 1.5rem;
+  background: var(--steel-900, #1a1a1a);
+  border: 2px solid var(--status-witness, #e91e63);
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* =============================================================================
+   Header
+   ============================================================================= */
+
+.witness-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--steel-800, #252525);
+}
+
+.witness-panel__badge {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--status-witness, #e91e63);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* =============================================================================
+   Fields
+   ============================================================================= */
+
+.witness-panel__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.witness-panel__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--steel-400, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.witness-panel__input,
+.witness-panel__textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--steel-950, #0d0d0d);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: 2px;
+  color: var(--steel-100, #e0e0e0);
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  transition: border-color 0.15s ease;
+}
+
+.witness-panel__input:focus,
+.witness-panel__textarea:focus {
+  outline: none;
+  border-color: var(--status-witness, #e91e63);
+  box-shadow: 0 0 0 1px var(--status-witness, #e91e63);
+}
+
+.witness-panel__input::placeholder,
+.witness-panel__textarea::placeholder {
+  color: var(--steel-600, #444);
+}
+
+.witness-panel__input:disabled,
+.witness-panel__textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.witness-panel__textarea {
+  resize: vertical;
+  min-height: 4rem;
+}
+
+/* =============================================================================
+   Tags
+   ============================================================================= */
+
+.witness-panel__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.witness-panel__tag {
+  padding: 0.25rem 0.75rem;
+  background: var(--steel-800, #252525);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: 12px;
+  color: var(--steel-400, #888);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.witness-panel__tag:hover:not(:disabled) {
+  background: var(--steel-700, #333);
+  border-color: var(--steel-600, #444);
+  color: var(--steel-300, #a0a0a0);
+}
+
+.witness-panel__tag--selected {
+  background: var(--status-witness, #e91e63);
+  border-color: var(--status-witness, #e91e63);
+  color: var(--steel-950, #0d0d0d);
+  font-weight: 600;
+}
+
+.witness-panel__tag--selected:hover:not(:disabled) {
+  background: #c2185b; /* Darker magenta */
+  border-color: #c2185b;
+}
+
+.witness-panel__tag:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+   Footer
+   ============================================================================= */
+
+.witness-panel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--steel-800, #252525);
+  font-size: 0.75rem;
+  color: var(--steel-500, #666);
+}
+
+.witness-panel__footer kbd {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  background: var(--steel-800, #252525);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 0.625rem;
+  color: var(--steel-300, #a0a0a0);
+}
+
+.witness-panel__separator {
+  color: var(--steel-700, #333);
+  margin: 0 0.25rem;
+}
+
+.witness-panel__loading {
+  margin-left: 0.5rem;
+  color: var(--status-witness, #e91e63);
+  font-weight: 600;
+  animation: witness-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes witness-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .witness-panel {
+    width: 95%;
+    padding: 1rem;
+  }
+
+  .witness-panel__tags {
+    gap: 0.375rem;
+  }
+
+  .witness-panel__tag {
+    font-size: 0.625rem;
+    padding: 0.25rem 0.5rem;
+  }
+}

@@ -143,6 +143,12 @@ export interface UseKeyHandlerOptions {
    */
   onEnterInsert?: () => void | Promise<void>;
 
+  /**
+   * Called when edge is confirmed in EDGE mode.
+   * This is where witness mark is created (async).
+   */
+  onEdgeConfirm?: () => Promise<void>;
+
   /** Called when command is submitted */
   onCommand?: (command: string) => void;
 
@@ -178,6 +184,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     closeAllPortals,
     onEnterCommand,
     onEnterInsert,
+    onEdgeConfirm,
     enabled = true,
   } = options;
 
@@ -485,7 +492,13 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     (e: KeyboardEvent, key: string): boolean => {
       if (key === 'y' || key === 'Enter') {
         e.preventDefault();
-        dispatch({ type: 'EDGE_CONFIRM' });
+        if (onEdgeConfirm) {
+          // Call async handler instead of dispatching directly
+          void onEdgeConfirm();
+        } else {
+          // Fallback if no handler provided
+          dispatch({ type: 'EDGE_CONFIRM' });
+        }
         return true;
       }
       if (key === 'n' || key === 'Backspace') {
@@ -495,7 +508,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       }
       return false;
     },
-    [dispatch]
+    [onEdgeConfirm, dispatch]
   );
 
   const handleEdgeMode = useCallback(

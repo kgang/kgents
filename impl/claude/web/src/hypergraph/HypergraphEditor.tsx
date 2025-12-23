@@ -27,6 +27,7 @@ import { useKBlock } from './useKBlock';
 import { StatusLine } from './StatusLine';
 import { CommandLine } from './CommandLine';
 import { EdgePanel } from './EdgePanel';
+import { WitnessPanel } from './WitnessPanel';
 import { MarkdownEditor, MarkdownEditorRef } from '../components/editor';
 import type { GraphNode, Edge, EdgeType } from './types';
 
@@ -417,9 +418,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
   const commandLineRef = useRef<HTMLInputElement>(null);
   const [commandLineVisible, setCommandLineVisible] = useState(false);
-
-  // Note: writePromptVisible could be used for a witness message dialog in the future
-  const writePromptVisible = false; // Currently not used, but reserved for witness prompt UI
+  const [witnessLoading, setWitnessLoading] = useState(false);
 
   // Handle INSERT mode entry - create K-Block
   const handleEnterInsert = useCallback(async () => {
@@ -439,6 +438,58 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       dispatch({ type: 'ENTER_INSERT' });
     }
   }, [state.currentNode, kblockHook, dispatch]);
+
+  // Handle witness mark save
+  const handleWitnessSave = useCallback(
+    async (action: string, reasoning?: string, tags?: string[]) => {
+      setWitnessLoading(true);
+      try {
+        await fetch('/api/witness/marks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action,
+            reasoning: reasoning || null,
+            principles: tags || [],
+            author: 'kent',
+          }),
+        });
+        dispatch({ type: 'EXIT_WITNESS' });
+        console.info('[HypergraphEditor] Witness mark saved:', action);
+      } catch (error) {
+        console.error('[HypergraphEditor] Failed to save mark:', error);
+      } finally {
+        setWitnessLoading(false);
+      }
+    },
+    [dispatch]
+  );
+
+  // Handle EDGE mode confirmation - create witness mark
+  const handleEdgeConfirm = useCallback(async () => {
+    if (!state.edgePending) return;
+
+    const { sourceId, edgeType, targetId } = state.edgePending;
+
+    try {
+      await fetch('/api/witness/marks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: `Created ${edgeType} edge: ${sourceId} → ${targetId}`,
+          reasoning: null,
+          principles: ['composable'],
+          author: 'hypergraph-editor',
+        }),
+      });
+
+      dispatch({ type: 'EDGE_CONFIRMED' });
+    } catch (error) {
+      console.error('[EdgeConfirm] Failed to create edge mark:', error);
+      // Still exit edge mode on failure (user can retry)
+      dispatch({ type: 'EDGE_CONFIRMED' });
+    }
+  }, [state.edgePending, dispatch]);
 
   // Key handler
   const { pendingSequence } = useKeyHandler({
@@ -461,7 +512,8 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       setTimeout(() => commandLineRef.current?.focus(), 0);
     },
     onEnterInsert: handleEnterInsert,
-    enabled: !commandLineVisible && !writePromptVisible,
+    onEdgeConfirm: handleEdgeConfirm,
+    enabled: !commandLineVisible && state.mode !== 'WITNESS',
   });
 
   // Load initial node
@@ -677,6 +729,15 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
       {/* Edge panel (when in EDGE mode) */}
       {state.mode === 'EDGE' && state.edgePending && <EdgePanel edgePending={state.edgePending} />}
+
+      {/* Witness panel (when in WITNESS mode) */}
+      {state.mode === 'WITNESS' && (
+        <WitnessPanel
+          onSave={handleWitnessSave}
+          onCancel={() => dispatch({ type: 'EXIT_WITNESS' })}
+          loading={witnessLoading}
+        />
+      )}
 
       {/* Status line */}
       <StatusLine

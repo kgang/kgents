@@ -364,6 +364,7 @@ export type NavigationAction =
   | { type: 'EDGE_SELECT_TYPE'; edgeType: EdgeType }
   | { type: 'EDGE_SELECT_TARGET'; targetId: string; targetLabel: string }
   | { type: 'EDGE_CONFIRM' }
+  | { type: 'EDGE_CONFIRMED' }
   | { type: 'EDGE_CANCEL' }
 
   // K-Block operations
