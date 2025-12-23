@@ -212,6 +212,324 @@ export function useKBlock(sessionId: string = 'membrane-default'): UseKBlock {
 }
 
 // =============================================================================
+// File K-Block Hook (for SpecView editing)
+// =============================================================================
+
+export type KBlockViewType = 'prose' | 'graph' | 'code' | 'outline' | 'diff' | 'references';
+
+export interface FileKBlockState {
+  blockId: string | null;
+  path: string | null;
+  content: string;
+  baseContent: string;
+  isolation: IsolationState;
+  isDirty: boolean;
+  activeViews: KBlockViewType[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface SemanticDelta {
+  kind: 'add' | 'remove' | 'modify';
+  token_id: string;
+  token_kind: string;
+  token_value: string;
+  old_value?: string;
+  new_value?: string;
+  parent_id?: string;
+  position_hint?: number;
+  timestamp: string;
+}
+
+export interface ViewEditResult {
+  success: boolean;
+  contentChanged: boolean;
+  semanticDeltas: SemanticDelta[];
+  error?: string;
+}
+
+export interface KBlockReference {
+  kind: 'implements' | 'tests' | 'extends' | 'extended_by' | 'references' | 'heritage';
+  target: string;
+  context?: string;
+  lineNumber?: number;
+  confidence: number;
+  stale: boolean;
+  exists: boolean;
+}
+
+export interface UseFileKBlock {
+  state: FileKBlockState;
+  create: (path: string) => Promise<boolean>;
+  refresh: () => Promise<boolean>;
+  viewEdit: (
+    sourceView: KBlockViewType,
+    content: string,
+    reasoning?: string
+  ) => Promise<ViewEditResult>;
+  save: (reasoning?: string) => Promise<{ success: boolean; error?: string }>;
+  discard: () => Promise<boolean>;
+  getReferences: () => Promise<KBlockReference[]>;
+  reset: () => void;
+}
+
+/**
+ * useFileKBlock — K-Block operations for file-based editing
+ *
+ * Unlike useKBlock (for dialogue thoughts), this hook manages
+ * K-Blocks for actual files in the filesystem.
+ *
+ * Usage in SpecView:
+ * ```tsx
+ * const { state, create, viewEdit, save, discard } = useFileKBlock();
+ *
+ * // Create K-Block when mounting
+ * useEffect(() => { create(specPath); }, [specPath]);
+ *
+ * // Edit via graph view
+ * await viewEdit('graph', newGraphContent, 'Kent reorganized sections');
+ *
+ * // Save when done
+ * await save('Completed spec update');
+ * ```
+ */
+export function useFileKBlock(): UseFileKBlock {
+  const [state, setState] = useState<FileKBlockState>({
+    blockId: null,
+    path: null,
+    content: '',
+    baseContent: '',
+    isolation: 'PRISTINE',
+    isDirty: false,
+    activeViews: [],
+    isLoading: false,
+    error: null,
+  });
+
+  const create = useCallback(async (path: string): Promise<boolean> => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    const result = await invokeKBlock('create', { path });
+
+    if (result.success && result.data) {
+      const blockId = result.data.block_id as string;
+
+      // Fetch full content
+      const getResult = await invokeKBlock('get', { block_id: blockId });
+
+      if (getResult.success && getResult.data) {
+        setState({
+          blockId,
+          path: getResult.data.path as string,
+          content: getResult.data.content as string,
+          baseContent: getResult.data.base_content as string,
+          isolation: getResult.data.isolation as IsolationState,
+          isDirty: getResult.data.is_dirty as boolean,
+          activeViews: getResult.data.active_views as KBlockViewType[],
+          isLoading: false,
+          error: null,
+        });
+        return true;
+      }
+    }
+
+    setState((prev) => ({
+      ...prev,
+      isLoading: false,
+      error: result.error || 'Failed to create K-Block',
+    }));
+    return false;
+  }, []);
+
+  const refresh = useCallback(async (): Promise<boolean> => {
+    if (!state.blockId) return false;
+
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    const getResult = await invokeKBlock('get', { block_id: state.blockId });
+
+    if (getResult.success && getResult.data) {
+      setState((prev) => ({
+        ...prev,
+        content: getResult.data!.content as string,
+        baseContent: getResult.data!.base_content as string,
+        isolation: getResult.data!.isolation as IsolationState,
+        isDirty: getResult.data!.is_dirty as boolean,
+        activeViews: getResult.data!.active_views as KBlockViewType[],
+        isLoading: false,
+      }));
+      return true;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      isLoading: false,
+      error: getResult.error || 'Failed to refresh K-Block',
+    }));
+    return false;
+  }, [state.blockId]);
+
+  const viewEdit = useCallback(
+    async (
+      sourceView: KBlockViewType,
+      content: string,
+      reasoning?: string
+    ): Promise<ViewEditResult> => {
+      if (!state.blockId) {
+        return { success: false, contentChanged: false, semanticDeltas: [], error: 'No K-Block' };
+      }
+
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+      const result = await invokeKBlock('view_edit', {
+        block_id: state.blockId,
+        source_view: sourceView,
+        content,
+        reasoning,
+      });
+
+      if (result.success && result.data) {
+        // Refresh to get updated content
+        await refresh();
+
+        return {
+          success: true,
+          contentChanged: result.data.content_changed as boolean,
+          semanticDeltas: (result.data.semantic_deltas as SemanticDelta[]) || [],
+        };
+      }
+
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: result.error || 'Failed to edit',
+      }));
+
+      return {
+        success: false,
+        contentChanged: false,
+        semanticDeltas: [],
+        error: result.error || 'Failed to edit',
+      };
+    },
+    [state.blockId, refresh]
+  );
+
+  const save = useCallback(
+    async (reasoning?: string): Promise<{ success: boolean; error?: string }> => {
+      if (!state.blockId) {
+        return { success: false, error: 'No K-Block' };
+      }
+
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+      const result = await invokeKBlock('save', {
+        block_id: state.blockId,
+        reasoning,
+      });
+
+      if (result.success && result.data) {
+        if (result.data.success) {
+          setState((prev) => ({
+            ...prev,
+            isolation: 'PRISTINE',
+            isDirty: false,
+            baseContent: prev.content,
+            isLoading: false,
+          }));
+          return { success: true };
+        }
+        return { success: false, error: result.data.error as string };
+      }
+
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: result.error || 'Failed to save',
+      }));
+
+      return { success: false, error: result.error || 'Failed to save' };
+    },
+    [state.blockId]
+  );
+
+  const discard = useCallback(async (): Promise<boolean> => {
+    if (!state.blockId) return false;
+
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    const result = await invokeKBlock('discard', { block_id: state.blockId });
+
+    if (result.success) {
+      setState({
+        blockId: null,
+        path: null,
+        content: '',
+        baseContent: '',
+        isolation: 'PRISTINE',
+        isDirty: false,
+        activeViews: [],
+        isLoading: false,
+        error: null,
+      });
+      return true;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      isLoading: false,
+      error: result.error || 'Failed to discard',
+    }));
+    return false;
+  }, [state.blockId]);
+
+  const getReferences = useCallback(async (): Promise<KBlockReference[]> => {
+    if (!state.blockId) return [];
+
+    const result = await invokeKBlock('references', { block_id: state.blockId });
+
+    if (result.success && result.data && result.data.references) {
+      return (result.data.references as Record<string, unknown>[]).map((ref) => ({
+        kind: ref.kind as KBlockReference['kind'],
+        target: ref.target as string,
+        context: ref.context as string | undefined,
+        lineNumber: ref.line_number as number | undefined,
+        confidence: ref.confidence as number,
+        stale: ref.stale as boolean,
+        exists: ref.exists as boolean,
+      }));
+    }
+
+    return [];
+  }, [state.blockId]);
+
+  const reset = useCallback(() => {
+    setState({
+      blockId: null,
+      path: null,
+      content: '',
+      baseContent: '',
+      isolation: 'PRISTINE',
+      isDirty: false,
+      activeViews: [],
+      isLoading: false,
+      error: null,
+    });
+  }, []);
+
+  return {
+    state,
+    create,
+    refresh,
+    viewEdit,
+    save,
+    discard,
+    getReferences,
+    reset,
+  };
+}
+
+// =============================================================================
 // Exports
 // =============================================================================
 
