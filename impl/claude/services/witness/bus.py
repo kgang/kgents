@@ -63,6 +63,11 @@ class WitnessTopics:
     # Trail events (Context Perception integration - Phase 4)
     TRAIL_CAPTURED = "witness.trail.captured"
 
+    # K-Block events (Membrane integration - Editing IS Witnessing)
+    KBLOCK_EDITED = "witness.kblock.edited"
+    KBLOCK_SAVED = "witness.kblock.saved"
+    KBLOCK_DISCARDED = "witness.kblock.discarded"
+
     # Daemon lifecycle
     DAEMON_STARTED = "witness.daemon.started"
     DAEMON_STOPPED = "witness.daemon.stopped"
@@ -72,13 +77,22 @@ class WitnessTopics:
     AGENTESE_COMPLETED = "witness.agentese.completed"
     AGENTESE_ERROR = "witness.agentese.error"
 
+    # Spec Ledger events (Living Spec integration)
+    SPEC_SCANNED = "witness.spec.scanned"
+    SPEC_DEPRECATED = "witness.spec.deprecated"
+    SPEC_EVIDENCE_ADDED = "witness.spec.evidence_added"
+    SPEC_CONTRADICTION_FOUND = "witness.spec.contradiction"
+    SPEC_ORPHAN_DETECTED = "witness.spec.orphan"
+
     # Wildcards
     ALL = "witness.*"
     GIT_ALL = "witness.git.*"
     THOUGHT_ALL = "witness.thought.*"
     TRAIL_ALL = "witness.trail.*"
+    KBLOCK_ALL = "witness.kblock.*"
     DAEMON_ALL = "witness.daemon.*"
     AGENTESE_ALL = "witness.agentese.*"
+    SPEC_ALL = "witness.spec.*"
 
 
 # =============================================================================

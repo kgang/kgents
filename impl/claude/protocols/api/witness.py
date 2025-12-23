@@ -231,58 +231,70 @@ def create_witness_router() -> "APIRouter | None":
     @router.get("/stream")
     async def stream_marks() -> StreamingResponse:
         """
-        SSE stream for real-time mark updates.
+        SSE stream for real-time witness events (marks, K-Block edits, crystals, etc.).
 
-        Returns Server-Sent Events for new marks as they're created.
+        Event-driven via WitnessSynergyBus — instant delivery, no polling.
+
+        "The proof IS the decision. The mark IS the witness."
         """
 
         async def generate() -> AsyncGenerator[str, None]:
-            """Generate SSE events."""
-            # Send initial connection event
-            yield f"event: connected\ndata: {json.dumps({'status': 'connected'})}\n\n"
+            """Generate SSE events from WitnessSynergyBus subscription."""
+            from typing import Any
 
-            # Keep-alive and poll for new marks
-            last_check = datetime.now()
-            seen_ids: set[str] = set()
+            from services.witness.bus import WitnessTopics, get_synergy_bus
+
+            # Send initial connection event
+            yield f"event: connected\ndata: {json.dumps({'status': 'connected', 'type': 'connected'})}\n\n"
+
+            bus = get_synergy_bus()
+            event_queue: asyncio.Queue[tuple[str, Any]] = asyncio.Queue()
+
+            # Subscribe to all witness events
+            async def on_event(topic: str, event: Any) -> None:
+                await event_queue.put((topic, event))
+
+            unsub = bus.subscribe(WitnessTopics.ALL, on_event)
 
             try:
-                from services.providers import get_witness_persistence
-
-                persistence = await get_witness_persistence()
-
-                # Get initial marks to populate seen_ids
-                initial = await persistence.get_marks(limit=20)
-                for m in initial:
-                    seen_ids.add(m.mark_id)
-
                 while True:
-                    await asyncio.sleep(2)  # Poll every 2 seconds
+                    try:
+                        # Wait for event with 30s timeout for heartbeat
+                        topic, event = await asyncio.wait_for(
+                            event_queue.get(),
+                            timeout=30.0,
+                        )
 
-                    # Check for new marks
-                    recent = await persistence.get_marks(limit=10)
-                    for m in recent:
-                        if m.mark_id not in seen_ids:
-                            seen_ids.add(m.mark_id)
-                            mark_data = {
-                                "id": m.mark_id,
-                                "action": m.action,
-                                "reasoning": m.reasoning,
-                                "principles": m.principles,
-                                "author": m.author,
-                                "timestamp": m.timestamp.isoformat(),
-                            }
-                            yield f"event: mark\ndata: {json.dumps(mark_data)}\n\n"
+                        # Determine event type from topic
+                        event_type = "mark"
+                        if "kblock" in topic:
+                            event_type = "kblock"
+                        elif "crystal" in topic:
+                            event_type = "crystal"
+                        elif "thought" in topic:
+                            event_type = "thought"
+                        elif "trail" in topic:
+                            event_type = "trail"
+                        elif "spec" in topic:
+                            event_type = "spec"
 
-                    # Periodic heartbeat
-                    if (datetime.now() - last_check).seconds > 30:
-                        yield f"event: heartbeat\ndata: {json.dumps({'time': datetime.now().isoformat()})}\n\n"
-                        last_check = datetime.now()
+                        # Ensure event has type field for frontend
+                        if isinstance(event, dict):
+                            event["type"] = event_type
+
+                        yield f"event: {event_type}\ndata: {json.dumps(event)}\n\n"
+
+                    except asyncio.TimeoutError:
+                        # Heartbeat on timeout
+                        yield f"event: heartbeat\ndata: {json.dumps({'type': 'heartbeat', 'time': datetime.now().isoformat()})}\n\n"
 
             except asyncio.CancelledError:
                 yield f"event: disconnected\ndata: {json.dumps({'status': 'disconnected'})}\n\n"
             except Exception as e:
-                logger.exception("Error in mark stream")
+                logger.exception("Error in witness stream")
                 yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
+            finally:
+                unsub()
 
         return StreamingResponse(
             generate(),

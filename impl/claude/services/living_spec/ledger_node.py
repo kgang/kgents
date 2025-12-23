@@ -1,0 +1,774 @@
+"""
+Living Spec Ledger AGENTESE Node: self.spec.ledger.*
+
+Accounting-style interface for spec corpus management.
+
+Aspects:
+- self.spec.scan          - Scan corpus, extract claims, find evidence
+- self.spec.ledger        - Get ledger summary (assets/liabilities)
+- self.spec.get           - Get single spec detail
+- self.spec.orphans       - List specs without evidence
+- self.spec.contradictions - List conflicting specs
+- self.spec.harmonies     - List reinforcing relationships
+- self.spec.deprecate     - Mark specs as deprecated
+
+Philosophy:
+    "Spec = Asset. Evidence = Transactions. Contradictions = Liabilities."
+    "If proofs valid, supported. If not used, dead."
+    "The proof IS the decision. The mark IS the witness."
+
+Integration:
+    Every ledger mutation emits to WitnessBus.
+    Connects Living Spec to Witness crown jewel.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from .analyzer import (
+    Contradiction,
+    Harmony,
+    LedgerReport,
+    SpecRecord,
+    SpecStatus,
+    analyze_spec_corpus,
+)
+
+logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Ledger Cache
+# =============================================================================
+
+
+@dataclass
+class LedgerCache:
+    """Cached ledger data for fast access."""
+
+    report: LedgerReport | None = None
+    last_scan: float = 0.0
+    spec_root: Path | None = None
+
+    def is_fresh(self, max_age_seconds: float = 300) -> bool:
+        """Check if cache is fresh (< 5 minutes old)."""
+        import time
+
+        return self.report is not None and (time.time() - self.last_scan) < max_age_seconds
+
+
+_cache = LedgerCache()
+
+
+# =============================================================================
+# Witness Bus Integration
+# =============================================================================
+
+
+def _get_witness_bus() -> tuple[Any, Any]:
+    """
+    Get the witness synergy bus (optional dependency).
+
+    Returns (None, None) if witness bus not available.
+    This allows LedgerNode to work standalone for testing.
+    """
+    try:
+        from services.witness.bus import WitnessTopics, get_synergy_bus
+
+        return get_synergy_bus(), WitnessTopics
+    except ImportError:
+        logger.debug("Witness bus not available")
+        return None, None
+
+
+async def _emit_witness_event(topic: str, event: dict[str, Any]) -> None:
+    """
+    Emit an event to the witness bus.
+
+    Silently no-ops if witness bus not available.
+    """
+    bus, _ = _get_witness_bus()
+    if bus is not None:
+        await bus.publish(topic, event)
+        logger.debug(f"Emitted witness event: {topic}")
+
+
+def get_spec_root() -> Path:
+    """Get the spec root directory."""
+    # Navigate up from this file to find spec/
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        spec_dir = parent / "spec"
+        if spec_dir.exists() and spec_dir.is_dir():
+            return spec_dir
+    raise FileNotFoundError("Could not find spec/ directory")
+
+
+async def ensure_scanned() -> LedgerReport:
+    """Ensure we have a scanned ledger, scanning if needed."""
+    if _cache.is_fresh():
+        return _cache.report  # type: ignore
+
+    # Scan in thread pool to not block
+    spec_root = get_spec_root()
+    loop = asyncio.get_event_loop()
+    report = await loop.run_in_executor(None, analyze_spec_corpus, spec_root)
+
+    import time
+
+    _cache.report = report
+    _cache.last_scan = time.time()
+    _cache.spec_root = spec_root
+
+    return report
+
+
+# =============================================================================
+# Response Types
+# =============================================================================
+
+
+@dataclass
+class LedgerSummary:
+    """Summary of spec corpus health."""
+
+    total_specs: int
+    active: int
+    orphans: int
+    deprecated: int
+    archived: int
+    total_claims: int
+    contradictions: int
+    harmonies: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "total_specs": self.total_specs,
+            "active": self.active,
+            "orphans": self.orphans,
+            "deprecated": self.deprecated,
+            "archived": self.archived,
+            "total_claims": self.total_claims,
+            "contradictions": self.contradictions,
+            "harmonies": self.harmonies,
+        }
+
+
+@dataclass
+class SpecEntry:
+    """Single spec in ledger table."""
+
+    path: str
+    title: str
+    status: str
+    claim_count: int
+    impl_count: int
+    test_count: int
+    ref_count: int
+    word_count: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "path": self.path,
+            "title": self.title,
+            "status": self.status,
+            "claim_count": self.claim_count,
+            "impl_count": self.impl_count,
+            "test_count": self.test_count,
+            "ref_count": self.ref_count,
+            "word_count": self.word_count,
+        }
+
+
+@dataclass
+class LedgerResponse:
+    """Full ledger response for API."""
+
+    summary: LedgerSummary
+    specs: list[SpecEntry]
+    orphan_paths: list[str]
+    deprecated_paths: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "summary": self.summary.to_dict(),
+            "specs": [s.to_dict() for s in self.specs],
+            "orphan_paths": self.orphan_paths,
+            "deprecated_paths": self.deprecated_paths,
+        }
+
+
+@dataclass
+class SpecDetail:
+    """Detailed view of single spec."""
+
+    path: str
+    title: str
+    status: str
+    claims: list[dict[str, Any]]
+    implementations: list[str]
+    tests: list[str]
+    references: list[str]
+    harmonies: list[dict[str, Any]]
+    contradictions: list[dict[str, Any]]
+    word_count: int
+    heading_count: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "path": self.path,
+            "title": self.title,
+            "status": self.status,
+            "claims": self.claims,
+            "implementations": self.implementations,
+            "tests": self.tests,
+            "references": self.references,
+            "harmonies": self.harmonies,
+            "contradictions": self.contradictions,
+            "word_count": self.word_count,
+            "heading_count": self.heading_count,
+        }
+
+
+# =============================================================================
+# AGENTESE Node
+# =============================================================================
+
+
+@dataclass
+class LedgerNode:
+    """
+    AGENTESE node for spec ledger operations.
+
+    Symmetric harness: agents can do everything Kent can do.
+    """
+
+    handle: str = "self.spec"
+
+    async def scan(self, force: bool = False) -> dict[str, Any]:
+        """
+        Scan spec corpus and populate ledger.
+
+        Args:
+            force: Force rescan even if cache is fresh
+
+        Returns:
+            Summary of scan results
+
+        Emits:
+            witness.spec.scanned — Summary of scan results
+        """
+        if force:
+            _cache.report = None  # Invalidate cache
+
+        report = await ensure_scanned()
+        summary = report.summary()
+
+        # Emit witness event
+        _, topics = _get_witness_bus()
+        if topics:
+            await _emit_witness_event(
+                topics.SPEC_SCANNED,
+                {
+                    "action": "scan",
+                    "force": force,
+                    "summary": summary,
+                    "orphan_count": len(report.orphans),
+                    "contradiction_count": len(report.contradictions),
+                },
+            )
+
+        return {
+            "success": True,
+            "message": f"Scanned {summary['total_specs']} specs",
+            "summary": summary,
+        }
+
+    async def ledger(
+        self,
+        status_filter: str | None = None,
+        sort_by: str = "path",
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        """
+        Get ledger summary and spec list.
+
+        Args:
+            status_filter: Filter by status (active, orphan, deprecated)
+            sort_by: Sort field (path, claims, impl, status)
+            limit: Max specs to return
+            offset: Pagination offset
+
+        Returns:
+            LedgerResponse with summary and specs
+        """
+        report = await ensure_scanned()
+
+        # Build summary
+        summary_data = report.summary()
+        summary = LedgerSummary(
+            total_specs=summary_data["total_specs"],
+            active=summary_data["active"],
+            orphans=summary_data["orphans"],
+            deprecated=summary_data["deprecated"],
+            archived=summary_data["archived"],
+            total_claims=summary_data["total_claims"],
+            contradictions=summary_data["contradictions"],
+            harmonies=summary_data["harmonies"],
+        )
+
+        # Convert specs to entries
+        specs = report.specs
+
+        # Filter by status
+        if status_filter:
+            status_upper = status_filter.upper()
+            if status_upper == "ORPHAN":
+                orphan_set = set(report.orphans)
+                specs = [s for s in specs if s.path in orphan_set]
+            elif status_upper == "DEPRECATED":
+                specs = [s for s in specs if s.status == SpecStatus.DEPRECATED]
+            elif status_upper == "ACTIVE":
+                orphan_set = set(report.orphans)
+                specs = [
+                    s for s in specs if s.status == SpecStatus.ACTIVE and s.path not in orphan_set
+                ]
+            elif status_upper == "ARCHIVED":
+                specs = [s for s in specs if s.status == SpecStatus.ARCHIVED]
+
+        # Sort
+        if sort_by == "claims":
+            specs = sorted(specs, key=lambda s: len(s.claims), reverse=True)
+        elif sort_by == "impl":
+            specs = sorted(specs, key=lambda s: len(s.implementations), reverse=True)
+        elif sort_by == "status":
+            specs = sorted(specs, key=lambda s: s.status.name)
+        else:  # path
+            specs = sorted(specs, key=lambda s: s.path)
+
+        # Paginate
+        total = len(specs)
+        specs = specs[offset : offset + limit]
+
+        # Convert to entries
+        orphan_set = set(report.orphans)
+        entries = [
+            SpecEntry(
+                path=s.path,
+                title=s.title,
+                status="ORPHAN" if s.path in orphan_set else s.status.name,
+                claim_count=len(s.claims),
+                impl_count=len(s.implementations),
+                test_count=len(s.tests),
+                ref_count=len(s.references),
+                word_count=s.word_count,
+            )
+            for s in specs
+        ]
+
+        response = LedgerResponse(
+            summary=summary,
+            specs=entries,
+            orphan_paths=report.orphans[:50],  # Limit for response size
+            deprecated_paths=report.deprecated[:50],
+        )
+
+        return {
+            "success": True,
+            "total": total,
+            "offset": offset,
+            "limit": limit,
+            **response.to_dict(),
+        }
+
+    async def get(self, path: str) -> dict[str, Any]:
+        """
+        Get detailed view of single spec.
+
+        Args:
+            path: Spec path (relative to spec/)
+
+        Returns:
+            SpecDetail with claims, evidence, relationships
+        """
+        report = await ensure_scanned()
+
+        # Find the spec
+        spec = None
+        for s in report.specs:
+            if path in s.path or s.path.endswith(path):
+                spec = s
+                break
+
+        if not spec:
+            return {
+                "success": False,
+                "error": f"Spec not found: {path}",
+            }
+
+        # Find harmonies involving this spec
+        harmonies = [
+            {
+                "spec": h.spec_b if h.spec_a == spec.path else h.spec_a,
+                "relationship": h.relationship,
+                "strength": h.strength,
+            }
+            for h in report.harmonies
+            if h.spec_a == spec.path or h.spec_b == spec.path
+        ]
+
+        # Find contradictions involving this spec
+        contradictions = [
+            {
+                "spec": c.spec_b if c.spec_a == spec.path else c.spec_a,
+                "conflict_type": c.conflict_type,
+                "severity": c.severity,
+            }
+            for c in report.contradictions
+            if c.spec_a == spec.path or c.spec_b == spec.path
+        ]
+
+        # Determine status
+        orphan_set = set(report.orphans)
+        status = "ORPHAN" if spec.path in orphan_set else spec.status.name
+
+        detail = SpecDetail(
+            path=spec.path,
+            title=spec.title,
+            status=status,
+            claims=[
+                {
+                    "type": c.claim_type.name,
+                    "subject": c.subject,
+                    "predicate": c.predicate,
+                    "line": c.line_number,
+                }
+                for c in spec.claims
+            ],
+            implementations=spec.implementations,
+            tests=spec.tests,
+            references=spec.references,
+            harmonies=harmonies[:20],
+            contradictions=contradictions,
+            word_count=spec.word_count,
+            heading_count=spec.heading_count,
+        )
+
+        return {
+            "success": True,
+            **detail.to_dict(),
+        }
+
+    async def orphans(self, limit: int = 100) -> dict[str, Any]:
+        """
+        List specs without evidence.
+
+        Returns:
+            List of orphan spec paths with details
+        """
+        report = await ensure_scanned()
+
+        orphan_details = []
+        orphan_set = set(report.orphans)
+
+        for spec in report.specs:
+            if spec.path in orphan_set:
+                orphan_details.append(
+                    {
+                        "path": spec.path,
+                        "title": spec.title,
+                        "claim_count": len(spec.claims),
+                        "word_count": spec.word_count,
+                    }
+                )
+
+        # Sort by word count (bigger specs = more important to triage)
+        def get_word_count(x: dict[str, Any]) -> int:
+            val = x.get("word_count", 0)
+            return int(val) if isinstance(val, (int, float, str)) else 0
+
+        orphan_details = sorted(orphan_details, key=get_word_count, reverse=True)
+
+        return {
+            "success": True,
+            "total": len(orphan_details),
+            "orphans": orphan_details[:limit],
+        }
+
+    async def contradictions(self) -> dict[str, Any]:
+        """
+        List conflicting specs.
+
+        Returns:
+            List of contradictions with details
+        """
+        report = await ensure_scanned()
+
+        return {
+            "success": True,
+            "total": len(report.contradictions),
+            "contradictions": [
+                {
+                    "spec_a": c.spec_a,
+                    "spec_b": c.spec_b,
+                    "conflict_type": c.conflict_type,
+                    "severity": c.severity,
+                    "claim_a": {
+                        "type": c.claim_a.claim_type.name,
+                        "text": c.claim_a.raw_text[:200],
+                    },
+                    "claim_b": {
+                        "type": c.claim_b.claim_type.name,
+                        "text": c.claim_b.raw_text[:200],
+                    },
+                }
+                for c in report.contradictions[:50]
+            ],
+        }
+
+    async def harmonies(self, limit: int = 50) -> dict[str, Any]:
+        """
+        List reinforcing relationships.
+
+        Returns:
+            List of harmonies
+        """
+        report = await ensure_scanned()
+
+        # Sort by strength
+        sorted_harmonies = sorted(report.harmonies, key=lambda h: h.strength, reverse=True)
+
+        return {
+            "success": True,
+            "total": len(report.harmonies),
+            "harmonies": [
+                {
+                    "spec_a": h.spec_a,
+                    "spec_b": h.spec_b,
+                    "relationship": h.relationship,
+                    "strength": h.strength,
+                }
+                for h in sorted_harmonies[:limit]
+            ],
+        }
+
+    async def evidence_add(
+        self,
+        spec_path: str,
+        evidence_path: str,
+        evidence_type: str = "implementation",
+    ) -> dict[str, Any]:
+        """
+        Link evidence (implementation/test) to a spec.
+
+        This is a TRANSACTION in the accounting sense:
+        - Records when evidence was linked
+        - Emits SPEC_EVIDENCE_ADDED witness event
+        - May transition spec from ORPHAN → ACTIVE if first evidence
+
+        Args:
+            spec_path: Path to spec file (relative to spec/)
+            evidence_path: Path to implementation/test file
+            evidence_type: One of "implementation", "test", "usage"
+
+        Returns:
+            Result of evidence linking
+
+        Emits:
+            witness.spec.evidence_added — Evidence transaction record
+        """
+        import time
+        from pathlib import Path as P
+
+        # Validate evidence type
+        valid_types = {"implementation", "test", "usage"}
+        if evidence_type not in valid_types:
+            return {
+                "success": False,
+                "error": f"Invalid evidence_type: {evidence_type}. Must be one of {valid_types}",
+            }
+
+        # Ensure we have scanned data
+        report = await ensure_scanned()
+
+        # Find the spec
+        spec = None
+        for s in report.specs:
+            if spec_path in s.path or s.path.endswith(spec_path):
+                spec = s
+                break
+
+        if not spec:
+            return {
+                "success": False,
+                "error": f"Spec not found: {spec_path}",
+            }
+
+        # Check if evidence file exists (best effort)
+        evidence_exists = P(evidence_path).exists()
+        if not evidence_exists:
+            # Try relative to impl/claude
+            impl_root = P(__file__).resolve().parents[2]
+            alt_path = impl_root / evidence_path.replace("impl/claude/", "")
+            evidence_exists = alt_path.exists()
+
+        # Determine if this is first evidence (orphan → active transition)
+        orphan_set = set(report.orphans)
+        was_orphan = spec.path in orphan_set
+        is_first_evidence = was_orphan and (len(spec.implementations) == 0 and len(spec.tests) == 0)
+
+        # Record the transaction timestamp
+        timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+        # Emit witness event
+        _, topics = _get_witness_bus()
+        if topics:
+            await _emit_witness_event(
+                topics.SPEC_EVIDENCE_ADDED,
+                {
+                    "action": "evidence_add",
+                    "spec_path": spec.path,
+                    "evidence_path": evidence_path,
+                    "evidence_type": evidence_type,
+                    "evidence_exists": evidence_exists,
+                    "was_orphan": was_orphan,
+                    "is_first_evidence": is_first_evidence,
+                    "timestamp": timestamp,
+                },
+            )
+
+        # Note: This doesn't persist the link yet (Phase 2 needs DB)
+        # For now, we emit the witness event as the transaction record
+        # The analyzer will pick up the link on next scan if files reference each other
+
+        logger.info(f"Evidence linked: {evidence_path} → {spec.path} ({evidence_type})")
+
+        return {
+            "success": True,
+            "message": f"Evidence linked to {spec.path}",
+            "spec_path": spec.path,
+            "evidence_path": evidence_path,
+            "evidence_type": evidence_type,
+            "evidence_exists": evidence_exists,
+            "was_orphan": was_orphan,
+            "is_first_evidence": is_first_evidence,
+            "timestamp": timestamp,
+            "note": "Transaction witnessed. Full persistence requires Phase 2 (DB)."
+            if not evidence_exists
+            else None,
+        }
+
+    async def deprecate(self, paths: list[str], reason: str) -> dict[str, Any]:
+        """
+        Mark specs as deprecated.
+
+        Modifies spec files to add deprecation notice at top.
+
+        Args:
+            paths: List of spec paths to deprecate
+            reason: Reason for deprecation
+
+        Returns:
+            Result of deprecation
+
+        Emits:
+            witness.spec.deprecated — For each deprecated spec
+        """
+        import time
+
+        spec_root = get_spec_root()
+        deprecated_paths: list[str] = []
+        failed_paths: list[tuple[str, str]] = []
+
+        deprecation_date = time.strftime("%Y-%m-%d")
+        deprecation_notice = f"""---
+> **⚠️ DEPRECATED** ({deprecation_date})
+>
+> {reason}
+---
+
+"""
+
+        for path in paths:
+            try:
+                # Resolve path relative to spec root
+                full_path = spec_root / path.replace("spec/", "")
+                if not full_path.exists():
+                    # Try without adjustment
+                    full_path = Path(path)
+                    if not full_path.exists():
+                        failed_paths.append((path, "File not found"))
+                        continue
+
+                # Read current content
+                content = full_path.read_text(encoding="utf-8")
+
+                # Check if already deprecated
+                if "**⚠️ DEPRECATED**" in content or "> **DEPRECATED**" in content:
+                    failed_paths.append((path, "Already deprecated"))
+                    continue
+
+                # Prepend deprecation notice
+                new_content = deprecation_notice + content
+                full_path.write_text(new_content, encoding="utf-8")
+
+                deprecated_paths.append(path)
+                logger.info(f"Deprecated spec: {path}")
+
+            except Exception as e:
+                failed_paths.append((path, str(e)))
+                logger.error(f"Failed to deprecate {path}: {e}")
+
+        # Emit witness events for each deprecated spec
+        _, topics = _get_witness_bus()
+        if topics and deprecated_paths:
+            await _emit_witness_event(
+                topics.SPEC_DEPRECATED,
+                {
+                    "action": "deprecate",
+                    "paths": deprecated_paths,
+                    "reason": reason,
+                    "date": deprecation_date,
+                    "count": len(deprecated_paths),
+                },
+            )
+
+        # Invalidate cache since we modified files
+        if deprecated_paths:
+            _cache.report = None
+
+        return {
+            "success": len(deprecated_paths) > 0,
+            "message": f"Deprecated {len(deprecated_paths)} of {len(paths)} specs",
+            "paths": deprecated_paths,
+            "reason": reason,
+            "failed": [{"path": p, "error": e} for p, e in failed_paths],
+        }
+
+
+# =============================================================================
+# Singleton
+# =============================================================================
+
+_ledger_node: LedgerNode | None = None
+
+
+def get_ledger_node() -> LedgerNode:
+    """Get or create the ledger node singleton."""
+    global _ledger_node
+    if _ledger_node is None:
+        _ledger_node = LedgerNode()
+    return _ledger_node
+
+
+def reset_ledger_node() -> None:
+    """Reset the ledger node (for testing)."""
+    global _ledger_node
+    _ledger_node = None
+    _cache.report = None

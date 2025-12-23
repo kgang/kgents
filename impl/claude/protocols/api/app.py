@@ -238,6 +238,14 @@ def create_app(
         app.include_router(witness_router)
         logger.info("Witness API mounted at /api/witness")
 
+    # Spec Ledger REST API (living spec dashboard)
+    from .spec_ledger import create_spec_ledger_router
+
+    spec_ledger_router = create_spec_ledger_router()
+    if spec_ledger_router is not None:
+        app.include_router(spec_ledger_router)
+        logger.info("Spec Ledger API mounted at /api/spec")
+
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
     # - GET/POST /agentese/world/codebase/{aspect}
