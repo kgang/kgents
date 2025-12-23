@@ -783,7 +783,7 @@ class AgenteseGateway:
 
     async def _invoke_path(
         self,
-        path: str,
+        agentese_path: str,
         aspect: str,
         observer: Observer,
         **kwargs: Any,
@@ -798,8 +798,11 @@ class AgenteseGateway:
         Law 3 (Completeness): Every AGENTESE invocation emits exactly one Mark.
         This method instruments all invocations with Mark emission.
 
+        Note: Parameter renamed from 'path' to 'agentese_path' to avoid collision
+        with kwargs that may contain 'path' (e.g., world.file.read path parameter).
+
         Args:
-            path: AGENTESE path (e.g., "self.memory")
+            agentese_path: AGENTESE path (e.g., "self.memory")
             aspect: Aspect to invoke (e.g., "capture")
             observer: Observer context
             **kwargs: Aspect-specific arguments
@@ -817,15 +820,17 @@ class AgenteseGateway:
 
         try:
             # Try registry first
-            if registry.has(path):
-                node = await registry.resolve(path, self.container)
+            if registry.has(agentese_path):
+                node = await registry.resolve(agentese_path, self.container)
                 if node is not None:
                     # Observer is compatible with Umwelt for node.invoke
                     result = await node.invoke(aspect, observer, **kwargs)  # type: ignore[arg-type]
                     # Check if result is async generator (streaming)
                     is_streaming = hasattr(result, "__aiter__")
                     # Emit Mark for successful invocation
-                    self._emit_trace(path, aspect, observer, result, is_streaming=is_streaming)
+                    self._emit_trace(
+                        agentese_path, aspect, observer, result, is_streaming=is_streaming
+                    )
                     return result
 
             # Fall back to Logos
@@ -833,12 +838,14 @@ class AgenteseGateway:
                 logos = self._get_logos()
                 if logos is not None:
                     try:
-                        result = await logos.invoke(f"{path}.{aspect}", observer, **kwargs)
+                        result = await logos.invoke(f"{agentese_path}.{aspect}", observer, **kwargs)
                         is_streaming = hasattr(result, "__aiter__")
-                        self._emit_trace(path, aspect, observer, result, is_streaming=is_streaming)
+                        self._emit_trace(
+                            agentese_path, aspect, observer, result, is_streaming=is_streaming
+                        )
                         return result
                     except Exception as e:
-                        logger.debug(f"Logos fallback failed for {path}.{aspect}: {e}")
+                        logger.debug(f"Logos fallback failed for {agentese_path}.{aspect}: {e}")
 
             # Path not found - raise without catching
             from fastapi import HTTPException as FastAPIHTTPException
@@ -846,7 +853,7 @@ class AgenteseGateway:
             error = FastAPIHTTPException(
                 status_code=404,
                 detail={
-                    "error": f"Path not found: {path}",
+                    "error": f"Path not found: {agentese_path}",
                     "suggestion": "Check /agentese/discover for available paths",
                     "available_contexts": list(VALID_CONTEXTS),
                 },
@@ -855,7 +862,7 @@ class AgenteseGateway:
 
         except Exception as e:
             # Emit Mark for error
-            self._emit_trace(path, aspect, observer, None, error=e)
+            self._emit_trace(agentese_path, aspect, observer, None, error=e)
             raise
 
     def _emit_trace(
