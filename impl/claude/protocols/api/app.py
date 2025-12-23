@@ -269,6 +269,22 @@ def create_app(
         app.include_router(spec_ledger_router)
         logger.info("Spec Ledger API mounted at /api/spec")
 
+    # === Sovereign API ===
+    from .sovereign import create_sovereign_router
+
+    sovereign_router = create_sovereign_router()
+    if sovereign_router is not None:
+        app.include_router(sovereign_router)
+        logger.info("Sovereign API mounted at /api/sovereign")
+
+    # === Explorer API (Unified Data Stream for Brain Page) ===
+    from .explorer import create_explorer_router
+
+    explorer_router = create_explorer_router()
+    if explorer_router is not None:
+        app.include_router(explorer_router)
+        logger.info("Explorer API mounted at /api/explorer")
+
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
     # - GET/POST /agentese/world/codebase/{aspect}
@@ -551,6 +567,15 @@ def create_app(
                     "create": "POST /api/witness/marks",
                     "retract": "PATCH /api/witness/marks/{id}/retract",
                     "stream": "GET /api/witness/stream (SSE)",
+                },
+                "explorer": {
+                    "note": "Unified data stream for Brain page",
+                    "stream": "GET /api/explorer/stream (SSE)",
+                    "health": "GET /api/explorer/health",
+                    "agentese_list": "POST /agentese/self/explorer/list",
+                    "agentese_search": "POST /agentese/self/explorer/search",
+                    "agentese_detail": "POST /agentese/self/explorer/detail",
+                    "agentese_surface": "POST /agentese/self/explorer/surface",
                 },
                 "webhooks": {
                     "stripe": "/webhooks/stripe",

@@ -63,6 +63,7 @@ if TYPE_CHECKING:
     from services.conductor import Summarizer, WindowPersistence
     from services.conductor.file_guard import FileEditGuard
     from services.conductor.swarm import SwarmSpawner
+    from services.explorer import UnifiedQueryService
     from services.foundry import AgentFoundry
     from services.fusion import FusionService
     from services.hypergraph_editor import HypergraphEditorService
@@ -588,6 +589,38 @@ async def _wire_sovereign_listeners_once(sovereign_store: "SovereignStore") -> N
 
 
 # =============================================================================
+# Explorer Crown Jewel (Unified Data Explorer)
+# =============================================================================
+
+
+async def get_unified_query_service() -> "UnifiedQueryService":
+    """
+    Get the UnifiedQueryService for unified data exploration.
+
+    The explorer aggregates ALL kgents data constructs into a unified stream:
+    - Marks (witnessed behavior)
+    - Crystals (crystallized knowledge)
+    - Trails (exploration journeys)
+    - Evidence (verification graphs, trace witnesses, violations)
+    - Teachings (ancestral wisdom from deleted code)
+    - Lemmas (ASHC verified proofs)
+
+    Used by:
+    - BrainPage for unified event stream
+    - ExplorerNode for self.explorer.* AGENTESE paths
+    - SSE stream for real-time updates
+
+    Example:
+        service = await get_unified_query_service()
+        response = await service.list_events(ListEventsRequest(limit=50))
+    """
+    from services.explorer import UnifiedQueryService
+
+    session_factory = await get_session_factory()
+    return UnifiedQueryService(session_factory)
+
+
+# =============================================================================
 # Proxy Handle Store (AD-015: Epistemic Hygiene for Computed Data)
 # =============================================================================
 
@@ -710,6 +743,9 @@ async def setup_providers() -> None:
     # Proxy Handle Store (AD-015: Epistemic Hygiene)
     container.register("proxy_handle_store", get_proxy_handle_store, singleton=True)
 
+    # Explorer Crown Jewel (Unified Data Explorer)
+    container.register("unified_query_service", get_unified_query_service, singleton=True)
+
     logger.info(
         "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion)"
     )
@@ -804,6 +840,14 @@ async def setup_providers() -> None:
         logger.info("LivingDocsNode + SelfDocsNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"LivingDocsNode not available: {e}")
+
+    # Explorer Crown Jewel (Unified Data Explorer for Brain Page)
+    try:
+        from services.explorer import ExplorerNode  # noqa: F401
+
+        logger.info("ExplorerNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"ExplorerNode not available: {e}")
 
     # Wire KgentSoul to SoulNode
     try:
@@ -913,4 +957,6 @@ __all__ = [
     "get_sovereign_store",
     # Hypergraph Editor Crown Jewel
     "get_editor_service",
+    # Explorer Crown Jewel
+    "get_unified_query_service",
 ]
