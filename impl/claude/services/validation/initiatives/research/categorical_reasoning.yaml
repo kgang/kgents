@@ -1,0 +1,163 @@
+# Categorical Machine Reasoning Validation
+#
+# Migrated from: plans/categorical-validation-framework.md
+# "If you can't measure it, you can't claim it."
+
+id: categorical_reasoning
+name: Categorical Machine Reasoning
+description: |
+  Validates that LLMs exhibit categorical reasoning patterns that correlate
+  with correctness. The hypothesis: Monad identity and sheaf coherence
+  are detectable in reasoning traces and predict success.
+
+phases:
+  # ===========================================================================
+  # Phase 1: Foundations
+  # ===========================================================================
+  - id: foundations
+    name: "Phase 1: Foundations"
+    description: |
+      Establish that categorical properties correlate with correctness.
+      If no correlation, the whole endeavor is falsified.
+    gate:
+      id: foundations_gate
+      name: Foundations Gate
+      condition: all_required
+    propositions:
+      - id: monad_identity_correlation
+        description: Monad identity test correlates with answer correctness
+        metric: pearson_r
+        threshold: 0.3
+        direction: ">"
+        required: true
+
+      - id: sheaf_coherence_correlation
+        description: Sheaf coherence score correlates with correctness
+        metric: pearson_r
+        threshold: 0.4
+        direction: ">"
+        required: true
+
+      - id: combined_prediction_auc
+        description: Combined features predict correctness better than chance
+        metric: auc
+        threshold: 0.7
+        direction: ">"
+        required: true
+
+  # ===========================================================================
+  # Phase 2: Integration
+  # ===========================================================================
+  - id: integration
+    name: "Phase 2: Integration"
+    description: |
+      Integrate categorical detection into CPRM (Categorical Process Reward Model).
+      Train heads that predict categorical properties from hidden states.
+    depends_on: [foundations]
+    gate:
+      id: integration_gate
+      name: Integration Gate
+      condition: all_required
+    propositions:
+      - id: cprm_monad_head_auc
+        description: CPRM monad head achieves strong AUC
+        metric: auc
+        threshold: 0.75
+        direction: ">"
+        required: true
+
+      - id: cprm_sheaf_head_auc
+        description: CPRM sheaf head achieves strong AUC
+        metric: auc
+        threshold: 0.75
+        direction: ">"
+        required: true
+
+      - id: search_efficiency_gain
+        description: Categorical guidance reduces search nodes by 30%+
+        metric: percent
+        threshold: 30
+        direction: ">"
+        required: true
+
+      - id: coherence_detection_recall
+        description: Sheaf coherence detects 80%+ of planted contradictions
+        metric: recall
+        threshold: 0.8
+        direction: ">="
+        required: true
+
+  # ===========================================================================
+  # Phase 3: Architecture
+  # ===========================================================================
+  - id: architecture
+    name: "Phase 3: Architecture"
+    description: |
+      Implement Structured Binding Memory (SBM) for long-context variable tracking.
+      The architectural enhancement that enables complex reasoning chains.
+    depends_on: [integration]
+    gate:
+      id: architecture_gate
+      name: Architecture Gate
+      condition: all_required
+    propositions:
+      - id: sbm_retention_100_tokens
+        description: SBM retains bindings at 100 tokens with 95%+ accuracy
+        metric: accuracy
+        threshold: 0.95
+        direction: ">="
+        required: true
+
+      - id: sbm_multi_variable
+        description: SBM handles 5+ simultaneous variables at 90%+ accuracy
+        metric: accuracy
+        threshold: 0.9
+        direction: ">="
+        required: true
+
+      - id: binding_detection_f1
+        description: Binding detection achieves 0.9+ F1
+        metric: f1
+        threshold: 0.9
+        direction: ">="
+        required: true
+
+  # ===========================================================================
+  # Phase 4: Synthesis
+  # ===========================================================================
+  - id: synthesis
+    name: "Phase 4: Synthesis"
+    description: |
+      Integrate with kgents agent framework. Prove the system works end-to-end.
+    depends_on: [architecture]
+    gate:
+      id: synthesis_gate
+      name: Synthesis Gate
+      condition: all_required
+    propositions:
+      - id: categorical_agent_compatibility
+        description: All kgents agent tests pass with categorical enhancement
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      - id: gsm8k_improvement
+        description: GSM8k accuracy improves by 5+ percentage points
+        metric: percent
+        threshold: 5.0
+        direction: ">"
+        required: true
+
+      - id: demo_correct
+        description: End-to-end demo produces correct results
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+witness_tags:
+  - validation
+  - research
+  - categorical
+  - reasoning

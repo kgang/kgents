@@ -1,0 +1,72 @@
+# Brain Crown Jewel Validation
+#
+# "Spatial cathedral of memory + TeachingCrystal crystallization"
+# Status: 100% per NOW.md
+
+id: brain
+name: Brain Crown Jewel
+description: |
+  The spatial cathedral of memory. Validates that Brain provides
+  navigable memory spaces and correct TeachingCrystal crystallization.
+
+propositions:
+  # Quantitative: Test suite health
+  - id: tests_pass
+    description: All Brain tests pass
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: test_count
+    description: At least 200 tests exist
+    metric: count
+    threshold: 200
+    direction: ">="
+    required: true
+
+  # Functional: Core capabilities
+  - id: spatial_navigable
+    description: Spatial cathedral is navigable (gh/gl/gj/gk work)
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: teaching_crystal_crystallizes
+    description: TeachingCrystal produces valid crystals
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: memory_persists
+    description: Memories persist across sessions
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Quality: Mirror Test
+  - id: feels_cathedral_like
+    description: Navigation feels like a cathedral, not a filing cabinet
+    metric: judgment
+    threshold: 1
+    direction: "="
+    required: false
+    judgment_required: true
+    judgment_criteria: |
+      The Mirror Test: Does navigating Brain feel like Kent on his best day?
+      - Is it spatial, not hierarchical?
+      - Is it intuitive, not menu-driven?
+      - Does it invite exploration?
+
+gate:
+  id: brain_complete
+  name: Brain Complete
+  condition: all_required
+
+witness_tags:
+  - validation
+  - crown_jewel
+  - brain

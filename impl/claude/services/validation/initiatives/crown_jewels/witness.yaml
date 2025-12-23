@@ -1,0 +1,96 @@
+# Witness Crown Jewel Validation
+#
+# "Marks, crystals, streaming, promotion"
+# Status: 98% per NOW.md (678 tests)
+
+id: witness
+name: Witness Crown Jewel
+description: |
+  The proof IS the decision. The mark IS the witness.
+  Validates that Witness correctly captures, stores, and promotes marks.
+
+propositions:
+  # Quantitative: Test suite health
+  - id: tests_pass
+    description: All Witness tests pass
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: test_count
+    description: At least 600 tests exist
+    metric: count
+    threshold: 600
+    direction: ">="
+    required: true
+
+  # Functional: Mark operations
+  - id: marks_emit
+    description: km command emits marks
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: marks_persist
+    description: Marks persist across sessions
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: marks_queryable
+    description: Marks are queryable by tag, date, content
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Functional: Crystal operations
+  - id: crystals_form
+    description: Session crystals form from marks
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: crystals_promote
+    description: Crystals promote through hierarchy (L0→L1→L2→L3)
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Functional: Streaming
+  - id: streaming_works
+    description: SSE streaming delivers marks in real-time
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Functional: Decision witnessing
+  - id: decisions_record
+    description: kg decide records fusion decisions
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: decisions_toulmin
+    description: Decisions include Toulmin proof structure
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+gate:
+  id: witness_complete
+  name: Witness Complete
+  condition: all_required
+
+witness_tags:
+  - validation
+  - crown_jewel
+  - witness

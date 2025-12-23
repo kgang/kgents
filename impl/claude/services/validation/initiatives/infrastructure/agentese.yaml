@@ -1,0 +1,104 @@
+# AGENTESE Protocol Validation
+#
+# "The protocol IS the API"
+# The verb-first ontology for agent-world interaction
+
+id: agentese
+name: AGENTESE Protocol
+description: |
+  Validates that AGENTESE provides a complete, correct, and composable
+  protocol for agent-world interaction. The five contexts, seven aspects,
+  and composition laws.
+
+propositions:
+  # Quantitative: Test suite health
+  - id: tests_pass
+    description: All AGENTESE tests pass
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Structural: Five contexts exist
+  - id: context_world
+    description: world.* context is functional
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: context_self
+    description: self.* context is functional
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: context_concept
+    description: concept.* context is functional
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: context_void
+    description: void.* context is functional
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: context_time
+    description: time.* context is functional
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Laws: Composition correctness
+  - id: identity_law
+    description: Id >> f == f == f >> Id
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: associativity_law
+    description: (f >> g) >> h == f >> (g >> h)
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # DI: Fail-fast resolution (AD-016)
+  - id: di_fail_fast
+    description: Missing required deps fail at import time, not invoke time
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Integration: Logos works
+  - id: logos_invoke
+    description: logos.invoke() correctly resolves paths
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: logos_discover
+    description: All registered nodes are discoverable
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+gate:
+  id: agentese_complete
+  name: AGENTESE Complete
+  condition: all_required
+
+witness_tags:
+  - validation
+  - infrastructure
+  - agentese
