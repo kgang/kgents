@@ -838,3 +838,18 @@
 .spec-view__upload-btn:active {
   transform: translateY(0);
 }
+
+.spec-view__upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spec-view__not-ingested-error {
+  font-size: 0.8rem;
+  color: var(--accent-error, #a65d4a);
+  background: rgba(166, 93, 74, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}

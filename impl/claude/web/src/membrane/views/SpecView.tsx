@@ -17,9 +17,9 @@
  * "You edit a possible world until you crystallize."
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { documentApi } from '../../api/client';
+import { documentApi, sovereignApi } from '../../api/client';
 import { EmpathyError } from '../../components/joy/EmpathyError';
 import { GrowingContainer } from '../../components/genesis/GrowingContainer';
 import { PersonalityLoading } from '../../components/joy/PersonalityLoading';
@@ -350,6 +350,11 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
   // User needs to upload content via file picker to ingest
   const [notIngested, setNotIngested] = useState(false);
   const [ingestHint, setIngestHint] = useState<string>('');
+  const [isIngesting, setIsIngesting] = useState(false);
+  const [ingestError, setIngestError] = useState<string | null>(null);
+
+  // File input ref for sovereign ingest
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // K-Block for transactional editing
   const kblock = useFileKBlock();
@@ -521,6 +526,43 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
     setEditContent('');
   }, []);
 
+  // Handle file ingest via sovereign store
+  const handleIngestFile = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setIsIngesting(true);
+      setIngestError(null);
+
+      try {
+        const content = await file.text();
+        const result = await sovereignApi.ingest({
+          path,
+          content,
+          source: 'webapp-upload',
+        });
+
+        if (result.version) {
+          // Success! Clear not-ingested state and reload via K-Block
+          setNotIngested(false);
+          setIngestHint('');
+          await kblock.create(path);
+        }
+      } catch (err) {
+        console.error('[SpecView] Ingest failed:', err);
+        setIngestError(err instanceof Error ? err.message : 'Failed to ingest file');
+      } finally {
+        setIsIngesting(false);
+        // Reset file input so same file can be re-selected
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    },
+    [path, kblock]
+  );
+
   // If SpecGraph fails but we have content, show it anyway
   // This allows testing Interactive Text before SpecGraph is wired
   const hasContent = sceneGraph !== null;
@@ -559,15 +601,21 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
             <code>{path}</code>
           </div>
           <div className="spec-view__not-ingested-hint">{ingestHint}</div>
+          {ingestError && <div className="spec-view__not-ingested-error">{ingestError}</div>}
           <div className="spec-view__not-ingested-actions">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleIngestFile}
+              accept=".md,.txt,.markdown"
+              style={{ display: 'none' }}
+            />
             <button
               className="spec-view__upload-btn"
-              onClick={() => {
-                // TODO: Open file upload dialog
-                console.info('[SpecView] Open file uploader for:', path);
-              }}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isIngesting}
             >
-              Upload Content
+              {isIngesting ? 'Uploading...' : 'Upload Content'}
             </button>
           </div>
         </div>

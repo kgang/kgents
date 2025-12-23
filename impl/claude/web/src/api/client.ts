@@ -1117,6 +1117,76 @@ export const fileApi = {
 };
 
 // =============================================================================
+// Sovereign API (Inbound Sovereignty) - AGENTESE Universal Protocol
+// Routes:
+//   concept.sovereign.manifest - Store health and stats
+//   concept.sovereign.ingest - Ingest content into sovereign store
+//   concept.sovereign.query - Query with full provenance
+//   concept.sovereign.list - List all sovereign entities
+//
+// Philosophy:
+//   "We don't reference. We possess."
+// =============================================================================
+
+/**
+ * Response from sovereign ingest operation.
+ */
+export interface SovereignIngestResponse {
+  path: string;
+  version: number;
+  ingest_mark_id: string;
+  edge_count: number;
+}
+
+/**
+ * Response from sovereign query operation.
+ */
+export interface SovereignQueryResponse {
+  path: string;
+  version: number;
+  content: string;
+  content_hash: string;
+  ingest_mark_id: string;
+  overlay?: Record<string, unknown>;
+}
+
+export const sovereignApi = {
+  /**
+   * Ingest content into sovereign store via AGENTESE: concept.sovereign.ingest
+   *
+   * Creates a sovereign copy with witness mark and edge extraction.
+   *
+   * @param path - Virtual path for the content
+   * @param content - The content to ingest
+   * @param source - Optional source identifier (default: 'webapp')
+   */
+  ingest: async (data: {
+    path: string;
+    content: string;
+    source?: string;
+  }): Promise<SovereignIngestResponse> => {
+    const response = await apiClient.post<AgenteseResponse<SovereignIngestResponse>>(
+      '/agentese/concept/sovereign/ingest',
+      data
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Query sovereign entity via AGENTESE: concept.sovereign.query
+   *
+   * @param path - Entity path to query
+   */
+  query: async (path: string): Promise<SovereignQueryResponse> => {
+    const response = await apiClient.post<AgenteseResponse<SovereignQueryResponse>>(
+      '/agentese/concept/sovereign/query',
+      { path }
+    );
+    return unwrapAgentese(response);
+  },
+};
+
+// =============================================================================
 // K-Block API (Transactional Editing) - AGENTESE Universal Protocol
 // Routes:
 //   self.kblock.manifest - Active K-Blocks
