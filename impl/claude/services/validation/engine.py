@@ -733,6 +733,10 @@ class ValidationEngine:
         computation, not cache hits. ProxyHandle events provide transparency
         for cache behavior.
 
+        Multi-Initiative Support:
+            Each (initiative_id, phase_id) pair gets its own cache slot via
+            composite keys. Caching phase1 then phase2 does NOT overwrite.
+
         Args:
             initiative_id: The initiative to validate
             measurements: Map of proposition ID to measured value
@@ -754,7 +758,13 @@ class ValidationEngine:
         if isinstance(phase_id, str):
             phase_id = PhaseId(phase_id)
 
-        # Build source_hash for cache invalidation
+        # Build composite key for multi-initiative caching
+        # Format: "{initiative_id}" or "{initiative_id}:{phase_id}"
+        cache_key = str(initiative_id)
+        if phase_id:
+            cache_key += f":{phase_id}"
+
+        # Build source_hash for cache invalidation (measurements changed)
         source_hash = self._compute_source_hash(initiative_id, phase_id, measurements)
 
         # Build human-readable label
@@ -766,10 +776,11 @@ class ValidationEngine:
         async def _run_validation() -> ValidationRun:
             return self.validate(initiative_id, measurements, phase_id)
 
-        # Use ProxyHandleStore for explicit caching
+        # Use ProxyHandleStore for explicit caching with composite key
         return await self.proxy_store.compute(
             source_type=SourceType.VALIDATION_RUN,
             compute_fn=_run_validation,
+            key=cache_key,  # Composite key enables multi-initiative caching
             force=force,
             ttl=ttl or timedelta(minutes=5),
             human_label=human_label,
