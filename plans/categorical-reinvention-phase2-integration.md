@@ -225,6 +225,97 @@ class CoherenceWitness:
 | CPRM-guided search explores 30% fewer nodes | Node count comparison | CPRM not efficient |
 | Coherence Witness catches >80% of introduced contradictions | Synthetic test | Detector needs tuning |
 
+### ValidationEngine Integration
+
+Track Phase 2 propositions with validated gates:
+
+```yaml
+# initiatives/categorical-phase2.yaml
+id: categorical_phase2
+name: "Phase 2: Integration"
+description: "Convert categorical insights into training signal"
+witness_tags: ["categorical", "phase2", "integration"]
+
+phases:
+  - id: cprm_training
+    name: "CPRM Training"
+    description: "Train Categorical Process Reward Model"
+    propositions:
+      - id: cprm_auc
+        description: "CPRM heads achieve AUC > 0.75"
+        metric: auc
+        threshold: 0.75
+        direction: ">"
+        required: true
+    gate:
+      condition: all_required
+
+  - id: search_integration
+    name: "Search Integration"
+    description: "CPRM-guided search effectiveness"
+    depends_on: [cprm_training]
+    propositions:
+      - id: search_accuracy_parity
+        description: "CPRM search matches baseline accuracy"
+        metric: percent
+        threshold: 95  # 95% of baseline accuracy
+        direction: ">="
+        required: true
+      - id: search_efficiency
+        description: "30% fewer nodes explored"
+        metric: percent
+        threshold: 30
+        direction: ">="
+        required: true
+    gate:
+      condition: all_required
+
+  - id: coherence_witness
+    name: "Coherence Witness"
+    description: "Live coherence checking"
+    depends_on: [cprm_training]
+    propositions:
+      - id: contradiction_detection
+        description: "Catches >80% of introduced contradictions"
+        metric: recall
+        threshold: 0.8
+        direction: ">"
+        required: true
+    gate:
+      condition: all_required
+```
+
+```python
+# Phased validation with caching
+engine = get_validation_engine()
+
+# Phase 2 has dependencies: cprm_training → search_integration
+# Validate each phase as you complete it
+
+# After training CPRM
+handle = await engine.validate_cached(
+    "categorical_phase2",
+    {"cprm_auc": validation_auc},
+    phase_id="cprm_training",
+    ttl=timedelta(hours=1),  # Training results stable
+)
+
+# After benchmarking search
+handle = await engine.validate_cached(
+    "categorical_phase2",
+    {
+        "search_accuracy_parity": (cprm_accuracy / baseline_accuracy) * 100,
+        "search_efficiency": node_reduction_percent,
+    },
+    phase_id="search_integration",
+)
+
+# Check overall progress
+status = engine.get_status("categorical_phase2")
+print(f"Phase 2: {status.progress_percent}% complete")
+print(f"Phases done: {status.phases_complete}")
+```
+
 ---
 
 ## What We Cut
