@@ -18,11 +18,11 @@
  * From deepest soil to lightest sand
  */
 export const EARTH = {
-  soil: '#2D1B14',   // Deepest background
-  bark: '#4A3728',   // Card surfaces
-  wood: '#6B4E3D',   // Elevated surfaces
-  clay: '#8B6F5C',   // Borders, muted elements
-  sand: '#AB9080',   // Secondary text
+  soil: '#2D1B14', // Deepest background
+  bark: '#4A3728', // Card surfaces
+  wood: '#6B4E3D', // Elevated surfaces
+  clay: '#8B6F5C', // Borders, muted elements
+  sand: '#AB9080', // Secondary text
 } as const;
 
 export type EarthShade = keyof typeof EARTH;
@@ -36,10 +36,10 @@ export type EarthShade = keyof typeof EARTH;
  * From deep forest moss to fresh sprouts
  */
 export const GREEN = {
-  moss: '#1A2E1A',   // Deep forest
-  fern: '#2E4A2E',   // Forest mid-tone
-  sage: '#4A6B4A',   // Nature accent
-  mint: '#6B8B6B',   // Available/ready state
+  moss: '#1A2E1A', // Deep forest
+  fern: '#2E4A2E', // Forest mid-tone
+  sage: '#4A6B4A', // Nature accent
+  mint: '#6B8B6B', // Available/ready state
   sprout: '#8BAB8B', // Fresh growth
 } as const;
 
@@ -55,10 +55,10 @@ export type GreenShade = keyof typeof GREEN;
  */
 export const GLOW = {
   lantern: '#F5E6D3', // Warm white, highlights
-  honey: '#E8C4A0',   // Soft glow
-  amber: '#D4A574',   // Primary accent (collaboration)
-  copper: '#C08552',  // Warm mid-accent
-  bronze: '#8B5A2B',  // Deep accent
+  honey: '#E8C4A0', // Soft glow
+  amber: '#D4A574', // Primary accent (collaboration)
+  copper: '#C08552', // Warm mid-accent
+  bronze: '#8B5A2B', // Deep accent
 } as const;
 
 export type GlowShade = keyof typeof GLOW;
@@ -72,11 +72,11 @@ export type GlowShade = keyof typeof GLOW;
  * Cooler, deeper earth for dark mode backgrounds
  */
 export const DARK_EARTH = {
-  soil: '#1A1210',   // Deepest night
-  bark: '#2D2118',   // Dark card
-  wood: '#3D2E25',   // Dark elevated
-  clay: '#5A483D',   // Dark borders
-  sand: '#7A6655',   // Dark muted
+  soil: '#1A1210', // Deepest night
+  bark: '#2D2118', // Dark card
+  wood: '#3D2E25', // Dark elevated
+  clay: '#5A483D', // Dark borders
+  sand: '#7A6655', // Dark muted
 } as const;
 
 export type DarkEarthShade = keyof typeof DARK_EARTH;
@@ -86,10 +86,10 @@ export type DarkEarthShade = keyof typeof DARK_EARTH;
  * Deeper, more saturated greens for dark backgrounds
  */
 export const DARK_GREEN = {
-  moss: '#0F1A0F',   // Deep night forest
-  fern: '#1A2E1A',   // Dark forest
-  sage: '#2E4A2E',   // Dark nature
-  mint: '#4A6B4A',   // Dark ready
+  moss: '#0F1A0F', // Deep night forest
+  fern: '#1A2E1A', // Dark forest
+  sage: '#2E4A2E', // Dark nature
+  mint: '#4A6B4A', // Dark ready
   sprout: '#6B8B6B', // Dark growth
 } as const;
 
@@ -103,13 +103,12 @@ export type DarkGreenShade = keyof typeof DARK_GREEN;
  * Each Crown Jewel has a primary identity color from Living Earth
  */
 export const JEWEL_IDENTITY = {
-  park: '#4A6B4A',    // Sage - Organic growth, living hosts
-  town: '#6B4E3D',    // Wood - Grounded, community, reliable
+  town: '#6B4E3D', // Wood - Grounded, community, reliable
   coalition: '#D4A574', // Amber - Collaboration glow
-  forge: '#C08552',  // Copper - Creative fire
-  brain: '#2E4A2E',   // Fern - Deep thought
-  garden: '#4A6B4A',  // Sage - Cultivation, growth
-  domain: '#8B5A2B',  // Bronze - Integration, grounding
+  forge: '#C08552', // Copper - Creative fire
+  brain: '#2E4A2E', // Fern - Deep thought
+  garden: '#4A6B4A', // Sage - Cultivation, growth
+  domain: '#8B5A2B', // Bronze - Integration, grounding
 } as const;
 
 export type JewelName = keyof typeof JEWEL_IDENTITY;
@@ -126,38 +125,38 @@ export type JewelName = keyof typeof JEWEL_IDENTITY;
  */
 export const SEMANTIC_MAPPINGS = {
   // Primary UI colors
-  primary: GREEN.sage,           // Main brand color
-  accent: GLOW.amber,            // Accent/highlight color
+  primary: GREEN.sage, // Main brand color
+  accent: GLOW.amber, // Accent/highlight color
 
   // State colors
-  warning: GLOW.copper,          // Warning states
-  error: GLOW.bronze,            // Error states
-  success: GREEN.mint,           // Success states
-  info: GLOW.honey,              // Informational states
+  warning: GLOW.copper, // Warning states
+  error: GLOW.bronze, // Error states
+  success: GREEN.mint, // Success states
+  info: GLOW.honey, // Informational states
 
   // Surface colors (light mode)
-  surface: EARTH.sand,           // Base surface
-  surfaceElevated: EARTH.clay,   // Elevated surface
-  background: GLOW.lantern,      // Page background
+  surface: EARTH.sand, // Base surface
+  surfaceElevated: EARTH.clay, // Elevated surface
+  background: GLOW.lantern, // Page background
 
   // Surface colors (dark mode)
-  surfaceDark: DARK_EARTH.wood,  // Dark surface
+  surfaceDark: DARK_EARTH.wood, // Dark surface
   surfaceElevatedDark: DARK_EARTH.clay, // Dark elevated
   backgroundDark: DARK_EARTH.soil, // Dark background
 
   // Text colors (light mode)
-  textPrimary: EARTH.soil,       // Primary text
-  textSecondary: EARTH.wood,     // Secondary text
-  textMuted: EARTH.clay,         // Muted text
+  textPrimary: EARTH.soil, // Primary text
+  textSecondary: EARTH.wood, // Secondary text
+  textMuted: EARTH.clay, // Muted text
 
   // Text colors (dark mode)
   textPrimaryDark: GLOW.lantern, // Dark mode primary text
   textSecondaryDark: GLOW.honey, // Dark mode secondary text
-  textMutedDark: EARTH.sand,     // Dark mode muted text
+  textMutedDark: EARTH.sand, // Dark mode muted text
 
   // Borders
-  border: EARTH.clay,            // Light border
-  borderDark: DARK_EARTH.clay,   // Dark border
+  border: EARTH.clay, // Light border
+  borderDark: DARK_EARTH.clay, // Dark border
 } as const;
 
 export type SemanticMapping = keyof typeof SEMANTIC_MAPPINGS;
@@ -225,10 +224,7 @@ export function getSemanticMapping(mapping: string): string {
 /**
  * Get color based on mode (light/dark)
  */
-export function getEarthColorByMode(
-  shade: EarthShade,
-  isDark: boolean
-): string {
+export function getEarthColorByMode(shade: EarthShade, isDark: boolean): string {
   if (isDark) {
     return getDarkEarthColor(shade);
   }
@@ -238,10 +234,7 @@ export function getEarthColorByMode(
 /**
  * Get green color based on mode (light/dark)
  */
-export function getGreenColorByMode(
-  shade: GreenShade,
-  isDark: boolean
-): string {
+export function getGreenColorByMode(shade: GreenShade, isDark: boolean): string {
   if (isDark) {
     return getDarkGreenColor(shade);
   }
@@ -307,7 +300,6 @@ export const LIVING_EARTH_FLAT = {
   'dark-green-sprout': DARK_GREEN.sprout,
 
   // Jewel identities
-  'jewel-park': JEWEL_IDENTITY.park,
   'jewel-town': JEWEL_IDENTITY.town,
   'jewel-coalition': JEWEL_IDENTITY.coalition,
   'jewel-forge': JEWEL_IDENTITY.forge,

@@ -59,6 +59,13 @@ from .exceptions import (
     ProxyHandleError,
     StaleHandleError,
 )
+from .reactor import (
+    DEFAULT_TRIGGERS,
+    InvalidationTrigger,
+    ProxyReactor,
+    get_proxy_reactor,
+    reset_proxy_reactor,
+)
 from .store import (
     ProxyHandleEventCallback,
     ProxyHandleStore,
@@ -91,6 +98,12 @@ __all__ = [
     # Factory
     "get_proxy_handle_store",
     "reset_proxy_handle_store",
+    # Reactor (reactive invalidation)
+    "ProxyReactor",
+    "InvalidationTrigger",
+    "DEFAULT_TRIGGERS",
+    "get_proxy_reactor",
+    "reset_proxy_reactor",
     # Exceptions
     "ProxyHandleError",
     "NoProxyHandleError",

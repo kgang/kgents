@@ -53,7 +53,7 @@ export default function GalleryPage() {
             <h3 className="font-medium mb-4">PersonalityLoading</h3>
             <div className="flex gap-4 justify-center">
               <PersonalityLoading jewel="brain" size="md" />
-              <PersonalityLoading jewel="gestalt" size="md" />
+              <PersonalityLoading jewel="gardener" size="md" />
               <PersonalityLoading jewel="forge" size="md" />
             </div>
           </ElasticCard>

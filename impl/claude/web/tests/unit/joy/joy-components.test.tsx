@@ -279,11 +279,6 @@ describe('PersonalityLoading', () => {
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders with gestalt jewel Lucide icon', () => {
-    render(<PersonalityLoading jewel="gestalt" />);
-    expect(document.querySelector('svg')).toBeInTheDocument();
-  });
-
   it('renders with gardener jewel Lucide icon', () => {
     render(<PersonalityLoading jewel="gardener" />);
     expect(document.querySelector('svg')).toBeInTheDocument();
@@ -291,16 +286,6 @@ describe('PersonalityLoading', () => {
 
   it('renders with forge jewel Lucide icon', () => {
     render(<PersonalityLoading jewel="forge" />);
-    expect(document.querySelector('svg')).toBeInTheDocument();
-  });
-
-  it('renders with coalition jewel Lucide icon', () => {
-    render(<PersonalityLoading jewel="coalition" />);
-    expect(document.querySelector('svg')).toBeInTheDocument();
-  });
-
-  it('renders with park jewel Lucide icon', () => {
-    render(<PersonalityLoading jewel="park" />);
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 

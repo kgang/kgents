@@ -377,16 +377,20 @@ class TestConceptContextResolver:
     def resolver(self) -> ConceptContextResolver:
         return create_concept_resolver()
 
-    def test_resolve_creates_concept(self, resolver: WorldContextResolver) -> None:
-        """Resolver creates concept for unknown names."""
-        node = resolver.resolve("recursion", [])
-        assert node.handle == "concept.recursion"
-        assert isinstance(node, ConceptNode)
+    def test_resolve_unregistered_raises_error(self, resolver: ConceptContextResolver) -> None:
+        """AD-016: Resolver raises NodeNotRegisteredError for unknown concepts."""
+        from protocols.agentese.exceptions import NodeNotRegisteredError
 
-    def test_resolve_caches_concept(self, resolver: WorldContextResolver) -> None:
-        """Resolved concepts are cached."""
-        node1 = resolver.resolve("recursion", [])
-        node2 = resolver.resolve("recursion", [])
+        with pytest.raises(NodeNotRegisteredError) as exc_info:
+            resolver.resolve("recursion", [])
+
+        assert "concept.recursion" in str(exc_info.value)
+        assert "AD-016" in str(exc_info.value)
+
+    def test_resolve_caches_registered_concept(self, resolver: ConceptContextResolver) -> None:
+        """Resolved concepts are cached (special-case nphase)."""
+        node1 = resolver.resolve("nphase", [])
+        node2 = resolver.resolve("nphase", [])
         assert node1 is node2
 
 
@@ -948,10 +952,17 @@ class TestLogosContextIntegration:
         node = logos.resolve("self.memory")
         assert node.handle == "self.memory"
 
-    def test_resolve_concept_path(self, logos: Logos) -> None:
-        """Logos resolves concept.* paths."""
-        node = logos.resolve("concept.justice")
-        assert node.handle == "concept.justice"
+    def test_resolve_concept_path_unregistered_raises(self, logos: Logos) -> None:
+        """AD-016: Logos raises NodeNotRegisteredError for unregistered concept paths."""
+        from protocols.agentese.exceptions import NodeNotRegisteredError
+
+        with pytest.raises(NodeNotRegisteredError):
+            logos.resolve("concept.justice")
+
+    def test_resolve_concept_path_registered(self, logos: Logos) -> None:
+        """Logos resolves registered concept.* paths (nphase special-case)."""
+        node = logos.resolve("concept.nphase")
+        assert node.handle == "concept.nphase"
 
     def test_resolve_void_path(self, logos: Logos) -> None:
         """Logos resolves void.* paths."""

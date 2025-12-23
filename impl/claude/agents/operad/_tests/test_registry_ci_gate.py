@@ -68,11 +68,7 @@ def import_all_operads() -> None:
     except ImportError:
         pass  # Optional
 
-    # Emergence operad (domain-specific, extends DESIGN not AGENT)
-    try:
-        from agents.emergence.operad import EMERGENCE_OPERAD
-    except ImportError:
-        pass  # Optional
+    # Note: Emergence operad removed 2025-12-21 (Crown Jewel Cleanup)
 
     # Design operads (LAYOUT, CONTENT, MOTION, DESIGN)
     try:

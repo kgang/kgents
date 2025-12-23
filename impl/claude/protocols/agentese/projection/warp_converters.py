@@ -71,7 +71,7 @@ class LivingEarthPalette:
 
     # Living accents
     LIVING_GREEN: str = "living_green"  # #4a7c59 - Gestalt, vitality
-    AMBER_GLOW: str = "amber_glow"  # #ffbf00 - Coalition, energy
+    AMBER_GLOW: str = "amber_glow"  # #ffbf00 - Energy
     TWILIGHT: str = "twilight"  # #5d4e6d - Void, mystery
 
     # Status colors (semantic, not RGB)

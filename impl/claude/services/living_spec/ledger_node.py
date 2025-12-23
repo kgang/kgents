@@ -20,15 +20,26 @@ Philosophy:
 Integration:
     Every ledger mutation emits to WitnessBus.
     Connects Living Spec to Witness crown jewel.
+
+AD-015 Migration (2025-12-23):
+    Radical Unification: LedgerCache DELETED.
+    All caching now via ProxyHandleStore singleton.
+    Reactive invalidation via ProxyReactor.
+    One truth. One store.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
+
+from services.proxy.exceptions import NoProxyHandleError
+from services.proxy.store import get_proxy_handle_store
+from services.proxy.types import SourceType
 
 from .analyzer import (
     Contradiction,
@@ -43,26 +54,11 @@ logger = logging.getLogger(__name__)
 
 
 # =============================================================================
-# Ledger Cache
+# Constants
 # =============================================================================
 
-
-@dataclass
-class LedgerCache:
-    """Cached ledger data for fast access."""
-
-    report: LedgerReport | None = None
-    last_scan: float = 0.0
-    spec_root: Path | None = None
-
-    def is_fresh(self, max_age_seconds: float = 300) -> bool:
-        """Check if cache is fresh (< 5 minutes old)."""
-        import time
-
-        return self.report is not None and (time.time() - self.last_scan) < max_age_seconds
-
-
-_cache = LedgerCache()
+# Default TTL for spec corpus analysis (5 minutes)
+SPEC_CORPUS_TTL = timedelta(minutes=5)
 
 
 # =============================================================================
@@ -128,40 +124,44 @@ def get_spec_root() -> Path:
     raise FileNotFoundError("Could not find spec/ directory")
 
 
-class NoPreComputedDataError(Exception):
-    """Raised when spec ledger data hasn't been pre-computed."""
-
-    pass
-
-
 async def ensure_scanned() -> LedgerReport:
     """
-    Get the pre-computed ledger report.
+    Get the pre-computed ledger report from ProxyHandleStore.
 
-    AD-015: This NO LONGER auto-computes. If no cached data exists,
-    it raises NoPreComputedDataError. Use `kg spec analyze` to
-    pre-compute the data.
+    AD-015 Radical Unification: All caching via ProxyHandleStore.
+    No auto-compute. Fail fast if no handle exists.
 
     Raises:
-        NoPreComputedDataError: If no pre-computed data exists
-    """
-    if _cache.is_fresh():
-        return _cache.report  # type: ignore
+        NoProxyHandleError: If no pre-computed data exists
 
-    # AD-015: No auto-compute. Fail fast with helpful message.
-    raise NoPreComputedDataError(
-        "Spec ledger data not available. "
-        "Run `kg spec analyze` to pre-compute, or use `analyze_now()` for one-time analysis."
-    )
+    Returns:
+        The LedgerReport from the proxy handle
+    """
+    store = get_proxy_handle_store()
+    handle = await store.get_or_raise(SourceType.SPEC_CORPUS)
+
+    # Handle data is the LedgerReport
+    if handle.data is None:
+        raise NoProxyHandleError(
+            SourceType.SPEC_CORPUS,
+            "Proxy handle exists but has no data. Use analyze_now() to compute.",
+        )
+
+    # Type cast since ProxyHandle is generic over Any
+    report: LedgerReport = handle.data
+    return report
 
 
 async def analyze_now(force: bool = False) -> LedgerReport:
     """
-    Explicitly analyze the spec corpus NOW.
+    Explicitly analyze the spec corpus NOW via ProxyHandleStore.
 
-    AD-015: This is the ONLY way to compute analysis. Called by:
-    - `kg spec analyze` CLI command
-    - Explicit user request via API
+    AD-015 Radical Unification: Computation is ALWAYS explicit.
+    This method delegates to ProxyHandleStore.compute() which:
+    - Checks for fresh handle (returns it unless force=True)
+    - Coordinates concurrent computations (idempotent)
+    - Emits events for transparency
+    - Enables reactive invalidation
 
     Args:
         force: Force re-analysis even if cache is fresh
@@ -169,22 +169,26 @@ async def analyze_now(force: bool = False) -> LedgerReport:
     Returns:
         The analyzed LedgerReport
     """
-    if not force and _cache.is_fresh():
-        return _cache.report  # type: ignore
+    store = get_proxy_handle_store()
 
-    # Scan in thread pool to not block
-    spec_root = get_spec_root()
-    loop = asyncio.get_event_loop()
-    report = await loop.run_in_executor(None, analyze_spec_corpus, spec_root)
+    async def compute_fn() -> LedgerReport:
+        """Compute spec corpus analysis in thread pool."""
+        spec_root = get_spec_root()
+        loop = asyncio.get_event_loop()
+        report = await loop.run_in_executor(None, analyze_spec_corpus, spec_root)
+        logger.info(f"Spec corpus analyzed: {len(report.specs)} specs")
+        return report
 
-    import time
+    handle = await store.compute(
+        source_type=SourceType.SPEC_CORPUS,
+        compute_fn=compute_fn,
+        force=force,
+        ttl=SPEC_CORPUS_TTL,
+        human_label="Spec corpus ledger analysis",
+        computed_by="ledger_node.analyze_now",
+    )
 
-    _cache.report = report
-    _cache.last_scan = time.time()
-    _cache.spec_root = spec_root
-
-    logger.info(f"Spec corpus analyzed: {len(report.specs)} specs")
-    return report
+    return handle.data  # type: ignore
 
 
 # =============================================================================
@@ -1046,9 +1050,11 @@ class LedgerNode:
                 },
             )
 
-        # Invalidate cache since we modified files
+        # Invalidate proxy handle since we modified files
+        # This enables reactive staleness detection
         if deprecated_paths:
-            _cache.report = None
+            store = get_proxy_handle_store()
+            await store.invalidate(SourceType.SPEC_CORPUS)
 
         return {
             "success": len(deprecated_paths) > 0,
@@ -1075,10 +1081,13 @@ def get_ledger_node() -> LedgerNode:
 
 
 def reset_ledger_node() -> None:
-    """Reset the ledger node (for testing)."""
+    """Reset the ledger node and proxy store (for testing)."""
     global _ledger_node
     _ledger_node = None
-    _cache.report = None
+    # Also reset the proxy store to clear spec corpus handle
+    from services.proxy.store import reset_proxy_handle_store
+
+    reset_proxy_handle_store()
 
 
 # =============================================================================
@@ -1090,7 +1099,6 @@ __all__ = [
     "ensure_scanned",
     "analyze_now",
     "get_spec_root",
-    "NoPreComputedDataError",
     # Response types
     "LedgerSummary",
     "SpecEntry",
@@ -1100,4 +1108,6 @@ __all__ = [
     "LedgerNode",
     "get_ledger_node",
     "reset_ledger_node",
+    # Re-export for backward compatibility (use services.proxy.exceptions directly)
+    "NoProxyHandleError",
 ]

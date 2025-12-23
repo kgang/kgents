@@ -73,27 +73,18 @@ export type {
 export { useWidgetState, useWidgetStream } from './useWidgetState';
 
 // Renderer
+// Note: CitizenCardProps, ColonyDashboardProps removed 2025-12-23 (unused)
 export type {
   WidgetRendererProps,
   GlyphProps,
   BarProps,
   SparklineProps,
-  CitizenCardProps,
   HStackProps,
   VStackProps,
-  ColonyDashboardProps,
 } from './WidgetRenderer';
 
-export {
-  WidgetRenderer,
-  Glyph,
-  Bar,
-  Sparkline,
-  CitizenCard,
-  HStack,
-  VStack,
-  ColonyDashboard,
-} from './WidgetRenderer';
+// Note: CitizenCard, ColonyDashboard removed 2025-12-23 (unused)
+export { WidgetRenderer, Glyph, Bar, Sparkline, HStack, VStack } from './WidgetRenderer';
 
 // Context
 export type { WidgetTheme, WidgetContextValue, WidgetProviderProps } from './context';

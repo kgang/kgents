@@ -14,7 +14,7 @@ export type Jewel =
   | 'gestalt'
   | 'gardener'
   | 'forge'
-  | 'coalition'
+  | 'coalition' // DEPRECATED 2025-12-21
   | 'park'
   | 'domain'
   | 'dgent';
@@ -44,7 +44,7 @@ export type SynergyEventType =
   // Forge events
   | 'piece_created'
   | 'bid_accepted'
-  // Coalition events
+  // Coalition events (DEPRECATED 2025-12-21)
   | 'coalition_formed'
   | 'task_assigned'
   // Domain events
@@ -163,6 +163,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     path: '/world.forge',
   },
   coalition: {
+    // DEPRECATED 2025-12-21: Coalition feature removed
     name: 'Coalition',
     icon: '🤝',
     color: 'text-cyan-400',

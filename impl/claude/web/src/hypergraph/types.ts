@@ -252,6 +252,29 @@ export interface KBlockState {
 }
 
 /**
+ * Portal state — an inline expansion of an edge's target.
+ *
+ * "Navigation IS expansion" — when you expand an edge reference,
+ * you see the target's content inline without losing context.
+ */
+export interface PortalState {
+  /** Edge ID that this portal expands */
+  edgeId: string;
+
+  /** Target node (loaded when portal opens) */
+  targetNode: GraphNode | null;
+
+  /** Depth level (portals can nest) */
+  depth: number;
+
+  /** Whether portal is loading */
+  loading: boolean;
+
+  /** Collapsed state (for nested content) */
+  collapsed: boolean;
+}
+
+/**
  * Complete navigation state.
  * This is the "where you are" in the hypergraph.
  */
@@ -276,6 +299,9 @@ export interface NavigationState {
 
   /** Edge pending state (when in EDGE mode) */
   edgePending: EdgePendingState | null;
+
+  /** Open portals — edges expanded inline (zo/zc) */
+  portals: Map<string, PortalState>;
 
   /** Siblings (nodes sharing same parent edge type) */
   siblings: GraphNode[];
@@ -351,7 +377,15 @@ export type NavigationAction =
   | { type: 'SET_LOADING'; loading: boolean }
   | { type: 'SET_ERROR'; error: string | null }
   | { type: 'SET_SIBLINGS'; siblings: GraphNode[]; index: number }
-  | { type: 'NODE_LOADED'; node: GraphNode };
+  | { type: 'NODE_LOADED'; node: GraphNode }
+
+  // Portal operations (zo/zc — inline expansion of edges)
+  | { type: 'PORTAL_OPEN'; edgeId: string; targetPath: string }
+  | { type: 'PORTAL_CLOSE'; edgeId: string }
+  | { type: 'PORTAL_TOGGLE'; edgeId: string; targetPath: string }
+  | { type: 'PORTAL_LOADED'; edgeId: string; node: GraphNode }
+  | { type: 'PORTAL_OPEN_ALL' }
+  | { type: 'PORTAL_CLOSE_ALL' };
 
 // =============================================================================
 // Key Bindings
@@ -471,6 +505,7 @@ export function createInitialState(): NavigationState {
     mode: 'NORMAL',
     kblock: null,
     edgePending: null,
+    portals: new Map(),
     siblings: [],
     siblingIndex: -1,
     loading: false,

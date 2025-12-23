@@ -80,16 +80,7 @@ def _discover_paths() -> list[str]:
     except ImportError:
         pass
 
-    try:
-        from protocols.cli.handlers.park_thin import (
-            MASK_SUBCOMMAND_TO_PATH,
-            PARK_SUBCOMMAND_TO_PATH,
-        )
-
-        paths.update(PARK_SUBCOMMAND_TO_PATH.values())
-        paths.update(MASK_SUBCOMMAND_TO_PATH.values())
-    except ImportError:
-        pass
+    # Note: Park removed 2025-12-21 (extinction)
 
     try:
         from protocols.cli.handlers.atelier_thin import (

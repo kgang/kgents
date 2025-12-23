@@ -580,10 +580,10 @@ async def get_proxy_handle_store() -> "ProxyHandleStore":
             human_label="Spec corpus analysis",
         )
     """
-    from services.proxy import ProxyHandleStore
+    from services.proxy import get_proxy_handle_store as get_store
 
-    # ProxyHandleStore is self-managing singleton
-    return ProxyHandleStore()
+    # Use the singleton factory
+    return get_store()
 
 
 # =============================================================================

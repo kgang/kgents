@@ -70,7 +70,7 @@ def _import_node_modules() -> None:
 
         # Import specific context node modules (legacy/fallback)
         # Note: removed 2025-12-21 (Crown Jewel Cleanup):
-        #   time_trace_warp, world_gestalt_live, world_park, self_archaeology, self_conductor
+        #   time_trace_warp, self_archaeology, self_conductor
         from .contexts import (
             concept_derivation,  # noqa: F401 - Derivation Framework (concept.derivation.*)
             concept_intent,  # noqa: F401 - WARP Phase 1: Task decomposition (concept.intent.*)
@@ -171,6 +171,12 @@ def _import_node_modules() -> None:
             from services.witnessed_graph import node as graph_node  # noqa: F401  # concept.graph.*
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (witnessed_graph): {e}")
+
+        # === Proxy Handle Crown Jewel (self.proxy.*) ===
+        try:
+            from services.proxy import node as proxy_node  # noqa: F401  # self.proxy.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (proxy): {e}")
 
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:

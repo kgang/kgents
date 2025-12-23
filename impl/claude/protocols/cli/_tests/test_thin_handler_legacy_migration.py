@@ -175,56 +175,35 @@ class TestDocsLegacyMappings:
         assert remaining == []
 
 
-class TestGraphLegacyMappings:
-    """Test graph command legacy mappings to concept.graph.* (NEW!)"""
+class TestGraphThinHandler:
+    """
+    Test graph command routing.
 
-    def test_graph_default(self) -> None:
-        """graph → concept.graph.manifest"""
+    Graph commands are NOT legacy - they route through thin handler (graph_thin.py)
+    which properly bootstraps service providers before AGENTESE invocation.
+    See legacy.py lines 76-80 for explanation of why graph was removed from legacy.
+
+    These tests verify graph does NOT expand as legacy (it's a thin handler).
+    """
+
+    def test_graph_is_not_legacy(self) -> None:
+        """graph is NOT a legacy command - it uses thin handler."""
         from protocols.cli.legacy import expand_legacy
 
         path, remaining = expand_legacy(["graph"])
-        assert path == "concept.graph.manifest"
+        # Should NOT expand - graph is handled by thin handler, not legacy
+        assert path == "graph"
         assert remaining == []
 
-    def test_graph_manifest(self) -> None:
-        """graph manifest → concept.graph.manifest"""
+    def test_graph_subcommands_not_legacy(self) -> None:
+        """graph subcommands are NOT legacy - thin handler handles them."""
         from protocols.cli.legacy import expand_legacy
 
-        path, remaining = expand_legacy(["graph", "manifest"])
-        assert path == "concept.graph.manifest"
-        assert remaining == []
-
-    def test_graph_neighbors(self) -> None:
-        """graph neighbors → concept.graph.neighbors"""
-        from protocols.cli.legacy import expand_legacy
-
-        path, remaining = expand_legacy(["graph", "neighbors"])
-        assert path == "concept.graph.neighbors"
-        assert remaining == []
-
-    def test_graph_evidence(self) -> None:
-        """graph evidence → concept.graph.evidence"""
-        from protocols.cli.legacy import expand_legacy
-
-        path, remaining = expand_legacy(["graph", "evidence"])
-        assert path == "concept.graph.evidence"
-        assert remaining == []
-
-    def test_graph_trace(self) -> None:
-        """graph trace → concept.graph.trace"""
-        from protocols.cli.legacy import expand_legacy
-
-        path, remaining = expand_legacy(["graph", "trace"])
-        assert path == "concept.graph.trace"
-        assert remaining == []
-
-    def test_graph_search(self) -> None:
-        """graph search → concept.graph.search"""
-        from protocols.cli.legacy import expand_legacy
-
-        path, remaining = expand_legacy(["graph", "search"])
-        assert path == "concept.graph.search"
-        assert remaining == []
+        for subcommand in ["manifest", "neighbors", "evidence", "trace", "search"]:
+            path, remaining = expand_legacy(["graph", subcommand])
+            # Should NOT expand - thin handler routes these
+            assert path == "graph"
+            assert remaining == [subcommand]
 
 
 class TestRouterIntegration:
@@ -262,13 +241,15 @@ class TestRouterIntegration:
         assert str(result.input_type) == "legacy"
         assert result.agentese_path == "concept.docs.generate"
 
-    def test_graph_routes_as_legacy(self) -> None:
-        """Router should classify graph commands as LEGACY."""
+    def test_graph_not_legacy(self) -> None:
+        """Router should NOT classify graph as LEGACY - it's a thin handler."""
         from protocols.cli.agentese_router import classify_input
 
         result = classify_input(["graph", "neighbors"])
-        assert str(result.input_type) == "legacy"
-        assert result.agentese_path == "concept.graph.neighbors"
+        # Graph uses thin handler (COMMAND_REGISTRY), not legacy expansion
+        # Router classifies as UNKNOWN because it doesn't know about thin handlers
+        # The hollow.py COMMAND_REGISTRY handles "graph" before router is called
+        assert str(result.input_type) != "legacy"
 
 
 class TestLongestPrefixMatching:

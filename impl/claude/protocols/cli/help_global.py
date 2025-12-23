@@ -32,7 +32,7 @@ COMMAND_FAMILIES = [
         "Primary experiences - where the magic happens",
         [
             ("brain", "self.memory", "Holographic memory operations"),
-            ("town", "world.town", "Agent simulation and coalitions"),
+            ("town", "world.town", "Agent simulation and interactions"),
             ("atelier", "world.atelier", "Collaborative creative workshops"),
         ],
     ),

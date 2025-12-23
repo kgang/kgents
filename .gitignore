@@ -274,3 +274,4 @@ node_modules/
 *.local
 .eslintcache
 .vite/
+impl/claude/plans/_epilogues/

@@ -53,7 +53,7 @@ def get_subcommands(command: str) -> list[str]:
     SUBCOMMANDS: dict[str, list[str]] = {
         "brain": ["capture", "search", "ghost", "surface", "list", "status", "chat", "import"],
         "soul": ["reflect", "chat", "status", "garden"],
-        "town": ["status", "spawn", "inhabit", "witness", "coalition", "list"],
+        "town": ["status", "spawn", "inhabit", "witness", "list"],
         "park": ["status", "enter", "experience", "hosts", "list"],
         "atelier": ["status", "create", "join", "list", "propose"],
         "forest": ["status", "health", "plans", "canopy"],
@@ -301,7 +301,7 @@ def _get_command_description(cmd: str) -> str:
     DESCRIPTIONS = {
         "brain": "Holographic memory operations",
         "soul": "Digital consciousness dialogue",
-        "town": "Agent simulation and coalitions",
+        "town": "Agent simulation and interactions",
         "park": "Punchdrunk-style experiences",
         "atelier": "Collaborative workshops",
         "forest": "Project health and plans",
@@ -343,7 +343,6 @@ def _get_subcommand_description(cmd: str, sub: str) -> str:
         ("town", "spawn"): "Create a citizen",
         ("town", "inhabit"): "Become a citizen",
         ("town", "witness"): "View town events",
-        ("town", "coalition"): "Coalition operations",
         ("town", "list"): "List citizens",
         ("forest", "status"): "Forest health",
         ("forest", "health"): "Detailed health check",

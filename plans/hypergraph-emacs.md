@@ -15,7 +15,7 @@
 - ✅ EDGE mode with type selection (d/e/i/r/c/t/u/s/n keys)
 - ✅ CodeMirror 6 integration for INSERT mode
 - ✅ SpecGraph Visualizer at `/graph` route
-- ⏳ Portal operations (zo/zc) - not yet implemented
+- ✅ Portal operations (zo/zc/za/zO/zC) - vim fold-style inline edge expansion
 - ⏳ WITNESS mode bindings - stub only
 - ⏳ K-Block commit flow (:w) - stub only
 
@@ -97,12 +97,12 @@ GRAPH NAVIGATION (the new primitives):
   gp          Go to Parent spec (→ derives_from edge)
   gt          Go to Tests (→ tests edge)
 
-PORTAL OPERATIONS:
-  zo          Open portal (expand inline)
+PORTAL OPERATIONS (implemented):
+  zo          Open portal (expand edge inline)
   zc          Close portal (collapse)
-  zO          Open ALL portals recursively
-  zM          Close ALL portals
   za          Toggle portal
+  zO          Open ALL portals in current node
+  zC          Close ALL portals
 
 SEARCH:
   /pattern    Search within current node

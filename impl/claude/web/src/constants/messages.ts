@@ -28,13 +28,7 @@ export const LOADING_MESSAGES: Record<JewelName, readonly string[]> = {
     'Weaving connections...',
     'Synthesizing understanding...',
   ],
-  gestalt: [
-    'Mapping the topology...',
-    'Rendering the architecture...',
-    'Tracing dependencies...',
-    'Visualizing structure...',
-    'Computing relationships...',
-  ],
+  // gestalt removed 2025-12-21
   gardener: [
     'Preparing the garden...',
     'Gathering context...',
@@ -49,20 +43,7 @@ export const LOADING_MESSAGES: Record<JewelName, readonly string[]> = {
     'Setting up the anvil...',
     'Ready to build...',
   ],
-  coalition: [
-    'Convening the council...',
-    'Aligning perspectives...',
-    'Forging connections...',
-    'Building consensus...',
-    'Synthesizing viewpoints...',
-  ],
-  park: [
-    'Setting the stage...',
-    'Preparing the scenario...',
-    'Calibrating tension...',
-    'Assembling the cast...',
-    'Tuning the dramatic arc...',
-  ],
+  // coalition removed 2025-12-21
   domain: [
     'Analyzing the situation...',
     'Modeling dynamics...',
@@ -269,7 +250,7 @@ export const EMPTY_STATE_MESSAGES: Record<
     description: 'Creations will appear as the artisans work.',
   },
 
-  // Coalition
+  // Coalition (DEPRECATED 2025-12-21)
   noCitizens: {
     title: 'Town is quiet',
     description: 'Citizens will gather when you create a coalition.',
@@ -279,17 +260,6 @@ export const EMPTY_STATE_MESSAGES: Record<
     title: 'No coalitions formed',
     description: 'Groups of citizens can work together on shared goals.',
     action: 'Start a coalition',
-  },
-
-  // Park
-  noScenarios: {
-    title: 'Stage is empty',
-    description: 'Start a scenario to practice crisis response.',
-    action: 'Begin scenario',
-  },
-  noMasks: {
-    title: 'No masks available',
-    description: 'Masks become available as the scenario progresses.',
   },
 
   // Domain
@@ -375,7 +345,7 @@ export const BUTTON_LABELS = {
   visualize: 'Visualize', // Gestalt
   create_art: 'Create', // Forge (verb)
   convene: 'Convene', // Coalition
-  simulate: 'Simulate', // Park/Domain
+  simulate: 'Simulate', // Domain
 } as const;
 
 // =============================================================================
@@ -398,10 +368,6 @@ export const TOOLTIPS = {
   // Gestalt
   nodeCount: (count: number) => `${count} node${count !== 1 ? 's' : ''} in this view`,
   connectionStrength: (strength: number) => `Connection strength: ${Math.round(strength * 100)}%`,
-
-  // Park
-  consentDebt: (debt: number) => `Consent debt: ${Math.round(debt * 100)}% - affects serendipity`,
-  forcesRemaining: (count: number) => `${count} force${count !== 1 ? 's' : ''} remaining`,
 
   // Generic
   lastUpdated: (date: Date) => `Last updated ${date.toLocaleString()}`,

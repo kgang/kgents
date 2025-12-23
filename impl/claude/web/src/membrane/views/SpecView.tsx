@@ -522,7 +522,7 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
   if (loading && !hasContent) {
     return (
       <div className="spec-view spec-view--loading">
-        <PersonalityLoading jewel="gestalt" action="analyzing" size="md" />
+        <PersonalityLoading jewel="brain" action="analyze" size="md" />
       </div>
     );
   }

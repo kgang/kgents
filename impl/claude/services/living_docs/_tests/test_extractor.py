@@ -267,7 +267,8 @@ class TestPropertyBased:
         summary=st.text(
             min_size=1,
             max_size=100,
-            alphabet=st.characters(blacklist_categories=("Cs",), blacklist_characters="\n\r\"'"),
+            # Blacklist: surrogates, newlines, quotes, and backslash (escape sequences)
+            alphabet=st.characters(blacklist_categories=("Cs",), blacklist_characters="\n\r\"'\\"),
         ).filter(lambda s: s.strip()),
     )
     @settings(max_examples=20)

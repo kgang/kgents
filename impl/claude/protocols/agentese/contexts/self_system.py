@@ -224,15 +224,7 @@ class SystemNode(BaseLogosNode):
         """Ensure all node modules are imported so they register."""
         # These imports trigger @node registrations
         try:
-            from services.gestalt import node as gestalt_node  # noqa: F401
-        except ImportError:
-            pass
-        try:
             from services.atelier import node as atelier_node  # noqa: F401
-        except ImportError:
-            pass
-        try:
-            from services.park import node as park_node  # noqa: F401
         except ImportError:
             pass
 
@@ -270,30 +262,14 @@ class SystemNode(BaseLogosNode):
                 "poly": None,
                 "operad": "GrowthOperad",
             },
-            {
-                "name": "Gestalt",
-                "path": "world.codebase",
-                "poly": "GESTALT_POLYNOMIAL",
-                "operad": "GestaltOperad",
-            },
+            # Gestalt removed 2025-12-21 (Crown Jewel Cleanup)
             {
                 "name": "Atelier",
                 "path": "world.atelier",
                 "poly": "WORKSHOP_POLYNOMIAL",
                 "operad": "AtelierOperad",
             },
-            {
-                "name": "Park",
-                "path": "world.park",
-                "poly": "DIRECTOR_POLYNOMIAL",
-                "operad": "DirectorOperad",
-            },
-            {
-                "name": "Coalition",
-                "path": "world.coalition",
-                "poly": None,
-                "operad": None,
-            },
+            # Park, Coalition removed 2025-12-21 (Crown Jewel Cleanup)
         ]
 
         registry = get_registry()
@@ -403,8 +379,6 @@ Target: ≥0.9 (90%)
 
 ### Recommendations
 {"- ✅ System healthy: all jewels compliant!" if audit.healthy else ""}
-{"- Add @node to Coalition (world.coalition)" if not any(j["has_node"] for j in jewel_data if j["name"] == "Coalition") else ""}
-{"- Create CoalitionOperad and register it" if not any(j["has_operad"] for j in jewel_data if j["name"] == "Coalition") else ""}
 
 Run `kg self.system.witness` to see evolution history.
 """
@@ -549,7 +523,6 @@ Run `kg self.system.witness` to see evolution history.
             "town",
             "atelier",
             "park",
-            "gestalt",
             "f",
         }
     )
@@ -586,7 +559,7 @@ Run `kg self.system.witness` to see evolution history.
                 "**Option 2 - By path**:\n"
                 "  `kg self.system.reflect impl_path=agents/town`\n\n"
                 "**Crown Jewels** (use holon= for 100% coverage):\n"
-                "  town, brain, atelier, park, gestalt, f",
+                "  brain, atelier, f",
                 metadata={"error": "missing_impl_path"},
             )
 
@@ -1051,7 +1024,7 @@ kg self.system.spec.gaps severity=critical
             return BasicRendering(
                 summary="Reflect requires holon name",
                 content="Usage: `kg self.system.spec.reflect holon=town`\n\n"
-                "**Available holons**: brain, town, atelier, park, gestalt, f",
+                "**Available holons**: brain, atelier, f",
                 metadata={"error": "missing_holon"},
             )
 

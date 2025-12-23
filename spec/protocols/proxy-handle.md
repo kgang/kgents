@@ -275,6 +275,47 @@ WitnessTopics.PROXY_FAILED = "witness.proxy.failed"
 WitnessTopics.PROXY_STALE = "witness.proxy.stale"
 ```
 
+### Reactive Invalidation (Phase 2)
+
+The ProxyReactor enables **event-driven staleness** — handles are invalidated when their sources change, not just when TTL expires. This inverts staleness detection from pull to push.
+
+```
+WitnessSynergyBus ──publish──▶ ProxyReactor._on_source_changed()
+                                      │
+                                      │ await store.invalidate()
+                                      ▼
+                               ProxyHandleStore
+                                      │
+                                      │ emit event
+                                      ▼
+                               WitnessSynergyBus ──▶ (cycle continues)
+```
+
+#### Source-to-Topic Mapping
+
+```python
+# Each SourceType maps to topics that trigger invalidation
+InvalidationTrigger(
+    topic="witness.spec.deprecated",    # Spec file deprecated
+    source_types=(SourceType.SPEC_CORPUS,),
+)
+InvalidationTrigger(
+    topic="witness.git.commit",         # Git commit (filtered by path)
+    source_types=(SourceType.SPEC_CORPUS, SourceType.CODEBASE_GRAPH),
+    filter_fn=lambda e: any(f.startswith("spec/") for f in e.get("files", [])),
+)
+```
+
+#### Why Reactive > Polling
+
+| Approach | Detection Latency | Resource Usage | Complexity |
+|----------|-------------------|----------------|------------|
+| **TTL-only** | Up to TTL duration | Low | Simple |
+| **Poll on access** | Immediate | High (check every access) | Moderate |
+| **Reactive** | Immediate | Low (event-driven) | Moderate |
+
+The insight: Instead of checking "is source stale?" on every access, we listen for "source changed" events and pre-emptively invalidate
+
 ### CLI Integration
 
 ```bash

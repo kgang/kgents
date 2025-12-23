@@ -92,7 +92,7 @@ function getToastType(eventType: SynergyEventType): SynergyToastType {
     case 'piece_created':
     case 'drill_complete':
     case 'scenario_complete':
-    case 'coalition_formed':
+    case 'coalition_formed': // DEPRECATED 2025-12-21
     case 'data_stored':
     case 'data_upgraded':
       return 'success';
@@ -139,7 +139,7 @@ function getToastTitle(eventType: SynergyEventType): string {
     // Forge
     piece_created: 'Piece Created',
     bid_accepted: 'Bid Accepted',
-    // Coalition
+    // Coalition (DEPRECATED 2025-12-21)
     coalition_formed: 'Coalition Formed',
     task_assigned: 'Task Complete',
     // Domain
@@ -226,7 +226,7 @@ export const synergyToast = {
     });
   },
 
-  /** Coalition → Brain: Task complete */
+  /** @deprecated Coalition → Brain: Task complete (Coalition removed 2025-12-21) */
   taskComplete: (coalitionSize: number, duration: string) => {
     showSynergyToast(
       'coalition',

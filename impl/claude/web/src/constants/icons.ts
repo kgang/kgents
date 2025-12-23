@@ -39,7 +39,7 @@ import {
   RefreshCw,
   User,
   Settings,
-  // Park/Archetype icons
+  // Archetype icons
   Sparkles,
   Cloud,
   Building2,
@@ -145,11 +145,13 @@ export const BUILDER_ICONS_LUCIDE: Record<string, LucideIcon> = {
 } as const;
 
 // =============================================================================
-// Park Icons (Punchdrunk Park)
+// Historical Park Icons (DEPRECATED 2025-12-21)
+// Kept for backward compatibility with archived data only
 // =============================================================================
 
 /**
  * Crisis phase icons.
+ * @deprecated Park feature removed 2025-12-21
  */
 export const CRISIS_PHASE_ICONS: Record<string, LucideIcon> = {
   NORMAL: CheckCircle,
@@ -174,6 +176,7 @@ export const TIMER_STATUS_ICONS: Record<string, LucideIcon> = {
 
 /**
  * Mask archetype icons.
+ * @deprecated Park feature removed 2025-12-21
  */
 export const MASK_ARCHETYPE_ICONS: Record<string, LucideIcon> = {
   TRICKSTER: Sparkles,
@@ -181,7 +184,7 @@ export const MASK_ARCHETYPE_ICONS: Record<string, LucideIcon> = {
   SKEPTIC: Search,
   ARCHITECT: Building2,
   CHILD: Star,
-  SAGE: Bird,  // Using Bird since Owl not available in Lucide
+  SAGE: Bird, // Using Bird since Owl not available in Lucide
   WARRIOR: Swords,
   HEALER: Heart,
 } as const;

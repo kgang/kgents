@@ -249,45 +249,71 @@ container.register("proxy_handle_store", get_proxy_handle_store, singleton=True)
 
 ---
 
-## Phase 2: Event Integration (Session 2)
+## Phase 2: Event Integration (Session 2) ✅ COMPLETED 2025-12-23
 
-### 2.1 Add Witness Topics
+### 2.1 Add Witness Topics ✅
 
-In `services/witness/bus.py`:
+In `services/witness/bus.py` — PROXY_* topics already added.
 
-```python
-class WitnessTopics:
-    # ... existing ...
+### 2.2 Wire Events ✅
 
-    # Proxy handle lifecycle
-    PROXY_STARTED = "witness.proxy.started"
-    PROXY_COMPLETED = "witness.proxy.completed"
-    PROXY_FAILED = "witness.proxy.failed"
-    PROXY_STALE = "witness.proxy.stale"
-    PROXY_ALL = "witness.proxy.*"
-```
+In `store.py` — `_emit_to_bus()` publishes to WitnessSynergyBus.
 
-### 2.2 Wire Events
+### 2.3 Reactive Invalidation ✅ (RADICAL IMPROVEMENT)
 
-In `store.py`:
+**New capability: ProxyReactor**
+
+The ProxyReactor enables **event-driven staleness** — handles are invalidated when their sources change, not just when TTL expires.
 
 ```python
-async def _emit(self, event: ProxyHandleEvent) -> None:
-    """Non-blocking event emission to WitnessSynergyBus."""
-    try:
+# services/proxy/reactor.py
+class ProxyReactor:
+    """
+    Subscribes to WitnessSynergyBus topics and invalidates handles
+    when source data changes.
+    """
+
+    def wire(self) -> None:
+        """Wire reactor to WitnessSynergyBus."""
         bus = get_synergy_bus()
-        topic = {
-            "computation_started": WitnessTopics.PROXY_STARTED,
-            "computation_completed": WitnessTopics.PROXY_COMPLETED,
-            "computation_failed": WitnessTopics.PROXY_FAILED,
-            "handle_stale": WitnessTopics.PROXY_STALE,
-        }.get(event.event_type)
+        for trigger in self.triggers:
+            bus.subscribe(trigger.topic, self._on_event)
 
-        if topic and bus:
-            asyncio.create_task(bus.publish(topic, event.to_dict()))
-    except Exception:
-        pass  # Graceful degradation: event emission never blocks
+    async def _on_event(self, topic: str, event: Any, trigger: InvalidationTrigger) -> None:
+        """Invalidate handles when sources change."""
+        if trigger.matches_event(event):
+            for source_type in trigger.source_types:
+                await self.store.invalidate(source_type)
 ```
+
+**Default triggers:**
+- `witness.spec.deprecated` → invalidates `SPEC_CORPUS`
+- `witness.spec.evidence_added` → invalidates `SPEC_CORPUS`
+- `witness.git.commit` (filtered by path) → invalidates `SPEC_CORPUS`, `CODEBASE_GRAPH`
+- `witness.thought.captured` → invalidates `WITNESS_GRAPH`
+
+### 2.4 AGENTESE Node ✅
+
+```python
+# services/proxy/node.py
+@node("self.proxy", dependencies=("proxy_handle_store",))
+class ProxyNode(BaseLogosNode):
+    """
+    AGENTESE paths:
+    - self.proxy.manifest     - Store status
+    - self.proxy.list         - List all handles
+    - self.proxy.get          - Get handle by source_type
+    - self.proxy.invalidate   - Mark handle as stale
+    - self.proxy.reactor      - Reactor status
+    """
+```
+
+### 2.5 Tests ✅
+
+70 tests passing:
+- `test_types.py` (26 tests)
+- `test_store.py` (28 tests)
+- `test_reactor.py` (16 tests)
 
 ---
 

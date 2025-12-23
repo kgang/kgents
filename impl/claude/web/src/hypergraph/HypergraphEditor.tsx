@@ -395,8 +395,22 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   loadSiblings,
 }: HypergraphEditorProps) {
   const navigation = useNavigation();
-  const { state, dispatch, focusNode, goParent, goChild, goDefinition, goReferences, goTests } =
-    navigation;
+  const {
+    state,
+    dispatch,
+    focusNode,
+    goParent,
+    goChild,
+    goDefinition,
+    goReferences,
+    goTests,
+    // Portal operations
+    openPortal,
+    closePortal,
+    togglePortal,
+    openAllPortals,
+    closeAllPortals,
+  } = navigation;
 
   // K-Block integration
   const kblockHook = useKBlock();
@@ -435,6 +449,12 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     goDefinition,
     goReferences,
     goTests,
+    // Portal operations (zo/zc — vim fold-style)
+    openPortal,
+    closePortal,
+    togglePortal,
+    openAllPortals,
+    closeAllPortals,
     onEnterCommand: () => {
       setCommandLineVisible(true);
       // Focus command line after state updates

@@ -1,9 +1,8 @@
 /**
  * Card widgets - agent and entity visualizations.
+ *
+ * Note: CitizenCard and EigenvectorDisplay removed 2025-12-23 (unused)
  */
 
-export { CitizenCard } from './CitizenCard';
-export type { CitizenCardProps } from './CitizenCard';
-
-export { EigenvectorDisplay } from './EigenvectorDisplay';
-export type { EigenvectorDisplayProps } from './EigenvectorDisplay';
+// Currently empty - add new card components here
+export {};

@@ -57,13 +57,11 @@ STANDARD_SHORTCUTS: dict[str, str] = {
     "mforge": "world.forge.manifest",
     "gallery": "world.forge.gallery.manifest",
     # ==========================================================================
-    # CROWN JEWEL 2: Coalition Forge (Operad)
-    # "A no-code tool for assembling agent coalitions that accomplish real tasks"
+    # CROWN JEWEL 2: Task Management
     # ==========================================================================
-    "forge": "world.coalition.manifest",
+    "forge": "world.forge.manifest",
     "task": "concept.task.manifest",
     "tasks": "?concept.task.*",
-    "coalitions": "?world.coalition.*",
     "credits": "self.credits.manifest",
     # ==========================================================================
     # CROWN JEWEL 3: Holographic Second Brain (Sheaf)
@@ -76,18 +74,9 @@ STANDARD_SHORTCUTS: dict[str, str] = {
     "ghost": "self.memory.ghost.surface",
     "map": "self.memory.cartography.manifest",
     # ==========================================================================
-    # CROWN JEWEL 4: Punchdrunk Park (Polynomial)
-    # "Westworld-like simulation where citizens can say no"
+    # Note: Park Crown Jewel removed 2025-12-21 (extinction)
     # ==========================================================================
-    "park": "world.town.manifest",
-    "scenarios": "?world.town.scenario.*",
-    "inhabit": "world.town.scenario.inhabit",
-    "consent": "self.consent.manifest",
-    "force": "self.consent.force",
-    "masks": "concept.mask.manifest",
-    "replay": "time.inhabit.witness",
-    # ==========================================================================
-    # CROWN JEWEL 5: Domain Simulation Engine (Tenancy)
+    # CROWN JEWEL 4: Domain Simulation Engine (Tenancy)
     # "Agent Town configured for any domain with enterprise requirements"
     # ==========================================================================
     "sim": "world.simulation.manifest",
@@ -98,7 +87,7 @@ STANDARD_SHORTCUTS: dict[str, str] = {
     "audit": "time.simulation.witness",
     "export": "time.simulation.export",
     # ==========================================================================
-    # CROWN JEWEL 6: Gestalt Architecture Visualizer (Reactive)
+    # CROWN JEWEL 5: Gestalt Architecture Visualizer (Reactive)
     # "Architecture diagrams that never rot because they never stop watching"
     # ==========================================================================
     "arch": "world.codebase.manifest",
@@ -109,7 +98,7 @@ STANDARD_SHORTCUTS: dict[str, str] = {
     "governance": "concept.governance.manifest",
     "tour": "world.codebase.tour",
     # ==========================================================================
-    # CROWN JEWEL 7: The Gardener (N-Phase)
+    # CROWN JEWEL 6: The Gardener (N-Phase)
     # "The form that generates forms. The garden that tends itself."
     # ==========================================================================
     "garden": "concept.gardener.manifest",

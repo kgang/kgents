@@ -50,19 +50,27 @@ const NORMAL_MODE_BINDINGS: Record<string, SimpleBinding> = {
 };
 
 /**
- * Multi-key sequences (g-prefixed graph navigation, etc.)
+ * Multi-key sequences (g-prefixed graph navigation, z-prefixed portals, etc.)
  */
 interface SequenceBinding {
   keys: string[];
   action:
     | NavigationAction
+    // Graph navigation
     | 'GO_PARENT'
     | 'GO_CHILD'
     | 'GO_DEFINITION'
     | 'GO_REFERENCES'
     | 'GO_TESTS'
+    // Mode switches
     | 'ENTER_EDGE'
-    | 'ENTER_WITNESS';
+    | 'ENTER_WITNESS'
+    // Portal operations (zo/zc — vim fold-style)
+    | 'PORTAL_OPEN'
+    | 'PORTAL_CLOSE'
+    | 'PORTAL_TOGGLE'
+    | 'PORTAL_OPEN_ALL'
+    | 'PORTAL_CLOSE_ALL';
   description: string;
 }
 
@@ -88,6 +96,13 @@ const NORMAL_MODE_SEQUENCES: SequenceBinding[] = [
 
   // gg - go to start
   { keys: ['g', 'g'], action: { type: 'GOTO_START' }, description: 'Go to start (gg)' },
+
+  // Portal operations (z-prefix — vim fold-style)
+  { keys: ['z', 'o'], action: 'PORTAL_OPEN', description: 'Open portal (zo)' },
+  { keys: ['z', 'c'], action: 'PORTAL_CLOSE', description: 'Close portal (zc)' },
+  { keys: ['z', 'a'], action: 'PORTAL_TOGGLE', description: 'Toggle portal (za)' },
+  { keys: ['z', 'O'], action: 'PORTAL_OPEN_ALL', description: 'Open all portals (zO)' },
+  { keys: ['z', 'C'], action: 'PORTAL_CLOSE_ALL', description: 'Close all portals (zC)' },
 ];
 
 // INSERT, EDGE, COMMAND, WITNESS mode bindings will be added in later phases
@@ -110,6 +125,13 @@ export interface UseKeyHandlerOptions {
   goDefinition: () => void;
   goReferences: () => void;
   goTests: () => void;
+
+  /** Portal operations (zo/zc — inline edge expansion) */
+  openPortal: () => void;
+  closePortal: () => void;
+  togglePortal: () => void;
+  openAllPortals: () => void;
+  closeAllPortals: () => void;
 
   /** Called when entering command mode (to focus input) */
   onEnterCommand?: () => void;
@@ -149,6 +171,11 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     goDefinition,
     goReferences,
     goTests,
+    openPortal,
+    closePortal,
+    togglePortal,
+    openAllPortals,
+    closeAllPortals,
     onEnterCommand,
     onEnterInsert,
     enabled = true,
@@ -174,51 +201,363 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     setPendingKeys([]);
   }, []);
 
-  // Handle a single keypress
-  const handleKey = useCallback(
-    (e: KeyboardEvent) => {
-      // Skip if not enabled or if in an input field
-      if (!enabled) return;
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        // In INSERT mode, let textarea handle it
-        if (state.mode === 'INSERT' && e.key !== 'Escape') {
-          return;
+  // =============================================================================
+  // Normal Mode Handlers - Split into Sub-Functions
+  // =============================================================================
+
+  /**
+   * Handle string actions (callbacks that don't dispatch)
+   */
+  const handleStringAction = useCallback(
+    (action: string) => {
+      switch (action) {
+        // Navigation
+        case 'GO_PARENT':
+          goParent();
+          break;
+        case 'GO_CHILD':
+          goChild();
+          break;
+        case 'GO_DEFINITION':
+          goDefinition();
+          break;
+        case 'GO_REFERENCES':
+          goReferences();
+          break;
+        case 'GO_TESTS':
+          goTests();
+          break;
+
+        // Mode switches
+        case 'ENTER_EDGE':
+          dispatch({ type: 'ENTER_EDGE' });
+          break;
+        case 'ENTER_WITNESS':
+          dispatch({ type: 'ENTER_WITNESS' });
+          break;
+
+        // Portal operations (zo/zc — vim fold-style)
+        case 'PORTAL_OPEN':
+          openPortal();
+          break;
+        case 'PORTAL_CLOSE':
+          closePortal();
+          break;
+        case 'PORTAL_TOGGLE':
+          togglePortal();
+          break;
+        case 'PORTAL_OPEN_ALL':
+          openAllPortals();
+          break;
+        case 'PORTAL_CLOSE_ALL':
+          closeAllPortals();
+          break;
+      }
+    },
+    [
+      goParent,
+      goChild,
+      goDefinition,
+      goReferences,
+      goTests,
+      dispatch,
+      openPortal,
+      closePortal,
+      togglePortal,
+      openAllPortals,
+      closeAllPortals,
+    ]
+  );
+
+  /**
+   * Try to match or advance a key sequence
+   * Returns true if handled (matched or prefix)
+   */
+  const trySequence = useCallback(
+    (e: KeyboardEvent, key: string, now: number): boolean => {
+      const pending = [...sequenceRef.current.keys, key];
+
+      // Check for complete sequence match
+      const matchingSequence = NORMAL_MODE_SEQUENCES.find(
+        (seq) => seq.keys.length === pending.length && seq.keys.every((k, i) => k === pending[i])
+      );
+
+      if (matchingSequence) {
+        e.preventDefault();
+        resetSequence();
+        const action = matchingSequence.action;
+        if (typeof action === 'string') {
+          handleStringAction(action);
+        } else {
+          dispatch(action);
         }
-        // In COMMAND mode, only handle Escape
-        if (state.mode === 'COMMAND' && e.key !== 'Escape' && e.key !== 'Enter') {
-          return;
-        }
+        return true;
       }
 
-      const { mode } = state;
-      const key = e.key;
-      const now = Date.now();
+      // Check for sequence prefix (waiting for more keys)
+      const isPrefix = NORMAL_MODE_SEQUENCES.some(
+        (seq) =>
+          seq.keys.length > pending.length &&
+          seq.keys.slice(0, pending.length).every((k, i) => k === pending[i])
+      );
 
-      // Check for timeout on pending sequence
-      if (
-        sequenceRef.current.keys.length > 0 &&
-        now - sequenceRef.current.lastKeyTime > sequenceRef.current.timeout
-      ) {
+      if (isPrefix) {
+        e.preventDefault();
+        sequenceRef.current = { ...sequenceRef.current, keys: pending, lastKeyTime: now };
+        setPendingKeys(pending);
+        return true;
+      }
+
+      // Reset sequence if not a prefix
+      if (sequenceRef.current.keys.length > 0) {
         resetSequence();
       }
 
-      // Universal: Escape always exits to NORMAL
-      if (key === 'Escape') {
-        e.preventDefault();
-        if (mode !== 'NORMAL') {
-          dispatch({ type: 'SET_MODE', mode: 'NORMAL' });
-          resetSequence();
-        }
-        return;
+      return false;
+    },
+    [resetSequence, handleStringAction, dispatch]
+  );
+
+  /**
+   * Try simple (single-key) bindings
+   */
+  const trySimpleBinding = useCallback(
+    (e: KeyboardEvent, key: string): boolean => {
+      // Skip if modifier keys are held (except for specific cases)
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        return false;
       }
 
-      // Mode-specific handling
-      switch (mode) {
+      const binding = NORMAL_MODE_BINDINGS[key];
+      if (!binding) return false;
+
+      e.preventDefault();
+
+      // Special handling for command mode
+      if (binding.action.type === 'ENTER_COMMAND') {
+        dispatch(binding.action);
+        onEnterCommand?.();
+      } else if (binding.action.type === 'ENTER_INSERT') {
+        // K-Block creation happens via onEnterInsert callback
+        if (onEnterInsert) {
+          void onEnterInsert();
+        } else {
+          dispatch(binding.action);
+        }
+      } else {
+        dispatch(binding.action);
+      }
+
+      return true;
+    },
+    [dispatch, onEnterCommand, onEnterInsert]
+  );
+
+  /**
+   * Handle paragraph motion ({ and })
+   */
+  const handleParagraphMotion = useCallback(
+    (direction: 'forward' | 'backward') => {
+      const content = state.currentNode?.content || '';
+      const lines = content.split('\n');
+      const currentLine = Math.min(state.cursor.line, lines.length - 1);
+
+      if (direction === 'forward') {
+        // Skip current blank lines
+        let i = currentLine;
+        while (i < lines.length && lines[i].trim() === '') i++;
+        // Find next blank line
+        while (i < lines.length && lines[i].trim() !== '') i++;
+
+        if (i < lines.length) {
+          dispatch({ type: 'GOTO_LINE', line: i });
+        } else {
+          dispatch({ type: 'GOTO_END' });
+        }
+      } else {
+        // Skip current blank lines
+        let i = currentLine;
+        while (i > 0 && lines[i].trim() === '') i--;
+        // Find previous blank line
+        while (i > 0 && lines[i].trim() !== '') i--;
+        dispatch({ type: 'GOTO_LINE', line: i });
+      }
+    },
+    [state, dispatch]
+  );
+
+  /**
+   * Try special keys (G, {, }, Ctrl+o)
+   */
+  const trySpecialKey = useCallback(
+    (e: KeyboardEvent, key: string): boolean => {
+      // Ctrl+o - go back
+      if (e.ctrlKey && key === 'o') {
+        e.preventDefault();
+        dispatch({ type: 'GO_BACK' });
+        return true;
+      }
+
+      // G - go to end
+      if (key === 'G') {
+        e.preventDefault();
+        dispatch({ type: 'GOTO_END' });
+        return true;
+      }
+
+      // } - next paragraph
+      if (key === '}') {
+        e.preventDefault();
+        handleParagraphMotion('forward');
+        return true;
+      }
+
+      // { - previous paragraph
+      if (key === '{') {
+        e.preventDefault();
+        handleParagraphMotion('backward');
+        return true;
+      }
+
+      return false;
+    },
+    [dispatch, handleParagraphMotion]
+  );
+
+  const handleNormalMode = useCallback(
+    (e: KeyboardEvent, key: string, now: number) => {
+      // Try handlers in order
+      if (trySequence(e, key, now)) return;
+      if (trySimpleBinding(e, key)) return;
+      trySpecialKey(e, key);
+    },
+    [trySequence, trySimpleBinding, trySpecialKey]
+  );
+
+  // =============================================================================
+  // Edge Mode Handlers - Split by Phase
+  // =============================================================================
+
+  const handleEdgeSelectType = useCallback(
+    (e: KeyboardEvent, key: string): boolean => {
+      const edgeType = EDGE_TYPE_KEYS[key.toLowerCase()];
+      if (edgeType) {
+        e.preventDefault();
+        dispatch({ type: 'EDGE_SELECT_TYPE', edgeType });
+        return true;
+      }
+      return false;
+    },
+    [dispatch]
+  );
+
+  const handleEdgeSelectTarget = useCallback(
+    (e: KeyboardEvent, key: string): boolean => {
+      // Navigate using j/k like normal mode
+      if (key === 'j') {
+        e.preventDefault();
+        dispatch({ type: 'GO_SIBLING', direction: 1 });
+        return true;
+      }
+      if (key === 'k') {
+        e.preventDefault();
+        dispatch({ type: 'GO_SIBLING', direction: -1 });
+        return true;
+      }
+
+      // Enter selects current node as target
+      if (key === 'Enter' && state.currentNode) {
+        e.preventDefault();
+        dispatch({
+          type: 'EDGE_SELECT_TARGET',
+          targetId: state.currentNode.path,
+          targetLabel: state.currentNode.title || state.currentNode.path.split('/').pop() || '',
+        });
+        return true;
+      }
+
+      return false;
+    },
+    [state, dispatch]
+  );
+
+  const handleEdgeConfirm = useCallback(
+    (e: KeyboardEvent, key: string): boolean => {
+      if (key === 'y' || key === 'Enter') {
+        e.preventDefault();
+        dispatch({ type: 'EDGE_CONFIRM' });
+        return true;
+      }
+      if (key === 'n' || key === 'Backspace') {
+        e.preventDefault();
+        dispatch({ type: 'EDGE_CANCEL' });
+        return true;
+      }
+      return false;
+    },
+    [dispatch]
+  );
+
+  const handleEdgeMode = useCallback(
+    (e: KeyboardEvent, key: string) => {
+      const { edgePending } = state;
+      if (!edgePending) return;
+
+      // Dispatch to phase-specific handlers
+      if (edgePending.phase === 'select-type') {
+        handleEdgeSelectType(e, key);
+      } else if (edgePending.phase === 'select-target') {
+        handleEdgeSelectTarget(e, key);
+      } else if (edgePending.phase === 'confirm') {
+        handleEdgeConfirm(e, key);
+      }
+    },
+    [state, handleEdgeSelectType, handleEdgeSelectTarget, handleEdgeConfirm]
+  );
+
+  const handleWitnessMode = useCallback((_e: KeyboardEvent, _key: string) => {
+    // Witness mode bindings will be added in Phase 5
+    // For now, Escape is the only binding (handled universally above)
+  }, []);
+
+  // =============================================================================
+  // Key Handler Entry Point
+  // =============================================================================
+
+  /**
+   * Check if we should skip key handling (in input fields, disabled, etc)
+   */
+  const shouldSkipKey = useCallback(
+    (e: KeyboardEvent): boolean => {
+      if (!enabled) return true;
+
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        // In INSERT mode, let textarea handle everything except Escape
+        if (state.mode === 'INSERT' && e.key !== 'Escape') {
+          return true;
+        }
+        // In COMMAND mode, only handle Escape and Enter
+        if (state.mode === 'COMMAND' && e.key !== 'Escape' && e.key !== 'Enter') {
+          return true;
+        }
+      }
+
+      return false;
+    },
+    [enabled, state.mode]
+  );
+
+  /**
+   * Dispatch to mode-specific handlers
+   */
+  const dispatchToModeHandler = useCallback(
+    (e: KeyboardEvent, key: string, now: number) => {
+      switch (state.mode) {
         case 'NORMAL':
           handleNormalMode(e, key, now);
           break;
         case 'INSERT':
-          // INSERT mode: only Escape is handled (above)
+          // INSERT mode: only Escape is handled (in handleKey)
           break;
         case 'COMMAND':
           // COMMAND mode: handled by CommandLine component
@@ -234,234 +573,40 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
           break;
       }
     },
-    [enabled, state, dispatch, resetSequence]
+    [state.mode, handleNormalMode, handleEdgeMode, handleWitnessMode]
   );
 
-  const handleNormalMode = useCallback(
-    (e: KeyboardEvent, key: string, now: number) => {
-      // First check if we're building a sequence
-      const pending = [...sequenceRef.current.keys, key];
+  // Handle a single keypress
+  const handleKey = useCallback(
+    (e: KeyboardEvent) => {
+      if (shouldSkipKey(e)) return;
 
-      // Check for sequence match
-      const matchingSequence = NORMAL_MODE_SEQUENCES.find(
-        (seq) => seq.keys.length === pending.length && seq.keys.every((k, i) => k === pending[i])
-      );
+      const key = e.key;
+      const now = Date.now();
 
-      if (matchingSequence) {
-        e.preventDefault();
-        resetSequence();
-
-        // Handle special action types
-        const action = matchingSequence.action;
-        if (typeof action === 'string') {
-          switch (action) {
-            case 'GO_PARENT':
-              goParent();
-              break;
-            case 'GO_CHILD':
-              goChild();
-              break;
-            case 'GO_DEFINITION':
-              goDefinition();
-              break;
-            case 'GO_REFERENCES':
-              goReferences();
-              break;
-            case 'GO_TESTS':
-              goTests();
-              break;
-            case 'ENTER_EDGE':
-              dispatch({ type: 'ENTER_EDGE' });
-              break;
-            case 'ENTER_WITNESS':
-              dispatch({ type: 'ENTER_WITNESS' });
-              break;
-          }
-        } else {
-          dispatch(action);
-        }
-        return;
-      }
-
-      // Check for sequence prefix (waiting for more keys)
-      const isPrefix = NORMAL_MODE_SEQUENCES.some(
-        (seq) =>
-          seq.keys.length > pending.length &&
-          seq.keys.slice(0, pending.length).every((k, i) => k === pending[i])
-      );
-
-      if (isPrefix) {
-        e.preventDefault();
-        sequenceRef.current = {
-          ...sequenceRef.current,
-          keys: pending,
-          lastKeyTime: now,
-        };
-        setPendingKeys(pending);
-        return;
-      }
-
-      // Reset sequence if not a prefix
-      if (sequenceRef.current.keys.length > 0) {
+      // Check for timeout on pending sequence
+      if (
+        sequenceRef.current.keys.length > 0 &&
+        now - sequenceRef.current.lastKeyTime > sequenceRef.current.timeout
+      ) {
         resetSequence();
       }
 
-      // Ctrl+o - go back (check BEFORE simple bindings so 'o' doesn't trigger insert)
-      if (e.ctrlKey && key === 'o') {
+      // Universal: Escape always exits to NORMAL
+      if (key === 'Escape') {
         e.preventDefault();
-        dispatch({ type: 'GO_BACK' });
-        return;
-      }
-
-      // Check for simple binding (skip if modifier keys are held)
-      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-        const binding = NORMAL_MODE_BINDINGS[key];
-        if (binding) {
-          e.preventDefault();
-
-          // Special handling for command mode
-          if (binding.action.type === 'ENTER_COMMAND') {
-            dispatch(binding.action);
-            onEnterCommand?.();
-          } else if (binding.action.type === 'ENTER_INSERT') {
-            // K-Block creation happens via onEnterInsert callback
-            if (onEnterInsert) {
-              void onEnterInsert();
-            } else {
-              dispatch(binding.action);
-            }
-          } else {
-            dispatch(binding.action);
-          }
-          return;
-        }
-      }
-
-      // G - go to end
-      if (key === 'G') {
-        e.preventDefault();
-        dispatch({ type: 'GOTO_END' });
-        return;
-      }
-
-      // } - next blank line (vim paragraph motion)
-      if (key === '}') {
-        e.preventDefault();
-        const content = state.currentNode?.content || '';
-        const lines = content.split('\n');
-        const currentLine = Math.min(state.cursor.line, lines.length - 1);
-
-        // Skip any blank lines we're currently on
-        let i = currentLine;
-        while (i < lines.length && lines[i].trim() === '') {
-          i++;
-        }
-        // Find next blank line
-        while (i < lines.length && lines[i].trim() !== '') {
-          i++;
-        }
-        if (i < lines.length) {
-          dispatch({ type: 'GOTO_LINE', line: i });
-        } else {
-          dispatch({ type: 'GOTO_END' });
+        if (state.mode !== 'NORMAL') {
+          dispatch({ type: 'SET_MODE', mode: 'NORMAL' });
+          resetSequence();
         }
         return;
       }
 
-      // { - previous blank line (vim paragraph motion)
-      if (key === '{') {
-        e.preventDefault();
-        const content = state.currentNode?.content || '';
-        const lines = content.split('\n');
-        const currentLine = Math.min(state.cursor.line, lines.length - 1);
-
-        // Skip any blank lines we're currently on
-        let i = currentLine;
-        while (i > 0 && lines[i].trim() === '') {
-          i--;
-        }
-        // Find previous blank line
-        while (i > 0 && lines[i].trim() !== '') {
-          i--;
-        }
-        dispatch({ type: 'GOTO_LINE', line: i });
-      }
+      // Dispatch to mode-specific handler
+      dispatchToModeHandler(e, key, now);
     },
-    [
-      dispatch,
-      state,
-      goParent,
-      goChild,
-      goDefinition,
-      goReferences,
-      goTests,
-      onEnterCommand,
-      onEnterInsert,
-      resetSequence,
-    ]
+    [shouldSkipKey, state.mode, dispatch, resetSequence, dispatchToModeHandler]
   );
-
-  const handleEdgeMode = useCallback(
-    (e: KeyboardEvent, key: string) => {
-      const { edgePending } = state;
-      if (!edgePending) return;
-
-      // Phase 1: Select edge type
-      if (edgePending.phase === 'select-type') {
-        const edgeType = EDGE_TYPE_KEYS[key.toLowerCase()];
-        if (edgeType) {
-          e.preventDefault();
-          dispatch({ type: 'EDGE_SELECT_TYPE', edgeType });
-          return;
-        }
-      }
-
-      // Phase 2: Select target - navigation keys work, Enter confirms current node
-      if (edgePending.phase === 'select-target') {
-        // Navigate using j/k like normal mode
-        if (key === 'j') {
-          e.preventDefault();
-          dispatch({ type: 'GO_SIBLING', direction: 1 });
-          return;
-        }
-        if (key === 'k') {
-          e.preventDefault();
-          dispatch({ type: 'GO_SIBLING', direction: -1 });
-          return;
-        }
-
-        // Enter selects current node as target
-        if (key === 'Enter' && state.currentNode) {
-          e.preventDefault();
-          dispatch({
-            type: 'EDGE_SELECT_TARGET',
-            targetId: state.currentNode.path,
-            targetLabel: state.currentNode.title || state.currentNode.path.split('/').pop() || '',
-          });
-          return;
-        }
-      }
-
-      // Phase 3: Confirm - y to confirm, n to cancel
-      if (edgePending.phase === 'confirm') {
-        if (key === 'y' || key === 'Enter') {
-          e.preventDefault();
-          dispatch({ type: 'EDGE_CONFIRM' });
-          return;
-        }
-        if (key === 'n' || key === 'Backspace') {
-          e.preventDefault();
-          dispatch({ type: 'EDGE_CANCEL' });
-        }
-      }
-    },
-    [state, dispatch]
-  );
-
-  const handleWitnessMode = useCallback((_e: KeyboardEvent, _key: string) => {
-    // Witness mode bindings will be added in Phase 5
-    // For now, Escape is the only binding (handled universally above)
-  }, []);
 
   // Attach global key handler
   useEffect(() => {

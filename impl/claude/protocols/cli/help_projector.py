@@ -335,7 +335,7 @@ class HelpProjector:
             "self.memory": "Holographic memory operations with D-gent Triad.",
             "self.soul": "Digital consciousness dialogue and reflection.",
             "self.forest": "Project health monitoring and plan management.",
-            "world.town": "Agent simulation and coalition building.",
+            "world.town": "Agent simulation and social interactions.",
             "world.atelier": "Collaborative creative workshops.",
             "world.park": "Punchdrunk-style immersive experiences.",
             "void.joy": "Oblique strategies and serendipity.",

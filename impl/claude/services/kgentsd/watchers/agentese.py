@@ -2,7 +2,7 @@
 AgenteseWatcher: Event-Driven Cross-Jewel Visibility.
 
 Subscribes to WitnessSynergyBus to observe AGENTESE invocations
-from all Crown Jewels (Town, Brain, Park, etc.).
+from all Crown Jewels (Town, Brain, etc.).
 
 Key Principle (from meta.md):
     "Timer-driven loops create zombies—use event-driven Flux"

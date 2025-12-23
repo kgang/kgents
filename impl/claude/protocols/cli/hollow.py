@@ -50,8 +50,7 @@ USAGE:
 CROWN JEWELS:
   brain       Holographic memory operations
   soul        Digital consciousness dialogue
-  town        Agent simulation and coalitions
-  park        Punchdrunk-style experiences
+  town        Agent simulation and interactions
   gardener    Development session management
 
 FOREST PROTOCOL:
@@ -106,17 +105,7 @@ COMMAND_REGISTRY: dict[str, str] = {
     "wipe": "protocols.cli.handlers.wipe:cmd_wipe",
     "migrate": "protocols.cli.handlers.migrate:cmd_migrate",
     # ==========================================================================
-    # Agent Town (Crown Jewel)
-    # Uses thin routing shim - all logic in agents/town/, services/town/
-    # ==========================================================================
-    "town": "protocols.cli.handlers.town_thin:cmd_town",
-    # ==========================================================================
-    # Punchdrunk Park (Crown Jewel - Wave 3)
-    # Uses thin routing shim - all logic in agents/park/, services/park/
-    # ==========================================================================
-    "park": "protocols.cli.handlers.park_thin:cmd_park",
-    # ==========================================================================
-    # Note: Atelier CLI removed 2025-12-21
+    # Note: Town, Park, Atelier CLI removed 2025-12-21 (Post-Extinction cleanup)
     # ==========================================================================
     # Holographic Brain (Crown Jewel - Memory)
     # Uses thin routing shim - all logic in services/brain/
@@ -143,15 +132,10 @@ COMMAND_REGISTRY: dict[str, str] = {
     "play": "protocols.cli.handlers.play:cmd_play",
     # ==========================================================================
     # Wave 4: Joy-Inducing Commands (CLI Quick Wins)
+    # Note: joy, challenge, oblique, constrain, yes-and, surprise-me, tension
+    # removed 2025-12-23 (handlers never implemented)
     # ==========================================================================
-    "joy": "protocols.cli.handlers.joy:cmd_joy",  # Wave 2: void.joy.*
-    "challenge": "protocols.cli.handlers.challenge:cmd_challenge",
-    "oblique": "protocols.cli.handlers.oblique:cmd_oblique",
-    "constrain": "protocols.cli.handlers.constrain:cmd_constrain",
-    "yes-and": "protocols.cli.handlers.yes_and:cmd_yes_and",
-    "surprise-me": "protocols.cli.handlers.surprise_me:cmd_surprise_me",
     "why": "protocols.cli.handlers.why:cmd_why",
-    "tension": "protocols.cli.handlers.tension:cmd_tension",
     # ==========================================================================
     # v3: Shortcut Management
     # ==========================================================================

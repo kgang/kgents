@@ -311,7 +311,7 @@ _CROWN_JEWEL_DOMAINS: dict[str, SpecDomain] = {
     "town": SpecDomain.WORLD,  # world.town
     "atelier": SpecDomain.WORLD,  # world.atelier
     "park": SpecDomain.WORLD,  # world.park
-    "gestalt": SpecDomain.WORLD,  # world.codebase
+    # "gestalt": removed 2025-12-21
     "gardener": SpecDomain.CONCEPT,  # concept.gardener
     "design": SpecDomain.CONCEPT,  # concept.design
 }
@@ -505,7 +505,7 @@ def reflect_crown_jewels(impl_root: Path) -> dict[str, ReflectResult]:
 
     Returns dict mapping jewel name to ReflectResult.
     """
-    jewel_holons = ["brain", "town", "atelier", "park", "gestalt", "f"]
+    jewel_holons = ["brain", "atelier", "f"]  # town, park, gestalt removed 2025-12-21
 
     results = {}
     for holon in jewel_holons:

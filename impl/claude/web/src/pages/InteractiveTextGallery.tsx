@@ -218,7 +218,7 @@ function ShimmerPilot() {
  * Pilot 5: PersonalityLoading
  */
 function PersonalityLoadingPilot() {
-  const jewels: CrownJewel[] = ['brain', 'gestalt', 'gardener', 'forge', 'coalition'];
+  const jewels: CrownJewel[] = ['brain', 'gardener', 'forge']; // gestalt, coalition removed 2025-12-21
 
   return (
     <PilotContainer title="PersonalityLoading" subtitle="Jewel-themed loading indicators" fullWidth>

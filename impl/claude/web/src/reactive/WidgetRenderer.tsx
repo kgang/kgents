@@ -33,16 +33,8 @@ import { useLayoutMeasure } from '@/hooks/useLayoutContext';
 import { LayoutContextProvider } from '@/components/elastic';
 
 // Import widget components from /widgets/
-import {
-  Glyph,
-  Bar,
-  Sparkline,
-  CitizenCard,
-  HStack,
-  VStack,
-  ColonyDashboard,
-  WidgetProvider,
-} from '@/widgets';
+// Note: CitizenCard, ColonyDashboard removed 2025-12-23 (unused)
+import { Glyph, Bar, Sparkline, HStack, VStack, WidgetProvider } from '@/widgets';
 
 // Re-export constants for backwards compatibility
 export { PHASE_GLYPHS, NPHASE_COLORS, SPARK_CHARS } from '@/widgets';
@@ -123,48 +115,31 @@ const InnerRenderer = memo(function InnerRenderer({
       return <Sparkline {...widget} className={className} />;
 
     case 'citizen_card':
-      return (
-        <CitizenCard
-          {...widget}
-          onSelect={onSelect}
-          isSelected={widget.citizen_id === selectedId}
-          className={className}
-        />
-      );
+      // CitizenCard removed 2025-12-23
+      return <div className="text-amber-500">CitizenCard widget deprecated</div>;
 
     case 'hstack':
       return (
-        <HStack
-          {...widget}
-          onSelect={onSelect}
-          selectedId={selectedId}
-          className={className}
-        />
+        <HStack {...widget} onSelect={onSelect} selectedId={selectedId} className={className} />
       );
 
     case 'vstack':
       return (
-        <VStack
-          {...widget}
-          onSelect={onSelect}
-          selectedId={selectedId}
-          className={className}
-        />
+        <VStack {...widget} onSelect={onSelect} selectedId={selectedId} className={className} />
       );
 
     case 'colony_dashboard':
-      return (
-        <ColonyDashboard
-          {...widget}
-          onSelectCitizen={onSelect}
-          className={className}
-        />
-      );
+      // ColonyDashboard removed 2025-12-23
+      return <div className="text-amber-500">ColonyDashboard widget deprecated</div>;
 
     default: {
       // Type-safe exhaustiveness check
       const exhaustiveCheck: never = widget;
-      return <div className="text-red-500">Unknown widget type: {(exhaustiveCheck as { type: string }).type}</div>;
+      return (
+        <div className="text-red-500">
+          Unknown widget type: {(exhaustiveCheck as { type: string }).type}
+        </div>
+      );
     }
   }
 });
@@ -227,6 +202,7 @@ export const WidgetRenderer = memo(function WidgetRenderer({
 });
 
 // Re-export components for backwards compatibility
-export { Glyph, Bar, Sparkline, CitizenCard, HStack, VStack, ColonyDashboard };
+// Note: CitizenCard, ColonyDashboard removed 2025-12-23
+export { Glyph, Bar, Sparkline, HStack, VStack };
 
 export default WidgetRenderer;

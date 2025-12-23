@@ -16,60 +16,103 @@ import type {
   EdgeType,
   Position,
   EditorMode,
+  TrailStep,
 } from './types';
 import { createInitialState, createTrailStep } from './types';
 
 // =============================================================================
-// Reducer
+// Reducer - Split into Sub-Reducers by Domain
 // =============================================================================
 
-function navigationReducer(state: NavigationState, action: NavigationAction): NavigationState {
+/**
+ * Helper: Add current node to trail
+ */
+function addToTrail(
+  state: NavigationState,
+  newNode: GraphNode | null
+): { steps: TrailStep[]; node: GraphNode | null } {
+  const newSteps = state.currentNode
+    ? [...state.trail.steps, createTrailStep(state.currentNode, null, state.cursor)].slice(
+        -state.trail.maxLength
+      )
+    : state.trail.steps;
+
+  return { steps: newSteps, node: newNode };
+}
+
+/**
+ * Focus operations: FOCUS_NODE, NODE_LOADED, FOCUS_PATH
+ */
+function focusReducer(state: NavigationState, action: NavigationAction): NavigationState {
   switch (action.type) {
-    // =========================================================================
-    // Focus Operations
-    // =========================================================================
-
     case 'FOCUS_NODE': {
-      const { node } = action;
-
-      // Add current node to trail before switching
-      const newSteps = state.currentNode
-        ? [...state.trail.steps, createTrailStep(state.currentNode, null, state.cursor)].slice(
-            -state.trail.maxLength
-          )
-        : state.trail.steps;
-
+      const { steps, node } = addToTrail(state, action.node);
       return {
         ...state,
         currentNode: node,
-        trail: { ...state.trail, steps: newSteps },
+        trail: { ...state.trail, steps },
         cursor: { line: 0, column: 0 },
         viewport: { ...state.viewport, topLine: 0, scrollPercent: 0 },
         error: null,
       };
     }
 
-    case 'NODE_LOADED': {
+    case 'NODE_LOADED':
       return {
         ...state,
         currentNode: action.node,
         loading: false,
         error: null,
       };
-    }
 
-    // =========================================================================
-    // Graph Navigation
-    // =========================================================================
+    default:
+      return state;
+  }
+}
 
+/**
+ * Cursor movement: MOVE_*, GOTO_*
+ */
+function cursorReducer(state: NavigationState, action: NavigationAction): NavigationState {
+  switch (action.type) {
+    case 'MOVE_CURSOR':
+      return { ...state, cursor: action.position };
+
+    case 'MOVE_LINE':
+      return {
+        ...state,
+        cursor: { ...state.cursor, line: Math.max(0, state.cursor.line + action.delta) },
+      };
+
+    case 'MOVE_COLUMN':
+      return {
+        ...state,
+        cursor: { ...state.cursor, column: Math.max(0, state.cursor.column + action.delta) },
+      };
+
+    case 'GOTO_LINE':
+      return { ...state, cursor: { line: Math.max(0, action.line), column: 0 } };
+
+    case 'GOTO_START':
+      return { ...state, cursor: { line: 0, column: 0 } };
+
+    case 'GOTO_END':
+      return { ...state, cursor: { line: Infinity, column: 0 } };
+
+    default:
+      return state;
+  }
+}
+
+/**
+ * Graph navigation: GO_BACK, GO_SIBLING
+ */
+function graphNavigationReducer(state: NavigationState, action: NavigationAction): NavigationState {
+  switch (action.type) {
     case 'GO_BACK': {
-      if (state.trail.steps.length === 0) {
-        return state;
-      }
-
+      if (state.trail.steps.length === 0) return state;
       const steps = [...state.trail.steps];
       const lastStep = steps.pop()!;
-
       return {
         ...state,
         currentNode: lastStep.node,
@@ -79,127 +122,46 @@ function navigationReducer(state: NavigationState, action: NavigationAction): Na
     }
 
     case 'GO_SIBLING': {
-      if (state.siblings.length === 0) {
-        return state;
-      }
-
+      if (state.siblings.length === 0) return state;
       const newIndex =
         (state.siblingIndex + action.direction + state.siblings.length) % state.siblings.length;
-
-      const newNode = state.siblings[newIndex];
-
-      // Add current to trail
-      const newSteps = state.currentNode
-        ? [...state.trail.steps, createTrailStep(state.currentNode, null, state.cursor)].slice(
-            -state.trail.maxLength
-          )
-        : state.trail.steps;
-
+      const { steps, node } = addToTrail(state, state.siblings[newIndex]);
       return {
         ...state,
-        currentNode: newNode,
+        currentNode: node,
         siblingIndex: newIndex,
-        trail: { ...state.trail, steps: newSteps },
+        trail: { ...state.trail, steps },
         cursor: { line: 0, column: 0 },
       };
     }
 
-    // =========================================================================
-    // Cursor Movement
-    // =========================================================================
+    default:
+      return state;
+  }
+}
 
-    case 'MOVE_CURSOR': {
-      return {
-        ...state,
-        cursor: action.position,
-      };
-    }
+/**
+ * Mode changes: SET_MODE, ENTER_*, EXIT_*
+ */
+function modeReducer(state: NavigationState, action: NavigationAction): NavigationState {
+  switch (action.type) {
+    case 'SET_MODE':
+      return { ...state, mode: action.mode };
 
-    case 'MOVE_LINE': {
-      return {
-        ...state,
-        cursor: {
-          ...state.cursor,
-          line: Math.max(0, state.cursor.line + action.delta),
-        },
-      };
-    }
+    case 'ENTER_INSERT':
+      return { ...state, mode: 'INSERT' };
 
-    case 'MOVE_COLUMN': {
-      return {
-        ...state,
-        cursor: {
-          ...state.cursor,
-          column: Math.max(0, state.cursor.column + action.delta),
-        },
-      };
-    }
+    case 'EXIT_INSERT':
+      return { ...state, mode: 'NORMAL' };
 
-    case 'GOTO_LINE': {
-      return {
-        ...state,
-        cursor: { line: Math.max(0, action.line), column: 0 },
-      };
-    }
+    case 'ENTER_COMMAND':
+      return { ...state, mode: 'COMMAND' };
 
-    case 'GOTO_START': {
-      return {
-        ...state,
-        cursor: { line: 0, column: 0 },
-      };
-    }
-
-    case 'GOTO_END': {
-      // We'd need content to know the last line, but this sets the intent
-      return {
-        ...state,
-        cursor: { line: Infinity, column: 0 },
-      };
-    }
-
-    // =========================================================================
-    // Mode Changes
-    // =========================================================================
-
-    case 'SET_MODE': {
-      return {
-        ...state,
-        mode: action.mode,
-      };
-    }
-
-    case 'ENTER_INSERT': {
-      return {
-        ...state,
-        mode: 'INSERT',
-      };
-    }
-
-    case 'EXIT_INSERT': {
-      return {
-        ...state,
-        mode: 'NORMAL',
-      };
-    }
-
-    case 'ENTER_COMMAND': {
-      return {
-        ...state,
-        mode: 'COMMAND',
-      };
-    }
-
-    case 'EXIT_COMMAND': {
-      return {
-        ...state,
-        mode: 'NORMAL',
-      };
-    }
+    case 'EXIT_COMMAND':
+      return { ...state, mode: 'NORMAL' };
 
     case 'ENTER_EDGE': {
-      // Initialize edge pending state with current node as source
       if (!state.currentNode) return state;
-
       return {
         ...state,
         mode: 'EDGE',
@@ -214,34 +176,35 @@ function navigationReducer(state: NavigationState, action: NavigationAction): Na
       };
     }
 
-    case 'EXIT_EDGE': {
-      return {
-        ...state,
-        mode: 'NORMAL',
-        edgePending: null,
-      };
-    }
+    case 'EXIT_EDGE':
+      return { ...state, mode: 'NORMAL', edgePending: null };
 
-    // =========================================================================
-    // Edge Mode Operations
-    // =========================================================================
+    case 'ENTER_WITNESS':
+      return { ...state, mode: 'WITNESS' };
 
+    case 'EXIT_WITNESS':
+      return { ...state, mode: 'NORMAL' };
+
+    default:
+      return state;
+  }
+}
+
+/**
+ * Edge operations: EDGE_SELECT_TYPE, EDGE_SELECT_TARGET, EDGE_CONFIRM, EDGE_CANCEL
+ */
+function edgeReducer(state: NavigationState, action: NavigationAction): NavigationState {
+  switch (action.type) {
     case 'EDGE_SELECT_TYPE': {
       if (!state.edgePending) return state;
-
       return {
         ...state,
-        edgePending: {
-          ...state.edgePending,
-          edgeType: action.edgeType,
-          phase: 'select-target',
-        },
+        edgePending: { ...state.edgePending, edgeType: action.edgeType, phase: 'select-target' },
       };
     }
 
     case 'EDGE_SELECT_TARGET': {
       if (!state.edgePending) return state;
-
       return {
         ...state,
         edgePending: {
@@ -253,43 +216,23 @@ function navigationReducer(state: NavigationState, action: NavigationAction): Na
       };
     }
 
-    case 'EDGE_CONFIRM': {
-      // Edge creation will be handled by the component (calls API, emits witness)
-      // Just clear the pending state
-      return {
-        ...state,
-        mode: 'NORMAL',
-        edgePending: null,
-      };
-    }
+    case 'EDGE_CONFIRM':
+      return { ...state, mode: 'NORMAL', edgePending: null };
 
-    case 'EDGE_CANCEL': {
-      return {
-        ...state,
-        mode: 'NORMAL',
-        edgePending: null,
-      };
-    }
+    case 'EDGE_CANCEL':
+      return { ...state, mode: 'NORMAL', edgePending: null };
 
-    case 'ENTER_WITNESS': {
-      return {
-        ...state,
-        mode: 'WITNESS',
-      };
-    }
+    default:
+      return state;
+  }
+}
 
-    case 'EXIT_WITNESS': {
-      return {
-        ...state,
-        mode: 'NORMAL',
-      };
-    }
-
-    // =========================================================================
-    // K-Block Operations
-    // =========================================================================
-
-    case 'KBLOCK_CREATED': {
+/**
+ * K-Block operations: KBLOCK_*
+ */
+function kblockReducer(state: NavigationState, action: NavigationAction): NavigationState {
+  switch (action.type) {
+    case 'KBLOCK_CREATED':
       return {
         ...state,
         kblock: {
@@ -301,25 +244,23 @@ function navigationReducer(state: NavigationState, action: NavigationAction): Na
           checkpoints: [],
         },
       };
-    }
 
     case 'KBLOCK_UPDATED': {
       if (!state.kblock) return state;
-
+      const isDirty = action.content !== state.kblock.baseContent;
       return {
         ...state,
         kblock: {
           ...state.kblock,
           workingContent: action.content,
-          isDirty: action.content !== state.kblock.baseContent,
-          isolation: action.content !== state.kblock.baseContent ? 'DIRTY' : 'PRISTINE',
+          isDirty,
+          isolation: isDirty ? 'DIRTY' : 'PRISTINE',
         },
       };
     }
 
     case 'KBLOCK_CHECKPOINT': {
       if (!state.kblock) return state;
-
       return {
         ...state,
         kblock: {
@@ -337,50 +278,150 @@ function navigationReducer(state: NavigationState, action: NavigationAction): Na
       };
     }
 
-    case 'KBLOCK_COMMITTED': {
-      return {
-        ...state,
-        kblock: null,
-      };
+    case 'KBLOCK_COMMITTED':
+      return { ...state, kblock: null };
+
+    case 'KBLOCK_DISCARDED':
+      return { ...state, kblock: null };
+
+    default:
+      return state;
+  }
+}
+
+/**
+ * Portal operations: PORTAL_OPEN, PORTAL_CLOSE, PORTAL_TOGGLE, etc.
+ *
+ * "Navigation IS expansion" — zo/zc expand edges inline.
+ */
+function portalReducer(state: NavigationState, action: NavigationAction): NavigationState {
+  switch (action.type) {
+    case 'PORTAL_OPEN': {
+      const newPortals = new Map(state.portals);
+      const existing = newPortals.get(action.edgeId);
+      if (existing && !existing.loading) {
+        // Already open and loaded
+        return state;
+      }
+      newPortals.set(action.edgeId, {
+        edgeId: action.edgeId,
+        targetNode: null,
+        depth: 0,
+        loading: true,
+        collapsed: false,
+      });
+      return { ...state, portals: newPortals };
     }
 
-    case 'KBLOCK_DISCARDED': {
-      return {
-        ...state,
-        kblock: null,
-      };
+    case 'PORTAL_CLOSE': {
+      const newPortals = new Map(state.portals);
+      if (!newPortals.has(action.edgeId)) {
+        return state;
+      }
+      newPortals.delete(action.edgeId);
+      return { ...state, portals: newPortals };
     }
 
-    // =========================================================================
-    // Loading State
-    // =========================================================================
-
-    case 'SET_LOADING': {
-      return {
-        ...state,
-        loading: action.loading,
-      };
+    case 'PORTAL_TOGGLE': {
+      const newPortals = new Map(state.portals);
+      if (newPortals.has(action.edgeId)) {
+        newPortals.delete(action.edgeId);
+      } else {
+        newPortals.set(action.edgeId, {
+          edgeId: action.edgeId,
+          targetNode: null,
+          depth: 0,
+          loading: true,
+          collapsed: false,
+        });
+      }
+      return { ...state, portals: newPortals };
     }
 
-    case 'SET_ERROR': {
-      return {
-        ...state,
-        error: action.error,
+    case 'PORTAL_LOADED': {
+      const existing = state.portals.get(action.edgeId);
+      if (!existing) {
+        return state;
+      }
+      const newPortals = new Map(state.portals);
+      newPortals.set(action.edgeId, {
+        ...existing,
+        targetNode: action.node,
         loading: false,
-      };
+      });
+      return { ...state, portals: newPortals };
     }
 
-    case 'SET_SIBLINGS': {
-      return {
-        ...state,
-        siblings: action.siblings,
-        siblingIndex: action.index,
-      };
+    case 'PORTAL_OPEN_ALL': {
+      if (!state.currentNode) return state;
+      const newPortals = new Map(state.portals);
+      for (const edge of state.currentNode.outgoingEdges) {
+        if (!newPortals.has(edge.id)) {
+          newPortals.set(edge.id, {
+            edgeId: edge.id,
+            targetNode: null,
+            depth: 0,
+            loading: true,
+            collapsed: false,
+          });
+        }
+      }
+      return { ...state, portals: newPortals };
+    }
+
+    case 'PORTAL_CLOSE_ALL': {
+      if (state.portals.size === 0) return state;
+      return { ...state, portals: new Map() };
     }
 
     default:
       return state;
   }
+}
+
+/**
+ * Loading state: SET_LOADING, SET_ERROR, SET_SIBLINGS
+ */
+function loadingReducer(state: NavigationState, action: NavigationAction): NavigationState {
+  switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, loading: action.loading };
+
+    case 'SET_ERROR':
+      return { ...state, error: action.error, loading: false };
+
+    case 'SET_SIBLINGS':
+      return { ...state, siblings: action.siblings, siblingIndex: action.index };
+
+    default:
+      return state;
+  }
+}
+
+/**
+ * Main reducer: compose all sub-reducers
+ */
+function navigationReducer(state: NavigationState, action: NavigationAction): NavigationState {
+  // Try each sub-reducer in sequence
+  const reducers = [
+    focusReducer,
+    cursorReducer,
+    graphNavigationReducer,
+    modeReducer,
+    edgeReducer,
+    kblockReducer,
+    portalReducer,
+    loadingReducer,
+  ];
+
+  for (const reducer of reducers) {
+    const nextState = reducer(state, action);
+    if (nextState !== state) {
+      return nextState;
+    }
+  }
+
+  return state;
 }
 
 // =============================================================================
@@ -437,6 +478,29 @@ export interface UseNavigationResult {
 
   /** Get current trail breadcrumb */
   getTrailBreadcrumb: () => string;
+
+  // Portal operations (zo/zc — inline edge expansion)
+
+  /** Open portal for edge at current cursor (zo) */
+  openPortal: () => void;
+
+  /** Close portal for edge at current cursor (zc) */
+  closePortal: () => void;
+
+  /** Toggle portal for edge at current cursor (za) */
+  togglePortal: () => void;
+
+  /** Open all portals in current node (zO) */
+  openAllPortals: () => void;
+
+  /** Close all portals (zC) */
+  closeAllPortals: () => void;
+
+  /** Check if an edge has an open portal */
+  isPortalOpen: (edgeId: string) => boolean;
+
+  /** Get edge at current cursor position (if any) */
+  getEdgeAtCursor: () => { edgeId: string; targetPath: string } | null;
 }
 
 /**
@@ -569,6 +633,93 @@ export function useNavigation(): UseNavigationResult {
       .join(' → ');
   }, [state]);
 
+  // =========================================================================
+  // Portal Operations (zo/zc — inline edge expansion)
+  // =========================================================================
+
+  /**
+   * Find the edge reference at the current cursor position.
+   *
+   * Heuristic: Look for lines that contain edge references like:
+   * - [[path/to/file]] — wiki-style links
+   * - [text](path/to/file) — markdown links
+   * - @implements path/to/file — AGENTESE refs
+   * - References: file.md — explicit references
+   *
+   * We match against outgoing edges from the current node.
+   */
+  const getEdgeAtCursor = useCallback((): { edgeId: string; targetPath: string } | null => {
+    const { currentNode, cursor } = state;
+    if (!currentNode?.content) return null;
+
+    const lines = currentNode.content.split('\n');
+    const currentLine = lines[Math.min(cursor.line, lines.length - 1)] || '';
+
+    // Try to match the current line against outgoing edges
+    for (const edge of currentNode.outgoingEdges) {
+      // Extract filename from target path
+      const targetFile = edge.target.split('/').pop() || edge.target;
+      const targetBase = targetFile.replace(/\.[^.]+$/, ''); // Remove extension
+
+      // Check if line contains this target
+      if (
+        currentLine.includes(edge.target) ||
+        currentLine.includes(targetFile) ||
+        currentLine.includes(targetBase) ||
+        currentLine.includes(`[[${targetBase}]]`) ||
+        currentLine.includes(`(${edge.target})`)
+      ) {
+        return { edgeId: edge.id, targetPath: edge.target };
+      }
+    }
+
+    // Fallback: if cursor is on an edge line in the metadata section
+    // (edges are often listed at the top)
+    const edgeIndex = Math.min(cursor.line, currentNode.outgoingEdges.length - 1);
+    if (edgeIndex >= 0 && currentNode.outgoingEdges[edgeIndex]) {
+      const edge = currentNode.outgoingEdges[edgeIndex];
+      return { edgeId: edge.id, targetPath: edge.target };
+    }
+
+    return null;
+  }, [state]);
+
+  const openPortal = useCallback(() => {
+    const edgeRef = getEdgeAtCursor();
+    if (edgeRef) {
+      dispatch({ type: 'PORTAL_OPEN', edgeId: edgeRef.edgeId, targetPath: edgeRef.targetPath });
+    }
+  }, [getEdgeAtCursor, dispatch]);
+
+  const closePortal = useCallback(() => {
+    const edgeRef = getEdgeAtCursor();
+    if (edgeRef) {
+      dispatch({ type: 'PORTAL_CLOSE', edgeId: edgeRef.edgeId });
+    }
+  }, [getEdgeAtCursor, dispatch]);
+
+  const togglePortal = useCallback(() => {
+    const edgeRef = getEdgeAtCursor();
+    if (edgeRef) {
+      dispatch({ type: 'PORTAL_TOGGLE', edgeId: edgeRef.edgeId, targetPath: edgeRef.targetPath });
+    }
+  }, [getEdgeAtCursor, dispatch]);
+
+  const openAllPortals = useCallback(() => {
+    dispatch({ type: 'PORTAL_OPEN_ALL' });
+  }, [dispatch]);
+
+  const closeAllPortals = useCallback(() => {
+    dispatch({ type: 'PORTAL_CLOSE_ALL' });
+  }, [dispatch]);
+
+  const isPortalOpen = useCallback(
+    (edgeId: string): boolean => {
+      return state.portals.has(edgeId);
+    },
+    [state.portals]
+  );
+
   return {
     state,
     dispatch,
@@ -586,5 +737,13 @@ export function useNavigation(): UseNavigationResult {
     enterInsert,
     exitToNormal,
     getTrailBreadcrumb,
+    // Portal operations
+    openPortal,
+    closePortal,
+    togglePortal,
+    openAllPortals,
+    closeAllPortals,
+    isPortalOpen,
+    getEdgeAtCursor,
   };
 }

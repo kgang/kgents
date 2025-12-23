@@ -229,7 +229,7 @@ def audit_all_jewels(
         ),
         ("atelier", spec_root / "a-gents" / "art", impl_root / "agents" / "atelier"),
         ("park", spec_root / "town" / "operad.md", impl_root / "agents" / "park"),
-        ("gestalt", spec_root / "g-gents", impl_root / "agents" / "gestalt"),
+        # ("gestalt", ...): removed 2025-12-21
         ("flow", spec_root / "agents" / "composition.md", impl_root / "agents" / "f"),
     ]
 

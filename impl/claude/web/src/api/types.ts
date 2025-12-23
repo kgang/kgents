@@ -133,9 +133,10 @@ export interface TownEvent {
 }
 
 // =============================================================================
-// Coalition
+// Coalition (DEPRECATED - removed 2025-12-21 extinction event)
 // =============================================================================
 
+/** @deprecated Coalition feature removed 2025-12-21 */
 export interface Coalition {
   id: string;
   name: string;
@@ -144,6 +145,7 @@ export interface Coalition {
   strength: number;
 }
 
+/** @deprecated Coalition feature removed 2025-12-21 */
 export interface CoalitionsResponse {
   coalitions: Coalition[];
   bridge_citizens: string[];

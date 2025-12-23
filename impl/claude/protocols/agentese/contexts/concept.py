@@ -724,7 +724,6 @@ class ConceptContextResolver:
 
         # AD-016: Fail-fast on unregistered paths (no placeholder fallback)
         # Previously created placeholder concepts which masked missing registrations
-        print(f"DEBUG: AD-016 fail-fast triggered for {handle}")  # TEMPORARY DEBUG
         from protocols.agentese.exceptions import NodeNotRegisteredError
 
         similar = self.list_handles("concept.")

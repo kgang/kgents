@@ -293,7 +293,7 @@ export const townApi = {
     };
   },
 
-  /** Get coalitions - not yet implemented in AUP */
+  /** @deprecated Coalition feature removed 2025-12-21 */
   getCoalitions: async (_townId: string): Promise<CoalitionsResponse> => {
     return { coalitions: [], bridge_citizens: [] };
   },

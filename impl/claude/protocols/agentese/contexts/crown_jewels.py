@@ -6,11 +6,11 @@ Registers AGENTESE paths for the Crown Jewel applications:
 2. Design Language System (Operad) - concept.design.*
 3. Morpheus LLM Gateway (Infrastructure) - world.morpheus.*
 
-Note: Coalition, Park, Simulation, Gestalt removed 2025-12-21.
-Note: Atelier and Gardener deprecated 2025-12-21.
-Note: Emergence (world.emergence.*) removed 2025-12-21.
-
 Per plans/core-apps-synthesis.md - the unified categorical foundation.
+
+History:
+- 2025-12-21: Coalition, Park, Simulation, Gestalt, Atelier, Gardener, Emergence removed
+- 2025-12-23: Empty path registries cleaned up (final tombstone removal)
 """
 
 from __future__ import annotations
@@ -29,25 +29,6 @@ S = TypeVar("S")
 # =============================================================================
 # Path Registry Definitions per Crown Jewel
 # =============================================================================
-
-# Atelier paths deprecated 2025-12-21
-ATELIER_PATHS: dict[str, dict[str, Any]] = {}
-
-# Coalition paths removed 2025-12-21
-COALITION_PATHS: dict[str, dict[str, Any]] = {}
-
-# Park paths removed 2025-12-21
-PARK_PATHS: dict[str, dict[str, Any]] = {}
-
-# Simulation paths removed 2025-12-21
-SIMULATION_PATHS: dict[str, dict[str, Any]] = {}
-
-# Gestalt paths removed 2025-12-21
-GESTALT_PATHS: dict[str, dict[str, Any]] = {}
-GESTALT_LIVE_PATHS: dict[str, dict[str, Any]] = {}
-
-# Gardener paths deprecated 2025-12-21
-GARDENER_PATHS: dict[str, dict[str, Any]] = {}
 
 # Crown Jewel: Holographic Second Brain
 BRAIN_PATHS: dict[str, dict[str, Any]] = {
@@ -87,8 +68,6 @@ BRAIN_PATHS: dict[str, dict[str, Any]] = {
         "effects": [],
     },
 }
-
-# Note: Emergence (world.emergence.*) removed 2025-12-21
 
 # Design Language System (concept.design.*)
 # Exposes the three orthogonal design operads: Layout, Content, Motion
@@ -268,7 +247,7 @@ class CrownJewelRegistry:
         List registered paths, optionally filtered by jewel.
 
         Args:
-            jewel: One of "brain", "emergence", "design", "morpheus", or None for all
+            jewel: One of "brain", "design", "morpheus", or None for all
         """
         jewel_prefixes = {
             "brain": ("self.memory.",),
@@ -356,15 +335,8 @@ def list_self_time_paths() -> dict[str, list[str]]:
 # =============================================================================
 
 __all__ = [
-    # Path registries per jewel (kept for backward compat, now empty)
-    "ATELIER_PATHS",
-    "COALITION_PATHS",
+    # Path registries per jewel
     "BRAIN_PATHS",
-    "PARK_PATHS",
-    "SIMULATION_PATHS",
-    "GESTALT_PATHS",
-    "GESTALT_LIVE_PATHS",
-    "GARDENER_PATHS",
     "DESIGN_PATHS",
     "MORPHEUS_PATHS",
     # Unified registry

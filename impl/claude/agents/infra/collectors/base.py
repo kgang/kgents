@@ -239,12 +239,16 @@ class BaseCollector(ABC):
     # =========================================================================
 
     @abstractmethod
-    async def stream_events(self) -> AsyncIterator[InfraEvent]:
+    def stream_events(self) -> AsyncIterator[InfraEvent]:
         """
         Stream real-time infrastructure events.
 
         Yields:
             InfraEvent: Events as they occur
+
+        Note: Declared without 'async' per mypy guidance for abstract methods
+        returning AsyncIterator. Implementations should use 'async def'.
+        See: https://mypy.readthedocs.io/en/stable/more_types.html#asynchronous-iterators
         """
         ...
 

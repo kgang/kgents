@@ -13,8 +13,8 @@
  * <PersonalityLoading jewel="brain" />
  * // Shows Brain icon with "Crystallizing memories..."
  *
- * <PersonalityLoading jewel="gestalt" action="analyzing" />
- * // Shows Network icon with "Analyzing architecture..."
+ * <PersonalityLoading jewel="forge" action="create" />
+ * // Shows Palette icon with "Building your artifact..."
  * ```
  */
 
@@ -24,9 +24,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Breathe } from './Breathe';
 import { useMotionPreferences } from './useMotionPreferences';
 import { JEWEL_ICONS, JEWEL_COLORS, type JewelName } from '../../constants/jewels';
-import { Leaf as TreeIcon } from 'lucide-react'; // For organic/forest mode
+// TreeIcon removed - no longer needed after gestalt removal
 
-export type CrownJewel = 'brain' | 'gestalt' | 'gardener' | 'forge' | 'coalition' | 'park' | 'domain';
+export type CrownJewel = 'brain' | 'gardener' | 'forge' | 'domain'; // gestalt, coalition, park removed 2025-12-21
 
 export interface PersonalityLoadingProps {
   /** Which jewel context */
@@ -43,7 +43,7 @@ export interface PersonalityLoadingProps {
   className?: string;
   /** Additional inline styles */
   style?: CSSProperties;
-  /** Use organic/forest-themed variant (for Gestalt forest mode) */
+  /** Use organic/forest-themed variant */
   organic?: boolean;
 }
 
@@ -78,29 +78,7 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
       analyze: 'Analyzing memory topology...',
     },
   },
-  gestalt: {
-    messages: [
-      'Analyzing architecture...',
-      'Computing health metrics...',
-      'Detecting drift patterns...',
-      'Mapping module topology...',
-      'Evaluating dependencies...',
-    ],
-    actionVerbs: {
-      scan: 'Scanning codebase structure...',
-      analyze: 'Analyzing module health...',
-      detect: 'Detecting violations...',
-      compute: 'Computing health grades...',
-    },
-    // Forest-themed messages for organic mode
-    organicMessages: [
-      'Surveying the forest canopy...',
-      'Tracing root systems...',
-      'Sensing ecosystem health...',
-      'Mapping the growth rings...',
-      'Feeling the pulse of the grove...',
-    ],
-  },
+  // gestalt removed 2025-12-21
   gardener: {
     messages: [
       'Preparing the garden...',
@@ -130,36 +108,7 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
       refine: 'Refining the work...',
     },
   },
-  coalition: {
-    messages: [
-      'Assembling the team...',
-      'Coordinating specialists...',
-      'Forming consensus...',
-      'Aligning perspectives...',
-      'Building bridges...',
-    ],
-    actionVerbs: {
-      form: 'Forming coalition...',
-      coordinate: 'Coordinating members...',
-      discuss: 'Facilitating discussion...',
-      decide: 'Building consensus...',
-    },
-  },
-  park: {
-    messages: [
-      'Setting the stage...',
-      'Preparing the scene...',
-      'Summoning characters...',
-      'Writing the script...',
-      'Dimming the lights...',
-    ],
-    actionVerbs: {
-      inhabit: 'Entering the scenario...',
-      interact: 'Processing dialogue...',
-      explore: 'Exploring possibilities...',
-      conclude: 'Closing the curtain...',
-    },
-  },
+  // coalition, park removed 2025-12-21
   domain: {
     messages: [
       'Initializing simulation...',
@@ -224,12 +173,13 @@ export function PersonalityLoading({
   const config = JEWEL_CONFIG[jewel];
   const sizeConfig = SIZE_CONFIG[size];
 
-  // Get the icon component from JEWEL_ICONS - use TreeIcon for organic mode
-  const IconComponent = organic && jewel === 'gestalt' ? TreeIcon : JEWEL_ICONS[jewel as JewelName];
+  // Get the icon component from JEWEL_ICONS
+  const IconComponent = JEWEL_ICONS[jewel as JewelName];
   const iconColor = JEWEL_COLORS[jewel as JewelName]?.primary ?? '#64748B';
 
   // Use organic messages if available and organic mode is enabled
-  const displayMessages = organic && config.organicMessages ? config.organicMessages : config.messages;
+  const displayMessages =
+    organic && config.organicMessages ? config.organicMessages : config.messages;
 
   // Get the message to display
   const getMessage = useMemo(() => {
@@ -253,9 +203,7 @@ export function PersonalityLoading({
     return () => clearInterval(timer);
   }, [rotate, getMessage, rotateInterval]);
 
-  const currentMessage = typeof getMessage === 'string'
-    ? getMessage
-    : getMessage[messageIndex];
+  const currentMessage = typeof getMessage === 'string' ? getMessage : getMessage[messageIndex];
 
   return (
     <div
@@ -264,11 +212,7 @@ export function PersonalityLoading({
     >
       {/* Animated icon - uses Lucide icons per visual-system.md */}
       <Breathe intensity={0.4} speed="slow">
-        <IconComponent
-          size={sizeConfig.iconSize}
-          color={iconColor}
-          strokeWidth={1.5}
-        />
+        <IconComponent size={sizeConfig.iconSize} color={iconColor} strokeWidth={1.5} />
       </Breathe>
 
       {/* Message with fade transition */}

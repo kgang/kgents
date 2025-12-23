@@ -47,7 +47,7 @@ def _force_reload_node_modules():
     import sys
 
     # List of node modules to reload (order matters for dependencies)
-    # Note: Town, Park, Forge, Gestalt, Chat removed 2025-12-21 (Crown Jewel Cleanup)
+    # Note: Town, Park, Forge, Gestalt, Chat, world_emergence removed 2025-12-21 (Crown Jewel Cleanup)
     node_modules = [
         "protocols.agentese.contexts.design",
         "protocols.agentese.contexts.self_differance",
@@ -56,7 +56,6 @@ def _force_reload_node_modules():
         "protocols.agentese.contexts.self_soul",
         "protocols.agentese.contexts.self_system",
         "protocols.agentese.contexts.time_differance",
-        "protocols.agentese.contexts.world_emergence",
         "protocols.agentese.contexts.world_gallery",
         "protocols.agentese.contexts.world_gallery_api",
         "services.brain.node",

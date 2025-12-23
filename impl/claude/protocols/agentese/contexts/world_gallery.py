@@ -1,14 +1,16 @@
 """
-AGENTESE Emergence Gallery Context: Educational Categorical Showcase.
+AGENTESE Gallery Context: Educational Categorical Showcase.
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  DISTINCTION: world.emergence.gallery vs world.gallery                      │
 │                                                                             │
 │  world.emergence.gallery (THIS FILE):                                       │
-│    - Educational categorical showcase                                       │
+│    - Educational categorical showcase (AGENTESE path namespace)             │
 │    - Demonstrates PolyAgent, Operad, Sheaf patterns                        │
 │    - Interactive polynomial simulation and law verification                 │
 │    - Learning-focused: "How do categorical primitives work?"               │
+│    - NOTE: "emergence" here is lowercase and part of the AGENTESE path,    │
+│      not related to the removed Emergence Crown Jewel                      │
 │                                                                             │
 │  world.gallery (world_gallery_api.py):                                      │
 │    - Practical projection rendering API                                     │

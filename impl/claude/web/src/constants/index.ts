@@ -65,11 +65,11 @@ export {
   CONNECTION_STATUS_COLORS,
   getConnectionStatusColor,
   type ConnectionStatus,
-  // Phase glow effects (park-town-design-overhaul)
+  // Phase glow effects
   PHASE_GLOW,
   getPhaseGlow,
   type PhaseGlowType,
-  // Teaching gradient backgrounds (park-town-design-overhaul)
+  // Teaching gradient backgrounds
   TEACHING_GRADIENT,
   getTeachingGradient,
   type TeachingCategory,

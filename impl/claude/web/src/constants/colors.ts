@@ -54,7 +54,6 @@ export const SEMANTIC_COLORS = {
   cultivation: '#84CC16', // Lime - gardener, nurturing, emergence
   creation: '#F59E0B', // Amber - forge, creativity, warmth
   collaboration: '#8B5CF6', // Violet - coalition, synthesis, harmony
-  drama: '#EC4899', // Pink - park, narrative, performance
   urgency: '#EF4444', // Red - domain, crisis, alert
   neutral: '#64748B', // Slate - structure, chrome, system
 } as const;
@@ -233,10 +232,8 @@ export function getConnectionStatusColor(status: string): string {
 /**
  * Phase Glow Effects
  *
- * Box-shadow glows for polynomial agent states across Town and Park.
+ * Box-shadow glows for polynomial agent states across Town.
  * Used by StateIndicator and phase visualization components.
- *
- * @see plans/park-town-design-overhaul.md - Part III: Design System Additions
  */
 export const PHASE_GLOW = {
   idle: '0 0 12px rgba(100, 116, 139, 0.5)', // slate
@@ -261,9 +258,7 @@ export function getPhaseGlow(category: string): string {
  * Teaching Gradient Backgrounds
  *
  * Gradient backgrounds for teaching callouts, categorized by type.
- * Used with TeachingCallout component across Park and Town.
- *
- * @see plans/park-town-design-overhaul.md - Part III: Design System Additions
+ * Used with TeachingCallout component across Town.
  */
 export const TEACHING_GRADIENT = {
   /** Blue-purple for categorical explanations (polynomial, operad, sheaf) */
@@ -288,8 +283,6 @@ export function getTeachingGradient(category: string): string {
  * Edge Animation Configuration
  *
  * Consistent animation timing for state transitions and operations.
- *
- * @see plans/park-town-design-overhaul.md - Part III: Design System Additions
  */
 export const EDGE_ANIMATION = {
   duration: '300ms',
@@ -413,7 +406,6 @@ export function getLivingEarthColor(name: string): string {
 export const JEWEL_IDENTITY_COLORS = {
   town: LIVING_EARTH.amber, // Collaboration, warmth
   forge: LIVING_EARTH.honey, // Creation, artisan craft
-  park: LIVING_EARTH.copper, // Drama, performance
   domain: LIVING_EARTH.bronze, // Integration, grounding
   brain: SEMANTIC_COLORS.knowledge, // Cyan - knowledge
   garden: LIVING_EARTH.sage, // Growth, cultivation
