@@ -1,0 +1,68 @@
+/**
+ * SpecLedgerPage styles — STARK BIOME
+ *
+ * Full-page layout for the spec ledger.
+ * "The frame is humble. The numbers glow."
+ */
+
+.spec-ledger-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--surface-0);
+  color: var(--text-primary);
+}
+
+/* Navigation */
+.spec-ledger-page__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 1rem;
+  height: 48px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--surface-2);
+}
+
+.spec-ledger-page__tab {
+  padding: 0.5rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.spec-ledger-page__tab:hover {
+  color: var(--text-secondary);
+}
+
+.spec-ledger-page__tab--active {
+  color: var(--text-primary);
+  border-bottom-color: var(--life-sage);
+}
+
+.spec-ledger-page__nav-spacer {
+  flex: 1;
+}
+
+.spec-ledger-page__title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+}
+
+/* Content */
+.spec-ledger-page__content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
