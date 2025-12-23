@@ -21,7 +21,10 @@
 | [AD-011](AD-011-registry-single-source.md) | Registry as Single Source of Truth | 2025-12-19 | @node registry is truth; frontend/CLI derive from it |
 | [AD-012](AD-012-aspect-projection.md) | Aspect Projection Protocol | 2025-12-19 | Paths are places; aspects are actions |
 | [AD-013](AD-013-form-polynomial.md) | Form as Polynomial Functor | 2025-12-19 | Complex forms modeled as state machines |
+| [AD-014](AD-014-self-hosting-spec.md) | Self-Hosting Spec Architecture | 2025-12-22 | Specs are navigable, editable, witnessed |
+| [AD-015](AD-015-proxy-handles.md) | Proxy Handles & Transparent Batch | 2025-12-23 | Analysis produces proxy handles; computation explicit |
 | [AD-016](AD-016-fail-fast-agentese.md) | Fail-Fast AGENTESE Resolution | 2025-12-23 | No JIT fallback; unregistered paths error immediately |
+| [AD-017](AD-017-typed-agentese.md) | Typed AGENTESE | 2025-12-21 | Paths have categorical types; composition errors at import time |
 
 ---
 
@@ -40,6 +43,8 @@
 ### Architecture
 - **AD-005**: Self-Similar Lifecycle (N-Phase)
 - **AD-009**: Metaphysical Fullstack Agent
+- **AD-014**: Self-Hosting Spec Architecture
+- **AD-015**: Proxy Handles & Transparent Batch
 
 ### Protocol & Navigation
 - **AD-007**: Liturgical CLI
@@ -47,6 +52,7 @@
 - **AD-011**: Registry as Single Source of Truth
 - **AD-012**: Aspect Projection Protocol
 - **AD-016**: Fail-Fast AGENTESE Resolution
+- **AD-017**: Typed AGENTESE
 
 ### UI & Forms
 - **AD-013**: Form as Polynomial Functor
@@ -58,10 +64,11 @@
 | If you're... | Read these ADs |
 |--------------|----------------|
 | Building a new agent | AD-002, AD-006, AD-009 |
-| Working on AGENTESE | AD-010, AD-011, AD-012, AD-016 |
+| Working on AGENTESE | AD-010, AD-011, AD-012, AD-016, AD-017 |
 | Designing UI | AD-008, AD-013 |
-| Debugging | AD-001, AD-011, AD-016 |
-| Philosophizing | AD-003, AD-005, AD-006 |
+| Debugging | AD-001, AD-011, AD-015, AD-016 |
+| Philosophizing | AD-003, AD-005, AD-006, AD-014 |
+| Working on specs | AD-014, AD-015, AD-017 |
 
 ---
 
