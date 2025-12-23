@@ -95,6 +95,7 @@ def get_postgres_url() -> str:
     if url:
         return url
 
+    # Default for local Docker development
     return "postgresql://kgents:kgents@localhost:5432/kgents"
 
 

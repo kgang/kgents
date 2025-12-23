@@ -64,9 +64,11 @@ async def main(dry_run: bool = False) -> int:
         print("Sample (first 10):")
         print("-" * 60)
         for t in teachings[:10]:
-            icon = {"critical": "\U0001f6a8", "warning": "\u26a0\ufe0f", "info": "\u2139\ufe0f"}.get(
-                t.moment.severity, "\u2022"
-            )
+            icon = {
+                "critical": "\U0001f6a8",
+                "warning": "\u26a0\ufe0f",
+                "info": "\u2139\ufe0f",
+            }.get(t.moment.severity, "\u2022")
             print(f"{icon} [{t.moment.severity}] {t.module}::{t.symbol}")
             print(f"   {t.moment.insight[:70]}...")
             if t.moment.evidence:
@@ -88,6 +90,7 @@ async def main(dry_run: bool = False) -> int:
         # Initialize the bootstrap services
         import os
 
+        # Default for local Docker development - override via KGENTS_DATABASE_URL
         os.environ.setdefault(
             "KGENTS_DATABASE_URL",
             "postgresql+asyncpg://kgents:kgents@localhost:5432/kgents",
