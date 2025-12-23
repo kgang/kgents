@@ -253,27 +253,37 @@ interface ContentPaneProps {
   node: GraphNode | null;
   mode: string;
   cursor: { line: number; column: number };
+  /** Working content (reflects edits, may differ from node.content) */
+  workingContent?: string;
   onContentChange?: (content: string) => void;
 }
 
+/**
+ * ContentPane — The heart of the editor
+ *
+ * Mode philosophy:
+ * - NORMAL: Show a *rendered* view (read-only CodeMirror with syntax highlighting)
+ *           This is the "reader" mode - clean, parsed, beautiful
+ * - INSERT: Show a *raw* editor (editable CodeMirror with monospace)
+ *           This is the "writer" mode - monospace, line numbers, editing
+ *
+ * Content flow:
+ * - workingContent (from K-Block) is the source of truth during edits
+ * - Falls back to node.content when no working content exists
+ */
 const ContentPane = memo(function ContentPane({
   node,
   mode,
-  cursor,
+  cursor: _cursor, // Reserved for future cursor positioning in CodeMirror
+  workingContent,
   onContentChange,
   onCursorChange: _onCursorChange, // Reserved for future cursor sync
 }: ContentPaneProps & { onCursorChange?: (line: number, column: number) => void }) {
   const editorRef = useRef<MarkdownEditorRef>(null);
-  const currentLineRef = useRef<HTMLDivElement>(null);
-  const [localContent, setLocalContent] = useState('');
   const prevModeRef = useRef(mode);
 
-  // Sync content when node changes
-  useEffect(() => {
-    if (node?.content) {
-      setLocalContent(node.content);
-    }
-  }, [node?.content]);
+  // Use working content if available (edited content), otherwise use node content
+  const displayContent = workingContent ?? node?.content ?? '';
 
   // Focus editor when entering INSERT mode
   useEffect(() => {
@@ -286,33 +296,13 @@ const ContentPane = memo(function ContentPane({
     prevModeRef.current = mode;
   }, [mode]);
 
-  // Scroll current line into view when cursor moves in NORMAL mode
-  useEffect(() => {
-    if (currentLineRef.current && mode === 'NORMAL') {
-      requestAnimationFrame(() => {
-        currentLineRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
-      });
-    }
-  }, [cursor.line, mode]);
-
   // Handle content changes from CodeMirror
   const handleContentChange = useCallback(
     (newContent: string) => {
-      setLocalContent(newContent);
       onContentChange?.(newContent);
     },
     [onContentChange]
   );
-
-  // Handle blur - extract cursor position when leaving INSERT mode
-  const handleBlur = useCallback(() => {
-    // Note: Cursor extraction from CodeMirror would need the view instance
-    // For now, we'll reset to start of line when exiting INSERT mode
-    // This can be enhanced later with proper cursor tracking
-  }, []);
 
   if (!node) {
     return (
@@ -342,15 +332,14 @@ const ContentPane = memo(function ContentPane({
     );
   }
 
-  // In INSERT mode, show CodeMirror editor
+  // In INSERT mode, show raw CodeMirror editor (editable, monospace)
   if (mode === 'INSERT') {
     return (
       <div className="content-pane content-pane--insert">
         <MarkdownEditor
           ref={editorRef}
-          value={localContent}
+          value={displayContent}
           onChange={handleContentChange}
-          onBlur={handleBlur}
           vimMode={false} // Use our own modal editing, not vim's
           placeholder="Enter content..."
           fillHeight
@@ -360,26 +349,17 @@ const ContentPane = memo(function ContentPane({
     );
   }
 
-  // In NORMAL mode, show read-only content with line numbers
-  const lines = (node.content || '').split('\n');
-
-  // Clamp cursor to valid line range (handles Infinity from GOTO_END)
-  const clampedLine = Math.min(cursor.line, lines.length - 1);
-
+  // In NORMAL mode, show rendered view (readonly CodeMirror with syntax highlighting)
+  // This provides the "reader" experience with parsed/tokenized rendering
   return (
     <div className="content-pane content-pane--normal">
-      <div className="content-pane__lines">
-        {lines.map((line, i) => (
-          <div
-            key={i}
-            ref={i === clampedLine ? currentLineRef : null}
-            className={`content-pane__line ${i === clampedLine ? 'content-pane__line--current' : ''}`}
-          >
-            <span className="content-pane__line-number">{i + 1}</span>
-            <span className="content-pane__line-content">{line || ' '}</span>
-          </div>
-        ))}
-      </div>
+      <MarkdownEditor
+        value={displayContent}
+        readonly={true}
+        vimMode={false}
+        fillHeight
+        className="content-pane__reader"
+      />
     </div>
   );
 });
@@ -752,11 +732,10 @@ export const HypergraphEditor = memo(function HypergraphEditor({
           node={state.currentNode}
           mode={state.mode}
           cursor={state.cursor}
+          workingContent={state.kblock?.workingContent}
           onContentChange={(content) => {
             // Update both reducer state and K-Block hook
-            if (state.kblock) {
-              dispatch({ type: 'KBLOCK_UPDATED', content });
-            }
+            dispatch({ type: 'KBLOCK_UPDATED', content });
             kblockHook.updateContent(content);
           }}
           onCursorChange={(line, column) => {

@@ -347,62 +347,64 @@
   color: var(--steel-300, #a0a0a0);
 }
 
-/* Normal mode: line display */
+/* Normal mode: reader view (readonly CodeMirror with syntax highlighting) */
 .content-pane--normal {
-  padding: 0.5rem 0;
+  padding: 0;
+  position: relative;
 }
 
-.content-pane__lines {
-  /* Intentionally no padding - line numbers handle it */
+/* Reader view styling - clean, focused reading experience */
+.content-pane__reader {
+  /* Slightly larger text for reading comfort */
+  font-size: 0.9375rem;
+  line-height: 1.6;
 }
 
-.content-pane__line {
-  display: flex;
-  min-height: 1.5rem;
+/* Hide line numbers in reader mode for cleaner appearance */
+.content-pane--normal .cm-gutters {
+  display: none !important;
 }
 
-.content-pane__line--current {
-  background: var(--steel-900, #1a1a1a);
+/* Reader mode has subtle left padding since no line numbers */
+.content-pane--normal .cm-content {
+  padding-left: 1rem;
 }
 
-.content-pane__line-number {
-  flex-shrink: 0;
-  width: 3rem;
-  padding-right: 0.5rem;
-  text-align: right;
-  color: var(--steel-600, #444);
-  user-select: none;
+/* Ensure cursor is hidden in readonly mode */
+.content-pane--normal .cm-cursor {
+  display: none !important;
 }
 
-.content-pane__line--current .content-pane__line-number {
-  color: var(--steel-400, #888);
+/* Subtle indicator that this is view-only */
+.content-pane--normal::after {
+  content: 'VIEW';
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.125rem 0.375rem;
+  background: var(--steel-800, #252525);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: 2px;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--steel-500, #666);
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
-.content-pane__line-content {
-  flex: 1;
-  padding-right: 1rem;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-/* Insert mode: textarea */
+/* Insert mode: full editor with line numbers and editing cues */
 .content-pane--insert {
   padding: 0;
+  position: relative;
+  /* Subtle green tint to indicate edit mode */
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.02) 0%, transparent 50%);
 }
 
-.content-pane__editor {
-  width: 100%;
-  height: 100%;
-  padding: 0.5rem 1rem;
-  background: var(--steel-950, #0d0d0d);
-  border: none;
-  outline: none;
-  resize: none;
-  color: var(--steel-100, #e0e0e0);
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  caret-color: var(--mode-accent, var(--accent-gold, #ffd700));
+/* Edit mode shows line numbers */
+.content-pane--insert .cm-gutters {
+  background: var(--steel-900, #1a1a1a);
+  border-right: 1px solid var(--steel-800, #252525);
 }
 
 /* Insert mode indicator: left border glow */
@@ -412,8 +414,30 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 2px;
+  width: 3px;
   background: var(--mode-accent, var(--status-insert, #4caf50));
+  z-index: 10;
+}
+
+/* EDIT badge in insert mode */
+.content-pane--insert::after {
+  content: 'EDIT';
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.125rem 0.375rem;
+  background: var(--status-insert, #4caf50);
+  border-radius: 2px;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--steel-950, #0d0d0d);
+  z-index: 10;
+}
+
+/* Highlight the caret more prominently in edit mode */
+.content-pane--insert .cm-cursor {
+  border-left: 2px solid var(--status-insert, #4caf50) !important;
 }
 
 /* =============================================================================

@@ -30,6 +30,18 @@ interface SpecTableProps {
   initialFilter?: StatusFilter;
 }
 
+/**
+ * Type guard to check if response needs computation (AD-015)
+ */
+function isNeedsComputation(response: unknown): response is { needs_scan: true; message: string } {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'needs_scan' in response &&
+    (response as { needs_scan: boolean }).needs_scan === true
+  );
+}
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -38,6 +50,7 @@ export function SpecTable({ onSelectSpec, initialFilter = 'all' }: SpecTableProp
   const [specs, setSpecs] = useState<SpecEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isEmpty, setIsEmpty] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Filters & Sorting
@@ -54,6 +67,7 @@ export function SpecTable({ onSelectSpec, initialFilter = 'all' }: SpecTableProp
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setIsEmpty(false);
 
     try {
       const response = await getLedger({
@@ -63,7 +77,24 @@ export function SpecTable({ onSelectSpec, initialFilter = 'all' }: SpecTableProp
         offset: page * pageSize,
       });
 
-      let filteredSpecs = response.specs;
+      // AD-015: Handle case where data needs computation or is empty
+      if (isNeedsComputation(response)) {
+        setIsEmpty(true);
+        setSpecs([]);
+        setTotal(0);
+        return;
+      }
+
+      // Safely access specs with fallback to empty array
+      let filteredSpecs = response.specs ?? [];
+
+      // Check if corpus is empty
+      if (filteredSpecs.length === 0 && (response.total ?? 0) === 0) {
+        setIsEmpty(true);
+        setSpecs([]);
+        setTotal(0);
+        return;
+      }
 
       // Client-side search filter
       if (searchQuery) {
@@ -89,7 +120,7 @@ export function SpecTable({ onSelectSpec, initialFilter = 'all' }: SpecTableProp
       }
 
       setSpecs(filteredSpecs);
-      setTotal(response.total);
+      setTotal(response.total ?? 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load specs');
     } finally {
@@ -164,6 +195,17 @@ export function SpecTable({ onSelectSpec, initialFilter = 'all' }: SpecTableProp
         <div className="spec-table__loading">Loading...</div>
       ) : error ? (
         <div className="spec-table__error">{error}</div>
+      ) : isEmpty ? (
+        <div className="spec-table__empty">
+          <div className="spec-table__empty-icon">📋</div>
+          <h3 className="spec-table__empty-title">No specs yet</h3>
+          <p className="spec-table__empty-message">
+            Upload spec files to get started, or use the Hypergraph Editor to create new specs.
+          </p>
+          <a href="/editor" className="spec-table__empty-link">
+            Open Editor →
+          </a>
+        </div>
       ) : (
         <div className="spec-table__wrapper">
           <table className="spec-table__table">

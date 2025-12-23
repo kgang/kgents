@@ -76,8 +76,8 @@ export function AstronomicalChart({
   const [internalStatusFilter, setInternalStatusFilter] = useState(statusFilter || '');
   const [tierFilter, setTierFilter] = useState<number[] | null>(null);
 
-  // Data (AD-015: now includes needsScan and scan)
-  const { stars, connections, isLoading, error, needsScan, scan, refetch } = useAstronomicalData({
+  // Data (AD-015: needsScan indicates no data available)
+  const { stars, connections, isLoading, error, needsScan, refetch } = useAstronomicalData({
     statusFilter: internalStatusFilter || undefined,
     limit,
   });
@@ -389,26 +389,19 @@ export function AstronomicalChart({
     );
   }
 
-  // AD-015: Needs scan state
+  // AD-015: No data available yet
   if (needsScan) {
     return (
-      <div className="astronomical-chart astronomical-chart--needs-scan">
-        <div className="astronomical-chart__needs-scan">
-          <div className="astronomical-chart__needs-scan-icon">🔭</div>
-          <h2>Analysis Required</h2>
-          <p>
-            No proxy handle data available.
-            <br />
-            <span className="astronomical-chart__hint">
-              AD-015: Analysis is explicit, not automatic.
-            </span>
+      <div className="astronomical-chart astronomical-chart--empty">
+        <div className="astronomical-chart__empty">
+          <div className="astronomical-chart__empty-icon">🔭</div>
+          <h3 className="astronomical-chart__empty-title">No spec data yet</h3>
+          <p className="astronomical-chart__empty-message">
+            Upload spec files or use the Hypergraph Editor to create new specs.
           </p>
-          <button onClick={scan} className="astronomical-chart__scan-button">
-            Scan Spec Corpus
-          </button>
-          <p className="astronomical-chart__scan-note">
-            This will analyze ~200 specs and generate a proxy handle.
-          </p>
+          <a href="/editor" className="astronomical-chart__empty-link">
+            Open Editor →
+          </a>
         </div>
       </div>
     );
@@ -426,13 +419,19 @@ export function AstronomicalChart({
     );
   }
 
-  // Empty state
+  // Empty state (after filtering or genuinely empty)
   if (stars.length === 0) {
     return (
       <div className="astronomical-chart astronomical-chart--empty">
         <div className="astronomical-chart__empty">
-          <span>No specs to display</span>
-          <button onClick={refetch}>Refresh</button>
+          <div className="astronomical-chart__empty-icon">✨</div>
+          <h3 className="astronomical-chart__empty-title">No specs to display</h3>
+          <p className="astronomical-chart__empty-message">
+            Try adjusting your filters, or add some spec files.
+          </p>
+          <button onClick={refetch} className="astronomical-chart__empty-button">
+            Refresh
+          </button>
         </div>
       </div>
     );

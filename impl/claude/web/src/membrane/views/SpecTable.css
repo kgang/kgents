@@ -85,6 +85,58 @@
   color: var(--accent-error, #a65d4a);
 }
 
+/* Empty State */
+.spec-table__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex: 1;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.spec-table__empty-icon {
+  font-size: 2.5rem;
+  opacity: 0.6;
+}
+
+.spec-table__empty-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.spec-table__empty-message {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.spec-table__empty-link {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent-primary);
+  text-decoration: none;
+  border: 1px solid var(--accent-primary);
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+
+.spec-table__empty-link:hover {
+  background: var(--accent-primary);
+  color: var(--surface-0);
+}
+
 /* Table Wrapper */
 .spec-table__wrapper {
   flex: 1;

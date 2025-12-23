@@ -289,67 +289,70 @@
 }
 
 /* =============================================================================
- * AD-015: Needs Scan State
+ * Empty State (replaces deprecated needs-scan)
  * ============================================================================= */
 
-.astronomical-chart__needs-scan {
+.astronomical-chart__empty {
   text-align: center;
-  max-width: 400px;
-  padding: 40px 20px;
+  max-width: 360px;
+  padding: 48px 24px;
 }
 
-.astronomical-chart__needs-scan-icon {
-  font-size: 48px;
-  margin-bottom: 8px;
+.astronomical-chart__empty-icon {
+  font-size: 2.5rem;
+  opacity: 0.6;
+  margin-bottom: 12px;
 }
 
-.astronomical-chart__needs-scan h2 {
-  font-size: 18px;
+.astronomical-chart__empty-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary, #e5e7eb);
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0;
 }
 
-.astronomical-chart__needs-scan p {
-  font-size: 13px;
-  color: var(--text-secondary, #8a8a94);
-  margin: 0 0 20px 0;
+.astronomical-chart__empty-message {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted, #5a5a64);
   line-height: 1.5;
+  margin: 0 0 16px 0;
 }
 
-.astronomical-chart__hint {
-  display: block;
-  margin-top: 8px;
-  font-size: 11px;
-  color: var(--text-muted, #5a5a64);
-  font-style: italic;
+.astronomical-chart__empty-link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--life-sage, #4a6b4a);
+  text-decoration: none;
+  border: 1px solid var(--life-sage, #4a6b4a);
+  border-radius: 4px;
+  transition: all 0.15s ease;
 }
 
-.astronomical-chart__scan-button {
-  padding: 12px 24px;
+.astronomical-chart__empty-link:hover {
   background: var(--life-sage, #4a6b4a);
-  border: none;
-  color: var(--text-primary, #e5e7eb);
-  border-radius: 6px;
+  color: var(--surface-0, #0a0a0c);
+}
+
+.astronomical-chart__empty-button {
+  padding: 0.5rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  color: var(--text-secondary, #8a8a94);
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(74, 107, 74, 0.3);
+  transition: all 0.15s ease;
 }
 
-.astronomical-chart__scan-button:hover {
-  background: var(--life-sage-bright, #5a7b5a);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(74, 107, 74, 0.4);
-}
-
-.astronomical-chart__scan-button:active {
-  transform: translateY(0);
-}
-
-.astronomical-chart__scan-note {
-  font-size: 11px;
-  color: var(--text-muted, #5a5a64);
-  margin-top: 16px;
+.astronomical-chart__empty-button:hover {
+  background: var(--surface-3, #28282f);
+  color: var(--text-primary, #e5e7eb);
+  border-color: var(--life-sage, #4a6b4a);
 }

@@ -274,6 +274,9 @@ export interface KBlockCreateResult {
   isDirty?: boolean;
   activeViews?: KBlockViewType[];
   error?: string;
+  // Sovereignty: content not in sovereign store
+  not_ingested?: boolean;
+  ingest_hint?: string;
 }
 
 export interface UseFileKBlock {
@@ -340,6 +343,20 @@ export function useFileKBlock(): UseFileKBlock {
     const result = await invokeKBlock('create', { path });
 
     if (result.success && result.data) {
+      // Check if content not ingested (sovereign store empty)
+      // Return early so SpecView can show the upload UI
+      if (result.data.not_ingested) {
+        setState((prev) => ({ ...prev, isLoading: false }));
+        return {
+          success: true,
+          blockId: result.data.block_id as string,
+          path: result.data.path as string,
+          content: '',
+          not_ingested: true,
+          ingest_hint: (result.data.ingest_hint as string) || 'Upload content via File Picker',
+        };
+      }
+
       const blockId = result.data.block_id as string;
 
       // Fetch full content
