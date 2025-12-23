@@ -197,9 +197,20 @@ function navigationReducer(state: NavigationState, action: NavigationAction): Na
     }
 
     case 'ENTER_EDGE': {
+      // Initialize edge pending state with current node as source
+      if (!state.currentNode) return state;
+
       return {
         ...state,
         mode: 'EDGE',
+        edgePending: {
+          sourceId: state.currentNode.path,
+          sourceLabel: state.currentNode.title || state.currentNode.path.split('/').pop() || '',
+          edgeType: null,
+          phase: 'select-type',
+          targetId: null,
+          targetLabel: null,
+        },
       };
     }
 
@@ -207,6 +218,56 @@ function navigationReducer(state: NavigationState, action: NavigationAction): Na
       return {
         ...state,
         mode: 'NORMAL',
+        edgePending: null,
+      };
+    }
+
+    // =========================================================================
+    // Edge Mode Operations
+    // =========================================================================
+
+    case 'EDGE_SELECT_TYPE': {
+      if (!state.edgePending) return state;
+
+      return {
+        ...state,
+        edgePending: {
+          ...state.edgePending,
+          edgeType: action.edgeType,
+          phase: 'select-target',
+        },
+      };
+    }
+
+    case 'EDGE_SELECT_TARGET': {
+      if (!state.edgePending) return state;
+
+      return {
+        ...state,
+        edgePending: {
+          ...state.edgePending,
+          targetId: action.targetId,
+          targetLabel: action.targetLabel,
+          phase: 'confirm',
+        },
+      };
+    }
+
+    case 'EDGE_CONFIRM': {
+      // Edge creation will be handled by the component (calls API, emits witness)
+      // Just clear the pending state
+      return {
+        ...state,
+        mode: 'NORMAL',
+        edgePending: null,
+      };
+    }
+
+    case 'EDGE_CANCEL': {
+      return {
+        ...state,
+        mode: 'NORMAL',
+        edgePending: null,
       };
     }
 

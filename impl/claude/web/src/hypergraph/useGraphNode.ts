@@ -4,7 +4,7 @@
  * Converts SpecGraph data into GraphNode format for the editor.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 
 import { invokeSpecGraph } from '../membrane/useSpecNavigation';
 import type { GraphNode, Edge, EdgeType } from './types';
@@ -121,12 +121,65 @@ export interface UseGraphNodeResult {
 export function useGraphNode(): UseGraphNodeResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const discoveredRef = useRef(false);
+  const discoveringRef = useRef(false);
+
+  // Auto-discover SpecGraph on first use
+  // gotcha: SpecGraph is lazy-loaded. Without discover(), queries return empty.
+  useEffect(() => {
+    const doDiscover = async () => {
+      if (discoveredRef.current || discoveringRef.current) return;
+
+      discoveringRef.current = true;
+
+      try {
+        // Call discover to populate the graph
+        await invokeSpecGraph<{ count: number }>('discover');
+        // eslint-disable-next-line require-atomic-updates -- refs are stable
+        discoveredRef.current = true;
+      } catch (e) {
+        console.warn('[useGraphNode] Failed to discover SpecGraph:', e);
+      } finally {
+        // eslint-disable-next-line require-atomic-updates -- refs are stable
+        discoveringRef.current = false;
+      }
+    };
+
+    doDiscover();
+  }, []);
 
   const loadNode = useCallback(async (path: string): Promise<GraphNode | null> => {
     setLoading(true);
     setError(null);
 
     try {
+      // Ensure SpecGraph is discovered before querying
+      // Wait if discovery is in progress, or trigger if not done
+      if (!discoveredRef.current) {
+        if (!discoveringRef.current) {
+          discoveringRef.current = true;
+          try {
+            await invokeSpecGraph<{ count: number }>('discover');
+            // eslint-disable-next-line require-atomic-updates -- refs are stable
+            discoveredRef.current = true;
+          } catch (e) {
+            console.warn('[useGraphNode] Discovery failed:', e);
+          } finally {
+            // eslint-disable-next-line require-atomic-updates -- refs are stable
+            discoveringRef.current = false;
+          }
+        } else {
+          // Wait for in-progress discovery (simple polling)
+          let attempts = 0;
+          while (discoveringRef.current && attempts < 50) {
+            await new Promise<void>((r) => {
+              setTimeout(r, 100);
+            });
+            attempts++;
+          }
+        }
+      }
+
       // Query SpecGraph for node metadata
       const result = await invokeSpecGraph<SpecGraphQueryResult>('query', { path });
 

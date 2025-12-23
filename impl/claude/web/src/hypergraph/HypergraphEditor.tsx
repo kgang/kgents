@@ -19,12 +19,14 @@
  * └────────────────────────────────────────────────────────────────────────┘
  */
 
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useNavigation } from './useNavigation';
 import { useKeyHandler } from './useKeyHandler';
 import { StatusLine } from './StatusLine';
 import { CommandLine } from './CommandLine';
+import { EdgePanel } from './EdgePanel';
+import { MarkdownEditor, MarkdownEditorRef } from '../components/editor';
 import type { GraphNode, Edge, EdgeType } from './types';
 
 import './HypergraphEditor.css';
@@ -218,9 +220,9 @@ const ContentPane = memo(function ContentPane({
   mode,
   cursor,
   onContentChange,
-  onCursorChange,
+  onCursorChange: _onCursorChange, // Reserved for future cursor sync
 }: ContentPaneProps & { onCursorChange?: (line: number, column: number) => void }) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<MarkdownEditorRef>(null);
   const currentLineRef = useRef<HTMLDivElement>(null);
   const [localContent, setLocalContent] = useState('');
   const prevModeRef = useRef(mode);
@@ -232,56 +234,20 @@ const ContentPane = memo(function ContentPane({
     }
   }, [node?.content]);
 
-  // Position textarea cursor when entering INSERT mode (only on mode change, not content change)
+  // Focus editor when entering INSERT mode
   useEffect(() => {
-    if (mode === 'INSERT' && prevModeRef.current !== 'INSERT' && textareaRef.current) {
-      textareaRef.current.focus();
-
-      // Calculate character offset from line/column
-      const lines = localContent.split('\n');
-      let offset = 0;
-      for (let i = 0; i < Math.min(cursor.line, lines.length); i++) {
-        offset += lines[i].length + 1; // +1 for newline
-      }
-      offset += Math.min(cursor.column, lines[cursor.line]?.length || 0);
-
-      textareaRef.current.setSelectionRange(offset, offset);
-    }
-    // Note: prevModeRef is updated in the exit effect below
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
-
-  // Read cursor position when exiting INSERT mode
-  useEffect(() => {
-    if (prevModeRef.current === 'INSERT' && mode === 'NORMAL' && textareaRef.current) {
-      const textarea = textareaRef.current;
-      const offset = textarea.selectionStart;
-      const content = textarea.value;
-
-      // Convert offset to line/column
-      let line = 0;
-      let remaining = offset;
-      const lines = content.split('\n');
-
-      for (let i = 0; i < lines.length; i++) {
-        if (remaining <= lines[i].length) {
-          line = i;
-          break;
-        }
-        remaining -= lines[i].length + 1; // +1 for newline
-        line = i + 1;
-      }
-
-      const column = Math.max(0, remaining);
-      onCursorChange?.(line, column);
+    if (mode === 'INSERT' && prevModeRef.current !== 'INSERT') {
+      // Small delay to ensure editor is mounted
+      requestAnimationFrame(() => {
+        editorRef.current?.focus();
+      });
     }
     prevModeRef.current = mode;
-  }, [mode, onCursorChange]);
+  }, [mode]);
 
-  // Scroll current line into view when cursor moves
+  // Scroll current line into view when cursor moves in NORMAL mode
   useEffect(() => {
     if (currentLineRef.current && mode === 'NORMAL') {
-      // Use a small delay to ensure the DOM has updated
       requestAnimationFrame(() => {
         currentLineRef.current?.scrollIntoView({
           behavior: 'smooth',
@@ -291,13 +257,21 @@ const ContentPane = memo(function ContentPane({
     }
   }, [cursor.line, mode]);
 
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setLocalContent(e.target.value);
-      onContentChange?.(e.target.value);
+  // Handle content changes from CodeMirror
+  const handleContentChange = useCallback(
+    (newContent: string) => {
+      setLocalContent(newContent);
+      onContentChange?.(newContent);
     },
     [onContentChange]
   );
+
+  // Handle blur - extract cursor position when leaving INSERT mode
+  const handleBlur = useCallback(() => {
+    // Note: Cursor extraction from CodeMirror would need the view instance
+    // For now, we'll reset to start of line when exiting INSERT mode
+    // This can be enhanced later with proper cursor tracking
+  }, []);
 
   if (!node) {
     return (
@@ -327,16 +301,19 @@ const ContentPane = memo(function ContentPane({
     );
   }
 
-  // In INSERT mode, show editable textarea
+  // In INSERT mode, show CodeMirror editor
   if (mode === 'INSERT') {
     return (
       <div className="content-pane content-pane--insert">
-        <textarea
-          ref={textareaRef}
-          className="content-pane__editor"
+        <MarkdownEditor
+          ref={editorRef}
           value={localContent}
-          onChange={handleChange}
-          spellCheck={false}
+          onChange={handleContentChange}
+          onBlur={handleBlur}
+          vimMode={false} // Use our own modal editing, not vim's
+          placeholder="Enter content..."
+          fillHeight
+          autoFocus
         />
       </div>
     );
@@ -525,6 +502,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       {commandLineVisible && (
         <CommandLine ref={commandLineRef} onSubmit={handleCommand} onCancel={handleCommandCancel} />
       )}
+
+      {/* Edge panel (when in EDGE mode) */}
+      {state.mode === 'EDGE' && state.edgePending && <EdgePanel edgePending={state.edgePending} />}
 
       {/* Status line */}
       <StatusLine

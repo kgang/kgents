@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import type { NavigationState, NavigationAction, KeySequence } from './types';
+import { EDGE_TYPE_KEYS } from './types';
 
 // =============================================================================
 // Key Binding Definitions
@@ -384,10 +385,62 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     ]
   );
 
-  const handleEdgeMode = useCallback((_e: KeyboardEvent, _key: string) => {
-    // Edge mode bindings will be added in Phase 4
-    // For now, Escape is the only binding (handled universally above)
-  }, []);
+  const handleEdgeMode = useCallback(
+    (e: KeyboardEvent, key: string) => {
+      const { edgePending } = state;
+      if (!edgePending) return;
+
+      // Phase 1: Select edge type
+      if (edgePending.phase === 'select-type') {
+        const edgeType = EDGE_TYPE_KEYS[key.toLowerCase()];
+        if (edgeType) {
+          e.preventDefault();
+          dispatch({ type: 'EDGE_SELECT_TYPE', edgeType });
+          return;
+        }
+      }
+
+      // Phase 2: Select target - navigation keys work, Enter confirms current node
+      if (edgePending.phase === 'select-target') {
+        // Navigate using j/k like normal mode
+        if (key === 'j') {
+          e.preventDefault();
+          dispatch({ type: 'GO_SIBLING', direction: 1 });
+          return;
+        }
+        if (key === 'k') {
+          e.preventDefault();
+          dispatch({ type: 'GO_SIBLING', direction: -1 });
+          return;
+        }
+
+        // Enter selects current node as target
+        if (key === 'Enter' && state.currentNode) {
+          e.preventDefault();
+          dispatch({
+            type: 'EDGE_SELECT_TARGET',
+            targetId: state.currentNode.path,
+            targetLabel: state.currentNode.title || state.currentNode.path.split('/').pop() || '',
+          });
+          return;
+        }
+      }
+
+      // Phase 3: Confirm - y to confirm, n to cancel
+      if (edgePending.phase === 'confirm') {
+        if (key === 'y' || key === 'Enter') {
+          e.preventDefault();
+          dispatch({ type: 'EDGE_CONFIRM' });
+          return;
+        }
+        if (key === 'n' || key === 'Backspace') {
+          e.preventDefault();
+          dispatch({ type: 'EDGE_CANCEL' });
+        }
+      }
+    },
+    [state, dispatch]
+  );
 
   const handleWitnessMode = useCallback((_e: KeyboardEvent, _key: string) => {
     // Witness mode bindings will be added in Phase 5

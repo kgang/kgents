@@ -1,0 +1,329 @@
+/**
+ * SpecGraph Styles
+ *
+ * STARK BIOME themed Reactflow components.
+ * "The frame is humble. The content glows."
+ */
+
+/* =============================================================================
+ * Viewer Container
+ * ============================================================================= */
+
+.spec-graph-viewer {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background: var(--surface-0, #0a0a0c);
+  position: relative;
+}
+
+.spec-graph-viewer--loading,
+.spec-graph-viewer--error,
+.spec-graph-viewer--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spec-graph-viewer__loading,
+.spec-graph-viewer__error,
+.spec-graph-viewer__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted, #5a5a64);
+}
+
+.spec-graph-viewer__spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--surface-3, #28282f);
+  border-top-color: var(--life-sage, #4a6b4a);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spec-graph-viewer__error button,
+.spec-graph-viewer__empty button {
+  padding: 6px 12px;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  color: var(--text-primary, #e5e7eb);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.spec-graph-viewer__error button:hover,
+.spec-graph-viewer__empty button:hover {
+  background: var(--surface-3, #28282f);
+  border-color: var(--life-sage, #4a6b4a);
+}
+
+/* =============================================================================
+ * Spec Node
+ * ============================================================================= */
+
+.spec-node {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--surface-1, #141418);
+  border: 1px solid var(--surface-3, #28282f);
+  min-width: 120px;
+  max-width: 180px;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.spec-node:hover {
+  border-color: var(--text-muted, #5a5a64);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.spec-node--selected {
+  border-color: var(--life-sage, #4a6b4a);
+  box-shadow: 0 0 0 2px rgba(74, 107, 74, 0.3);
+}
+
+/* Tier-based border colors */
+.spec-node--tier-0 {
+  border-left: 3px solid var(--life-sage, #4a6b4a);
+}
+.spec-node--tier-1 {
+  border-left: 3px solid #6b8b6b;
+}
+.spec-node--tier-2 {
+  border-left: 3px solid var(--text-muted, #5a5a64);
+}
+.spec-node--tier-3 {
+  border-left: 3px solid var(--accent-primary, #c4a77d);
+}
+.spec-node--tier-4 {
+  border-left: 3px solid #88c0d0;
+}
+
+/* Status-based styling */
+.spec-node--orphan {
+  opacity: 0.7;
+  background: rgba(166, 93, 74, 0.1);
+}
+.spec-node--deprecated {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.spec-node--archived {
+  opacity: 0.4;
+}
+
+/* Content */
+.spec-node__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spec-node__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary, #e5e7eb);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spec-node__stats {
+  display: flex;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-muted, #5a5a64);
+}
+
+.spec-node__stat {
+  padding: 1px 4px;
+  background: var(--surface-2, #1c1c22);
+  border-radius: 3px;
+}
+
+.spec-node__stat--impl {
+  color: var(--accent-secondary, #8ba98b);
+}
+
+.spec-node__stat--test {
+  color: #88c0d0;
+}
+
+/* Status indicator dot */
+.spec-node__status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--life-sage, #4a6b4a);
+}
+
+.spec-node__status[data-status='ORPHAN'] {
+  background: var(--accent-error, #a65d4a);
+}
+
+.spec-node__status[data-status='DEPRECATED'],
+.spec-node__status[data-status='ARCHIVED'] {
+  background: var(--text-muted, #5a5a64);
+}
+
+/* Handles */
+.spec-node__handle {
+  width: 8px;
+  height: 8px;
+  background: var(--surface-3, #28282f);
+  border: 1px solid var(--text-muted, #5a5a64);
+}
+
+.spec-node__handle:hover {
+  background: var(--life-sage, #4a6b4a);
+}
+
+/* =============================================================================
+ * Spec Edge
+ * ============================================================================= */
+
+.spec-edge {
+  stroke-linecap: round;
+}
+
+.spec-edge--selected {
+  filter: drop-shadow(0 0 3px rgba(74, 107, 74, 0.5));
+}
+
+.spec-edge__label {
+  position: absolute;
+  padding: 2px 6px;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--text-secondary, #8a8a94);
+  pointer-events: none;
+}
+
+/* =============================================================================
+ * Controls & MiniMap
+ * ============================================================================= */
+
+.spec-graph-controls {
+  background: var(--surface-1, #141418) !important;
+  border: 1px solid var(--surface-3, #28282f) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.spec-graph-controls button {
+  background: var(--surface-1, #141418) !important;
+  border-color: var(--surface-3, #28282f) !important;
+  color: var(--text-secondary, #8a8a94) !important;
+}
+
+.spec-graph-controls button:hover {
+  background: var(--surface-2, #1c1c22) !important;
+  color: var(--text-primary, #e5e7eb) !important;
+}
+
+.spec-graph-controls button svg {
+  fill: currentColor !important;
+}
+
+.spec-graph-minimap {
+  background: var(--surface-1, #141418) !important;
+  border: 1px solid var(--surface-3, #28282f) !important;
+  border-radius: 6px !important;
+}
+
+/* =============================================================================
+ * Legend
+ * ============================================================================= */
+
+.spec-graph-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  padding: 12px;
+  background: var(--surface-1, #141418);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.spec-graph-legend__title {
+  font-weight: 600;
+  color: var(--text-secondary, #8a8a94);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.spec-graph-legend__items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spec-graph-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted, #5a5a64);
+}
+
+.spec-graph-legend__color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.spec-graph-legend__color[data-tier='0'] {
+  background: var(--life-sage, #4a6b4a);
+}
+.spec-graph-legend__color[data-tier='1'] {
+  background: #6b8b6b;
+}
+.spec-graph-legend__color[data-tier='2'] {
+  background: var(--text-muted, #5a5a64);
+}
+.spec-graph-legend__color[data-tier='3'] {
+  background: var(--accent-primary, #c4a77d);
+}
+.spec-graph-legend__color[data-tier='4'] {
+  background: #88c0d0;
+}
+
+/* =============================================================================
+ * Reactflow Overrides
+ * ============================================================================= */
+
+.react-flow__background {
+  background: var(--surface-0, #0a0a0c);
+}
+
+.react-flow__pane {
+  cursor: grab;
+}
+
+.react-flow__pane:active {
+  cursor: grabbing;
+}
+
+.react-flow__edge-path {
+  stroke: var(--text-muted, #5a5a64);
+}
+
+.react-flow__attribution {
+  display: none;
+}

@@ -9,6 +9,49 @@
  */
 
 // =============================================================================
+// Edge Pending State (for EDGE mode)
+// =============================================================================
+
+/**
+ * Edge creation phase.
+ */
+export type EdgePhase = 'select-type' | 'select-target' | 'confirm';
+
+/**
+ * State for pending edge creation in EDGE mode.
+ */
+export interface EdgePendingState {
+  /** Source node (current node when entering EDGE mode) */
+  sourceId: string;
+  /** Source node label for display */
+  sourceLabel: string;
+  /** Selected edge type (null until chosen) */
+  edgeType: EdgeType | null;
+  /** Current phase */
+  phase: EdgePhase;
+  /** Target node (null until chosen) */
+  targetId: string | null;
+  /** Target node label for display */
+  targetLabel: string | null;
+}
+
+/**
+ * Edge type shortcuts for EDGE mode.
+ * Press the key to select that edge type.
+ */
+export const EDGE_TYPE_KEYS: Record<string, EdgeType> = {
+  d: 'defines',
+  e: 'extends',
+  i: 'implements',
+  r: 'references',
+  c: 'contradicts',
+  t: 'tests',
+  u: 'uses',
+  s: 'derives_from', // 's' for "source from"
+  n: 'contains', // 'n' for "nests"
+};
+
+// =============================================================================
 // Modes
 // =============================================================================
 
@@ -211,6 +254,9 @@ export interface NavigationState {
   /** K-Block state (when editing) */
   kblock: KBlockState | null;
 
+  /** Edge pending state (when in EDGE mode) */
+  edgePending: EdgePendingState | null;
+
   /** Siblings (nodes sharing same parent edge type) */
   siblings: GraphNode[];
 
@@ -267,6 +313,12 @@ export type NavigationAction =
   | { type: 'EXIT_EDGE' }
   | { type: 'ENTER_WITNESS' }
   | { type: 'EXIT_WITNESS' }
+
+  // Edge mode operations
+  | { type: 'EDGE_SELECT_TYPE'; edgeType: EdgeType }
+  | { type: 'EDGE_SELECT_TARGET'; targetId: string; targetLabel: string }
+  | { type: 'EDGE_CONFIRM' }
+  | { type: 'EDGE_CANCEL' }
 
   // K-Block operations
   | { type: 'KBLOCK_CREATED'; blockId: string; content: string }
@@ -398,6 +450,7 @@ export function createInitialState(): NavigationState {
     },
     mode: 'NORMAL',
     kblock: null,
+    edgePending: null,
     siblings: [],
     siblingIndex: -1,
     loading: false,
