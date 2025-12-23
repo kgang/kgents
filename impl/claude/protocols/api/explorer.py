@@ -250,6 +250,68 @@ def create_explorer_router() -> "APIRouter | None":
             },
         )
 
+    @router.get("/list")
+    async def list_events(
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0),
+        types: str | None = Query(default=None, description="Comma-separated entity types"),
+        author: str | None = Query(default=None),
+    ) -> dict[str, Any]:
+        """
+        List unified events with pagination.
+
+        This REST endpoint wraps UnifiedQueryService.list_events() for
+        frontend polling fallback when SSE isn't available.
+
+        Args:
+            limit: Max events to return (1-200)
+            offset: Pagination offset
+            types: Comma-separated types (mark,crystal,trail,evidence,teaching,lemma)
+            author: Filter by author
+        """
+        try:
+            from services.explorer.contracts import EntityType, ListEventsRequest, StreamFilters
+            from services.providers import get_unified_query_service
+
+            service = await get_unified_query_service()
+
+            # Build filters
+            filters = None
+            if types or author:
+                parsed_types = []
+                if types:
+                    for t in types.split(","):
+                        try:
+                            parsed_types.append(EntityType(t.strip().lower()))
+                        except ValueError:
+                            pass  # Skip invalid types
+
+                filters = StreamFilters(
+                    types=parsed_types,
+                    author=author,
+                )
+
+            request = ListEventsRequest(
+                filters=filters,
+                limit=limit,
+                offset=offset,
+            )
+            response = await service.list_events(request)
+
+            return {
+                "events": [e.to_dict() for e in response.events],
+                "total": response.total,
+                "has_more": response.has_more,
+            }
+        except Exception as e:
+            logger.exception("Error listing events")
+            return {
+                "events": [],
+                "total": 0,
+                "has_more": False,
+                "error": str(e),
+            }
+
     @router.get("/health")
     async def explorer_health() -> dict[str, Any]:
         """

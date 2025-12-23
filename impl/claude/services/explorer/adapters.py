@@ -57,6 +57,27 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
+# =============================================================================
+# Timestamp Helper
+# =============================================================================
+
+
+def _safe_timestamp(value: Any) -> str:
+    """
+    Safely convert a timestamp to ISO format string.
+
+    Handles: datetime, string, None, and other types gracefully.
+    """
+    if value is None:
+        return datetime.utcnow().isoformat()
+    if isinstance(value, str):
+        return value  # Already a string
+    if hasattr(value, "isoformat"):
+        return str(value.isoformat())
+    return str(value)
+
+
 T = TypeVar("T")
 
 
@@ -150,9 +171,7 @@ class MarkAdapter(EntityAdapter):
             type=EntityType.MARK,
             title=title,
             summary=summary,
-            timestamp=row.created_at.isoformat()
-            if row.created_at
-            else datetime.utcnow().isoformat(),
+            timestamp=_safe_timestamp(row.created_at),
             metadata=metadata.__dict__,
         )
 
@@ -229,7 +248,7 @@ class CrystalAdapter(EntityAdapter):
             content_hash=row.content_hash or "",
             tags=list(row.tags) if row.tags else [],
             access_count=row.access_count or 0,
-            last_accessed=row.last_accessed.isoformat() if row.last_accessed else None,
+            last_accessed=_safe_timestamp(row.last_accessed) if row.last_accessed else None,
             source_type=row.source_type,
             source_ref=row.source_ref,
             datum_id=row.datum_id,
@@ -251,9 +270,7 @@ class CrystalAdapter(EntityAdapter):
             type=EntityType.CRYSTAL,
             title=title,
             summary=summary,
-            timestamp=row.created_at.isoformat()
-            if row.created_at
-            else datetime.utcnow().isoformat(),
+            timestamp=_safe_timestamp(row.created_at),
             metadata=metadata.__dict__,
         )
 
@@ -358,9 +375,7 @@ class TrailAdapter(EntityAdapter):
             type=EntityType.TRAIL,
             title=title,
             summary=summary,
-            timestamp=row.created_at.isoformat()
-            if row.created_at
-            else datetime.utcnow().isoformat(),
+            timestamp=_safe_timestamp(row.created_at),
             metadata=metadata.__dict__,
         )
 
@@ -442,9 +457,7 @@ class EvidenceAdapter(EntityAdapter):
             type=EntityType.EVIDENCE,
             title=title,
             summary=summary,
-            timestamp=row.created_at.isoformat()
-            if row.created_at
-            else datetime.utcnow().isoformat(),
+            timestamp=_safe_timestamp(row.created_at),
             metadata=metadata.__dict__,
         )
 
@@ -469,9 +482,7 @@ class EvidenceAdapter(EntityAdapter):
             type=EntityType.EVIDENCE,
             title=title,
             summary=summary,
-            timestamp=row.created_at.isoformat()
-            if row.created_at
-            else datetime.utcnow().isoformat(),
+            timestamp=_safe_timestamp(row.created_at),
             metadata=metadata.__dict__,
         )
 
@@ -500,9 +511,7 @@ class EvidenceAdapter(EntityAdapter):
             type=EntityType.EVIDENCE,
             title=title,
             summary=summary,
-            timestamp=row.created_at.isoformat()
-            if row.created_at
-            else datetime.utcnow().isoformat(),
+            timestamp=_safe_timestamp(row.created_at),
             metadata=metadata.__dict__,
         )
 
@@ -628,7 +637,7 @@ class TeachingAdapter(EntityAdapter):
             source_module=row.source_module or "",
             source_symbol=row.source_symbol or "",
             is_alive=is_alive,
-            died_at=row.died_at.isoformat() if row.died_at else None,
+            died_at=_safe_timestamp(row.died_at) if row.died_at else None,
             successor_module=row.successor_module,
             extinction_id=None,  # Would need join to get this
         )
@@ -649,9 +658,7 @@ class TeachingAdapter(EntityAdapter):
             type=EntityType.TEACHING,
             title=title,
             summary=summary,
-            timestamp=row.created_at.isoformat()
-            if row.created_at
-            else datetime.utcnow().isoformat(),
+            timestamp=_safe_timestamp(row.created_at),
             metadata=metadata.__dict__,
         )
 
@@ -734,9 +741,7 @@ class LemmaAdapter(EntityAdapter):
             type=EntityType.LEMMA,
             title=title,
             summary=summary,
-            timestamp=row.created_at.isoformat()
-            if row.created_at
-            else datetime.utcnow().isoformat(),
+            timestamp=_safe_timestamp(row.created_at),
             metadata=metadata.__dict__,
         )
 
