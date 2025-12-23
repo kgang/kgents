@@ -38,6 +38,12 @@ from .brain import (
     TeachingCrystal,
 )
 
+# Sovereign Crown Jewel
+from .sovereign import (
+    SovereignCollectionRow,
+    SovereignPlaceholderRow,
+)
+
 # Town Crown Jewel
 from .town import Citizen, CitizenRelationship, Conversation, ConversationTurn
 
@@ -81,4 +87,7 @@ __all__ = [
     "TrailForkRow",
     "TrailEvidenceRow",
     "TrailCommitmentRow",
+    # Sovereign
+    "SovereignCollectionRow",
+    "SovereignPlaceholderRow",
 ]

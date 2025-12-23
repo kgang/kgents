@@ -36,14 +36,20 @@ from .probes import (
     ProbeResults,
     # Sheaf probes
     SheafDetector,
+    # Phase 1 enhancements
+    StepExtractor,
+    SymbolicContradictionChecker,
     Violation,
 )
 from .study import (
+    BaselineResults,
     CorrelationResult,
     CorrelationStudy,
     Problem,
+    ProblemResult,
     ProblemSet,
     StudyConfig,
+    StudyResult,
 )
 
 __all__ = [
@@ -61,10 +67,16 @@ __all__ = [
     # Unified runner
     "CategoricalProbeRunner",
     "ProbeResults",
+    # Phase 1 enhancements
+    "StepExtractor",
+    "SymbolicContradictionChecker",
     # Study
     "CorrelationStudy",
     "CorrelationResult",
+    "BaselineResults",
     "Problem",
     "ProblemSet",
+    "ProblemResult",
     "StudyConfig",
+    "StudyResult",
 ]

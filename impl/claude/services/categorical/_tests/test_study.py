@@ -204,29 +204,68 @@ class TestCorrelationResult:
 
 
 class TestStudyResult:
-    """Tests for StudyResult."""
+    """Tests for StudyResult.
+
+    Note: After Phase 1 methodology hardening, the gate criteria now require:
+    - CI lower bounds > threshold (not just point estimate)
+    - p-value < 0.01 (strict significance)
+    - Beats baseline by Δ > 0.15
+
+    These tests use relaxed_gate checks or properly configured CI bounds.
+    """
 
     def _make_study_result(
         self,
         identity_r: float = 0.4,
         coherence_r: float = 0.5,
         auc: float = 0.75,
+        identity_ci: tuple[float, float] | None = None,
+        coherence_ci: tuple[float, float] | None = None,
+        p_value_perm: float = 0.001,  # Default to passing significance
     ) -> StudyResult:
-        """Helper to create study result."""
+        """Helper to create study result with proper CI bounds."""
+        # Default CI bounds: tightly around point estimate for passing tests
+        id_ci = identity_ci or (identity_r - 0.05, identity_r + 0.05)
+        co_ci = coherence_ci or (coherence_r - 0.05, coherence_r + 0.05)
+
         return StudyResult(
             config=StudyConfig(),
             problem_results=[],
-            monad_identity_corr=CorrelationResult("identity", identity_r, 0.01, 100, 0.8, 0.4),
+            monad_identity_corr=CorrelationResult(
+                metric_name="identity",
+                correlation=identity_r,
+                p_value=0.01,
+                n_samples=100,
+                mean_when_correct=0.8,
+                mean_when_incorrect=0.4,
+                ci_low=id_ci[0],
+                ci_high=id_ci[1],
+                p_value_permutation=p_value_perm,
+            ),
             monad_assoc_corr=None,
-            sheaf_coherence_corr=CorrelationResult("coherence", coherence_r, 0.01, 100, 0.9, 0.5),
+            sheaf_coherence_corr=CorrelationResult(
+                metric_name="coherence",
+                correlation=coherence_r,
+                p_value=0.01,
+                n_samples=100,
+                mean_when_correct=0.9,
+                mean_when_incorrect=0.5,
+                ci_low=co_ci[0],
+                ci_high=co_ci[1],
+                p_value_permutation=p_value_perm,
+            ),
             combined_auc=auc,
+            baselines=None,  # No baselines = beats_all_baselines returns True
         )
 
     def test_passed_gate_all_pass(self) -> None:
-        """Gate passes when all thresholds met."""
+        """Gate passes when all thresholds met (using CI lower bounds)."""
+        # CI bounds are ±0.05 by default, so CI_low = r - 0.05
+        # For CI_low > 0.3, we need r > 0.35
+        # For CI_low > 0.4, we need r > 0.45
         result = self._make_study_result(
-            identity_r=0.35,  # > 0.3
-            coherence_r=0.45,  # > 0.4
+            identity_r=0.40,  # CI_low = 0.35 > 0.3
+            coherence_r=0.50,  # CI_low = 0.45 > 0.4
             auc=0.75,  # > 0.7
         )
 

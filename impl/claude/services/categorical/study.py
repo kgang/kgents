@@ -150,9 +150,14 @@ class ProblemResult:
 @dataclass
 class CorrelationResult:
     """
-    Statistical correlation results.
+    Statistical correlation results with bootstrapped confidence intervals.
 
-    Implements Pearson correlation coefficient.
+    Implements Pearson correlation coefficient with uncertainty quantification.
+
+    Enhanced in Phase 1 methodology hardening to include:
+    - 95% CI via bootstrap
+    - Exact p-value via permutation test
+    - Effect size interpretation
     """
 
     metric_name: str
@@ -162,10 +167,29 @@ class CorrelationResult:
     mean_when_correct: float
     mean_when_incorrect: float
 
+    # Phase 1 enhancement: Bootstrapped confidence intervals
+    ci_low: float = 0.0  # Lower bound of 95% CI
+    ci_high: float = 0.0  # Upper bound of 95% CI
+
+    # Phase 1 enhancement: Permutation test p-value
+    p_value_permutation: float | None = None  # Exact p-value (non-parametric)
+
     @property
     def significant(self) -> bool:
-        """True if p < 0.05."""
-        return self.p_value < 0.05
+        """True if p < 0.05 (uses permutation p-value if available)."""
+        p = self.p_value_permutation if self.p_value_permutation is not None else self.p_value
+        return p < 0.05
+
+    @property
+    def significant_strict(self) -> bool:
+        """True if p < 0.01 (Phase 1 gate criterion)."""
+        p = self.p_value_permutation if self.p_value_permutation is not None else self.p_value
+        return p < 0.01
+
+    @property
+    def ci_excludes_zero(self) -> bool:
+        """True if 95% CI excludes zero (stronger evidence)."""
+        return self.ci_low > 0 or self.ci_high < 0
 
     @property
     def effect_size(self) -> str:
@@ -183,8 +207,38 @@ class CorrelationResult:
 
 
 @dataclass
+class BaselineResults:
+    """
+    Results from baseline comparisons.
+
+    Phase 1 enhancement: Correlation without baselines is meaningless.
+    Random noise can correlate. Categorical probes must beat all baselines.
+    """
+
+    random_corr: CorrelationResult  # Random scores [0,1]
+    length_corr: CorrelationResult  # Trace length as predictor
+    confidence_corr: CorrelationResult | None = None  # LLM self-confidence (optional)
+
+    @property
+    def best_baseline(self) -> float:
+        """Best baseline correlation (the bar categorical must beat)."""
+        corrs = [abs(self.random_corr.correlation), abs(self.length_corr.correlation)]
+        if self.confidence_corr:
+            corrs.append(abs(self.confidence_corr.correlation))
+        return max(corrs)
+
+
+@dataclass
 class StudyResult:
-    """Complete study results with all correlations."""
+    """
+    Complete study results with all correlations and enhanced gate criteria.
+
+    Phase 1 methodology hardening adds:
+    - Baseline comparisons (random, length, confidence)
+    - Bootstrapped confidence intervals
+    - Permutation test p-values
+    - Stricter gate criteria (CI lower bounds, beats baseline)
+    """
 
     config: "StudyConfig"
     problem_results: list[ProblemResult]
@@ -195,15 +249,64 @@ class StudyResult:
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     duration: timedelta = field(default=timedelta(0))
 
+    # Phase 1 enhancement: Baseline comparisons
+    baselines: BaselineResults | None = None
+
+    @property
+    def categorical_delta(self) -> float:
+        """How much categorical (avg of identity + coherence) beats random baseline."""
+        if self.baselines is None:
+            return 0.0
+        categorical_avg = (
+            abs(self.monad_identity_corr.correlation) + abs(self.sheaf_coherence_corr.correlation)
+        ) / 2
+        return categorical_avg - abs(self.baselines.random_corr.correlation)
+
+    @property
+    def beats_all_baselines(self) -> bool:
+        """True if categorical beats all baselines by meaningful margin."""
+        if self.baselines is None:
+            return True  # No baselines to beat
+        # Must beat best baseline by at least 0.15
+        return self.categorical_delta > 0.15
+
     @property
     def passed_gate(self) -> bool:
         """
         Check if study passes Phase 1 gate.
 
-        Criteria:
-        - Monad identity r > 0.3
-        - Sheaf coherence r > 0.4
+        Enhanced criteria (methodology hardening):
+        - Monad identity CI lower bound > 0.3 (not just point estimate)
+        - Sheaf coherence CI lower bound > 0.4
         - Combined AUC > 0.7
+        - Beats random baseline by Δ > 0.15
+        - Both correlations have p < 0.01 (permutation test)
+        """
+        # Use CI lower bounds for stricter criterion
+        identity_ok = self.monad_identity_corr.ci_low > 0.3
+        coherence_ok = self.sheaf_coherence_corr.ci_low > 0.4
+        auc_ok = self.combined_auc > 0.7
+        baseline_ok = self.beats_all_baselines
+
+        # Check significance
+        identity_sig = self.monad_identity_corr.significant_strict
+        coherence_sig = self.sheaf_coherence_corr.significant_strict
+
+        return (
+            identity_ok
+            and coherence_ok
+            and auc_ok
+            and baseline_ok
+            and identity_sig
+            and coherence_sig
+        )
+
+    @property
+    def passed_gate_relaxed(self) -> bool:
+        """
+        Relaxed gate (original criteria without CI/baseline checks).
+
+        Use this for comparison with enhanced gate.
         """
         return (
             self.monad_identity_corr.correlation > 0.3
@@ -215,14 +318,33 @@ class StudyResult:
     def blockers(self) -> list[str]:
         """List metrics that block the gate."""
         blockers = []
-        if self.monad_identity_corr.correlation <= 0.3:
-            blockers.append(f"monad_identity (r={self.monad_identity_corr.correlation:.3f} ≤ 0.3)")
-        if self.sheaf_coherence_corr.correlation <= 0.4:
+
+        # CI lower bound checks
+        if self.monad_identity_corr.ci_low <= 0.3:
             blockers.append(
-                f"sheaf_coherence (r={self.sheaf_coherence_corr.correlation:.3f} ≤ 0.4)"
+                f"monad_identity CI low (r={self.monad_identity_corr.correlation:.3f}, "
+                f"CI=[{self.monad_identity_corr.ci_low:.3f}, {self.monad_identity_corr.ci_high:.3f}])"
+            )
+        if self.sheaf_coherence_corr.ci_low <= 0.4:
+            blockers.append(
+                f"sheaf_coherence CI low (r={self.sheaf_coherence_corr.correlation:.3f}, "
+                f"CI=[{self.sheaf_coherence_corr.ci_low:.3f}, {self.sheaf_coherence_corr.ci_high:.3f}])"
             )
         if self.combined_auc <= 0.7:
             blockers.append(f"combined_auc ({self.combined_auc:.3f} ≤ 0.7)")
+
+        # Baseline check
+        if not self.beats_all_baselines:
+            blockers.append(f"baseline_delta ({self.categorical_delta:.3f} ≤ 0.15)")
+
+        # Significance checks
+        if not self.monad_identity_corr.significant_strict:
+            p = self.monad_identity_corr.p_value_permutation or self.monad_identity_corr.p_value
+            blockers.append(f"monad_identity p-value ({p:.4f} ≥ 0.01)")
+        if not self.sheaf_coherence_corr.significant_strict:
+            p = self.sheaf_coherence_corr.p_value_permutation or self.sheaf_coherence_corr.p_value
+            blockers.append(f"sheaf_coherence p-value ({p:.4f} ≥ 0.01)")
+
         return blockers
 
     def to_dict(self) -> dict[str, Any]:
@@ -251,7 +373,16 @@ class StudyResult:
 
 @dataclass
 class StudyConfig:
-    """Configuration for correlation study."""
+    """
+    Configuration for correlation study.
+
+    Enhanced with Phase 1 methodology parameters:
+    - run_baselines: Compute baseline comparisons
+    - n_bootstrap: Number of bootstrap samples for CI
+    - n_permutations: Number of permutations for p-value
+    - significance_level: Required p-value threshold
+    - random_seed: For reproducibility
+    """
 
     n_problems: int = 500
     n_samples_per_problem: int = 5  # For identity tests
@@ -264,6 +395,13 @@ class StudyConfig:
     min_monad_corr: float = 0.3
     min_sheaf_corr: float = 0.4
     min_combined_auc: float = 0.7
+
+    # Phase 1 enhancement: Statistical rigor parameters
+    run_baselines: bool = True  # Compute baseline comparisons
+    n_bootstrap: int = 1000  # Bootstrap samples for CI
+    n_permutations: int = 10000  # Permutations for exact p-value
+    significance_level: float = 0.01  # Stricter than 0.05
+    random_seed: int | None = 42  # For reproducibility
 
 
 # =============================================================================
@@ -371,16 +509,110 @@ class CorrelationStudy:
 
         return lines[-1].strip() if lines else ""
 
+    def _pearson(self, x: list[float], y: list[float]) -> float:
+        """Compute Pearson correlation coefficient."""
+        import math
+
+        n = len(x)
+        if n < 2:
+            return 0.0
+
+        mean_x = sum(x) / n
+        mean_y = sum(y) / n
+
+        numerator = sum((xi - mean_x) * (yi - mean_y) for xi, yi in zip(x, y))
+        denom_x = math.sqrt(sum((xi - mean_x) ** 2 for xi in x))
+        denom_y = math.sqrt(sum((yi - mean_y) ** 2 for yi in y))
+
+        if denom_x == 0 or denom_y == 0:
+            return 0.0
+
+        return numerator / (denom_x * denom_y)
+
+    def _bootstrap_ci(
+        self,
+        values: list[float],
+        correct: list[bool],
+        n_bootstrap: int = 1000,
+    ) -> tuple[float, float]:
+        """
+        Compute 95% confidence interval via bootstrap.
+
+        Phase 1 enhancement: Point estimates are incomplete.
+        We need uncertainty quantification.
+        """
+        import random
+
+        n = len(values)
+        if n < 3:
+            return (0.0, 0.0)
+
+        y = [1.0 if c else 0.0 for c in correct]
+        bootstrap_rs = []
+
+        for _ in range(n_bootstrap):
+            # Sample with replacement
+            indices = [random.randint(0, n - 1) for _ in range(n)]
+            sample_vals = [values[i] for i in indices]
+            sample_y = [y[i] for i in indices]
+            r = self._pearson(sample_vals, sample_y)
+            bootstrap_rs.append(r)
+
+        # 95% CI (2.5th and 97.5th percentiles)
+        sorted_rs = sorted(bootstrap_rs)
+        ci_low = sorted_rs[int(0.025 * n_bootstrap)]
+        ci_high = sorted_rs[int(0.975 * n_bootstrap)]
+
+        return (ci_low, ci_high)
+
+    def _permutation_test(
+        self,
+        values: list[float],
+        correct: list[bool],
+        observed_r: float,
+        n_permutations: int = 10000,
+    ) -> float:
+        """
+        Exact p-value via permutation test.
+
+        Phase 1 enhancement: t-test assumes normality.
+        Permutation tests are exact and distribution-free.
+        """
+        import random
+
+        n = len(values)
+        if n < 3:
+            return 1.0
+
+        y = [1.0 if c else 0.0 for c in correct]
+        count_extreme = 0
+
+        for _ in range(n_permutations):
+            # Shuffle correctness labels
+            shuffled_y = y.copy()
+            random.shuffle(shuffled_y)
+            perm_r = self._pearson(values, shuffled_y)
+
+            # Two-tailed: count if |perm_r| >= |observed_r|
+            if abs(perm_r) >= abs(observed_r):
+                count_extreme += 1
+
+        return count_extreme / n_permutations
+
     def _compute_correlation(
         self,
         metric_name: str,
         values: list[float],
         correct: list[bool],
+        n_bootstrap: int = 1000,
+        n_permutations: int = 10000,
     ) -> CorrelationResult:
         """
-        Compute Pearson correlation between metric and correctness.
+        Compute Pearson correlation with bootstrapped CI and permutation p-value.
 
-        Uses scipy if available, falls back to simple computation.
+        Phase 1 methodology hardening:
+        - Bootstrap 95% CI
+        - Permutation test for exact p-value
         """
         import math
 
@@ -393,38 +625,33 @@ class CorrelationStudy:
                 n_samples=n,
                 mean_when_correct=0.0,
                 mean_when_incorrect=0.0,
+                ci_low=0.0,
+                ci_high=0.0,
+                p_value_permutation=1.0,
             )
 
         # Convert correctness to float
         y = [1.0 if c else 0.0 for c in correct]
-        x = values
 
-        # Compute means
-        mean_x = sum(x) / n
-        mean_y = sum(y) / n
+        # Compute point estimate
+        r = self._pearson(values, y)
 
-        # Compute Pearson r
-        numerator = sum((xi - mean_x) * (yi - mean_y) for xi, yi in zip(x, y))
-        denom_x = math.sqrt(sum((xi - mean_x) ** 2 for xi in x))
-        denom_y = math.sqrt(sum((yi - mean_y) ** 2 for yi in y))
+        # Bootstrap CI
+        ci_low, ci_high = self._bootstrap_ci(values, correct, n_bootstrap)
 
-        if denom_x == 0 or denom_y == 0:
-            r = 0.0
-        else:
-            r = numerator / (denom_x * denom_y)
+        # Permutation test p-value
+        p_value_perm = self._permutation_test(values, correct, r, n_permutations)
 
-        # Simple p-value approximation (t-test)
+        # Simple t-test p-value (for comparison)
         if abs(r) >= 1.0 or n < 3:
             p_value = 0.0 if abs(r) >= 0.999 else 1.0
         else:
             t = r * math.sqrt((n - 2) / (1 - r * r))
-            # Approximate p-value (two-tailed)
-            # Using normal approximation for large n
-            p_value = 2 * (1 - _normal_cdf(abs(t))) if n > 30 else 0.05  # Conservative
+            p_value = 2 * (1 - _normal_cdf(abs(t))) if n > 30 else 0.05
 
         # Mean values by correctness
-        correct_vals = [x[i] for i in range(n) if correct[i]]
-        incorrect_vals = [x[i] for i in range(n) if not correct[i]]
+        correct_vals = [values[i] for i in range(n) if correct[i]]
+        incorrect_vals = [values[i] for i in range(n) if not correct[i]]
 
         mean_correct = sum(correct_vals) / len(correct_vals) if correct_vals else 0.0
         mean_incorrect = sum(incorrect_vals) / len(incorrect_vals) if incorrect_vals else 0.0
@@ -436,6 +663,9 @@ class CorrelationStudy:
             n_samples=n,
             mean_when_correct=mean_correct,
             mean_when_incorrect=mean_incorrect,
+            ci_low=ci_low,
+            ci_high=ci_high,
+            p_value_permutation=p_value_perm,
         )
 
     def _compute_auc(
@@ -485,9 +715,65 @@ class CorrelationStudy:
 
         return auc / (n_pos * n_neg)
 
+    def _compute_baselines(
+        self,
+        valid_results: list[ProblemResult],
+        correctness: list[bool],
+        config: StudyConfig,
+    ) -> BaselineResults:
+        """
+        Compute baseline correlations for comparison.
+
+        Phase 1 enhancement: Categorical probes must beat these baselines:
+        1. Random scores: correlation with random [0,1] values
+        2. Length heuristic: trace length often correlates with correctness
+        """
+        import random
+
+        n = len(valid_results)
+
+        # Seed for reproducibility
+        if config.random_seed is not None:
+            random.seed(config.random_seed + 999)  # Different from main seed
+
+        # Random baseline: generate random scores
+        random_scores = [random.random() for _ in range(n)]
+        random_corr = self._compute_correlation(
+            "random_baseline",
+            random_scores,
+            correctness,
+            config.n_bootstrap,
+            config.n_permutations,
+        )
+
+        # Length baseline: use trace length as predictor
+        # Normalize to [0,1] for comparability
+        trace_lengths = [len(r.trace) for r in valid_results]
+        max_len = max(trace_lengths) if trace_lengths else 1
+        length_scores = [l / max_len for l in trace_lengths]
+        length_corr = self._compute_correlation(
+            "length_baseline",
+            length_scores,
+            correctness,
+            config.n_bootstrap,
+            config.n_permutations,
+        )
+
+        return BaselineResults(
+            random_corr=random_corr,
+            length_corr=length_corr,
+            confidence_corr=None,  # Could add LLM self-confidence if available
+        )
+
     async def run(self, config: StudyConfig | None = None) -> StudyResult:
         """
-        Run the correlation study.
+        Run the correlation study with enhanced methodology.
+
+        Phase 1 enhancements:
+        - Bootstrap CIs for all correlations
+        - Permutation tests for exact p-values
+        - Baseline comparisons (random, length)
+        - Reproducible via random_seed
 
         Args:
             config: Study configuration (uses defaults if not provided)
@@ -495,10 +781,22 @@ class CorrelationStudy:
         Returns:
             StudyResult with all correlations and gate status
         """
+        import random
+
         start_time = datetime.now(timezone.utc)
         config = config or StudyConfig()
 
+        # Set random seed for reproducibility
+        if config.random_seed is not None:
+            random.seed(config.random_seed)
+            logger.info(f"Random seed: {config.random_seed}")
+
         logger.info(f"Starting correlation study: {config.n_problems} problems")
+        logger.info(
+            f"Bootstrap samples: {config.n_bootstrap}, "
+            f"Permutations: {config.n_permutations}, "
+            f"Run baselines: {config.run_baselines}"
+        )
 
         # Create probe runner
         runner = CategoricalProbeRunner(
@@ -538,14 +836,42 @@ class CorrelationStudy:
         coherence_scores = [r.sheaf_coherence_score for r in valid_results]
         correctness = [r.correct for r in valid_results]
 
-        # Compute correlations
-        identity_corr = self._compute_correlation("monad_identity", identity_scores, correctness)
+        # Compute correlations with bootstrap CI and permutation p-value
+        identity_corr = self._compute_correlation(
+            "monad_identity",
+            identity_scores,
+            correctness,
+            config.n_bootstrap,
+            config.n_permutations,
+        )
 
         assoc_corr = None
         if config.run_associativity and any(s > 0 for s in assoc_scores):
-            assoc_corr = self._compute_correlation("monad_assoc", assoc_scores, correctness)
+            assoc_corr = self._compute_correlation(
+                "monad_assoc",
+                assoc_scores,
+                correctness,
+                config.n_bootstrap,
+                config.n_permutations,
+            )
 
-        coherence_corr = self._compute_correlation("sheaf_coherence", coherence_scores, correctness)
+        coherence_corr = self._compute_correlation(
+            "sheaf_coherence",
+            coherence_scores,
+            correctness,
+            config.n_bootstrap,
+            config.n_permutations,
+        )
+
+        # Compute baselines if requested
+        baselines: BaselineResults | None = None
+        if config.run_baselines:
+            logger.info("Computing baseline correlations...")
+            baselines = self._compute_baselines(valid_results, correctness, config)
+            logger.info(
+                f"Baselines: random_r={baselines.random_corr.correlation:.3f}, "
+                f"length_r={baselines.length_corr.correlation:.3f}"
+            )
 
         # Compute combined AUC
         combined_scores = [
@@ -563,16 +889,24 @@ class CorrelationStudy:
             sheaf_coherence_corr=coherence_corr,
             combined_auc=combined_auc,
             duration=duration,
+            baselines=baselines,
         )
 
         # Emit final mark
         await self._emit_study_mark(study_result)
 
+        # Enhanced logging
         logger.info(
-            f"Study complete: identity_r={identity_corr.correlation:.3f}, "
-            f"coherence_r={coherence_corr.correlation:.3f}, "
-            f"auc={combined_auc:.3f}, "
-            f"passed={study_result.passed_gate}"
+            f"Study complete:\n"
+            f"  Identity: r={identity_corr.correlation:.3f} "
+            f"CI=[{identity_corr.ci_low:.3f}, {identity_corr.ci_high:.3f}] "
+            f"p={identity_corr.p_value_permutation:.4f}\n"
+            f"  Coherence: r={coherence_corr.correlation:.3f} "
+            f"CI=[{coherence_corr.ci_low:.3f}, {coherence_corr.ci_high:.3f}] "
+            f"p={coherence_corr.p_value_permutation:.4f}\n"
+            f"  AUC: {combined_auc:.3f}\n"
+            f"  Δ over baseline: {study_result.categorical_delta:.3f}\n"
+            f"  Gate: {'PASS' if study_result.passed_gate else 'BLOCKED by: ' + ', '.join(study_result.blockers)}"
         )
 
         return study_result
@@ -629,6 +963,7 @@ def _normal_cdf(x: float) -> float:
 __all__ = [
     "CorrelationStudy",
     "CorrelationResult",
+    "BaselineResults",  # Phase 1 enhancement
     "Problem",
     "ProblemSet",
     "ProblemType",

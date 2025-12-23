@@ -817,6 +817,225 @@ class CategoricalProbeRunner:
             logger.warning(f"Failed to emit probe mark: {e}")
 
 
+# =============================================================================
+# StepExtractor: Automatic Reasoning Step Extraction
+# =============================================================================
+
+
+class StepExtractor:
+    """
+    Extract reasoning steps from a trace automatically.
+
+    Phase 1 enhancement: Current associativity test requires pre-defined steps.
+    This limits applicability. StepExtractor enables automatic step discovery.
+
+    Usage:
+        >>> extractor = StepExtractor(llm_client)
+        >>> steps = await extractor.extract("Let me think... First, I calculate 5+3=8...")
+        >>> print(steps)  # ("5+3=8", "Then multiply by 2", "Result is 16")
+    """
+
+    EXTRACTION_PROMPT = """Identify the distinct reasoning steps in this trace.
+
+A step is a self-contained logical move (calculation, inference, lookup, decision).
+Return each step on a new line, prefixed with "STEP: ".
+
+Be concise - each step should be 1-2 sentences.
+
+Trace:
+{trace}
+
+Steps:"""
+
+    def __init__(
+        self,
+        llm: LLMProtocol,
+        system_prompt: str = "You identify reasoning steps precisely.",
+        temperature: float = 0.0,
+        min_steps: int = 2,
+        max_steps: int = 10,
+    ):
+        """
+        Initialize StepExtractor.
+
+        Args:
+            llm: LLM client conforming to LLMProtocol
+            system_prompt: System prompt for extraction
+            temperature: Generation temperature
+            min_steps: Minimum steps to extract (pad if needed)
+            max_steps: Maximum steps to return
+        """
+        self.llm = llm
+        self.system_prompt = system_prompt
+        self.temperature = temperature
+        self.min_steps = min_steps
+        self.max_steps = max_steps
+
+    async def extract(self, trace: str) -> tuple[str, ...]:
+        """
+        Extract reasoning steps from trace.
+
+        Returns tuple of step descriptions suitable for associativity testing.
+        """
+        response = await self.llm.generate(
+            system=self.system_prompt,
+            user=self.EXTRACTION_PROMPT.format(trace=trace),
+            temperature=self.temperature,
+        )
+
+        text = response.text if hasattr(response, "text") else response.get("text", str(response))
+        steps = self._parse_steps(text)
+
+        # Ensure we have at least min_steps
+        if len(steps) < self.min_steps:
+            # Pad with generic steps (fallback)
+            padded = list(steps) + [f"Step {i + 1}" for i in range(len(steps), self.min_steps)]
+            steps = tuple(padded)
+
+        return steps[: self.max_steps]
+
+    def _parse_steps(self, response: str) -> tuple[str, ...]:
+        """Parse steps from LLM extraction response."""
+        steps: list[str] = []
+
+        for line in response.strip().split("\n"):
+            line = line.strip()
+            if line.upper().startswith("STEP:"):
+                step = line[5:].strip()
+                if step:
+                    steps.append(step)
+
+        return tuple(steps)
+
+
+# =============================================================================
+# SymbolicContradictionChecker: Fast Pre-filter for Sheaf Detection
+# =============================================================================
+
+
+class SymbolicContradictionChecker:
+    """
+    Fast symbolic checks before expensive LLM calls.
+
+    Phase 1 enhancement: Using LLM to check contradictions is circular.
+    If the LLM reasons poorly, it'll miss contradictions. Symbolic checks
+    catch obvious contradictions without LLM overhead.
+
+    Usage:
+        >>> checker = SymbolicContradictionChecker()
+        >>> result = checker.check("x = 5", "x = 7")
+        >>> print(result)  # True (contradiction detected)
+    """
+
+    def check(self, claim_a: str, claim_b: str) -> bool | None:
+        """
+        Check if two claims contradict each other symbolically.
+
+        Returns:
+            True: Definite contradiction detected
+            False: Definite compatibility detected
+            None: Inconclusive, defer to LLM
+        """
+        # Try numeric contradiction first
+        numeric_result = self.check_numeric_contradiction(claim_a, claim_b)
+        if numeric_result is not None:
+            return numeric_result
+
+        # Try boolean contradiction
+        boolean_result = self.check_boolean_contradiction(claim_a, claim_b)
+        if boolean_result is not None:
+            return boolean_result
+
+        # Inconclusive - defer to LLM
+        return None
+
+    def check_numeric_contradiction(
+        self,
+        claim_a: str,
+        claim_b: str,
+    ) -> bool | None:
+        """
+        Check if claims have contradictory numbers.
+
+        E.g., "x = 5" vs "x = 7" → contradiction
+        """
+        import re
+
+        # Extract variable-value pairs from both claims
+        nums_a = self._extract_numbers(claim_a)
+        nums_b = self._extract_numbers(claim_b)
+
+        # If same variable has different values, contradiction
+        for var, val_a in nums_a.items():
+            if var in nums_b:
+                val_b = nums_b[var]
+                # Check if values are meaningfully different
+                if abs(val_a - val_b) > 0.001:
+                    return True
+
+        # No contradiction found (but not necessarily compatible)
+        return None
+
+    def check_boolean_contradiction(
+        self,
+        claim_a: str,
+        claim_b: str,
+    ) -> bool | None:
+        """
+        Check for boolean contradictions (yes/no, true/false, is/is not).
+
+        E.g., "The answer is yes" vs "The answer is no" → contradiction
+        """
+        claim_a_lower = claim_a.lower()
+        claim_b_lower = claim_b.lower()
+
+        # Check for direct contradictions
+        contradiction_pairs = [
+            ("yes", "no"),
+            ("true", "false"),
+            ("is", "is not"),
+            ("can", "cannot"),
+            ("will", "will not"),
+            ("does", "does not"),
+            ("correct", "incorrect"),
+            ("possible", "impossible"),
+        ]
+
+        for pos, neg in contradiction_pairs:
+            # Check if one claim contains pos and other contains neg
+            # in similar context (same subject)
+            if pos in claim_a_lower and neg in claim_b_lower:
+                return True
+            if neg in claim_a_lower and pos in claim_b_lower:
+                return True
+
+        return None
+
+    def _extract_numbers(self, text: str) -> dict[str, float]:
+        """Extract variable-value pairs from text."""
+        import re
+
+        results: dict[str, float] = {}
+
+        patterns = [
+            r"(\w+)\s*=\s*(-?\d+(?:\.\d+)?)",  # x = 5, x = -3.14
+            r"(\w+)\s+is\s+(-?\d+(?:\.\d+)?)",  # x is 5
+            r"(\w+):\s*(-?\d+(?:\.\d+)?)",  # x: 5
+            r"(\w+)\s+equals?\s+(-?\d+(?:\.\d+)?)",  # x equals 5
+            r"(\w+)\s*→\s*(-?\d+(?:\.\d+)?)",  # x → 5
+        ]
+
+        for pattern in patterns:
+            for match in re.finditer(pattern, text, re.IGNORECASE):
+                var, val = match.groups()
+                try:
+                    results[var.lower()] = float(val)
+                except ValueError:
+                    pass
+
+        return results
+
+
 __all__ = [
     # Monad probes
     "MonadProbe",
@@ -834,4 +1053,7 @@ __all__ = [
     "ProbeResults",
     # Protocol
     "LLMProtocol",
+    # Phase 1 enhancements
+    "StepExtractor",
+    "SymbolicContradictionChecker",
 ]
