@@ -7,6 +7,17 @@
 
 ---
 
+## FIRST: Get Task-Relevant Gotchas
+
+```bash
+kg docs hydrate "<your task>"
+```
+
+This surfaces critical gotchas, likely files, and voice anchors for YOUR specific task.
+Don't skip this—the gotchas you don't read are the bugs you will write.
+
+---
+
 ## The Greater Arc: Burn → Build → Harden
 
 ```
@@ -130,23 +141,6 @@
 | **Witness** | 98% | 678 | Marks, crystals, streaming, promotion |
 | **Atelier** | 75% | — | Design forge, creative patterns |
 | **Liminal** | 50% | — | Transition protocols |
-
----
-
-## Gotchas for Next Claude
-
-**Hardening Complete**:
-- ✅ AD-015: `LedgerCache` → `ProxyHandleStore` (uncommitted, 98 tests pass)
-- ✅ AD-016: Fail-fast AGENTESE resolution (0d93ea6c)
-- ✅ Edit→Witness→Graph→Visual loop closed (90f5d23d)
-- ✅ `ContextNode.follow()` wired to AGENTESE resolvers (87bc75be)
-- ✅ K-Block `:w [message]` and `:q!` fully wired
-- ✅ `useGraphNode` migrated to WitnessedGraph API
-
-**Known Debt**:
-- ⚠️ Hypergraph Emacs Portal ops (zo/zc) not yet implemented
-- ⚠️ 183 mypy errors (manifest signature mismatches)
-- ⚠️ Two PortalToken implementations exist (context vs file_operad)
 
 ---
 

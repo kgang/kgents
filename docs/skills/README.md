@@ -4,7 +4,7 @@ context: self
 
 # Agent Skills Directory
 
-> *"19 skills are necessary and sufficient to build any kgents component."*
+> *"21 skills are necessary and sufficient to build any kgents component."*
 
 **READ SKILLS FIRST.** Every task has a corresponding skill. Before writing code, find the right skill—it will save you hours.
 
@@ -64,6 +64,13 @@ These four skills apply to virtually ANY work you'll do:
 | [data-bus-integration](data-bus-integration.md) | DataBus, SynergyBus, EventBus patterns |
 | [hypergraph-editor](hypergraph-editor.md) | Six-mode modal editing, graph navigation, K-Block integration |
 
+### Witness (Evidence & Derivation)
+
+| Skill | Purpose |
+|-------|---------|
+| [witness-for-agents](witness-for-agents.md) | Marks, decisions, context budgets for programmatic agents |
+| [derivation-edges](derivation-edges.md) | Edge evidence: how marks strengthen derivation relationships |
+
 ### Process (N-Phase)
 
 | Skill | Purpose |
@@ -86,10 +93,11 @@ These four skills apply to virtually ANY work you'll do:
 ## The Skill Composition Formula
 
 ```
-Component = Foundation ∘ Protocol ∘ Architecture ∘ Process ∘ Projection
+Component = Foundation ∘ Protocol ∘ Architecture ∘ Witness ∘ Process ∘ Projection
           = (polynomial-agent + building-agent)
           ∘ (agentese-path + agentese-node-registration)
           ∘ (crown-jewel-patterns + metaphysical-fullstack + data-bus-integration + hypergraph-editor)
+          ∘ (witness-for-agents + derivation-edges)
           ∘ (plan-file + spec-template + spec-hygiene)
           ∘ (projection-target + marimo-projection + test-patterns + elastic-ui-patterns)
 ```
@@ -105,4 +113,4 @@ Extended skills archived to `docs/_archive/2025-12-18-consolidation/`. Restore i
 
 ---
 
-*Consolidated: 2025-12-22 | Skills: 19 active | Docs Renaissance Edition*
+*Consolidated: 2025-12-23 | Skills: 21 active | Docs Renaissance Edition*

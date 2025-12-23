@@ -6,6 +6,19 @@ Minimal context for agents. For humans: start with [README.md](README.md).
 
 ---
 
+## FIRST: Get Task-Relevant Gotchas
+
+```bash
+kg docs hydrate "<your task>"
+```
+
+This surfaces critical gotchas, likely files, and voice anchors for YOUR specific task.
+**Don't skip this**—the gotchas you don't read are the bugs you will write.
+
+For file-specific work: `kg docs relevant <path>`
+
+---
+
 ## Principles
 
 **Tasteful** • **Curated** • **Ethical** • **Joy-Inducing** • **Composable** • **Heterarchical** • **Generative**
@@ -99,26 +112,6 @@ kg witness context --budget 2000       # Budget-aware context
 `docs/skills/` — Essential skills covering every task.
 
 **Universal**: `metaphysical-fullstack.md` • `crown-jewel-patterns.md` • `test-patterns.md`
-
----
-
-## Current Focus (2025-12-23)
-
-**Hypergraph Emacs + Membrane**: The frontend IS the agent.
-
-| Phase | What | Status |
-|-------|------|--------|
-| 1-2 | EditorPolynomial + ContextNode.follow() | ✅ Done |
-| 3 | K-Block auto-creation on INSERT + `:w`/`:q!` | ✅ Done |
-| 4 | WitnessedGraph Integration | ✅ Done |
-| 5 | Portal operations (zo/zc) — vim fold-style | ✅ Done |
-
-**AD-015 Radical Unification** (2025-12-23): LedgerCache DELETED → ProxyHandleStore.
-- Phase 2 complete: ProxyReactor enables event-driven staleness (70 tests)
-- `ensure_scanned()` → `proxy_store.get_or_raise(SourceType.SPEC_CORPUS)`
-- `analyze_now()` → `proxy_store.compute()` with reactive invalidation
-
-See `NOW.md` for active plans.
 
 ---
 

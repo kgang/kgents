@@ -18,6 +18,7 @@ The Metaphysical Fullstack Pattern:
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Optional
 
@@ -150,10 +151,22 @@ def create_app(
 
     # Add CORS middleware
     if enable_cors:
+        # CORS_ALLOW_ALL=1 enables permissive mode for local development
+        # In production, use CORS_ORIGINS to specify allowed origins
+        if os.getenv("CORS_ALLOW_ALL", "").lower() in ("1", "true", "yes"):
+            # Local development: allow all origins (no credentials for safety)
+            cors_origins = ["*"]
+            allow_credentials = False
+        else:
+            # Production: explicit origins from env, default to localhost
+            origins_str = os.getenv("CORS_ORIGINS", "http://localhost:3000")
+            cors_origins = [o.strip() for o in origins_str.split(",") if o.strip()]
+            allow_credentials = True
+
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],  # In production, restrict this
-            allow_credentials=True,
+            allow_origins=cors_origins,
+            allow_credentials=allow_credentials,
             allow_methods=["*"],
             allow_headers=["*"],
         )

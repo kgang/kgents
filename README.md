@@ -2,9 +2,9 @@
 
 > *"The noun is a lie. There is only the rate of change."*
 
-Agents are morphisms in a category. They compose. They observe. They become.
+Agents are morphisms in a category. They compose. They observe. They witness.
 
-This is not another orchestration framework. kgents is a **specification** for agents that have mathematical structure—composition laws that are verified at runtime, not promised in documentation. If your agents don't compose associatively, they're not agents. They're functions with aspirations.
+This is not another orchestration framework. kgents is a **specification** for agents with mathematical structure—composition laws verified at runtime, not promised in documentation. If your agents don't compose associatively, they're not agents. They're functions with aspirations.
 
 ---
 
@@ -25,278 +25,214 @@ _, outputs = pipe.run(initial=("ready", "ready"), inputs=[5, 10])
 
 ---
 
-## Try It: Interactive Demos
+## Core Ideas
 
-Experience kgents through multiple projections—the same concepts, different manifestations.
+### Agents Are Morphisms
 
-### Python Examples (2 minutes)
+Not objects with methods. Not workers with queues. Morphisms in a category—functions that compose, with identity and associativity laws **verified at runtime**.
 
-Five standalone scripts, each <50 lines:
-
-```bash
-cd impl/claude
-
-# Agent composition and associativity laws
-python ../../docs/examples/composition.py
-
-# Operad law verification at runtime
-python ../../docs/examples/operad_laws.py
-
-# Trust levels and witness verification
-python ../../docs/examples/trust_levels.py
-
-# All examples at once
-for f in ../../docs/examples/*.py; do python "$f"; done
+```python
+Agent[A, B]           # A morphism from A to B
+PolyAgent[S, A, B]    # State-dependent morphism (mode changes interface)
 ```
 
-### Marimo Notebooks (Interactive)
+### Witness Everything
 
-Four interactive notebooks for hands-on exploration:
+> *"The proof IS the decision. The mark IS the witness."*
 
-```bash
-cd impl/claude
-
-# The flagship demo: Alethic Architecture
-# Same agent → 6 different projections (Local, CLI, Docker, K8s, WASM, marimo)
-marimo edit demos/agent_explorer.py
-
-# Forge Crown Jewel: artifact synthesis and composition
-marimo edit demos/foundry_showcase.py
-
-# Memory agents: holographic associative memory
-marimo edit demos/stateful_memory_demo.py
-
-# Interactive text rendering and projection
-marimo edit demos/interactive_text_demo.py
-```
-
-### Python Demos (Standalone)
+Every significant action leaves a trace. Marks are the atomic unit of agency. Decisions use dialectical fusion (Kent's view + Claude's view → synthesis).
 
 ```bash
-cd impl/claude
-
-# Reactive substrate visualization
-uv run python demos/red_and_blue.py
-
-# WASM sandbox: zero-trust browser execution
-uv run python demos/wasm_sandbox_demo.py
+km "Completed refactor"                    # Basic mark
+km "Key insight" --tag eureka              # Tagged for retrieval
+kg decide --fast "Use SSE" --reasoning "Simpler than WebSockets"
 ```
 
-### HTML Sandboxes (Browser, No Build)
+### AGENTESE: The Protocol IS the API
 
-Open directly in your browser—no server, no build step:
+Five contexts. Verb-first ontology. No explicit backend routes—invoke paths directly.
 
-```bash
-cd impl/claude/demos
-
-# Memory agent visualization
-open memory_agent_sandbox.html    # macOS
-# or: xdg-open memory_agent_sandbox.html  # Linux
-
-# Text transformation playground
-open text_transformer_sandbox.html
+```python
+await logos.invoke("world.document.manifest", observer_umwelt)
+await logos.invoke("self.memory.engram", observer_umwelt)
+await logos.invoke("concept.graph.sip", observer_umwelt)
 ```
 
-### WASM Demo (Zero-Trust Execution)
-
-Run agents completely sandboxed in your browser via Pyodide:
-
-```bash
-cd impl/claude
-uv run python demos/wasm_sandbox_demo.py
-# Opens in browser. No server required after loading.
-```
+Different observers get different projections. *"To observe is to act. There is no view from nowhere."*
 
 ---
 
-## For Developers: Quick Start
+## Systems
+
+### Derivation DAG
+
+Specs aren't static markdown. They form a directed graph with confidence propagation:
+
+```
+CONSTITUTION (confidence = 1.0)
+       │
+       ├──► PRINCIPLES (derived, confidence = f(evidence))
+       │
+       └──► AGENTESE ──► SERVICES ──► IMPLEMENTATIONS
+                                            │
+                                    Confidence = f(tests, proofs, marks)
+```
+
+Bootstrap specs (principles, composition laws) have confidence 1.0. Everything else inherits confidence from ancestors × accumulated evidence. Marks strengthen edges. Test failures weaken them.
+
+### WitnessedGraph
+
+Edges carry evidence. Every relationship in the system has:
+- **Origin**: Where did this edge come from? (Mark ID, test result, proof)
+- **Confidence**: How certain are we? (0.0–1.0, propagates through DAG)
+- **Visual gutter**: Confidence renders as edge thickness in the graph viewer
+
+This isn't metadata—it's the graph's memory of how it learned what it knows.
+
+### Hypergraph Emacs
+
+Six-mode modal editor for conceptual navigation:
+
+```
+MODES:    NORMAL │ INSERT │ EDGE │ VISUAL │ COMMAND │ WITNESS
+NAV:      gh/gl (parent/child) │ gj/gk (siblings) │ gd/gr/gt (def/refs/test)
+```
+
+Navigate specs like code. `gd` jumps to definition. `gr` shows references. `gt` finds tests. The graph is the filesystem; navigation is traversal.
+
+### Self-Hosting Specs
+
+Claude can navigate specs, edit them in K-Block isolation, witness changes, and update the derivation graph—all from inside the webapp. The loop:
+
+```
+NAVIGATE → EXPAND (portals) → EDIT (K-Block) → WITNESS (mark) → PROPAGATE (confidence)
+```
+
+The spec that can't be edited by the system it specifies is mere aspiration.
+
+### K-Block
+
+Monadic isolation for spec editing. Changes don't escape to the cosmos until explicit commit. Multiple views (prose, graph, code) sync bidirectionally within the monad. Time travel is free—the cosmos is append-only.
+
+### Crown Jewels
+
+| Jewel | Purpose |
+|-------|---------|
+| **Brain** | Spatial cathedral of memory, TeachingCrystal crystallization |
+| **Witness** | Marks, decisions, crystals, streaming, promotion |
+| **Atelier** | Design forge, creative workshop |
+| **Liminal** | Transition protocols |
+
+Crown Jewels are production services built on categorical primitives. They own their domain logic, adapters, and frontend components.
+
+---
+
+## Quick Start
 
 ### Requirements
 
 | Component | Required | Notes |
 |-----------|----------|-------|
 | Python 3.12+ | Yes | Core runtime |
-| [uv](https://github.com/astral-sh/uv) | Yes | Package manager (`pip install uv`) |
+| [uv](https://github.com/astral-sh/uv) | Yes | Package manager |
 | Node.js 18+ | Yes | Frontend |
-| [Claude CLI](https://docs.anthropic.com/en/docs/claude-code) | For LLM | Morpheus uses `claude -p` subprocess by default |
-| Docker | Optional | PostgreSQL for persistence (falls back to SQLite) |
+| Docker | Optional | PostgreSQL (falls back to SQLite) |
 
-### 1. Clone and Install
+### Install
 
 ```bash
 git clone https://github.com/kentgang/kgents.git && cd kgents
-uv sync                              # Python dependencies
+uv sync
 
-cd impl/claude/web
-npm install                          # Frontend dependencies
+cd impl/claude/web && npm install
 ```
 
-### 2. Start Backend + Frontend
+### Run
 
 ```bash
-# Terminal 1: Backend API
+# Terminal 1: Backend
 cd impl/claude
 uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
 
 # Terminal 2: Frontend
 cd impl/claude/web
-npm run dev                          # http://localhost:3000
+npm run dev
+# Visit http://localhost:3000
 ```
 
-**Verify**: `curl http://localhost:8000/health` should return `{"status":"ok"}`
-
-### 3. LLM Setup (Morpheus Gateway)
-
-Morpheus is the LLM gateway. Without it, composition and tests work but LLM-powered features (K-gent soul, semantic search) won't.
-
-**Option A: Claude CLI (Recommended)**
-```bash
-# Install Claude CLI: https://docs.anthropic.com/en/docs/claude-code
-claude --version                     # Verify installed
-claude                               # Authenticate (one-time OAuth)
-```
-Morpheus auto-detects and routes `claude-*` models via CLI subprocess.
-
-**Option B: Direct API**
-```bash
-export ANTHROPIC_API_KEY=sk-...      # Or add to .env
-# Or: export OPENROUTER_API_KEY=...  # For 100+ models
-```
-
-### 4. PostgreSQL (Optional)
-
-Enables persistent storage for Crown Jewels. Without it, falls back to SQLite at `~/.local/share/kgents/`.
+### Verify
 
 ```bash
-cd impl/claude
-docker compose up -d                 # Start Postgres container
-source .env                          # Sets KGENTS_POSTGRES_URL
+cd impl/claude && uv run pytest -q && uv run mypy .
+cd impl/claude/web && npm run typecheck && npm run lint
 ```
 
-### 5. Verify Everything
+---
 
-```bash
-cd impl/claude
-uv run pytest -q                     # 11,170+ tests (~2 min)
-uv run mypy .                        # Strict typing
-
-cd impl/claude/web
-npm run typecheck                    # Frontend types (catches real bugs!)
-npm run lint
-```
-
-### Key Directories
+## Key Directories
 
 ```
 spec/              # THE LAW — conceptual specification
+  principles.md    # The seven principles + 17 architectural decisions
+  agents/          # Agent genus specifications
+  protocols/       # AGENTESE, storage, living-spec
+
 impl/claude/       # Reference implementation
-  agents/          # Categorical primitives: PolyAgent, Operad, Sheaf, Flux
-  services/        # Crown Jewels: Brain, Living Docs, Witness, Foundry
+  agents/          # PolyAgent, Operad, Sheaf, Flux, K-gent, M-gent
+  services/        # Crown Jewels: Brain, Witness, Atelier, Liminal
   protocols/       # AGENTESE runtime, CLI, API gateway
-  demos/           # Interactive demos (marimo, HTML, WASM)
   web/             # React + Three.js frontend
-docs/              # Developer documentation
-  skills/          # THE 17 SKILLS — read before building
-  examples/        # Standalone Python examples
+
+docs/skills/       # 21 skills — READ BEFORE BUILDING
+plans/             # Active work + _focus.md (human intent)
 ```
 
-### What Works Without LLM
-
-| Feature | Without LLM | With Morpheus |
-|---------|-------------|---------------|
-| Agent composition (`>>`) | ✅ | ✅ |
-| Category law verification | ✅ | ✅ |
-| AGENTESE protocol | ✅ | ✅ |
-| Web UI navigation | ✅ | ✅ |
-| Brain (memory storage) | ✅ | ✅ |
-| K-gent soul dialogue | ❌ | ✅ |
-| Semantic search | ❌ | ✅ |
-
 ---
 
-## What Makes This Different
-
-**vs. LangChain/LlamaIndex**: Those are orchestration libraries—useful plumbing. kgents is a *specification* with mathematical structure. Agents here satisfy category laws; composition is associative; functors lift behavior uniformly. The difference between "agents that usually work together" and "agents that compose by construction."
-
-**vs. AutoGPT/CrewAI**: Those optimize for autonomy—agents that act without supervision. kgents optimizes for *composability*—agents that can be combined into larger agents without losing guarantees. Autonomy is a capability; composability is a structure.
-
-**vs. DSPy**: Closest in spirit. DSPy treats prompts as programs; kgents treats agents as morphisms. Both are algebraic. DSPy focuses on prompt optimization; kgents focuses on agent composition. They're complementary.
-
-**The core insight**: Traditional agent systems return JSON objects. kgents returns *handles*—morphisms that map Observer → Interaction. The same path yields different results to different observers. *"To observe is to act. There is no view from nowhere."*
-
----
-
-## The Vocabulary (Dense, Intentionally)
-
-| Term | What It Means | Where to Learn |
-|------|---------------|----------------|
-| **PolyAgent[S, A, B]** | State machine with mode-dependent inputs. `Agent[A,B]` embeds as `PolyAgent[Unit,A,B]` | [polynomial-agent.md](docs/skills/polynomial-agent.md) |
-| **Operad** | Composition grammar—defines *what combinations are valid* | [spec/principles.md](spec/principles.md) §AD-003 |
-| **Sheaf** | Gluing local views into global coherence. How emergence works. | [categorical-foundations.md](docs/categorical-foundations.md) |
-| **AGENTESE** | Verb-first protocol. Five contexts: `world.*`, `self.*`, `concept.*`, `void.*`, `time.*` | [agentese-path.md](docs/skills/agentese-path.md) |
-| **Crown Jewel** | Production service (Brain, Witness, Foundry...) built on categorical primitives | [crown-jewel-patterns.md](docs/skills/crown-jewel-patterns.md) |
-| **K-gent** | The governance functor—personality space navigation, not chatbot | [spec/agents/k-gent.md](spec/agents/k-gent.md) |
-| **Functor** | Structure-preserving map. `F.lift(a >> b) = F.lift(a) >> F.lift(b)` | [architecture-overview.md](docs/architecture-overview.md) |
-| **Accursed Share** | The void context. Entropy budget. *"Everything is slop or comes from slop."* | [spec/principles.md](spec/principles.md) §Meta-Principle |
-
----
-
-## The Seven Principles (Terse)
+## The Seven Principles
 
 1. **Tasteful** — Each agent serves a clear, justified purpose. Say "no" more than "yes."
-2. **Curated** — 10 excellent agents beat 100 mediocre ones. No parking lots.
-3. **Ethical** — Agents augment humans, never replace judgment. Transparency required.
-4. **Joy-Inducing** — Personality encouraged. Warmth over coldness. Humor when appropriate.
-5. **Composable** — Agents are morphisms. `(f >> g) >> h = f >> (g >> h)`. Verified, not aspirational.
-6. **Heterarchical** — No fixed boss agent. Leadership is contextual. Loop mode AND function mode.
+2. **Curated** — 10 excellent agents beat 100 mediocre ones.
+3. **Ethical** — Agents augment humans, never replace judgment.
+4. **Joy-Inducing** — Personality encouraged. Warmth over coldness.
+5. **Composable** — Agents are morphisms. `(f >> g) >> h = f >> (g >> h)`. Verified.
+6. **Heterarchical** — No fixed boss agent. Leadership is contextual.
 7. **Generative** — Spec is compression. If you can't compress, you don't understand.
 
 Full treatment: [spec/principles.md](spec/principles.md)
 
 ---
 
-## Web Galleries
+## For AI Agents Working Here
 
-The frontend includes interactive galleries showcasing projection patterns. Start the frontend (see [Quick Start](#2-start-backend--frontend)), then visit:
+Read [CLAUDE.md](CLAUDE.md) first.
 
-| Gallery | URL | What It Shows |
-|---------|-----|---------------|
-| **Projection Gallery** | [localhost:3000/_/gallery](http://localhost:3000/_/gallery) | Polynomial playground, operad wiring, category filtering |
-| **Layout Gallery** | [localhost:3000/_/gallery/layout](http://localhost:3000/_/gallery/layout) | 8 pilots demonstrating density isomorphism—same content, different structures (compact ↔ spacious) |
-| **Interactive Text** | [localhost:3000/_/gallery/interactive-text](http://localhost:3000/_/gallery/interactive-text) | 6 pilots: AGENTESE portals, task toggles, code regions, badge tokens |
-
-```bash
-# Quick start: Backend + Frontend
-cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000 &
-cd impl/claude/web && npm run dev
-# Then visit http://localhost:3000/_/gallery
-```
+- **Anti-Sausage Protocol**: Kent's voice gets diluted through LLM processing. Quote directly; don't paraphrase.
+- **Skills-First**: 21 skills in `docs/skills/`. Read them before building.
+- **Fail-Fast DI**: Required deps error immediately with actionable messages. Optional deps (`= None`) degrade gracefully.
+- **The Mirror Test**: *"Does this feel like Kent on his best day?"*
 
 ---
 
-## For AI Agents Working in This Codebase
+## What Makes This Different
 
-Read [CLAUDE.md](CLAUDE.md) first. It contains:
-- **Anti-Sausage Protocol**: Kent's voice gets diluted through LLM processing. Quote directly; don't paraphrase.
-- **Skills-First**: The 17 skills in `docs/skills/` cover every task. Read them before building.
-- **DI Enlightened Resolution**: Required deps fail fast with actionable errors. Optional deps (`= None`) degrade gracefully.
-- **Voice Anchors**: *"Daring, bold, creative, opinionated but not gaudy"*, *"Tasteful > feature-complete"*
+**vs. LangChain/LlamaIndex**: Orchestration libraries—useful plumbing. kgents is a *specification* with mathematical structure.
 
-The Mirror Test: *"Does this feel like Kent on his best day?"*
+**vs. AutoGPT/CrewAI**: Those optimize for autonomy. kgents optimizes for *composability*—agents that combine into larger agents without losing guarantees.
+
+**vs. DSPy**: Closest in spirit. DSPy treats prompts as programs; kgents treats agents as morphisms. Both algebraic. Complementary.
 
 ---
 
 ## Explore
 
-| What | Where | When |
-|------|-------|------|
-| Interactive demos | [impl/claude/demos/](impl/claude/demos/) | First 10 minutes |
-| Zero to agent | [docs/quickstart.md](docs/quickstart.md) | First 5 minutes |
-| The 17 skills | [docs/skills/](docs/skills/) | Before building anything |
-| The seven principles | [spec/principles.md](spec/principles.md) | Understanding why |
-| Architecture | [docs/architecture-overview.md](docs/architecture-overview.md) | Understanding how |
-| Systems inventory | [docs/systems-reference.md](docs/systems-reference.md) | Before building new |
-| Categorical foundations | [docs/categorical-foundations.md](docs/categorical-foundations.md) | The math |
+| What | Where |
+|------|-------|
+| Interactive demos | `impl/claude/demos/` |
+| The 21 skills | `docs/skills/` |
+| The seven principles | `spec/principles.md` |
+| What's happening now | `NOW.md` |
+| Categorical foundations | `docs/categorical-foundations.md` |
 
 ---
 
