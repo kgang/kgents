@@ -327,3 +327,220 @@
   line-height: 1.7;
   color: var(--text-primary);
 }
+
+/* =============================================================================
+ * K-Block Isolation Badge
+ * Shows K-Block state: PRISTINE (editing possible world) or DIRTY (pending changes)
+ * ============================================================================= */
+
+.spec-view__isolation {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1.5rem;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.spec-view__isolation-state {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.125rem 0.5rem;
+  border-radius: 2px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+/* PRISTINE: editing a possible world, no changes yet */
+.spec-view__isolation[data-dirty='false'] .spec-view__isolation-state {
+  color: var(--life-sage);
+  background: rgba(var(--life-sage-rgb, 139, 178, 134), 0.1);
+  border: 1px solid var(--life-sage);
+}
+
+/* DIRTY: pending changes, needs save or discard */
+.spec-view__isolation[data-dirty='true'] .spec-view__isolation-state {
+  color: var(--accent-gold);
+  background: rgba(var(--accent-gold-rgb, 255, 193, 7), 0.1);
+  border: 1px solid var(--accent-gold);
+}
+
+.spec-view__isolation-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.spec-view__isolation-btn {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 2px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+}
+
+.spec-view__isolation-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.spec-view__isolation-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spec-view__isolation-btn--save {
+  background: var(--life-sage);
+  color: var(--surface-0);
+  border: none;
+}
+
+.spec-view__isolation-btn--save:hover:not(:disabled) {
+  background: var(--life-mint);
+}
+
+.spec-view__isolation-btn--discard {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--surface-3);
+}
+
+.spec-view__isolation-btn--discard:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+/* =============================================================================
+ * References Panel
+ * Shows implements, tests, extends relationships (discovered from K-Block)
+ * ============================================================================= */
+
+.spec-view__references {
+  padding: 0.75rem 1.5rem;
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.spec-view__references-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.spec-view__references-toggle:hover {
+  background: var(--surface-2);
+}
+
+.spec-view__references-icon {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+}
+
+.spec-view__references-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.spec-view__references-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.spec-view__references-list {
+  padding: 0.75rem 0 0 0;
+}
+
+.spec-view__references-group {
+  margin-bottom: 0.75rem;
+}
+
+.spec-view__references-kind {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-secondary);
+  margin-bottom: 0.375rem;
+}
+
+.spec-view__references-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.spec-view__references-item {
+  margin-bottom: 0.25rem;
+}
+
+.spec-view__references-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 2px;
+  text-align: left;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.spec-view__references-link:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+.spec-view__references-link:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.spec-view__references-stale,
+.spec-view__references-missing {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  padding: 0.0625rem 0.25rem;
+  border-radius: 2px;
+}
+
+.spec-view__references-stale {
+  background: rgba(var(--accent-gold-rgb, 255, 193, 7), 0.15);
+  color: var(--accent-gold);
+}
+
+.spec-view__references-missing {
+  background: rgba(var(--error-rgb, 198, 40, 40), 0.15);
+  color: var(--error-text, #c62828);
+}
+
+/* Highlight state when K-Block has pending changes */
+.spec-view[data-isolation='DIRTY'] {
+  /* Subtle border glow to indicate pending changes */
+}
+
+.spec-view[data-isolation='DIRTY'] .spec-view__header {
+  border-left: 2px solid var(--accent-gold);
+}
