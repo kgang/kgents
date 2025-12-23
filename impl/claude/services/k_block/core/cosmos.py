@@ -8,6 +8,14 @@ cosmos is a pointer to the latest version.
 Philosophy:
     "The cosmos never overwrites. Every save appends.
      The past is immutable. The future is uncommitted."
+    "The proof IS the decision. The mark IS the witness."
+
+Integration with Witness (Phase 2):
+    Every commit can carry a MarkId linking to the full witness trace.
+    This enables:
+    - Audit trail: Who changed what, when, and WHY
+    - Replay: Reconstruct editing sessions from marks
+    - Blame: Trace any content to its justification
 
 See: spec/protocols/k-block.md
 """
@@ -21,6 +29,8 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, NewType
 
 if TYPE_CHECKING:
+    from services.witness import MarkId
+
     from .kblock import KBlock, KBlockId
 
 # -----------------------------------------------------------------------------
@@ -36,6 +46,44 @@ def generate_version_id() -> VersionId:
 
 
 # -----------------------------------------------------------------------------
+# Blame Entry (Phase 2: Witness-Enabled History)
+# -----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class BlameEntry:
+    """
+    A single entry in the blame trace.
+
+    Combines cosmos version info with witness context for
+    "git blame meets Witness" functionality.
+
+    The mark_id links to the full Witness trace where you can find:
+    - Toulmin proof (data → warrant → claim)
+    - Causal links to other marks
+    - Umwelt snapshot (what the actor could perceive)
+    """
+
+    version_id: VersionId
+    actor: str
+    reasoning: str | None
+    mark_id: str | None
+    timestamp: datetime
+    summary: str  # First line of change for quick preview
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize for API responses."""
+        return {
+            "version_id": self.version_id,
+            "actor": self.actor,
+            "reasoning": self.reasoning,
+            "mark_id": self.mark_id,
+            "timestamp": self.timestamp.isoformat(),
+            "summary": self.summary,
+        }
+
+
+# -----------------------------------------------------------------------------
 # Cosmos Entry
 # -----------------------------------------------------------------------------
 
@@ -47,6 +95,11 @@ class CosmosEntry:
 
     Each entry represents a committed state of content at a path.
     Entries are immutable once created.
+
+    Phase 2 Enhancement:
+        mark_id links to the Witness system, enabling full traceability.
+        The mark contains Toulmin proof structure (data → warrant → claim)
+        explaining WHY this change was made.
     """
 
     version_id: VersionId
@@ -57,6 +110,7 @@ class CosmosEntry:
     timestamp: datetime
     actor: str  # "Kent", "Claude", "system"
     reasoning: str | None = None  # Why this change was made
+    mark_id: str | None = None  # MarkId linking to Witness trace (Phase 2)
 
     @classmethod
     def create(
@@ -66,6 +120,7 @@ class CosmosEntry:
         parent_version: VersionId | None,
         actor: str = "system",
         reasoning: str | None = None,
+        mark_id: str | None = None,
     ) -> "CosmosEntry":
         """Create a new cosmos entry."""
         content_hash = hashlib.sha256(content.encode()).hexdigest()[:16]
@@ -78,6 +133,7 @@ class CosmosEntry:
             timestamp=datetime.now(timezone.utc),
             actor=actor,
             reasoning=reasoning,
+            mark_id=mark_id,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -91,6 +147,7 @@ class CosmosEntry:
             "timestamp": self.timestamp.isoformat(),
             "actor": self.actor,
             "reasoning": self.reasoning,
+            "mark_id": self.mark_id,
         }
 
     @classmethod
@@ -107,6 +164,7 @@ class CosmosEntry:
             timestamp=datetime.fromisoformat(data["timestamp"]),
             actor=data["actor"],
             reasoning=data.get("reasoning"),
+            mark_id=data.get("mark_id"),
         )
 
 
@@ -268,12 +326,24 @@ class Cosmos:
         content: str,
         actor: str = "system",
         reasoning: str | None = None,
+        mark_id: str | None = None,
     ) -> VersionId:
         """
         Commit new content to cosmos.
 
         This is the ONLY way to write to the cosmos.
         Returns the new version ID.
+
+        Args:
+            path: Cosmos path (e.g., "spec/protocols/k-block.md")
+            content: The content to commit
+            actor: Who is making this change ("Kent", "Claude", "system")
+            reasoning: Human-readable explanation of why
+            mark_id: Optional MarkId linking to Witness trace for full audit trail
+
+        Phase 2 Enhancement:
+            When mark_id is provided, the entry links to the full Witness trace.
+            This enables blame(), history traversal, and session replay.
         """
         # Get parent version (if exists)
         parent_version = self.index.get_latest(path)
@@ -285,6 +355,7 @@ class Cosmos:
             parent_version=parent_version,
             actor=actor,
             reasoning=reasoning,
+            mark_id=mark_id,
         )
 
         # Append to log
@@ -338,6 +409,90 @@ class Cosmos:
             )
         )
         return "".join(diff_lines)
+
+    # ---------------------------------------------------------------------
+    # Witness-Enabled History (Phase 2)
+    # ---------------------------------------------------------------------
+
+    async def blame(self, path: str, limit: int = 10) -> list["BlameEntry"]:
+        """
+        Get traced history for a path with witness context.
+
+        Returns BlameEntry instances that include:
+        - version_id: Which version
+        - actor: Who made the change
+        - reasoning: Why they made it
+        - mark_id: Link to full Witness trace (for Toulmin proof access)
+        - timestamp: When it happened
+        - summary: First line of content change
+
+        This is the Phase 2 "git blame meets witness" feature.
+
+        Args:
+            path: Cosmos path to trace
+            limit: Maximum entries to return (default 10)
+
+        Returns:
+            List of BlameEntry, newest first
+        """
+        entries = await self.history(path)
+        blame_entries: list[BlameEntry] = []
+
+        for i, entry in enumerate(entries[:limit]):
+            # Compute summary (first line of diff with parent)
+            summary = ""
+            if entry.parent_version:
+                parent = self.log.get(entry.parent_version)
+                if parent:
+                    # Get first changed line as summary
+                    old_lines = parent.content.splitlines()
+                    new_lines = entry.content.splitlines()
+                    for old, new in zip(old_lines, new_lines):
+                        if old != new:
+                            summary = (
+                                f"Changed: {new[:60]}..." if len(new) > 60 else f"Changed: {new}"
+                            )
+                            break
+                    else:
+                        # Check for additions
+                        if len(new_lines) > len(old_lines):
+                            added = new_lines[len(old_lines)]
+                            summary = (
+                                f"Added: {added[:60]}..." if len(added) > 60 else f"Added: {added}"
+                            )
+            else:
+                # Initial commit
+                first_line = entry.content.split("\n")[0] if entry.content else ""
+                summary = (
+                    f"Initial: {first_line[:60]}..."
+                    if len(first_line) > 60
+                    else f"Initial: {first_line}"
+                )
+
+            blame_entries.append(
+                BlameEntry(
+                    version_id=entry.version_id,
+                    actor=entry.actor,
+                    reasoning=entry.reasoning,
+                    mark_id=entry.mark_id,
+                    timestamp=entry.timestamp,
+                    summary=summary,
+                )
+            )
+
+        return blame_entries
+
+    async def get_mark_ids_for_path(self, path: str) -> list[str]:
+        """
+        Get all MarkIds associated with changes to a path.
+
+        Useful for bulk-loading witness traces for a file's history.
+
+        Returns:
+            List of MarkIds (strings), newest first, excluding None values
+        """
+        entries = await self.history(path)
+        return [e.mark_id for e in entries if e.mark_id is not None]
 
     # ---------------------------------------------------------------------
     # K-Block Registry

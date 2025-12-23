@@ -11,6 +11,11 @@ It implements the HARNESS_OPERAD operations:
 
 Philosophy:
     "The harness is the gate. Only the gatekeeper may open it."
+    "The proof IS the decision. The mark IS the witness." (Phase 2)
+
+Phase 2 Enhancement:
+    The harness can emit Witness marks on save(), enabling full
+    audit trail with Toulmin proof structure.
 
 See: spec/protocols/k-block.md
 """
@@ -29,9 +34,10 @@ from .kblock import (
     KBlockId,
     generate_kblock_id,
 )
+from .witnessed import WitnessedCosmos, WitnessTrace, create_witnessed_cosmos
 
 if TYPE_CHECKING:
-    pass
+    from services.witness import MarkStore, Proof
 
 
 # -----------------------------------------------------------------------------
@@ -41,14 +47,26 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class SaveResult:
-    """Result of a save operation."""
+    """
+    Result of a save operation.
+
+    Phase 2 Enhancement:
+        mark_id links to the Witness trace for this save.
+        Use this to navigate to the full Toulmin proof.
+    """
 
     success: bool
     path: str
     version_id: VersionId | None = None
+    mark_id: str | None = None  # Phase 2: Link to Witness trace
     no_changes: bool = False
     dependents_marked: int = 0
     error: str | None = None
+
+    @property
+    def is_witnessed(self) -> bool:
+        """Whether this save was witnessed (has mark_id)."""
+        return self.mark_id is not None
 
     @classmethod
     def ok(
@@ -56,11 +74,13 @@ class SaveResult:
         path: str,
         version_id: VersionId,
         dependents_marked: int = 0,
+        mark_id: str | None = None,
     ) -> "SaveResult":
         return cls(
             success=True,
             path=path,
             version_id=version_id,
+            mark_id=mark_id,
             dependents_marked=dependents_marked,
         )
 
@@ -126,11 +146,24 @@ class FileOperadHarness:
     - save_idempotence: save(save(kb)) == save(kb)
     - fork_merge_identity: merge(fork(kb)) == kb
     - checkpoint_rewind_identity: rewind(kb, checkpoint(kb)) == kb
+
+    Phase 2 Enhancement:
+        When witness_enabled=True, saves emit Witness marks with
+        Toulmin proof structure for full audit trail.
     """
 
     cosmos: Cosmos = field(default_factory=get_cosmos)
     _blocks: dict[KBlockId, KBlock] = field(default_factory=dict)
     _blocks_by_path: dict[str, KBlockId] = field(default_factory=dict)
+
+    # Phase 2: Witness integration
+    witness_enabled: bool = True  # Enable witness marks on save
+    _witnessed_cosmos: WitnessedCosmos | None = field(default=None, repr=False)
+
+    def __post_init__(self) -> None:
+        """Initialize witnessed cosmos if enabled."""
+        if self.witness_enabled and self._witnessed_cosmos is None:
+            self._witnessed_cosmos = create_witnessed_cosmos(self.cosmos)
 
     # ---------------------------------------------------------------------
     # HARNESS_OPERAD.create
@@ -176,6 +209,7 @@ class FileOperadHarness:
         block: KBlock,
         actor: str = "system",
         reasoning: str | None = None,
+        proof: "Proof | None" = None,
     ) -> SaveResult:
         """
         Commit K-Block changes to cosmos.
@@ -187,8 +221,19 @@ class FileOperadHarness:
 
         Effects on save:
         1. Content written to cosmos (append-only)
-        2. Dependents marked stale
-        3. K-Block state reset to PRISTINE
+        2. Witness mark emitted (if witness_enabled)
+        3. Dependents marked stale
+        4. K-Block state reset to PRISTINE
+
+        Args:
+            block: The K-Block to save
+            actor: Who is saving ("Kent", "Claude", "system")
+            reasoning: Human-readable explanation of why
+            proof: Optional Toulmin proof for full justification (Phase 2)
+
+        Phase 2 Enhancement:
+            When witness_enabled=True, creates a Witness Mark with the
+            provided reasoning/proof, enabling full audit trail.
         """
         # Validate state
         if block.isolation == IsolationState.CONFLICTING:
@@ -201,13 +246,38 @@ class FileOperadHarness:
         if not block.is_dirty:
             return SaveResult.unchanged(block.path)
 
-        # Commit to cosmos
-        version_id = await self.cosmos.commit(
-            path=block.path,
-            content=block.content,
-            actor=actor,
-            reasoning=reasoning,
-        )
+        # Compute delta summary for witness
+        delta = block.compute_delta()
+        delta_summary = f"+{delta.additions}/-{delta.deletions} lines"
+
+        # Commit to cosmos (with or without witness)
+        mark_id: str | None = None
+
+        if self.witness_enabled and self._witnessed_cosmos is not None:
+            # Use witnessed cosmos for audit trail
+            trace = WitnessTrace(
+                actor=actor,
+                reasoning=reasoning,
+                proof=proof,
+                kblock_id=str(block.id),
+                delta_summary=delta_summary,
+                tags=("kblock", "save"),
+            )
+            result = await self._witnessed_cosmos.commit(
+                path=block.path,
+                content=block.content,
+                trace=trace,
+            )
+            version_id = result.version_id
+            mark_id = result.mark_id
+        else:
+            # Direct cosmos commit (no witness)
+            version_id = await self.cosmos.commit(
+                path=block.path,
+                content=block.content,
+                actor=actor,
+                reasoning=reasoning,
+            )
 
         # Mark dependents stale
         dependents_marked = await self._mark_dependents_stale(block.path)
@@ -222,6 +292,7 @@ class FileOperadHarness:
             path=block.path,
             version_id=version_id,
             dependents_marked=dependents_marked,
+            mark_id=mark_id,
         )
 
     async def _mark_dependents_stale(self, path: str) -> int:
