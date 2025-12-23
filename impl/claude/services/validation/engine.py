@@ -680,6 +680,102 @@ class ValidationEngine:
 
         return self.store.get_history(initiative_id, phase_id, limit)
 
+    # =========================================================================
+    # Cached Validation (AD-015: Proxy Handle Integration)
+    # =========================================================================
+
+    def _compute_source_hash(
+        self,
+        initiative_id: InitiativeId,
+        phase_id: PhaseId | None,
+        measurements: dict[str, float],
+    ) -> str:
+        """
+        Compute hash for cache invalidation.
+
+        The hash captures the validation inputs so that changes in measurements
+        automatically invalidate the cache (source-aware invalidation).
+        """
+        data = json.dumps(
+            {
+                "initiative": str(initiative_id),
+                "phase": str(phase_id) if phase_id else None,
+                "measurements": sorted(measurements.items()),
+            },
+            sort_keys=True,
+        )
+        return hashlib.sha256(data.encode()).hexdigest()[:16]
+
+    async def validate_cached(
+        self,
+        initiative_id: InitiativeId | str,
+        measurements: dict[str, float],
+        phase_id: PhaseId | str | None = None,
+        *,
+        force: bool = False,
+        ttl: timedelta | None = None,
+    ) -> "ProxyHandle[ValidationRun]":
+        """
+        Validate with caching via ProxyHandleStore.
+
+        If a fresh handle exists and measurements haven't changed, returns cached.
+        Otherwise computes and caches the validation run.
+
+        AD-015 Philosophy:
+            "The representation of an object is distinct from the object itself."
+            "Computation is ALWAYS explicit. There is no auto-compute."
+
+        The cached validation is a lens on the validation run, not the run itself.
+        The original validate() remains for witnessed, uncached validation.
+        validate_cached() adds caching as an explicit choice.
+
+        IMPORTANT: Cached results do NOT re-emit marks. Marks are for actual
+        computation, not cache hits. ProxyHandle events provide transparency
+        for cache behavior.
+
+        Args:
+            initiative_id: The initiative to validate
+            measurements: Map of proposition ID to measured value
+            phase_id: For phased initiatives, which phase to validate
+            force: Force recomputation even if fresh cache exists
+            ttl: Cache TTL (default 5 minutes)
+
+        Returns:
+            ProxyHandle containing ValidationRun
+
+        Raises:
+            ValueError: If initiative not found or phase mismatch
+        """
+        from services.proxy import SourceType
+
+        # Normalize IDs
+        if isinstance(initiative_id, str):
+            initiative_id = InitiativeId(initiative_id)
+        if isinstance(phase_id, str):
+            phase_id = PhaseId(phase_id)
+
+        # Build source_hash for cache invalidation
+        source_hash = self._compute_source_hash(initiative_id, phase_id, measurements)
+
+        # Build human-readable label
+        human_label = f"Validation: {initiative_id}"
+        if phase_id:
+            human_label += f"/{phase_id}"
+
+        # Define the compute function (closure captures all context)
+        async def _run_validation() -> ValidationRun:
+            return self.validate(initiative_id, measurements, phase_id)
+
+        # Use ProxyHandleStore for explicit caching
+        return await self.proxy_store.compute(
+            source_type=SourceType.VALIDATION_RUN,
+            compute_fn=_run_validation,
+            force=force,
+            ttl=ttl or timedelta(minutes=5),
+            human_label=human_label,
+            source_hash=source_hash,
+        )
+
 
 # =============================================================================
 # Global Engine (Module Singleton Pattern)

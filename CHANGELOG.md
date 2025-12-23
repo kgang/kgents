@@ -5,7 +5,7 @@ All notable changes to kgents will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2025-12-23
+## [0.0.1] - 2025-12-23
 
 ### The Hardening Release
 
@@ -49,9 +49,9 @@ A controlled extinction, rebuilding, and hardening of the codebase.
 
 ---
 
-## [1.0.0] - 2025-12-14
+## [0.0.0] - 2025-12-14
 
-### Added
+### Initial Development
 
 #### Reactive Substrate
 - `KgentsWidget[S]` base class with `project(target)` functor pattern
@@ -104,10 +104,3 @@ Supported targets:
 5. **Deterministic Joy** - Same seed -> same personality, forever
 6. **Slots/Fillers Composition** - Operad-like widget composition
 
-## [0.1.0] - 2025-11-01
-
-### Added
-- Initial kgents implementation
-- AGENTESE protocol foundation
-- Agent taxonomy (A-Z, Ψ, Ω)
-- Basic CLI infrastructure

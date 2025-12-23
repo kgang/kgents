@@ -20,9 +20,7 @@ We will acknowledge receipt within 48 hours and provide a timeline for resolutio
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.1.x   | :white_check_mark: |
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| 0.0.x   | :white_check_mark: |
 
 ---
 

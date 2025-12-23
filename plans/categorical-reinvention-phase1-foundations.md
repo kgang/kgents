@@ -161,6 +161,69 @@ async def run_correlation_study():
 **If all propositions hold**: Phase 2 proceeds.
 **If combined AUC < 0.6**: Stop. The theory doesn't apply to LLMs.
 
+### ValidationEngine Integration
+
+These propositions are tracked via the Validation Framework (`services/validation/`):
+
+```yaml
+# initiatives/categorical-phase1.yaml
+id: categorical_phase1
+name: "Phase 1: Foundations"
+description: "Validate categorical laws predict reasoning correctness"
+witness_tags: ["categorical", "phase1", "foundations"]
+
+propositions:
+  - id: monad_identity_correlation
+    description: "Monad identity law correlates with accuracy"
+    metric: pearson_r
+    threshold: 0.3
+    direction: ">"
+    required: true
+
+  - id: sheaf_coherence_correlation
+    description: "Sheaf coherence correlates with correctness"
+    metric: pearson_r
+    threshold: 0.4
+    direction: ">"
+    required: true
+
+  - id: combined_auc
+    description: "Combined categorical metrics predict accuracy"
+    metric: auc
+    threshold: 0.7
+    direction: ">"
+    required: true
+
+gate:
+  id: phase1_gate
+  name: "Phase 1 Completion Gate"
+  condition: all_required
+```
+
+```python
+# Running validation with caching (AD-015)
+from services.validation import get_validation_engine
+
+engine = get_validation_engine()
+
+# Run correlation study, cache results (5 min TTL)
+handle = await engine.validate_cached(
+    "categorical_phase1",
+    measurements={
+        "monad_identity_correlation": study_results['monad_identity_corr'],
+        "sheaf_coherence_correlation": study_results['sheaf_corr'],
+        "combined_auc": study_results['combined_auc'],
+    },
+    ttl=timedelta(minutes=30),  # Cache expensive correlation study
+)
+
+if handle.data.passed:
+    print("✅ Phase 1 passed - proceed to Phase 2")
+else:
+    blockers = engine.get_blockers()
+    print(f"❌ Blocked by: {[b.proposition.id for b in blockers]}")
+```
+
 ---
 
 ## What We Cut
