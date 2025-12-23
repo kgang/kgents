@@ -24,7 +24,7 @@
 .welcome-view__content {
   position: relative;
   z-index: 1;
-  max-width: 480px;
+  max-width: 680px;
   text-align: center;
   transition: transform 0.15s ease-out;
   will-change: transform;
@@ -121,22 +121,23 @@
 }
 
 /* =============================================================================
- * Hint Cards — With Spring Tilt
+ * Principle Cards — The Seven Principles with Spring Tilt
  * ============================================================================= */
 
-.welcome-view__hints {
-  display: flex;
-  flex-direction: column;
+.welcome-view__principles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.5rem;
   margin-bottom: 2rem;
+  max-width: 640px;
 }
 
-.welcome-view__hint {
+.welcome-view__principle {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 2px;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 3px;
   background: var(--surface-1);
   border: 1px solid var(--surface-3);
   text-align: left;
@@ -144,54 +145,94 @@
 
   /* Animation setup */
   opacity: 0;
-  transform: translateY(10px) scale(0.98);
+  transform: translateY(8px) scale(0.98);
   transition:
-    opacity 0.3s ease-out,
-    transform 0.3s ease-out,
+    opacity 0.25s ease-out,
+    transform 0.25s ease-out,
     box-shadow 0.2s ease-out,
     border-color 0.2s ease-out;
   transform-style: preserve-3d;
 }
 
-.welcome-view__hint--visible {
+.welcome-view__principle--visible {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
 
-.welcome-view__hint:hover {
+.welcome-view__principle:hover {
   border-color: var(--life-sage);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.2),
+    0 0 20px rgba(74, 107, 74, 0.1);
 }
 
-.welcome-view__hint:active {
+.welcome-view__principle:active {
   transform: scale(0.98);
 }
 
-.welcome-view__hint-key {
-  padding: 0.25rem 0.5rem;
-  border-radius: 2px;
-  background: transparent;
-  border: 1px solid var(--life-sage);
-  color: var(--life-mint);
-  font-size: 0.7rem;
-  font-weight: 600;
-  min-width: 70px;
+.welcome-view__principle-glyph {
+  font-size: 1.1rem;
+  color: var(--glow-spore);
+  min-width: 1.5rem;
   text-align: center;
+  transition: all 0.2s ease-out;
+}
+
+.welcome-view__principle-glyph--pulsing {
+  color: var(--glow-light);
+  transform: scale(1.2);
+  text-shadow: 0 0 12px var(--glow-spore);
+}
+
+.welcome-view__principle-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.welcome-view__principle-key {
+  color: var(--life-mint);
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.025em;
-  transition: all 0.15s ease-out;
+  letter-spacing: 0.03em;
 }
 
-.welcome-view__hint-key--pulsing {
-  background: var(--life-sage);
-  color: var(--text-primary);
-  transform: scale(1.05);
-  box-shadow: 0 0 8px var(--life-sage);
+.welcome-view__principle-essence {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
 }
 
-.welcome-view__hint-action {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
+/* Whisper text — softer emphasis */
+.welcome-view__whisper {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+/* Invitation — hidden keyboard hint */
+.welcome-view__invitation {
+  margin-top: 1.5rem;
+  font-size: 0.7rem;
+  color: var(--steel-zinc);
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.welcome-view:hover .welcome-view__invitation {
+  opacity: 1;
+}
+
+.welcome-view__invitation kbd {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  margin: 0 0.15rem;
+  font-family: inherit;
+  font-size: 0.85em;
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+  border-radius: 2px;
+  color: var(--life-mint);
 }
 
 /* =============================================================================
@@ -271,7 +312,7 @@
     transition: none !important;
   }
 
-  .welcome-view__hint {
+  .welcome-view__principle {
     opacity: 1;
     transform: none !important;
     transition: none !important;
@@ -290,7 +331,7 @@
     display: none;
   }
 
-  .welcome-view__hint-key--pulsing {
+  .welcome-view__principle-glyph--pulsing {
     animation: none;
     transform: none;
   }
@@ -300,7 +341,7 @@
  * Focus States (Accessibility)
  * ============================================================================= */
 
-.welcome-view__hint:focus-visible {
+.welcome-view__principle:focus-visible {
   outline: 2px solid var(--life-sage);
   outline-offset: 2px;
 }

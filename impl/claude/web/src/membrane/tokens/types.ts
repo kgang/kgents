@@ -18,6 +18,13 @@ export type MeaningTokenKind =
   | 'CODE_REGION' // Code block with run/edit
   | 'PRINCIPLE_ANCHOR' // Principle reference badge
   | 'REQUIREMENT_TRACE' // Requirement reference badge
+  | 'MARKDOWN_TABLE' // Table with export/edit
+  | 'LINK' // Hyperlink with preview
+  | 'BLOCKQUOTE' // Quoted text block
+  | 'HORIZONTAL_RULE' // Section divider
+  | 'PORTAL' // Expandable hyperedge (from SYNTHESIS-living-spec)
+  | 'PRINCIPLE' // Principle reference (unified from PRINCIPLE_ANCHOR)
+  | 'IMAGE' // Image with AI analysis (unified from IMAGE_EMBED)
   | 'PLAIN_TEXT'; // Non-token text (markdown prose)
 
 // Also include base SceneNodeKind values
@@ -162,6 +169,72 @@ export interface CodeBlockData {
 export interface ImageData {
   src: string;
   alt_text: string;
+}
+
+export interface MarkdownTableData {
+  columns: Array<{
+    header: string;
+    alignment: 'left' | 'center' | 'right';
+    index: number;
+  }>;
+  rows: string[][];
+  row_count: number;
+  column_count: number;
+}
+
+export interface LinkData {
+  text: string;
+  url: string;
+}
+
+export interface BlockquoteData {
+  content: string;
+  attribution?: string;
+}
+
+export interface HorizontalRuleData {
+  style?: 'single' | 'double' | 'dashed';
+}
+
+// =============================================================================
+// NEW: Portal Token Data (from SYNTHESIS-living-spec.md)
+// =============================================================================
+
+export interface PortalDestination {
+  path: string;
+  title?: string;
+  preview?: string;
+  exists?: boolean;
+}
+
+export interface PortalData {
+  edge_type: string;
+  source_path?: string;
+  destinations: PortalDestination[];
+}
+
+// =============================================================================
+// NEW: Principle Token Data
+// =============================================================================
+
+export type PrincipleCategory = 'architectural' | 'constitutional' | 'operational';
+
+export interface PrincipleData {
+  principle: string;
+  title?: string;
+  description?: string;
+  category?: PrincipleCategory;
+}
+
+// =============================================================================
+// NEW: Image Token Data
+// =============================================================================
+
+export interface ImageTokenData {
+  src: string;
+  alt: string;
+  ai_description?: string;
+  caption?: string;
 }
 
 export function getTokenData<T>(content: MeaningTokenContent): T {

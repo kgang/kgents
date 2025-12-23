@@ -717,11 +717,13 @@
 }
 
 .context-menu-item.destructive {
-  color: #f87171; /* red-400 */
+  /* STARK BIOME: muted rust for destructive — attention without alarm */
+  color: #a65d4a;
 }
 
 .context-menu-item.destructive:hover {
-  background: rgba(248, 113, 113, 0.1);
+  /* STARK BIOME: muted rust background */
+  background: rgba(166, 93, 74, 0.15);
 }
 
 .context-menu-item:disabled,
@@ -817,11 +819,13 @@
 }
 
 .swipe-action.edit {
-  background: #3b82f6; /* blue-500 */
+  /* STARK BIOME: life-sage for edit actions */
+  background: #4a6b4a;
 }
 
 .swipe-action.delete {
-  background: #ef4444; /* red-500 */
+  /* STARK BIOME: muted rust for destructive */
+  background: #8b5a4a;
 }
 
 /* =============================================================================
@@ -834,7 +838,8 @@
   top: -40px;
   left: 0;
   padding: var(--elastic-gap-sm) var(--elastic-gap-lg);
-  background: var(--color-town-highlight, #e94560);
+  /* STARK BIOME: life-sage for accessibility link */
+  background: var(--color-life-sage, #4a6b4a);
   color: white;
   z-index: 9999;
   transition: top 0.2s ease;

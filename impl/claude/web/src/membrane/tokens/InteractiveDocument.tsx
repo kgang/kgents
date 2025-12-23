@@ -12,9 +12,29 @@
 import { memo, useCallback } from 'react';
 
 import { AGENTESEPathToken } from './AGENTESEPathToken';
+import { BlockquoteToken } from './BlockquoteToken';
+import { CodeBlockToken } from './CodeBlockToken';
+import { HorizontalRuleToken } from './HorizontalRuleToken';
+import { ImageToken } from './ImageToken';
+import { LinkToken } from './LinkToken';
+import { MarkdownTableToken } from './MarkdownTableToken';
+import { PortalToken } from './PortalToken';
+import { PrincipleToken } from './PrincipleToken';
 import { TaskCheckboxToken } from './TaskCheckboxToken';
 import { TextSpan } from './TextSpan';
-import type { AGENTESEPathData, SceneGraph, SceneNode, TaskCheckboxData } from './types';
+import type {
+  AGENTESEPathData,
+  BlockquoteData,
+  CodeBlockData,
+  ImageTokenData,
+  LinkData,
+  MarkdownTableData,
+  PortalData,
+  PrincipleData,
+  SceneGraph,
+  SceneNode,
+  TaskCheckboxData,
+} from './types';
 import { getTokenData, isMeaningTokenContent, isTextContent } from './types';
 
 import './tokens.css';
@@ -95,10 +115,127 @@ const SceneNodeRenderer = memo(function SceneNodeRenderer({
       return <TextSpan content={String(content)} />;
     }
 
-    // Future token types - render as plain text for now
+    // New token types with full rendering
     case 'CODE_REGION':
-    case 'IMAGE_EMBED':
-    case 'PRINCIPLE_ANCHOR':
+    case 'code_block': {
+      if (isMeaningTokenContent(content)) {
+        const tokenData = getTokenData<CodeBlockData>(content);
+        return (
+          <CodeBlockToken
+            language={tokenData.language || ''}
+            code={tokenData.code || content.source_text}
+            sourceText={content.source_text}
+          />
+        );
+      }
+      return <TextSpan content={String(content)} />;
+    }
+
+    case 'MARKDOWN_TABLE':
+    case 'markdown_table': {
+      if (isMeaningTokenContent(content)) {
+        const tokenData = getTokenData<MarkdownTableData>(content);
+        return (
+          <MarkdownTableToken
+            columns={tokenData.columns || []}
+            rows={tokenData.rows || []}
+            sourceText={content.source_text}
+          />
+        );
+      }
+      return <TextSpan content={String(content)} />;
+    }
+
+    case 'LINK':
+    case 'link': {
+      if (isMeaningTokenContent(content)) {
+        const tokenData = getTokenData<LinkData>(content);
+        return (
+          <LinkToken
+            text={tokenData.text || content.source_text}
+            url={tokenData.url || ''}
+            onClick={onNavigate}
+          />
+        );
+      }
+      return <TextSpan content={String(content)} />;
+    }
+
+    case 'BLOCKQUOTE':
+    case 'blockquote': {
+      if (isMeaningTokenContent(content)) {
+        const tokenData = getTokenData<BlockquoteData>(content);
+        return (
+          <BlockquoteToken
+            content={tokenData.content || content.source_text}
+            attribution={tokenData.attribution}
+          />
+        );
+      }
+      return <TextSpan content={String(content)} />;
+    }
+
+    case 'HORIZONTAL_RULE':
+    case 'horizontal_rule': {
+      return <HorizontalRuleToken />;
+    }
+
+    // NEW: Portal Token — Expandable hyperedge
+    case 'PORTAL':
+    case 'portal': {
+      if (isMeaningTokenContent(content)) {
+        const tokenData = getTokenData<PortalData>(content);
+        return (
+          <PortalToken
+            edgeType={tokenData.edge_type || 'references'}
+            sourcePath={tokenData.source_path}
+            destinations={tokenData.destinations || []}
+            onNavigate={onNavigate}
+          />
+        );
+      }
+      return <TextSpan content={String(content)} />;
+    }
+
+    // NEW: Principle Token — Architectural principle reference
+    case 'PRINCIPLE':
+    case 'principle':
+    case 'PRINCIPLE_ANCHOR': {
+      if (isMeaningTokenContent(content)) {
+        const tokenData = getTokenData<PrincipleData>(content);
+        return (
+          <PrincipleToken
+            principle={tokenData.principle || content.source_text}
+            title={tokenData.title}
+            description={tokenData.description}
+            category={tokenData.category}
+            onClick={onNavigate}
+          />
+        );
+      }
+      return <TextSpan content={String(content)} />;
+    }
+
+    // NEW: Image Token — Image with AI analysis
+    case 'IMAGE':
+    case 'image':
+    case 'IMAGE_EMBED': {
+      if (isMeaningTokenContent(content)) {
+        const tokenData = getTokenData<ImageTokenData>(content);
+        return (
+          <ImageToken
+            src={tokenData.src || ''}
+            alt={tokenData.alt || ''}
+            aiDescription={tokenData.ai_description}
+            caption={tokenData.caption}
+            onClick={onNavigate}
+          />
+        );
+      }
+      return <TextSpan content={String(content)} />;
+    }
+
+    // Remaining token types - render as placeholder
     case 'REQUIREMENT_TRACE': {
       if (isMeaningTokenContent(content)) {
         return (
@@ -148,18 +285,10 @@ export const InteractiveDocument = memo(function InteractiveDocument({
     [onToggle]
   );
 
-  const { nodes, layout } = sceneGraph;
+  const { nodes } = sceneGraph;
 
   return (
-    <div
-      className={`interactive-document ${className ?? ''}`}
-      style={{
-        display: 'flex',
-        flexDirection: layout?.direction === 'horizontal' ? 'row' : 'column',
-        gap: layout?.gap ? `${layout.gap}rem` : undefined,
-      }}
-      data-mode={layout?.mode || 'COMFORTABLE'}
-    >
+    <div className={`interactive-document ${className ?? ''}`}>
       {nodes.map((node) => (
         <SceneNodeRenderer
           key={node.id}

@@ -500,3 +500,296 @@ class TestEdgeCases:
         doc = parse_markdown(text)
         assert doc.token_count == 1
         assert doc.tokens[0].position.end == len(text)
+
+
+# =============================================================================
+# New Token Types (Tables, Links, etc.)
+# =============================================================================
+
+
+class TestMarkdownTableRecognition:
+    """Test markdown table token recognition."""
+
+    def test_simple_table(self) -> None:
+        """Simple two-column table is recognized."""
+        text = dedent("""\
+            | Col A | Col B |
+            |-------|-------|
+            | data1 | data2 |
+        """)
+        doc = parse_markdown(text)
+        assert doc.token_count == 1
+        assert doc.tokens[0].token_type == "markdown_table"
+
+    def test_table_with_alignment(self) -> None:
+        """Table with alignment markers is recognized."""
+        text = dedent("""\
+            | Left | Center | Right |
+            |:-----|:------:|------:|
+            | L    | C      | R     |
+        """)
+        doc = parse_markdown(text)
+        assert doc.token_count == 1
+        assert doc.tokens[0].token_type == "markdown_table"
+
+    def test_table_multiple_rows(self) -> None:
+        """Table with multiple data rows is recognized."""
+        text = dedent("""\
+            | Name | Value |
+            |------|-------|
+            | foo  | 1     |
+            | bar  | 2     |
+            | baz  | 3     |
+        """)
+        doc = parse_markdown(text)
+        assert doc.token_count == 1
+        assert doc.tokens[0].token_type == "markdown_table"
+
+    def test_table_roundtrip(self) -> None:
+        """Table roundtrips correctly."""
+        text = dedent("""\
+            | Header 1 | Header 2 |
+            |----------|----------|
+            | Cell 1   | Cell 2   |
+        """)
+        doc = parse_markdown(text)
+        rendered = doc.render()
+        assert rendered == text
+
+    def test_table_from_spec(self) -> None:
+        """Table from the interactive-text spec is recognized."""
+        text = dedent("""\
+            | Without | With |
+            |---------|------|
+            | Specs describe interfaces | Specs ARE interfaces |
+        """)
+        doc = parse_markdown(text)
+        assert doc.token_count == 1
+        assert doc.tokens[0].token_type == "markdown_table"
+
+
+class TestLinkRecognition:
+    """Test link token recognition."""
+
+    def test_simple_link(self) -> None:
+        """Simple link is recognized."""
+        text = "Check [this link](https://example.com) for info."
+        doc = parse_markdown(text)
+        link_tokens = [t for t in doc.tokens if t.token_type == "link"]
+        assert len(link_tokens) == 1
+
+    def test_link_not_image(self) -> None:
+        """Link is distinct from image (no ! prefix)."""
+        text = "[link](url) and ![image](url)"
+        doc = parse_markdown(text)
+        link_tokens = [t for t in doc.tokens if t.token_type == "link"]
+        image_tokens = [t for t in doc.tokens if t.token_type == "image"]
+        assert len(link_tokens) == 1
+        assert len(image_tokens) == 1
+
+    def test_link_roundtrip(self) -> None:
+        """Links roundtrip correctly."""
+        text = "Visit [our docs](https://docs.example.com/guide) today."
+        doc = parse_markdown(text)
+        assert doc.render() == text
+
+
+class TestBlockquoteRecognition:
+    """Test blockquote token recognition."""
+
+    def test_simple_blockquote(self) -> None:
+        """Simple blockquote is recognized."""
+        text = "> This is a quote\n"
+        doc = parse_markdown(text)
+        quote_tokens = [t for t in doc.tokens if t.token_type == "blockquote"]
+        assert len(quote_tokens) == 1
+
+    def test_multiline_blockquote(self) -> None:
+        """Multi-line blockquote is recognized."""
+        text = "> Line 1\n> Line 2\n> Line 3\n"
+        doc = parse_markdown(text)
+        quote_tokens = [t for t in doc.tokens if t.token_type == "blockquote"]
+        assert len(quote_tokens) == 1
+
+    def test_blockquote_roundtrip(self) -> None:
+        """Blockquotes roundtrip correctly."""
+        text = "> The proof IS the decision.\n"
+        doc = parse_markdown(text)
+        assert doc.render() == text
+
+
+class TestHorizontalRuleRecognition:
+    """Test horizontal rule token recognition."""
+
+    def test_dash_rule(self) -> None:
+        """Dash horizontal rule is recognized."""
+        text = "---\n"
+        doc = parse_markdown(text)
+        rule_tokens = [t for t in doc.tokens if t.token_type == "horizontal_rule"]
+        assert len(rule_tokens) == 1
+
+    def test_asterisk_rule(self) -> None:
+        """Asterisk horizontal rule is recognized."""
+        text = "***\n"
+        doc = parse_markdown(text)
+        rule_tokens = [t for t in doc.tokens if t.token_type == "horizontal_rule"]
+        assert len(rule_tokens) == 1
+
+    def test_underscore_rule(self) -> None:
+        """Underscore horizontal rule is recognized."""
+        text = "___\n"
+        doc = parse_markdown(text)
+        rule_tokens = [t for t in doc.tokens if t.token_type == "horizontal_rule"]
+        assert len(rule_tokens) == 1
+
+    def test_horizontal_rule_roundtrip(self) -> None:
+        """Horizontal rules roundtrip correctly."""
+        text = "Before\n\n---\n\nAfter"
+        doc = parse_markdown(text)
+        assert doc.render() == text
+
+
+# =============================================================================
+# Code Block Protection Tests
+# =============================================================================
+
+
+class TestCodeBlockProtection:
+    """Test that tokens inside code blocks are NOT recognized."""
+
+    def test_agentese_path_inside_code_block_not_tokenized(self) -> None:
+        """AGENTESE paths inside code blocks should NOT be recognized."""
+        text = dedent("""\
+            ```python
+            path = "world.town.citizen"
+            await logos.invoke("self.brain.capture")
+            ```
+        """)
+        doc = parse_markdown(text)
+
+        # Should only have 1 token: the code block itself
+        assert doc.token_count == 1
+        assert doc.tokens[0].token_type == "code_block"
+
+    def test_task_checkbox_inside_code_block_not_tokenized(self) -> None:
+        """Task checkboxes inside code blocks should NOT be recognized."""
+        text = dedent("""\
+            ```markdown
+            - [ ] This is NOT a real task
+            - [x] Neither is this
+            ```
+        """)
+        doc = parse_markdown(text)
+        assert doc.token_count == 1
+        assert doc.tokens[0].token_type == "code_block"
+
+    def test_table_inside_code_block_not_tokenized(self) -> None:
+        """Tables inside code blocks should NOT be recognized."""
+        text = dedent("""\
+            ```markdown
+            | Header | Header |
+            |--------|--------|
+            | Cell   | Cell   |
+            ```
+        """)
+        doc = parse_markdown(text)
+        assert doc.token_count == 1
+        assert doc.tokens[0].token_type == "code_block"
+
+    def test_tokens_outside_code_block_still_recognized(self) -> None:
+        """Tokens outside code blocks should still be recognized."""
+        text = dedent("""\
+            Check `world.town.citizen` here.
+
+            ```python
+            path = "world.town.ignored"
+            ```
+
+            And also `self.brain.capture` here.
+        """)
+        doc = parse_markdown(text)
+
+        # Should have: code_block + 2 agentese_path tokens
+        code_blocks = [t for t in doc.tokens if t.token_type == "code_block"]
+        agentese_paths = [t for t in doc.tokens if t.token_type == "agentese_path"]
+
+        assert len(code_blocks) == 1
+        assert len(agentese_paths) == 2
+
+    def test_code_block_with_nested_backticks(self) -> None:
+        """Code blocks with nested backticks are handled correctly."""
+        text = dedent("""\
+            ````python
+            # This code block contains ```
+            code = '''
+            ```markdown
+            Not a code block
+            ```
+            '''
+            ````
+        """)
+        doc = parse_markdown(text)
+        assert doc.token_count == 1
+        assert doc.tokens[0].token_type == "code_block"
+
+
+# =============================================================================
+# Complex Document Tests
+# =============================================================================
+
+
+class TestComplexDocuments:
+    """Test parsing of complex real-world documents."""
+
+    def test_spec_like_document(self) -> None:
+        """Document similar to interactive-text.md spec."""
+        text = dedent("""\
+            # Interactive Text Protocol
+
+            > *"The spec is not description—it is generative."*
+
+            ---
+
+            ## Part I: Purpose
+
+            | Without | With |
+            |---------|------|
+            | Specs describe | Specs ARE interfaces |
+
+            ### Example Code
+
+            ```python
+            @semantic_token("agentese_path")
+            class AGENTESEPathToken:
+                pattern = re.compile(r'`world\\.path`')
+            ```
+
+            See `world.document.interactive` for details.
+
+            - [ ] Implement parser
+            - [x] Write tests
+        """)
+        doc = parse_markdown(text)
+
+        # Count token types
+        token_types = {}
+        for token in doc.tokens:
+            t = token.token_type
+            token_types[t] = token_types.get(t, 0) + 1
+
+        # Should have:
+        # - 1 blockquote
+        # - 1 horizontal_rule
+        # - 1 markdown_table
+        # - 1 code_block
+        # - 1 agentese_path (the one outside code block)
+        # - 2 task_checkbox
+        assert token_types.get("blockquote", 0) >= 1
+        assert token_types.get("horizontal_rule", 0) >= 1
+        assert token_types.get("markdown_table", 0) >= 1
+        assert token_types.get("code_block", 0) >= 1
+        assert token_types.get("agentese_path", 0) >= 1
+        assert token_types.get("task_checkbox", 0) >= 2
+
+        # Roundtrip fidelity
+        assert doc.render() == text

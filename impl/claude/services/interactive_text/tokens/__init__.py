@@ -2,13 +2,17 @@
 Token type implementations.
 
 This module contains concrete implementations of MeaningToken for each
-of the six core token types:
+of the ten core token types:
 - AGENTESEPath: Portal to the agent system
 - TaskCheckbox: Proof of completion with trace witness
 - Image: Multimodal context with AI analysis
 - CodeBlock: Executable action with sandboxed execution
 - PrincipleRef: Anchor to design principles
 - RequirementRef: Trace to requirements with verification status
+- MarkdownTable: Structured data display with interactive editing
+- HorizontalRule: Visual section divider
+- Link: Hyperlink to external or internal resource
+- Blockquote: Quoted text block
 
 Each token type implements the MeaningToken abstract base class and
 provides affordances appropriate to its semantic meaning.
@@ -60,6 +64,16 @@ from .requirement_ref import (
     RequirementNavigationResult,
     RequirementRefToken,
     create_requirement_ref_token,
+)
+from .table import (
+    MarkdownTableToken,
+    TableAlignment,
+    TableCell,
+    TableColumn,
+    TableEditResult,
+    TableExportResult,
+    TableHoverInfo,
+    create_markdown_table_token,
 )
 from .task_checkbox import (
     TaskCheckboxToken,
@@ -119,4 +133,13 @@ __all__ = [
     "RequirementNavigationResult",
     "RequirementContextMenuResult",
     "create_requirement_ref_token",
+    # MarkdownTable token
+    "MarkdownTableToken",
+    "TableAlignment",
+    "TableColumn",
+    "TableCell",
+    "TableHoverInfo",
+    "TableEditResult",
+    "TableExportResult",
+    "create_markdown_table_token",
 ]

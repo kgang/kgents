@@ -9,6 +9,20 @@
  * - Life: moss, fern, sage, mint, sprout (living accents)
  * - Glow: spore, amber, light, lichen (earned highlights)
  *
+ * =============================================================================
+ * INVARIANT: NO LAYOUT SHIFT FROM HOVER ELEMENTS
+ * =============================================================================
+ *
+ * Badges, tooltips, and hover-only UI elements must NEVER change container
+ * dimensions. This prevents jarring visual jumps that break user focus.
+ *
+ * Implementation rules:
+ * 1. Hover elements are ALWAYS in the DOM (not conditionally rendered)
+ * 2. Use opacity: 0/1 transitions, not display: none/block
+ * 3. Use position: absolute for overlays that float above content
+ * 4. Reserve space with min-height for elements that contain hover children
+ * 5. Test by rapidly hovering — no "jumping" should occur
+ *
  * See: tailwind.config.js, docs/creative/visual-system.md
  */
 
@@ -41,6 +55,67 @@
 .text-span {
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* -----------------------------------------------------------------------------
+   Cosmetic Header Detection (not tokenized)
+
+   These styles apply to markdown headers detected in TextSpan.
+   Headers are rendered as styled <span> elements, not semantic <h1>-<h6>.
+   ----------------------------------------------------------------------------- */
+
+.text-span__header {
+  display: block;
+  font-weight: 600;
+  line-height: 1.3;
+  /* Minimal spacing — doc-like flow */
+  margin: 0;
+  /* STARK: foreground-strong for headers */
+  color: rgb(210 210 220);
+}
+
+.text-span__header--h1 {
+  font-size: 1.6em;
+  font-weight: 700;
+  /* STARK: life-sage underline accent */
+  border-bottom: 2px solid rgba(74, 107, 74, 0.4);
+  padding-bottom: 0.15em;
+  color: rgb(230 230 240);
+}
+
+.text-span__header--h2 {
+  font-size: 1.3em;
+  font-weight: 600;
+  /* STARK: subtle left accent */
+  border-left: 3px solid rgba(74, 107, 74, 0.5);
+  padding-left: 0.5em;
+}
+
+.text-span__header--h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  /* STARK: steel-zinc for tertiary */
+  color: rgb(190 190 200);
+}
+
+.text-span__header--h4 {
+  font-size: 0.9em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  /* STARK: muted for quaternary */
+  color: rgb(160 160 170);
+}
+
+.text-span__header--h5,
+.text-span__header--h6 {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: rgb(140 140 150);
+}
+
+.text-span__header--h6 {
+  font-style: italic;
 }
 
 /* =============================================================================
@@ -226,7 +301,8 @@
 .token-placeholder--code_region {
   display: block;
   padding: 0.5em 0.75em;
-  margin: 0.5em 0;
+  /* Minimal spacing — doc-like flow */
+  margin: 0.25em 0;
   /* STARK: steel-carbon with gunmetal accent */
   background-color: #141418;
   border-left: 3px solid #28282f; /* steel-gunmetal */
@@ -246,4 +322,687 @@
   padding: 0.1em 0.4em;
   font-size: 0.85em;
   color: #c4a77d; /* glow-spore */
+}
+
+/* =============================================================================
+   Code Block Token — Structured Code Display
+
+   Philosophy: Code is precision. Use steel foundation with
+   language badge as accent.
+
+   INVARIANT: Badges and hover elements must NOT change container shape.
+   - Use position: absolute for overlays
+   - Reserve space for persistent elements (header always visible)
+   - Hover-only elements appear WITHIN existing bounds
+   ============================================================================= */
+
+.code-block-token {
+  display: block;
+  /* Minimal spacing — doc-like flow */
+  margin: 0.25em 0;
+  border-radius: 4px;
+  overflow: hidden;
+  /* STARK: steel-carbon background */
+  background-color: #141418;
+  /* STARK: steel-gunmetal border */
+  border: 1px solid #28282f;
+}
+
+.code-block-token__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.5em 0.75em;
+  /* STARK: steel-slate for header */
+  background-color: rgba(28, 28, 34, 0.8);
+  border-bottom: 1px solid #28282f;
+  font-size: 0.8em;
+  /* INVARIANT: Fixed height so copy button doesn't cause reflow */
+  min-height: 2em;
+}
+
+.code-block-token__language {
+  /* STARK: life-sage for living elements */
+  color: #6b8b6b;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+.code-block-token__info {
+  /* STARK: steel-zinc for muted */
+  color: #3a3a44;
+  font-size: 0.9em;
+}
+
+.code-block-token__copy {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #28282f;
+  border-radius: 3px;
+  padding: 0.25em 0.5em;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: #6b8b6b;
+  /* INVARIANT: Button always in DOM, opacity controlled by CSS (no layout shift) */
+  opacity: 0;
+  transition: all 200ms ease;
+}
+
+.code-block-token:hover .code-block-token__copy {
+  opacity: 1;
+}
+
+.code-block-token__copy:hover {
+  background-color: rgba(74, 107, 74, 0.15);
+  border-color: #4a6b4a;
+}
+
+.code-block-token__pre {
+  margin: 0;
+  padding: 0.75em 1em;
+  overflow-x: auto;
+}
+
+.code-block-token__code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+  color: rgb(180 180 190);
+  white-space: pre;
+}
+
+/* =============================================================================
+   Markdown Table Token — Structured Data Display
+
+   Philosophy: Tables are organized information. Steel foundation with
+   subtle hover states.
+
+   INVARIANT: Badges and hover elements must NOT change container shape.
+   - Badge floats INSIDE the table header, not above it
+   - No content shift on hover
+   ============================================================================= */
+
+.markdown-table-token {
+  display: block;
+  position: relative;
+  /* Minimal spacing — doc-like flow */
+  margin: 0.25em 0;
+  overflow-x: auto;
+  /* INVARIANT: Allow badge to be visible but don't change layout */
+  overflow-y: visible;
+}
+
+.markdown-table-token__badge {
+  /* INVARIANT: Badge appears INSIDE header row, not outside container */
+  position: absolute;
+  top: 0.4em;
+  right: 0.5em;
+  padding: 0.15em 0.4em;
+  font-size: 0.65em;
+  /* STARK: life-sage accent */
+  background-color: rgba(74, 107, 74, 0.95);
+  color: #e0e0e4;
+  border-radius: 3px;
+  z-index: 1;
+  pointer-events: none;
+  /* Smooth fade in/out */
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.markdown-table-token:hover .markdown-table-token__badge {
+  opacity: 1;
+}
+
+.markdown-table-token__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  /* STARK: steel-gunmetal border */
+  border: 1px solid #28282f;
+}
+
+.markdown-table-token__table th,
+.markdown-table-token__table td {
+  padding: 0.5em 0.75em;
+  border: 1px solid #28282f;
+}
+
+.markdown-table-token__table th {
+  /* STARK: steel-slate for header */
+  background-color: rgba(28, 28, 34, 0.8);
+  color: rgb(200 200 210);
+  font-weight: 600;
+  text-align: left;
+}
+
+.markdown-table-token__table td {
+  /* STARK: steel-carbon for cells */
+  background-color: rgba(20, 20, 24, 0.6);
+}
+
+.markdown-table-token__table tr:hover td {
+  /* STARK: subtle hover */
+  background-color: rgba(28, 28, 34, 0.8);
+}
+
+/* =============================================================================
+   Link Token — Navigable Reference
+
+   Philosophy: Links are connections. Use life accent with
+   subtle preview on hover.
+   ============================================================================= */
+
+.link-token {
+  position: relative;
+  display: inline;
+}
+
+.link-token__anchor {
+  /* STARK: life-mint for links */
+  color: #6b8b6b;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(107, 139, 107, 0.5);
+  transition: all 200ms ease;
+}
+
+.link-token__anchor:hover {
+  color: #8ba98b;
+  border-bottom-style: solid;
+  border-bottom-color: #8ba98b;
+}
+
+.link-token__external-icon {
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+
+.link-token__preview {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  padding: 0.25em 0.5em;
+  font-size: 0.75em;
+  /* STARK: steel-slate background */
+  background-color: #1c1c22;
+  border: 1px solid #28282f;
+  border-radius: 3px;
+  color: #8ba98b;
+  white-space: nowrap;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 10;
+  pointer-events: none;
+  /* INVARIANT: Always in DOM, CSS controls visibility (no layout shift) */
+  opacity: 0;
+  transition: opacity 185ms ease;
+}
+
+.link-token:hover .link-token__preview {
+  opacity: 1;
+}
+
+/* =============================================================================
+   Blockquote Token — Emphasized Text
+
+   Philosophy: Quotes are wisdom. Use life accent border with
+   italic styling.
+   ============================================================================= */
+
+.blockquote-token {
+  display: block;
+  /* Minimal spacing — doc-like flow */
+  margin: 0.25em 0;
+  padding: 0.5em 1em;
+  /* STARK: life-sage left border */
+  border-left: 3px solid #4a6b4a;
+  /* STARK: subtle background */
+  background-color: rgba(20, 20, 24, 0.4);
+  border-radius: 0 4px 4px 0;
+}
+
+.blockquote-token__content {
+  font-style: italic;
+  color: rgb(160 160 170);
+  line-height: 1.6;
+}
+
+.blockquote-token__attribution {
+  margin-top: 0.5em;
+  font-size: 0.85em;
+  /* STARK: steel-zinc for muted */
+  color: #5a5a64;
+  font-style: normal;
+}
+
+/* =============================================================================
+   Horizontal Rule Token — Section Divider
+
+   Philosophy: Dividers are breath. Minimal presence,
+   organic gradient.
+   ============================================================================= */
+
+.horizontal-rule-token {
+  border: none;
+  height: 1px;
+  /* Minimal spacing — doc-like flow */
+  margin: 0.5em 0;
+  /* STARK: subtle gradient from steel to muted life and back */
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(40, 40, 47, 0.6) 25%,
+    rgba(74, 107, 74, 0.4) 50%,
+    rgba(40, 40, 47, 0.6) 75%,
+    transparent 100%
+  );
+}
+
+/* =============================================================================
+   Portal Token — Expandable Hyperedge
+
+   Philosophy: "The doc comes to you." Portals are navigation without
+   leaving context. Steel frame, life accent on expand.
+
+   INVARIANT: Expansion animates height, not display toggle.
+   ============================================================================= */
+
+.portal-token {
+  display: block;
+  margin: 0.5em 0;
+  border-radius: 4px;
+  /* STARK: steel-carbon background */
+  background-color: rgba(20, 20, 24, 0.5);
+  border: 1px solid #28282f;
+  overflow: hidden;
+}
+
+.portal-token__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+  padding: 0.5em 0.75em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  color: rgb(180 180 190);
+  transition: background-color 200ms ease;
+}
+
+.portal-token__toggle:hover {
+  /* STARK: steel-slate on hover */
+  background-color: rgba(28, 28, 34, 0.8);
+}
+
+.portal-token__icon {
+  font-size: 0.75em;
+  color: #6b8b6b;
+  transition: transform 200ms ease;
+}
+
+.portal-token--expanded .portal-token__icon {
+  transform: rotate(0deg);
+}
+
+.portal-token__edge-type {
+  /* STARK: life-sage for edge type */
+  color: #6b8b6b;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.portal-token__arrow {
+  /* STARK: steel-zinc for arrow */
+  color: #3a3a44;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.portal-token__count {
+  /* STARK: steel-zinc for count */
+  color: #5a5a64;
+  font-size: 0.85em;
+  margin-left: auto;
+}
+
+.portal-token__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* STARK: steel-carbon background for list */
+  background-color: rgba(14, 14, 18, 0.6);
+  border-top: 1px solid #28282f;
+}
+
+.portal-token__item {
+  border-bottom: 1px solid rgba(40, 40, 47, 0.5);
+}
+
+.portal-token__item:last-child {
+  border-bottom: none;
+}
+
+.portal-token__destination {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+  padding: 0.4em 0.75em 0.4em 1.5em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  color: rgb(160 160 170);
+  transition: all 200ms ease;
+}
+
+.portal-token__destination:hover:not(:disabled) {
+  background-color: rgba(74, 107, 74, 0.1);
+  color: #8ba98b;
+}
+
+.portal-token__destination:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.portal-token__dest-index {
+  /* STARK: steel-zinc for index */
+  color: #3a3a44;
+  font-size: 0.8em;
+  min-width: 1.5em;
+}
+
+.portal-token__dest-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+}
+
+.portal-token__dest-missing {
+  /* STARK: muted rust for missing */
+  color: #a65d4a;
+  font-size: 0.75em;
+  padding: 0.1em 0.3em;
+  border-radius: 2px;
+  background-color: rgba(166, 93, 74, 0.15);
+  margin-left: auto;
+}
+
+.portal-token__preview {
+  padding: 0.25em 0.75em 0.5em 2.5em;
+  font-size: 0.8em;
+  /* STARK: steel-zinc for preview */
+  color: #5a5a64;
+  font-style: italic;
+}
+
+.portal-token__show-more {
+  padding: 0.4em 0.75em 0.4em 1.5em;
+}
+
+.portal-token__show-more-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85em;
+  /* STARK: life-sage for action */
+  color: #6b8b6b;
+  padding: 0;
+}
+
+.portal-token__show-more-btn:hover {
+  color: #8ba98b;
+  text-decoration: underline;
+}
+
+/* =============================================================================
+   Principle Token — Architectural Principle Reference
+
+   Philosophy: Principles are earned wisdom. Gold/spore accent for
+   architectural decisions worth remembering.
+
+   INVARIANT: Tooltip always in DOM, opacity controlled by CSS.
+   ============================================================================= */
+
+.principle-token {
+  position: relative;
+  display: inline;
+}
+
+.principle-token__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+  transition: all 200ms ease;
+}
+
+/* Architectural decisions — gold/spore accent */
+.principle-token--architectural .principle-token__badge {
+  /* STARK: glow-spore background */
+  background-color: rgba(196, 167, 125, 0.15);
+  color: #c4a77d;
+}
+
+.principle-token--architectural .principle-token__badge:hover {
+  background-color: rgba(196, 167, 125, 0.25);
+  box-shadow: 0 0 8px rgba(196, 167, 125, 0.2);
+}
+
+/* Constitutional principles — life accent */
+.principle-token--constitutional .principle-token__badge {
+  /* STARK: life-sage background */
+  background-color: rgba(74, 107, 74, 0.15);
+  color: #6b8b6b;
+}
+
+.principle-token--constitutional .principle-token__badge:hover {
+  background-color: rgba(74, 107, 74, 0.25);
+  box-shadow: 0 0 8px rgba(139, 169, 139, 0.2);
+}
+
+/* Operational — steel accent */
+.principle-token--operational .principle-token__badge {
+  background-color: rgba(58, 58, 68, 0.3);
+  color: #8a8a94;
+}
+
+.principle-token--operational .principle-token__badge:hover {
+  background-color: rgba(58, 58, 68, 0.5);
+}
+
+.principle-token__id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.principle-token__title {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.principle-token__tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5em 0.75em;
+  /* STARK: steel-slate background */
+  background-color: #1c1c22;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  z-index: 10;
+  pointer-events: none;
+  min-width: 200px;
+  max-width: 300px;
+  /* INVARIANT: Always in DOM, CSS controls visibility */
+  transition: opacity 185ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.principle-token__tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #28282f;
+}
+
+.principle-token__tooltip-title {
+  font-weight: 600;
+  color: rgb(200 200 210);
+  font-size: 0.9em;
+}
+
+.principle-token__tooltip-desc {
+  color: rgb(140 140 150);
+  font-size: 0.8em;
+  line-height: 1.4;
+}
+
+/* =============================================================================
+   Image Token — Image with AI Analysis
+
+   Philosophy: Images are meaning tokens, not decoration.
+   Show AI analysis on hover to reveal semantic content.
+
+   INVARIANT: Tooltip always in DOM, opacity controlled by CSS.
+   ============================================================================= */
+
+.image-token {
+  display: block;
+  margin: 0.75em 0;
+}
+
+.image-token__container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  /* STARK: steel-gunmetal border */
+  border: 1px solid #28282f;
+}
+
+.image-token__button {
+  display: block;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.image-token__img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  transition: filter 200ms ease;
+}
+
+.image-token__button:hover .image-token__img {
+  filter: brightness(1.05);
+}
+
+.image-token__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2em;
+  /* STARK: steel-carbon background */
+  background-color: #141418;
+  min-height: 100px;
+  gap: 0.5em;
+}
+
+.image-token__error-icon {
+  font-size: 1.5em;
+  /* STARK: muted rust */
+  color: #a65d4a;
+}
+
+.image-token__error-text {
+  color: rgb(160 160 170);
+  font-size: 0.9em;
+}
+
+.image-token__error-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75em;
+  color: #5a5a64;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-token__tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  padding: 0.5em 0.75em;
+  /* STARK: steel-slate background */
+  background-color: rgba(28, 28, 34, 0.95);
+  border: 1px solid #28282f;
+  border-radius: 4px 4px 0 0;
+  z-index: 10;
+  pointer-events: none;
+  /* INVARIANT: Always in DOM, CSS controls visibility */
+  transition: opacity 185ms ease;
+}
+
+.image-token__tooltip-label {
+  display: block;
+  font-size: 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  /* STARK: life-sage for label */
+  color: #6b8b6b;
+  margin-bottom: 0.25em;
+}
+
+.image-token__tooltip-text {
+  display: block;
+  font-size: 0.85em;
+  color: rgb(180 180 190);
+  line-height: 1.4;
+}
+
+.image-token__tooltip-loading {
+  font-size: 0.85em;
+  color: rgb(140 140 150);
+  font-style: italic;
+}
+
+.image-token__caption {
+  margin-top: 0.5em;
+  font-size: 0.85em;
+  color: rgb(160 160 170);
+  text-align: center;
+}
+
+.image-token__alt {
+  margin-top: 0.25em;
+  font-size: 0.8em;
+  color: #5a5a64;
+  font-style: italic;
+  text-align: center;
 }

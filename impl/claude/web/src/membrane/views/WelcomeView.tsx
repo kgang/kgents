@@ -22,28 +22,71 @@ import { useTitleScatter } from '@/hooks/useTitleScatter';
 import './WelcomeView.css';
 
 // =============================================================================
-// Constants
+// Constants — The Seven Principles
 // =============================================================================
 
-const HINTS = [
-  { key: 'Type', action: 'Start a thought in the dialogue pane', shortcut: 't' },
-  { key: 'Mention', action: 'Reference a file path to see it here', shortcut: 'm' },
-  { key: 'Crystallize', action: 'Capture decisions to the witness stream', shortcut: 'c' },
+/**
+ * The seven kgents principles, expressed as invitations.
+ * Each is clickable, triggering a ripple of vitality.
+ */
+const PRINCIPLES = [
+  {
+    key: 'Tasteful',
+    essence: 'Every element earns its place',
+    shortcut: '1',
+    glyph: '◇',
+  },
+  {
+    key: 'Curated',
+    essence: 'Intentional selection, not exhaustive cataloging',
+    shortcut: '2',
+    glyph: '◈',
+  },
+  {
+    key: 'Ethical',
+    essence: 'Augment capability, never replace judgment',
+    shortcut: '3',
+    glyph: '◉',
+  },
+  {
+    key: 'Joy-Inducing',
+    essence: 'Delight in interaction; personality matters',
+    shortcut: '4',
+    glyph: '✧',
+  },
+  {
+    key: 'Composable',
+    essence: 'Agents combine like morphisms in a category',
+    shortcut: '5',
+    glyph: '⊛',
+  },
+  {
+    key: 'Heterarchical',
+    essence: 'Leadership is contextual, not fixed',
+    shortcut: '6',
+    glyph: '⊕',
+  },
+  {
+    key: 'Generative',
+    essence: 'Spec is compression; design generates implementation',
+    shortcut: '7',
+    glyph: '❋',
+  },
 ] as const;
 
 // =============================================================================
 // Sub-Components
 // =============================================================================
 
-interface HintCardProps {
-  hint: (typeof HINTS)[number];
+interface PrincipleCardProps {
+  principle: (typeof PRINCIPLES)[number];
   index: number;
   onRipple?: (x: number, y: number) => void;
 }
 
-function HintCard({ hint, index, onRipple }: HintCardProps) {
-  const { style, handlers } = useSpringTilt({ maxTilt: 6, stiffness: 0.12 });
-  const { isPulsing } = useKeyPulse(hint.shortcut);
+function PrincipleCard({ principle, index, onRipple }: PrincipleCardProps) {
+  const { style, handlers } = useSpringTilt({ maxTilt: 8, stiffness: 0.15 });
+  const { isPulsing } = useKeyPulse(principle.shortcut);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Staggered entrance animation
@@ -52,7 +95,7 @@ function HintCard({ hint, index, onRipple }: HintCardProps) {
   useEffect(() => {
     const timer = setTimeout(
       () => setIsVisible(true),
-      150 + index * 100 // Stagger by 100ms
+      200 + index * 80 // Stagger by 80ms for faster cascade
     );
     return () => clearTimeout(timer);
   }, [index]);
@@ -73,20 +116,23 @@ function HintCard({ hint, index, onRipple }: HintCardProps) {
   return (
     <div
       ref={cardRef}
-      className={`welcome-view__hint ${isVisible ? 'welcome-view__hint--visible' : ''}`}
+      className={`welcome-view__principle ${isVisible ? 'welcome-view__principle--visible' : ''}`}
       style={{
         ...style,
-        animationDelay: `${index * 100}ms`,
+        animationDelay: `${index * 80}ms`,
       }}
       onClick={handleClick}
       {...handlers}
     >
       <span
-        className={`welcome-view__hint-key ${isPulsing ? 'welcome-view__hint-key--pulsing' : ''}`}
+        className={`welcome-view__principle-glyph ${isPulsing ? 'welcome-view__principle-glyph--pulsing' : ''}`}
       >
-        {hint.key}
+        {principle.glyph}
       </span>
-      <span className="welcome-view__hint-action">{hint.action}</span>
+      <div className="welcome-view__principle-content">
+        <span className="welcome-view__principle-key">{principle.key}</span>
+        <span className="welcome-view__principle-essence">{principle.essence}</span>
+      </div>
     </div>
   );
 }
@@ -144,17 +190,17 @@ export function WelcomeView() {
     getLetterStyle,
     isScattered,
     isReforming,
-  } = useTitleScatter({ text: 'The Membrane' });
+  } = useTitleScatter({ text: 'kgents' });
 
   // Container ref for positioning
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Handle ripple from hint cards (normalized coords)
-  const handleHintRipple = useCallback(
+  // Handle ripple from principle cards (normalized coords)
+  const handlePrincipleRipple = useCallback(
     (x: number, y: number) => {
-      // Convert hint card coords to container coords (rough approximation)
-      // Hints are centered in container, so offset accordingly
-      triggerRipple(0.3 + x * 0.4, 0.5 + y * 0.15);
+      // Convert principle card coords to container coords (rough approximation)
+      // Principles are centered in container, so offset accordingly
+      triggerRipple(0.3 + x * 0.4, 0.4 + y * 0.3);
     },
     [triggerRipple]
   );
@@ -202,16 +248,25 @@ export function WelcomeView() {
           ))}
         </h1>
 
-        <p className="welcome-view__subtitle">Co-thinking surface</p>
+        <p className="welcome-view__subtitle">Ideas that want to help you think</p>
 
         <div className="welcome-view__description">
-          <p>This is where you and K-gent think together. Not a chatbot — a collaborative space.</p>
+          <p>
+            Not chatbots. Not tools. <em>Collaborators.</em>
+            <br />
+            <span className="welcome-view__whisper">Agents that compose, grow, and remember.</span>
+          </p>
         </div>
 
-        {/* Hint cards with spring tilt */}
-        <div className="welcome-view__hints">
-          {HINTS.map((hint, i) => (
-            <HintCard key={hint.key} hint={hint} index={i} onRipple={handleHintRipple} />
+        {/* Seven Principles — the generative core */}
+        <div className="welcome-view__principles">
+          {PRINCIPLES.map((principle, i) => (
+            <PrincipleCard
+              key={principle.key}
+              principle={principle}
+              index={i}
+              onRipple={handlePrincipleRipple}
+            />
           ))}
         </div>
 
@@ -233,6 +288,11 @@ export function WelcomeView() {
             ))}
           </div>
         </div>
+
+        {/* Hidden invitation */}
+        <p className="welcome-view__invitation">
+          Press <kbd>1</kbd>-<kbd>7</kbd> to feel each principle
+        </p>
       </div>
     </div>
   );

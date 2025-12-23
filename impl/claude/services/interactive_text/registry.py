@@ -322,11 +322,13 @@ CORE_TOKEN_DEFINITIONS: list[TokenDefinition] = [
         description="Multimodal context with AI analysis",
     ),
     # 4. Code Block Token
+    # Uses backreference to match variable-length fences (````, `````, etc.)
+    # This allows escaping code containing triple backticks by using 4+ backticks
     TokenDefinition(
         name="code_block",
         pattern=TokenPattern(
             name="code_block",
-            regex=re.compile(r"```(\w*)\n(.*?)```", re.DOTALL),
+            regex=re.compile(r"(`{3,})(\w*)\n(.*?)\1", re.DOTALL),
             priority=5,
         ),
         affordances=(
@@ -419,6 +421,144 @@ CORE_TOKEN_DEFINITIONS: list[TokenDefinition] = [
             "json": "services.interactive_text.projectors.json.requirement_ref",
         },
         description="Trace to requirements with verification status",
+    ),
+    # 7. Markdown Table Token
+    # Matches GFM-style tables with header, separator, and data rows
+    # Alignment markers (`:---`, `:---:`, `---:`) captured in separator
+    TokenDefinition(
+        name="markdown_table",
+        pattern=TokenPattern(
+            name="markdown_table",
+            # Pattern breakdown:
+            # - Header row: | col | col | (with optional leading |)
+            # - Separator row: |-----|-----| (with optional alignment : markers)
+            # - Data rows: | data | data | (one or more)
+            regex=re.compile(
+                r"^\|?[^\n|]+(?:\|[^\n|]+)+\|?\n"  # Header row
+                r"\|?[\s]*:?-{3,}:?[\s]*(?:\|[\s]*:?-{3,}:?[\s]*)+\|?\n"  # Separator row
+                r"(?:\|?[^\n|]*(?:\|[^\n|]*)+\|?\n?)+",  # Data rows (1+)
+                re.MULTILINE,
+            ),
+            priority=3,  # Lower priority than code blocks
+        ),
+        affordances=(
+            Affordance(
+                name="hover_table",
+                action=AffordanceAction.HOVER,
+                handler="self.document.table.hover",
+                description="Display table structure info (rows, columns)",
+            ),
+            Affordance(
+                name="edit_table",
+                action=AffordanceAction.CLICK,
+                handler="self.document.table.edit",
+                description="Edit table in structured editor",
+            ),
+            Affordance(
+                name="export_table",
+                action=AffordanceAction.RIGHT_CLICK,
+                handler="self.document.table.export",
+                description="Export table as CSV, JSON, or HTML",
+            ),
+        ),
+        projectors={
+            "cli": "services.interactive_text.projectors.cli.markdown_table",
+            "web": "services.interactive_text.projectors.web.MarkdownTableToken",
+            "json": "services.interactive_text.projectors.json.markdown_table",
+        },
+        description="Structured data display with interactive editing",
+    ),
+    # 8. Horizontal Rule Token
+    # Matches ---, ***, ___ (with optional spaces)
+    TokenDefinition(
+        name="horizontal_rule",
+        pattern=TokenPattern(
+            name="horizontal_rule",
+            regex=re.compile(r"^[ ]{0,3}(?:[-*_][ ]*){3,}$", re.MULTILINE),
+            priority=2,
+        ),
+        affordances=(
+            Affordance(
+                name="hover_rule",
+                action=AffordanceAction.HOVER,
+                handler="self.document.rule.hover",
+                description="Section divider",
+            ),
+        ),
+        projectors={
+            "cli": "services.interactive_text.projectors.cli.horizontal_rule",
+            "web": "services.interactive_text.projectors.web.HorizontalRuleToken",
+            "json": "services.interactive_text.projectors.json.horizontal_rule",
+        },
+        description="Visual section divider",
+    ),
+    # 9. Link Token (distinct from images)
+    # Matches [text](url) but NOT ![alt](url) which is an image
+    TokenDefinition(
+        name="link",
+        pattern=TokenPattern(
+            name="link",
+            # Negative lookbehind to exclude images (which start with !)
+            regex=re.compile(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)"),
+            priority=4,
+        ),
+        affordances=(
+            Affordance(
+                name="hover_link",
+                action=AffordanceAction.HOVER,
+                handler="self.document.link.hover",
+                description="Preview link destination",
+            ),
+            Affordance(
+                name="navigate_link",
+                action=AffordanceAction.CLICK,
+                handler="self.document.link.navigate",
+                description="Navigate to link destination",
+            ),
+            Affordance(
+                name="copy_link",
+                action=AffordanceAction.RIGHT_CLICK,
+                handler="self.document.link.copy",
+                description="Copy link URL to clipboard",
+            ),
+        ),
+        projectors={
+            "cli": "services.interactive_text.projectors.cli.link",
+            "web": "services.interactive_text.projectors.web.LinkToken",
+            "json": "services.interactive_text.projectors.json.link",
+        },
+        description="Hyperlink to external or internal resource",
+    ),
+    # 10. Blockquote Token
+    # Matches > quoted text (can span multiple lines)
+    TokenDefinition(
+        name="blockquote",
+        pattern=TokenPattern(
+            name="blockquote",
+            # Matches one or more consecutive lines starting with >
+            regex=re.compile(r"^(?:>[ ]?[^\n]*\n?)+", re.MULTILINE),
+            priority=2,
+        ),
+        affordances=(
+            Affordance(
+                name="hover_quote",
+                action=AffordanceAction.HOVER,
+                handler="self.document.quote.hover",
+                description="Display quote attribution if available",
+            ),
+            Affordance(
+                name="copy_quote",
+                action=AffordanceAction.CLICK,
+                handler="self.document.quote.copy",
+                description="Copy quoted text",
+            ),
+        ),
+        projectors={
+            "cli": "services.interactive_text.projectors.cli.blockquote",
+            "web": "services.interactive_text.projectors.web.BlockquoteToken",
+            "json": "services.interactive_text.projectors.json.blockquote",
+        },
+        description="Quoted text block with optional attribution",
     ),
 ]
 

@@ -51,7 +51,7 @@ The text file is the source of truth. Interactive rendering is a **projection**â
 
 Six token types. No more. Curated, not catalogued.
 
-```bnf
+````bnf
 Document     := Block*
 Block        := Paragraph | Heading | List | CodeFence | Other
 Paragraph    := (Text | Token)*
@@ -85,7 +85,7 @@ PrincipleName := "Tasteful" | "Curated" | "Ethical" | "Joy-Inducing"
 RequirementRef := "_Requirements:" Space? RequirementList "_"
 RequirementList := RequirementId ("," Space? RequirementId)*
 RequirementId   := Digits "." Digits
-```
+````
 
 ### 2.2 The Interactive Functor
 
@@ -222,9 +222,7 @@ class AGENTESEPathToken:
 
 ### 3.2 Task Checkboxes
 
-**Pattern**: `- [ ] Task description`
-
-| Affordance | Action | Result |
+**Pattern**: `- [ ] Task description`| Affordance | Action | Result |
 |------------|--------|--------|
 | Click checkbox | Toggle state | Updates file, captures trace witness |
 | Hover | Show verification status | Links to requirement, last trace |

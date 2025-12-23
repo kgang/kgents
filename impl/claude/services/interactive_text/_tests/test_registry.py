@@ -3,7 +3,9 @@ Tests for Token Registry.
 
 Tests the TokenRegistry which is the single source of truth for token
 definitions (AD-011). Validates token registration, recognition, and
-the six core token types.
+the ten core token types:
+- agentese_path, task_checkbox, image, code_block, principle_ref, requirement_ref
+- markdown_table, horizontal_rule, link, blockquote (added for robustification)
 
 Feature: meaning-token-frontend
 Requirements: 1.1, 1.6
@@ -151,11 +153,11 @@ class TestTokenRegistryBasics:
 
 
 class TestCoreTokens:
-    """Tests for the six core token types."""
+    """Tests for the ten core token types."""
 
-    def test_six_core_tokens_defined(self) -> None:
-        """Exactly six core token types are defined."""
-        assert len(CORE_TOKEN_DEFINITIONS) == 6
+    def test_ten_core_tokens_defined(self) -> None:
+        """Exactly ten core token types are defined."""
+        assert len(CORE_TOKEN_DEFINITIONS) == 10
 
     def test_core_token_names(self) -> None:
         """Core tokens have expected names."""
@@ -167,6 +169,11 @@ class TestCoreTokens:
             "code_block",
             "principle_ref",
             "requirement_ref",
+            # New token types added for robustification
+            "markdown_table",
+            "horizontal_rule",
+            "link",
+            "blockquote",
         }
         assert names == expected
 
@@ -220,20 +227,35 @@ class TestCoreTokens:
         assert match.group(1) == ""
 
     def test_code_block_pattern(self) -> None:
-        """Code block pattern matches fenced code blocks."""
+        """Code block pattern matches fenced code blocks.
+
+        Note: Pattern groups are:
+            1: fence (```, ````, etc.)
+            2: language
+            3: code content
+        """
         defn = next(d for d in CORE_TOKEN_DEFINITIONS if d.name == "code_block")
 
         text = "```python\nprint('hello')\n```"
         match = defn.pattern.regex.search(text)
         assert match
-        assert match.group(1) == "python"
-        assert "print" in match.group(2)
+        assert match.group(1) == "```"  # fence
+        assert match.group(2) == "python"  # language
+        assert "print" in match.group(3)  # code
 
         # No language
         text = "```\ncode here\n```"
         match = defn.pattern.regex.search(text)
         assert match
-        assert match.group(1) == ""
+        assert match.group(2) == ""  # empty language
+
+        # Variable-length fence (4 backticks)
+        text = "````python\ncode with ``` inside\n````"
+        match = defn.pattern.regex.search(text)
+        assert match
+        assert match.group(1) == "````"  # 4-char fence
+        assert match.group(2) == "python"
+        assert "```" in match.group(3)  # nested backticks preserved
 
     def test_principle_ref_pattern(self) -> None:
         """Principle reference pattern matches [P1], [P2], etc."""

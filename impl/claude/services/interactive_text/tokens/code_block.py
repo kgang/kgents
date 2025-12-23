@@ -151,8 +151,10 @@ class CodeBlockToken(BaseMeaningToken[str]):
     Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6
     """
 
-    # Pattern for fenced code blocks
-    PATTERN = re.compile(r"```(\w*)\n(.*?)```", re.DOTALL)
+    # Pattern for fenced code blocks with variable-length fences
+    # Uses backreference to match closing fence with same length as opening
+    # This allows escaping code containing ``` by using ```` or more
+    PATTERN = re.compile(r"(`{3,})(\w*)\n(.*?)\1", re.DOTALL)
 
     # Languages that can be executed
     EXECUTABLE_LANGUAGES = frozenset(["python", "javascript", "typescript", "shell", "bash"])
@@ -196,12 +198,17 @@ class CodeBlockToken(BaseMeaningToken[str]):
 
         Returns:
             New CodeBlockToken instance
+
+        Note: Pattern groups are:
+            1: fence (```, ````, etc.)
+            2: language
+            3: code content
         """
         return cls(
             source_text=match.group(0),
             source_position=(match.start(), match.end()),
-            language=match.group(1),
-            code=match.group(2),
+            language=match.group(2),  # Language is now group 2
+            code=match.group(3),  # Code is now group 3
         )
 
     @property

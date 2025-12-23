@@ -17,7 +17,7 @@
  * "You edit a possible world until you crystallize."
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { documentApi } from '../../api/client';
 import { EmpathyError } from '../../components/joy/EmpathyError';
@@ -26,7 +26,9 @@ import { PersonalityLoading } from '../../components/joy/PersonalityLoading';
 
 import { InteractiveDocument, type SceneGraph } from '../tokens';
 import { useSpecQuery, type EdgeType } from '../useSpecNavigation';
-import { useFileKBlock, type KBlockReference } from '../useKBlock';
+import { useFileKBlock, type KBlockReference, type KBlockCreateResult } from '../useKBlock';
+import { useWitnessStream, type WitnessEvent } from '../useWitnessStream';
+import { EditPane } from './EditPane';
 
 import './SpecView.css';
 
@@ -263,6 +265,71 @@ function ReferencesPanel({ references, onNavigate }: ReferencesPanelProps) {
 }
 
 // =============================================================================
+// Witness Components
+// =============================================================================
+
+interface WitnessPaneProps {
+  events: WitnessEvent[];
+  connected: boolean;
+  onReconnect: () => void;
+}
+
+function WitnessPane({ events, connected, onReconnect }: WitnessPaneProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (events.length === 0 && connected) {
+    return null; // Nothing to show
+  }
+
+  return (
+    <div className="spec-view__witness" data-connected={connected}>
+      <button
+        className="spec-view__witness-toggle"
+        onClick={() => setExpanded(!expanded)}
+        data-expanded={expanded}
+      >
+        <span className="spec-view__witness-icon">{expanded ? '\u25BC' : '\u25B6'}</span>
+        <span className="spec-view__witness-title">Witness Stream</span>
+        <span className="spec-view__witness-status" data-connected={connected}>
+          {connected ? '\u25CF' : '\u25CB'}
+        </span>
+        {events.length > 0 && <span className="spec-view__witness-count">({events.length})</span>}
+      </button>
+
+      {!connected && (
+        <button className="spec-view__witness-reconnect" onClick={onReconnect}>
+          Reconnect
+        </button>
+      )}
+
+      {expanded && (
+        <GrowingContainer>
+          <ul className="spec-view__witness-list">
+            {events.slice(0, 10).map((event) => (
+              <li key={event.id} className="spec-view__witness-event" data-type={event.type}>
+                <span className="spec-view__witness-event-type">{event.type}</span>
+                <span className="spec-view__witness-event-action">
+                  {event.action || event.content || event.insight || 'Event'}
+                </span>
+                {event.reasoning && (
+                  <span className="spec-view__witness-event-reasoning">{event.reasoning}</span>
+                )}
+                <span className="spec-view__witness-event-time">
+                  {event.timestamp.toLocaleTimeString()}
+                </span>
+              </li>
+            ))}
+            {events.length > 10 && (
+              <li className="spec-view__witness-more">+{events.length - 10} more events</li>
+            )}
+          </ul>
+        </GrowingContainer>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -271,11 +338,25 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
   const [sceneGraph, setSceneGraph] = useState<SceneGraph | null>(null);
   const [contentLoading, setContentLoading] = useState(false);
   const [contentError, setContentError] = useState<string | null>(null);
-  const [references, setReferences] = useState<KBlockReference[]>([]);
+  const [references, _setReferences] = useState<KBlockReference[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Edit mode state (editing IS witnessing)
+  const [editMode, setEditMode] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [isApplyingEdit, setIsApplyingEdit] = useState(false);
 
   // K-Block for transactional editing
   const kblock = useFileKBlock();
+
+  // Witness stream for real-time events
+  const witness = useWitnessStream();
+
+  // Filter witness events for current path
+  const pathEvents = useMemo(
+    () => witness.events.filter((e) => e.path === path || !e.path),
+    [witness.events, path]
+  );
 
   // Query SpecGraph for metadata
   useEffect(() => {
@@ -284,39 +365,34 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
     }
   }, [path, query]);
 
-  // Create K-Block and fetch content when path changes
+  // Create K-Block and load content when path changes
   useEffect(() => {
     let cancelled = false;
 
-    async function initKBlock() {
+    async function loadContent() {
       setContentLoading(true);
       setContentError(null);
 
       try {
-        // Step 1: Create K-Block for the spec file
-        const created = await kblock.create(path);
+        // Step 1: Create K-Block for this file (returns content immediately)
+        const result: KBlockCreateResult = await kblock.create(path);
 
         if (cancelled) return;
 
-        if (!created) {
-          throw new Error(kblock.state.error || 'Failed to create K-Block');
+        if (!result.success || !result.content) {
+          throw new Error(result.error || 'Failed to create K-Block');
         }
 
         // Step 2: Parse content to SceneGraph via AGENTESE self.document.parse
-        const parsed = await documentApi.parse(kblock.state.content, 'COMFORTABLE');
+        // Content is available immediately from the promise, no React state delay
+        const parsed = await documentApi.parse(result.content, 'COMFORTABLE');
 
         if (cancelled) return;
 
         setSceneGraph(parsed.scene_graph as SceneGraph);
-
-        // Step 3: Fetch references
-        const refs = await kblock.getReferences();
-        if (!cancelled) {
-          setReferences(refs);
-        }
       } catch (err) {
         if (!cancelled) {
-          console.error('[SpecView] Failed to initialize K-Block:', err);
+          console.error('[SpecView] Failed to load content:', err);
           setContentError(err instanceof Error ? err.message : 'Failed to load content');
         }
       } finally {
@@ -326,31 +402,12 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
       }
     }
 
-    initKBlock();
+    loadContent();
     return () => {
       cancelled = true;
-      // Discard K-Block when unmounting (unless explicitly saved)
-      // This is intentional: uncommitted edits are lost on navigation
-      kblock.discard();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path]);
-
-  // Re-parse content when K-Block content changes
-  useEffect(() => {
-    if (!kblock.state.content) return;
-
-    async function reparse() {
-      try {
-        const parsed = await documentApi.parse(kblock.state.content, 'COMFORTABLE');
-        setSceneGraph(parsed.scene_graph as SceneGraph);
-      } catch (err) {
-        console.error('[SpecView] Failed to reparse content:', err);
-      }
-    }
-
-    reparse();
-  }, [kblock.state.content]);
+  }, [path, kblock.create]);
 
   // Handle AGENTESE path navigation
   const handleTokenNavigate = useCallback(
@@ -365,7 +422,7 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
         onNavigate?.(`concept/${parts.slice(1).join('/')}`);
       } else {
         // For now, log and let parent handle
-        console.log('[SpecView] Navigate to AGENTESE path:', agentesePath);
+        console.info('[SpecView] Navigate to AGENTESE path:', agentesePath);
         onNavigate?.(agentesePath);
       }
     },
@@ -414,6 +471,38 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
     // Re-create K-Block with fresh content
     await kblock.create(path);
   }, [kblock, path]);
+
+  // Handle enter edit mode
+  const handleEnterEdit = useCallback(() => {
+    setEditContent(kblock.state.content);
+    setEditMode(true);
+  }, [kblock.state.content]);
+
+  // Handle apply edit via K-Block viewEdit (editing IS witnessing)
+  const handleApplyEdit = useCallback(async () => {
+    if (!kblock.state.blockId) return;
+
+    setIsApplyingEdit(true);
+    try {
+      const result = await kblock.viewEdit('prose', editContent, 'Kent edited in Membrane');
+      if (result.success) {
+        setEditMode(false);
+        // Re-parse content to update SceneGraph
+        const parsed = await documentApi.parse(editContent, 'COMFORTABLE');
+        setSceneGraph(parsed.scene_graph as SceneGraph);
+      } else {
+        console.error('[SpecView] Failed to apply edit:', result.error);
+      }
+    } finally {
+      setIsApplyingEdit(false);
+    }
+  }, [kblock, editContent]);
+
+  // Handle cancel edit
+  const handleCancelEdit = useCallback(() => {
+    setEditMode(false);
+    setEditContent('');
+  }, []);
 
   // If SpecGraph fails but we have content, show it anyway
   // This allows testing Interactive Text before SpecGraph is wired
@@ -511,9 +600,28 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
       {/* References panel - discovered from K-Block */}
       <ReferencesPanel references={references} onNavigate={onNavigate} />
 
-      {/* Content */}
+      {/* Witness stream - real-time events for this spec */}
+      {(witness.connected || pathEvents.length > 0) && (
+        <WitnessPane
+          events={pathEvents}
+          connected={witness.connected}
+          onReconnect={witness.reconnect}
+        />
+      )}
+
+      {/* Content — edit mode or view mode */}
       <div className="spec-view__content">
-        {contentLoading ? (
+        {editMode ? (
+          // Edit mode: show EditPane (editing IS witnessing)
+          <EditPane
+            content={editContent}
+            onChange={setEditContent}
+            onSave={handleApplyEdit}
+            onCancel={handleCancelEdit}
+            isSaving={isApplyingEdit}
+            path={path}
+          />
+        ) : contentLoading ? (
           <div className="spec-view__content-loading">Loading content...</div>
         ) : contentError ? (
           <div className="spec-view__content-error">
@@ -521,12 +629,22 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
             <p className="spec-view__content-hint">{contentError}</p>
           </div>
         ) : sceneGraph ? (
-          <InteractiveDocument
-            sceneGraph={sceneGraph}
-            onNavigate={handleTokenNavigate}
-            onToggle={handleTaskToggle}
-            className="spec-view__interactive"
-          />
+          <>
+            <InteractiveDocument
+              sceneGraph={sceneGraph}
+              onNavigate={handleTokenNavigate}
+              onToggle={handleTaskToggle}
+              className="spec-view__interactive"
+            />
+            {/* Edit button - double-click or button to enter edit mode */}
+            <button
+              className="spec-view__edit-btn"
+              onClick={handleEnterEdit}
+              title="Edit this spec (enters K-Block isolation)"
+            >
+              Edit
+            </button>
+          </>
         ) : (
           <div className="spec-view__content-empty">
             <p>Content not available</p>
