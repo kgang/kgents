@@ -408,6 +408,15 @@ Principles alignment: Heterarchical (resources flow), Graceful Degradation (test
 StorageProvider mirrors isolation: vectors, blobs, telemetry all get isolated in tests
 ```
 
+### AD-015 Radical Unification (2025-12-23)
+```
+LedgerCache → ProxyHandleStore: Delete ad-hoc caches, unify via singleton proxy store
+ensure_scanned() → get_or_raise(): Explicit data requirement, NoProxyHandleError if missing
+analyze_now() → compute(): Explicit computation with TTL, provenance, event transparency
+Reactive invalidation via ProxyReactor: Spec deprecation events auto-invalidate handles
+One truth, one store: All Crown Jewels can share ProxyHandleStore for computed data
+```
+
 ---
 
-*Lines: ~410/200 | Last updated: 2025-12-22 | Multi-Agent Test Isolation*
+*Lines: ~420/200 | Last updated: 2025-12-23 | AD-015 Radical Unification*

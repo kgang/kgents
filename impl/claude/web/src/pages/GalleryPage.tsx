@@ -1,88 +1,252 @@
 /**
- * GalleryPage: Component Gallery for kgents foundation primitives.
+ * The Terrarium — A Living Gallery
  *
- * Post-surgical refactor: Simplified to showcase elastic, joy, and projection primitives.
+ * "The Gallery is not a catalogue—it is a living demonstration of the categorical ground."
+ *
+ * One page. Components breathe. Entropy controls them. The polynomial is visible.
+ *
+ * Four creatures. One slider. That's bold restraint.
+ *
+ * @see spec/gallery/gallery-v2.md
+ * @see plans/ethereal-churning-spark.md
  */
 
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ElasticCard } from '@/components/elastic';
-import { PersonalityLoading, Breathe, Pop, EmpathyError } from '@/components/joy';
+import { Breathe, Pop, Shimmer, PersonalityLoading } from '@/components/joy';
+import {
+  EntropySlider,
+  PhaseIndicator,
+  TeachingCallout,
+  TerrariumCreature,
+} from '@/components/terrarium';
+import { useTerrarium } from '@/hooks/useTerrarium';
 
-const GALLERY_SECTIONS = [
-  {
-    title: 'Elastic Primitives',
-    route: '/_/gallery/layout',
-    description: 'Density-aware layout components: ElasticContainer, ElasticCard, ElasticSplit',
-  },
-  {
-    title: 'Joy Animations',
-    route: '/_/gallery/interactive-text',
-    description: 'Delightful animations: Breathe, Pop, Shake, Shimmer, PersonalityLoading',
-  },
-];
+/**
+ * The Terrarium.
+ *
+ * Four creatures respond to global entropy:
+ * - Breather: Breathe component, speed + intensity scale with entropy
+ * - Popper: Pop component, triggers more frequently at high entropy
+ * - Shimmerer: Shimmer component, duration shortens as entropy rises
+ * - Loader: PersonalityLoading, message rotation speeds up
+ */
+export default function TerrariumPage() {
+  const { entropy, setEntropy, phase, setPhase } = useTerrarium();
 
-export default function GalleryPage() {
+  // Pop triggers periodically based on entropy
+  // Higher entropy = more frequent pops
+  const [popTrigger, setPopTrigger] = useState(false);
+  useEffect(() => {
+    // Pop interval: 5s at low entropy, 1s at high entropy
+    const interval = Math.max(1000, 5000 - entropy * 4000);
+    const timer = setInterval(() => {
+      setPopTrigger(true);
+      setTimeout(() => setPopTrigger(false), 200);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [entropy]);
+
   return (
-    <div className="min-h-screen bg-surface-canvas p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Component Gallery</h1>
-        <p className="text-text-secondary mb-8">
-          Foundation primitives for kgents web. Surgical refactor 2025-12-22.
+    <div
+      className="terrarium-page"
+      style={{
+        minHeight: '100vh',
+        background: 'var(--surface-canvas)',
+        padding: '2rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2rem',
+      }}
+    >
+      {/* Header */}
+      <header
+        style={{
+          maxWidth: '48rem',
+          margin: '0 auto',
+          width: '100%',
+          textAlign: 'center',
+        }}
+      >
+        <h1
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '1.5rem',
+            fontWeight: 600,
+            color: 'var(--text-primary)',
+            margin: 0,
+            letterSpacing: '-0.02em',
+          }}
+        >
+          The Terrarium
+        </h1>
+        <p
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.875rem',
+            color: 'var(--text-secondary)',
+            marginTop: '0.5rem',
+          }}
+        >
+          A living gallery. Drag entropy. Watch them breathe.
         </p>
+      </header>
 
-        {/* Section Links */}
-        <div className="grid gap-4 mb-12">
-          {GALLERY_SECTIONS.map((section) => (
-            <Link key={section.route} to={section.route}>
-              <Pop trigger={true} scale={1.02}>
-                <ElasticCard className="p-6 hover:border-copper-500 transition-colors">
-                  <h2 className="text-xl font-semibold text-text-primary">{section.title}</h2>
-                  <p className="text-text-secondary mt-1">{section.description}</p>
-                </ElasticCard>
-              </Pop>
-            </Link>
-          ))}
-        </div>
+      {/* Main content */}
+      <main
+        style={{
+          maxWidth: '48rem',
+          margin: '0 auto',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.5rem',
+        }}
+      >
+        {/* Entropy Slider — The Heart */}
+        <EntropySlider value={entropy} onChange={setEntropy} />
 
-        {/* Quick Demo */}
-        <h2 className="text-xl font-semibold text-text-primary mb-4">Quick Demo</h2>
+        {/* Creature Grid — Four creatures, no more */}
+        <div
+          className="creature-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(10rem, 1fr))',
+            gap: '1rem',
+          }}
+        >
+          {/* Creature 1: Breather */}
+          <TerrariumCreature
+            name="Breather"
+            entropy={entropy}
+            description="Speed and intensity scale with entropy"
+          >
+            <Breathe entropy={entropy} intensity={0.5}>
+              <div
+                style={{
+                  width: '4rem',
+                  height: '4rem',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--sage-500), var(--sage-600))',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                }}
+              />
+            </Breathe>
+          </TerrariumCreature>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Loading States */}
-          <ElasticCard className="p-6">
-            <h3 className="font-medium mb-4">PersonalityLoading</h3>
-            <div className="flex gap-4 justify-center">
-              <PersonalityLoading jewel="brain" size="md" />
-              <PersonalityLoading jewel="gardener" size="md" />
-              <PersonalityLoading jewel="forge" size="md" />
-            </div>
-          </ElasticCard>
+          {/* Creature 2: Popper */}
+          <TerrariumCreature
+            name="Popper"
+            entropy={entropy}
+            description="Pops more frequently as entropy rises"
+          >
+            <Pop trigger={popTrigger} scale={1 + entropy * 0.3}>
+              <div
+                style={{
+                  width: '4rem',
+                  height: '4rem',
+                  borderRadius: '0.5rem',
+                  background: 'linear-gradient(135deg, var(--copper-500), var(--copper-600))',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                }}
+              />
+            </Pop>
+          </TerrariumCreature>
 
-          {/* Breathing */}
-          <ElasticCard className="p-6">
-            <h3 className="font-medium mb-4">Breathe Animation</h3>
-            <div className="flex gap-4 justify-center">
-              <Breathe intensity={0.5}>
-                <div className="w-16 h-16 rounded-full bg-sage-500" />
-              </Breathe>
-              <Breathe intensity={0.3} speed="slow">
-                <div className="w-16 h-16 rounded-lg bg-copper-500" />
-              </Breathe>
-            </div>
-          </ElasticCard>
+          {/* Creature 3: Shimmerer */}
+          <TerrariumCreature
+            name="Shimmerer"
+            entropy={entropy}
+            description="Duration shortens, becomes frantic"
+          >
+            <Shimmer duration={Math.max(0.5, 2 - entropy * 1.5)}>
+              <div
+                style={{
+                  width: '4rem',
+                  height: '4rem',
+                  borderRadius: '0.25rem',
+                  background: 'var(--surface-3)',
+                }}
+              />
+            </Shimmer>
+          </TerrariumCreature>
 
-          {/* Error State */}
-          <ElasticCard className="p-6 md:col-span-2">
-            <h3 className="font-medium mb-4">EmpathyError</h3>
-            <EmpathyError
-              type="network"
-              title="Connection Lost"
-              subtitle="We're having trouble reaching the server"
-              size="sm"
+          {/* Creature 4: Loader */}
+          <TerrariumCreature
+            name="Loader"
+            entropy={entropy}
+            description="Message rotation speeds up"
+          >
+            <PersonalityLoading
+              jewel="brain"
+              size="md"
+              rotateInterval={Math.max(1000, 4000 - entropy * 3000)}
             />
-          </ElasticCard>
+          </TerrariumCreature>
         </div>
-      </div>
+
+        {/* Phase Indicator — The Polynomial Made Visible */}
+        <PhaseIndicator phase={phase} onPhaseClick={setPhase} />
+
+        {/* Teaching Callout — Context Without Lecture */}
+        <TeachingCallout entropy={entropy} />
+
+        {/* Navigation to sub-galleries */}
+        <nav
+          style={{
+            display: 'flex',
+            gap: '1rem',
+            justifyContent: 'center',
+            paddingTop: '1rem',
+            borderTop: '1px solid var(--surface-3)',
+          }}
+        >
+          <Link
+            to="/_/gallery/layout"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              color: 'var(--text-tertiary)',
+              textDecoration: 'none',
+            }}
+          >
+            Layout Gallery
+          </Link>
+          <Link
+            to="/_/gallery/interactive-text"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.75rem',
+              color: 'var(--text-tertiary)',
+              textDecoration: 'none',
+            }}
+          >
+            Animation Gallery
+          </Link>
+        </nav>
+      </main>
+
+      {/* Footer quote */}
+      <footer
+        style={{
+          maxWidth: '48rem',
+          margin: '0 auto',
+          width: '100%',
+          textAlign: 'center',
+          paddingTop: '2rem',
+        }}
+      >
+        <p
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.75rem',
+            fontStyle: 'italic',
+            color: 'var(--text-tertiary)',
+          }}
+        >
+          "The persona is a garden, not a museum."
+        </p>
+      </footer>
     </div>
   );
 }

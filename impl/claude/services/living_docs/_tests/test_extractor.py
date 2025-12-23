@@ -267,14 +267,24 @@ class TestPropertyBased:
         summary=st.text(
             min_size=1,
             max_size=100,
-            # Blacklist: surrogates, newlines, quotes, and backslash (escape sequences)
+            # Domain of Preservation Law (see spec/protocols/living-docs.md §Law Domains):
+            # - Cs (surrogates): Invalid Unicode for Python strings
+            # - \n\r: Break docstring structure
+            # - "': Break docstring delimiters
+            # - \: Escape sequences are interpreted by Python parser before extraction
+            #      e.g., \0 → null char, \n → newline. This is Python's contract.
             alphabet=st.characters(blacklist_categories=("Cs",), blacklist_characters="\n\r\"'\\"),
         ).filter(lambda s: s.strip()),
     )
     @settings(max_examples=20)
     def test_summary_extraction_preserves_content(self, summary: str) -> None:
-        """Extracted summary contains original content (modulo whitespace)."""
-        # Skip summaries with problematic characters
+        """
+        Preservation Law: extract(source).summary ≡ normalize(docstring.first_line)
+
+        Domain: Unicode text without Python escape sequences.
+        See: spec/protocols/living-docs.md §Preservation Law Domain
+        """
+        # Skip triple-quote sequences that break docstring structure
         if '"""' in summary or "'''" in summary or "\n" in summary:
             return
 
@@ -291,6 +301,38 @@ def test_func():
             expected = " ".join(summary.split())
             actual = " ".join(nodes[0].summary.split())
             assert expected == actual
+
+    def test_preservation_law_boundary_escape_sequences(self) -> None:
+        """
+        Boundary Evidence: Preservation Law does NOT hold for escape sequences.
+
+        This test documents WHY the domain excludes backslash:
+        Python's AST parser interprets escape sequences before extraction.
+        This is Python's contract, not a bug in our extractor.
+
+        See: spec/protocols/living-docs.md §Preservation Law Domain
+        """
+        # Input: 2-char string (backslash + zero)
+        original = "\\0"
+        assert len(original) == 2
+
+        source = f'''
+def test_func():
+    """{original}"""
+    pass
+'''
+        extractor = DocstringExtractor()
+        nodes = extractor.extract_module(source, "test")
+
+        # Python interprets \0 as null character
+        extracted = nodes[0].summary
+        assert extracted == "\x00"  # 1-char null
+        assert len(extracted) == 1
+
+        # Law DOES NOT hold: original ≠ extracted
+        assert original != extracted
+
+        # This is correct behavior: extractor returns what Python parsed
 
     @given(
         symbol=st.from_regex(r"[a-z][a-z0-9_]{2,}", fullmatch=True),

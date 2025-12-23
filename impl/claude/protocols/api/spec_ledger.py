@@ -321,7 +321,7 @@ def create_spec_ledger_router() -> Optional["APIRouter"]:
     # Import ledger node
     try:
         from services.living_spec.ledger_node import (
-            NoPreComputedDataError,
+            NoProxyHandleError,  # AD-015: Unified exception from proxy service
             get_ledger_node,
         )
     except ImportError as e:
@@ -365,7 +365,7 @@ def create_spec_ledger_router() -> Optional["APIRouter"]:
                 limit=limit,
                 offset=offset,
             )
-        except NoPreComputedDataError:
+        except NoProxyHandleError:
             # AD-015: Data not computed yet, return helpful response
             return DataNotComputedResponse()
 
@@ -457,7 +457,7 @@ def create_spec_ledger_router() -> Optional["APIRouter"]:
         node = get_ledger_node()
         try:
             result = await node.harmonies(limit=limit)
-        except NoPreComputedDataError:
+        except NoProxyHandleError:
             # AD-015: Data not computed yet, return helpful response
             return DataNotComputedResponse()
 

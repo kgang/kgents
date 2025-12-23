@@ -36,6 +36,15 @@ export interface BreatheProps {
   intensity?: number;
   /** Animation speed. Default: 'normal' */
   speed?: BreatheSpeed;
+  /**
+   * Global entropy level (0.0-1.0). When provided, modulates intensity and speed.
+   * - Entropy < 0.3: slow speed, reduced intensity
+   * - Entropy 0.3-0.7: normal speed, base intensity
+   * - Entropy > 0.7: fast speed, amplified intensity
+   *
+   * Used by the Terrarium to make all creatures respond to global chaos level.
+   */
+  entropy?: number;
   /** Disable animation regardless of motion preferences */
   disabled?: boolean;
   /** Additional CSS classes */
@@ -89,6 +98,7 @@ export function Breathe({
   children,
   intensity = 0.3,
   speed = 'normal',
+  entropy,
   disabled = false,
   className = '',
   style,
@@ -104,9 +114,21 @@ export function Breathe({
     );
   }
 
-  const duration = SPEED_DURATION[speed];
-  const [minScale, maxScale] = getScaleRange(intensity);
-  const [maxOpacity, minOpacity] = getOpacityRange(intensity);
+  // When entropy is provided, modulate intensity and speed
+  // This allows the Terrarium to control all creatures with a single slider
+  let effectiveIntensity = intensity;
+  let effectiveSpeed = speed;
+
+  if (entropy !== undefined) {
+    // Intensity scales with entropy: half base at 0, full at 0.5, 1.5x at 1.0
+    effectiveIntensity = intensity * (0.5 + entropy);
+    // Speed maps to entropy thresholds
+    effectiveSpeed = entropy > 0.7 ? 'fast' : entropy > 0.3 ? 'normal' : 'slow';
+  }
+
+  const duration = SPEED_DURATION[effectiveSpeed];
+  const [minScale, maxScale] = getScaleRange(effectiveIntensity);
+  const [maxOpacity, minOpacity] = getOpacityRange(effectiveIntensity);
 
   /**
    * STARK BIOME: 4-7-8 Asymmetric Calming Breath

@@ -212,8 +212,64 @@ for fix in archaeology.bug_fixes(path):
 | **Functor** | `project(compose(a, b)) ≡ compose(project(a), project(b))` | `LivingDocsWitness.verify_functor()` |
 | **Freshness** | Claims re-verified within 7 days are valid | CI job: `kg docs verify --stale-days=7` |
 | **Provenance** | `∀ TeachingMoment: evidence ≠ None → test exists` | `LivingDocsWitness.verify_provenance()` |
+| **Preservation** | `extract(source).summary ≡ normalize(docstring.first_line)` | `test_extractor.py::TestPropertyBased` |
 
 Laws are verified, not aspirational. No witness = no law.
+
+---
+
+## Law Domains (When Laws Hold)
+
+> *"A law without its domain is a lie."*
+
+Laws are not universal truths—they hold within precisely defined domains. Documenting domain boundaries is as important as documenting the law itself.
+
+### Preservation Law Domain
+
+**Law:** Extracted summary equals normalized original content.
+
+**Domain of Validity:**
+```
+Valid(text) ≡ text ∈ Unicode ∧ ¬contains_escape_sequences(text)
+```
+
+**Specifically valid:**
+- All Unicode categories except surrogates (Cs)
+- Multi-line content (normalized via `" ".join(s.split())`)
+- Whitespace variations
+
+**Explicitly invalid (law does NOT hold):**
+- Python escape sequences: `\0`, `\n`, `\t`, `\x00`, `\u0000`, etc.
+- Backslash followed by interpretable characters
+
+**Why the boundary exists:**
+
+```
+Input:       "\\0"              (2 chars: backslash, zero)
+Source:      f'"""{text}"""'   → '"""\0"""'
+AST parse:   \0 interpreted    → null character
+Output:      "\x00"             (1 char: null)
+```
+
+Python's AST parser interprets escape sequences *before* we can extract them. This is Python's contract, not ours to override. The extractor correctly returns what Python parsed.
+
+**Generalized Pattern:**
+
+When a law fails at a boundary, ask:
+1. **Is the boundary in our control?** (No—Python parser)
+2. **Can we extend validity?** (Only by reimplementing Python's parser—violates taste)
+3. **Is the boundary fundamental?** (Yes—escape sequences are inherently interpretive)
+
+If (1)=No, (2)=costly, (3)=Yes → **Document the boundary, don't paper over it.**
+
+### Boundary Documentation Template
+
+```markdown
+**Law:** [Statement]
+**Domain:** [Formal predicate or set description]
+**Boundary:** [What's excluded and why]
+**Evidence:** [Test that verifies both validity and boundary]
+```
 
 ---
 
