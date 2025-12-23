@@ -73,6 +73,13 @@ phases:
         direction: ">"
         required: true
 
+      - id: search_accuracy_parity
+        description: CPRM search maintains 95%+ of baseline accuracy
+        metric: percent
+        threshold: 95
+        direction: ">="
+        required: true
+
       - id: search_efficiency_gain
         description: Categorical guidance reduces search nodes by 30%+
         metric: percent
@@ -122,6 +129,13 @@ phases:
         direction: ">="
         required: true
 
+      - id: gsm8k_binding_improvement
+        description: Improves on binding-heavy GSM8K problems by 5%+
+        metric: percent
+        threshold: 5
+        direction: ">"
+        required: true
+
   # ===========================================================================
   # Phase 4: Synthesis
   # ===========================================================================
@@ -142,6 +156,13 @@ phases:
         direction: "="
         required: true
 
+      - id: agentese_paths_working
+        description: All categorical AGENTESE paths registered and functional
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
       - id: gsm8k_improvement
         description: GSM8k accuracy improves by 5+ percentage points
         metric: percent
@@ -151,6 +172,13 @@ phases:
 
       - id: demo_correct
         description: End-to-end demo produces correct results
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      - id: no_critical_blockers
+        description: No critical bugs or regressions blocking release
         metric: binary
         threshold: 1
         direction: "="

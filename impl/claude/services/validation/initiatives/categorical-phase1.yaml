@@ -1,0 +1,93 @@
+# Categorical Phase 1: Foundations
+#
+# The core validation for kgents 2.0's hypothesis:
+#   "LLM reasoning failures follow patterns that category theory predicts."
+#
+# See: plans/categorical-reinvention-phase1-foundations.md
+# See: docs/theory/03-monadic-reasoning.md
+# See: docs/theory/05-sheaf-coherence.md
+
+id: categorical_phase1
+name: "Phase 1: Categorical Foundations"
+description: |
+  Validate that categorical laws (monad, sheaf) correlate with LLM
+  reasoning correctness. This is the gate for kgents 2.0.
+
+  The Bet: If the correlation holds (r > 0.3 for monad, r > 0.4 for sheaf,
+  AUC > 0.7 combined), we have a new paradigm for LLM verification.
+
+witness_tags:
+  - categorical
+  - phase1
+  - foundations
+  - kgents2
+
+# Propositions are atomic measurable claims
+propositions:
+  - id: monad_identity_correlation
+    description: "Monad identity law satisfaction correlates with accuracy"
+    metric: pearson_r
+    threshold: 0.3
+    direction: ">"
+    required: true
+    rationale: |
+      Identity law: Adding trivial prefixes ("Let me think...") shouldn't
+      change answers. Violations indicate sensitivity to framing, a sign
+      of brittle reasoning.
+
+  - id: monad_assoc_correlation
+    description: "Monad associativity correlates with accuracy (optional)"
+    metric: pearson_r
+    threshold: 0.2
+    direction: ">"
+    required: false  # Optional in Phase 1
+    rationale: |
+      Associativity: Grouping of reasoning steps shouldn't matter.
+      Harder to test, lower bar for Phase 1.
+
+  - id: sheaf_coherence_correlation
+    description: "Sheaf coherence correlates with correctness"
+    metric: pearson_r
+    threshold: 0.4
+    direction: ">"
+    required: true
+    rationale: |
+      Sheaf condition: Local claims must agree on overlaps.
+      Violations are hallucinations. Strong predictor expected.
+
+  - id: combined_auc
+    description: "Combined categorical metrics predict accuracy"
+    metric: auc_roc
+    threshold: 0.7
+    direction: ">"
+    required: true
+    rationale: |
+      The ultimate test: Can categorical metrics be used as a classifier
+      for reasoning correctness? AUC > 0.7 = useful signal.
+
+  - id: n_problems_sufficient
+    description: "Study ran with sufficient sample size"
+    metric: count
+    threshold: 500
+    direction: ">="
+    required: true
+    rationale: |
+      Statistical power requires sufficient samples. 500 problems
+      minimum for meaningful correlation.
+
+# Gate is the decision checkpoint
+gate:
+  id: phase1_gate
+  name: "Phase 1 Completion Gate"
+  condition: all_required
+  description: |
+    All required propositions must pass for Phase 1 to complete.
+    If blocked, document learnings and decide next steps.
+
+# Metadata for tracking
+metadata:
+  created: "2025-12-23"
+  owner: kgents
+  timeline_weeks: 3
+  dependencies: []  # Phase 1 has no dependencies
+  successor: categorical_phase2  # What comes next if this passes

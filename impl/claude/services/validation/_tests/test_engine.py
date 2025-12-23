@@ -668,6 +668,87 @@ class TestCachedValidation:
         assert handle.data.phase_id == "foundations"
         assert "foundations" in handle.human_label
 
+    @pytest.mark.asyncio
+    async def test_multi_initiative_caching_no_overwrite(
+        self,
+        cached_engine: ValidationEngine,
+        flat_initiative: Initiative,
+        phased_initiative: Initiative,
+    ) -> None:
+        """
+        Multiple initiatives/phases get separate cache slots.
+
+        REGRESSION TEST: Previously SourceType.VALIDATION_RUN was a single slot,
+        so caching initiative1 then initiative2 would overwrite initiative1.
+        With composite keys, each (initiative, phase) pair has its own slot.
+        """
+        cached_engine.register_initiative(flat_initiative)
+        cached_engine.register_initiative(phased_initiative)
+
+        # Cache flat initiative (brain)
+        handle_brain = await cached_engine.validate_cached(
+            "brain", {"tests_pass": 1.0, "test_count": 250.0}
+        )
+        assert handle_brain.data is not None
+        assert handle_brain.data.initiative_id == "brain"
+        original_brain_handle_id = handle_brain.handle_id
+
+        # Cache phased initiative (categorical) - should NOT overwrite brain
+        handle_cat = await cached_engine.validate_cached(
+            "categorical", {"correlation": 0.4}, phase_id="foundations"
+        )
+        assert handle_cat.data is not None
+        assert handle_cat.data.initiative_id == "categorical"
+        assert handle_cat.handle_id != handle_brain.handle_id  # Different handle
+
+        # Retrieve brain again - should still be cached (not overwritten)
+        handle_brain2 = await cached_engine.validate_cached(
+            "brain", {"tests_pass": 1.0, "test_count": 250.0}
+        )
+        # Same handle means cache hit, not recompute
+        assert handle_brain2.handle_id == original_brain_handle_id
+        assert handle_brain2.computation_count == 1  # Still 1, not recomputed
+
+        # Verify all three handles are distinct
+        assert handle_brain.handle_id != handle_cat.handle_id
+
+    @pytest.mark.asyncio
+    async def test_multi_phase_caching_no_overwrite(
+        self, cached_engine: ValidationEngine, phased_initiative: Initiative
+    ) -> None:
+        """
+        Multiple phases of same initiative get separate cache slots.
+
+        REGRESSION TEST: Caching phase1 then phase2 should NOT overwrite phase1.
+        """
+        cached_engine.register_initiative(phased_initiative)
+
+        # Cache phase 1 (foundations)
+        handle_p1 = await cached_engine.validate_cached(
+            "categorical", {"correlation": 0.4}, phase_id="foundations"
+        )
+        assert handle_p1.data is not None
+        assert handle_p1.data.phase_id == "foundations"
+        original_p1_handle_id = handle_p1.handle_id
+
+        # Cache phase 2 (integration) - should NOT overwrite phase 1
+        # First, mark phase 1 as passed so phase 2 is available
+        cached_engine._phase_status[(InitiativeId("categorical"), PhaseId("foundations"))] = True
+
+        handle_p2 = await cached_engine.validate_cached(
+            "categorical", {"auc": 0.8}, phase_id="integration"
+        )
+        assert handle_p2.data is not None
+        assert handle_p2.data.phase_id == "integration"
+        assert handle_p2.handle_id != handle_p1.handle_id  # Different handle
+
+        # Retrieve phase 1 again - should still be cached
+        handle_p1_again = await cached_engine.validate_cached(
+            "categorical", {"correlation": 0.4}, phase_id="foundations"
+        )
+        assert handle_p1_again.handle_id == original_p1_handle_id
+        assert handle_p1_again.computation_count == 1  # Still 1, not recomputed
+
 
 class TestWitnessedValidation:
     """

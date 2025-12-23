@@ -1,0 +1,837 @@
+"""
+Categorical Probes: Testing LLM Reasoning for Law Satisfaction.
+
+This module implements probes that measure how well LLM reasoning
+satisfies categorical laws—specifically monad laws and sheaf coherence.
+
+The core insight from the theory monograph (Chapter 3):
+    "Chain-of-thought IS Kleisli composition in the Writer monad.
+    The monad laws are rationality constraints on extended reasoning."
+
+And from Chapter 5:
+    "Hallucinations are sheaf condition failures—local claims that
+    don't glue into a coherent global picture."
+
+Philosophy:
+    "The proof IS the decision. The mark IS the witness."
+    Every probe run emits Marks for witnessed measurement.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import logging
+from collections import Counter
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum, auto
+from typing import Any, Callable, Protocol, Sequence
+
+logger = logging.getLogger("kgents.categorical.probes")
+
+
+# =============================================================================
+# LLM Protocol (Dependency Injection)
+# =============================================================================
+
+
+class LLMProtocol(Protocol):
+    """Protocol for LLM clients used by probes."""
+
+    async def generate(
+        self,
+        system: str,
+        user: str,
+        temperature: float = 0.7,
+        max_tokens: int = 4000,
+    ) -> Any:
+        """Generate a response from the LLM."""
+        ...
+
+
+# =============================================================================
+# Monad Probe Types
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class IdentityTestResult:
+    """Result of a monad identity law test.
+
+    The identity law states: Adding "trivial" prefixes/suffixes
+    should not change the answer.
+
+    Tests:
+    - Left identity: η >> f ≡ f (adding "Let me think" prefix)
+    - Right identity: f >> η ≡ f (adding "Thus concludes" suffix)
+    """
+
+    base_answer: str
+    modified_answer: str
+    passed: bool
+    modification_type: str  # "prefix" or "suffix"
+    modification_text: str
+
+    @property
+    def score(self) -> float:
+        """1.0 if passed, 0.0 otherwise."""
+        return 1.0 if self.passed else 0.0
+
+
+@dataclass(frozen=True)
+class AssociativityTestResult:
+    """Result of a monad associativity law test.
+
+    The associativity law states: Grouping of reasoning steps
+    shouldn't affect the final answer.
+
+    (A >> B) >> C ≡ A >> (B >> C)
+    """
+
+    left_grouped_answer: str  # ((A >> B) >> C)
+    right_grouped_answer: str  # (A >> (B >> C))
+    passed: bool
+    steps: tuple[str, ...]
+
+    @property
+    def score(self) -> float:
+        """1.0 if passed, 0.0 otherwise."""
+        return 1.0 if self.passed else 0.0
+
+
+@dataclass(frozen=True)
+class MonadResult:
+    """Combined result from all monad law tests."""
+
+    identity_results: tuple[IdentityTestResult, ...]
+    associativity_results: tuple[AssociativityTestResult, ...]
+    problem: str
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @property
+    def identity_score(self) -> float:
+        """Average identity law satisfaction (0-1)."""
+        if not self.identity_results:
+            return 0.0
+        return sum(r.score for r in self.identity_results) / len(self.identity_results)
+
+    @property
+    def associativity_score(self) -> float:
+        """Average associativity law satisfaction (0-1)."""
+        if not self.associativity_results:
+            return 0.0
+        return sum(r.score for r in self.associativity_results) / len(self.associativity_results)
+
+    @property
+    def overall_score(self) -> float:
+        """Combined monad law score (average of identity and associativity)."""
+        scores = []
+        if self.identity_results:
+            scores.append(self.identity_score)
+        if self.associativity_results:
+            scores.append(self.associativity_score)
+        return sum(scores) / len(scores) if scores else 0.0
+
+
+# =============================================================================
+# MonadProbe: Test Monad Laws on LLM Reasoning
+# =============================================================================
+
+
+class MonadProbe:
+    """
+    Probe for testing monad law satisfaction in LLM reasoning.
+
+    The monad laws encode rationality constraints:
+    - Identity: Trivial modifications shouldn't change answers
+    - Associativity: Grouping of steps shouldn't matter
+
+    Usage:
+        >>> probe = MonadProbe(llm_client)
+        >>> result = await probe.test_all("What is 2 + 2?", n_samples=10)
+        >>> print(f"Identity score: {result.identity_score:.2f}")
+        >>> print(f"Associativity score: {result.associativity_score:.2f}")
+
+    Teaching:
+        gotcha: Temperature affects law satisfaction. Lower temp → better laws.
+                Use temperature=0.0 for deterministic testing.
+                (Evidence: test_probes.py::test_temperature_affects_laws)
+    """
+
+    # Prefixes for identity law testing (should not change answer)
+    IDENTITY_PREFIXES = [
+        "Let me think step by step. ",
+        "I'll work through this carefully. ",
+        "Thinking about this problem: ",
+    ]
+
+    # Suffixes for identity law testing (should not change answer)
+    IDENTITY_SUFFIXES = [
+        " Please be precise.",
+        " Show your work.",
+        " Think carefully.",
+    ]
+
+    def __init__(
+        self,
+        llm: LLMProtocol,
+        system_prompt: str = "You are a helpful assistant. Answer concisely.",
+        temperature: float = 0.0,  # Deterministic by default
+        extract_answer: Callable[[str], str] | None = None,
+    ):
+        """
+        Initialize MonadProbe.
+
+        Args:
+            llm: LLM client conforming to LLMProtocol
+            system_prompt: System prompt for all generations
+            temperature: Generation temperature (0.0 = deterministic)
+            extract_answer: Function to extract canonical answer from response
+        """
+        self.llm = llm
+        self.system_prompt = system_prompt
+        self.temperature = temperature
+        self._extract_answer = extract_answer or self._default_extract_answer
+
+    def _default_extract_answer(self, response: str) -> str:
+        """
+        Extract the canonical answer from a response.
+
+        Default: Extract the last line or number found.
+        Override for domain-specific extraction.
+        """
+        # Look for common answer patterns
+        lines = response.strip().split("\n")
+
+        # Try to find "Answer: X" or "The answer is X"
+        for line in reversed(lines):
+            line_lower = line.lower().strip()
+            if line_lower.startswith("answer:") or "the answer is" in line_lower:
+                # Extract after the pattern
+                for pattern in ["answer:", "the answer is"]:
+                    if pattern in line_lower:
+                        idx = line_lower.index(pattern) + len(pattern)
+                        return line[idx:].strip().rstrip(".")
+
+        # Fall back to last non-empty line
+        for line in reversed(lines):
+            if line.strip():
+                return line.strip()
+
+        return response.strip()
+
+    async def _solve(self, problem: str) -> str:
+        """Generate solution and extract answer."""
+        response = await self.llm.generate(
+            system=self.system_prompt,
+            user=problem,
+            temperature=self.temperature,
+        )
+        # Handle both dict and object responses
+        text = response.text if hasattr(response, "text") else response.get("text", str(response))
+        return self._extract_answer(text)
+
+    async def test_identity(
+        self,
+        problem: str,
+        n_samples: int = 10,
+    ) -> tuple[IdentityTestResult, ...]:
+        """
+        Test the monad identity laws.
+
+        Left identity: η >> f ≡ f
+            Adding a "Let me think" prefix should not change the answer.
+
+        Right identity: f >> η ≡ f
+            Adding a concluding phrase should not change the answer.
+
+        Args:
+            problem: The problem to solve
+            n_samples: Number of samples for majority voting
+
+        Returns:
+            Tuple of IdentityTestResult for each modification tested
+        """
+        results: list[IdentityTestResult] = []
+
+        # Get base answer (mode of n_samples)
+        base_answers = [await self._solve(problem) for _ in range(n_samples)]
+        base_mode = Counter(base_answers).most_common(1)[0][0]
+
+        # Test left identity (prefix modifications)
+        for prefix in self.IDENTITY_PREFIXES:
+            modified_problem = prefix + problem
+            modified_answers = [await self._solve(modified_problem) for _ in range(n_samples)]
+            modified_mode = Counter(modified_answers).most_common(1)[0][0]
+
+            results.append(
+                IdentityTestResult(
+                    base_answer=base_mode,
+                    modified_answer=modified_mode,
+                    passed=base_mode == modified_mode,
+                    modification_type="prefix",
+                    modification_text=prefix,
+                )
+            )
+
+        # Test right identity (suffix modifications)
+        for suffix in self.IDENTITY_SUFFIXES:
+            modified_problem = problem + suffix
+            modified_answers = [await self._solve(modified_problem) for _ in range(n_samples)]
+            modified_mode = Counter(modified_answers).most_common(1)[0][0]
+
+            results.append(
+                IdentityTestResult(
+                    base_answer=base_mode,
+                    modified_answer=modified_mode,
+                    passed=base_mode == modified_mode,
+                    modification_type="suffix",
+                    modification_text=suffix,
+                )
+            )
+
+        return tuple(results)
+
+    async def test_associativity(
+        self,
+        problem: str,
+        steps: tuple[str, ...],
+    ) -> AssociativityTestResult:
+        """
+        Test the monad associativity law.
+
+        (A >> B) >> C ≡ A >> (B >> C)
+
+        Grouping of reasoning steps shouldn't change the final answer.
+
+        Args:
+            problem: The problem to solve
+            steps: Reasoning steps to group differently
+
+        Returns:
+            AssociativityTestResult
+        """
+        if len(steps) < 3:
+            raise ValueError("Associativity test requires at least 3 steps")
+
+        # Left grouping: ((step1, step2), step3)
+        left_prompt = f"{problem}\n\nFirst, let me address these together:\n"
+        left_prompt += f"- {steps[0]}\n- {steps[1]}\n"
+        left_prompt += f"\nThen separately:\n- {steps[2]}"
+
+        # Right grouping: (step1, (step2, step3))
+        right_prompt = f"{problem}\n\nFirst, let me start with:\n"
+        right_prompt += f"- {steps[0]}\n"
+        right_prompt += f"\nThen address these together:\n- {steps[1]}\n- {steps[2]}"
+
+        left_answer = await self._solve(left_prompt)
+        right_answer = await self._solve(right_prompt)
+
+        return AssociativityTestResult(
+            left_grouped_answer=left_answer,
+            right_grouped_answer=right_answer,
+            passed=left_answer == right_answer,
+            steps=steps,
+        )
+
+    async def test_all(
+        self,
+        problem: str,
+        n_samples: int = 10,
+        steps: tuple[str, ...] | None = None,
+    ) -> MonadResult:
+        """
+        Run all monad law tests on a problem.
+
+        Args:
+            problem: The problem to solve
+            n_samples: Samples for identity tests
+            steps: Optional steps for associativity test
+
+        Returns:
+            MonadResult with all test results
+        """
+        identity_results = await self.test_identity(problem, n_samples)
+
+        assoc_results: tuple[AssociativityTestResult, ...] = ()
+        if steps:
+            assoc_result = await self.test_associativity(problem, steps)
+            assoc_results = (assoc_result,)
+
+        return MonadResult(
+            identity_results=identity_results,
+            associativity_results=assoc_results,
+            problem=problem,
+        )
+
+
+# =============================================================================
+# Sheaf Detector Types
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class Claim:
+    """A factual claim extracted from reasoning trace."""
+
+    content: str
+    context: str  # What the claim refers to
+    source_position: int  # Position in trace (for ordering)
+
+
+@dataclass(frozen=True)
+class ClaimPair:
+    """A pair of claims to check for contradiction."""
+
+    claim_a: Claim
+    claim_b: Claim
+
+    @property
+    def key(self) -> str:
+        """Unique key for this pair."""
+        return f"{self.claim_a.source_position}:{self.claim_b.source_position}"
+
+
+@dataclass(frozen=True)
+class Violation:
+    """A sheaf condition violation (contradiction between claims)."""
+
+    pair: ClaimPair
+    explanation: str = ""
+
+    @property
+    def claim_a(self) -> Claim:
+        return self.pair.claim_a
+
+    @property
+    def claim_b(self) -> Claim:
+        return self.pair.claim_b
+
+
+@dataclass(frozen=True)
+class CoherenceResult:
+    """Result of sheaf coherence detection."""
+
+    is_coherent: bool
+    claims: tuple[Claim, ...]
+    violations: tuple[Violation, ...]
+    trace: str
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @property
+    def score(self) -> float:
+        """
+        Coherence score from 0-1.
+
+        1.0 = perfectly coherent (no violations)
+        0.0 = maximally incoherent (every pair contradicts)
+        """
+        if len(self.claims) < 2:
+            return 1.0  # Trivially coherent
+
+        max_violations = len(self.claims) * (len(self.claims) - 1) // 2
+        if max_violations == 0:
+            return 1.0
+
+        return 1.0 - (len(self.violations) / max_violations)
+
+    @property
+    def violation_rate(self) -> float:
+        """Proportion of claim pairs that contradict."""
+        if len(self.claims) < 2:
+            return 0.0
+        max_pairs = len(self.claims) * (len(self.claims) - 1) // 2
+        return len(self.violations) / max_pairs if max_pairs > 0 else 0.0
+
+
+# =============================================================================
+# SheafDetector: Find Coherence Violations
+# =============================================================================
+
+
+class SheafDetector:
+    """
+    Detector for sheaf coherence violations in LLM reasoning traces.
+
+    Hallucinations are claims that contradict each other. The sheaf
+    condition says: local claims must agree on overlaps.
+
+    Philosophy:
+        "The whole is more than the sum of its parts—but only when
+        the parts fit together."
+
+    Usage:
+        >>> detector = SheafDetector(llm_client)
+        >>> result = await detector.detect(reasoning_trace)
+        >>> if not result.is_coherent:
+        ...     for v in result.violations:
+        ...         print(f"Contradiction: {v.claim_a.content} vs {v.claim_b.content}")
+
+    Teaching:
+        gotcha: Claim extraction is itself an LLM call. Use low temperature
+                for consistent extraction.
+                (Evidence: test_probes.py::test_claim_extraction_consistency)
+    """
+
+    EXTRACTION_PROMPT = """Extract all factual claims from this reasoning trace.
+
+A factual claim is any statement that asserts something specific about the world,
+numbers, relationships, or conclusions.
+
+For each claim, provide:
+1. The claim itself (exact quote or close paraphrase)
+2. The context (what it refers to)
+
+Format each claim as:
+CLAIM: [the claim]
+CONTEXT: [what it refers to]
+
+Reasoning trace:
+{trace}
+
+List all claims:"""
+
+    CONTRADICTION_PROMPT = """Do these two claims contradict each other?
+
+Claim A: {claim_a}
+Context A: {context_a}
+
+Claim B: {claim_b}
+Context B: {context_b}
+
+Answer only YES or NO, followed by a brief explanation."""
+
+    def __init__(
+        self,
+        llm: LLMProtocol,
+        system_prompt: str = "You are a precise logical analyzer.",
+        temperature: float = 0.0,
+    ):
+        """
+        Initialize SheafDetector.
+
+        Args:
+            llm: LLM client conforming to LLMProtocol
+            system_prompt: System prompt for analysis
+            temperature: Generation temperature
+        """
+        self.llm = llm
+        self.system_prompt = system_prompt
+        self.temperature = temperature
+
+    async def extract_claims(self, trace: str) -> tuple[Claim, ...]:
+        """
+        Extract factual claims from a reasoning trace.
+
+        Uses LLM to identify claims for coherence checking.
+
+        Args:
+            trace: The reasoning trace to analyze
+
+        Returns:
+            Tuple of extracted Claims
+        """
+        response = await self.llm.generate(
+            system=self.system_prompt,
+            user=self.EXTRACTION_PROMPT.format(trace=trace),
+            temperature=self.temperature,
+        )
+
+        text = response.text if hasattr(response, "text") else response.get("text", str(response))
+        return self._parse_claims(text)
+
+    def _parse_claims(self, response: str) -> tuple[Claim, ...]:
+        """Parse claims from LLM extraction response."""
+        claims: list[Claim] = []
+        lines = response.strip().split("\n")
+
+        current_claim: str | None = None
+        current_context: str | None = None
+        position = 0
+
+        for line in lines:
+            line = line.strip()
+            if line.upper().startswith("CLAIM:"):
+                # Save previous claim if exists
+                if current_claim:
+                    claims.append(
+                        Claim(
+                            content=current_claim,
+                            context=current_context or "unspecified",
+                            source_position=position,
+                        )
+                    )
+                    position += 1
+
+                current_claim = line[6:].strip()
+                current_context = None
+            elif line.upper().startswith("CONTEXT:"):
+                current_context = line[8:].strip()
+
+        # Don't forget the last claim
+        if current_claim:
+            claims.append(
+                Claim(
+                    content=current_claim,
+                    context=current_context or "unspecified",
+                    source_position=position,
+                )
+            )
+
+        return tuple(claims)
+
+    async def check_contradiction(
+        self,
+        claim_a: Claim,
+        claim_b: Claim,
+    ) -> tuple[bool, str]:
+        """
+        Check if two claims contradict each other.
+
+        Args:
+            claim_a: First claim
+            claim_b: Second claim
+
+        Returns:
+            Tuple of (contradicts: bool, explanation: str)
+        """
+        response = await self.llm.generate(
+            system=self.system_prompt,
+            user=self.CONTRADICTION_PROMPT.format(
+                claim_a=claim_a.content,
+                context_a=claim_a.context,
+                claim_b=claim_b.content,
+                context_b=claim_b.context,
+            ),
+            temperature=self.temperature,
+        )
+
+        text = response.text if hasattr(response, "text") else response.get("text", str(response))
+        text_upper = text.upper().strip()
+
+        contradicts = text_upper.startswith("YES")
+        explanation = text.strip()
+
+        return contradicts, explanation
+
+    async def detect(self, trace: str) -> CoherenceResult:
+        """
+        Detect coherence violations in a reasoning trace.
+
+        Algorithm:
+        1. Extract factual claims using structured prompting
+        2. Check each pair for contradiction
+        3. Return violations and coherence score
+
+        Args:
+            trace: The reasoning trace to analyze
+
+        Returns:
+            CoherenceResult with coherence status and any violations
+        """
+        claims = await self.extract_claims(trace)
+
+        if len(claims) < 2:
+            return CoherenceResult(
+                is_coherent=True,
+                claims=claims,
+                violations=(),
+                trace=trace,
+            )
+
+        violations: list[Violation] = []
+
+        # Check all pairs
+        for i, claim_a in enumerate(claims):
+            for claim_b in claims[i + 1 :]:
+                contradicts, explanation = await self.check_contradiction(claim_a, claim_b)
+                if contradicts:
+                    violations.append(
+                        Violation(
+                            pair=ClaimPair(claim_a=claim_a, claim_b=claim_b),
+                            explanation=explanation,
+                        )
+                    )
+
+        return CoherenceResult(
+            is_coherent=len(violations) == 0,
+            claims=claims,
+            violations=tuple(violations),
+            trace=trace,
+        )
+
+
+# =============================================================================
+# Unified Probe Runner
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class ProbeResults:
+    """Combined results from all categorical probes."""
+
+    monad_result: MonadResult | None
+    coherence_result: CoherenceResult | None
+    problem: str
+    trace: str = ""
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @property
+    def monad_score(self) -> float:
+        """Overall monad law score (0-1)."""
+        return self.monad_result.overall_score if self.monad_result else 0.0
+
+    @property
+    def coherence_score(self) -> float:
+        """Sheaf coherence score (0-1)."""
+        return self.coherence_result.score if self.coherence_result else 0.0
+
+    @property
+    def combined_score(self) -> float:
+        """Combined categorical score (average of monad and coherence)."""
+        scores = []
+        if self.monad_result:
+            scores.append(self.monad_score)
+        if self.coherence_result:
+            scores.append(self.coherence_score)
+        return sum(scores) / len(scores) if scores else 0.0
+
+
+class CategoricalProbeRunner:
+    """
+    Unified runner for all categorical probes.
+
+    Runs MonadProbe and SheafDetector together, returning combined results.
+    Integrates with Witness for mark emission.
+
+    Usage:
+        >>> runner = CategoricalProbeRunner(llm_client)
+        >>> results = await runner.probe("What is 2+2?", trace="Let me think...")
+        >>> print(f"Combined score: {results.combined_score:.2f}")
+    """
+
+    def __init__(
+        self,
+        llm: LLMProtocol,
+        system_prompt: str = "You are a helpful assistant. Answer concisely.",
+        temperature: float = 0.0,
+        emit_marks: bool = True,
+    ):
+        """
+        Initialize CategoricalProbeRunner.
+
+        Args:
+            llm: LLM client
+            system_prompt: System prompt for all operations
+            temperature: Generation temperature
+            emit_marks: Whether to emit Witness marks
+        """
+        self.monad_probe = MonadProbe(
+            llm=llm,
+            system_prompt=system_prompt,
+            temperature=temperature,
+        )
+        self.sheaf_detector = SheafDetector(
+            llm=llm,
+            system_prompt="You are a precise logical analyzer.",
+            temperature=temperature,
+        )
+        self.emit_marks = emit_marks
+
+    async def probe(
+        self,
+        problem: str,
+        trace: str = "",
+        n_samples: int = 10,
+        steps: tuple[str, ...] | None = None,
+        run_monad: bool = True,
+        run_sheaf: bool = True,
+    ) -> ProbeResults:
+        """
+        Run categorical probes on a problem/trace.
+
+        Args:
+            problem: The problem being solved
+            trace: Reasoning trace (for sheaf detection)
+            n_samples: Samples for monad identity tests
+            steps: Optional steps for monad associativity test
+            run_monad: Whether to run monad probes
+            run_sheaf: Whether to run sheaf detection
+
+        Returns:
+            ProbeResults with all categorical measurements
+        """
+        monad_result: MonadResult | None = None
+        coherence_result: CoherenceResult | None = None
+
+        if run_monad:
+            monad_result = await self.monad_probe.test_all(
+                problem=problem,
+                n_samples=n_samples,
+                steps=steps,
+            )
+
+        if run_sheaf and trace:
+            coherence_result = await self.sheaf_detector.detect(trace)
+
+        results = ProbeResults(
+            monad_result=monad_result,
+            coherence_result=coherence_result,
+            problem=problem,
+            trace=trace,
+        )
+
+        # Emit witness mark if enabled
+        if self.emit_marks:
+            await self._emit_probe_mark(results)
+
+        return results
+
+    async def _emit_probe_mark(self, results: ProbeResults) -> None:
+        """Emit a Witness mark for the probe results."""
+        try:
+            from services.witness.mark import Mark
+            from services.witness.trace_store import get_mark_store
+
+            content = (
+                f"Categorical probe: monad={results.monad_score:.2f}, "
+                f"coherence={results.coherence_score:.2f}, "
+                f"combined={results.combined_score:.2f}"
+            )
+
+            mark = Mark.from_thought(
+                content=content,
+                source="categorical",
+                tags=("categorical", "probe", "phase1"),
+                origin="categorical_probe",
+            )
+
+            store = get_mark_store()
+            store.append(mark)
+            logger.debug(f"Emitted categorical probe mark: {mark.id}")
+
+        except ImportError:
+            # Witness not available
+            logger.debug("Witness not available, skipping mark emission")
+        except Exception as e:
+            logger.warning(f"Failed to emit probe mark: {e}")
+
+
+__all__ = [
+    # Monad probes
+    "MonadProbe",
+    "MonadResult",
+    "IdentityTestResult",
+    "AssociativityTestResult",
+    # Sheaf probes
+    "SheafDetector",
+    "CoherenceResult",
+    "Claim",
+    "ClaimPair",
+    "Violation",
+    # Unified runner
+    "CategoricalProbeRunner",
+    "ProbeResults",
+    # Protocol
+    "LLMProtocol",
+]
