@@ -37,6 +37,8 @@ export type { UseKeyHandlerOptions, UseKeyHandlerResult } from './useKeyHandler'
 export { HypergraphEditor } from './HypergraphEditor';
 export { StatusLine } from './StatusLine';
 export { CommandLine } from './CommandLine';
+export { FileExplorer } from './FileExplorer';
+export type { UploadedFile } from './FileExplorer';
 
 // API Bridge
 export { useGraphNode, normalizePath } from './useGraphNode';

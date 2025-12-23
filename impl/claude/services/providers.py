@@ -549,7 +549,42 @@ async def get_witnessed_graph_service() -> "witnessed_graph.WitnessedGraphServic
     # Wire bus for live updates (closes the loop: save → witness → graph → UI)
     await service.wire_bus()
 
+    # Wire sovereign listeners (closes the loop: K-Block save → Cosmos → SovereignStore)
+    await _wire_sovereign_listeners_once(sovereign_store)
+
     return service
+
+
+# Global flag to ensure we only wire sovereign listeners once
+_sovereign_listeners_wired = False
+
+
+async def _wire_sovereign_listeners_once(sovereign_store: "SovereignStore") -> None:
+    """
+    Wire sovereign event listeners to the bus.
+
+    Only wires once globally to avoid duplicate subscriptions.
+    This closes the loop: K-Block save → Cosmos commit → Reingest to SovereignStore
+    """
+    global _sovereign_listeners_wired
+
+    if _sovereign_listeners_wired:
+        return
+
+    try:
+        from services.sovereign import wire_sovereign_listeners
+        from services.witness.bus import get_synergy_bus
+
+        bus = get_synergy_bus()
+        await wire_sovereign_listeners(bus, sovereign_store)
+
+        _sovereign_listeners_wired = True
+        logger.info("[providers] Sovereign listeners wired to bus")
+
+    except ImportError:
+        logger.warning("[providers] Witness bus not available - sovereign listeners not wired")
+    except Exception as e:
+        logger.error(f"[providers] Failed to wire sovereign listeners: {e}", exc_info=True)
 
 
 # =============================================================================

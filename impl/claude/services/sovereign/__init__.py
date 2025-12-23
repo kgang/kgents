@@ -41,6 +41,7 @@ from .ingest import (
     ingest_content,
     ingest_file,
 )
+from .listeners import on_kblock_saved, wire_sovereign_listeners
 from .node import SovereignNode
 from .store import SovereignStore
 from .types import (
@@ -74,6 +75,9 @@ __all__ = [
     "extract_edges",
     "ingest_file",
     "ingest_content",
+    # Event listeners
+    "on_kblock_saved",
+    "wire_sovereign_listeners",
     # AGENTESE Node
     "SovereignNode",
 ]
