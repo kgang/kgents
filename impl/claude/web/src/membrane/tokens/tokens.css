@@ -1,13 +1,15 @@
 /**
- * Token Styles — Visual semantics for Interactive Text tokens.
+ * Token Styles — STARK BIOME Integration
  *
- * Design principles:
- * - Living green for AGENTESE paths (the garden grows)
- * - Breathing animations on hover (vitality)
- * - Ghost state for non-existent paths (potential)
- * - Sage tones for task checkboxes (grounded)
+ * "The frame is humble. The content glows."
+ * 90% Steel (cool industrial) / 10% Life (organic accents)
  *
- * See: spec/protocols/interactive-text.md
+ * Design tokens from tailwind.config.js:
+ * - Steel: obsidian, carbon, slate, gunmetal, zinc (backgrounds/frames)
+ * - Life: moss, fern, sage, mint, sprout (living accents)
+ * - Glow: spore, amber, light, lichen (earned highlights)
+ *
+ * See: tailwind.config.js, docs/creative/visual-system.md
  */
 
 /* =============================================================================
@@ -18,7 +20,8 @@
   font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.7;
-  color: var(--text-primary, #1a1a1a);
+  /* STARK: Foreground text uses zinc for muted, or higher for emphasis */
+  color: rgb(180 180 190); /* --foreground-strong equivalent */
 }
 
 .interactive-document[data-mode='COMPACT'] {
@@ -41,7 +44,10 @@
 }
 
 /* =============================================================================
-   AGENTESE Path Token
+   AGENTESE Path Token — Living Accent (10%)
+
+   Philosophy: AGENTESE paths are "life emerging" — they use the living
+   accent colors (sage, mint) with earned glow on interaction.
    ============================================================================= */
 
 .agentese-path-token {
@@ -54,68 +60,78 @@
   cursor: pointer;
   display: inline;
 
-  /* Token styling */
-  color: var(--living-green, #2d5a27);
+  /* STARK BIOME: life-sage for living elements */
+  color: #6b8b6b; /* life-mint */
   text-decoration: none;
-  border-radius: 3px;
+  border-radius: 2px; /* bare edge */
   transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .agentese-path-token:hover {
-  background-color: var(--living-green-bg, rgba(45, 90, 39, 0.1));
-  box-shadow: 0 0 8px var(--living-green-glow, rgba(45, 90, 39, 0.3));
+  /* STARK: Earned glow on interaction */
+  background-color: rgba(74, 107, 74, 0.15); /* life-sage with alpha */
+  box-shadow: 0 0 8px rgba(139, 169, 139, 0.3); /* glow-lichen */
 }
 
 .agentese-path-token:focus-visible {
-  outline: 2px solid var(--living-green, #2d5a27);
+  outline: 2px solid #4a6b4a; /* life-sage */
   outline-offset: 2px;
 }
 
 .agentese-path-token__code {
-  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.9em;
   padding: 0.1em 0.3em;
-  background-color: var(--code-bg, rgba(0, 0, 0, 0.05));
-  border-radius: 3px;
+  /* STARK: steel-slate for code background */
+  background-color: rgba(28, 28, 34, 0.6); /* steel-slate with alpha */
+  border-radius: 2px; /* bare edge */
 }
 
 /* Ghost state for non-existent paths */
 .agentese-path-token--ghost {
-  color: var(--ghost-text, #888);
+  /* STARK: steel-zinc for muted/ghost */
+  color: #3a3a44; /* steel-zinc */
   opacity: 0.7;
 }
 
 .agentese-path-token--ghost .agentese-path-token__code {
-  background-color: var(--ghost-bg, rgba(0, 0, 0, 0.03));
+  background-color: rgba(20, 20, 24, 0.4); /* steel-carbon with alpha */
   text-decoration: line-through;
   text-decoration-style: wavy;
-  text-decoration-color: var(--ghost-line, rgba(136, 136, 136, 0.5));
+  text-decoration-color: rgba(58, 58, 68, 0.5); /* steel-zinc */
 }
 
 .agentese-path-token--ghost:hover {
-  background-color: var(--ghost-hover-bg, rgba(0, 0, 0, 0.05));
+  background-color: rgba(28, 28, 34, 0.3); /* steel-slate */
   box-shadow: none;
 }
 
-/* Breathing animation on hover */
-@keyframes breathe {
+/* Breathing animation on hover — STARK BIOME calming breath */
+@keyframes token-breathe {
   0%,
   100% {
-    box-shadow: 0 0 4px var(--living-green-glow, rgba(45, 90, 39, 0.2));
+    box-shadow: 0 0 4px rgba(139, 169, 139, 0.2); /* glow-lichen */
+  }
+  40% {
+    box-shadow: 0 0 10px rgba(139, 169, 139, 0.35);
   }
   50% {
-    box-shadow: 0 0 12px var(--living-green-glow, rgba(45, 90, 39, 0.4));
+    box-shadow: 0 0 10px rgba(139, 169, 139, 0.35);
   }
 }
 
 .agentese-path-token:hover:not(.agentese-path-token--ghost) {
-  animation: breathe 2s ease-in-out infinite;
+  /* STARK: Calming breath — 6.75s matches breatheAlive */
+  animation: token-breathe 6.75s cubic-bezier(0.4, 0, 0.1, 1) infinite;
 }
 
 /* =============================================================================
-   Task Checkbox Token
+   Task Checkbox Token — Soil Undertones
+
+   Philosophy: Tasks are grounded work. Use soil tones with life accent
+   for completed state.
    ============================================================================= */
 
 .task-checkbox-token {
@@ -123,13 +139,14 @@
   align-items: baseline;
   gap: 0.5em;
   cursor: pointer;
-  padding: 0.2em 0;
-  border-radius: 3px;
-  transition: background-color 0.2s ease;
+  padding: 0.2em 0.4em;
+  border-radius: 2px; /* bare edge */
+  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .task-checkbox-token:hover {
-  background-color: var(--sage-bg, rgba(143, 169, 143, 0.1));
+  /* STARK: soil-loam for grounded hover */
+  background-color: rgba(26, 21, 18, 0.5); /* soil-loam with alpha */
 }
 
 .task-checkbox-token__input {
@@ -149,71 +166,84 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.2em;
-  height: 1.2em;
-  border: 2px solid var(--checkbox-border, #666);
-  border-radius: 3px;
-  font-size: 0.8em;
-  color: var(--checkbox-check, #2d5a27);
-  background-color: var(--checkbox-bg, #fff);
+  width: 1.1em;
+  height: 1.1em;
+  /* STARK: steel-gunmetal border, steel-carbon bg */
+  border: 1.5px solid #28282f; /* steel-gunmetal */
+  border-radius: 2px; /* bare edge */
+  font-size: 0.75em;
+  color: #4a6b4a; /* life-sage for checkmark */
+  background-color: #141418; /* steel-carbon */
   transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
+    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .task-checkbox-token--checked .task-checkbox-token__box {
-  border-color: var(--checkbox-checked-border, #2d5a27);
-  background-color: var(--checkbox-checked-bg, rgba(45, 90, 39, 0.1));
+  /* STARK: life-moss background for completed */
+  border-color: #4a6b4a; /* life-sage */
+  background-color: rgba(26, 46, 26, 0.4); /* life-moss with alpha */
 }
 
 .task-checkbox-token__input:focus-visible + .task-checkbox-token__box {
-  outline: 2px solid var(--focus-ring, #2d5a27);
+  outline: 2px solid #c4a77d; /* glow-spore for focus */
   outline-offset: 2px;
 }
 
 .task-checkbox-token__description {
-  color: inherit;
+  /* STARK: foreground text */
+  color: rgb(180 180 190);
 }
 
 .task-checkbox-token--checked .task-checkbox-token__description {
   text-decoration: line-through;
-  opacity: 0.7;
+  opacity: 0.6;
+  /* STARK: steel-zinc for completed text */
+  color: #3a3a44;
 }
 
 .task-checkbox-token--toggling {
-  opacity: 0.6;
+  opacity: 0.5;
   pointer-events: none;
 }
 
 /* =============================================================================
    Token Placeholder (for future token types)
+
+   Philosophy: Placeholders are dormant — steel foundation only.
    ============================================================================= */
 
 .token-placeholder {
-  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.9em;
   padding: 0.1em 0.3em;
-  background-color: var(--placeholder-bg, rgba(0, 0, 0, 0.05));
-  border-radius: 3px;
+  /* STARK: steel-slate for placeholder */
+  background-color: rgba(28, 28, 34, 0.5);
+  border-radius: 2px;
+  color: rgb(138 138 148); /* muted foreground */
 }
 
 .token-placeholder--code_region {
   display: block;
-  padding: 0.5em;
+  padding: 0.5em 0.75em;
   margin: 0.5em 0;
-  background-color: var(--code-bg, #f5f5f5);
-  border-left: 3px solid var(--code-accent, #666);
+  /* STARK: steel-carbon with gunmetal accent */
+  background-color: #141418;
+  border-left: 3px solid #28282f; /* steel-gunmetal */
   white-space: pre-wrap;
 }
 
 .token-placeholder--image_embed {
-  border: 1px dashed var(--image-border, #999);
+  /* STARK: dashed border for incomplete */
+  border: 1px dashed #28282f; /* steel-gunmetal */
   padding: 0.25em 0.5em;
 }
 
 .token-placeholder--principle_anchor,
 .token-placeholder--requirement_trace {
-  background-color: var(--badge-bg, rgba(180, 150, 50, 0.15));
+  /* STARK: glow-spore for earned badges */
+  background-color: rgba(196, 167, 125, 0.15); /* glow-spore with alpha */
   padding: 0.1em 0.4em;
   font-size: 0.85em;
+  color: #c4a77d; /* glow-spore */
 }
