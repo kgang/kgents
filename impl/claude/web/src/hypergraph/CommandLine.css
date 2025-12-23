@@ -1,0 +1,33 @@
+/**
+ * CommandLine — Vim-style command input
+ */
+
+.command-line {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  background: var(--steel-900, #1a1a1a);
+  border-top: 1px solid var(--steel-700, #333);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.875rem;
+}
+
+.command-line__prompt {
+  color: var(--steel-300, #a0a0a0);
+  margin-right: 0.25rem;
+}
+
+.command-line__input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--steel-100, #e0e0e0);
+  font-family: inherit;
+  font-size: inherit;
+  caret-color: var(--accent-gold, #ffd700);
+}
+
+.command-line__input::placeholder {
+  color: var(--steel-600, #444);
+}

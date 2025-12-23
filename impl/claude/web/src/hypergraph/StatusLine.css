@@ -1,0 +1,117 @@
+/**
+ * StatusLine — Vim-style status line
+ *
+ * Stark biome: steel background, 10% accent glow
+ */
+
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--steel-900, #1a1a1a);
+  border-top: 1px solid var(--steel-700, #333);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+  color: var(--steel-300, #a0a0a0);
+  min-height: 1.5rem;
+}
+
+/* Mode indicator */
+.status-line__mode {
+  padding: 0.125rem 0.5rem;
+  background: var(--mode-color, var(--steel-700));
+  color: var(--steel-900, #1a1a1a);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 2px;
+}
+
+.status-line__mode[data-mode='INSERT'] {
+  background: var(--status-insert, #4caf50);
+}
+
+.status-line__mode[data-mode='EDGE'] {
+  background: var(--status-edge, #ff9800);
+}
+
+.status-line__mode[data-mode='VISUAL'] {
+  background: var(--status-visual, #9c27b0);
+  color: white;
+}
+
+.status-line__mode[data-mode='COMMAND'] {
+  background: transparent;
+  color: var(--steel-300);
+  font-weight: normal;
+}
+
+.status-line__mode[data-mode='WITNESS'] {
+  background: var(--status-witness, #e91e63);
+  color: white;
+}
+
+/* Pending key sequence */
+.status-line__pending {
+  padding: 0.125rem 0.25rem;
+  background: var(--steel-800, #252525);
+  border: 1px solid var(--steel-600, #444);
+  border-radius: 2px;
+  color: var(--accent-gold, #ffd700);
+  font-weight: 500;
+}
+
+/* K-Block status */
+.status-line__kblock {
+  padding: 0 0.25rem;
+  font-size: 0.7rem;
+}
+
+.status-line__kblock[data-status='PRISTINE'] {
+  color: var(--steel-500, #666);
+}
+
+.status-line__kblock[data-status='DIRTY'] {
+  color: var(--accent-gold, #ffd700);
+}
+
+.status-line__kblock[data-status='STALE'] {
+  color: var(--status-edge, #ff9800);
+}
+
+.status-line__kblock[data-status='CONFLICTING'] {
+  color: var(--status-error, #f44336);
+}
+
+/* Breadcrumb trail */
+.status-line__breadcrumb {
+  color: var(--steel-400, #888);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40%;
+}
+
+/* Spacer pushes right items to the end */
+.status-line__spacer {
+  flex: 1;
+}
+
+/* Node path */
+.status-line__path {
+  color: var(--steel-500, #666);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 30%;
+  text-align: right;
+}
+
+/* Cursor position */
+.status-line__cursor {
+  color: var(--steel-300, #a0a0a0);
+  font-variant-numeric: tabular-nums;
+  min-width: 5rem;
+  text-align: right;
+}
