@@ -426,6 +426,78 @@ def pytest_addoption(parser: Any) -> None:
 
 
 # =============================================================================
+# CPU Throttling: Dynamic Worker Count (pytest-xdist)
+# =============================================================================
+#
+# This hook implements self-throttling for parallel test execution.
+# It prevents CPU thrashing by adapting worker count to current system load.
+#
+# Philosophy (Heterarchical principle):
+# - Resources flow where needed, not allocated top-down
+# - The system self-adjusts based on current conditions
+# - Leave headroom for the OS and other processes
+#
+# Override via environment variable: PYTEST_XDIST_AUTO_NUM_WORKERS=N
+# =============================================================================
+
+
+def pytest_xdist_auto_num_workers(config: Any) -> int | None:
+    """
+    Dynamically determine optimal number of pytest-xdist workers.
+
+    Implements CPU throttling by:
+    1. Checking current system load average
+    2. Reducing workers when system is already under load
+    3. Always leaving cores for the OS and other processes
+
+    Returns:
+        Number of workers to use, or None to fall back to xdist default.
+    """
+    import os
+
+    # Allow explicit override via environment variable
+    if override := os.environ.get("PYTEST_XDIST_AUTO_NUM_WORKERS"):
+        try:
+            return int(override)
+        except ValueError:
+            pass
+
+    try:
+        cpu_count = os.cpu_count() or 4
+
+        # Try to get system load (macOS/Linux only)
+        try:
+            # 1-minute load average
+            load_avg = os.getloadavg()[0]
+
+            # If system is already loaded (>80% of cores busy), throttle hard
+            if load_avg > cpu_count * 0.8:
+                # Use at most half the cores when system is busy
+                return max(1, cpu_count // 2)
+
+            # If system is moderately loaded (>50%), be conservative
+            if load_avg > cpu_count * 0.5:
+                # Leave 2 cores free
+                return max(1, cpu_count - 2)
+
+        except (AttributeError, OSError):
+            # Windows doesn't have getloadavg(), fall through to default
+            pass
+
+        # Default: Use most cores but leave 1-2 for system responsiveness
+        # For small machines (<=4 cores): leave 1 core
+        # For larger machines (>4 cores): leave 2 cores
+        if cpu_count <= 4:
+            return max(1, cpu_count - 1)
+        else:
+            return max(1, cpu_count - 2)
+
+    except Exception:
+        # Never break pytest startup due to worker count detection
+        return None
+
+
+# =============================================================================
 # Domain Auto-Marking for Compartmentalized CI
 # =============================================================================
 #

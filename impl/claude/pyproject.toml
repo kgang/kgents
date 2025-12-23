@@ -78,6 +78,10 @@ addopts = [
     "--strict-markers",
     "--tb=short",
     "-m", "not tier3",  # Skip tier3 (E2E) tests by default
+    # CPU throttling: Parallel execution with dynamic load balancing
+    # See conftest.py::pytest_xdist_auto_num_workers for adaptive worker count
+    "-n", "auto",
+    "--dist", "worksteal",  # Better load balancing than default 'load'
 ]
 # Test Optimization: Run pytest with --profile-tests to enable profiling
 # Example: pytest --profile-tests --show-recommendations
