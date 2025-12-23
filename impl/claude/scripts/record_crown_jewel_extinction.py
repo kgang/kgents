@@ -83,6 +83,7 @@ async def main() -> int:
         # Initialize the bootstrap services
         import os
 
+        # Default for local Docker development - override via KGENTS_DATABASE_URL
         os.environ.setdefault(
             "KGENTS_DATABASE_URL",
             "postgresql+asyncpg://kgents:kgents@localhost:5432/kgents",

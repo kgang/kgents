@@ -28,7 +28,7 @@ import asyncio
 import os
 from datetime import datetime, timedelta, timezone
 
-# Enable asyncpg (Postgres backend)
+# Default for local Docker development - override via KGENTS_POSTGRES_URL
 os.environ.setdefault(
     "KGENTS_POSTGRES_URL",
     "postgresql://kgents:kgents@localhost:5432/kgents",

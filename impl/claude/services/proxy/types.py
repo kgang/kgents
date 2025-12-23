@@ -67,6 +67,7 @@ class SourceType(str, Enum):
     CODEBASE_GRAPH = "codebase_graph"  # Codebase topology analysis
     TOWN_SNAPSHOT = "town_snapshot"  # Agent town state
     MEMORY_CRYSTALS = "memory_crystals"  # K-gent memory summaries
+    VALIDATION_RUN = "validation_run"  # Validation run results (cached)
 
     # Extension point
     CUSTOM = "custom"
