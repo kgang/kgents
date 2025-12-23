@@ -124,6 +124,7 @@ async def _create_mark_async(
     action: str,
     reasoning: str | None = None,
     principles: list[str] | None = None,
+    tags: list[str] | None = None,
     author: str = "kent",
     parent_mark_id: str | None = None,
 ) -> dict[str, Any]:
@@ -135,6 +136,7 @@ async def _create_mark_async(
         action=action,
         reasoning=reasoning,
         principles=principles or [],
+        tags=tags or [],
         author=author,
         parent_mark_id=parent_mark_id,
     )
@@ -144,6 +146,7 @@ async def _create_mark_async(
         "action": result.action,
         "reasoning": result.reasoning,
         "principles": result.principles,
+        "tags": result.tags,
         "timestamp": result.timestamp.isoformat(),
         "author": result.author,
         "parent_mark_id": result.parent_mark_id,
@@ -163,6 +166,7 @@ async def _get_recent_marks_async(limit: int = 20) -> list[dict[str, Any]]:
             "action": m.action,
             "reasoning": m.reasoning or "",
             "principles": m.principles,
+            "tags": m.tags,
             "timestamp": m.timestamp.isoformat(),
             "author": m.author,
             "parent_mark_id": m.parent_mark_id,
@@ -327,12 +331,13 @@ def cmd_mark(args: list[str]) -> int:
         kg witness mark "Did a thing"
         kg witness mark "Chose X" -w "Because Y"
         kg witness mark "Pattern" -p composable,generative
+        kg witness mark "Action" --tag eureka --tag gotcha
         kg witness mark "Action" --json  # Machine-readable output
         kg witness mark "Follow-up" --parent mark-abc123  # Create with parent
     """
     if not args:
         print(
-            'Usage: kg witness mark "action" [-w reason] [-p principles] [--parent mark-id] [--json]'
+            'Usage: kg witness mark "action" [-w reason] [-p principles] [--tag tag] [--parent mark-id] [--json]'
         )
         return 1
 
@@ -340,6 +345,7 @@ def cmd_mark(args: list[str]) -> int:
     action = None
     reasoning = None
     principles: list[str] = []
+    tags: list[str] = []
     parent_mark_id: str | None = None
     json_output = "--json" in args
 
@@ -353,6 +359,10 @@ def cmd_mark(args: list[str]) -> int:
             i += 2
         elif arg in ("-p", "--principles") and i + 1 < len(args):
             principles = [p.strip() for p in args[i + 1].split(",")]
+            i += 2
+        elif arg in ("-t", "--tag") and i + 1 < len(args):
+            # Support multiple --tag flags
+            tags.append(args[i + 1].strip())
             i += 2
         elif arg == "--parent" and i + 1 < len(args):
             parent_mark_id = args[i + 1]
@@ -371,7 +381,7 @@ def cmd_mark(args: list[str]) -> int:
         return 1
 
     try:
-        result = _create_mark(action, reasoning, principles, parent_mark_id=parent_mark_id)
+        result = _create_mark(action, reasoning, principles, tags, parent_mark_id=parent_mark_id)
 
         if json_output:
             # Machine-readable output for agents
@@ -389,12 +399,17 @@ def cmd_mark(args: list[str]) -> int:
                 if principles:
                     principle_str = " ".join(f"[{p}]" for p in principles)
                     console.print(f"  [dim]{principle_str}[/dim]")
+                if tags:
+                    tag_str = " ".join(f"#{t}" for t in tags)
+                    console.print(f"  [dim]{tag_str}[/dim]")
             else:
                 print(f"\u2713 {result['mark_id'][:8]}")
                 if parent_mark_id:
                     print(f"  └─ child of {parent_mark_id[:12]}")
                 if reasoning:
                     print(f"  -> {reasoning}")
+                if tags:
+                    print(f"  #{' #'.join(tags)}")
 
         return 0
     except Exception as e:
@@ -2125,6 +2140,7 @@ CONTEXT COMMANDS:
 MARK OPTIONS:
   -w, --why "reason"          Add reasoning
   -p, --principles a,b        Add principles
+  -t, --tag <tag>             Add tag (can repeat: --tag a --tag b)
   --parent <mark_id>          Link as child of parent (lineage)
   --json                      Machine-readable JSON output
 
@@ -2192,12 +2208,14 @@ GRAPH OPTIONS:
 QUICK ALIAS (recommended):
   km "action"                  = kg witness mark "action"
   km "X" -w "Y"                = kg witness mark "X" -w "Y"
+  km "X" --tag eureka          = kg witness mark "X" --tag eureka
   km "X" --parent mark-abc     = Link as child of parent
 
 EXAMPLES:
   kg witness mark "Refactored DI container"
   kg witness mark "Chose PostgreSQL" -w "Scaling needs"
-  kg witness mark "Fixed issue" --parent mark-abc123  # Create causal link
+  kg witness mark "Insight" --tag eureka --tag pattern  # Multiple tags
+  kg witness mark "Fixed issue" --parent mark-abc123    # Create causal link
   kg witness tree mark-abc123          # See tree of related marks
   kg witness crystallize               # LLM-powered insight extraction
   kg witness crystallize --tree mark-abc  # Crystallize entire tree

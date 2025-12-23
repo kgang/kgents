@@ -145,6 +145,24 @@ class FileChangedError(FileGuardError):
 # =============================================================================
 
 
+def _find_repo_root() -> Path:
+    """
+    Find the repository root by walking up from cwd to find .git.
+
+    Teaching:
+        gotcha: The API might be running from impl/claude/ but the spec
+                files are at repo_root/spec. We need to walk up to find
+                the actual git root, not just use cwd.
+    """
+    current = Path.cwd().resolve()
+    while current != current.parent:
+        if (current / ".git").exists():
+            return current
+        current = current.parent
+    # Fallback to cwd if no .git found
+    return Path.cwd()
+
+
 @dataclass
 class FileEditGuard:
     """
@@ -164,6 +182,9 @@ class FileEditGuard:
     cache_ttl_seconds: float = 300.0  # 5 minutes
     max_cached_files: int = 100  # LRU eviction threshold
 
+    # Repo root for resolving relative paths
+    repo_root: Path = field(default_factory=_find_repo_root)
+
     # Internal state
     _cache: dict[str, FileCacheEntry] = field(default_factory=dict)
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock)
@@ -180,6 +201,20 @@ class FileEditGuard:
     def set_event_emitter(self, emitter: Any) -> None:
         """Inject the synergy event emitter."""
         self._emit_event = emitter
+
+    def _resolve_path(self, path_str: str) -> Path:
+        """
+        Resolve a path relative to repo_root if not absolute.
+
+        Teaching:
+            gotcha: Paths like "spec/principles.md" need to resolve relative
+                    to the git repo root, not the cwd. This is critical when
+                    the API runs from impl/claude/ but files are at repo root.
+        """
+        path = Path(path_str)
+        if path.is_absolute():
+            return path
+        return self.repo_root / path
 
     # === Read Operations ===
 
@@ -206,7 +241,7 @@ class FileEditGuard:
             span.set_attribute("file.path", request.path)
             span.set_attribute("agent.id", agent_id)
 
-            path = Path(request.path)
+            path = self._resolve_path(request.path)
 
             # Read content
             try:
@@ -305,7 +340,7 @@ class FileEditGuard:
                 await self._require_read(request.path)
 
                 # 2. Read current content
-                path = Path(request.path)
+                path = self._resolve_path(request.path)
                 content = path.read_text()
 
                 # 3. Check file hasn't changed
@@ -407,7 +442,7 @@ class FileEditGuard:
             span.set_attribute("agent.id", agent_id)
 
             try:
-                path = Path(request.path)
+                path = self._resolve_path(request.path)
                 created_dirs: list[str] = []
 
                 # Create parent directories if needed
@@ -525,7 +560,7 @@ class FileEditGuard:
 
     async def _update_cache_after_edit(self, path: str, new_content: str) -> None:
         """Update cache entry after successful edit."""
-        stat = Path(path).stat()
+        stat = self._resolve_path(path).stat()
         content_hash = hashlib.sha256(new_content.encode()).hexdigest()
 
         async with self._lock:

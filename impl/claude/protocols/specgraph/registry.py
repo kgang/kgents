@@ -316,15 +316,37 @@ class SpecRegistry:
 _registry: SpecRegistry | None = None
 
 
+def _find_repo_root() -> Path:
+    """
+    Find the repository root by walking up from cwd to find .git.
+
+    Teaching:
+        gotcha: The API might be running from impl/claude/ but the spec
+                directory is at repo_root/spec. We need to walk up to find
+                the actual git root, not just use cwd.
+    """
+    current = Path.cwd().resolve()
+    while current != current.parent:
+        if (current / ".git").exists():
+            return current
+        current = current.parent
+    # Fallback to cwd if no .git found
+    return Path.cwd()
+
+
 def get_registry(repo_root: Path | None = None) -> SpecRegistry:
     """
     Get the singleton SpecRegistry.
 
     Creates the registry on first call.
     Optionally pass repo_root on first call to set the root.
+    If repo_root is None, auto-detects by walking up to find .git.
     """
     global _registry
     if _registry is None:
+        if repo_root is None:
+            repo_root = _find_repo_root()
+            logger.info(f"Auto-detected repo root: {repo_root}")
         _registry = SpecRegistry(repo_root=repo_root)
     return _registry
 

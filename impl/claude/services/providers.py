@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     from agents.l.embedders import SentenceTransformerEmbedder
     from models.brain import Crystal
     from protocols.agentese.logos import Logos
+    from services import witnessed_graph
     from services.ashc.persistence import PostgresLemmaDatabase
     from services.brain import BrainPersistence
     from services.conductor import Summarizer, WindowPersistence
@@ -493,6 +494,44 @@ async def get_embedder() -> "SentenceTransformerEmbedder | None":
         return None
 
 
+async def get_witnessed_graph_service() -> "witnessed_graph.WitnessedGraphService":
+    """
+    Get the WitnessedGraphService for unified graph queries.
+
+    Composes three edge sources:
+    - Sovereign: Code structure edges (imports, calls, inherits)
+    - Witness: Mark-based edges (evidence, decisions, gotchas)
+    - SpecLedger: Spec relation edges (harmony, contradiction, dependency)
+
+    Usage:
+        graph = await container.get("witnessed_graph_service")
+        result = await graph.neighbors("spec/agents/d-gent.md")
+    """
+    from services.witnessed_graph import (
+        SovereignSource,
+        SpecLedgerSource,
+        WitnessedGraphService,
+        WitnessSource,
+    )
+
+    # Get dependencies
+    sovereign_store = await get_sovereign_store()
+    witness_persistence = await get_witness_persistence()
+
+    # Create sources
+    sovereign_source = SovereignSource(sovereign_store)
+    witness_source = WitnessSource(witness_persistence)
+    # SpecLedgerSource loads report lazily
+    spec_source = SpecLedgerSource()
+
+    # Compose into unified graph
+    return WitnessedGraphService(
+        sovereign_source=sovereign_source,
+        witness_source=witness_source,
+        spec_source=spec_source,
+    )
+
+
 # =============================================================================
 # Setup Function
 # =============================================================================
@@ -573,6 +612,9 @@ async def setup_providers() -> None:
     # Sovereign Crown Jewel (Inbound Sovereignty)
     container.register("sovereign_store", get_sovereign_store, singleton=True)
 
+    # WitnessedGraph Crown Jewel (Unified Edge Composition)
+    container.register("witnessed_graph_service", get_witnessed_graph_service, singleton=True)
+
     logger.info(
         "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion)"
     )
@@ -643,6 +685,14 @@ async def setup_providers() -> None:
         logger.info("SovereignNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"SovereignNode not available: {e}")
+
+    # WitnessedGraph Crown Jewel (Unified Edge Composition)
+    try:
+        from services.witnessed_graph.node import GraphNode  # noqa: F401
+
+        logger.info("GraphNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"GraphNode not available: {e}")
 
     # Wire KgentSoul to SoulNode
     try:

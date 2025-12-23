@@ -42,6 +42,23 @@ from .models import HealthResponse
 
 logger = logging.getLogger(__name__)
 
+
+async def _warm_ledger_cache() -> None:
+    """
+    Warm the spec ledger cache in background.
+
+    This scans ~200 spec files and takes ~10s, so we run it
+    fire-and-forget at startup to avoid blocking the first request.
+    """
+    try:
+        from services.living_spec.ledger_node import ensure_scanned
+
+        await ensure_scanned()
+        logger.info("Spec ledger cache warmed (199 specs)")
+    except Exception as e:
+        logger.warning(f"Failed to warm ledger cache: {e}")
+
+
 # SaaS infrastructure (optional)
 try:
     from protocols.config import (
@@ -82,6 +99,15 @@ async def _create_lifespan(
         logger.warning(f"Could not initialize service providers: {e}")
     except Exception as e:
         logger.error(f"Error initializing service providers: {e}")
+
+    # Warm the spec ledger cache (fire-and-forget to not block startup)
+    try:
+        import asyncio
+
+        asyncio.create_task(_warm_ledger_cache())
+        logger.info("Spec ledger cache warming started")
+    except Exception:
+        pass  # Ledger not installed or task creation failed
 
     # Initialize SaaS clients if configured
     if enable_saas and HAS_SAAS_CONFIG and init_saas_clients is not None:

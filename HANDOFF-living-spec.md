@@ -2,7 +2,7 @@
 
 > **For**: Next Claude session
 > **From**: Session 2025-12-22
-> **Status**: Phase 1 complete, Phase 2 ready
+> **Status**: Phase 2 (Evidence-as-Marks) implemented, UI update pending
 
 ---
 
@@ -96,75 +96,50 @@ Harmonies:        329
 
 ---
 
-## What's Next (Phase 2: Evidence Tracking)
+## What Was Done (Phase 2: Evidence-as-Marks)
 
-From `spec/protocols/living-spec-ui-strategy.md`:
+**Radical transformation**: Evidence is no longer a separate concept. **Evidence IS witness marks with specific tags.**
 
-### 1. Persistent Evidence Links
+### 1. Unified Evidence Model (COMPLETE)
 
-Currently `evidence_add()` emits a witness event but doesn't persist. Need:
-
-```sql
--- Add to existing schema (see living-spec-ui-strategy.md)
-CREATE TABLE spec_evidence (
-    id UUID PRIMARY KEY,
-    spec_id UUID REFERENCES spec_ledger(id),
-    evidence_type TEXT,  -- implementation, test, usage
-    path TEXT,
-    last_verified TIMESTAMP,
-    status TEXT  -- valid, stale, broken
-);
-```
-
-**Implementation**:
-1. Add D-gent storage integration to `ledger_node.py`
-2. Persist evidence links on `evidence_add()`
-3. Add `evidence_verify()` to check if evidence still exists
-4. Track evidence staleness (file modified since last verification)
-
-### 2. Evidence Auto-Detection
-
-Enhance `analyzer.py` to:
-- Scan `impl/` for files that reference specs
-- Parse test files for spec assertions
-- Track import chains to find indirect evidence
+Instead of a separate `spec_evidence` table, evidence uses the existing witness mark system:
 
 ```python
-# Example enhancement to analyzer.py
-def find_evidence_for_spec(spec_path: str) -> list[EvidenceRecord]:
-    """Scan impl/ for files that reference this spec."""
-    # Look for:
-    # - Comments: "# See spec/protocols/foo.md"
-    # - Imports: from services.foo import ...
-    # - Test names: test_foo_spec_compliance
-    pass
+# Evidence = Marks with evidence tags
+tags = [
+    "spec:principles.md",      # Which spec this is evidence for
+    "evidence:impl",           # Type: impl, test, usage
+    "file:path/to/impl.py",    # The evidence file
+]
 ```
 
-### 3. Evidence Verification API
+See: `spec/protocols/living-spec-evidence.md`
 
-```python
-# Add to ledger_node.py
-async def evidence_verify(self, spec_path: str) -> dict[str, Any]:
-    """
-    Verify all evidence for a spec is still valid.
+### 2. Backend Implementation (COMPLETE)
 
-    Checks:
-    - File exists
-    - File still references spec
-    - Tests pass (optional)
+**Added to `WitnessMark` model** (`models/witness.py`):
+- `tags` column (JSON array with GIN index)
+- Evidence tag taxonomy in docstring
 
-    Emits:
-        witness.spec.evidence_verified
-    """
-```
+**Added to `WitnessPersistence`** (`services/witness/persistence.py`):
+- `get_evidence_for_spec(spec_path, evidence_type)` — Query evidence by spec
+- `get_specs_with_evidence()` — All specs with evidence
+- `count_evidence_by_spec()` — Counts by spec and type
+- `save_mark(... tags=...)` — Store tags with marks
 
-### 4. UI Enhancements
+**Added to `LedgerNode`** (`services/living_spec/ledger_node.py`):
+- `evidence_add()` now creates a witness mark (not just event)
+- `evidence_query()` — Query evidence from witness marks
+- `evidence_verify()` — Check if evidence files exist
+- `evidence_summary()` — Counts across all specs
+
+### 3. What Remains (UI Only)
 
 Add to `SpecLedgerDetail.tsx`:
 - "Add Evidence" modal with file picker
 - "Verify Evidence" button that runs checks
 - Evidence status indicators (valid/stale/broken)
-- "Run Tests" integration
+- Show evidence marks in detail view
 
 ---
 

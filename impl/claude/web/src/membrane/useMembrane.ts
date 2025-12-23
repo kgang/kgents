@@ -24,7 +24,7 @@ import { useKBlock, type IsolationState } from './useKBlock';
 
 export type MembraneMode = 'compact' | 'comfortable' | 'spacious';
 
-export type FocusType = 'welcome' | 'file' | 'spec' | 'concept' | 'dialogue';
+export type FocusType = 'welcome' | 'file' | 'spec' | 'concept' | 'dialogue' | 'graph';
 
 export interface Focus {
   type: FocusType;

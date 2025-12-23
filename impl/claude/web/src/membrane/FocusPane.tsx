@@ -12,7 +12,7 @@
  */
 
 import type { Focus, FocusType } from './useMembrane';
-import { WelcomeView, FileView, SpecView, ConceptView } from './views';
+import { WelcomeView, FileView, SpecView, ConceptView, GraphView } from './views';
 import type { EdgeType } from './useSpecNavigation';
 
 import './FocusPane.css';
@@ -97,6 +97,16 @@ function renderFocusContent(
       // For dialogue focus, we could show an expanded view
       // For now, fall back to welcome
       return <WelcomeView />;
+
+    case 'graph':
+      return (
+        <GraphView
+          onSpecClick={(path) => {
+            // Navigate to spec when clicking a node
+            onNavigate(path);
+          }}
+        />
+      );
 
     default:
       return <WelcomeView />;
