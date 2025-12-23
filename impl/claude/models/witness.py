@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     Float,
@@ -33,6 +34,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+# Use JSON with JSONB variant for PostgreSQL (enables GIN index).
+# Falls back to plain JSON for SQLite.
+JSONBCompat = JSON().with_variant(JSONB(), "postgresql")
 
 from .base import Base, TimestampMixin
 
@@ -145,7 +150,7 @@ class WitnessThought(TimestampMixin, Base):
     # Content
     content: Mapped[str] = mapped_column(Text, nullable=False)
     source: Mapped[str] = mapped_column(String(64), nullable=False)  # git, tests, ci, etc.
-    tags: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    tags: Mapped[list[str]] = mapped_column(JSONBCompat, default=list)
 
     # D-gent link for semantic search
     datum_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
@@ -272,11 +277,11 @@ class WitnessMark(TimestampMixin, Base):
     reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Which principles honored (stored as JSONB array for GIN indexing)
-    principles: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    principles: Mapped[list[str]] = mapped_column(JSONBCompat, default=list)
 
     # General tags for categorization (stored as JSONB array for GIN indexing)
     # Includes evidence tags (spec:*, evidence:*) and session tags (eureka, gotcha, etc.)
-    tags: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    tags: Mapped[list[str]] = mapped_column(JSONBCompat, default=list)
 
     # Authorship
     author: Mapped[str] = mapped_column(String(64), default="kent", nullable=False)
