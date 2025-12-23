@@ -150,6 +150,7 @@ See: `docs/skills/witness-for-agents.md`
 | **Adding new agent** | `polynomial-agent.md` (state machine), `building-agent.md` (composition laws) |
 | **Exposing via AGENTESE** | `agentese-node-registration.md` (@node decorator), `agentese-path.md` (path structure) |
 | **Service/Crown Jewel** | `crown-jewel-patterns.md` (14 patterns), `metaphysical-fullstack.md` (architecture) |
+| **Hypergraph editing** | `hypergraph-editor.md` (six-mode modal editing, graph navigation, K-Block) |
 | **Event-driven feature** | `data-bus-integration.md` (DataBus, SynergyBus, EventBus) |
 | **Multi-target rendering** | `projection-target.md` (CLI/TUI/JSON/marimo), `elastic-ui-patterns.md` (responsive) |
 | **Persistence/Storage** | `unified-storage.md` (StorageProvider, XDG paths, CLI sessions) |
@@ -161,7 +162,7 @@ See: `docs/skills/witness-for-agents.md`
 Component = Foundation ∘ Protocol ∘ Architecture ∘ Spec ∘ Projection
           = (polynomial-agent + building-agent)
           ∘ (agentese-path + agentese-node-registration)
-          ∘ (crown-jewel-patterns + metaphysical-fullstack + data-bus-integration)
+          ∘ (crown-jewel-patterns + metaphysical-fullstack + data-bus-integration + hypergraph-editor)
           ∘ (spec-template + spec-hygiene)
           ∘ (projection-target + test-patterns + elastic-ui-patterns)
 ```

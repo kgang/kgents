@@ -4,7 +4,7 @@ context: self
 
 # Agent Skills Directory
 
-> *"18 skills are necessary and sufficient to build any kgents component."*
+> *"19 skills are necessary and sufficient to build any kgents component."*
 
 **READ SKILLS FIRST.** Every task has a corresponding skill. Before writing code, find the right skill—it will save you hours.
 
@@ -30,6 +30,7 @@ These four skills apply to virtually ANY work you'll do:
 | **Adding new agent** | `polynomial-agent.md`, `building-agent.md` |
 | **Exposing via AGENTESE** | `agentese-node-registration.md`, `agentese-path.md` |
 | **Service/Crown Jewel** | `crown-jewel-patterns.md`, `metaphysical-fullstack.md` |
+| **Hypergraph editing** | `hypergraph-editor.md` |
 | **Event-driven feature** | `data-bus-integration.md` |
 | **Multi-target rendering** | `projection-target.md`, `elastic-ui-patterns.md` |
 | **marimo notebooks** | `marimo-projection.md` |
@@ -61,6 +62,7 @@ These four skills apply to virtually ANY work you'll do:
 | [crown-jewel-patterns](crown-jewel-patterns.md) | 14 patterns: Container-Owns-Workflow, Signal Aggregation, Teaching Mode... |
 | [metaphysical-fullstack](metaphysical-fullstack.md) | AD-009 stack—AGENTESE IS the API, no explicit routes |
 | [data-bus-integration](data-bus-integration.md) | DataBus, SynergyBus, EventBus patterns |
+| [hypergraph-editor](hypergraph-editor.md) | Six-mode modal editing, graph navigation, K-Block integration |
 
 ### Process (N-Phase)
 
@@ -87,7 +89,7 @@ These four skills apply to virtually ANY work you'll do:
 Component = Foundation ∘ Protocol ∘ Architecture ∘ Process ∘ Projection
           = (polynomial-agent + building-agent)
           ∘ (agentese-path + agentese-node-registration)
-          ∘ (crown-jewel-patterns + metaphysical-fullstack + data-bus-integration)
+          ∘ (crown-jewel-patterns + metaphysical-fullstack + data-bus-integration + hypergraph-editor)
           ∘ (plan-file + spec-template + spec-hygiene)
           ∘ (projection-target + marimo-projection + test-patterns + elastic-ui-patterns)
 ```
@@ -103,4 +105,4 @@ Extended skills archived to `docs/_archive/2025-12-18-consolidation/`. Restore i
 
 ---
 
-*Consolidated: 2025-12-21 | Skills: 18 active | Docs Renaissance Edition*
+*Consolidated: 2025-12-22 | Skills: 19 active | Docs Renaissance Edition*
