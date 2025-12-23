@@ -38,7 +38,6 @@ A controlled extinction, rebuilding, and hardening of the codebase.
 
 #### Security
 - Fixed overly permissive CORS configuration
-- Added SECURITY.md for responsible disclosure
 - Created .env.example templates
 
 ### Crown Jewel Status
