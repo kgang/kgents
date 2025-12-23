@@ -53,6 +53,9 @@ class GraphManifestResponse:
     origin: str
     by_origin: dict[str, int]
     by_kind: dict[str, int]
+    # Event-driven update tracking (for UI refresh)
+    last_update_at: str  # ISO timestamp
+    update_count: int
 
 
 # =============================================================================

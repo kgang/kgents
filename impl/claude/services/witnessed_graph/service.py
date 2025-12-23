@@ -11,14 +11,20 @@ Crown Jewel Patterns Applied:
 - Pattern 1: Container Owns Workflow (service owns composed graph)
 - Pattern 4: Dual-Channel Output (rich edges + stats)
 - Pattern 14: Full Stack Agent (service → AGENTESE → CLI)
+- Pattern 9: Event-Driven Integration (bus subscription for live updates)
 
 AGENTESE: concept.graph.neighbors, concept.graph.evidence, concept.graph.trace
+
+Loop Closure (2025-12-23):
+    K-Block save → Witness mark → Bus event → Graph update → UI refresh
 """
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from .composition import ComposedSource
@@ -27,6 +33,8 @@ from .types import EdgeKind, HyperEdge
 if TYPE_CHECKING:
     from .protocol import EdgeSourceProtocol
     from .sources import SovereignSource, SpecLedgerSource, WitnessSource
+
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================
@@ -145,8 +153,14 @@ class WitnessedGraphService:
     - evidence_for: Get evidence supporting a spec
     - trace_path: Find paths between nodes
 
+    Event-Driven Integration:
+        Subscribes to bus events to track when sources change:
+        - witness.kblock.saved → Graph may have new edges
+        - witness.spec.scanned → Spec ledger updated
+
     Example:
         >>> service = WitnessedGraphService(sovereign, witness, spec)
+        >>> await service.wire_bus()  # Enable live updates
         >>> result = await service.neighbors("spec/agents/d-gent.md")
         >>> print(f"Connected to {result.total} edges")
     """
@@ -176,6 +190,11 @@ class WitnessedGraphService:
 
         # Compose all sources
         self._graph = ComposedSource(all_sources)
+
+        # Event-driven update tracking (for UI refresh)
+        self._last_update_at: datetime = datetime.now(timezone.utc)
+        self._update_count: int = 0
+        self._bus_unsubs: list[Any] = []
 
     @property
     def graph(self) -> ComposedSource:
@@ -349,7 +368,71 @@ class WitnessedGraphService:
             "origin": self.origin,
             "by_origin": dict(by_origin),
             "by_kind": dict(by_kind),
+            "last_update_at": self._last_update_at.isoformat(),
+            "update_count": self._update_count,
         }
+
+    # =========================================================================
+    # Event-Driven Integration (Bus Subscription)
+    # =========================================================================
+
+    async def wire_bus(self) -> None:
+        """
+        Subscribe to bus events for live graph updates.
+
+        Subscribes to:
+        - witness.kblock.saved → New edges from K-Block saves
+        - witness.spec.scanned → Spec ledger updates
+
+        This enables the closed loop:
+            K-Block save → Witness mark → Bus event → Graph update → UI refresh
+        """
+        try:
+            from services.witness.bus import WitnessTopics, get_synergy_bus
+
+            bus = get_synergy_bus()
+
+            # Subscribe to K-Block saves (creates edges via witness marks)
+            unsub1 = bus.subscribe(WitnessTopics.KBLOCK_SAVED, self._on_source_change)
+            self._bus_unsubs.append(unsub1)
+
+            # Subscribe to spec scans (updates spec ledger edges)
+            unsub2 = bus.subscribe(WitnessTopics.SPEC_SCANNED, self._on_source_change)
+            self._bus_unsubs.append(unsub2)
+
+            logger.info("WitnessedGraph wired to bus (KBLOCK_SAVED, SPEC_SCANNED)")
+
+        except ImportError:
+            logger.warning("Witness bus not available - graph won't receive live updates")
+
+    async def unwire_bus(self) -> None:
+        """Unsubscribe from all bus events."""
+        for unsub in self._bus_unsubs:
+            unsub()
+        self._bus_unsubs.clear()
+        logger.info("WitnessedGraph unwired from bus")
+
+    async def _on_source_change(self, topic: str, event: Any) -> None:
+        """
+        Handle source change events.
+
+        Updates the timestamp and count so frontends know to refresh.
+        """
+        self._last_update_at = datetime.now(timezone.utc)
+        self._update_count += 1
+
+        path = event.get("path", "unknown") if isinstance(event, dict) else "unknown"
+        logger.debug(f"Graph source changed: {topic} ({path}), update #{self._update_count}")
+
+    @property
+    def last_update_at(self) -> datetime:
+        """When the graph was last updated (for UI polling)."""
+        return self._last_update_at
+
+    @property
+    def update_count(self) -> int:
+        """Number of updates since service creation (for cache invalidation)."""
+        return self._update_count
 
 
 # =============================================================================

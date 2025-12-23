@@ -181,9 +181,11 @@ class GraphNode(BaseLogosNode):
             origin=stats["origin"],
             by_origin=stats["by_origin"],
             by_kind=stats["by_kind"],
+            last_update_at=stats["last_update_at"],
+            update_count=stats["update_count"],
         )
         return BasicRendering(
-            summary=f"WitnessedGraph: {stats['total_edges']} edges from {stats['sources']} sources",
+            summary=f"WitnessedGraph: {stats['total_edges']} edges from {stats['sources']} sources (v{stats['update_count']})",
             content=json.dumps(asdict(response), indent=2),
             metadata=asdict(response),
         )

@@ -255,13 +255,18 @@ class FileOperadHarness:
 
         if self.witness_enabled and self._witnessed_cosmos is not None:
             # Use witnessed cosmos for audit trail
+            # Include file:{path} tag so WitnessSource can create graph edges
+            # This closes the loop: K-Block save → Witness mark → WitnessedGraph edge
+            path_tag = (
+                f"file:{block.path}" if not block.path.startswith("spec/") else f"spec:{block.path}"
+            )
             trace = WitnessTrace(
                 actor=actor,
                 reasoning=reasoning,
                 proof=proof,
                 kblock_id=str(block.id),
                 delta_summary=delta_summary,
-                tags=("kblock", "save"),
+                tags=("kblock", "save", path_tag),
             )
             result = await self._witnessed_cosmos.commit(
                 path=block.path,
@@ -288,12 +293,49 @@ class FileOperadHarness:
         block.checkpoints.clear()
         block.modified_at = datetime.now(timezone.utc)
 
+        # Emit KBLOCK_SAVED event to bus (closes the loop: save → witness → graph)
+        await self._emit_kblock_saved_event(block, version_id, mark_id, reasoning)
+
         return SaveResult.ok(
             path=block.path,
             version_id=version_id,
             dependents_marked=dependents_marked,
             mark_id=mark_id,
         )
+
+    async def _emit_kblock_saved_event(
+        self,
+        block: KBlock,
+        version_id: VersionId,
+        mark_id: str | None,
+        reasoning: str | None,
+    ) -> None:
+        """
+        Emit KBLOCK_SAVED event to the Witness bus.
+
+        This closes the loop: K-Block save → Bus event → Graph update → UI refresh
+        """
+        try:
+            from services.witness.bus import WitnessTopics, get_synergy_bus
+
+            bus = get_synergy_bus()
+            await bus.publish(
+                WitnessTopics.KBLOCK_SAVED,
+                {
+                    "path": block.path,
+                    "kblock_id": str(block.id),
+                    "version_id": str(version_id),
+                    "mark_id": mark_id,
+                    "reasoning": reasoning,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+        except ImportError:
+            # Bus not available (testing without full infrastructure)
+            pass
+        except Exception:
+            # Non-critical - don't fail save on bus error
+            pass
 
     async def _mark_dependents_stale(self, path: str) -> int:
         """Mark K-Blocks that depend on this path as stale."""

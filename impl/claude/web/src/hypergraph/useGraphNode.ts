@@ -12,7 +12,7 @@
  * - Origin tracking (which source contributed this edge)
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { graphApi, fileApi } from '../api/client';
 import type { ConceptGraphNeighborsResponse } from '../api/types/_generated/concept-graph';
@@ -136,7 +136,19 @@ export interface UseGraphNodeResult {
 
   /** Error state */
   error: string | null;
+
+  /** Graph update count (for cache invalidation) */
+  updateCount: number;
+
+  /** Whether the graph has new updates since last load */
+  hasUpdates: boolean;
+
+  /** Acknowledge updates (reset hasUpdates flag) */
+  acknowledgeUpdates: () => void;
 }
+
+/** Polling interval for checking graph updates (5 seconds) */
+const UPDATE_POLL_INTERVAL = 5000;
 
 /**
  * Hook for loading graph nodes from the WitnessedGraph API.
@@ -145,12 +157,58 @@ export interface UseGraphNodeResult {
  * - Doesn't require explicit discover() call
  * - Returns edges with witness marks (evidence)
  * - Tracks edge origins (which source contributed)
+ * - Polls for updates to enable live refresh
  *
  * "The file is a lie. There is only the graph."
  */
 export function useGraphNode(): UseGraphNodeResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Update tracking state
+  const [updateCount, setUpdateCount] = useState(0);
+  const [hasUpdates, setHasUpdates] = useState(false);
+  const lastKnownUpdateCountRef = useRef(0);
+
+  // Poll for graph updates
+  useEffect(() => {
+    let mounted = true;
+
+    const checkForUpdates = async () => {
+      try {
+        const manifest = await graphApi.manifest();
+        if (mounted && manifest.update_count > lastKnownUpdateCountRef.current) {
+          setUpdateCount(manifest.update_count);
+          setHasUpdates(true);
+          console.info(
+            '[useGraphNode] Graph updated:',
+            manifest.update_count,
+            'at',
+            manifest.last_update_at
+          );
+        }
+      } catch (_e) {
+        // Polling failure is non-critical
+      }
+    };
+
+    // Initial check
+    checkForUpdates();
+
+    // Set up polling interval
+    const interval = setInterval(checkForUpdates, UPDATE_POLL_INTERVAL);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Acknowledge updates
+  const acknowledgeUpdates = useCallback(() => {
+    lastKnownUpdateCountRef.current = updateCount;
+    setHasUpdates(false);
+  }, [updateCount]);
 
   const loadNode = useCallback(async (path: string): Promise<GraphNode | null> => {
     setLoading(true);
@@ -270,5 +328,8 @@ export function useGraphNode(): UseGraphNodeResult {
     loadSiblings,
     loading,
     error,
+    updateCount,
+    hasUpdates,
+    acknowledgeUpdates,
   };
 }

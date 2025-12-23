@@ -73,13 +73,11 @@ LEGACY_COMMANDS: dict[str, str] = {
     "witness dashboard": "self.witness.dashboard",
     "witness stream": "self.witness.stream",
     "witness context": "self.witness.context",
-    # Graph / WitnessedGraph (thin handler mappings)
-    "graph": "concept.graph.manifest",
-    "graph manifest": "concept.graph.manifest",
-    "graph neighbors": "concept.graph.neighbors",
-    "graph evidence": "concept.graph.evidence",
-    "graph trace": "concept.graph.trace",
-    "graph search": "concept.graph.search",
+    # Graph / WitnessedGraph: REMOVED from legacy (2025-12-23)
+    # Now uses thin handler in COMMAND_REGISTRY (graph_thin.py)
+    # which properly calls setup_providers_sync() before AGENTESE invocation
+    # Old entries intercepted the thin handler and routed through _handle_agentese
+    # which didn't bootstrap service providers, causing "node not registered" errors
     # Coffee / Liminal (thin handler mappings)
     "coffee": "time.coffee.manifest",
     "coffee garden": "time.coffee.garden",
@@ -105,7 +103,6 @@ LEGACY_COMMANDS: dict[str, str] = {
     # Town / Multi-agent
     "town": "world.town.manifest",
     "town citizens": "world.town.citizens",
-    "town coalitions": "world.town.coalitions",
     "town inhabit": "world.town.inhabit",
     "town run": "world.town.run",
     # Atelier / Creative

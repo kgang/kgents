@@ -12,6 +12,9 @@ export interface ConceptGraphManifestResponse {
   origin: string;
   by_origin: Record<string, number>;
   by_kind: Record<string, number>;
+  // Event-driven update tracking (for UI refresh)
+  last_update_at: string; // ISO timestamp
+  update_count: number;
 }
 
 /**

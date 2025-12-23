@@ -540,11 +540,16 @@ async def get_witnessed_graph_service() -> "witnessed_graph.WitnessedGraphServic
     spec_source = SpecLedgerSource()
 
     # Compose into unified graph
-    return WitnessedGraphService(
+    service = WitnessedGraphService(
         sovereign_source=sovereign_source,
         witness_source=witness_source,
         spec_source=spec_source,
     )
+
+    # Wire bus for live updates (closes the loop: save → witness → graph → UI)
+    await service.wire_bus()
+
+    return service
 
 
 # =============================================================================

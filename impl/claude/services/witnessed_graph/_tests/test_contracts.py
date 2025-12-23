@@ -125,11 +125,14 @@ class TestGraphManifestResponse:
             origin="sovereign+witness+spec_ledger",
             by_origin={"sovereign": 100, "witness": 30, "spec_ledger": 20},
             by_kind={"IMPORTS": 80, "EVIDENCE": 50, "USES": 20},
+            last_update_at="2025-12-23T00:00:00Z",
+            update_count=42,
         )
 
         assert manifest.total_edges == 150
         assert manifest.sources == 3
         assert manifest.by_origin["sovereign"] == 100
+        assert manifest.update_count == 42
 
     def test_immutability(self) -> None:
         """GraphManifestResponse cannot be mutated."""
@@ -139,6 +142,8 @@ class TestGraphManifestResponse:
             origin="test",
             by_origin={},
             by_kind={},
+            last_update_at="2025-12-23T00:00:00Z",
+            update_count=0,
         )
 
         with pytest.raises(FrozenInstanceError):
@@ -327,7 +332,15 @@ class TestContractRegistration:
         # Create instances of each and verify immutability
         instances = [
             EdgeResponse(kind="X", source_path="a", target_path="b", origin="test"),
-            GraphManifestResponse(total_edges=0, sources=0, origin="", by_origin={}, by_kind={}),
+            GraphManifestResponse(
+                total_edges=0,
+                sources=0,
+                origin="",
+                by_origin={},
+                by_kind={},
+                last_update_at="",
+                update_count=0,
+            ),
             NeighborsRequest(path="test"),
             NeighborsResponse(path="test", incoming=[], outgoing=[], total=0),
             EvidenceRequest(spec_path="test"),
