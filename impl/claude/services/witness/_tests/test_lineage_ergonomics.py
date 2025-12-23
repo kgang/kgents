@@ -140,6 +140,7 @@ class TestMarkResult:
             action="Test action",
             reasoning=None,
             principles=[],
+            tags=[],
             author="kent",
             timestamp=datetime.now(),
             datum_id=None,
@@ -155,11 +156,26 @@ class TestMarkResult:
             action="Test action",
             reasoning=None,
             principles=[],
+            tags=[],
             author="kent",
             timestamp=datetime.now(),
         )
 
         assert result.parent_mark_id is None
+
+    def test_mark_result_has_tags_field(self):
+        """MarkResult should include tags field for evidence tracking."""
+        result = MarkResult(
+            mark_id="mark-123",
+            action="Test action",
+            reasoning=None,
+            principles=["composable"],
+            tags=["spec:principles.md", "evidence:impl"],
+            author="kent",
+            timestamp=datetime.now(),
+        )
+
+        assert result.tags == ["spec:principles.md", "evidence:impl"]
 
 
 # =============================================================================
@@ -179,6 +195,7 @@ class TestTreeQuery:
                 action="Root action",
                 reasoning=None,
                 principles=[],
+                tags=[],
                 author="kent",
                 timestamp=datetime.now(),
                 parent_mark_id=None,
@@ -199,6 +216,7 @@ class TestTreeQuery:
                 action="Root",
                 reasoning=None,
                 principles=[],
+                tags=[],
                 author="kent",
                 timestamp=datetime.now(),
                 parent_mark_id=None,
@@ -208,6 +226,7 @@ class TestTreeQuery:
                 action="Child 1",
                 reasoning=None,
                 principles=[],
+                tags=[],
                 author="kent",
                 timestamp=datetime.now() + timedelta(minutes=1),
                 parent_mark_id="mark-root",
@@ -217,6 +236,7 @@ class TestTreeQuery:
                 action="Child 2",
                 reasoning=None,
                 principles=[],
+                tags=[],
                 author="kent",
                 timestamp=datetime.now() + timedelta(minutes=2),
                 parent_mark_id="mark-root",
@@ -248,6 +268,7 @@ class TestTreeQuery:
                 action="Root",
                 reasoning=None,
                 principles=[],
+                tags=[],
                 author="kent",
                 timestamp=datetime.now(),
                 parent_mark_id=None,
@@ -257,6 +278,7 @@ class TestTreeQuery:
                 action="Child",
                 reasoning=None,
                 principles=[],
+                tags=[],
                 author="kent",
                 timestamp=datetime.now(),
                 parent_mark_id="mark-root",
@@ -266,6 +288,7 @@ class TestTreeQuery:
                 action="Grandchild",
                 reasoning=None,
                 principles=[],
+                tags=[],
                 author="kent",
                 timestamp=datetime.now(),
                 parent_mark_id="mark-child",
@@ -275,6 +298,7 @@ class TestTreeQuery:
                 action="Great",
                 reasoning=None,
                 principles=[],
+                tags=[],
                 author="kent",
                 timestamp=datetime.now(),
                 parent_mark_id="mark-grandchild",
@@ -316,6 +340,7 @@ class TestAncestryQuery:
             action="Root",
             reasoning=None,
             principles=[],
+            tags=[],
             author="kent",
             timestamp=datetime.now(),
             parent_mark_id=None,
@@ -335,6 +360,7 @@ class TestAncestryQuery:
             action="Root",
             reasoning=None,
             principles=[],
+            tags=[],
             author="kent",
             timestamp=datetime.now(),
             parent_mark_id=None,
@@ -344,6 +370,7 @@ class TestAncestryQuery:
             action="Child",
             reasoning=None,
             principles=[],
+            tags=[],
             author="kent",
             timestamp=datetime.now(),
             parent_mark_id="mark-root",

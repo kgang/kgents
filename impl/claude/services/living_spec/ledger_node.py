@@ -98,6 +98,25 @@ async def _emit_witness_event(topic: str, event: dict[str, Any]) -> None:
         logger.debug(f"Emitted witness event: {topic}")
 
 
+async def _get_witness_persistence() -> Any | None:
+    """
+    Get the WitnessPersistence instance.
+
+    Returns None if witness persistence not available.
+    This enables graceful degradation when running without full witness stack.
+    """
+    try:
+        from services.providers import get_witness_persistence
+
+        return await get_witness_persistence()
+    except ImportError as e:
+        logger.debug(f"Witness persistence not available: {e}")
+        return None
+    except Exception as e:
+        logger.warning(f"Could not create witness persistence: {e}")
+        return None
+
+
 def get_spec_root() -> Path:
     """Get the spec root directory."""
     # Navigate up from this file to find spec/
@@ -563,22 +582,32 @@ class LedgerNode:
         spec_path: str,
         evidence_path: str,
         evidence_type: str = "implementation",
+        author: str = "system",
+        reasoning: str | None = None,
     ) -> dict[str, Any]:
         """
         Link evidence (implementation/test) to a spec.
 
         This is a TRANSACTION in the accounting sense:
-        - Records when evidence was linked
+        - Creates a DECLARATION MARK in the witness system
         - Emits SPEC_EVIDENCE_ADDED witness event
         - May transition spec from ORPHAN → ACTIVE if first evidence
+
+        Unified Evidence-as-Marks:
+            Evidence is stored as witness marks with specific tags:
+            - spec:{path} — Links mark to a spec
+            - evidence:{type} — Type of evidence (impl, test, usage)
+            - file:{path} — The evidence file path
 
         Args:
             spec_path: Path to spec file (relative to spec/)
             evidence_path: Path to implementation/test file
             evidence_type: One of "implementation", "test", "usage"
+            author: Who is declaring this evidence (default: "system")
+            reasoning: Optional reasoning for why this is evidence
 
         Returns:
-            Result of evidence linking
+            Result of evidence linking (includes mark_id)
 
         Emits:
             witness.spec.evidence_added — Evidence transaction record
@@ -593,6 +622,9 @@ class LedgerNode:
                 "success": False,
                 "error": f"Invalid evidence_type: {evidence_type}. Must be one of {valid_types}",
             }
+
+        # Map to short form for tags
+        type_short = {"implementation": "impl", "test": "test", "usage": "usage"}[evidence_type]
 
         # Ensure we have scanned data
         report = await ensure_scanned()
@@ -626,7 +658,38 @@ class LedgerNode:
         # Record the transaction timestamp
         timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
-        # Emit witness event
+        # Normalize spec path for tag
+        spec_tag_path = spec.path.replace("spec/", "")
+
+        # Create the declaration mark via witness persistence
+        mark_id: str | None = None
+        try:
+            persistence = await _get_witness_persistence()
+            if persistence:
+                # Build evidence tags
+                tags = [
+                    f"spec:{spec_tag_path}",
+                    f"evidence:{type_short}",
+                    f"file:{evidence_path}",
+                ]
+                if is_first_evidence:
+                    tags.append("first-evidence")
+
+                # Create the mark
+                mark_result = await persistence.save_mark(
+                    action=f"Declared {evidence_type} evidence: {evidence_path} → {spec.path}",
+                    reasoning=reasoning
+                    or f"Links {evidence_path} as {evidence_type} for {spec.path}",
+                    principles=["composable", "generative"],  # Evidence supports spec
+                    tags=tags,
+                    author=author,
+                )
+                mark_id = mark_result.mark_id
+                logger.info(f"Evidence mark created: {mark_id}")
+        except Exception as e:
+            logger.warning(f"Could not create evidence mark: {e}")
+
+        # Emit witness event (for cross-jewel awareness)
         _, topics = _get_witness_bus()
         if topics:
             await _emit_witness_event(
@@ -640,12 +703,9 @@ class LedgerNode:
                     "was_orphan": was_orphan,
                     "is_first_evidence": is_first_evidence,
                     "timestamp": timestamp,
+                    "mark_id": mark_id,
                 },
             )
-
-        # Note: This doesn't persist the link yet (Phase 2 needs DB)
-        # For now, we emit the witness event as the transaction record
-        # The analyzer will pick up the link on next scan if files reference each other
 
         logger.info(f"Evidence linked: {evidence_path} → {spec.path} ({evidence_type})")
 
@@ -659,10 +719,216 @@ class LedgerNode:
             "was_orphan": was_orphan,
             "is_first_evidence": is_first_evidence,
             "timestamp": timestamp,
-            "note": "Transaction witnessed. Full persistence requires Phase 2 (DB)."
-            if not evidence_exists
-            else None,
+            "mark_id": mark_id,
         }
+
+    async def evidence_query(
+        self,
+        spec_path: str,
+        evidence_type: str | None = None,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        """
+        Query evidence for a spec from the witness mark system.
+
+        Returns both declared evidence (explicit links) and emergent evidence
+        (activity marks) for the spec.
+
+        Args:
+            spec_path: Path to spec file
+            evidence_type: Filter by type ("impl", "test", "usage", or None for all)
+            limit: Maximum evidence marks to return
+
+        Returns:
+            Evidence summary with marks
+        """
+        try:
+            persistence = await _get_witness_persistence()
+            if not persistence:
+                return {
+                    "success": False,
+                    "error": "Witness persistence not available",
+                }
+
+            evidence = await persistence.get_evidence_for_spec(
+                spec_path=spec_path,
+                evidence_type=evidence_type,
+                limit=limit,
+            )
+
+            # Group by evidence type
+            by_type: dict[str, list[dict[str, Any]]] = {
+                "impl": [],
+                "test": [],
+                "usage": [],
+            }
+
+            for mark in evidence:
+                for tag in mark.tags:
+                    if tag.startswith("evidence:"):
+                        etype = tag[9:]
+                        if etype in by_type:
+                            by_type[etype].append(
+                                {
+                                    "mark_id": mark.mark_id,
+                                    "action": mark.action,
+                                    "reasoning": mark.reasoning,
+                                    "author": mark.author,
+                                    "timestamp": mark.timestamp.isoformat()
+                                    if mark.timestamp
+                                    else None,
+                                    "tags": mark.tags,
+                                }
+                            )
+                        break
+
+            return {
+                "success": True,
+                "spec_path": spec_path,
+                "total_evidence": len(evidence),
+                "by_type": by_type,
+                "marks": [
+                    {
+                        "mark_id": m.mark_id,
+                        "action": m.action,
+                        "author": m.author,
+                        "timestamp": m.timestamp.isoformat() if m.timestamp else None,
+                        "tags": m.tags,
+                    }
+                    for m in evidence
+                ],
+            }
+
+        except Exception as e:
+            logger.error(f"Error querying evidence: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+            }
+
+    async def evidence_verify(self, spec_path: str) -> dict[str, Any]:
+        """
+        Verify all evidence for a spec is still valid.
+
+        Checks:
+        - Files referenced in evidence marks still exist
+        - Tests still pass (future: run tests)
+
+        Args:
+            spec_path: Path to spec file
+
+        Returns:
+            Verification result with status for each evidence item
+        """
+        from pathlib import Path as P
+
+        try:
+            persistence = await _get_witness_persistence()
+            if not persistence:
+                return {
+                    "success": False,
+                    "error": "Witness persistence not available",
+                }
+
+            evidence = await persistence.get_evidence_for_spec(spec_path)
+
+            # Verify each evidence file exists
+            verification_results = []
+            valid_count = 0
+            stale_count = 0
+            broken_count = 0
+
+            impl_root = P(__file__).resolve().parents[2]
+
+            for mark in evidence:
+                # Extract file path from tags
+                file_path = None
+                evidence_type = None
+                for tag in mark.tags:
+                    if tag.startswith("file:"):
+                        file_path = tag[5:]
+                    elif tag.startswith("evidence:"):
+                        evidence_type = tag[9:]
+
+                if not file_path:
+                    continue
+
+                # Check if file exists
+                exists = P(file_path).exists()
+                if not exists:
+                    alt_path = impl_root / file_path.replace("impl/claude/", "")
+                    exists = alt_path.exists()
+
+                status = "valid" if exists else "broken"
+                if status == "valid":
+                    valid_count += 1
+                else:
+                    broken_count += 1
+
+                verification_results.append(
+                    {
+                        "mark_id": mark.mark_id,
+                        "file_path": file_path,
+                        "evidence_type": evidence_type,
+                        "status": status,
+                        "exists": exists,
+                    }
+                )
+
+            return {
+                "success": True,
+                "spec_path": spec_path,
+                "total": len(verification_results),
+                "valid": valid_count,
+                "stale": stale_count,
+                "broken": broken_count,
+                "results": verification_results,
+            }
+
+        except Exception as e:
+            logger.error(f"Error verifying evidence: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+            }
+
+    async def evidence_summary(self) -> dict[str, Any]:
+        """
+        Get a summary of evidence across all specs.
+
+        Returns counts of evidence by spec and type.
+        """
+        try:
+            persistence = await _get_witness_persistence()
+            if not persistence:
+                return {
+                    "success": False,
+                    "error": "Witness persistence not available",
+                }
+
+            counts = await persistence.count_evidence_by_spec()
+
+            # Calculate totals
+            total_specs = len(counts)
+            total_impl = sum(c["impl"] for c in counts.values())
+            total_test = sum(c["test"] for c in counts.values())
+            total_usage = sum(c["usage"] for c in counts.values())
+
+            return {
+                "success": True,
+                "total_specs_with_evidence": total_specs,
+                "total_impl": total_impl,
+                "total_test": total_test,
+                "total_usage": total_usage,
+                "by_spec": counts,
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting evidence summary: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+            }
 
     async def deprecate(self, paths: list[str], reason: str) -> dict[str, Any]:
         """

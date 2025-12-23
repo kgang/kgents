@@ -208,7 +208,70 @@ class EvidenceAddResponse(BaseModel):
     was_orphan: bool
     is_first_evidence: bool
     timestamp: str
+    mark_id: str | None = None
     note: str | None = None
+
+
+class EvidenceMark(BaseModel):
+    """Single evidence mark from witness system."""
+
+    mark_id: str
+    action: str
+    reasoning: str | None
+    author: str
+    timestamp: str | None
+    tags: list[str]
+
+
+class EvidenceByType(BaseModel):
+    """Evidence grouped by type."""
+
+    impl: list[EvidenceMark]
+    test: list[EvidenceMark]
+    usage: list[EvidenceMark]
+
+
+class EvidenceQueryResponse(BaseModel):
+    """Response from evidence query."""
+
+    success: bool
+    spec_path: str
+    total_evidence: int
+    by_type: EvidenceByType
+    marks: list[EvidenceMark]
+
+
+class EvidenceVerifyResult(BaseModel):
+    """Single evidence verification result."""
+
+    mark_id: str
+    file_path: str
+    evidence_type: str | None
+    status: str
+    exists: bool
+
+
+class EvidenceVerifyResponse(BaseModel):
+    """Response from evidence verification."""
+
+    success: bool
+    spec_path: str
+    total: int
+    valid: int
+    stale: int
+    broken: int
+    results: list[EvidenceVerifyResult]
+
+
+class EvidenceSummaryResponse(BaseModel):
+    """Response from evidence summary."""
+
+    success: bool
+    total_specs_with_evidence: int
+    total_impl: int
+    total_test: int
+    total_usage: int
+    by_spec: dict[str, dict[str, int]]
 
 
 class DeprecateRequest(BaseModel):
@@ -387,7 +450,7 @@ def create_spec_ledger_router() -> Optional["APIRouter"]:
         """
         Link evidence (implementation/test) to a spec.
 
-        This is an accounting transaction — emits SPEC_EVIDENCE_ADDED witness event.
+        This is an accounting transaction — creates a witness mark with evidence tags.
         """
         node = get_ledger_node()
         result = await node.evidence_add(
@@ -411,7 +474,94 @@ def create_spec_ledger_router() -> Optional["APIRouter"]:
             was_orphan=result["was_orphan"],
             is_first_evidence=result["is_first_evidence"],
             timestamp=result["timestamp"],
+            mark_id=result.get("mark_id"),
             note=result.get("note"),
+        )
+
+    @router.get("/evidence/query", response_model=EvidenceQueryResponse)
+    async def query_evidence(
+        path: str = Query(..., description="Spec path to query evidence for"),
+        evidence_type: Optional[str] = Query(None, description="Filter by type: impl, test, usage"),
+        limit: int = Query(50, ge=1, le=200, description="Max results"),
+    ) -> EvidenceQueryResponse:
+        """
+        Query evidence for a spec from the witness mark system.
+
+        Returns declared evidence (explicit links) from witness marks.
+        """
+        node = get_ledger_node()
+        result = await node.evidence_query(
+            spec_path=path,
+            evidence_type=evidence_type,
+            limit=limit,
+        )
+
+        if not result["success"]:
+            raise HTTPException(
+                status_code=400, detail=result.get("error", "Failed to query evidence")
+            )
+
+        return EvidenceQueryResponse(
+            success=result["success"],
+            spec_path=result["spec_path"],
+            total_evidence=result["total_evidence"],
+            by_type=EvidenceByType(
+                impl=[EvidenceMark(**m) for m in result["by_type"]["impl"]],
+                test=[EvidenceMark(**m) for m in result["by_type"]["test"]],
+                usage=[EvidenceMark(**m) for m in result["by_type"]["usage"]],
+            ),
+            marks=[EvidenceMark(**m) for m in result["marks"]],
+        )
+
+    @router.post("/evidence/verify", response_model=EvidenceVerifyResponse)
+    async def verify_evidence(
+        path: str = Query(..., description="Spec path to verify evidence for"),
+    ) -> EvidenceVerifyResponse:
+        """
+        Verify all evidence for a spec is still valid.
+
+        Checks if evidence files still exist on disk.
+        """
+        node = get_ledger_node()
+        result = await node.evidence_verify(spec_path=path)
+
+        if not result["success"]:
+            raise HTTPException(
+                status_code=400, detail=result.get("error", "Failed to verify evidence")
+            )
+
+        return EvidenceVerifyResponse(
+            success=result["success"],
+            spec_path=result["spec_path"],
+            total=result["total"],
+            valid=result["valid"],
+            stale=result["stale"],
+            broken=result["broken"],
+            results=[EvidenceVerifyResult(**r) for r in result["results"]],
+        )
+
+    @router.get("/evidence/summary", response_model=EvidenceSummaryResponse)
+    async def get_evidence_summary() -> EvidenceSummaryResponse:
+        """
+        Get summary of evidence across all specs.
+
+        Returns counts by spec and evidence type.
+        """
+        node = get_ledger_node()
+        result = await node.evidence_summary()
+
+        if not result["success"]:
+            raise HTTPException(
+                status_code=400, detail=result.get("error", "Failed to get evidence summary")
+            )
+
+        return EvidenceSummaryResponse(
+            success=result["success"],
+            total_specs_with_evidence=result["total_specs_with_evidence"],
+            total_impl=result["total_impl"],
+            total_test=result["total_test"],
+            total_usage=result["total_usage"],
+            by_spec=result["by_spec"],
         )
 
     @router.post("/deprecate", response_model=DeprecateResponse)

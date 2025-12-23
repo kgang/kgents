@@ -21,7 +21,6 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
-    JSON,
     Boolean,
     DateTime,
     Float,
@@ -32,6 +31,7 @@ from sqlalchemy import (
     Text,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
@@ -145,7 +145,7 @@ class WitnessThought(TimestampMixin, Base):
     # Content
     content: Mapped[str] = mapped_column(Text, nullable=False)
     source: Mapped[str] = mapped_column(String(64), nullable=False)  # git, tests, ci, etc.
-    tags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    tags: Mapped[list[str]] = mapped_column(JSONB, default=list)
 
     # D-gent link for semantic search
     datum_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
@@ -244,8 +244,19 @@ class WitnessMark(TimestampMixin, Base):
     - Every action leaves a mark
     - Marks are immutable once created
     - Marks can have reasoning and principles
+    - Marks can have tags for categorization and querying
 
     Used by the `km` CLI command for everyday mark-making.
+
+    Evidence Tag Taxonomy (spec/protocols/living-spec-evidence.md):
+    - spec:{path}        — Mark relates to a spec (e.g., spec:principles.md)
+    - evidence:impl      — Declares implementation evidence
+    - evidence:test      — Declares test evidence
+    - evidence:usage     — Declares usage evidence
+    - evidence:run       — Records a test run
+    - evidence:pass      — Test passed
+    - evidence:fail      — Test failed
+    - eureka, gotcha, taste, friction, joy, veto — Session tags
 
     AGENTESE: world.witness.mark / time.witness.mark
     """
@@ -260,8 +271,12 @@ class WitnessMark(TimestampMixin, Base):
     # Why (optional but encouraged)
     reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Which principles honored (stored as JSON array)
-    principles: Mapped[list[str]] = mapped_column(JSON, default=list)
+    # Which principles honored (stored as JSONB array for GIN indexing)
+    principles: Mapped[list[str]] = mapped_column(JSONB, default=list)
+
+    # General tags for categorization (stored as JSONB array for GIN indexing)
+    # Includes evidence tags (spec:*, evidence:*) and session tags (eureka, gotcha, etc.)
+    tags: Mapped[list[str]] = mapped_column(JSONB, default=list)
 
     # Authorship
     author: Mapped[str] = mapped_column(String(64), default="kent", nullable=False)
@@ -287,6 +302,8 @@ class WitnessMark(TimestampMixin, Base):
         Index("idx_witness_marks_recent", "created_at"),
         Index("idx_witness_marks_author", "author"),
         Index("idx_witness_marks_session", "session_id"),
+        Index("idx_witness_marks_tags", "tags", postgresql_using="gin"),
+        Index("idx_witness_marks_principles", "principles", postgresql_using="gin"),
     )
 
 

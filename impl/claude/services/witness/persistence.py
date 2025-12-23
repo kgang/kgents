@@ -124,6 +124,7 @@ class MarkResult:
     action: str
     reasoning: str | None
     principles: list[str]
+    tags: list[str]
     author: str
     timestamp: datetime
     datum_id: str | None = None
@@ -712,6 +713,7 @@ class WitnessPersistence:
         action: str,
         reasoning: str | None = None,
         principles: list[str] | None = None,
+        tags: list[str] | None = None,
         author: str = "kent",
         session_id: str | None = None,
         repository_path: str | None = None,
@@ -730,10 +732,20 @@ class WitnessPersistence:
             action: What was done
             reasoning: Why (optional but encouraged)
             principles: Which principles honored
+            tags: Categorization tags (evidence tags, session tags, etc.)
             author: Who made the mark
             session_id: Optional session context
             repository_path: Optional repository context
             parent_mark_id: Optional parent mark for causal lineage
+
+        Evidence Tags:
+            - spec:{path}     — Links mark to a spec
+            - evidence:impl   — Implementation evidence declaration
+            - evidence:test   — Test evidence declaration
+            - evidence:usage  — Usage evidence declaration
+            - evidence:run    — Records a test run
+            - evidence:pass   — Test passed
+            - evidence:fail   — Test failed
 
         Returns:
             MarkResult with mark_id and storage details
@@ -754,6 +766,7 @@ class WitnessPersistence:
             "type": "witness_mark",
             "author": author,
             "principles": ",".join(principles or []),
+            "tags": ",".join(tags or []),
         }
 
         content_parts = [action]
@@ -761,6 +774,8 @@ class WitnessPersistence:
             content_parts.append(f"Reasoning: {reasoning}")
         if principles:
             content_parts.append(f"Principles: {', '.join(principles)}")
+        if tags:
+            content_parts.append(f"Tags: {', '.join(tags)}")
 
         datum = Datum(
             id=f"witness-{mark_id}",
@@ -779,6 +794,7 @@ class WitnessPersistence:
                 action=action,
                 reasoning=reasoning,
                 principles=list(principles or []),
+                tags=list(tags or []),
                 author=author,
                 session_id=session_id,
                 parent_mark_id=parent_mark_id,
@@ -793,6 +809,7 @@ class WitnessPersistence:
             action=action,
             reasoning=reasoning,
             principles=list(principles or []),
+            tags=list(tags or []),
             author=author,
             timestamp=datetime.now(UTC),
             datum_id=datum_id,
@@ -815,6 +832,8 @@ class WitnessPersistence:
         author: str | None = None,
         session_id: str | None = None,
         since: datetime | None = None,
+        tags: list[str] | None = None,
+        tag_prefix: str | None = None,
     ) -> list["MarkResult"]:
         """
         Get recent marks with optional filters.
@@ -826,6 +845,8 @@ class WitnessPersistence:
             author: Filter by author
             session_id: Filter by session
             since: Filter by created_at > since
+            tags: Filter by exact tag match (any of these tags)
+            tag_prefix: Filter by tag prefix (e.g., "spec:" for all spec-related)
 
         Returns:
             List of MarkResult objects, newest first
@@ -847,19 +868,32 @@ class WitnessPersistence:
             result = await session.execute(stmt)
             rows = result.scalars().all()
 
-            return [
-                MarkResult(
-                    mark_id=row.id,
-                    action=row.action,
-                    reasoning=row.reasoning,
-                    principles=list(row.principles) if row.principles else [],
-                    author=row.author,
-                    timestamp=row.created_at,
-                    datum_id=row.datum_id,
-                    parent_mark_id=row.parent_mark_id,
+            # Filter by tags in-memory (JSON array filtering varies by DB)
+            marks = []
+            for row in rows:
+                row_tags = list(row.tags) if row.tags else []
+
+                # Apply tag filters
+                if tags and not any(t in row_tags for t in tags):
+                    continue
+                if tag_prefix and not any(t.startswith(tag_prefix) for t in row_tags):
+                    continue
+
+                marks.append(
+                    MarkResult(
+                        mark_id=row.id,
+                        action=row.action,
+                        reasoning=row.reasoning,
+                        principles=list(row.principles) if row.principles else [],
+                        tags=row_tags,
+                        author=row.author,
+                        timestamp=row.created_at,
+                        datum_id=row.datum_id,
+                        parent_mark_id=row.parent_mark_id,
+                    )
                 )
-                for row in rows
-            ]
+
+            return marks
 
     async def get_mark(self, mark_id: str) -> "MarkResult | None":
         """
@@ -883,6 +917,7 @@ class WitnessPersistence:
                 action=row.action,
                 reasoning=row.reasoning,
                 principles=list(row.principles) if row.principles else [],
+                tags=list(row.tags) if row.tags else [],
                 author=row.author,
                 timestamp=row.created_at,
                 datum_id=row.datum_id,
@@ -929,6 +964,7 @@ class WitnessPersistence:
                         action=row.action,
                         reasoning=row.reasoning,
                         principles=list(row.principles) if row.principles else [],
+                        tags=list(row.tags) if row.tags else [],
                         author=row.author,
                         timestamp=row.created_at,
                         datum_id=row.datum_id,
@@ -982,6 +1018,7 @@ class WitnessPersistence:
                         action=row.action,
                         reasoning=row.reasoning,
                         principles=list(row.principles) if row.principles else [],
+                        tags=list(row.tags) if row.tags else [],
                         author=row.author,
                         timestamp=row.created_at,
                         datum_id=row.datum_id,
@@ -992,6 +1029,121 @@ class WitnessPersistence:
                 current_id = row.parent_mark_id
 
         return results
+
+    # =========================================================================
+    # Evidence Operations (Unified Evidence-as-Marks)
+    # =========================================================================
+
+    async def get_evidence_for_spec(
+        self,
+        spec_path: str,
+        evidence_type: str | None = None,
+        limit: int = 100,
+    ) -> list["MarkResult"]:
+        """
+        Get all evidence marks for a spec.
+
+        Evidence is encoded as marks with specific tags:
+        - spec:{path} — Links mark to a spec
+        - evidence:impl — Implementation evidence
+        - evidence:test — Test evidence
+        - evidence:usage — Usage evidence
+
+        Args:
+            spec_path: The spec path (e.g., "principles.md" or "spec/principles.md")
+            evidence_type: Filter by type ("impl", "test", "usage", or None for all)
+            limit: Maximum marks to return
+
+        Returns:
+            List of MarkResult objects representing evidence
+        """
+        # Normalize spec path for matching
+        spec_tag = f"spec:{spec_path.replace('spec/', '')}"
+
+        # Query marks with the spec tag
+        marks = await self.get_marks(limit=limit * 2, tag_prefix="spec:")
+
+        # Filter to this specific spec
+        evidence = []
+        for mark in marks:
+            if spec_tag not in mark.tags:
+                continue
+
+            # Filter by evidence type if specified
+            if evidence_type:
+                type_tag = f"evidence:{evidence_type}"
+                if type_tag not in mark.tags:
+                    continue
+
+            evidence.append(mark)
+
+            if len(evidence) >= limit:
+                break
+
+        return evidence
+
+    async def get_specs_with_evidence(self, limit: int = 100) -> dict[str, list["MarkResult"]]:
+        """
+        Get all specs that have evidence marks.
+
+        Returns a mapping of spec paths to their evidence marks.
+
+        Args:
+            limit: Maximum total marks to scan
+
+        Returns:
+            Dict mapping spec path to list of evidence marks
+        """
+        # Get all marks with spec: tag prefix
+        marks = await self.get_marks(limit=limit, tag_prefix="spec:")
+
+        # Group by spec path
+        by_spec: dict[str, list[MarkResult]] = {}
+        for mark in marks:
+            for tag in mark.tags:
+                if tag.startswith("spec:"):
+                    spec_path = tag[5:]  # Remove "spec:" prefix
+                    if spec_path not in by_spec:
+                        by_spec[spec_path] = []
+                    by_spec[spec_path].append(mark)
+                    break  # Only count once per mark
+
+        return by_spec
+
+    async def count_evidence_by_spec(self) -> dict[str, dict[str, int]]:
+        """
+        Count evidence by spec and type.
+
+        Returns a nested dict: {spec_path: {evidence_type: count}}
+
+        Example:
+            {
+                "principles.md": {"impl": 3, "test": 2, "usage": 0},
+                "k-block.md": {"impl": 2, "test": 5, "usage": 1},
+            }
+        """
+        marks = await self.get_marks(limit=500, tag_prefix="spec:")
+
+        counts: dict[str, dict[str, int]] = {}
+        for mark in marks:
+            spec_path = None
+            evidence_types = []
+
+            for tag in mark.tags:
+                if tag.startswith("spec:"):
+                    spec_path = tag[5:]
+                elif tag.startswith("evidence:"):
+                    evidence_types.append(tag[9:])
+
+            if spec_path:
+                if spec_path not in counts:
+                    counts[spec_path] = {"impl": 0, "test": 0, "usage": 0}
+
+                for etype in evidence_types:
+                    if etype in counts[spec_path]:
+                        counts[spec_path][etype] += 1
+
+        return counts
 
     # =========================================================================
     # Status Operations
