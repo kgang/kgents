@@ -70,6 +70,7 @@ if TYPE_CHECKING:
     from services.metabolism.persistence import MetabolismPersistence
     from services.morpheus.persistence import MorpheusPersistence
     from services.principles import PrincipleLoader
+    from services.sovereign.store import SovereignStore
     from services.tooling import ToolExecutor, ToolRegistry
     from services.verification import VerificationPersistence
     from services.witness import WitnessPersistence
@@ -458,6 +459,17 @@ async def get_fusion_service() -> "FusionService":
 # =============================================================================
 
 
+async def get_sovereign_store() -> "SovereignStore":
+    """
+    Get the SovereignStore for inbound sovereignty.
+
+    Manages sovereign copies of ingested entities.
+    """
+    from services.sovereign.store import SovereignStore
+
+    return SovereignStore()
+
+
 async def get_embedder() -> "SentenceTransformerEmbedder | None":
     """
     Get SentenceTransformer embedder for semantic similarity.
@@ -558,6 +570,9 @@ async def setup_providers() -> None:
     # Trail Intelligence (Visual Trail Graph Session 3)
     container.register("embedder", get_embedder, singleton=True)
 
+    # Sovereign Crown Jewel (Inbound Sovereignty)
+    container.register("sovereign_store", get_sovereign_store, singleton=True)
+
     logger.info(
         "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion)"
     )
@@ -620,6 +635,14 @@ async def setup_providers() -> None:
         logger.info("FusionNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"FusionNode not available: {e}")
+
+    # Sovereign Crown Jewel (Inbound Sovereignty)
+    try:
+        from services.sovereign import SovereignNode  # noqa: F401
+
+        logger.info("SovereignNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"SovereignNode not available: {e}")
 
     # Wire KgentSoul to SoulNode
     try:
@@ -706,4 +729,6 @@ __all__ = [
     "get_fusion_service",
     # Trail Intelligence
     "get_embedder",
+    # Sovereign Crown Jewel
+    "get_sovereign_store",
 ]

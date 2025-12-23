@@ -206,6 +206,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "derivation": "protocols.cli.handlers.derivation:cmd_derivation",
     "derive": "protocols.cli.handlers.derivation:cmd_derivation",  # alias
+    # ==========================================================================
+    # SOVEREIGN: Inbound Sovereignty - possess, don't reference (concept.sovereign.*)
+    # Bootstrap, ingest, sync, diff - all data enters witnessed
+    # ==========================================================================
+    "sovereign": "protocols.cli.handlers.sovereign_thin:cmd_sovereign",
 }
 
 
@@ -817,6 +822,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "brain",  # Brain extinction queries (local + daemon compatible)
         "docs",  # Living Docs (local + daemon compatible)
         "witness",  # Witness dashboard needs stdin for interactive mode
+        "sovereign",  # Inbound Sovereignty (local file operations)
     }
 
     if command not in LOCAL_ONLY_COMMANDS:

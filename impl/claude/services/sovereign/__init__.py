@@ -41,6 +41,7 @@ from .ingest import (
     ingest_content,
     ingest_file,
 )
+from .node import SovereignNode
 from .store import SovereignStore
 from .types import (
     Annotation,
@@ -73,4 +74,6 @@ __all__ = [
     "extract_edges",
     "ingest_file",
     "ingest_content",
+    # AGENTESE Node
+    "SovereignNode",
 ]
