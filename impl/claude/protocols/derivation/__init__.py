@@ -81,6 +81,7 @@ See spec/protocols/derivation-framework.md for full specification.
 See spec/bootstrap.md for the axiom base.
 """
 
+# Phase 3B: Witnessed Edges (Evidence on Edges)
 # Phase 2: ASHC Integration
 from .ashc_bridge import (
     extract_principle_evidence,
@@ -125,6 +126,12 @@ from .decay import (
     run_decay_cycle,
     set_activity_store,
     should_refresh_agent,
+)
+from .edges import (
+    DerivationRationale,
+    EdgeType,
+    PrincipleFlow,
+    WitnessedEdge,
 )
 
 # Phase 6: Cross-Protocol Integration
@@ -215,6 +222,11 @@ __all__ = [
     "denial_weakens_derivation",
     "walk_updates_derivations",
     "sync_witness_to_derivations",
+    # Phase 3B: Witnessed Edges
+    "EdgeType",
+    "PrincipleFlow",
+    "DerivationRationale",
+    "WitnessedEdge",
     # Phase 4: Decay & Refresh
     "DecayConfig",
     "DEFAULT_CONFIG",

@@ -14,6 +14,7 @@ Also tests CONSTITUTION as the axiomatic root of the derivation DAG.
 import pytest
 
 from ..bootstrap import BOOTSTRAP_AGENT_NAMES, CONSTITUTION_DERIVATION, SEVEN_PRINCIPLES
+from ..edges import DerivationRationale, PrincipleFlow, WitnessedEdge
 from ..registry import DerivationDAG, DerivationRegistry, get_registry, reset_registry
 from ..types import DerivationTier, EvidenceType, PrincipleDraw
 
@@ -511,3 +512,251 @@ class TestConstitutionAsRoot:
         assert constitution.agent_name == CONSTITUTION_DERIVATION.agent_name
         assert constitution.tier == CONSTITUTION_DERIVATION.tier
         assert len(constitution.principle_draws) == len(CONSTITUTION_DERIVATION.principle_draws)
+
+
+class TestRegistryEdges:
+    """
+    Tests for WitnessedEdge storage in the registry (Phase 3B).
+
+    These tests verify:
+    - Bootstrap edges are seeded with categorical evidence
+    - get_edge returns empty edges for non-stored edges
+    - update_edge validates structural existence
+    - Categorical edges cannot be weakened (Law 3)
+    - edges_for and outgoing_edges query methods
+    """
+
+    def test_bootstrap_edges_seeded(self) -> None:
+        """Bootstrap edges (CONSTITUTION -> bootstrap) are pre-populated."""
+        registry = DerivationRegistry()
+
+        for name in BOOTSTRAP_AGENT_NAMES:
+            edge = registry.get_edge("CONSTITUTION", name)
+            assert edge.source == "CONSTITUTION"
+            assert edge.target == name
+            assert edge.is_categorical
+            assert edge.edge_strength == 1.0
+
+    def test_bootstrap_edge_has_rationale(self) -> None:
+        """Bootstrap edges have axiomatic rationale."""
+        registry = DerivationRegistry()
+
+        edge = registry.get_edge("CONSTITUTION", "Id")
+        assert edge.rationale is not None
+        assert "axiomatic" in edge.rationale.summary.lower()
+        assert edge.rationale.decision_id == "bootstrap"
+
+    def test_get_edge_returns_empty_for_unstored(self) -> None:
+        """get_edge returns empty edge if not stored."""
+        registry = DerivationRegistry()
+
+        # Register a new agent
+        registry.register(
+            "Test",
+            derives_from=("Id",),
+            principle_draws=(),
+            tier=DerivationTier.FUNCTOR,
+        )
+
+        # Edge exists structurally but has no stored metadata
+        edge = registry.get_edge("Id", "Test")
+        assert edge.source == "Id"
+        assert edge.target == "Test"
+        assert edge.evidence_count == 0
+        assert edge.edge_strength == 0.5  # Default
+
+    def test_update_edge_stores_metadata(self) -> None:
+        """update_edge stores edge metadata."""
+        registry = DerivationRegistry()
+
+        registry.register(
+            "Test",
+            derives_from=("Id",),
+            principle_draws=(),
+            tier=DerivationTier.FUNCTOR,
+        )
+
+        # Get, modify, update
+        edge = registry.get_edge("Id", "Test")
+        updated = edge.with_mark("mark-123")
+        registry.update_edge(updated)
+
+        # Fetch again - should have the mark
+        fetched = registry.get_edge("Id", "Test")
+        assert "mark-123" in fetched.mark_ids
+        assert fetched.edge_strength > 0.5
+
+    def test_update_edge_validates_target_exists(self) -> None:
+        """update_edge raises KeyError if target not in registry."""
+        registry = DerivationRegistry()
+
+        edge = WitnessedEdge.empty("Id", "NotRegistered")
+
+        with pytest.raises(KeyError, match="NotRegistered"):
+            registry.update_edge(edge)
+
+    def test_update_edge_validates_structural_existence(self) -> None:
+        """update_edge raises ValueError if edge doesn't exist structurally."""
+        registry = DerivationRegistry()
+
+        registry.register(
+            "Test",
+            derives_from=("Id",),  # Derives from Id, not Compose
+            principle_draws=(),
+            tier=DerivationTier.FUNCTOR,
+        )
+
+        # Try to add edge metadata for Compose -> Test (doesn't exist)
+        edge = WitnessedEdge.empty("Compose", "Test")
+
+        with pytest.raises(ValueError, match="doesn't exist structurally"):
+            registry.update_edge(edge)
+
+    def test_cannot_weaken_categorical_edge(self) -> None:
+        """Cannot downgrade a categorical edge to empirical (Law 3)."""
+        registry = DerivationRegistry()
+
+        # Bootstrap edge is categorical
+        edge = registry.get_edge("CONSTITUTION", "Id")
+        assert edge.is_categorical
+
+        # Try to replace with empirical edge
+        weakened = WitnessedEdge(
+            source="CONSTITUTION",
+            target="Id",
+            evidence_type=EvidenceType.EMPIRICAL,
+            edge_strength=0.5,
+        )
+
+        with pytest.raises(ValueError, match="Cannot weaken categorical"):
+            registry.update_edge(weakened)
+
+    def test_attach_mark_to_edge(self) -> None:
+        """attach_mark_to_edge is a convenience method."""
+        registry = DerivationRegistry()
+
+        registry.register(
+            "Test",
+            derives_from=("Id",),
+            principle_draws=(),
+            tier=DerivationTier.FUNCTOR,
+        )
+
+        edge = registry.attach_mark_to_edge("Id", "Test", "mark-abc")
+
+        assert "mark-abc" in edge.mark_ids
+        assert edge.edge_strength > 0.5
+
+        # Should persist
+        fetched = registry.get_edge("Id", "Test")
+        assert "mark-abc" in fetched.mark_ids
+
+    def test_edges_for_returns_incoming_edges(self) -> None:
+        """edges_for returns all incoming edges for an agent."""
+        registry = DerivationRegistry()
+
+        registry.register(
+            "Test",
+            derives_from=("Id", "Compose"),  # Two parents
+            principle_draws=(),
+            tier=DerivationTier.FUNCTOR,
+        )
+
+        edges = registry.edges_for("Test")
+
+        assert len(edges) == 2
+        sources = {e.source for e in edges}
+        assert sources == {"Id", "Compose"}
+
+    def test_edges_for_returns_empty_for_unknown(self) -> None:
+        """edges_for returns empty list for unknown agent."""
+        registry = DerivationRegistry()
+
+        edges = registry.edges_for("NotRegistered")
+        assert edges == []
+
+    def test_edges_for_constitution_is_empty(self) -> None:
+        """CONSTITUTION has no incoming edges (it's the root)."""
+        registry = DerivationRegistry()
+
+        edges = registry.edges_for("CONSTITUTION")
+        assert edges == []
+
+    def test_outgoing_edges_returns_dependent_edges(self) -> None:
+        """outgoing_edges returns edges to all dependents."""
+        registry = DerivationRegistry()
+
+        # Register two agents that derive from Id
+        registry.register(
+            "A", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
+        registry.register(
+            "B", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
+
+        outgoing = registry.outgoing_edges("Id")
+
+        # Should have at least A and B (plus the bootstrap agents that derive from CONSTITUTION)
+        targets = {e.target for e in outgoing}
+        assert "A" in targets
+        assert "B" in targets
+
+    def test_constitution_outgoing_edges_include_bootstrap(self) -> None:
+        """CONSTITUTION's outgoing edges include all bootstrap agents."""
+        registry = DerivationRegistry()
+
+        outgoing = registry.outgoing_edges("CONSTITUTION")
+        targets = {e.target for e in outgoing}
+
+        for name in BOOTSTRAP_AGENT_NAMES:
+            assert name in targets
+
+    def test_edge_with_principle_flow(self) -> None:
+        """Can add principle flow to an edge."""
+        registry = DerivationRegistry()
+
+        registry.register(
+            "Test",
+            derives_from=("Id",),
+            principle_draws=(),
+            tier=DerivationTier.FUNCTOR,
+        )
+
+        edge = registry.get_edge("Id", "Test")
+        flow = PrincipleFlow(
+            principle="Composable",
+            source_draw_strength=1.0,
+            contribution_weight=1.0,
+            evidence=("identity-law",),
+        )
+        updated = edge.with_principle_flow(flow)
+        registry.update_edge(updated)
+
+        fetched = registry.get_edge("Id", "Test")
+        assert len(fetched.principle_flows) == 1
+        assert fetched.principle_flows[0].principle == "Composable"
+
+    def test_edge_with_rationale(self) -> None:
+        """Can add rationale to an edge."""
+        registry = DerivationRegistry()
+        from datetime import datetime, timezone
+
+        registry.register(
+            "Test",
+            derives_from=("Id",),
+            principle_draws=(),
+            tier=DerivationTier.FUNCTOR,
+        )
+
+        edge = registry.get_edge("Id", "Test")
+        rationale = DerivationRationale(
+            summary="Inherits identity law",
+            reasoning="Test uses Id's identity property for composition",
+            decided_at=datetime.now(timezone.utc),
+        )
+        updated = edge.with_rationale(rationale)
+        registry.update_edge(updated)
+
+        fetched = registry.get_edge("Id", "Test")
+        assert fetched.rationale is not None
+        assert fetched.rationale.summary == "Inherits identity law"

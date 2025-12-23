@@ -31,10 +31,12 @@ from .bootstrap import (
     BOOTSTRAP_AGENT_NAMES,
     CONSTITUTION_DERIVATION,
 )
+from .edges import WitnessedEdge
 from .types import (
     BOOTSTRAP_PRINCIPLE_DRAWS,
     Derivation,
     DerivationTier,
+    EvidenceType,
     PrincipleDraw,
 )
 
@@ -166,6 +168,7 @@ class DerivationRegistry:
         self._derivations: dict[str, Derivation] = {}
         self._dag: DerivationDAG = DerivationDAG()
         self._usage_counts: dict[str, int] = {}
+        self._edges: dict[tuple[str, str], WitnessedEdge] = {}
         self._seed_bootstrap()
 
     def _seed_bootstrap(self) -> None:
@@ -199,6 +202,10 @@ class DerivationRegistry:
             self._derivations[name] = derivation
             self._dag.add_edges(name, ("CONSTITUTION",))  # Register the edge
             self._usage_counts[name] = 0
+
+            # Create axiomatic edge from CONSTITUTION to this bootstrap agent
+            edge = WitnessedEdge.axiomatic("CONSTITUTION", name)
+            self._edges[edge.edge_key] = edge
 
     def register(
         self,
@@ -433,6 +440,137 @@ class DerivationRegistry:
                 self._propagate_confidence(agent_name)
 
         return new_count
+
+    # =========================================================================
+    # Edge Methods (Phase 3B: Witnessed Edges)
+    # =========================================================================
+
+    def get_edge(self, source: str, target: str) -> WitnessedEdge:
+        """
+        Get edge metadata for a derivation relationship.
+
+        Returns the WitnessedEdge if stored, otherwise returns an empty edge.
+        This enables lazy initialization: edges exist structurally (in derives_from)
+        but accumulate metadata over time.
+
+        Args:
+            source: Parent agent name
+            target: Child agent name
+
+        Returns:
+            WitnessedEdge with metadata, or empty edge if not stored
+
+        Teaching:
+            gotcha: This returns an empty edge, not None, if not found.
+                    Check edge.evidence_count == 0 for truly empty edges.
+        """
+        key = (source, target)
+        if key in self._edges:
+            return self._edges[key]
+        return WitnessedEdge.empty(source, target)
+
+    def update_edge(self, edge: WitnessedEdge) -> WitnessedEdge:
+        """
+        Update edge metadata.
+
+        Validates the edge exists structurally (in derives_from) before storing.
+        Prevents weakening categorical edges (Law 3: Bootstrap Indefeasibility).
+
+        Args:
+            edge: The WitnessedEdge to store
+
+        Returns:
+            The stored edge
+
+        Raises:
+            KeyError: If target agent not in registry
+            ValueError: If edge doesn't exist structurally
+            ValueError: If trying to weaken a categorical edge
+
+        Teaching:
+            gotcha: The edge must exist structurally first. You can't add
+                    edge metadata for a relationship that isn't in derives_from.
+        """
+        # Validate target exists
+        if edge.target not in self._derivations:
+            raise KeyError(f"Target '{edge.target}' not in registry")
+
+        derivation = self._derivations[edge.target]
+
+        # Validate edge exists structurally
+        if edge.source not in derivation.derives_from:
+            raise ValueError(
+                f"Edge {edge.source} -> {edge.target} doesn't exist structurally. "
+                f"Target derives_from is {derivation.derives_from}. "
+                f"Register the derivation relationship first."
+            )
+
+        # Law 3: Can't weaken categorical edges
+        existing = self._edges.get(edge.edge_key)
+        if existing and existing.is_categorical and not edge.is_categorical:
+            raise ValueError(
+                f"Cannot weaken categorical edge {edge.source} -> {edge.target}. "
+                f"Bootstrap edges are indefeasible (Law 3)."
+            )
+
+        self._edges[edge.edge_key] = edge
+        return edge
+
+    def attach_mark_to_edge(self, source: str, target: str, mark_id: str) -> WitnessedEdge:
+        """
+        Attach a witness mark to an edge.
+
+        Convenience method that gets the edge, adds the mark, and stores it.
+
+        Args:
+            source: Parent agent name
+            target: Child agent name
+            mark_id: The mark ID to attach
+
+        Returns:
+            Updated WitnessedEdge
+
+        Raises:
+            KeyError: If target not in registry
+            ValueError: If edge doesn't exist structurally
+        """
+        edge = self.get_edge(source, target)
+        updated = edge.with_mark(mark_id)
+        return self.update_edge(updated)
+
+    def edges_for(self, agent_name: str) -> list[WitnessedEdge]:
+        """
+        Get all incoming edges (derives_from) for an agent.
+
+        Returns WitnessedEdge for each parent in derives_from.
+        Edges without stored metadata return empty edges.
+
+        Args:
+            agent_name: The agent to get edges for
+
+        Returns:
+            List of WitnessedEdge objects (one per parent)
+        """
+        derivation = self.get(agent_name)
+        if not derivation:
+            return []
+        return [self.get_edge(parent, agent_name) for parent in derivation.derives_from]
+
+    def outgoing_edges(self, agent_name: str) -> list[WitnessedEdge]:
+        """
+        Get all outgoing edges (to dependents) for an agent.
+
+        Returns WitnessedEdge for each direct dependent.
+        Edges without stored metadata return empty edges.
+
+        Args:
+            agent_name: The agent to get outgoing edges for
+
+        Returns:
+            List of WitnessedEdge objects (one per dependent)
+        """
+        dependents = self._dag.dependents(agent_name)
+        return [self.get_edge(agent_name, dep) for dep in dependents]
 
     def decay_all(self, days_elapsed: float) -> int:
         """
