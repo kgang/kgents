@@ -13,7 +13,7 @@ from __future__ import annotations
 import textwrap
 
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import assume, given, settings, strategies as st
 
 from services.living_docs.extractor import DocstringExtractor, extract_from_object
 from services.living_docs.types import Tier
@@ -292,11 +292,19 @@ def test_func():
             assert expected == actual
 
     @given(
-        symbol=st.from_regex(r"[a-z][a-z0-9_]*", fullmatch=True),
+        symbol=st.from_regex(r"[a-z][a-z0-9_]{2,}", fullmatch=True),
     )
     @settings(max_examples=20)
     def test_symbol_preserved(self, symbol: str) -> None:
-        """Symbol name is preserved exactly."""
+        """Symbol name is preserved exactly.
+
+        Note: Regex requires 3+ chars to avoid Python keywords (as, if, in, or, etc.)
+        """
+        import keyword
+
+        # Skip Python keywords
+        assume(not keyword.iskeyword(symbol))
+
         source = f'''
 def {symbol}():
     """A function."""
