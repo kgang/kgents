@@ -65,6 +65,7 @@ if TYPE_CHECKING:
     from services.conductor.swarm import SwarmSpawner
     from services.foundry import AgentFoundry
     from services.fusion import FusionService
+    from services.hypergraph_editor import HypergraphEditorService
     from services.interactive_text.service import InteractiveTextService
     from services.k_block.core import Cosmos, FileOperadHarness
     from services.liminal.coffee.core import CoffeeService
@@ -494,6 +495,19 @@ async def get_embedder() -> "SentenceTransformerEmbedder | None":
         return None
 
 
+async def get_editor_service() -> "HypergraphEditorService":
+    """
+    Get the HypergraphEditorService for typed-hypergraph editing.
+
+    The editor service wraps the EditorPolynomial state machine
+    for modal editing of the spec-impl graph.
+    Used by EditorNode for self.editor.* AGENTESE paths.
+    """
+    from services.hypergraph_editor.service import HypergraphEditorService
+
+    return HypergraphEditorService()
+
+
 async def get_witnessed_graph_service() -> "witnessed_graph.WitnessedGraphService":
     """
     Get the WitnessedGraphService for unified graph queries.
@@ -615,6 +629,9 @@ async def setup_providers() -> None:
     # WitnessedGraph Crown Jewel (Unified Edge Composition)
     container.register("witnessed_graph_service", get_witnessed_graph_service, singleton=True)
 
+    # Hypergraph Editor Crown Jewel (Modal Graph Editing)
+    container.register("editor_service", get_editor_service, singleton=True)
+
     logger.info(
         "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion)"
     )
@@ -693,6 +710,14 @@ async def setup_providers() -> None:
         logger.info("GraphNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"GraphNode not available: {e}")
+
+    # Hypergraph Editor Crown Jewel (Modal Graph Editing)
+    try:
+        from services.hypergraph_editor import EditorNode  # noqa: F401
+
+        logger.info("EditorNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"EditorNode not available: {e}")
 
     # Wire KgentSoul to SoulNode
     try:
@@ -781,4 +806,6 @@ __all__ = [
     "get_embedder",
     # Sovereign Crown Jewel
     "get_sovereign_store",
+    # Hypergraph Editor Crown Jewel
+    "get_editor_service",
 ]
