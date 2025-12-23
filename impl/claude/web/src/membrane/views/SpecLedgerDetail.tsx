@@ -3,17 +3,29 @@
  *
  * Shows:
  * - Claims extracted from spec
- * - Evidence (implementations, tests)
+ * - Evidence (implementations, tests) - both discovered and declared
+ * - Witness marks (declared evidence from evidence-as-marks system)
  * - Harmonies (references, extends)
  * - Contradictions (conflicts)
  *
  * Philosophy:
  *   "Every claim needs evidence."
+ *   "The mark IS the witness."
  */
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { getSpecDetail, type SpecDetailResponse } from '../../api/specLedger';
+import {
+  addEvidence,
+  getSpecDetail,
+  queryEvidence,
+  verifyEvidence,
+  type EvidenceMark,
+  type EvidenceQueryResponse,
+  type EvidenceType,
+  type EvidenceVerifyResponse,
+  type SpecDetailResponse,
+} from '../../api/specLedger';
 
 import './SpecLedgerDetail.css';
 
@@ -27,14 +39,204 @@ interface SpecLedgerDetailProps {
   onClose?: () => void;
 }
 
+interface AddEvidenceModalProps {
+  specPath: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
 // =============================================================================
-// Component
+// AddEvidence Modal
+// =============================================================================
+
+function AddEvidenceModal({ specPath, onClose, onSuccess }: AddEvidenceModalProps) {
+  const [evidencePath, setEvidencePath] = useState('');
+  const [evidenceType, setEvidenceType] = useState<EvidenceType>('implementation');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!evidencePath.trim()) return;
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      await addEvidence(specPath, evidencePath.trim(), evidenceType);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add evidence');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="spec-ledger-detail__modal-overlay" onClick={onClose}>
+      <div className="spec-ledger-detail__modal" onClick={(e) => e.stopPropagation()}>
+        <h3 className="spec-ledger-detail__modal-title">Add Evidence</h3>
+        <p className="spec-ledger-detail__modal-subtitle">
+          Link evidence to <code>{specPath}</code>
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="spec-ledger-detail__modal-field">
+            <label htmlFor="evidencePath">Evidence File Path</label>
+            <input
+              id="evidencePath"
+              type="text"
+              value={evidencePath}
+              onChange={(e) => setEvidencePath(e.target.value)}
+              placeholder="e.g., services/living_spec/ledger_node.py"
+              disabled={submitting}
+            />
+          </div>
+
+          <div className="spec-ledger-detail__modal-field">
+            <label htmlFor="evidenceType">Evidence Type</label>
+            <select
+              id="evidenceType"
+              value={evidenceType}
+              onChange={(e) => setEvidenceType(e.target.value as EvidenceType)}
+              disabled={submitting}
+            >
+              <option value="implementation">Implementation</option>
+              <option value="test">Test</option>
+              <option value="usage">Usage</option>
+            </select>
+          </div>
+
+          {error && <p className="spec-ledger-detail__modal-error">{error}</p>}
+
+          <div className="spec-ledger-detail__modal-actions">
+            <button type="button" onClick={onClose} disabled={submitting}>
+              Cancel
+            </button>
+            <button type="submit" disabled={submitting || !evidencePath.trim()}>
+              {submitting ? 'Adding...' : 'Add Evidence'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// EvidenceMarks Section
+// =============================================================================
+
+interface EvidenceMarksSectionProps {
+  marks: EvidenceMark[];
+  verification: EvidenceVerifyResponse | null;
+  onVerify: () => void;
+  verifying: boolean;
+}
+
+function EvidenceMarksSection({
+  marks,
+  verification,
+  onVerify,
+  verifying,
+}: EvidenceMarksSectionProps) {
+  if (marks.length === 0) {
+    return null;
+  }
+
+  // Build a map of file_path -> status from verification
+  const statusByFile: Record<string, 'valid' | 'stale' | 'broken'> = {};
+  if (verification?.results) {
+    for (const r of verification.results) {
+      statusByFile[r.file_path] = r.status;
+    }
+  }
+
+  // Extract file path from mark tags
+  const getFilePath = (mark: EvidenceMark): string | null => {
+    for (const tag of mark.tags) {
+      if (tag.startsWith('file:')) return tag.slice(5);
+    }
+    return null;
+  };
+
+  // Get evidence type from mark tags
+  const getEvidenceType = (mark: EvidenceMark): string | null => {
+    for (const tag of mark.tags) {
+      if (tag.startsWith('evidence:')) return tag.slice(9);
+    }
+    return null;
+  };
+
+  return (
+    <div className="spec-ledger-detail__evidence-marks">
+      <div className="spec-ledger-detail__evidence-marks-header">
+        <h3 className="spec-ledger-detail__evidence-title">Declared Evidence (Witness Marks)</h3>
+        <button className="spec-ledger-detail__verify-btn" onClick={onVerify} disabled={verifying}>
+          {verifying ? 'Verifying...' : 'Verify All'}
+        </button>
+      </div>
+
+      {verification && (
+        <div className="spec-ledger-detail__verification-summary">
+          <span className="spec-ledger-detail__verification-stat" data-status="valid">
+            ✓ {verification.valid} valid
+          </span>
+          {verification.broken > 0 && (
+            <span className="spec-ledger-detail__verification-stat" data-status="broken">
+              ✗ {verification.broken} broken
+            </span>
+          )}
+        </div>
+      )}
+
+      <ul className="spec-ledger-detail__evidence-marks-list">
+        {marks.map((mark) => {
+          const filePath = getFilePath(mark);
+          const evidenceType = getEvidenceType(mark);
+          const status = filePath ? statusByFile[filePath] : undefined;
+
+          return (
+            <li
+              key={mark.mark_id}
+              className="spec-ledger-detail__evidence-mark"
+              data-status={status}
+            >
+              <span className="spec-ledger-detail__evidence-mark-type" data-type={evidenceType}>
+                {evidenceType || 'evidence'}
+              </span>
+              <span className="spec-ledger-detail__evidence-mark-path">
+                {filePath || mark.action}
+              </span>
+              <span className="spec-ledger-detail__evidence-mark-author">{mark.author}</span>
+              {status && (
+                <span className="spec-ledger-detail__evidence-mark-status" data-status={status}>
+                  {status === 'valid' ? '✓' : '✗'}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+// =============================================================================
+// Main Component
 // =============================================================================
 
 export function SpecLedgerDetail({ path, onNavigateToSpec, onClose }: SpecLedgerDetailProps) {
   const [detail, setDetail] = useState<SpecDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Evidence marks state
+  const [evidenceMarks, setEvidenceMarks] = useState<EvidenceQueryResponse | null>(null);
+  const [verification, setVerification] = useState<EvidenceVerifyResponse | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Load spec detail
   const loadDetail = useCallback(async () => {
@@ -51,9 +253,40 @@ export function SpecLedgerDetail({ path, onNavigateToSpec, onClose }: SpecLedger
     }
   }, [path]);
 
+  // Load evidence marks
+  const loadEvidenceMarks = useCallback(async () => {
+    try {
+      const response = await queryEvidence(path);
+      setEvidenceMarks(response);
+    } catch (err) {
+      console.error('Failed to load evidence marks:', err);
+    }
+  }, [path]);
+
+  // Verify evidence
+  const handleVerify = useCallback(async () => {
+    setVerifying(true);
+    try {
+      const response = await verifyEvidence(path);
+      setVerification(response);
+    } catch (err) {
+      console.error('Failed to verify evidence:', err);
+    } finally {
+      setVerifying(false);
+    }
+  }, [path]);
+
+  // Handle evidence added successfully
+  const handleEvidenceAdded = useCallback(() => {
+    loadDetail();
+    loadEvidenceMarks();
+    setVerification(null); // Reset verification after adding new evidence
+  }, [loadDetail, loadEvidenceMarks]);
+
   useEffect(() => {
     loadDetail();
-  }, [loadDetail]);
+    loadEvidenceMarks();
+  }, [loadDetail, loadEvidenceMarks]);
 
   if (loading) {
     return (
@@ -141,8 +374,18 @@ export function SpecLedgerDetail({ path, onNavigateToSpec, onClose }: SpecLedger
 
         {/* Evidence Section */}
         <section className="spec-ledger-detail__section">
-          <h2 className="spec-ledger-detail__section-title">EVIDENCE</h2>
-          {!hasEvidence ? (
+          <div className="spec-ledger-detail__section-header">
+            <h2 className="spec-ledger-detail__section-title">EVIDENCE</h2>
+            <button
+              className="spec-ledger-detail__add-evidence-btn"
+              onClick={() => setShowAddModal(true)}
+            >
+              + Add Evidence
+            </button>
+          </div>
+
+          {/* Discovered Evidence (from file analysis) */}
+          {!hasEvidence && !evidenceMarks?.marks.length ? (
             <p className="spec-ledger-detail__empty spec-ledger-detail__empty--warning">
               No evidence found. This spec needs implementations or tests.
             </p>
@@ -150,7 +393,7 @@ export function SpecLedgerDetail({ path, onNavigateToSpec, onClose }: SpecLedger
             <div className="spec-ledger-detail__evidence">
               {detail.implementations.length > 0 && (
                 <div className="spec-ledger-detail__evidence-group">
-                  <h3 className="spec-ledger-detail__evidence-title">Implementations</h3>
+                  <h3 className="spec-ledger-detail__evidence-title">Discovered Implementations</h3>
                   <ul className="spec-ledger-detail__evidence-list">
                     {detail.implementations.map((impl, i) => (
                       <li key={i} className="spec-ledger-detail__evidence-item">
@@ -162,7 +405,7 @@ export function SpecLedgerDetail({ path, onNavigateToSpec, onClose }: SpecLedger
               )}
               {detail.tests.length > 0 && (
                 <div className="spec-ledger-detail__evidence-group">
-                  <h3 className="spec-ledger-detail__evidence-title">Tests</h3>
+                  <h3 className="spec-ledger-detail__evidence-title">Discovered Tests</h3>
                   <ul className="spec-ledger-detail__evidence-list">
                     {detail.tests.map((test, i) => (
                       <li key={i} className="spec-ledger-detail__evidence-item">
@@ -172,9 +415,28 @@ export function SpecLedgerDetail({ path, onNavigateToSpec, onClose }: SpecLedger
                   </ul>
                 </div>
               )}
+
+              {/* Declared Evidence (from witness marks) */}
+              {evidenceMarks && evidenceMarks.marks.length > 0 && (
+                <EvidenceMarksSection
+                  marks={evidenceMarks.marks}
+                  verification={verification}
+                  onVerify={handleVerify}
+                  verifying={verifying}
+                />
+              )}
             </div>
           )}
         </section>
+
+        {/* Add Evidence Modal */}
+        {showAddModal && (
+          <AddEvidenceModal
+            specPath={detail.path}
+            onClose={() => setShowAddModal(false)}
+            onSuccess={handleEvidenceAdded}
+          />
+        )}
 
         {/* References Section */}
         {detail.references.length > 0 && (

@@ -144,7 +144,59 @@ export interface EvidenceAddResponse {
   was_orphan: boolean;
   is_first_evidence: boolean;
   timestamp: string;
+  mark_id: string | null;
   note: string | null;
+}
+
+// Evidence query types (unified evidence-as-marks)
+export interface EvidenceMark {
+  mark_id: string;
+  action: string;
+  reasoning: string | null;
+  author: string;
+  timestamp: string | null;
+  tags: string[];
+}
+
+export interface EvidenceByType {
+  impl: EvidenceMark[];
+  test: EvidenceMark[];
+  usage: EvidenceMark[];
+}
+
+export interface EvidenceQueryResponse {
+  success: boolean;
+  spec_path: string;
+  total_evidence: number;
+  by_type: EvidenceByType;
+  marks: EvidenceMark[];
+}
+
+export interface EvidenceVerifyResult {
+  mark_id: string;
+  file_path: string;
+  evidence_type: string | null;
+  status: 'valid' | 'stale' | 'broken';
+  exists: boolean;
+}
+
+export interface EvidenceVerifyResponse {
+  success: boolean;
+  spec_path: string;
+  total: number;
+  valid: number;
+  stale: number;
+  broken: number;
+  results: EvidenceVerifyResult[];
+}
+
+export interface EvidenceSummaryResponse {
+  success: boolean;
+  total_specs_with_evidence: number;
+  total_impl: number;
+  total_test: number;
+  total_usage: number;
+  by_spec: Record<string, { impl: number; test: number; usage: number }>;
 }
 
 // =============================================================================
@@ -249,6 +301,7 @@ export async function deprecateSpecs(
  * Add evidence (implementation/test) to a spec.
  *
  * This is an accounting TRANSACTION:
+ * - Creates a witness mark with evidence tags
  * - Emits SPEC_EVIDENCE_ADDED witness event
  * - May transition spec from ORPHAN → ACTIVE if first evidence
  */
@@ -265,4 +318,44 @@ export async function addEvidence(
       evidence_type: evidenceType,
     }),
   });
+}
+
+/**
+ * Query evidence for a spec from the witness mark system.
+ *
+ * Returns declared evidence (explicit links) and groups by type.
+ */
+export async function queryEvidence(
+  specPath: string,
+  options?: {
+    evidenceType?: 'impl' | 'test' | 'usage';
+    limit?: number;
+  }
+): Promise<EvidenceQueryResponse> {
+  const params = new URLSearchParams({ path: specPath });
+  if (options?.evidenceType) params.set('evidence_type', options.evidenceType);
+  if (options?.limit) params.set('limit', String(options.limit));
+
+  return fetchJson<EvidenceQueryResponse>(`${API_BASE}/evidence/query?${params}`);
+}
+
+/**
+ * Verify all evidence for a spec is still valid.
+ *
+ * Checks if evidence files still exist on disk.
+ */
+export async function verifyEvidence(specPath: string): Promise<EvidenceVerifyResponse> {
+  const params = new URLSearchParams({ path: specPath });
+  return fetchJson<EvidenceVerifyResponse>(`${API_BASE}/evidence/verify?${params}`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Get summary of evidence across all specs.
+ *
+ * Returns counts by spec and evidence type.
+ */
+export async function getEvidenceSummary(): Promise<EvidenceSummaryResponse> {
+  return fetchJson<EvidenceSummaryResponse>(`${API_BASE}/evidence/summary`);
 }

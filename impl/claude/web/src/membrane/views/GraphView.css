@@ -1,0 +1,58 @@
+/**
+ * GraphView Styles
+ *
+ * STARK BIOME themed graph view container.
+ */
+
+.graph-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--surface-0, #0a0a0c);
+}
+
+.graph-view__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--surface-1, #141418);
+  border-bottom: 1px solid var(--surface-3, #28282f);
+}
+
+.graph-view__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #e5e7eb);
+}
+
+.graph-view__controls {
+  display: flex;
+  gap: 8px;
+}
+
+.graph-view__select {
+  padding: 6px 10px;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  color: var(--text-primary, #e5e7eb);
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.graph-view__select:hover {
+  border-color: var(--text-muted, #5a5a64);
+}
+
+.graph-view__select:focus {
+  outline: none;
+  border-color: var(--life-sage, #4a6b4a);
+}
+
+.graph-view__content {
+  flex: 1;
+  min-height: 0;
+}
