@@ -73,8 +73,13 @@ LEGACY_COMMANDS: dict[str, str] = {
     "witness dashboard": "self.witness.dashboard",
     "witness stream": "self.witness.stream",
     "witness context": "self.witness.context",
-    # Graph / Hypergraph: uses thin handler in handlers/graph_thin.py
-    # (NOT legacy - has dedicated handler that handles DI properly)
+    # Graph / WitnessedGraph (thin handler mappings)
+    "graph": "concept.graph.manifest",
+    "graph manifest": "concept.graph.manifest",
+    "graph neighbors": "concept.graph.neighbors",
+    "graph evidence": "concept.graph.evidence",
+    "graph trace": "concept.graph.trace",
+    "graph search": "concept.graph.search",
     # Coffee / Liminal (thin handler mappings)
     "coffee": "time.coffee.manifest",
     "coffee garden": "time.coffee.garden",
