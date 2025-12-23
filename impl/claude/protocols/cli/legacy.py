@@ -47,10 +47,52 @@ LEGACY_COMMANDS: dict[str, str] = {
     "memory crystal": "self.memory.crystal",
     "memory field": "self.memory.field",
     "memory recall": "self.memory.recall",
-    # Brain / Crown Jewel
-    # NOTE: "brain" is now a first-class command in COMMAND_REGISTRY
-    # Use `kg brain capture|ghost|map|status` directly
-    # Legacy entries removed to prevent routing conflict
+    # Brain / Crown Jewel (thin handler mappings)
+    "brain": "self.memory.manifest",
+    "brain capture": "self.memory.capture",
+    "brain search": "self.memory.recall",
+    "brain ghost": "self.memory.ghost.surface",
+    "brain surface": "void.memory.surface",
+    "brain list": "self.memory.manifest",
+    "brain status": "self.memory.manifest",
+    "brain chat": "self.jewel.brain.flow.chat.query",
+    "brain import": "self.memory.import",
+    "brain heal": "self.memory.heal",
+    # Witness / Mark-making (thin handler mappings)
+    "witness": "self.witness.manifest",
+    "witness mark": "self.witness.mark",
+    "witness show": "self.witness.show",
+    "witness recent": "self.witness.show",
+    "witness list": "self.witness.show",
+    "witness session": "self.witness.session",
+    "witness tree": "self.witness.tree",
+    "witness crystallize": "self.witness.crystallize",
+    "witness crystals": "self.witness.crystals",
+    "witness crystal": "self.witness.crystal",
+    "witness expand": "self.witness.expand",
+    "witness dashboard": "self.witness.dashboard",
+    "witness stream": "self.witness.stream",
+    "witness context": "self.witness.context",
+    # Graph / Hypergraph: uses thin handler in handlers/graph_thin.py
+    # (NOT legacy - has dedicated handler that handles DI properly)
+    # Coffee / Liminal (thin handler mappings)
+    "coffee": "time.coffee.manifest",
+    "coffee garden": "time.coffee.garden",
+    "coffee weather": "time.coffee.weather",
+    "coffee menu": "time.coffee.menu",
+    "coffee capture": "time.coffee.capture",
+    "coffee begin": "time.coffee.begin",
+    "coffee history": "time.coffee.history",
+    "coffee status": "time.coffee.manifest",
+    # Docs / Living Documentation (thin handler mappings)
+    "docs": "concept.docs.manifest",
+    "docs generate": "concept.docs.generate",
+    "docs teaching": "concept.docs.teaching",
+    "docs verify": "concept.docs.verify",
+    "docs lint": "concept.docs.lint",
+    "docs hydrate": "concept.docs.hydrate",
+    "docs relevant": "concept.docs.relevant",
+    "docs crystallize": "concept.docs.crystallize",
     # Status
     "status": "self.status.manifest",
     "status full": "self.status.full",

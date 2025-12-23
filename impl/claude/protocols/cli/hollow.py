@@ -128,6 +128,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "witness": "protocols.cli.handlers.witness_thin:cmd_witness",
     # ==========================================================================
+    # WitnessedGraph (9th Crown Jewel - Unified Edge Composition)
+    # Uses thin routing shim - delegates to concept.graph.* paths
+    # ==========================================================================
+    "graph": "protocols.cli.handlers.graph_thin:cmd_graph",
+    # ==========================================================================
     # Fusion: Symmetric Supersession (Dialectical Decision Witnessing)
     # Captures reasoning traces for decisions as they happen
     # ==========================================================================
@@ -823,6 +828,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "docs",  # Living Docs (local + daemon compatible)
         "witness",  # Witness dashboard needs stdin for interactive mode
         "sovereign",  # Inbound Sovereignty (local file operations)
+        "graph",  # WitnessedGraph: unified edge composition (local + daemon compatible)
     }
 
     if command not in LOCAL_ONLY_COMMANDS:

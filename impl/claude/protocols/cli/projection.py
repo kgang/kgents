@@ -340,23 +340,10 @@ def project_command(
 
     _import_node_modules()
 
-    # Create Logos
-    from protocols.agentese.logos import create_logos
-
-    logos = create_logos()
-
     # Create observer (CLI archetype)
     from protocols.agentese.node import Observer
 
     observer = Observer.from_archetype("cli")
-
-    # Get aspect metadata if available, use defaults otherwise
-    try:
-        meta = logos.get_aspect_meta(path)
-        dimensions = derive_dimensions(path, meta)
-    except (AttributeError, KeyError):
-        # Path not registered yet, use defaults
-        dimensions = DEFAULT_DIMENSIONS
 
     # Parse kwargs from args if not provided
     if kwargs is None:
@@ -370,6 +357,61 @@ def project_command(
 
     # Check for --message flag for one-shot chat
     one_shot_message = kwargs.pop("message", None)
+
+    # Parse path into node_path and aspect
+    parts = path.split(".")
+    if len(parts) < 3:
+        print(f"Error: Path must include aspect: '{path}'")
+        return 1
+
+    node_path = ".".join(parts[:-1])
+    aspect = parts[-1]
+
+    # Try registry first (with DI container) for nodes that need dependencies
+    from protocols.agentese.registry import get_registry
+
+    registry = get_registry()
+
+    if registry.has(node_path):
+        # Use registry with DI container (like gateway does)
+        from protocols.agentese.container import get_container
+        from services.providers import setup_providers_sync
+
+        # Ensure providers are wired
+        setup_providers_sync()
+        container = get_container()
+
+        try:
+            result = _run_async(
+                _invoke_via_registry(registry, container, node_path, aspect, observer, **kwargs)
+            )
+
+            # Render output
+            if json_output:
+                import json as json_mod
+
+                print(json_mod.dumps(result, indent=2, default=str))
+            else:
+                _render_result(result)
+
+            return 0
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return 1
+
+    # Fall back to Logos for JIT paths
+    from protocols.agentese.logos import create_logos
+
+    logos = create_logos()
+
+    # Get aspect metadata if available, use defaults otherwise
+    try:
+        meta = logos.get_aspect_meta(path)
+        dimensions = derive_dimensions(path, meta)
+    except (AttributeError, KeyError):
+        # Path not registered yet, use defaults
+        dimensions = DEFAULT_DIMENSIONS
 
     # Route INTERACTIVE paths to ChatProjection
     if dimensions.is_interactive or ".chat" in path:
@@ -406,6 +448,45 @@ def project_command(
     except Exception as e:
         print(f"Error: {e}")
         return 1
+
+
+async def _invoke_via_registry(
+    registry: Any,
+    container: Any,
+    node_path: str,
+    aspect: str,
+    observer: Any,
+    **kwargs: Any,
+) -> Any:
+    """Invoke a path via the registry with DI container."""
+    node = await registry.resolve(node_path, container)
+    if node is None:
+        raise ValueError(f"Failed to resolve node: {node_path}")
+    return await node.invoke(aspect, observer, **kwargs)
+
+
+def _render_result(result: Any) -> None:
+    """Render a result to terminal."""
+    if result is None:
+        return
+
+    # Handle Renderable types
+    if hasattr(result, "summary"):
+        print(result.summary)
+        if hasattr(result, "content") and result.content:
+            print(result.content)
+        return
+
+    # Handle dataclasses
+    if hasattr(result, "__dataclass_fields__"):
+        import json as json_mod
+        from dataclasses import asdict
+
+        print(json_mod.dumps(asdict(result), indent=2, default=str))
+        return
+
+    # Default: print string representation
+    print(result)
 
 
 def _project_chat(
@@ -473,6 +554,17 @@ def _parse_kwargs_from_args(args: list[str], path: str) -> dict[str, Any]:
             kwargs["query"] = " ".join(positional)
         elif "surface" in path:
             kwargs["context"] = " ".join(positional)
+        # Graph operations
+        elif "neighbors" in path:
+            kwargs["path"] = positional[0]
+        elif "evidence" in path:
+            kwargs["spec_path"] = positional[0]
+        elif "trace" in path:
+            if len(positional) >= 2:
+                kwargs["start"] = positional[0]
+                kwargs["end"] = positional[1]
+            elif len(positional) == 1:
+                kwargs["start"] = positional[0]
         else:
             # Default to content
             kwargs["content"] = " ".join(positional)
