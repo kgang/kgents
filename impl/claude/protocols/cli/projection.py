@@ -335,7 +335,14 @@ def project_command(
     Returns:
         Exit code (0 for success, non-zero for failure)
     """
-    # Ensure all node modules are imported (populates registry)
+    # Bootstrap providers FIRST - this imports service nodes and populates registry
+    # CRITICAL: Must happen before registry.has() check, otherwise service nodes
+    # like GraphNode won't be registered and we fall through to JIT fallback
+    from services.providers import setup_providers_sync
+
+    setup_providers_sync()
+
+    # Ensure all context modules are also imported (populates registry with legacy paths)
     from protocols.agentese.gateway import _import_node_modules
 
     _import_node_modules()
@@ -368,19 +375,13 @@ def project_command(
     aspect = parts[-1]
 
     # Try registry first (with DI container) for nodes that need dependencies
+    from protocols.agentese.container import get_container
     from protocols.agentese.registry import get_registry
 
     registry = get_registry()
+    container = get_container()
 
     if registry.has(node_path):
-        # Use registry with DI container (like gateway does)
-        from protocols.agentese.container import get_container
-        from services.providers import setup_providers_sync
-
-        # Ensure providers are wired
-        setup_providers_sync()
-        container = get_container()
-
         try:
             result = _run_async(
                 _invoke_via_registry(registry, container, node_path, aspect, observer, **kwargs)
@@ -390,7 +391,18 @@ def project_command(
             if json_output:
                 import json as json_mod
 
-                print(json_mod.dumps(result, indent=2, default=str))
+                # Handle BasicRendering and similar types with metadata
+                if hasattr(result, "metadata") and result.metadata:
+                    json_data = result.metadata
+                elif hasattr(result, "__dataclass_fields__"):
+                    from dataclasses import asdict
+
+                    json_data = asdict(result)
+                elif isinstance(result, dict):
+                    json_data = result
+                else:
+                    json_data = {"result": str(result)}
+                print(json_mod.dumps(json_data, indent=2, default=str))
             else:
                 _render_result(result)
 
