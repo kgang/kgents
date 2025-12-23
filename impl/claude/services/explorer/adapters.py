@@ -387,9 +387,19 @@ class TrailAdapter(EntityAdapter):
         filters: StreamFilters | None = None,
     ) -> list[UnifiedEvent]:
         """Query recent trails and convert."""
+        from sqlalchemy.orm import selectinload
+
         from models.trail import TrailRow
 
-        stmt = select(TrailRow).order_by(TrailRow.created_at.desc())
+        # Eagerly load relationships to avoid lazy-load in async context
+        stmt = (
+            select(TrailRow)
+            .options(
+                selectinload(TrailRow.steps),
+                selectinload(TrailRow.commitments),
+            )
+            .order_by(TrailRow.created_at.desc())
+        )
 
         if filters:
             if filters.date_start:

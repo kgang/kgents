@@ -128,61 +128,63 @@ class UnifiedQueryService:
         requested_types = filters.types if filters else []
         adapters = self._get_requested_adapters(requested_types if requested_types else None)
 
-        async with self.session_factory() as session:
-            # Query all adapters in parallel
-            # Request extra to determine has_more
-            per_adapter_limit = limit + 1
+        # Request extra to determine has_more
+        per_adapter_limit = limit + 1
 
-            async def query_adapter(adapter: EntityAdapter) -> list[UnifiedEvent]:
-                try:
+        # Each adapter gets its own session for true parallelism
+        # (SQLAlchemy async sessions don't support concurrent operations on same connection)
+        async def query_adapter(adapter: EntityAdapter) -> list[UnifiedEvent]:
+            try:
+                async with self.session_factory() as session:
                     return await adapter.list_recent(
                         session,
                         limit=per_adapter_limit,
                         offset=0,  # We'll handle offset after merge
                         filters=filters,
                     )
-                except Exception as e:
-                    logger.warning(f"Adapter {adapter.entity_type} failed: {e}")
-                    return []
+            except Exception as e:
+                logger.warning(f"Adapter {adapter.entity_type} failed: {e}")
+                return []
 
-            results = await asyncio.gather(
-                *[query_adapter(adapter) for adapter in adapters],
-                return_exceptions=False,
-            )
+        results = await asyncio.gather(
+            *[query_adapter(adapter) for adapter in adapters],
+            return_exceptions=False,
+        )
 
-            # Flatten and sort by timestamp descending
-            all_events: list[UnifiedEvent] = []
-            for event_list in results:
-                all_events.extend(event_list)
+        # Flatten and sort by timestamp descending
+        all_events: list[UnifiedEvent] = []
+        for event_list in results:
+            all_events.extend(event_list)
 
-            all_events.sort(key=lambda e: e.timestamp, reverse=True)
+        all_events.sort(key=lambda e: e.timestamp, reverse=True)
 
-            # Apply offset and limit
-            paginated = all_events[offset : offset + limit + 1]
+        # Apply offset and limit
+        paginated = all_events[offset : offset + limit + 1]
 
-            # Determine has_more
-            has_more = len(paginated) > limit
-            events = paginated[:limit]
+        # Determine has_more
+        has_more = len(paginated) > limit
+        events = paginated[:limit]
 
-            # Get total count (parallel)
-            async def count_adapter(adapter: EntityAdapter) -> int:
-                try:
+        # Get total count (parallel, each with own session)
+        async def count_adapter(adapter: EntityAdapter) -> int:
+            try:
+                async with self.session_factory() as session:
                     return await adapter.count(session, filters=filters)
-                except Exception as e:
-                    logger.warning(f"Count for {adapter.entity_type} failed: {e}")
-                    return 0
+            except Exception as e:
+                logger.warning(f"Count for {adapter.entity_type} failed: {e}")
+                return 0
 
-            counts = await asyncio.gather(
-                *[count_adapter(adapter) for adapter in adapters],
-                return_exceptions=False,
-            )
-            total = sum(counts)
+        counts = await asyncio.gather(
+            *[count_adapter(adapter) for adapter in adapters],
+            return_exceptions=False,
+        )
+        total = sum(counts)
 
-            return ListEventsResponse(
-                events=events,
-                total=total,
-                has_more=has_more,
-            )
+        return ListEventsResponse(
+            events=events,
+            total=total,
+            has_more=has_more,
+        )
 
     async def search_events(
         self,
@@ -205,66 +207,66 @@ class UnifiedQueryService:
 
         adapters = self._get_requested_adapters(requested_types)
 
-        async with self.session_factory() as session:
-            # Get recent events from all adapters
-            async def query_adapter(adapter: EntityAdapter) -> list[UnifiedEvent]:
-                try:
+        # Each adapter gets its own session for true parallelism
+        async def query_adapter(adapter: EntityAdapter) -> list[UnifiedEvent]:
+            try:
+                async with self.session_factory() as session:
                     # Get more than limit to allow for filtering
                     return await adapter.list_recent(session, limit=limit * 3)
-                except Exception as e:
-                    logger.warning(f"Search adapter {adapter.entity_type} failed: {e}")
-                    return []
+            except Exception as e:
+                logger.warning(f"Search adapter {adapter.entity_type} failed: {e}")
+                return []
 
-            results = await asyncio.gather(
-                *[query_adapter(adapter) for adapter in adapters],
-                return_exceptions=False,
+        results = await asyncio.gather(
+            *[query_adapter(adapter) for adapter in adapters],
+            return_exceptions=False,
+        )
+
+        # Flatten
+        all_events: list[UnifiedEvent] = []
+        for event_list in results:
+            all_events.extend(event_list)
+
+        # Simple keyword scoring
+        scored: list[SearchResult] = []
+        for event in all_events:
+            score = 0.0
+            text = f"{event.title} {event.summary}".lower()
+
+            # Title match is worth more
+            if query in event.title.lower():
+                score += 2.0
+            # Summary match
+            if query in event.summary.lower():
+                score += 1.0
+            # Partial matches
+            words = query.split()
+            for word in words:
+                if word in text:
+                    score += 0.5
+
+            if score > 0:
+                scored.append(SearchResult(event=event, score=score))
+
+        # Sort by score descending
+        scored.sort(key=lambda r: r.score, reverse=True)
+        scored = scored[:limit]
+
+        # Build facets (count by type)
+        facets: dict[str, int] = {}
+        for result in scored:
+            type_key = (
+                result.event.type.value
+                if isinstance(result.event.type, EntityType)
+                else result.event.type
             )
+            facets[type_key] = facets.get(type_key, 0) + 1
 
-            # Flatten
-            all_events: list[UnifiedEvent] = []
-            for event_list in results:
-                all_events.extend(event_list)
-
-            # Simple keyword scoring
-            scored: list[SearchResult] = []
-            for event in all_events:
-                score = 0.0
-                text = f"{event.title} {event.summary}".lower()
-
-                # Title match is worth more
-                if query in event.title.lower():
-                    score += 2.0
-                # Summary match
-                if query in event.summary.lower():
-                    score += 1.0
-                # Partial matches
-                words = query.split()
-                for word in words:
-                    if word in text:
-                        score += 0.5
-
-                if score > 0:
-                    scored.append(SearchResult(event=event, score=score))
-
-            # Sort by score descending
-            scored.sort(key=lambda r: r.score, reverse=True)
-            scored = scored[:limit]
-
-            # Build facets (count by type)
-            facets: dict[str, int] = {}
-            for result in scored:
-                type_key = (
-                    result.event.type.value
-                    if isinstance(result.event.type, EntityType)
-                    else result.event.type
-                )
-                facets[type_key] = facets.get(type_key, 0) + 1
-
-            return SearchEventsResponse(
-                results=scored,
-                total=len(scored),
-                facets=facets,
-            )
+        return SearchEventsResponse(
+            results=scored,
+            total=len(scored),
+            facets=facets,
+        )
 
     async def get_by_id(
         self,
@@ -355,27 +357,35 @@ class UnifiedQueryService:
         Returns:
             Manifest with counts and status.
         """
-        async with self.session_factory() as session:
-            # Get counts for each type
-            counts_by_type: dict[str, int] = {}
-            total = 0
 
-            for entity_type, adapter in self._adapters.items():
-                try:
+        # Each adapter gets its own session for true parallelism
+        async def count_for_type(
+            entity_type: EntityType, adapter: EntityAdapter
+        ) -> tuple[str, int]:
+            try:
+                async with self.session_factory() as session:
                     count = await adapter.count(session)
-                    counts_by_type[entity_type.value] = count
-                    total += count
-                except Exception as e:
-                    logger.warning(f"Count for {entity_type} failed: {e}")
-                    counts_by_type[entity_type.value] = 0
+                    return (entity_type.value, count)
+            except Exception as e:
+                logger.warning(f"Count for {entity_type} failed: {e}")
+                return (entity_type.value, 0)
 
-            # Determine connected services based on non-zero counts
-            connected = [k for k, v in counts_by_type.items() if v > 0]
+        results = await asyncio.gather(
+            *[count_for_type(et, adapter) for et, adapter in self._adapters.items()],
+            return_exceptions=False,
+        )
 
-            return ExplorerManifestResponse(
-                total_events=total,
-                counts_by_type=counts_by_type,
-                storage_backend="postgresql",  # Could detect from session
-                connected_services=connected,
-                stream_connected=False,  # SSE not implemented yet
-            )
+        # Build counts dict
+        counts_by_type: dict[str, int] = dict(results)
+        total = sum(counts_by_type.values())
+
+        # Determine connected services based on non-zero counts
+        connected = [k for k, v in counts_by_type.items() if v > 0]
+
+        return ExplorerManifestResponse(
+            total_events=total,
+            counts_by_type=counts_by_type,
+            storage_backend="postgresql",  # Could detect from session
+            connected_services=connected,
+            stream_connected=True,  # SSE is now implemented
+        )
