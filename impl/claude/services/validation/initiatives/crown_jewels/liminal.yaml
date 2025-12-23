@@ -1,0 +1,175 @@
+# Liminal Crown Jewel Validation
+#
+# "Rituals that honor state changes"
+# Status: 50% per NOW.md
+#
+# Currently implements: Morning Coffee protocol
+# Planned: Pause, Evening, Return protocols
+
+id: liminal
+name: Liminal Crown Jewel
+description: |
+  Transition protocols that honor state changes between work modes.
+  Currently validates the Morning Coffee ritual (Rest → Work transition).
+
+  Core capabilities:
+  - Movement-based rituals with state machine (COFFEE_POLYNOMIAL)
+  - Garden view (project status visualization)
+  - Conceptual weather (mood/energy sensing)
+  - Challenge menu (today's focus selection)
+  - Voice capture (morning intentions)
+
+phases:
+  # ===========================================================================
+  # Phase 1: Morning Coffee (currently implemented)
+  # ===========================================================================
+  - id: morning_coffee
+    name: "Phase 1: Morning Coffee"
+    description: |
+      The Rest → Work transition ritual. Validates the coffee service
+      correctly guides through movements and captures morning state.
+    gate:
+      id: coffee_gate
+      name: Morning Coffee Gate
+      condition: all_required
+    propositions:
+      # Quantitative: Test suite health
+      - id: coffee_tests_pass
+        description: All Morning Coffee tests pass
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      - id: coffee_test_count
+        description: At least 50 tests exist for coffee module
+        metric: count
+        threshold: 50
+        direction: ">="
+        required: true
+
+      # Functional: State machine
+      - id: polynomial_valid
+        description: COFFEE_POLYNOMIAL state machine is valid (modes, transitions)
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      - id: movements_complete
+        description: All 5 movements can be completed (arrive, breathe, orient, choose, begin)
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      # Functional: Garden
+      - id: garden_renders
+        description: Garden view renders project status
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      - id: garden_brain_wire
+        description: Garden wires to Brain for status data
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      # Functional: Weather
+      - id: weather_generates
+        description: Conceptual weather generates appropriate patterns
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      # Functional: Menu
+      - id: challenge_menu_works
+        description: Challenge menu presents and captures selections
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      # Integration: AGENTESE
+      - id: agentese_coffee
+        description: self.ritual.coffee path works
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      # Quality: Mirror Test
+      - id: feels_ritual_like
+        description: Morning Coffee feels like a ritual, not a checklist
+        metric: judgment
+        threshold: 1
+        direction: "="
+        required: false
+        judgment_required: true
+        judgment_criteria: |
+          The Mirror Test: Does Morning Coffee feel like Kent on his best day?
+          - Is there a sense of transition, not just data entry?
+          - Does the garden feel alive, not clinical?
+          - Is the pacing right (not rushed, not tedious)?
+
+  # ===========================================================================
+  # Phase 2: Additional Protocols (planned)
+  # ===========================================================================
+  - id: additional_protocols
+    name: "Phase 2: Additional Protocols"
+    description: |
+      Pause, Evening, and Return protocols. These are planned but not yet
+      implemented. This phase validates the framework is extensible.
+    depends_on: [morning_coffee]
+    gate:
+      id: protocols_gate
+      name: Additional Protocols Gate
+      condition: all_required
+    propositions:
+      # Framework extensibility
+      - id: protocol_registry
+        description: New protocols can be registered via standard interface
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      - id: movement_reuse
+        description: Movement primitives are reusable across protocols
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+
+      # Planned protocols (binary = not yet passing)
+      - id: pause_protocol
+        description: Pause protocol (Deep Work → Break) exists
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: false  # Not yet implemented
+
+      - id: evening_protocol
+        description: Evening protocol (Work → Rest) exists
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: false  # Not yet implemented
+
+      - id: return_protocol
+        description: Return protocol (Away → Back) exists
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: false  # Not yet implemented
+
+witness_tags:
+  - validation
+  - crown_jewel
+  - liminal
+  - ritual
+  - transition

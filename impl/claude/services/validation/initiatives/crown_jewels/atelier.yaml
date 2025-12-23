@@ -1,0 +1,127 @@
+# Atelier Crown Jewel Validation
+#
+# "The design forge where commissions become pieces"
+# Status: 75% per NOW.md
+#
+# NOTE: Being renamed to "Forge" per spec/protocols/metaphysical-forge.md
+# This YAML validates the current Atelier until migration completes.
+
+id: atelier
+name: Atelier Crown Jewel
+description: |
+  The design forge and creative workshop. Validates that Atelier correctly
+  processes commissions, coordinates artisans, and produces pieces.
+
+  Core capabilities:
+  - Commission intake and routing
+  - Artisan coordination with streaming events
+  - Piece creation and gallery management
+  - Operad-based composition (sequential/parallel/iterative)
+
+propositions:
+  # Quantitative: Test suite health
+  - id: tests_pass
+    description: All Atelier tests pass
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: test_count
+    description: At least 200 tests exist
+    metric: count
+    threshold: 200
+    direction: ">="
+    required: true
+
+  # Functional: Commission flow
+  - id: commissions_accepted
+    description: Commissions are accepted and queued
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: artisan_streaming
+    description: Artisan work streams events (CONTEMPLATING, WORKING, FRAGMENT, PIECE_COMPLETE)
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: pieces_created
+    description: Pieces are created from completed commissions
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Functional: Gallery and persistence
+  - id: gallery_persists
+    description: Pieces persist in gallery across sessions
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: queue_persists
+    description: Commission queue persists across sessions
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Structural: Operad composition
+  - id: operad_sequential
+    description: Sequential composition works (artisan A >> artisan B)
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: operad_parallel
+    description: Parallel merge composition works (A + B → combined)
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Integration: AGENTESE
+  - id: agentese_commission
+    description: world.atelier.commission path works
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  - id: agentese_gallery
+    description: world.atelier.gallery path works
+    metric: binary
+    threshold: 1
+    direction: "="
+    required: true
+
+  # Quality: Mirror Test
+  - id: feels_workshop_like
+    description: Interaction feels like a creative workshop, not a ticket queue
+    metric: judgment
+    threshold: 1
+    direction: "="
+    required: false
+    judgment_required: true
+    judgment_criteria: |
+      The Mirror Test: Does using Atelier feel like Kent on his best day?
+      - Is there joy in watching artisans work?
+      - Is the streaming experience engaging, not tedious?
+      - Does the gallery feel like a collection, not a dump?
+
+gate:
+  id: atelier_complete
+  name: Atelier Complete
+  condition: all_required
+
+witness_tags:
+  - validation
+  - crown_jewel
+  - atelier
+  - forge
