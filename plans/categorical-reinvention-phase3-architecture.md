@@ -283,6 +283,110 @@ def train_binding_heads(model: BindingAwareLM, dataset: Dataset):
 | Binding/substitution detection achieves F1 > 0.9 | Held-out synthetic data | Detection needs more data |
 | End-to-end reasoning improves on binding-heavy problems | GSM8K subset | Integration needs debugging |
 
+### ValidationEngine Integration
+
+Sharp Binding Module validation with benchmark caching:
+
+```yaml
+# initiatives/categorical-phase3.yaml
+id: categorical_phase3
+name: "Phase 3: Architecture"
+description: "Sharp Binding Module for variable tracking"
+witness_tags: ["categorical", "phase3", "architecture", "sbm"]
+
+phases:
+  - id: sbm_core
+    name: "SBM Core Implementation"
+    description: "Basic binding retention"
+    propositions:
+      - id: retention_100_tokens
+        description: "Retains bindings at 100 tokens with >95% accuracy"
+        metric: accuracy
+        threshold: 0.95
+        direction: ">"
+        required: true
+      - id: multi_binding
+        description: "Handles 5+ simultaneous bindings"
+        metric: accuracy
+        threshold: 0.95
+        direction: ">"
+        required: true
+    gate:
+      condition: all_required
+
+  - id: detection_training
+    name: "Detection Training"
+    description: "Train binding/substitution detectors"
+    depends_on: [sbm_core]
+    propositions:
+      - id: detector_f1
+        description: "Binding/substitution F1 > 0.9"
+        metric: f1
+        threshold: 0.9
+        direction: ">"
+        required: true
+    gate:
+      condition: all_required
+
+  - id: e2e_integration
+    name: "End-to-End Integration"
+    description: "SBM improves real reasoning"
+    depends_on: [detection_training]
+    propositions:
+      - id: gsm8k_improvement
+        description: "Improves on binding-heavy GSM8K problems"
+        metric: percent
+        threshold: 5  # 5% improvement
+        direction: ">"
+        required: true
+    gate:
+      condition: all_required
+```
+
+```python
+# Benchmark caching for iterative development
+engine = get_validation_engine()
+
+# Run binding benchmark (expensive) - cache for iteration
+async def run_sbm_validation():
+    # Run benchmark once, cache result
+    handle = await engine.validate_cached(
+        "categorical_phase3",
+        {
+            "retention_100_tokens": benchmark_results[100],
+            "multi_binding": multi_var_accuracy,
+        },
+        phase_id="sbm_core",
+        ttl=timedelta(hours=2),  # Benchmark results don't change often
+    )
+
+    # Force recompute after architecture changes
+    if architecture_modified:
+        handle = await engine.validate_cached(..., force=True)
+
+    return handle
+
+# The Binding Benchmark itself uses proxy caching internally
+class BindingBenchmark:
+    """Enhanced with ProxyHandle caching."""
+
+    async def evaluate_cached(
+        self, model, gaps: list[int], force: bool = False
+    ) -> "ProxyHandle[dict[int, float]]":
+        """Cache benchmark results via ProxyHandleStore."""
+        from services.proxy import SourceType, get_proxy_handle_store
+
+        store = get_proxy_handle_store()
+        return await store.compute(
+            source_type=SourceType.CUSTOM,
+            compute_fn=lambda: self.evaluate(model, gaps),
+            human_label=f"SBM Binding Benchmark: {model.__class__.__name__}",
+            source_hash=self._model_hash(model),
+            force=force,
+            ttl=timedelta(hours=1),
+        )
+```
+
 ---
 
 ## What We Cut

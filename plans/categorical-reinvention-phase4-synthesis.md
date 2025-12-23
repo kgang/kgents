@@ -296,6 +296,135 @@ if __name__ == "__main__":
 | Demo problem solved correctly | Manual test | Back to debugging |
 | All AGENTESE paths working | Integration tests | Node registration issue |
 
+### ValidationEngine Integration
+
+Phase 4 validates the complete system and tracks release readiness:
+
+```yaml
+# initiatives/categorical-phase4.yaml
+id: categorical_phase4
+name: "Phase 4: Synthesis"
+description: "Ship kgents 2.0 with categorical guarantees"
+witness_tags: ["categorical", "phase4", "synthesis", "release"]
+
+phases:
+  - id: agent_compatibility
+    name: "Agent Compatibility"
+    description: "CategoricalAgent drop-in replacement"
+    propositions:
+      - id: polyagent_tests_pass
+        description: "All PolyAgent tests pass with CategoricalAgent"
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+      - id: agentese_paths_working
+        description: "All AGENTESE paths registered and functional"
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+    gate:
+      condition: all_required
+
+  - id: benchmark_improvement
+    name: "Benchmark Improvement"
+    description: "Categorical pipeline outperforms baseline"
+    depends_on: [agent_compatibility]
+    propositions:
+      - id: gsm8k_accuracy_gain
+        description: "GSM8K accuracy improves >5%"
+        metric: percent
+        threshold: 5
+        direction: ">"
+        required: true
+    gate:
+      condition: all_required
+
+  - id: release_gate
+    name: "Release Gate"
+    description: "Final ship/no-ship decision"
+    depends_on: [benchmark_improvement]
+    propositions:
+      - id: demo_passes
+        description: "Demo problem solved correctly"
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+      - id: no_critical_blockers
+        description: "No critical bugs or regressions"
+        metric: binary
+        threshold: 1
+        direction: "="
+        required: true
+    gate:
+      condition: all_required
+```
+
+```python
+# Complete validation pipeline for kgents 2.0 release
+from services.validation import get_validation_engine
+from datetime import timedelta
+
+engine = get_validation_engine()
+
+async def validate_release_readiness():
+    """Full release validation with caching."""
+
+    # Phase 1: Agent compatibility (fast, run always)
+    compat_handle = await engine.validate_cached(
+        "categorical_phase4",
+        {
+            "polyagent_tests_pass": 1.0 if all_tests_pass else 0.0,
+            "agentese_paths_working": 1.0 if paths_registered else 0.0,
+        },
+        phase_id="agent_compatibility",
+    )
+
+    if not compat_handle.data.passed:
+        return "❌ Compatibility gate failed"
+
+    # Phase 2: Benchmark (expensive, cache aggressively)
+    benchmark_handle = await engine.validate_cached(
+        "categorical_phase4",
+        {"gsm8k_accuracy_gain": accuracy_improvement_percent},
+        phase_id="benchmark_improvement",
+        ttl=timedelta(hours=4),  # Benchmarks expensive
+    )
+
+    if not benchmark_handle.data.passed:
+        return "❌ Benchmark gate failed"
+
+    # Phase 3: Release gate
+    release_handle = await engine.validate_cached(
+        "categorical_phase4",
+        {
+            "demo_passes": 1.0 if demo_correct else 0.0,
+            "no_critical_blockers": 1.0 if not critical_bugs else 0.0,
+        },
+        phase_id="release_gate",
+    )
+
+    if release_handle.data.passed:
+        return "✅ kgents 2.0 READY TO SHIP"
+    else:
+        blockers = engine.get_blockers()
+        return f"❌ Release blocked: {blockers}"
+
+
+# Track full initiative progress
+status = engine.get_status("categorical_phase4")
+print(f"""
+kgents 2.0 Release Status
+========================
+Progress: {status.progress_percent:.0f}%
+Current Phase: {status.current_phase_id}
+Completed: {', '.join(str(p) for p in status.phases_complete) or 'None'}
+Blockers: {len(status.blockers)}
+""")
+```
+
 ---
 
 ## What We Cut
@@ -365,16 +494,54 @@ But first: ship.
 
 ## The Full Arc
 
-| Phase | Duration | Core Outcome |
-|-------|----------|--------------|
-| 1 | 3 weeks | Validated: Laws predict correctness |
-| 2 | 4 weeks | Operational: CPRM guides search |
-| 3 | 5 weeks | Architectural: SBM solves binding |
-| 4 | 3 weeks | Shipped: kgents 2.0 |
+| Phase | Duration | Core Outcome | ValidationEngine Initiative |
+|-------|----------|--------------|----------------------------|
+| 1 | 3 weeks | Validated: Laws predict correctness | `categorical_phase1` (flat) |
+| 2 | 4 weeks | Operational: CPRM guides search | `categorical_phase2` (3 phases) |
+| 3 | 5 weeks | Architectural: SBM solves binding | `categorical_phase3` (3 phases) |
+| 4 | 3 weeks | Shipped: kgents 2.0 | `categorical_phase4` (3 phases) |
 
 **Total: 15 weeks**
 
 From theory to product in under 4 months. Each phase has a clear deliverable and clear success criteria. Fail fast or ship fast.
+
+### Validation Infrastructure
+
+Every phase uses the same validation primitives:
+
+```python
+# All phases share this workflow
+from services.validation import get_validation_engine
+from datetime import timedelta
+
+engine = get_validation_engine()
+
+# 1. Register initiatives (once, at startup)
+engine.load_initiatives_from_dir(Path("initiatives/categorical/"))
+
+# 2. Run validation with caching (expensive benchmarks)
+handle = await engine.validate_cached(
+    "categorical_phase1",
+    measurements=study_results,
+    ttl=timedelta(minutes=30),
+)
+
+# 3. Check gate status
+if handle.data.passed:
+    proceed_to_next_phase()
+else:
+    blockers = engine.get_blockers()
+    fix_blockers(blockers)
+
+# 4. Track overall progress (AGENTESE path)
+await logos.invoke("concept.validation.status", umwelt, initiative="categorical_phase2")
+```
+
+**Key Integration Points**:
+- `SourceType.VALIDATION_RUN` — Cached validation results
+- `ProxyHandle[ValidationRun]` — Explicit computation, no auto-refresh
+- Witness marks — Every proposition check emits marks
+- `source_hash` — Changed measurements invalidate cache
 
 *"Daring, bold, creative, opinionated but not gaudy."*
 
