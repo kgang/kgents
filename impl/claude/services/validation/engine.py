@@ -21,9 +21,11 @@ See: plans/validation-framework-implementation.md
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -52,6 +54,7 @@ from .store import ValidationStore, get_validation_store
 
 # Witness imports — validation IS witnessed measurement
 if TYPE_CHECKING:
+    from services.proxy import ProxyHandle, ProxyHandleStore
     from services.witness.mark import Mark as MarkType
     from services.witness.trace_store import MarkStore as MarkStoreType
 
