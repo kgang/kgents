@@ -227,20 +227,59 @@ class ContextNode:
         Available hyperedges from this node.
 
         Observer-dependent: different observers see different edges.
-        This is a placeholder—real implementation uses AGENTESE aspects.
+        Delegates to hyperedge_resolvers for actual edge computation.
+
+        Teaching:
+            gotcha: This returns edge TYPES that are available, not resolved edges.
+                    Call follow() to get actual destinations.
         """
-        # Placeholder: in real impl, this queries AGENTESE aspects
-        return {}
+        # Import here to avoid circular dependency
+        try:
+            from protocols.agentese.contexts.hyperedge_resolvers import (
+                get_resolver_registry,
+            )
+
+            registry = get_resolver_registry()
+            edge_types = registry.list_edge_types()
+
+            # Return empty lists for each edge type
+            # The actual resolution happens in follow()
+            return {edge_type: [] for edge_type in edge_types}
+        except ImportError:
+            # Fallback if resolvers not available
+            return {}
 
     async def follow(self, aspect: str, observer: Observer) -> list[ContextNode]:
         """
-        Traverse a hyperedge.
+        Traverse a hyperedge using AGENTESE resolvers.
 
         Equivalent to: logos(f"{self.path}.{aspect}", observer)
+
+        Teaching:
+            gotcha: This now uses real hyperedge_resolvers! Navigation is live.
+                    (Evidence: test_state.py::test_navigate_follows_real_edges)
         """
-        # Placeholder: in real impl, this invokes AGENTESE
-        edges = self.edges(observer)
-        return edges.get(aspect, [])
+        try:
+            from protocols.agentese.contexts.hyperedge_resolvers import (
+                _get_project_root,
+                resolve_hyperedge,
+            )
+            from protocols.agentese.contexts.self_context import (
+                ContextNode as AgentContextNode,
+            )
+
+            # Create an AgentContextNode to use the resolver
+            agent_node = AgentContextNode(path=self.path, holon=self.holon)
+
+            # Resolve the hyperedge
+            root = _get_project_root()
+            agent_results = await resolve_hyperedge(agent_node, aspect, root)
+
+            # Convert back to exploration ContextNode
+            return [ContextNode(path=n.path, holon=n.holon) for n in agent_results]
+        except ImportError:
+            # Fallback to placeholder if resolvers not available
+            return []
 
 
 @dataclass
