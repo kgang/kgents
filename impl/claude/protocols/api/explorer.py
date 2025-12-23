@@ -298,17 +298,14 @@ def create_explorer_router() -> "APIRouter | None":
             )
             response = await service.list_events(request)
 
-            return {
-                "events": [e.to_dict() for e in response.events],
-                "total": response.total,
-                "has_more": response.has_more,
-            }
+            # Use response.to_dict() for consistent camelCase JSON
+            return response.to_dict()
         except Exception as e:
             logger.exception("Error listing events")
             return {
                 "events": [],
                 "total": 0,
-                "has_more": False,
+                "hasMore": False,
                 "error": str(e),
             }
 
