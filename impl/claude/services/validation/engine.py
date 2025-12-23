@@ -105,6 +105,9 @@ class ValidationEngine:
     # MarkStore for witness integration (injected or use global)
     _mark_store: MarkStoreType | None = None
 
+    # ProxyHandleStore for caching (injected or use global)
+    _proxy_store: "ProxyHandleStore | None" = None
+
     # Whether to emit marks (can be disabled for pure validation)
     emit_marks: bool = True
 
@@ -123,6 +126,15 @@ class ValidationEngine:
 
             self._mark_store = get_mark_store()
         return self._mark_store
+
+    @property
+    def proxy_store(self) -> "ProxyHandleStore":
+        """Get the proxy handle store (lazy initialization)."""
+        if self._proxy_store is None:
+            from services.proxy import get_proxy_handle_store
+
+            self._proxy_store = get_proxy_handle_store()
+        return self._proxy_store
 
     # =========================================================================
     # Witness Integration (Intrinsic)
