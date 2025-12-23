@@ -14,7 +14,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { graphApi, fileApi } from '../api/client';
+import { graphApi } from '../api/client';
 import type { ConceptGraphNeighborsResponse } from '../api/types/_generated/concept-graph';
 import type { GraphNode, Edge, EdgeType } from './types';
 
@@ -244,21 +244,12 @@ export function useGraphNode(): UseGraphNodeResult {
       // Query WitnessedGraph for edges connected to this path
       const neighborsResponse = await graphApi.neighbors(normalizedPath);
 
-      // Also fetch content via fileApi (optional - content is lazy-loaded)
-      let content: string | undefined;
-      try {
-        const fileResponse = await fileApi.read(normalizedPath);
-        content = fileResponse.content;
-      } catch (_fileError) {
-        // Content loading is optional - node can still show edges without content
-        console.info(
-          '[useGraphNode] Content not available for',
-          normalizedPath,
-          '- edges-only mode'
-        );
-      }
+      // NOTE: Content is NOT loaded here anymore!
+      // Content comes through K-Block when editing (via SpecView.tsx)
+      // This enforces inbound sovereignty - we only serve content from our managed store
+      // If content is needed, use K-Block create which queries Cosmos → SovereignStore
 
-      return convertNeighborsToGraphNode(normalizedPath, neighborsResponse, content);
+      return convertNeighborsToGraphNode(normalizedPath, neighborsResponse, undefined);
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Failed to load node';
       setError(errorMsg);

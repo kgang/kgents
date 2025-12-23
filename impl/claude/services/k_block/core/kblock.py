@@ -233,6 +233,10 @@ class KBlock:
     # Reference to cosmos (set by harness)
     _cosmos: "Cosmos | None" = field(default=None, repr=False)
 
+    # Sovereignty indicator: True if content not found in cosmos or sovereign store
+    # Frontend should show "not ingested" UI when this is True
+    not_ingested: bool = False
+
     # ---------------------------------------------------------------------
     # Content Operations
     # ---------------------------------------------------------------------

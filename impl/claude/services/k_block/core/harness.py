@@ -177,9 +177,17 @@ class FileOperadHarness:
 
         This is the 'return' operation of the K-Block monad.
         It lifts a document from the cosmos into an isolated editing context.
+
+        If content is not found in cosmos OR sovereign store, the K-Block
+        is created with empty content and not_ingested=True. Frontend should
+        show appropriate UI for uploading/ingesting content.
         """
-        # Read current content from cosmos (or empty if new)
-        content = await self.cosmos.read(path) or ""
+        # Read current content from cosmos (checks cosmos log, then sovereign store)
+        raw_content = await self.cosmos.read(path)
+
+        # Detect "not ingested" state: content is None (not in cosmos or sovereign)
+        not_ingested = raw_content is None
+        content = raw_content or ""
 
         # Create K-Block
         block = KBlock(
@@ -188,6 +196,7 @@ class FileOperadHarness:
             content=content,
             base_content=content,
             isolation=IsolationState.PRISTINE,
+            not_ingested=not_ingested,
         )
 
         # Set cosmos reference

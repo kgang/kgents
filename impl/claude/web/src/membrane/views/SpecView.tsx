@@ -346,6 +346,11 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
   const [editContent, setEditContent] = useState('');
   const [isApplyingEdit, setIsApplyingEdit] = useState(false);
 
+  // Sovereignty state: True when content not found in cosmos or sovereign store
+  // User needs to upload content via file picker to ingest
+  const [notIngested, setNotIngested] = useState(false);
+  const [ingestHint, setIngestHint] = useState<string>('');
+
   // K-Block for transactional editing
   const kblock = useFileKBlock();
 
@@ -372,6 +377,8 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
     async function loadContent() {
       setContentLoading(true);
       setContentError(null);
+      setNotIngested(false);
+      setIngestHint('');
 
       try {
         // Step 1: Create K-Block for this file (returns content immediately)
@@ -379,11 +386,21 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
 
         if (cancelled) return;
 
+        // Step 2: Check if content not ingested (sovereign store empty)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const resultAny = result as any;
+        if (resultAny.not_ingested) {
+          setNotIngested(true);
+          setIngestHint(resultAny.ingest_hint || 'Upload content via File Picker');
+          setContentLoading(false);
+          return;
+        }
+
         if (!result.success || !result.content) {
           throw new Error(result.error || 'Failed to create K-Block');
         }
 
-        // Step 2: Parse content to SceneGraph via AGENTESE self.document.parse
+        // Step 3: Parse content to SceneGraph via AGENTESE self.document.parse
         // Content is available immediately from the promise, no React state delay
         const parsed = await documentApi.parse(result.content, 'COMFORTABLE');
 
@@ -523,6 +540,37 @@ export function SpecView({ path, onNavigate, onEdgeClick }: SpecViewProps) {
     return (
       <div className="spec-view spec-view--loading">
         <PersonalityLoading jewel="brain" action="analyze" size="md" />
+      </div>
+    );
+  }
+
+  // NOT INGESTED state - content not in sovereign store
+  // User needs to upload content via file picker
+  if (notIngested) {
+    return (
+      <div className="spec-view spec-view--not-ingested">
+        <div className="spec-view__not-ingested">
+          <div className="spec-view__not-ingested-icon">📦</div>
+          <h3 className="spec-view__not-ingested-title">Content Not Ingested</h3>
+          <p className="spec-view__not-ingested-message">
+            This document hasn't been uploaded to the sovereign store yet.
+          </p>
+          <div className="spec-view__not-ingested-path">
+            <code>{path}</code>
+          </div>
+          <div className="spec-view__not-ingested-hint">{ingestHint}</div>
+          <div className="spec-view__not-ingested-actions">
+            <button
+              className="spec-view__upload-btn"
+              onClick={() => {
+                // TODO: Open file upload dialog
+                console.info('[SpecView] Open file uploader for:', path);
+              }}
+            >
+              Upload Content
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

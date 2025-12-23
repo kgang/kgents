@@ -745,3 +745,96 @@
   padding: 0.25rem 0.5rem;
   text-align: center;
 }
+
+/* ============================================================================= */
+/* Not Ingested State — Content not in sovereign store                          */
+/* ============================================================================= */
+
+.spec-view--not-ingested {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--surface-0);
+}
+
+.spec-view__not-ingested {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem;
+  max-width: 400px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.spec-view__not-ingested-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.spec-view__not-ingested-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+}
+
+.spec-view__not-ingested-message {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+}
+
+.spec-view__not-ingested-path {
+  margin-bottom: 1rem;
+}
+
+.spec-view__not-ingested-path code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--surface-2);
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+.spec-view__not-ingested-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 1.5rem;
+}
+
+.spec-view__not-ingested-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.spec-view__upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--accent-primary);
+  color: var(--surface-0);
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.spec-view__upload-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.spec-view__upload-btn:active {
+  transform: translateY(0);
+}

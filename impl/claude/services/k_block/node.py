@@ -451,12 +451,22 @@ class KBlockNode(BaseLogosNode):
                 return {"error": "path required"}
 
             block = await self._harness.create(path)
-            return {
+
+            response: dict[str, Any] = {
                 "block_id": block.id,
                 "path": block.path,
                 "isolation": block.isolation.name,
                 "content_preview": block.content[:200] if block.content else "",
+                "content": block.content,  # Full content for frontend
             }
+
+            # Add not_ingested flag if content wasn't found in cosmos or sovereign store
+            # Frontend should show upload UI when this is True
+            if block.not_ingested:
+                response["not_ingested"] = True
+                response["ingest_hint"] = "Upload content via File Picker"
+
+            return response
 
         elif aspect_name == "get":
             block_id = kwargs.get("block_id", "")

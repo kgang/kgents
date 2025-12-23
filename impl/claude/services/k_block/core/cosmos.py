@@ -314,16 +314,26 @@ class Cosmos:
             entry = self.log.get(latest)
             return entry.content if entry else None
 
-        # Fallback: read from filesystem if not in cosmos yet
+        # Fallback: read from SovereignStore (ingested copies)
+        # NOTE: We no longer fall back to filesystem! Content must be explicitly
+        # ingested into the sovereign store. This enforces inbound sovereignty.
         try:
-            from pathlib import Path
+            from services.providers import get_sovereign_store
 
-            file_path = Path(path)
-            if file_path.exists() and file_path.is_file():
-                return file_path.read_text(encoding="utf-8")
+            store = await get_sovereign_store()
+            entity = await store.get_current(path)
+            if entity is not None:
+                # SovereignEntity stores content as bytes, decode to str
+                return (
+                    entity.content.decode("utf-8")
+                    if isinstance(entity.content, bytes)
+                    else entity.content
+                )
         except Exception:
-            pass  # File read failed, return None
+            pass  # SovereignStore not available or path not found
 
+        # Return None if not in cosmos OR sovereign store
+        # Frontend should show "not ingested" UI when content is None
         return None
 
     async def exists(self, path: str) -> bool:
