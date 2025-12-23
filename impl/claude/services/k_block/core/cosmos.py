@@ -298,19 +298,33 @@ class Cosmos:
         """
         Read content at version (default: latest).
 
-        Returns None if path doesn't exist.
+        If the path doesn't exist in the cosmos log yet, falls back to
+        reading from the filesystem. This allows K-Blocks to be created
+        for files that haven't been edited through the cosmos yet.
+
+        Returns None if path doesn't exist anywhere.
         """
         if version is not None:
             entry = self.log.get(version)
             return entry.content if entry and entry.path == path else None
 
-        # Get latest version
+        # Get latest version from cosmos log
         latest = self.index.get_latest(path)
-        if latest is None:
-            return None
+        if latest is not None:
+            entry = self.log.get(latest)
+            return entry.content if entry else None
 
-        entry = self.log.get(latest)
-        return entry.content if entry else None
+        # Fallback: read from filesystem if not in cosmos yet
+        try:
+            from pathlib import Path
+
+            file_path = Path(path)
+            if file_path.exists() and file_path.is_file():
+                return file_path.read_text(encoding="utf-8")
+        except Exception:
+            pass  # File read failed, return None
+
+        return None
 
     async def exists(self, path: str) -> bool:
         """Check if path exists in cosmos."""

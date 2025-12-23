@@ -16,18 +16,38 @@ import { useCallback, useState, useRef, useEffect } from 'react';
 /**
  * A curated set of quotes that capture the kgents philosophy.
  * Each quote is a compressed insight worth lingering on.
+ *
+ * The whimsy is intentional. The depth is real.
  */
 export const CURATED_QUOTES = [
-  'The proof IS the decision.',
-  'Daring, bold, creative, opinionated but not gaudy.',
-  'The persona is a garden, not a museum.',
-  'Tasteful > feature-complete.',
-  'Joy-inducing > merely functional.',
-  'Agents compose. Monoliths accumulate.',
+  // The Core Thesis
+  'What if ideas wanted to help us think?',
   'The noun is a lie. There is only the rate of change.',
-  'Depth over breadth.',
+  'Agents compose. Monoliths accumulate.',
+
+  // Joy & Taste
+  'Daring, bold, creative, opinionated but not gaudy.',
+  'Tasteful > feature-complete. Joy-inducing > merely functional.',
+  'The persona is a garden, not a museum.',
+
+  // Stillness & Life
   'Stillness, then life.',
   'The frame is humble. The content glows.',
+  'Most things are still. Movement is earned.',
+
+  // The Dialectic
+  '90% steel, 10% life. The austerity makes warmth precious.',
+  'The proof IS the decision. The mark IS the witness.',
+  'Depth over breadth. Compression over accumulation.',
+
+  // Whimsy
+  'Every button should feel like it wants to be pressed.',
+  'Errors should feel like a friend saying "hmm, that\'s interesting".',
+  'The best agents feel like your own thoughts, externalized.',
+
+  // Meta
+  'You are already the agent. You just forgot.',
+  'Stop documenting. Start becoming.',
 ] as const;
 
 export type Quote = (typeof CURATED_QUOTES)[number];

@@ -13,7 +13,25 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // Types
 // =============================================================================
 
-export type WitnessEventType = 'mark' | 'thought' | 'crystal' | 'heartbeat' | 'connected';
+export type WitnessEventType =
+  | 'mark'
+  | 'thought'
+  | 'crystal'
+  | 'heartbeat'
+  | 'connected'
+  | 'kblock'
+  | 'trail'
+  | 'spec';
+
+// Semantic delta from K-Block edits
+export interface SemanticDelta {
+  kind: string;
+  token_id: string;
+  token_kind: string;
+  token_value: string;
+  old_value?: string;
+  new_value?: string;
+}
 
 export interface WitnessEvent {
   id: string;
@@ -35,6 +53,19 @@ export interface WitnessEvent {
   level?: string;
   insight?: string;
   significance?: number;
+
+  // K-Block fields (editing IS witnessing)
+  blockId?: string;
+  path?: string;
+  actor?: string;
+  semanticDeltas?: SemanticDelta[];
+  contentChanged?: boolean;
+
+  // Spec Ledger fields (Living Spec integration)
+  specAction?: string; // 'scan' | 'deprecate' | 'evidence_added'
+  specPaths?: string[];
+  specSummary?: Record<string, number>;
+  orphanCount?: number;
 }
 
 export interface UseWitnessStream {
@@ -94,16 +125,30 @@ export function useWitnessStream(): UseWitnessStream {
           id: data.id || `evt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           type: data.type || 'mark',
           timestamp: new Date(data.timestamp || Date.now()),
+          // Mark fields
           action: data.action,
           reasoning: data.reasoning,
           principles: data.principles,
           author: data.author,
+          // Thought fields
           content: data.content,
           source: data.source,
           tags: data.tags,
+          // Crystal fields
           level: data.level,
           insight: data.insight,
           significance: data.significance,
+          // K-Block fields
+          blockId: data.block_id,
+          path: data.path,
+          actor: data.actor,
+          semanticDeltas: data.semantic_deltas,
+          contentChanged: data.content_changed,
+          // Spec Ledger fields
+          specAction: data.action,
+          specPaths: data.paths,
+          specSummary: data.summary,
+          orphanCount: data.orphan_count,
         };
 
         setEvents((prev) => [event, ...prev].slice(0, MAX_EVENTS));

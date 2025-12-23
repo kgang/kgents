@@ -1,14 +1,23 @@
 /**
- * Breathe Animation Component
+ * Breathe Animation Component — STARK BIOME Edition
  *
- * Subtle pulsing animation for healthy/living elements.
- * Conveys vitality and wellness - use for health grades, status indicators.
+ * Calming breath animation for healthy/living elements.
+ * Uses 4-7-8 asymmetric timing for organic, non-mechanical feel.
  *
- * Foundation 5: Personality & Joy - Animation Primitives
+ * STARK BIOME: "Stillness, then life."
+ * Only living elements should breathe. Most things stay still.
+ *
+ * 4-7-8 Timing Pattern:
+ * - 15% rest (stillness before inhale)
+ * - 25% gentle rise (soft inhale)
+ * - 10% brief hold (moment of fullness)
+ * - 50% slow release (long, calming exhale)
+ *
+ * @see docs/creative/stark-biome-moodboard.md
  *
  * @example
  * ```tsx
- * <Breathe intensity={0.5}>
+ * <Breathe intensity={0.3}>
  *   <HealthGrade grade="A+" />
  * </Breathe>
  * ```
@@ -35,24 +44,36 @@ export interface BreatheProps {
   style?: CSSProperties;
 }
 
-// Duration in seconds for each speed
+/**
+ * STARK BIOME: Calming breath durations
+ * Based on 4-7-8 breathing pattern — asymmetric, organic timing
+ */
 const SPEED_DURATION: Record<BreatheSpeed, number> = {
-  slow: 4,
-  normal: 3,
-  fast: 2,
+  slow: 8.1, // Full calming cycle — ambient elements
+  normal: 6.75, // Standard living breath — active elements
+  fast: 5.4, // Quicker but still calming — attention needed
 };
 
-// Scale factor based on intensity
+/**
+ * STARK BIOME: Subtle scale range
+ * Scale is barely perceptible — organic, not mechanical
+ */
 function getScaleRange(intensity: number): [number, number] {
   const clampedIntensity = Math.max(0, Math.min(1, intensity));
-  const maxScale = 1 + clampedIntensity * 0.05; // Max 1.05 at full intensity
+  // Max scale 1.015 at full intensity — very subtle
+  const maxScale = 1 + clampedIntensity * 0.015;
   return [1, maxScale];
 }
 
-// Opacity range based on intensity
+/**
+ * STARK BIOME: Opacity range based on intensity
+ * - Whisper (low intensity): 0.985 ↔ 1.0 (1.5% variation)
+ * - Living (high intensity): 0.94 ↔ 1.0 (6% variation)
+ */
 function getOpacityRange(intensity: number): [number, number] {
   const clampedIntensity = Math.max(0, Math.min(1, intensity));
-  const minOpacity = 1 - clampedIntensity * 0.15; // Min 0.85 at full intensity
+  // Min 0.94 at full intensity, 0.985 at low intensity
+  const minOpacity = 1 - clampedIntensity * 0.06;
   return [1, minOpacity];
 }
 
@@ -87,14 +108,40 @@ export function Breathe({
   const [minScale, maxScale] = getScaleRange(intensity);
   const [maxOpacity, minOpacity] = getOpacityRange(intensity);
 
+  /**
+   * STARK BIOME: 4-7-8 Asymmetric Calming Breath
+   *
+   * Timeline breakdown:
+   * - 0-15% (0-1.01s): Rest — stillness before inhale
+   * - 15-40% (1.01-2.7s): Gentle rise — soft inhale
+   * - 40-50% (2.7-3.375s): Brief hold — moment of fullness
+   * - 50-100% (3.375-6.75s): Slow release — long, calming exhale
+   *
+   * This creates a natural breathing feel, not mechanical oscillation.
+   */
   const breatheVariants: Variants = {
     animate: {
-      scale: [minScale, maxScale, minScale],
-      opacity: [maxOpacity, minOpacity, maxOpacity],
+      // 4-7-8 timing: rest → rise → hold → slow release
+      scale: [
+        minScale, // 0% - rest
+        minScale, // 15% - still resting
+        maxScale, // 40% - peak of inhale
+        maxScale, // 50% - hold
+        minScale, // 100% - end of exhale
+      ],
+      opacity: [
+        minOpacity, // 0% - rest (dim)
+        minOpacity, // 15% - still dim
+        maxOpacity, // 40% - peak brightness
+        maxOpacity, // 50% - hold brightness
+        minOpacity, // 100% - back to dim
+      ],
       transition: {
         duration,
         repeat: Infinity,
-        ease: 'easeInOut',
+        // Custom timing to match 4-7-8 pattern
+        times: [0, 0.15, 0.4, 0.5, 1.0],
+        ease: 'linear', // Easing baked into keyframe placement
       },
     },
   };

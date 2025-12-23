@@ -42,24 +42,37 @@ export interface JewelColor {
 }
 
 /**
- * Crown Jewel Color Palette
+ * Crown Jewel Color Palette — STARK BIOME Edition
+ *
+ * STARK BIOME: "The frame is humble. The content glows."
+ * Jewel colors are MUTED — earned, not given.
  *
  * Semantic meanings:
- * - brain: Knowledge (Cyan) - understanding, memory
- * - gestalt: Growth (Green) - health, progress
- * - forge: Creation (Amber) - creativity, warmth
- * - coalition: Collaboration (Violet) - synthesis, harmony
- * - park: Drama (Pink) - narrative, performance
- * - domain: Urgency (Red) - crisis, alert
+ * - brain: Knowledge (Teal Moss) - understanding quietly growing
+ * - gestalt: Growth (Sage) - health, progress
+ * - gardener: Nurturing (Fern) - growth, tending
+ * - forge/atelier: Creation (Umber) - creative warmth, earned glow
+ * - coalition: Collaboration (Muted Violet) - synthesis, harmony
+ * - park: Drama (Muted Rose) - narrative, performance
+ * - domain: Urgency (Muted Rust) - alert without alarm
+ *
+ * @see docs/creative/stark-biome-moodboard.md
  */
 export const JEWEL_COLORS: Record<JewelName, JewelColor> = {
-  brain: { primary: '#06B6D4', accent: '#0891B2', bg: '#0E7490' }, // Cyan family
-  gestalt: { primary: '#22C55E', accent: '#16A34A', bg: '#15803D' }, // Green family
-  gardener: { primary: '#84CC16', accent: '#65A30D', bg: '#4D7C0F' }, // Lime family - Growth, nurturing
-  forge: { primary: '#F59E0B', accent: '#D97706', bg: '#B45309' }, // Amber family
-  coalition: { primary: '#8B5CF6', accent: '#7C3AED', bg: '#6D28D9' }, // Violet family
-  park: { primary: '#EC4899', accent: '#DB2777', bg: '#BE185D' }, // Pink family
-  domain: { primary: '#EF4444', accent: '#DC2626', bg: '#B91C1C' }, // Red family
+  // STARK BIOME: Muted teal moss — knowledge growing quietly
+  brain: { primary: '#4A6B6B', accent: '#5A7B7B', bg: '#3A5B5B' },
+  // STARK BIOME: life-sage family — organic health
+  gestalt: { primary: '#4A6B4A', accent: '#5A7B5A', bg: '#3A5B3A' },
+  // STARK BIOME: Fern family — nurturing growth
+  gardener: { primary: '#6B8B6B', accent: '#7B9B7B', bg: '#5A7B5A' },
+  // STARK BIOME: Umber family — creative warmth (same as atelier)
+  forge: { primary: '#8B7355', accent: '#9B8365', bg: '#7B6345' },
+  // STARK BIOME: Muted violet — synthesis without saturation
+  coalition: { primary: '#6B5A7B', accent: '#7B6A8B', bg: '#5B4A6B' },
+  // STARK BIOME: Muted rose — drama without screaming
+  park: { primary: '#7B5A6B', accent: '#8B6A7B', bg: '#6B4A5B' },
+  // STARK BIOME: Muted rust — alert without alarm (per state-alert)
+  domain: { primary: '#8B5A4A', accent: '#9B6A5A', bg: '#7B4A3A' },
 } as const;
 
 /**

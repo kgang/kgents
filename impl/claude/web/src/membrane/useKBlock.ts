@@ -71,7 +71,13 @@ async function invokeKBlock(
       return { success: false, error: data.error };
     }
 
-    return { success: true, data };
+    // AGENTESE responses wrap data in a 'result' field
+    const result = data.result ?? data;
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
   }
@@ -258,9 +264,21 @@ export interface KBlockReference {
   exists: boolean;
 }
 
+export interface KBlockCreateResult {
+  success: boolean;
+  blockId?: string;
+  path?: string;
+  content?: string;
+  baseContent?: string;
+  isolation?: IsolationState;
+  isDirty?: boolean;
+  activeViews?: KBlockViewType[];
+  error?: string;
+}
+
 export interface UseFileKBlock {
   state: FileKBlockState;
-  create: (path: string) => Promise<boolean>;
+  create: (path: string) => Promise<KBlockCreateResult>;
   refresh: () => Promise<boolean>;
   viewEdit: (
     sourceView: KBlockViewType,
@@ -281,16 +299,26 @@ export interface UseFileKBlock {
  *
  * Usage in SpecView:
  * ```tsx
- * const { state, create, viewEdit, save, discard } = useFileKBlock();
+ * const kblock = useFileKBlock();
  *
- * // Create K-Block when mounting
- * useEffect(() => { create(specPath); }, [specPath]);
+ * // Create K-Block and get content immediately
+ * useEffect(() => {
+ *   async function init() {
+ *     const result = await kblock.create(specPath);
+ *     if (result.success && result.content) {
+ *       // Content is available immediately, no need to wait for state update
+ *       const parsed = await documentApi.parse(result.content, 'COMFORTABLE');
+ *       setSceneGraph(parsed.scene_graph);
+ *     }
+ *   }
+ *   init();
+ * }, [specPath]);
  *
  * // Edit via graph view
- * await viewEdit('graph', newGraphContent, 'Kent reorganized sections');
+ * await kblock.viewEdit('graph', newGraphContent, 'Kent reorganized sections');
  *
  * // Save when done
- * await save('Completed spec update');
+ * await kblock.save('Completed spec update');
  * ```
  */
 export function useFileKBlock(): UseFileKBlock {
@@ -306,7 +334,7 @@ export function useFileKBlock(): UseFileKBlock {
     error: null,
   });
 
-  const create = useCallback(async (path: string): Promise<boolean> => {
+  const create = useCallback(async (path: string): Promise<KBlockCreateResult> => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     const result = await invokeKBlock('create', { path });
@@ -318,27 +346,48 @@ export function useFileKBlock(): UseFileKBlock {
       const getResult = await invokeKBlock('get', { block_id: blockId });
 
       if (getResult.success && getResult.data) {
+        const content = getResult.data.content as string;
+        const baseContent = getResult.data.base_content as string;
+        const isolation = getResult.data.isolation as IsolationState;
+        const isDirty = getResult.data.is_dirty as boolean;
+        const activeViews = getResult.data.active_views as KBlockViewType[];
+        const filePath = getResult.data.path as string;
+
+        // Update state
         setState({
           blockId,
-          path: getResult.data.path as string,
-          content: getResult.data.content as string,
-          baseContent: getResult.data.base_content as string,
-          isolation: getResult.data.isolation as IsolationState,
-          isDirty: getResult.data.is_dirty as boolean,
-          activeViews: getResult.data.active_views as KBlockViewType[],
+          path: filePath,
+          content,
+          baseContent,
+          isolation,
+          isDirty,
+          activeViews,
           isLoading: false,
           error: null,
         });
-        return true;
+
+        // Return content directly so caller doesn't have to wait for state update
+        return {
+          success: true,
+          blockId,
+          path: filePath,
+          content,
+          baseContent,
+          isolation,
+          isDirty,
+          activeViews,
+        };
       }
     }
 
+    const errorMsg = result.error || 'Failed to create K-Block';
     setState((prev) => ({
       ...prev,
       isLoading: false,
-      error: result.error || 'Failed to create K-Block',
+      error: errorMsg,
     }));
-    return false;
+
+    return { success: false, error: errorMsg };
   }, []);
 
   const refresh = useCallback(async (): Promise<boolean> => {

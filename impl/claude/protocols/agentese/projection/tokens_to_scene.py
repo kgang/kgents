@@ -68,6 +68,11 @@ class MeaningTokenKind(str, Enum):
     CODE_REGION = "CODE_REGION"  # Code block with run/edit
     PRINCIPLE_ANCHOR = "PRINCIPLE_ANCHOR"  # Principle reference badge
     REQUIREMENT_TRACE = "REQUIREMENT_TRACE"  # Requirement reference badge
+    # New token types (robustification)
+    MARKDOWN_TABLE = "MARKDOWN_TABLE"  # Table with export/edit
+    LINK = "LINK"  # Hyperlink with preview
+    BLOCKQUOTE = "BLOCKQUOTE"  # Quoted text block
+    HORIZONTAL_RULE = "HORIZONTAL_RULE"  # Section divider
     PLAIN_TEXT = "PLAIN_TEXT"  # Non-token text (markdown prose)
 
 
@@ -113,6 +118,11 @@ def _token_type_to_kind(token_type: str) -> str:
         "code_block": MeaningTokenKind.CODE_REGION.value,
         "principle_ref": MeaningTokenKind.PRINCIPLE_ANCHOR.value,
         "requirement_ref": MeaningTokenKind.REQUIREMENT_TRACE.value,
+        # New token types
+        "markdown_table": MeaningTokenKind.MARKDOWN_TABLE.value,
+        "link": MeaningTokenKind.LINK.value,
+        "blockquote": MeaningTokenKind.BLOCKQUOTE.value,
+        "horizontal_rule": MeaningTokenKind.HORIZONTAL_RULE.value,
     }
     return mapping.get(token_type, MeaningTokenKind.PLAIN_TEXT.value)
 
@@ -142,8 +152,74 @@ def _token_style(token_type: str) -> NodeStyle:
         "requirement_ref": NodeStyle(
             background="purple",
         ),
+        # New token types
+        "markdown_table": NodeStyle(
+            background="steel",
+            border="gunmetal",
+        ),
+        "link": NodeStyle(
+            foreground="living_green",
+        ),
+        "blockquote": NodeStyle(
+            background="soil",
+            border="sage",
+        ),
+        "horizontal_rule": NodeStyle(
+            foreground="steel",
+        ),
     }
     return styles.get(token_type, NodeStyle.default())
+
+
+def _parse_table_data(source_text: str) -> dict[str, Any]:
+    """Parse markdown table source text into structured data."""
+    lines = source_text.strip().split("\n")
+    if len(lines) < 2:
+        return {"columns": [], "rows": [], "row_count": 0, "column_count": 0}
+
+    # Parse header row
+    def parse_row(line: str) -> list[str]:
+        line = line.strip()
+        if line.startswith("|"):
+            line = line[1:]
+        if line.endswith("|"):
+            line = line[:-1]
+        return [cell.strip() for cell in line.split("|")]
+
+    # Parse alignment from separator row
+    def parse_alignment(cell: str) -> str:
+        cell = cell.strip()
+        if cell.startswith(":") and cell.endswith(":"):
+            return "center"
+        elif cell.endswith(":"):
+            return "right"
+        return "left"
+
+    headers = parse_row(lines[0])
+    alignments = [parse_alignment(cell) for cell in parse_row(lines[1])]
+
+    # Ensure alignments match headers
+    while len(alignments) < len(headers):
+        alignments.append("left")
+
+    columns = [{"header": h, "alignment": alignments[i], "index": i} for i, h in enumerate(headers)]
+
+    # Parse data rows
+    rows = []
+    for line in lines[2:]:
+        if line.strip():
+            cells = parse_row(line)
+            # Pad or truncate to match column count
+            while len(cells) < len(columns):
+                cells.append("")
+            rows.append(cells[: len(columns)])
+
+    return {
+        "columns": columns,
+        "rows": rows,
+        "row_count": len(rows),
+        "column_count": len(columns),
+    }
 
 
 def _affordances_to_interactions(affordances: list[dict[str, Any]]) -> tuple[Interaction, ...]:
@@ -200,23 +276,38 @@ async def text_span_to_scene_node(
 
     # Extract token-specific data from match groups
     token_data: dict[str, Any] = {}
-    if span.token_match.match.groups():
-        groups = span.token_match.match.groups()
-        if token_type == "agentese_path" and len(groups) >= 1:
-            token_data["path"] = groups[0]
-        elif token_type == "task_checkbox" and len(groups) >= 2:
-            token_data["checked"] = groups[0].lower() == "x"
-            token_data["description"] = groups[1]
-        elif token_type == "image" and len(groups) >= 2:
-            token_data["alt_text"] = groups[0]
-            token_data["src"] = groups[1]
-        elif token_type == "code_block" and len(groups) >= 2:
-            token_data["language"] = groups[0]
-            token_data["code"] = groups[1]
-        elif token_type == "principle_ref" and len(groups) >= 1:
-            token_data["principle_number"] = int(groups[0])
-        elif token_type == "requirement_ref" and len(groups) >= 1:
-            token_data["requirement_id"] = groups[0]
+    groups = span.token_match.match.groups() if span.token_match.match else ()
+
+    # Tokens with capture groups
+    if token_type == "agentese_path" and len(groups) >= 1:
+        token_data["path"] = groups[0]
+    elif token_type == "task_checkbox" and len(groups) >= 2:
+        token_data["checked"] = groups[0].lower() == "x"
+        token_data["description"] = groups[1]
+    elif token_type == "image" and len(groups) >= 2:
+        token_data["alt_text"] = groups[0]
+        token_data["src"] = groups[1]
+    elif token_type == "code_block" and len(groups) >= 3:
+        # Groups: 0=fence (```), 1=language, 2=code
+        token_data["language"] = groups[1] or ""
+        token_data["code"] = groups[2] or ""
+    elif token_type == "principle_ref" and len(groups) >= 1:
+        token_data["principle_number"] = int(groups[0])
+    elif token_type == "requirement_ref" and len(groups) >= 1:
+        token_data["requirement_id"] = groups[0]
+    elif token_type == "link" and len(groups) >= 2:
+        token_data["text"] = groups[0]
+        token_data["url"] = groups[1]
+
+    # Tokens that parse from source text (no capture groups needed)
+    elif token_type == "markdown_table":
+        # Parse table structure from source text
+        token_data = _parse_table_data(span.text)
+    elif token_type == "blockquote":
+        token_data["content"] = span.text
+    elif token_type == "horizontal_rule":
+        # No specific data needed
+        pass
 
     # Build content
     content = MeaningTokenContent(
@@ -265,6 +356,18 @@ def _get_token_label(token_type: str, token_data: dict[str, Any]) -> str:
     elif token_type == "requirement_ref":
         req_id = token_data.get("requirement_id", "?")
         return f"[R{req_id}]"
+    # New token types
+    elif token_type == "markdown_table":
+        rows = token_data.get("row_count", 0)
+        cols = token_data.get("column_count", 0)
+        return f"Table ({rows}×{cols})"
+    elif token_type == "link":
+        text = str(token_data.get("text", "link"))[:30]
+        return text
+    elif token_type == "blockquote":
+        return "Blockquote"
+    elif token_type == "horizontal_rule":
+        return "───"
     return token_type
 
 

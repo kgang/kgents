@@ -1,0 +1,140 @@
+/**
+ * EditPane styles — STARK BIOME Edition
+ *
+ * "The frame is humble. The content glows."
+ * Steel foundation with life-sage accent for editing states.
+ *
+ * @see docs/creative/stark-biome-moodboard.md
+ */
+
+.edit-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* STARK: steel-obsidian → steel-carbon */
+  background: var(--surface-1, #141418);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Header */
+.edit-pane__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  /* STARK: steel-slate for elevated surfaces */
+  background: var(--surface-2, #1c1c22);
+  border-bottom: 1px solid var(--surface-3, #28282f);
+}
+
+.edit-pane__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #e5e7eb);
+}
+
+.edit-pane__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-pane__btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.edit-pane__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.edit-pane__btn--cancel {
+  background: transparent;
+  color: var(--text-muted, #5a5a64);
+}
+
+.edit-pane__btn--cancel:hover:not(:disabled) {
+  background: var(--surface-2, #1c1c22);
+  color: var(--text-primary, #e5e7eb);
+}
+
+.edit-pane__btn--save {
+  /* STARK BIOME: life-sage accent — "the content glows" */
+  background: var(--life-sage, #4a6b4a);
+  color: white;
+  border-color: var(--life-sage, #4a6b4a);
+}
+
+.edit-pane__btn--save:hover:not(:disabled) {
+  /* STARK: life-mint for hover — earned glow */
+  background: var(--life-mint, #6b8b6b);
+  border-color: var(--life-mint, #6b8b6b);
+}
+
+/* Editor wrapper */
+.edit-pane__editor-wrapper {
+  flex: 1;
+  padding: 8px;
+  overflow: hidden;
+}
+
+/* Textarea */
+.edit-pane__editor {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-primary, #e5e7eb);
+  /* STARK: steel-carbon for input background */
+  background: var(--surface-1, #141418);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 4px;
+  resize: none;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.edit-pane__editor:focus {
+  /* STARK: life-sage focus ring — earned glow */
+  border-color: var(--life-sage, #4a6b4a);
+  box-shadow: 0 0 0 3px rgba(74, 107, 74, 0.2);
+}
+
+.edit-pane__editor::placeholder {
+  color: var(--text-muted, #5a5a64);
+}
+
+/* Footer */
+.edit-pane__footer {
+  padding: 6px 12px;
+  background: var(--surface-2, #1c1c22);
+  border-top: 1px solid var(--surface-3, #28282f);
+}
+
+.edit-pane__hint {
+  font-size: 11px;
+  color: var(--text-muted, #5a5a64);
+}
+
+.edit-pane__hint kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  margin: 0 2px;
+  font-family: inherit;
+  font-size: 10px;
+  background: var(--surface-1, #141418);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 3px;
+}

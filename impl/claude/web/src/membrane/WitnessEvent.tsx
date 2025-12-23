@@ -72,6 +72,10 @@ function getTypeLabel(type: WitnessEventData['type']): string {
       return 'Thought';
     case 'crystal':
       return 'Crystal';
+    case 'kblock':
+      return 'Edit';
+    case 'trail':
+      return 'Trail';
     case 'connected':
       return 'Connected';
     case 'heartbeat':
@@ -105,6 +109,35 @@ function renderContent(event: WitnessEventData): React.ReactNode {
         <>
           {event.insight && <div className="witness-event__insight">{event.insight}</div>}
           {event.level && <div className="witness-event__level">Level: {event.level}</div>}
+        </>
+      );
+
+    case 'kblock': {
+      const fileName = event.path?.split('/').pop() || 'Unknown';
+      const deltaCount = event.semanticDeltas?.length || 0;
+      return (
+        <>
+          <div className="witness-event__kblock">
+            <span className="witness-event__actor">{event.actor || 'Unknown'}</span>
+            {' edited '}
+            <strong className="witness-event__file">{fileName}</strong>
+            {deltaCount > 0 && (
+              <span className="witness-event__delta-count">
+                {' '}
+                ({deltaCount} change{deltaCount !== 1 ? 's' : ''})
+              </span>
+            )}
+          </div>
+          {event.reasoning && <div className="witness-event__reasoning">{event.reasoning}</div>}
+        </>
+      );
+    }
+
+    case 'trail':
+      return (
+        <>
+          {event.action && <div className="witness-event__action">{event.action}</div>}
+          {event.content && <div className="witness-event__trail">{event.content}</div>}
         </>
       );
 

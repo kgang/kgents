@@ -208,11 +208,59 @@ class WitnessedSheaf:
         # Store in local history
         self.edit_history.append(trace)
 
+        # Fire-and-forget to WitnessSynergyBus (editing IS witnessing)
+        self._schedule_bus_emit(trace)
+
         # Add trace to changes for caller
         if source in changes:
             changes[source]["trace"] = trace.to_dict()
 
         return changes
+
+    def _schedule_bus_emit(self, trace: ViewEditTrace) -> None:
+        """
+        Fire-and-forget emit to WitnessSynergyBus.
+
+        This enables the unified editing/witnessing path:
+        - Kent edits in Membrane → K-Block → Bus → WitnessStream
+        - Claude edits via AGENTESE → K-Block → Bus → WitnessStream
+
+        "The proof IS the decision. The mark IS the witness."
+        """
+        import asyncio
+
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._emit_to_bus(trace))
+        except RuntimeError:
+            # No running loop (sync context) — skip bus emit
+            # This is expected in tests or CLI without async context
+            pass
+
+    async def _emit_to_bus(self, trace: ViewEditTrace) -> None:
+        """Emit K-Block edit event to synergy bus."""
+        try:
+            from services.witness.bus import WitnessTopics, get_synergy_bus
+
+            bus = get_synergy_bus()
+            await bus.publish(
+                WitnessTopics.KBLOCK_EDITED,
+                {
+                    "id": f"kblock-{trace.timestamp.timestamp():.0f}",
+                    "type": "kblock",
+                    "action": f"kblock.view_edit.{trace.source_view.value}",
+                    "block_id": self.kblock.id,
+                    "path": self.kblock.path,
+                    "actor": trace.actor,
+                    "reasoning": trace.reasoning,
+                    "semantic_deltas": [d.to_dict() for d in trace.semantic_deltas],
+                    "content_changed": trace.old_content != trace.new_content,
+                    "timestamp": trace.timestamp.isoformat(),
+                },
+            )
+        except Exception:
+            # Swallow errors — bus emit is best-effort, shouldn't block editing
+            pass
 
     def propagate_prose(
         self,
