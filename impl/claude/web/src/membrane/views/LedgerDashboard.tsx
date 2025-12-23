@@ -62,7 +62,7 @@ export function LedgerDashboard({
     try {
       const response = await getLedger({ sortBy: 'claims', limit: 10 });
       setSummary(response.summary);
-      setRecentSpecs(response.specs);
+      setRecentSpecs(response.specs || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load ledger');
     } finally {

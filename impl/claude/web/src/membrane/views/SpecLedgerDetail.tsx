@@ -36,6 +36,7 @@ import './SpecLedgerDetail.css';
 interface SpecLedgerDetailProps {
   path: string;
   onNavigateToSpec?: (path: string) => void;
+  onEditInEditor?: (path: string) => void;
   onClose?: () => void;
 }
 
@@ -227,7 +228,13 @@ function EvidenceMarksSection({
 // Main Component
 // =============================================================================
 
-export function SpecLedgerDetail({ path, onNavigateToSpec, onClose }: SpecLedgerDetailProps) {
+// eslint-disable-next-line complexity
+export function SpecLedgerDetail({
+  path,
+  onNavigateToSpec,
+  onEditInEditor,
+  onClose,
+}: SpecLedgerDetailProps) {
   const [detail, setDetail] = useState<SpecDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -313,9 +320,20 @@ export function SpecLedgerDetail({ path, onNavigateToSpec, onClose }: SpecLedger
     <div className="spec-ledger-detail">
       {/* Header */}
       <header className="spec-ledger-detail__header">
-        <button className="spec-ledger-detail__back" onClick={onClose}>
-          ← Back
-        </button>
+        <div className="spec-ledger-detail__header-nav">
+          <button className="spec-ledger-detail__back" onClick={onClose}>
+            ← Back
+          </button>
+          {onEditInEditor && (
+            <button
+              className="spec-ledger-detail__edit-btn"
+              onClick={() => onEditInEditor(path)}
+              title="Open in Editor"
+            >
+              ⌨ Edit
+            </button>
+          )}
+        </div>
         <div className="spec-ledger-detail__title-row">
           <h1 className="spec-ledger-detail__title">{detail.title}</h1>
           <span className="spec-ledger-detail__status" data-status={detail.status.toLowerCase()}>

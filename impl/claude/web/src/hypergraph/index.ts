@@ -39,5 +39,5 @@ export { StatusLine } from './StatusLine';
 export { CommandLine } from './CommandLine';
 
 // API Bridge
-export { useGraphNode } from './useGraphNode';
+export { useGraphNode, normalizePath } from './useGraphNode';
 export type { UseGraphNodeResult } from './useGraphNode';

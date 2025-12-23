@@ -1,0 +1,143 @@
+/**
+ * AppShell — The cathedral navigation experience
+ *
+ * Wraps all surfaces with:
+ * - Top navbar for surface switching (Editor, Ledger, Chart, Brain)
+ * - Bottom WitnessFooter (always-on compact stream)
+ *
+ * "Stop documenting agents. Become the agent."
+ */
+
+import { ReactNode, useCallback } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+
+import { WitnessFooter } from './WitnessFooter';
+
+import './AppShell.css';
+
+// =============================================================================
+// Types
+// =============================================================================
+
+interface AppShellProps {
+  children: ReactNode;
+}
+
+interface NavItem {
+  path: string;
+  label: string;
+  shortcut: string;
+  icon: string;
+}
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+const NAV_ITEMS: NavItem[] = [
+  { path: '/editor', label: 'Editor', shortcut: 'E', icon: '⌨' },
+  { path: '/ledger', label: 'Ledger', shortcut: 'L', icon: '📊' },
+  { path: '/chart', label: 'Chart', shortcut: 'C', icon: '✦' },
+  { path: '/brain', label: 'Brain', shortcut: 'B', icon: '🧠' },
+];
+
+// =============================================================================
+// NavLink Component
+// =============================================================================
+
+interface NavLinkProps {
+  item: NavItem;
+  isActive: boolean;
+}
+
+function NavLink({ item, isActive }: NavLinkProps) {
+  return (
+    <Link
+      to={item.path}
+      className={`app-shell__nav-link ${isActive ? 'app-shell__nav-link--active' : ''}`}
+      title={`${item.label} (${item.shortcut})`}
+    >
+      <span className="app-shell__nav-icon">{item.icon}</span>
+      <span className="app-shell__nav-label">{item.label}</span>
+      <kbd className="app-shell__nav-shortcut">{item.shortcut}</kbd>
+    </Link>
+  );
+}
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
+export function AppShell({ children }: AppShellProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Determine active surface
+  const activePath = NAV_ITEMS.find((item) => location.pathname.startsWith(item.path))?.path;
+
+  // Global keyboard shortcuts
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      // Only handle if not in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement).isContentEditable
+      ) {
+        return;
+      }
+
+      // Shift + letter for navigation
+      if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        const key = e.key.toUpperCase();
+        const item = NAV_ITEMS.find((i) => i.shortcut === key);
+        if (item) {
+          e.preventDefault();
+          navigate(item.path);
+        }
+      }
+    },
+    [navigate]
+  );
+
+  return (
+    <div className="app-shell" onKeyDown={handleKeyDown} tabIndex={-1}>
+      {/* Top Navbar */}
+      <nav className="app-shell__navbar">
+        {/* Logo / Home */}
+        <Link to="/" className="app-shell__logo">
+          <span className="app-shell__logo-glyph">◇</span>
+          <span className="app-shell__logo-text">kgents</span>
+        </Link>
+
+        {/* Navigation links */}
+        <div className="app-shell__nav">
+          {NAV_ITEMS.map((item) => (
+            <NavLink key={item.path} item={item} isActive={activePath === item.path} />
+          ))}
+        </div>
+
+        {/* Right side: help/settings placeholder */}
+        <div className="app-shell__actions">
+          <button
+            className="app-shell__help"
+            title="Keyboard shortcuts"
+            onClick={() => {
+              console.info(
+                'Shortcuts: Shift+E: Editor | Shift+L: Ledger | Shift+C: Chart | Shift+B: Brain'
+              );
+            }}
+          >
+            <kbd>?</kbd>
+          </button>
+        </div>
+      </nav>
+
+      {/* Main content area */}
+      <main className="app-shell__content">{children}</main>
+
+      {/* Always-on witness footer */}
+      <WitnessFooter />
+    </div>
+  );
+}

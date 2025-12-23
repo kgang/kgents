@@ -19,6 +19,24 @@ import type { ConceptGraphNeighborsResponse } from '../api/types/_generated/conc
 import type { GraphNode, Edge, EdgeType } from './types';
 
 // =============================================================================
+// Path Utilities
+// =============================================================================
+
+/**
+ * Normalize path by stripping repo prefix if present.
+ *
+ * Handles paths like "kgents/spec/..." → "spec/..."
+ * This is necessary because some navigation sources include the repo directory name.
+ */
+export function normalizePath(path: string): string {
+  const repoPrefix = 'kgents/';
+  if (path.startsWith(repoPrefix)) {
+    return path.slice(repoPrefix.length);
+  }
+  return path;
+}
+
+// =============================================================================
 // Conversion Functions
 // =============================================================================
 
@@ -105,7 +123,9 @@ function convertNeighborsToGraphNode(
 
   // Calculate average confidence from edges (if available)
   const allEdges = [...response.incoming, ...response.outgoing];
-  const confidences = allEdges.filter((e) => e.confidence !== undefined).map((e) => e.confidence!);
+  const confidences = allEdges
+    .filter((e): e is typeof e & { confidence: number } => e.confidence !== undefined)
+    .map((e) => e.confidence);
   const avgConfidence =
     confidences.length > 0 ? confidences.reduce((a, b) => a + b, 0) / confidences.length : 0.5;
 
@@ -214,36 +234,46 @@ export function useGraphNode(): UseGraphNodeResult {
     setLoading(true);
     setError(null);
 
+    // Normalize path: strip repo prefix if present (e.g., "kgents/spec/..." → "spec/...")
+    const normalizedPath = normalizePath(path);
+    if (normalizedPath !== path) {
+      console.info('[useGraphNode] Normalized path:', path, '→', normalizedPath);
+    }
+
     try {
       // Query WitnessedGraph for edges connected to this path
-      const neighborsResponse = await graphApi.neighbors(path);
+      const neighborsResponse = await graphApi.neighbors(normalizedPath);
 
       // Also fetch content via fileApi (optional - content is lazy-loaded)
       let content: string | undefined;
       try {
-        const fileResponse = await fileApi.read(path);
+        const fileResponse = await fileApi.read(normalizedPath);
         content = fileResponse.content;
       } catch (_fileError) {
         // Content loading is optional - node can still show edges without content
-        console.info('[useGraphNode] Content not available for', path, '- edges-only mode');
+        console.info(
+          '[useGraphNode] Content not available for',
+          normalizedPath,
+          '- edges-only mode'
+        );
       }
 
-      return convertNeighborsToGraphNode(path, neighborsResponse, content);
+      return convertNeighborsToGraphNode(normalizedPath, neighborsResponse, content);
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Failed to load node';
       setError(errorMsg);
-      console.error('[useGraphNode] Error loading node:', path, e);
+      console.error('[useGraphNode] Error loading node:', normalizedPath, e);
 
       // Return a stub node so the editor is still usable
       // The UI should show that content is unavailable but navigation is possible
       return {
-        path,
-        title: path.split('/').pop() || path,
+        path: normalizedPath,
+        title: normalizedPath.split('/').pop() || normalizedPath,
         kind: 'unknown',
         confidence: 0,
         outgoingEdges: [],
         incomingEdges: [],
-        content: `# Node: ${path}\n\n*Error loading from WitnessedGraph: ${errorMsg}*\n\nTry :e <path> to navigate to another node.`,
+        content: `# Node: ${normalizedPath}\n\n*Error loading from WitnessedGraph: ${errorMsg}*\n\nTry :e <path> to navigate to another node.`,
       };
     } finally {
       setLoading(false);

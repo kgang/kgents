@@ -12,6 +12,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { LedgerDashboard } from '../membrane/views/LedgerDashboard';
 import { SpecTable } from '../membrane/views/SpecTable';
@@ -30,6 +31,7 @@ type LedgerView = 'dashboard' | 'table' | 'detail';
 // =============================================================================
 
 export function SpecLedgerPage() {
+  const navigate = useNavigate();
   const [view, setView] = useState<LedgerView>('dashboard');
   const [selectedSpecPath, setSelectedSpecPath] = useState<string | null>(null);
 
@@ -38,6 +40,14 @@ export function SpecLedgerPage() {
     setSelectedSpecPath(path);
     setView('detail');
   }, []);
+
+  // Navigate to Editor with spec path
+  const handleEditInEditor = useCallback(
+    (path: string) => {
+      navigate(`/editor?path=${encodeURIComponent(path)}`);
+    },
+    [navigate]
+  );
 
   // Navigate back from detail
   const handleCloseDetail = useCallback(() => {
@@ -88,6 +98,7 @@ export function SpecLedgerPage() {
           <SpecLedgerDetail
             path={selectedSpecPath}
             onNavigateToSpec={handleSelectSpec}
+            onEditInEditor={handleEditInEditor}
             onClose={handleCloseDetail}
           />
         )}

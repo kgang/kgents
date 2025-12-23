@@ -2,19 +2,42 @@
  * HypergraphEditorPage — Demo/test page for Hypergraph Emacs
  *
  * "The file is a lie. There is only the graph."
+ *
+ * URL Parameters:
+ * - ?path=<spec-path> — Open directly to this path
+ * - ?memory=<crystal-id> — Context from Brain (future)
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import { HypergraphEditor, useGraphNode } from '../hypergraph';
+import { HypergraphEditor, useGraphNode, normalizePath } from '../hypergraph';
 import type { GraphNode } from '../hypergraph';
 
 import './HypergraphEditorPage.css';
 
 export function HypergraphEditorPage() {
+  const [searchParams] = useSearchParams();
   const graphNode = useGraphNode();
-  const [currentPath, setCurrentPath] = useState<string>('spec/protocols/k-block.md');
+
+  // Get initial path from URL or use default, normalizing to strip repo prefix if present
+  const rawPath = searchParams.get('path') || 'spec/protocols/k-block.md';
+  const initialPath = normalizePath(rawPath);
+  // Future: const memoryContext = searchParams.get('memory'); // Show relevant Brain context
+
+  const [currentPath, setCurrentPath] = useState<string>(initialPath);
   const [focusedNode, setFocusedNode] = useState<GraphNode | null>(null);
+
+  // Update path when URL changes
+  useEffect(() => {
+    const urlPath = searchParams.get('path');
+    if (urlPath) {
+      const normalized = normalizePath(urlPath);
+      if (normalized !== currentPath) {
+        setCurrentPath(normalized);
+      }
+    }
+  }, [searchParams, currentPath]);
 
   const handleNodeFocus = useCallback((node: GraphNode) => {
     setFocusedNode(node);
