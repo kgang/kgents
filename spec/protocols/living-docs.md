@@ -378,10 +378,12 @@ This violates:
 
 | Phase | What | Status |
 |-------|------|--------|
-| **2B** | Bootstrap: Crystallize ~165 teaching moments to Brain | Pending |
-| **3** | Record Crown Jewel Cleanup as ExtinctionEvent | Pending |
-| **4** | Wire `/hydrate` skill to ghost hydration | Pending |
-| **5** | Radical: Hydrator queries Brain, not TeachingCollector | Pending |
+| **2B** | Bootstrap: Crystallize ~165 teaching moments to Brain | ✅ Complete (400 crystallized) |
+| **3** | Record Crown Jewel Cleanup as ExtinctionEvent | ✅ Complete (ext-12209627) |
+| **4** | Wire `/hydrate` skill to ghost hydration | ✅ Complete (--from-brain flag) |
+| **5** | Radical: Hydrator queries Brain, not TeachingCollector | ✅ Complete (hydrate_from_brain()) |
+
+**Verified**: 2025-12-23 | **Mark**: mark-1cba24fbf4a2
 
 ### Laws (Extended)
 
