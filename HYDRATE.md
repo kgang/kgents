@@ -111,11 +111,12 @@ kg witness context --budget 2000       # Budget-aware context
 | 1-2 | EditorPolynomial + ContextNode.follow() | ✅ Done |
 | 3 | K-Block auto-creation on INSERT + `:w`/`:q!` | ✅ Done |
 | 4 | WitnessedGraph Integration | ✅ Done |
+| 5 | Portal operations (zo/zc) — vim fold-style | ✅ Done |
 
 **AD-015 Radical Unification** (2025-12-23): LedgerCache DELETED → ProxyHandleStore.
+- Phase 2 complete: ProxyReactor enables event-driven staleness (70 tests)
 - `ensure_scanned()` → `proxy_store.get_or_raise(SourceType.SPEC_CORPUS)`
 - `analyze_now()` → `proxy_store.compute()` with reactive invalidation
-- One truth. One store. ~60 lines deleted. 98 tests pass.
 
 See `NOW.md` for active plans.
 
