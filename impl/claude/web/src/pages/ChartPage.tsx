@@ -1,19 +1,21 @@
 /**
- * GraphTestPage — Quick test page for SpecGraph Visualizer
+ * ChartPage — Astronomical Chart visualization page
+ *
+ * "The file is a lie. There is only the graph."
  */
 
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SpecGraphViewer } from '../membrane/graph';
+import { AstronomicalChart } from '../membrane/chart';
 
 import '../membrane/Membrane.css';
 
-export function GraphTestPage() {
+export function ChartPage() {
   const navigate = useNavigate();
 
   const handleNodeClick = useCallback((path: string) => {
-    console.log('Clicked node:', path);
-    // Could navigate to /ledger with the spec selected
+    console.log('Clicked star:', path);
+    // Could navigate to spec detail
     // navigate(`/ledger?spec=${encodeURIComponent(path)}`);
   }, []);
 
@@ -31,7 +33,7 @@ export function GraphTestPage() {
         }}
       >
         <h1 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)' }}>
-          SpecGraph Visualizer
+          Astronomical Chart
         </h1>
         <button
           onClick={() => navigate('/')}
@@ -44,16 +46,16 @@ export function GraphTestPage() {
             cursor: 'pointer',
           }}
         >
-          ← Back
+          &larr; Back
         </button>
       </header>
 
-      {/* Graph */}
+      {/* Chart */}
       <div style={{ flex: 1, minHeight: 0 }}>
-        <SpecGraphViewer onNodeClick={handleNodeClick} limit={50} showMinimap showControls />
+        <AstronomicalChart onNodeClick={handleNodeClick} limit={100} showControls showLegend />
       </div>
     </div>
   );
 }
 
-export default GraphTestPage;
+export default ChartPage;

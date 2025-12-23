@@ -21,6 +21,7 @@
 | [AD-011](AD-011-registry-single-source.md) | Registry as Single Source of Truth | 2025-12-19 | @node registry is truth; frontend/CLI derive from it |
 | [AD-012](AD-012-aspect-projection.md) | Aspect Projection Protocol | 2025-12-19 | Paths are places; aspects are actions |
 | [AD-013](AD-013-form-polynomial.md) | Form as Polynomial Functor | 2025-12-19 | Complex forms modeled as state machines |
+| [AD-016](AD-016-fail-fast-agentese.md) | Fail-Fast AGENTESE Resolution | 2025-12-23 | No JIT fallback; unregistered paths error immediately |
 
 ---
 
@@ -45,6 +46,7 @@
 - **AD-010**: The Habitat Guarantee
 - **AD-011**: Registry as Single Source of Truth
 - **AD-012**: Aspect Projection Protocol
+- **AD-016**: Fail-Fast AGENTESE Resolution
 
 ### UI & Forms
 - **AD-013**: Form as Polynomial Functor
@@ -56,9 +58,9 @@
 | If you're... | Read these ADs |
 |--------------|----------------|
 | Building a new agent | AD-002, AD-006, AD-009 |
-| Working on AGENTESE | AD-010, AD-011, AD-012 |
+| Working on AGENTESE | AD-010, AD-011, AD-012, AD-016 |
 | Designing UI | AD-008, AD-013 |
-| Debugging | AD-001, AD-011 |
+| Debugging | AD-001, AD-011, AD-016 |
 | Philosophizing | AD-003, AD-005, AD-006 |
 
 ---

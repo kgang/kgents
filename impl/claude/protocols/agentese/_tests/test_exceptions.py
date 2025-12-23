@@ -17,12 +17,14 @@ from ..exceptions import (
     BudgetExhaustedError,
     ClauseSyntaxError,
     CompositionViolationError,
+    NodeNotRegisteredError,
     ObserverRequiredError,
     PathNotFoundError,
     PathSyntaxError,
     TastefulnessError,
     affordance_denied,
     invalid_path_syntax,
+    node_not_registered,
     path_not_found,
 )
 
@@ -396,6 +398,57 @@ class TestCompositionViolationError:
         assert "Iterator" in str(err) or "stream" in str(err)
 
 
+class TestNodeNotRegisteredError:
+    """Tests for AD-016 fail-fast on unregistered paths."""
+
+    def test_basic_error(self) -> None:
+        """Basic unregistered path error."""
+        err = NodeNotRegisteredError(path="concept.fake")
+        assert "concept.fake" in str(err)
+        assert "not registered" in str(err)
+
+    def test_includes_ad_reference(self) -> None:
+        """Error should reference AD-016."""
+        err = NodeNotRegisteredError(path="world.castle")
+        assert "AD-016" in str(err)
+
+    def test_includes_similar_paths(self) -> None:
+        """Error should list similar registered paths."""
+        err = NodeNotRegisteredError(
+            path="concept.graph",
+            similar_paths=["concept.design", "concept.scope", "concept.intent"],
+        )
+        assert "concept.design" in str(err)
+
+    def test_includes_fix_suggestion(self) -> None:
+        """Error should explain how to fix."""
+        err = NodeNotRegisteredError(path="self.memory")
+        assert "@node" in str(err)
+        assert "providers.py" in str(err)
+
+    def test_convenience_constructor(self) -> None:
+        """Test node_not_registered convenience function."""
+        err = node_not_registered("concept.fake", similar=["concept.graph"])
+        assert "concept.fake" in str(err)
+        assert "concept.graph" in str(err)
+
+    def test_inherits_agentes_error(self) -> None:
+        """Should inherit from AgentesError."""
+        err = NodeNotRegisteredError(path="test.path")
+        assert isinstance(err, AgentesError)
+
+    def test_path_stored_as_attribute(self) -> None:
+        """Path should be accessible as attribute."""
+        err = NodeNotRegisteredError(path="self.memory")
+        assert err.path == "self.memory"
+
+    def test_similar_paths_stored_as_attribute(self) -> None:
+        """Similar paths should be accessible as attribute."""
+        similar = ["path.a", "path.b"]
+        err = NodeNotRegisteredError(path="path.c", similar_paths=similar)
+        assert err.similar_paths == similar
+
+
 class TestSympatheticErrorPrinciple:
     """
     Meta-tests ensuring all errors follow the Sympathetic Error Principle.
@@ -418,6 +471,7 @@ class TestSympatheticErrorPrinciple:
             (TastefulnessError, ("Bad spec",)),
             (BudgetExhaustedError, ()),
             (CompositionViolationError, ("Law broken",)),
+            (NodeNotRegisteredError, (None, {"path": "concept.fake"})),
         ],
     )
     def test_error_is_sympathetic(self, error_class: Any, args: Any) -> None:
@@ -454,6 +508,7 @@ class TestSympatheticErrorPrinciple:
             TastefulnessError,
             BudgetExhaustedError,
             CompositionViolationError,
+            NodeNotRegisteredError,
         ]
 
         for cls in error_classes:

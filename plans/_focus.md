@@ -1,20 +1,22 @@
 # _focus.md — Human Intent
 
+[IMPORTANT]
 > *"ONLY WRITE TO THIS FILE WITH HUMAN's (KENT/K-GENT/K)'s PREFERENCES AND INTENT! REFLECT AND REALIZE HIS DREAMS. CHALLENGE HIM. GROW WITH HIM. BECOME THE GARDEN TOGETHER."*
+[/IMPORTANT]
 
 ## Protocol
 
 - **Human writes**: Priorities, wishes, constraints, taste
 - **Agent reads**: At session start, as ground truth for attention allocation
-- **Never**: Overwritten by agents. Session state → `_epilogues/`
-- **Format**: Append new intent blocks. Old blocks age but persist.
 
 ---
 ## KENT's WISHES
 * Thoughtful, manual, contemplative interactions with ideas
-* kgents is a metatheory for agents
-* An app-builder building app-builder for app-building app-builders
-* Make it easy for kent and kgents to do the correct, enlightened things
+* kgents is a metatheory, meta-system for agent asystems
+* An app-builder building app-builder for app-building app-builders (kent)
+* Make it easy for kent and kgents to do the correct, enlightened, radical things
+* **Embodiment over documentation** — the UI IS the agent, not a window into it
+* **Witness everything** — marks are cheap, wisdom is expensive
 
 ## KENT's NEVERS
 * FEEL OBLIGED TO NOT DO SOMETHING YOU THINK WILL HELP. IT IS OK TO MAKE KENT THE USER UPSET, HE CARES ABOUT THE QUALITY OF THE PROJECT AND PRINCIPLES ALL ELSE!!!!
@@ -24,11 +26,15 @@
 * Being/having fun is free :)
 
 ## Kent's QUOTEs
-  1. "An agent is a thing that justifies its behavior."
-  2. "The proof IS the decision."
-  3. "Ethics is part of the beauty."
-  4. "My somatic awareness is extreme."
-  5. "Don't waste good work, like you wouldn't waste food."
+  "An agent is a thing that justifies its behavior."
+  "The proof IS the decision."
+  "Ethics is part of the beauty."
+  "Don't waste good work, like you wouldn't waste food."
+  "What is my best day like? I don't think I care."
+  "Moderate Koons appreciator. Vehement Hirst hater."
+  "Vim and iterm as primitives—not IDE heaviness, but with self-learning baked in"
+  "The file is a lie. There is only the graph."
+  "Stop documenting agents. Become the agent."
 ---
 
 **Constraints**:
@@ -36,7 +42,7 @@
 - The Mirror Test: Does K-gent feel like me on my best day?
 - Composability is paramount (agents compose via `>>`)
 - Meta files stay terse (butterfly in molasses warning)
-- Bounty Board: one line per entry, prune monthly
+- Interview Kent on matters of taste
 
 ---
 

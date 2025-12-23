@@ -7,7 +7,7 @@
  * action based on current mode and key sequences.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { NavigationState, NavigationAction, KeySequence } from './types';
 import { EDGE_TYPE_KEYS } from './types';
@@ -114,6 +114,13 @@ export interface UseKeyHandlerOptions {
   /** Called when entering command mode (to focus input) */
   onEnterCommand?: () => void;
 
+  /**
+   * Called when entering INSERT mode.
+   * This is where K-Block creation happens (async).
+   * If not provided, dispatch(ENTER_INSERT) is called directly.
+   */
+  onEnterInsert?: () => void | Promise<void>;
+
   /** Called when command is submitted */
   onCommand?: (command: string) => void;
 
@@ -143,6 +150,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     goReferences,
     goTests,
     onEnterCommand,
+    onEnterInsert,
     enabled = true,
   } = options;
 
@@ -154,7 +162,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     lastKeyTime: 0,
   });
 
-  const [pendingKeys, setPendingKeys] = React.useState<string[]>([]);
+  const [pendingKeys, setPendingKeys] = useState<string[]>([]);
 
   // Reset sequence on timeout
   const resetSequence = useCallback(() => {
@@ -315,6 +323,13 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
           if (binding.action.type === 'ENTER_COMMAND') {
             dispatch(binding.action);
             onEnterCommand?.();
+          } else if (binding.action.type === 'ENTER_INSERT') {
+            // K-Block creation happens via onEnterInsert callback
+            if (onEnterInsert) {
+              void onEnterInsert();
+            } else {
+              dispatch(binding.action);
+            }
           } else {
             dispatch(binding.action);
           }
@@ -381,6 +396,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       goReferences,
       goTests,
       onEnterCommand,
+      onEnterInsert,
       resetSequence,
     ]
   );
@@ -458,6 +474,3 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     resetSequence,
   };
 }
-
-// Need React import for useState
-import React from 'react';

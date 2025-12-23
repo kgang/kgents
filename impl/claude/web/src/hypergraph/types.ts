@@ -90,6 +90,12 @@ export type EdgeType =
 /**
  * An edge in the hypergraph.
  * Edges are typed and bidirectional (we store both directions).
+ *
+ * WitnessedGraph edges carry evidence:
+ * - confidence: How certain we are this relationship exists
+ * - origin: What source contributed this edge (git, ast, user)
+ * - markId: Link to witness mark for auditing
+ * - lineNumber: Where in the source file this relationship is asserted
  */
 export interface Edge {
   /** Unique identifier */
@@ -109,6 +115,20 @@ export interface Edge {
 
   /** Whether this edge is stale (target may have changed) */
   stale?: boolean;
+
+  // --- WitnessedGraph evidence fields ---
+
+  /** Confidence score (0-1) from evidence analysis */
+  confidence?: number;
+
+  /** Origin of this edge (which analysis source contributed it) */
+  origin?: 'git' | 'ast' | 'user' | 'llm' | 'import' | string;
+
+  /** Link to witness mark for audit trail */
+  markId?: string;
+
+  /** Line number in source where this relationship is asserted */
+  lineNumber?: number;
 }
 
 /**

@@ -296,6 +296,15 @@ class DeprecateResponse(BaseModel):
 # =============================================================================
 
 
+class DataNotComputedResponse(BaseModel):
+    """Response when proxy handle data hasn't been computed yet (AD-015)."""
+
+    success: bool = False
+    needs_scan: bool = True
+    message: str = "Spec analysis not available. Click 'Scan' to generate proxy handles."
+    hint: str = "AD-015: Analysis is explicit. Run scan to compute."
+
+
 def create_spec_ledger_router() -> Optional["APIRouter"]:
     """
     Create FastAPI router for spec ledger endpoints.
@@ -311,7 +320,10 @@ def create_spec_ledger_router() -> Optional["APIRouter"]:
 
     # Import ledger node
     try:
-        from services.living_spec.ledger_node import get_ledger_node
+        from services.living_spec.ledger_node import (
+            NoPreComputedDataError,
+            get_ledger_node,
+        )
     except ImportError as e:
         logger.error(f"Could not import ledger node: {e}")
         return None
@@ -332,25 +344,30 @@ def create_spec_ledger_router() -> Optional["APIRouter"]:
             summary=result["summary"],
         )
 
-    @router.get("/ledger", response_model=LedgerResponse)
+    @router.get("/ledger", response_model=LedgerResponse | DataNotComputedResponse)
     async def get_ledger(
         status: Optional[str] = Query(None, description="Filter by status"),
         sort_by: str = Query("path", description="Sort field"),
         limit: int = Query(100, ge=1, le=500, description="Max results"),
         offset: int = Query(0, ge=0, description="Pagination offset"),
-    ) -> LedgerResponse:
+    ) -> LedgerResponse | DataNotComputedResponse:
         """
         Get ledger summary and spec list.
 
         Returns summary statistics and paginated spec list.
+        AD-015: Returns needs_scan=true if no proxy handle data exists.
         """
         node = get_ledger_node()
-        result = await node.ledger(
-            status_filter=status,
-            sort_by=sort_by,
-            limit=limit,
-            offset=offset,
-        )
+        try:
+            result = await node.ledger(
+                status_filter=status,
+                sort_by=sort_by,
+                limit=limit,
+                offset=offset,
+            )
+        except NoPreComputedDataError:
+            # AD-015: Data not computed yet, return helpful response
+            return DataNotComputedResponse()
 
         return LedgerResponse(
             success=result["success"],
@@ -427,17 +444,22 @@ def create_spec_ledger_router() -> Optional["APIRouter"]:
             contradictions=[ContradictionEntry(**c) for c in result["contradictions"]],
         )
 
-    @router.get("/harmonies", response_model=HarmoniesResponse)
+    @router.get("/harmonies", response_model=HarmoniesResponse | DataNotComputedResponse)
     async def get_harmonies(
         limit: int = Query(50, ge=1, le=200, description="Max results"),
-    ) -> HarmoniesResponse:
+    ) -> HarmoniesResponse | DataNotComputedResponse:
         """
         List reinforcing relationships.
 
         Returns specs that reference or extend each other.
+        AD-015: Returns needs_scan=true if no proxy handle data exists.
         """
         node = get_ledger_node()
-        result = await node.harmonies(limit=limit)
+        try:
+            result = await node.harmonies(limit=limit)
+        except NoPreComputedDataError:
+            # AD-015: Data not computed yet, return helpful response
+            return DataNotComputedResponse()
 
         return HarmoniesResponse(
             success=result["success"],

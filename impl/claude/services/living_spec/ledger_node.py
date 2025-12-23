@@ -128,9 +128,48 @@ def get_spec_root() -> Path:
     raise FileNotFoundError("Could not find spec/ directory")
 
 
+class NoPreComputedDataError(Exception):
+    """Raised when spec ledger data hasn't been pre-computed."""
+
+    pass
+
+
 async def ensure_scanned() -> LedgerReport:
-    """Ensure we have a scanned ledger, scanning if needed."""
+    """
+    Get the pre-computed ledger report.
+
+    AD-015: This NO LONGER auto-computes. If no cached data exists,
+    it raises NoPreComputedDataError. Use `kg spec analyze` to
+    pre-compute the data.
+
+    Raises:
+        NoPreComputedDataError: If no pre-computed data exists
+    """
     if _cache.is_fresh():
+        return _cache.report  # type: ignore
+
+    # AD-015: No auto-compute. Fail fast with helpful message.
+    raise NoPreComputedDataError(
+        "Spec ledger data not available. "
+        "Run `kg spec analyze` to pre-compute, or use `analyze_now()` for one-time analysis."
+    )
+
+
+async def analyze_now(force: bool = False) -> LedgerReport:
+    """
+    Explicitly analyze the spec corpus NOW.
+
+    AD-015: This is the ONLY way to compute analysis. Called by:
+    - `kg spec analyze` CLI command
+    - Explicit user request via API
+
+    Args:
+        force: Force re-analysis even if cache is fresh
+
+    Returns:
+        The analyzed LedgerReport
+    """
+    if not force and _cache.is_fresh():
         return _cache.report  # type: ignore
 
     # Scan in thread pool to not block
@@ -144,6 +183,7 @@ async def ensure_scanned() -> LedgerReport:
     _cache.last_scan = time.time()
     _cache.spec_root = spec_root
 
+    logger.info(f"Spec corpus analyzed: {len(report.specs)} specs")
     return report
 
 
@@ -273,6 +313,9 @@ class LedgerNode:
         """
         Scan spec corpus and populate ledger.
 
+        AD-015: This is an EXPLICIT analysis request. Unlike the old
+        ensure_scanned(), this WILL compute analysis when called.
+
         Args:
             force: Force rescan even if cache is fresh
 
@@ -282,10 +325,8 @@ class LedgerNode:
         Emits:
             witness.spec.scanned — Summary of scan results
         """
-        if force:
-            _cache.report = None  # Invalidate cache
-
-        report = await ensure_scanned()
+        # AD-015: Use analyze_now() for explicit analysis
+        report = await analyze_now(force=force)
         summary = report.summary()
 
         # Emit witness event
@@ -1038,3 +1079,25 @@ def reset_ledger_node() -> None:
     global _ledger_node
     _ledger_node = None
     _cache.report = None
+
+
+# =============================================================================
+# Module Exports
+# =============================================================================
+
+__all__ = [
+    # Core functions
+    "ensure_scanned",
+    "analyze_now",
+    "get_spec_root",
+    "NoPreComputedDataError",
+    # Response types
+    "LedgerSummary",
+    "SpecEntry",
+    "LedgerResponse",
+    "SpecDetail",
+    # AGENTESE Node
+    "LedgerNode",
+    "get_ledger_node",
+    "reset_ledger_node",
+]

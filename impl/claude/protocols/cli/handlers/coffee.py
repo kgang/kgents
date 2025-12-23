@@ -4,6 +4,9 @@ Coffee Handler: Rich CLI for the Morning Coffee liminal transition protocol.
 
 Morning Coffee — Liminal transition protocol from rest to work.
 
+PATTERN: Rich CLI UX layer with custom formatting and interactive flows.
+         Has routing table but needs custom logic for ritual interaction.
+
 The handler provides both:
 1. Rich formatted output (default) — beautiful boxes and emoji
 2. JSON output (--json flag) — for programmatic access

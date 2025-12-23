@@ -5,12 +5,15 @@
 
 export * from './self-memory-archaeology';
 export * from './self-conductor-swarm';
+export * from './concept-sovereign';
 export * from './time-differance';
 export * from './world-morpheus';
+export * from './concept-graph';
 export * from './self-presence';
 export * from './self-foundry';
 export * from './self-witness';
 export * from './time-witness';
+export * from './self-editor';
 export * from './self-fusion';
 export * from './self-kblock';
 export * from './self-memory';

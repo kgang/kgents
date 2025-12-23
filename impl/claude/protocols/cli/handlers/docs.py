@@ -1,6 +1,9 @@
 """
 Docs Handler: Living Documentation Generator
 
+PATTERN: Thin routing shim that delegates to AGENTESE paths.
+         Custom handlers parse CLI args and format output nicely.
+
 A thin routing shim to concept.docs.* AGENTESE paths.
 All business logic lives in services/living_docs/.
 
@@ -512,8 +515,12 @@ def _handle_crystallize(args: list[str]) -> int:
                             "mode": "dry_run",
                             "would_crystallize": len(results),
                             "by_severity": {
-                                "critical": len([r for r in results if r.moment.severity == "critical"]),
-                                "warning": len([r for r in results if r.moment.severity == "warning"]),
+                                "critical": len(
+                                    [r for r in results if r.moment.severity == "critical"]
+                                ),
+                                "warning": len(
+                                    [r for r in results if r.moment.severity == "warning"]
+                                ),
                                 "info": len([r for r in results if r.moment.severity == "info"]),
                             },
                         }

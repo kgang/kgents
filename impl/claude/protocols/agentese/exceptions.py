@@ -513,6 +513,80 @@ class LawCheckFailed(AgentesError):
 # Convenience constructors for common error patterns
 
 
+@dataclass
+class NodeNotRegisteredError(AgentesError):
+    """
+    Raised when an AGENTESE path is invoked but no @node is registered for it.
+
+    AD-016 (Fail-Fast AGENTESE Resolution): Silent fallback to JIT is forbidden.
+    When a path isn't registered, fail immediately with helpful information.
+
+    This is distinct from PathNotFoundError:
+    - PathNotFoundError: Generic path resolution failure (may try JIT, spec, etc.)
+    - NodeNotRegisteredError: Specifically for fail-fast when @node lookup fails
+
+    The error provides:
+    - The path that was requested
+    - Similar registered paths for typo correction
+    - Actionable suggestion for how to fix
+    """
+
+    path: str = ""
+    similar_paths: list[str] = field(default_factory=list)
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        path: str = "",
+        similar_paths: list[str] | None = None,
+        why: str | None = None,
+        suggestion: str | None = None,
+    ) -> None:
+        self.path = path
+        self.similar_paths = similar_paths or []
+
+        if not message:
+            message = f"Node '{path}' not registered"
+
+        if not why:
+            why = (
+                "No @node decorator registered this path. "
+                "AGENTESE paths must be explicitly registered (AD-016: fail-fast resolution)."
+            )
+
+        if not suggestion:
+            suggestion = (
+                "To fix:\n"
+                "    1. Ensure the @node decorator is applied to your node class\n"
+                "    2. Import the node module in services/providers.py:setup_providers()\n"
+                "    3. Check spelling: similar paths shown below"
+            )
+
+        super().__init__(
+            message,
+            why=why,
+            suggestion=suggestion,
+            related=self.similar_paths[:5],
+        )
+
+    def __post_init__(self) -> None:
+        """Dataclass post-init (for when used as dataclass)."""
+        pass
+
+
+def node_not_registered(
+    path: str,
+    *,
+    similar: list[str] | None = None,
+) -> NodeNotRegisteredError:
+    """Create a NodeNotRegisteredError with standard formatting (AD-016)."""
+    return NodeNotRegisteredError(
+        path=path,
+        similar_paths=similar,
+    )
+
+
 def path_not_found(
     path: str,
     *,

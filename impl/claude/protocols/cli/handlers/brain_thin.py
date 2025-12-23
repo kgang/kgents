@@ -3,6 +3,9 @@ Brain Handler: Thin routing shim to self.memory.* AGENTESE paths.
 
 All business logic lives in services/brain/. This file only routes.
 
+PATTERN: Thin handler delegates to AGENTESE router for most operations.
+         Only keeps custom logic for special cases (extinct protocol).
+
 AGENTESE Path Mapping:
     kg brain                -> self.memory.manifest
     kg brain capture ...    -> self.memory.capture
@@ -13,7 +16,7 @@ AGENTESE Path Mapping:
     kg brain status         -> self.memory.manifest
     kg brain chat           -> self.jewel.brain.flow.chat.query (interactive)
     kg brain import         -> self.memory.import (batch)
-    kg brain extinct ...    -> void.extinct.* (extinction protocol)
+    kg brain extinct ...    -> void.extinct.* (extinction protocol - custom handler)
 
 See: docs/skills/metaphysical-fullstack.md, spec/protocols/cli.md
 """
@@ -31,7 +34,7 @@ if TYPE_CHECKING:
 # === Path Routing ===
 
 BRAIN_SUBCOMMAND_TO_PATH = {
-    # Core operations
+    # Core operations (delegated to AGENTESE)
     "capture": "self.memory.capture",
     "search": "self.memory.recall",
     "ghost": "self.memory.ghost.surface",
@@ -42,7 +45,7 @@ BRAIN_SUBCOMMAND_TO_PATH = {
     "chat": "self.jewel.brain.flow.chat.query",
     # Import (batch operation)
     "import": "self.memory.import",
-    # Extinction protocol (Memory-First Docs)
+    # Extinction protocol (has custom sub-subcommand logic below)
     "extinct": "void.extinct.list",  # Default to list
 }
 
@@ -56,7 +59,7 @@ def cmd_brain(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Holographic Brain: Route to AGENTESE self.memory.* paths.
 
-    All business logic is in services/brain/. This handler only routes.
+    Pattern: Delegate to AGENTESE router, with custom handlers for complex UX.
     """
     # Parse help flag (special case - not routed)
     if "--help" in args or "-h" in args:
@@ -66,14 +69,13 @@ def cmd_brain(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     # Parse subcommand
     subcommand = _parse_subcommand(args)
 
-    # Handle extinct subcommand specially (has sub-subcommands)
+    # Special case: extinct has complex sub-subcommands (list/show/wisdom)
+    # This needs custom logic for UX - can't be simplified to pure AGENTESE delegation
     if subcommand == "extinct":
         return _handle_extinct(args, ctx)
 
-    # Route to AGENTESE path
+    # Default: Delegate to AGENTESE via projection system
     path = route_to_path(subcommand, BRAIN_SUBCOMMAND_TO_PATH, DEFAULT_PATH)
-
-    # Project through CLI functor
     return project_command(path, args, ctx)
 
 

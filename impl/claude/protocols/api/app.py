@@ -43,21 +43,10 @@ from .models import HealthResponse
 logger = logging.getLogger(__name__)
 
 
-async def _warm_ledger_cache() -> None:
-    """
-    Warm the spec ledger cache in background.
-
-    This scans ~200 spec files and takes ~10s, so we run it
-    fire-and-forget at startup to avoid blocking the first request.
-    """
-    try:
-        from services.living_spec.ledger_node import ensure_scanned
-
-        await ensure_scanned()
-        logger.info("Spec ledger cache warmed (199 specs)")
-    except Exception as e:
-        logger.warning(f"Failed to warm ledger cache: {e}")
-
+# AD-015: Removed _warm_ledger_cache() (2025-12-23)
+# Analysis is a build step, not a runtime step.
+# Use `kg spec analyze` to pre-compute, server loads artifacts.
+# See spec/principles.md AD-015: Explicit Upload-and-Copy Data Model
 
 # SaaS infrastructure (optional)
 try:
@@ -100,14 +89,9 @@ async def _create_lifespan(
     except Exception as e:
         logger.error(f"Error initializing service providers: {e}")
 
-    # Warm the spec ledger cache (fire-and-forget to not block startup)
-    try:
-        import asyncio
-
-        asyncio.create_task(_warm_ledger_cache())
-        logger.info("Spec ledger cache warming started")
-    except Exception:
-        pass  # Ledger not installed or task creation failed
+    # AD-015: Spec ledger warming REMOVED (2025-12-23)
+    # Analysis is a build step, not a runtime step.
+    # Server loads pre-computed artifacts; no startup computation.
 
     # Initialize SaaS clients if configured
     if enable_saas and HAS_SAAS_CONFIG and init_saas_clients is not None:

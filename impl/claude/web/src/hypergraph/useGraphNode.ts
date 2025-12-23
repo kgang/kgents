@@ -1,99 +1,119 @@
 /**
- * useGraphNode — Bridge between SpecGraph API and Hypergraph types
+ * useGraphNode — Bridge between WitnessedGraph API and Hypergraph types
  *
- * Converts SpecGraph data into GraphNode format for the editor.
+ * "The file is a lie. There is only the graph."
+ *
+ * This hook connects the HypergraphEditor to the WitnessedGraph (9th Crown Jewel),
+ * converting concept.graph.neighbors responses into GraphNode format.
+ *
+ * Key features:
+ * - Witnessed edges (linked to marks via mark_id)
+ * - Evidence-based navigation (confidence, context, line numbers)
+ * - Origin tracking (which source contributed this edge)
  */
 
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState } from 'react';
 
-import { invokeSpecGraph } from '../membrane/useSpecNavigation';
+import { graphApi, fileApi } from '../api/client';
+import type { ConceptGraphNeighborsResponse } from '../api/types/_generated/concept-graph';
 import type { GraphNode, Edge, EdgeType } from './types';
-
-// =============================================================================
-// API Response Types (from SpecGraph)
-// =============================================================================
-
-interface SpecGraphQueryResult {
-  path: string;
-  agentese_path: string;
-  title: string;
-  tier: string;
-  confidence: number;
-  derives_from: string[];
-  edges: Record<string, string[]>;
-  tokens: Record<string, number>;
-}
 
 // =============================================================================
 // Conversion Functions
 // =============================================================================
 
-function convertEdgeType(type: string): EdgeType {
+/**
+ * Convert WitnessedGraph edge kind to HypergraphEditor EdgeType.
+ */
+function convertEdgeKind(kind: string): EdgeType {
   const mapping: Record<string, EdgeType> = {
-    extends: 'extends',
     implements: 'implements',
     tests: 'tests',
-    extended_by: 'extends', // Inverse
+    extends: 'extends',
+    derives_from: 'derives_from',
     references: 'references',
-    cross_pollinates: 'references',
     contradicts: 'contradicts',
+    contains: 'contains',
+    uses: 'uses',
+    defines: 'defines',
+    // WitnessedGraph might use different naming
     heritage: 'derives_from',
+    extended_by: 'extends',
   };
-  return mapping[type] || 'references';
+  return mapping[kind] || 'references';
 }
 
-function convertToGraphNode(result: SpecGraphQueryResult, content?: string): GraphNode {
-  // Convert edges from { type: targets[] } to Edge[]
-  const outgoingEdges: Edge[] = [];
-  const incomingEdges: Edge[] = [];
+/**
+ * Convert WitnessedGraph neighbors response to GraphNode.
+ *
+ * Preserves all evidence fields from WitnessedGraph:
+ * - confidence: certainty of relationship
+ * - origin: what source contributed it
+ * - markId: audit trail link
+ * - lineNumber: where in source file
+ */
+function convertNeighborsToGraphNode(
+  path: string,
+  response: ConceptGraphNeighborsResponse,
+  content?: string
+): GraphNode {
+  // Convert incoming edges with full evidence
+  const incomingEdges: Edge[] = response.incoming.map((edge) => ({
+    id: `${edge.source_path}-${edge.kind}-${edge.target_path}`,
+    source: edge.source_path,
+    target: edge.target_path,
+    type: convertEdgeKind(edge.kind),
+    context: edge.context ?? undefined,
+    stale: false,
+    // WitnessedGraph evidence fields
+    confidence: edge.confidence,
+    origin: edge.origin,
+    markId: edge.mark_id ?? undefined,
+    lineNumber: edge.line_number ?? undefined,
+  }));
 
-  // Defensive: result.edges may be undefined if API returns incomplete data
-  const edges = result.edges || {};
-  for (const [type, targets] of Object.entries(edges)) {
-    for (const target of targets) {
-      const edge: Edge = {
-        id: `${result.path}-${type}-${target}`,
-        source: result.path,
-        target,
-        type: convertEdgeType(type),
-      };
+  // Convert outgoing edges with full evidence
+  const outgoingEdges: Edge[] = response.outgoing.map((edge) => ({
+    id: `${edge.source_path}-${edge.kind}-${edge.target_path}`,
+    source: edge.source_path,
+    target: edge.target_path,
+    type: convertEdgeKind(edge.kind),
+    context: edge.context ?? undefined,
+    stale: false,
+    // WitnessedGraph evidence fields
+    confidence: edge.confidence,
+    origin: edge.origin,
+    markId: edge.mark_id ?? undefined,
+    lineNumber: edge.line_number ?? undefined,
+  }));
 
-      // extended_by is an inverse edge
-      if (type === 'extended_by') {
-        incomingEdges.push({ ...edge, source: target, target: result.path });
-      } else {
-        outgoingEdges.push(edge);
-      }
-    }
-  }
+  // Derive title from path (last component, without extension)
+  const pathParts = path.split('/');
+  const filename = pathParts[pathParts.length - 1] || path;
+  const title = filename.replace(/\.(md|py|ts|tsx|js|jsx)$/, '');
 
-  // Add derives_from as incoming edges
-  // Defensive: derives_from may be undefined
-  const derivesFrom = result.derives_from || [];
-  for (const parent of derivesFrom) {
-    incomingEdges.push({
-      id: `${parent}-derives-${result.path}`,
-      source: parent,
-      target: result.path,
-      type: 'derives_from',
-    });
-  }
+  // Derive kind from path
+  const kind: GraphNode['kind'] = path.startsWith('spec/')
+    ? 'spec'
+    : path.includes('_test') || path.includes('/tests/')
+      ? 'test'
+      : path.endsWith('.py') || path.endsWith('.ts') || path.endsWith('.tsx')
+        ? 'implementation'
+        : path.endsWith('.md')
+          ? 'doc'
+          : 'unknown';
+
+  // Calculate average confidence from edges (if available)
+  const allEdges = [...response.incoming, ...response.outgoing];
+  const confidences = allEdges.filter((e) => e.confidence !== undefined).map((e) => e.confidence!);
+  const avgConfidence =
+    confidences.length > 0 ? confidences.reduce((a, b) => a + b, 0) / confidences.length : 0.5;
 
   return {
-    path: result.path,
-    title: result.title || result.path.split('/').pop() || result.path,
-    agentesePath: result.agentese_path,
-    kind: result.path.startsWith('spec/')
-      ? 'spec'
-      : result.path.includes('_tests/')
-        ? 'test'
-        : result.path.endsWith('.py')
-          ? 'implementation'
-          : result.path.endsWith('.md')
-            ? 'doc'
-            : 'unknown',
-    tier: result.tier as GraphNode['tier'],
-    confidence: result.confidence,
+    path,
+    title,
+    kind,
+    confidence: avgConfidence,
     outgoingEdges,
     incomingEdges,
     content,
@@ -118,114 +138,46 @@ export interface UseGraphNodeResult {
   error: string | null;
 }
 
+/**
+ * Hook for loading graph nodes from the WitnessedGraph API.
+ *
+ * Unlike the old SpecGraph, WitnessedGraph:
+ * - Doesn't require explicit discover() call
+ * - Returns edges with witness marks (evidence)
+ * - Tracks edge origins (which source contributed)
+ *
+ * "The file is a lie. There is only the graph."
+ */
 export function useGraphNode(): UseGraphNodeResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const discoveredRef = useRef(false);
-  const discoveringRef = useRef(false);
-
-  // Auto-discover SpecGraph on first use
-  // gotcha: SpecGraph is lazy-loaded. Without discover(), queries return empty.
-  useEffect(() => {
-    const doDiscover = async () => {
-      if (discoveredRef.current || discoveringRef.current) return;
-
-      discoveringRef.current = true;
-
-      try {
-        // Call discover to populate the graph
-        await invokeSpecGraph<{ count: number }>('discover');
-        // eslint-disable-next-line require-atomic-updates -- refs are stable
-        discoveredRef.current = true;
-      } catch (e) {
-        console.warn('[useGraphNode] Failed to discover SpecGraph:', e);
-      } finally {
-        // eslint-disable-next-line require-atomic-updates -- refs are stable
-        discoveringRef.current = false;
-      }
-    };
-
-    doDiscover();
-  }, []);
 
   const loadNode = useCallback(async (path: string): Promise<GraphNode | null> => {
     setLoading(true);
     setError(null);
 
     try {
-      // Ensure SpecGraph is discovered before querying
-      // Wait if discovery is in progress, or trigger if not done
-      if (!discoveredRef.current) {
-        if (!discoveringRef.current) {
-          discoveringRef.current = true;
-          try {
-            await invokeSpecGraph<{ count: number }>('discover');
-            // eslint-disable-next-line require-atomic-updates -- refs are stable
-            discoveredRef.current = true;
-          } catch (e) {
-            console.warn('[useGraphNode] Discovery failed:', e);
-          } finally {
-            // eslint-disable-next-line require-atomic-updates -- refs are stable
-            discoveringRef.current = false;
-          }
-        } else {
-          // Wait for in-progress discovery (simple polling)
-          let attempts = 0;
-          while (discoveringRef.current && attempts < 50) {
-            await new Promise<void>((r) => {
-              setTimeout(r, 100);
-            });
-            attempts++;
-          }
-        }
-      }
+      // Query WitnessedGraph for edges connected to this path
+      const neighborsResponse = await graphApi.neighbors(path);
 
-      // Query SpecGraph for node metadata
-      const result = await invokeSpecGraph<SpecGraphQueryResult>('query', { path });
-
-      // Defensive: if API returns undefined/null metadata, create a minimal stub
-      if (!result || !result.path) {
-        console.warn(
-          '[useGraphNode] SpecGraph returned no metadata for',
-          path,
-          '- creating stub node'
-        );
-        // Return a stub node so the UI doesn't crash
-        return {
-          path,
-          title: path.split('/').pop() || path,
-          kind: path.endsWith('.md') ? 'doc' : path.endsWith('.py') ? 'implementation' : 'unknown',
-          confidence: 0,
-          outgoingEdges: [],
-          incomingEdges: [],
-          content: `[SpecGraph unavailable for: ${path}]`,
-        };
-      }
-
-      // Also fetch content via world.file.read
+      // Also fetch content via fileApi (optional - content is lazy-loaded)
       let content: string | undefined;
       try {
-        const docResult = await fetch('/agentese/world.file/read', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path }),
-        });
-        if (docResult.ok) {
-          const docData = await docResult.json();
-          content = docData.result?.content;
-        }
-      } catch {
-        // Content loading is optional
-        console.warn('[useGraphNode] Could not load content for', path);
+        const fileResponse = await fileApi.read(path);
+        content = fileResponse.content;
+      } catch (_fileError) {
+        // Content loading is optional - node can still show edges without content
+        console.info('[useGraphNode] Content not available for', path, '- edges-only mode');
       }
 
-      return convertToGraphNode(result, content);
+      return convertNeighborsToGraphNode(path, neighborsResponse, content);
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Failed to load node';
       setError(errorMsg);
       console.error('[useGraphNode] Error loading node:', path, e);
 
       // Return a stub node so the editor is still usable
+      // The UI should show that content is unavailable but navigation is possible
       return {
         path,
         title: path.split('/').pop() || path,
@@ -233,7 +185,7 @@ export function useGraphNode(): UseGraphNodeResult {
         confidence: 0,
         outgoingEdges: [],
         incomingEdges: [],
-        content: `[Error loading node: ${errorMsg}]`,
+        content: `# Node: ${path}\n\n*Error loading from WitnessedGraph: ${errorMsg}*\n\nTry :e <path> to navigate to another node.`,
       };
     } finally {
       setLoading(false);
@@ -241,7 +193,7 @@ export function useGraphNode(): UseGraphNodeResult {
   }, []);
 
   const loadSiblings = useCallback(async (node: GraphNode): Promise<GraphNode[]> => {
-    // Siblings are nodes that share the same parent (derives_from or extends)
+    // Siblings are nodes that share the same parent (via derives_from or extends edges)
     const parentEdge = node.incomingEdges.find(
       (e) => e.type === 'derives_from' || e.type === 'extends'
     );
@@ -251,26 +203,64 @@ export function useGraphNode(): UseGraphNodeResult {
     }
 
     try {
-      // Navigate from parent to get all children with same edge type
-      const result = await invokeSpecGraph<{
-        current: { path: string; title: string; tier: string };
-        targets: Array<{ path: string; title: string; tier: string }>;
-      }>('navigate', {
-        path: parentEdge.source,
-        edge: parentEdge.type === 'derives_from' ? 'extended_by' : 'extends',
-      });
+      // Get parent's neighbors to find all children
+      const parentNeighbors = await graphApi.neighbors(parentEdge.source);
 
-      // Convert targets to minimal GraphNodes
-      return result.targets.map((t) => ({
-        path: t.path,
-        title: t.title,
+      // Find outgoing edges from parent that have the inverse relationship
+      // derives_from incoming edge means parent has "derives" or "contains" outgoing
+      // extends incoming edge means parent has "extended_by" outgoing
+      const siblingPaths = parentNeighbors.outgoing
+        .filter((edge) => {
+          const kind = edge.kind.toLowerCase();
+          return (
+            kind === 'derives' ||
+            kind === 'contains' ||
+            kind === 'extended_by' ||
+            kind === 'children'
+          );
+        })
+        .map((edge) => edge.target_path);
+
+      // If no explicit sibling edges, find all nodes that derive from this parent
+      if (siblingPaths.length === 0) {
+        // Search for other nodes that have this parent
+        const searchResult = await graphApi.search(`derives_from:${parentEdge.source}`, 20);
+        for (const edge of searchResult.edges) {
+          if (edge.source_path !== node.path) {
+            siblingPaths.push(edge.source_path);
+          }
+        }
+      }
+
+      // Convert to minimal GraphNodes (full load would be expensive for many siblings)
+      const siblings: GraphNode[] = siblingPaths.map((siblingPath) => ({
+        path: siblingPath,
+        title:
+          siblingPath
+            .split('/')
+            .pop()
+            ?.replace(/\.(md|py|ts|tsx)$/, '') || siblingPath,
         kind: 'spec' as const,
-        tier: t.tier as GraphNode['tier'],
         confidence: 0.5,
         outgoingEdges: [],
         incomingEdges: [],
       }));
-    } catch {
+
+      // Include current node if not already present
+      if (!siblings.find((s) => s.path === node.path)) {
+        siblings.unshift({
+          path: node.path,
+          title: node.title,
+          kind: node.kind,
+          confidence: node.confidence,
+          outgoingEdges: [],
+          incomingEdges: [],
+        });
+      }
+
+      return siblings;
+    } catch (e) {
+      console.warn('[useGraphNode] Failed to load siblings:', e);
       return [node]; // Fallback to just current node
     }
   }, []);

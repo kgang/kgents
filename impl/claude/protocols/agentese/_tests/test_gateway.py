@@ -411,7 +411,8 @@ class TestGatewayConfiguration:
         assert gateway.prefix == "/agentese"
         assert gateway.enable_streaming is True
         assert gateway.enable_websocket is True
-        assert gateway.fallback_to_logos is True
+        # AD-016: fail-fast by default (no JIT fallback)
+        assert gateway.fallback_to_logos is False
 
     def test_custom_configuration(self):
         """Custom gateway configuration."""

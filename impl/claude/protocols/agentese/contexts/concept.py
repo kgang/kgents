@@ -663,9 +663,14 @@ class ConceptContextResolver:
     """
     Resolver for concept.* context.
 
-    Resolution strategy:
-    1. Check registry (known concepts)
-    2. Create exploratory concept node
+    Resolution strategy (AD-016 Fail-Fast):
+    1. Check cache (already resolved)
+    2. Check special-case handles (nphase)
+    3. Check registry (known concepts)
+    4. Raise NodeNotRegisteredError (no placeholder fallback)
+
+    Note: Previously created placeholder concepts which masked missing registrations.
+    Per AD-016, we now fail-fast with helpful error messages.
     """
 
     registry: Any = None  # L-gent for concept lookup
@@ -717,16 +722,16 @@ class ConceptContextResolver:
             except Exception:
                 pass
 
-        # Create placeholder concept for exploration
-        node = ConceptNode(
-            _handle=handle,
-            name=holon,
-            domain="general",
-            _registry=self.registry,
-            _grammarian=self.grammarian,
+        # AD-016: Fail-fast on unregistered paths (no placeholder fallback)
+        # Previously created placeholder concepts which masked missing registrations
+        print(f"DEBUG: AD-016 fail-fast triggered for {handle}")  # TEMPORARY DEBUG
+        from protocols.agentese.exceptions import NodeNotRegisteredError
+
+        similar = self.list_handles("concept.")
+        raise NodeNotRegisteredError(
+            path=handle,
+            similar_paths=similar[:5],
         )
-        self._cache[handle] = node
-        return node
 
     def _hydrate_from_registry(self, entry: Any, handle: str) -> ConceptNode:
         """Hydrate a ConceptNode from a registry entry."""

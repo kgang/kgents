@@ -45,6 +45,16 @@ export interface LedgerResponse {
   deprecated_paths: string[];
 }
 
+/**
+ * AD-015: Response when proxy handle data hasn't been computed yet.
+ */
+export interface DataNotComputedResponse {
+  success: false;
+  needs_scan: true;
+  message: string;
+  hint: string;
+}
+
 export interface ClaimDetail {
   type: string;
   subject: string;

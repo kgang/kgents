@@ -6,147 +6,112 @@
 
 ## Executive Summary
 
-The forest has undergone **The Great Extinction** (2025-12-21): Town, Park, Gestalt, Forge, Coalition, Muse, Gardener removed. ~52K lines archived. Post-extinction, **Hypergraph Emacs** emerged as a major deliverable (2025-12-22/23).
+**Post-Archive Clarity**: 7 plans archived (3 complete, 4 superseded). The forest is leaner.
 
-- **Active Plans**: 16 (down from 18 pre-extinction)
+The dominant arc is **Embodiment** — the frontend IS the agent now, not a documentation shell. Hypergraph Emacs and The Membrane are the primary surfaces.
+
+- **Active Plans**: 21 (down from 28)
 - **Active Crown Jewels**: Brain (100%), Witness (98%), Atelier (75%), Liminal (50%)
-- **Dominant Theme**: **Hypergraph Navigation** — modal editing, graph visualization, EDGE mode
-- **Major Delivery**: Hypergraph Emacs core complete (six-mode editor, SpecGraph visualizer)
+- **Dominant Theme**: Hypergraph Navigation + Witness Integration
+- **Major Delivery**: Hypergraph Emacs core (six-mode editor, SpecGraph visualizer)
 
 ---
 
 ## Plan Status Dashboard
 
-### Tier 1: Complete / Maintenance
+### Tier 1: In-Flight (Active Development)
 
-| Plan | Status | Delivered |
-|------|--------|-----------|
-| `hypergraph-emacs.md` | **PHASE 1-3 COMPLETE** | Six-mode editor, CodeMirror 6, SpecGraph visualizer, EDGE mode |
-| `witness-crystallization.md` | **COMPLETE** | 678 tests, 4 phases, crystal hierarchy |
-| `witness-dashboard-tui.md` | **COMPLETE** | Textual TUI, j/k nav, level filtering |
-| `visual-trail-graph-fullstack.md` | **Session 2 Done** | Branching, validation, hierarchical reasoning |
+| Plan | Status | Evidence |
+|------|--------|----------|
+| `hypergraph-emacs.md` | **Phase 1-3 Complete** | Six-mode editor, CodeMirror 6, EDGE mode, graph nav |
+| `_membrane.md` | **Foundation Complete** | 25 files, Focus/Witness/Dialogue panes |
+| `SPECGRAPH-ASHC-SELF-HOSTING.md` | **Phase 2 Active** | Master plan: SpecGraph + ASHC + K-Block + Interactive Text |
+| `_inbound-sovereignty.md` | **Session 1+2 Done** | 70 tests, sovereign store + ingest protocol |
 
 ### Tier 2: Ready for Implementation
 
-| Plan | Status | Sessions Est. | Next Step |
-|------|--------|---------------|-----------|
-| `witness-fusion-ux-implementation.md` | **READY** | 5-7 | Session 1: MarkCard, MarkTimeline, QuickMarkForm |
-| `witness-assurance-protocol.md` | **READY** | 8-10 | Phase 1: Evidence Ladder Infrastructure |
-| `witness-assurance-ui.md` | **READY** | 4-5 | Phase 1: EvidencePulse component |
-| `dawn-phase-4-kickoff.md` | **READY** | 2-3 hrs | j/k nav, copy confirmation, add focus modal |
-| `stark-biome-enforcement.md` | **READY** | 1 hr | ESLint rule + selective migration |
-| `git-archaeology-backfill.md` | **READY** | ~12 hrs | Phase 1: Recover archaeology code |
-| `memory-first-docs-execution.md` | **Phase 2A done** | 3-4 | Phase 2B: Bootstrap & CLI wiring |
+| Plan | Sessions Est. | Priority |
+|------|---------------|----------|
+| `witness-fusion-ux-implementation.md` | 5-7 | HIGH |
+| `witness-assurance-protocol.md` | 8-10 | HIGH |
+| `dawn-phase-4-kickoff.md` | 2-3 hrs | QUICK WIN |
+| `stark-biome-enforcement.md` | 1 hr | QUICK WIN |
+| `memory-first-docs-execution.md` | 3-4 | Phase 2B pending |
 
-### Tier 3: Planning / Design
+### Tier 3: Design / Planning
 
-| Plan | Status | Notes |
-|------|--------|-------|
-| `witness-fusion-ux-design.md` | **DESIGN SPEC** | Full UX vision for Witness + Fusion |
-| `dawn-cockpit.md` | **Phase 3.5 Done** | ZenPortal audit complete, 23 patterns extracted |
-| `stark-biome-refactor.md` | **PLANNING** | 90/10 steel/life aesthetic |
+| Plan | Status |
+|------|--------|
+| `witness-fusion-ux-design.md` | Design spec complete |
+| `witness-assurance-ui.md` | UX patterns defined |
+| `_k-block-implementation.md` | Phased plan ready |
+| `SYNTHESIS-UI.md` | Vision doc |
+| `stark-biome-refactor.md` | Token system planned |
 
-### Tier 4: Maintenance / Debt
+### Tier 4: Backlog / Maintenance
 
-| Plan | Status | Notes |
-|------|--------|-------|
-| `technical-debt-remediation.md` | **ACTIVE** | 183 mypy errors, 229 ESLint warnings |
+| Plan | Notes |
+|------|-------|
+| `visual-trail-graph-fullstack.md` | Session 2 done, branching + validation |
+| `git-archaeology-backfill.md` | Proposed, not started |
+| `technical-debt-remediation.md` | 183 mypy errors, ongoing |
 
 ---
 
-## General Trends
+## What Got Archived (2025-12-23)
 
-### 0. Hypergraph Emacs Emergence (NEW)
+### Complete (→ `_archive/2025-12-week52/complete/`)
+- `witness-crystallization.md` — 678 tests, Phase 4 complete
+- `witness-dashboard-tui.md` — Phase 1-3 complete, Textual TUI
+- `_membrane-execution.md` — Sprint complete
 
-The Hypergraph Emacs vision crystallized and was implemented in a single arc (2025-12-22/23):
+### Superseded (→ `_archive/2025-12-week52/superseded/`)
+- `dawn-cockpit.md` — Superseded by `dawn-phase-4-kickoff.md`
+- `_bootstrap-specgraph.md` — Merged into `SPECGRAPH-ASHC-SELF-HOSTING.md`
+- `_specgraph-inventory.md` — Merged into master plan
+- `AGENT-PROMPT-stark-biome-enhancement.md` — Agent prompt, not plan
 
-**Delivered:**
-- Six-mode modal editor (NORMAL, INSERT, EDGE, VISUAL, COMMAND, WITNESS)
-- CodeMirror 6 with custom STARK BIOME theme
-- SpecGraph Visualizer using Reactflow with tier-based coloring
-- EDGE mode for creating typed edges between nodes
-- Graph navigation: gh/gl (parent/child), gj/gk (siblings), gd/gr/gt (definition/references/tests)
+---
 
-**Remaining:**
-- Portal operations (zo/zc for inline expansion)
-- WITNESS mode bindings
-- K-Block commit flow (:w)
+## Trends & Observations
 
-This is now the primary UI surface for kgents self-hosting.
+### 1. From Documentation to Embodiment
 
-### 1. Witness Dominance
+The major shift: **Stop building UIs *about* agents. Build UIs that *are* agents.**
 
-**8 of 16 plans** (50%) are Witness-related:
-- Witness Crystallization (complete)
-- Witness Dashboard TUI (complete)
-- Witness Fusion UX Design + Implementation
-- Witness Assurance Protocol + UI
+- Old: NavigationTree, PathBrowser, PolynomialDiagram (documentation)
+- New: Hypergraph Emacs (you navigate *in* the graph), Membrane (you think *with* the agent)
+
+This is the realization of *"The proof IS the decision."*
+
+### 2. Witness as Central Nervous System
+
+8 of 21 active plans touch Witness:
+- Fusion UX (design + impl)
+- Assurance Protocol + UI
 - Visual Trail Graph (Trail → Witness bridge)
 - Memory-First Docs (Teaching → Crystal → Witness)
+- Inbound Sovereignty (witnessed ingestion)
 
-**Interpretation**: Witness is becoming the central nervous system. Every action leaves a mark. Every mark becomes evidence.
+### 3. Quick Wins Available
 
-### 2. From Crown Jewels to Evidence Ladder
+Two plans are < 3 hours each:
+- `dawn-phase-4-kickoff.md` — j/k nav, copy confirmation, add modal
+- `stark-biome-enforcement.md` — ESLint rule + selective migration
 
-Pre-extinction: 6 Crown Jewels competing for attention
-Post-extinction: 4 Crown Jewels organized on an **Evidence Ladder**:
+Good session-starters for momentum.
 
-```
-L3: Economic Bet (ASHC)
-L2: Formal Proof (ASHC)
-L1: Automated Test
-L0: Human Mark (Witness)
-L-1: TraceWitness
-L-2: PromptAncestor ← NEW (Prompt Archaeology)
-L-∞: Orphan (untracked artifacts)
-```
+### 4. Technical Debt Acknowledged
 
-### 3. Trust Surfaces Over Dashboards
-
-Three plans explicitly reject "dashboard as spreadsheet":
-- **Witness Assurance UI**: Garden metaphor, plants bloom/wilt
-- **Dawn Cockpit**: ZenPortal patterns, not generic TUI
-- **Stark Biome**: Industrial stillness, 10% earned glow
-
-*"The persona is a garden, not a museum."*
-
-### 4. Prompt Archaeology Emergence
-
-A new discipline is crystallizing:
-- **Total Provenance**: Every artifact traces to its generating prompt
-- **Fitness Metrics**: test pass rate + correction rate + crystal formation
-- **Self-Improvement Loops**: TextGRAD-style prompt evolution
-
-This wasn't in the pre-extinction forest. It's new.
-
-### 5. Technical Debt Acknowledged
-
-183 mypy errors, 229 ESLint warnings. The `technical-debt-remediation.md` plan exists but sits at Tier 4. This is intentional — feature velocity over cleanliness during rapid development.
-
----
-
-## What's NOT Here Anymore
-
-Post-Extinction Removal (2025-12-21):
-- **Town** — Citizens, dialogue, coalitions
-- **Park** — Idea harvesting, cultivation
-- **Gestalt** — Archetypal patterns
-- **Forge** — Creation flows
-- **Coalition** — Group dynamics
-- **Muse** — Inspiration engine
-- **Gardener** — System maintenance
-
-These concepts are archived in git, and their teaching moments are being crystallized via Memory-First Docs.
+183 mypy errors (mostly manifest signature mismatches). The debt is *known* and *deferred*—feature velocity prioritized during rapid development.
 
 ---
 
 ## Recommended Next Session
 
-Based on status and dependencies:
-
-### Hypergraph Emacs Phase 4 (Continue Current Arc)
-1. `hypergraph-emacs.md` Phase 4 — Portal operations (zo/zc), WITNESS mode bindings
-2. `hypergraph-emacs.md` Phase 5 — K-Block commit flow (:w saves)
+### Continue Current Arc
+1. `hypergraph-emacs.md` Phase 4 — Portal operations (zo/zc for inline expansion)
+2. `_inbound-sovereignty.md` Session 3 — Sync Protocol
 
 ### Quick Wins (< 3 hrs)
 3. `dawn-phase-4-kickoff.md` — j/k nav, copy confirmation, add modal
@@ -168,34 +133,20 @@ From `_bounty.md`, relevant open bounties:
 - **[HIGH]** Cross-jewel synergy bus — CRYSTAL_FORMED events
 - **[HIGH]** Observer unification — O/N/T-gent → ObserverFunctor
 
-These align with Witness Assurance work (synergy bus, evidence events).
-
----
-
-## Verification
-
-```bash
-# Count active plans
-ls -1 plans/*.md | grep -v "^plans/_" | wc -l
-# → 16 (excluding _bounty.md, _focus.md, meta.md, README.md)
-
-# Test counts (approximate)
-cd impl/claude && uv run pytest --collect-only -q 2>/dev/null | tail -1
-# → X tests collected
-```
+These align with Witness Assurance and Inbound Sovereignty work.
 
 ---
 
 ## Anti-Sausage Check
 
-Reviewing this forest, I ask:
-- **Daring?** Yes — Witness as central nervous system is bold
-- **Bold?** Yes — Extinction removed 52K lines without regret
-- **Creative?** Yes — Garden metaphor, prompt archaeology, evidence ladder
+Reviewing this forest:
+- **Daring?** Yes — Hypergraph Emacs is a novel editor paradigm
+- **Bold?** Yes — 67K lines burned, 7 plans archived without regret
+- **Creative?** Yes — Graph-as-UI, Witness-as-nervous-system, Evidence Ladder
 - **Not gaudy?** Yes — Plans are terse, focused, actionable
 
 The voice is preserved.
 
 ---
 
-*Last verified: 2025-12-23 | Hypergraph Emacs Delivery Edition*
+*Last verified: 2025-12-23 | Post-Archive Clarity Edition*

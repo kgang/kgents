@@ -1416,3 +1416,92 @@ export const kblockApi = {
     return unwrapAgentese(response);
   },
 };
+
+// =============================================================================
+// WitnessedGraph API (9th Crown Jewel) - AGENTESE Universal Protocol
+// Routes:
+//   concept.graph.manifest - Graph stats
+//   concept.graph.neighbors - Edges connected to a path
+//   concept.graph.evidence - Evidence supporting a spec
+//   concept.graph.trace - Path between nodes
+//   concept.graph.search - Search edges by query
+//
+// Philosophy:
+//   "The file is a lie. There is only the graph."
+// =============================================================================
+
+import type {
+  ConceptGraphManifestResponse,
+  ConceptGraphNeighborsResponse,
+  ConceptGraphEvidenceResponse,
+  ConceptGraphTraceResponse,
+  ConceptGraphSearchResponse,
+} from './types/_generated/concept-graph';
+
+export const graphApi = {
+  /**
+   * Get graph stats via AGENTESE: concept.graph.manifest
+   */
+  manifest: async (): Promise<ConceptGraphManifestResponse> => {
+    const response = await apiClient.post<AgenteseResponse<ConceptGraphManifestResponse>>(
+      '/agentese/concept/graph/manifest',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Get edges connected to a path via AGENTESE: concept.graph.neighbors
+   *
+   * @param path - File path to get neighbors for
+   */
+  neighbors: async (path: string): Promise<ConceptGraphNeighborsResponse> => {
+    const response = await apiClient.post<AgenteseResponse<ConceptGraphNeighborsResponse>>(
+      '/agentese/concept/graph/neighbors',
+      { path }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Get evidence supporting a spec via AGENTESE: concept.graph.evidence
+   *
+   * @param specPath - Spec file path
+   */
+  evidence: async (specPath: string): Promise<ConceptGraphEvidenceResponse> => {
+    const response = await apiClient.post<AgenteseResponse<ConceptGraphEvidenceResponse>>(
+      '/agentese/concept/graph/evidence',
+      { spec_path: specPath }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Find path between nodes via AGENTESE: concept.graph.trace
+   *
+   * @param start - Start path
+   * @param end - End path
+   * @param maxDepth - Maximum search depth (default: 5)
+   */
+  trace: async (start: string, end: string, maxDepth = 5): Promise<ConceptGraphTraceResponse> => {
+    const response = await apiClient.post<AgenteseResponse<ConceptGraphTraceResponse>>(
+      '/agentese/concept/graph/trace',
+      { start, end, max_depth: maxDepth }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Search edges by query via AGENTESE: concept.graph.search
+   *
+   * @param query - Search query
+   * @param limit - Maximum results (default: 100)
+   */
+  search: async (query: string, limit = 100): Promise<ConceptGraphSearchResponse> => {
+    const response = await apiClient.post<AgenteseResponse<ConceptGraphSearchResponse>>(
+      '/agentese/concept/graph/search',
+      { query, limit }
+    );
+    return unwrapAgentese(response);
+  },
+};

@@ -3,6 +3,10 @@ Witness Handler: CLI for everyday mark-making.
 
 "Every action leaves a mark. The mark IS the witness."
 
+PATTERN: Rich CLI UX layer that provides extensive formatting and interaction.
+         Unlike simple handlers, this has complex custom logic that can't be
+         delegated to AGENTESE router (interactive flows, tree visualization, etc.)
+
 This is the UX layer for the Witness Crown Jewel. It provides:
 - `kg witness mark "action"` - Create a mark (the core habit)
 - `kg witness show` - View recent marks

@@ -12,7 +12,7 @@
  */
 
 import type { Focus, FocusType } from './useMembrane';
-import { WelcomeView, FileView, SpecView, ConceptView, GraphView } from './views';
+import { WelcomeView, FileView, SpecView, ConceptView } from './views';
 import type { EdgeType } from './useSpecNavigation';
 
 import './FocusPane.css';
@@ -98,15 +98,8 @@ function renderFocusContent(
       // For now, fall back to welcome
       return <WelcomeView />;
 
-    case 'graph':
-      return (
-        <GraphView
-          onSpecClick={(path) => {
-            // Navigate to spec when clicking a node
-            onNavigate(path);
-          }}
-        />
-      );
+    // Note: 'graph' focus type will use AstronomicalChart once implemented
+    // For now, fall back to welcome
 
     default:
       return <WelcomeView />;

@@ -33,58 +33,24 @@ await logos.invoke("world.house.manifest", umwelt)  # Observer-dependent
 | **Categorical** | `agents/poly/`, `agents/operad/`, `agents/sheaf/` | PolyAgent, composition grammar, emergence |
 | **Streaming** | `agents/flux/` | Living pipelines, event-driven flows |
 | **Semantics** | `protocols/agentese/` | Logos, parser, JIT, wiring |
-| **SpecGraph** | `protocols/specgraph/` | Specs as navigable hypergraph (193 specs, 734 edges) |
-| **Services** | `services/` | Crown Jewels (Brain, Town, Witness, Liminal...) |
+| **SpecGraph** | `protocols/specgraph/` | Specs as navigable hypergraph |
+| **Services** | `services/` | Crown Jewels (Brain, Witness, Atelier, Liminal) |
 | **Soul** | `agents/k/` | LLM dialogue, hypnagogia, gatekeeper |
 | **Memory** | `agents/m/` | Crystals, cartography, stigmergy |
 | **UI** | `agents/i/reactive/` | Signal/Computed/Effect → multi-target |
 
 ---
 
-## Composition Patterns
-
-```python
-# 1. Agent composition
-pipeline = AgentA >> AgentB >> AgentC
-
-# 2. Flux lifting
-flux_agent = Flux.lift(discrete_agent)
-async for result in flux_agent.start(source): ...
-
-# 3. AGENTESE paths
-await logos.invoke("self.brain.capture", umwelt, content="...")
-
-# 4. PolyAgent modes
-poly = PolyAgent[S, A, B](positions, directions, transition)
-
-# 5. Widget projection
-widget.to_cli() | widget.to_marimo() | widget.to_json()
-```
-
----
-
-## Metaphysical Fullstack (AD-009)
-
-```
-Projection → AGENTESE Protocol → Node → Service → Infrastructure → Persistence
-```
-
-- Layer 0: `StorageProvider` (membrane.db, XDG-compliant)
-- `agents/` = Infrastructure (PolyAgent, Operad, Sheaf)
-- `services/` = Crown Jewels (Brain, Gardener, Town...)
-- **No explicit backend routes** — AGENTESE IS the API
-
----
-
-## Crown Jewels
+## Crown Jewels (Post-Extinction)
 
 | Jewel | Status | Purpose |
 |-------|--------|---------|
 | Brain | 100% | Spatial cathedral of memory + TeachingCrystal crystallization |
-| Town | 70% | Multi-agent simulation |
-| Witness | 98% | Audit core: Mark, Walk, Playbook, Grant, Scope (461+ tests) |
+| Witness | 98% | Marks, crystals, streaming, promotion (678 tests) |
 | Atelier | 75% | Design forge and creative workshop |
 | Liminal | 50% | Transition protocols: Morning Coffee |
+
+*Town, Park, Gestalt, Forge, Coalition, Muse, Gardener — archived 2025-12-21*
 
 ---
 
@@ -98,7 +64,6 @@ Projection → AGENTESE Protocol → Node → Service → Infrastructure → Per
 km "what happened"                         # Basic mark
 km "insight" --reasoning "why it matters"  # With justification
 km "gotcha" --tag gotcha --tag agentese    # Tagged for retrieval
-km "follow-up" --parent mark-abc           # Causal lineage
 km "action" --json                         # Machine-readable
 ```
 
@@ -121,17 +86,9 @@ kg decide --kent "view" --kent-reasoning "why" \
 ```bash
 kg witness show --today                # Today's marks
 kg witness show --tag joy              # Filter by tag
-kg witness tree mark-abc               # Causal tree
 kg witness crystallize                 # Marks → Session crystal
 kg witness context --budget 2000       # Budget-aware context
 ```
-
-### When to Witness
-
-- After fixing something subtle → `km` with `--tag gotcha`
-- When choosing between options → `kg decide`
-- When something feels right/wrong → `km` with `--tag taste`
-- Before ending session → `/crystallize`
 
 **Crystal Hierarchy**: Marks → Session (L0) → Day (L1) → Week (L2) → Epoch (L3)
 
@@ -139,9 +96,28 @@ kg witness context --budget 2000       # Budget-aware context
 
 ## Skills (READ THESE)
 
-`docs/skills/` — 13 essential skills covering every task.
+`docs/skills/` — Essential skills covering every task.
 
 **Universal**: `metaphysical-fullstack.md` • `crown-jewel-patterns.md` • `test-patterns.md`
+
+---
+
+## Current Focus (2025-12-23)
+
+**Hypergraph Emacs + Membrane**: The frontend IS the agent.
+
+| Phase | What | Status |
+|-------|------|--------|
+| 1-2 | EditorPolynomial + ContextNode.follow() | ✅ Done |
+| 3 | K-Block auto-creation on INSERT + `:w`/`:q!` | ✅ Done |
+| 4 | **WitnessedGraph Integration** | ✅ Done |
+
+**Phase 4**: Migrated `useGraphNode` from SpecGraph to WitnessedGraph API:
+- Edges carry evidence (confidence, origin, markId, lineNumber)
+- Edge gutters show confidence visually (solid/dashed/dotted)
+- Witnessed edges glow with 📜 indicator
+
+See `NOW.md` for active plans.
 
 ---
 
@@ -157,4 +133,4 @@ cd impl/claude/web && npm run typecheck && npm run lint
 
 ---
 
-*Lines: 115. Ceiling: 120.*
+*Lines: 100. Ceiling: 120.*

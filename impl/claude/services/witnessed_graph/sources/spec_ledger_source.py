@@ -8,10 +8,15 @@ The Living Spec Ledger provides spec-to-spec relationships:
 
 Design Principle:
     "Specs are nodes. Relations are edges. The ledger is the graph."
+
+AD-015 (Upload-and-Copy):
+    This source NO LONGER auto-computes. It requires pre-computed data.
+    If no data exists, it gracefully returns empty results with a warning.
 """
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, AsyncIterator, Awaitable, Callable
 
 from ..composition import ComposableMixin
@@ -19,6 +24,8 @@ from ..types import EdgeKind, HyperEdge
 
 if TYPE_CHECKING:
     from ...living_spec.analyzer import Contradiction, Harmony, LedgerReport, SpecRecord
+
+logger = logging.getLogger(__name__)
 
 
 class SpecLedgerSource(ComposableMixin):
@@ -50,16 +57,32 @@ class SpecLedgerSource(ComposableMixin):
         self._report = report
         self._loader = report_loader
 
-    async def _ensure_report(self) -> "LedgerReport":
-        """Get or load the report."""
+    async def _ensure_report(self) -> "LedgerReport | None":
+        """
+        Get the pre-computed report.
+
+        AD-015: Does NOT auto-compute. Returns None if no data available.
+        """
         if self._report is None:
             if self._loader:
-                self._report = await self._loader()
+                try:
+                    self._report = await self._loader()
+                except Exception as e:
+                    logger.warning(f"Could not load spec ledger report: {e}")
+                    return None
             else:
                 # Try to import and use ensure_scanned
-                from ...living_spec.ledger_node import ensure_scanned
+                try:
+                    from ...living_spec.ledger_node import ensure_scanned
 
-                self._report = await ensure_scanned()
+                    self._report = await ensure_scanned()
+                except Exception as e:
+                    # AD-015: No auto-compute, graceful degradation
+                    logger.warning(
+                        f"Spec ledger data not available: {e}. "
+                        "Run `kg spec analyze` to pre-compute."
+                    )
+                    return None
         return self._report
 
     @property
@@ -122,6 +145,7 @@ class SpecLedgerSource(ComposableMixin):
         Get edges originating from a spec path.
 
         Returns harmonies, contradictions, and references from this spec.
+        AD-015: Returns empty if no pre-computed data available.
 
         Args:
             path: Source spec path to query
@@ -130,6 +154,8 @@ class SpecLedgerSource(ComposableMixin):
             HyperEdge instances from spec relations
         """
         report = await self._ensure_report()
+        if report is None:
+            return  # AD-015: Graceful degradation
 
         # Harmonies where this spec is spec_a
         for harmony in report.harmonies:
@@ -157,6 +183,7 @@ class SpecLedgerSource(ComposableMixin):
         Get edges pointing to a spec path.
 
         Returns harmonies and contradictions targeting this spec.
+        AD-015: Returns empty if no pre-computed data available.
 
         Args:
             path: Target spec path
@@ -165,6 +192,8 @@ class SpecLedgerSource(ComposableMixin):
             HyperEdge instances pointing to path
         """
         report = await self._ensure_report()
+        if report is None:
+            return  # AD-015: Graceful degradation
 
         # Harmonies where this spec is spec_b
         for harmony in report.harmonies:
@@ -189,10 +218,14 @@ class SpecLedgerSource(ComposableMixin):
         """
         Get all edges in the spec ledger.
 
+        AD-015: Returns empty if no pre-computed data available.
+
         Yields:
             All HyperEdge instances from harmonies, contradictions, references
         """
         report = await self._ensure_report()
+        if report is None:
+            return  # AD-015: Graceful degradation
 
         # All harmonies
         for harmony in report.harmonies:
@@ -216,6 +249,7 @@ class SpecLedgerSource(ComposableMixin):
         Search edges by query.
 
         Searches spec paths and relationship contexts.
+        AD-015: Returns empty if no pre-computed data available.
 
         Args:
             query: Search string (case-insensitive)
@@ -224,7 +258,7 @@ class SpecLedgerSource(ComposableMixin):
             Matching HyperEdge instances
         """
         query_lower = query.lower()
-        async for edge in self.all_edges():
+        async for edge in self.all_edges():  # AD-015: all_edges handles None
             if (
                 query_lower in edge.source_path.lower()
                 or query_lower in edge.target_path.lower()

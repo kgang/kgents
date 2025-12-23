@@ -11,7 +11,7 @@ The Metaphysical Fullstack Pattern (AD-009):
 This gateway:
 1. Mounts a single dynamic route that handles ALL AGENTESE paths
 2. Routes requests to registered nodes via NodeRegistry
-3. Falls back to Logos for non-registered paths
+3. Fails fast on unregistered paths (AD-016: no JIT fallback)
 4. Supports SSE streaming for async generators
 5. Supports WebSocket for bidirectional streams
 
@@ -361,7 +361,8 @@ class AgenteseGateway:
     container: Any | None = None
     enable_streaming: bool = True
     enable_websocket: bool = True
-    fallback_to_logos: bool = True
+    # AD-016: Fail-fast on unregistered paths (no JIT fallback by default)
+    fallback_to_logos: bool = False
     _router: Any = field(default=None, repr=False)
     _logos: Any = field(default=None, repr=False)
 
@@ -839,29 +840,29 @@ class AgenteseGateway:
                     )
                     return result
 
-            # Fall back to Logos
-            if self.fallback_to_logos:
-                logos = self._get_logos()
-                if logos is not None:
-                    try:
-                        result = await logos.invoke(f"{agentese_path}.{aspect}", observer, **kwargs)
-                        is_streaming = hasattr(result, "__aiter__")
-                        self._emit_trace(
-                            agentese_path, aspect, observer, result, is_streaming=is_streaming
-                        )
-                        return result
-                    except Exception as e:
-                        logger.debug(f"Logos fallback failed for {agentese_path}.{aspect}: {e}")
-
-            # Path not found - raise without catching
+            # AD-016: Fail-fast on unregistered paths (no JIT fallback)
+            # Silent JIT fallback masks registration bugs - fail immediately with helpful error
             from fastapi import HTTPException as FastAPIHTTPException
+
+            # Find similar paths for typo correction
+            all_paths = registry.list_paths()
+            context_prefix = agentese_path.split(".")[0] if "." in agentese_path else ""
+            similar = [p for p in all_paths if context_prefix and p.startswith(context_prefix)][:5]
+            if not similar:
+                similar = all_paths[:5]
 
             error = FastAPIHTTPException(
                 status_code=404,
                 detail={
-                    "error": f"Path not found: {agentese_path}",
-                    "suggestion": "Check /agentese/discover for available paths",
-                    "available_contexts": list(VALID_CONTEXTS),
+                    "error": f"Node '{agentese_path}' not registered",
+                    "why": "No @node decorator registered this path (AD-016: fail-fast resolution)",
+                    "similar_paths": similar,
+                    "suggestion": (
+                        "To fix: "
+                        "1) Ensure @node decorator is applied to your node class, "
+                        "2) Import the node module in services/providers.py:setup_providers()"
+                    ),
+                    "discover_endpoint": f"{self.prefix}/discover",
                 },
             )
             raise error
@@ -990,7 +991,7 @@ def create_gateway(
     container: Any | None = None,
     enable_streaming: bool = True,
     enable_websocket: bool = True,
-    fallback_to_logos: bool = True,
+    fallback_to_logos: bool = False,
 ) -> AgenteseGateway:
     """
     Create an AGENTESE gateway instance.
@@ -1000,7 +1001,7 @@ def create_gateway(
         container: Optional ServiceContainer for dependency injection
         enable_streaming: Enable SSE streaming endpoints
         enable_websocket: Enable WebSocket endpoints
-        fallback_to_logos: Fall back to Logos for unregistered paths
+        fallback_to_logos: Fall back to Logos for unregistered paths (default False, AD-016)
 
     Returns:
         Configured AgenteseGateway instance

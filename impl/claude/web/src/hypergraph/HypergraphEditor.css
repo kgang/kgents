@@ -248,6 +248,51 @@
   color: var(--steel-500, #666);
 }
 
+.edge-gutter__witness {
+  font-size: 0.5rem;
+  margin-left: 0.125rem;
+}
+
+/* =============================================================================
+   Confidence-based Edge Styling (WitnessedGraph Evidence)
+   ============================================================================= */
+
+/* High confidence (80%+): bright, solid */
+.edge-gutter__badge--high {
+  border-color: var(--steel-600, #444);
+  background: var(--steel-800, #252525);
+}
+
+.edge-gutter__badge--high:hover {
+  background: var(--steel-700, #333);
+}
+
+/* Medium confidence (50-80%): slightly faded */
+.edge-gutter__badge--medium {
+  opacity: 0.85;
+  border-style: dashed;
+}
+
+/* Low confidence (<50%): faded, dotted */
+.edge-gutter__badge--low {
+  opacity: 0.6;
+  border-style: dotted;
+}
+
+/* Unknown confidence: no special styling */
+.edge-gutter__badge--unknown {
+  /* Default styling */
+}
+
+/* Witnessed edges (have audit trail) get subtle glow */
+.edge-gutter__badge[data-has-witness='true'] {
+  box-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
+}
+
+.edge-gutter__badge[data-has-witness='true']:hover {
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
 /* =============================================================================
    Content Pane
    ============================================================================= */

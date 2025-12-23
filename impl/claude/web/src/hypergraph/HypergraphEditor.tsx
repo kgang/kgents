@@ -23,6 +23,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useNavigation } from './useNavigation';
 import { useKeyHandler } from './useKeyHandler';
+import { useKBlock } from './useKBlock';
 import { StatusLine } from './StatusLine';
 import { CommandLine } from './CommandLine';
 import { EdgePanel } from './EdgePanel';
@@ -62,6 +63,27 @@ interface GutterProps {
   onEdgeClick?: (edge: Edge) => void;
 }
 
+/**
+ * Calculate average confidence for a group of edges.
+ * Returns undefined if no edges have confidence values.
+ */
+function getAverageConfidence(edges: Edge[]): number | undefined {
+  const withConfidence = edges.filter((e) => e.confidence !== undefined);
+  if (withConfidence.length === 0) return undefined;
+  return withConfidence.reduce((sum, e) => sum + e.confidence!, 0) / withConfidence.length;
+}
+
+/**
+ * Get CSS class for confidence level.
+ * Maps 0-1 confidence to visual indicator.
+ */
+function getConfidenceClass(confidence: number | undefined): string {
+  if (confidence === undefined) return 'edge-gutter__badge--unknown';
+  if (confidence >= 0.8) return 'edge-gutter__badge--high';
+  if (confidence >= 0.5) return 'edge-gutter__badge--medium';
+  return 'edge-gutter__badge--low';
+}
+
 const EdgeGutter = memo(function EdgeGutter({ edges, side, onEdgeClick }: GutterProps) {
   // Group edges by type
   const grouped = edges.reduce(
@@ -85,17 +107,35 @@ const EdgeGutter = memo(function EdgeGutter({ edges, side, onEdgeClick }: Gutter
         const typeEdges = grouped[type];
         const count = typeEdges.length;
         const abbrev = getEdgeAbbreviation(type);
+        const avgConfidence = getAverageConfidence(typeEdges);
+        const confidenceClass = getConfidenceClass(avgConfidence);
+
+        // Collect unique origins for tooltip
+        const origins = [...new Set(typeEdges.map((e) => e.origin).filter(Boolean))];
+        const hasWitness = typeEdges.some((e) => e.markId);
+
+        // Build rich tooltip
+        const tooltip = [
+          `${type}: ${count} edge${count > 1 ? 's' : ''}`,
+          avgConfidence !== undefined ? `Confidence: ${Math.round(avgConfidence * 100)}%` : null,
+          origins.length > 0 ? `Sources: ${origins.join(', ')}` : null,
+          hasWitness ? '📜 Has witness marks' : null,
+        ]
+          .filter(Boolean)
+          .join('\n');
 
         return (
           <button
             key={type}
-            className="edge-gutter__badge"
+            className={`edge-gutter__badge ${confidenceClass}`}
             data-edge-type={type}
+            data-has-witness={hasWitness}
             onClick={() => onEdgeClick?.(typeEdges[0])}
-            title={`${type}: ${count} edge${count > 1 ? 's' : ''}`}
+            title={tooltip}
           >
             <span className="edge-gutter__abbrev">{abbrev}</span>
             {count > 1 && <span className="edge-gutter__count">{count}</span>}
+            {hasWitness && <span className="edge-gutter__witness">📜</span>}
           </button>
         );
       })}
@@ -358,8 +398,33 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   const { state, dispatch, focusNode, goParent, goChild, goDefinition, goReferences, goTests } =
     navigation;
 
+  // K-Block integration
+  const kblockHook = useKBlock();
+
   const commandLineRef = useRef<HTMLInputElement>(null);
   const [commandLineVisible, setCommandLineVisible] = useState(false);
+
+  // Note: writePromptVisible could be used for a witness message dialog in the future
+  const writePromptVisible = false; // Currently not used, but reserved for witness prompt UI
+
+  // Handle INSERT mode entry - create K-Block
+  const handleEnterInsert = useCallback(async () => {
+    if (!state.currentNode) return;
+
+    // Create K-Block for the current node's path
+    const kblock = await kblockHook.create(state.currentNode.path);
+
+    if (kblock) {
+      // Update reducer state with K-Block info
+      dispatch({ type: 'KBLOCK_CREATED', blockId: kblock.blockId, content: kblock.content });
+      dispatch({ type: 'ENTER_INSERT' });
+      console.info('[HypergraphEditor] Entering INSERT with K-Block:', kblock.blockId);
+    } else {
+      // Still enter INSERT mode but log error
+      console.warn('[HypergraphEditor] K-Block creation failed, entering INSERT anyway');
+      dispatch({ type: 'ENTER_INSERT' });
+    }
+  }, [state.currentNode, kblockHook, dispatch]);
 
   // Key handler
   const { pendingSequence } = useKeyHandler({
@@ -375,7 +440,8 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       // Focus command line after state updates
       setTimeout(() => commandLineRef.current?.focus(), 0);
     },
-    enabled: !commandLineVisible,
+    onEnterInsert: handleEnterInsert,
+    enabled: !commandLineVisible && !writePromptVisible,
   });
 
   // Load initial node
@@ -418,14 +484,71 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     [state.currentNode, onNavigate, loadNode, focusNode, onNodeFocus]
   );
 
+  // Handle witnessed :w save
+  const handleWrite = useCallback(
+    async (reasoning?: string) => {
+      if (!kblockHook.kblock) {
+        console.warn('[HypergraphEditor] :w - No K-Block to save');
+        return false;
+      }
+
+      // Sync current content to hook before save
+      if (state.kblock?.workingContent) {
+        kblockHook.updateContent(state.kblock.workingContent);
+      }
+
+      const success = await kblockHook.save(reasoning || undefined);
+
+      if (success) {
+        // Clear reducer K-Block state
+        dispatch({ type: 'KBLOCK_COMMITTED' });
+        // Exit INSERT if we were in it
+        if (state.mode === 'INSERT') {
+          dispatch({ type: 'EXIT_INSERT' });
+        }
+        console.info('[HypergraphEditor] :w saved K-Block', reasoning ? `(${reasoning})` : '');
+      }
+
+      return success;
+    },
+    [kblockHook, state.kblock, state.mode, dispatch]
+  );
+
+  // Handle :q! discard
+  const handleQuit = useCallback(
+    async (force: boolean) => {
+      if (kblockHook.kblock) {
+        if (kblockHook.kblock.isDirty && !force) {
+          console.warn('[HypergraphEditor] :q - K-Block has unsaved changes. Use :q! to force.');
+          return false;
+        }
+
+        if (force) {
+          await kblockHook.discard();
+          dispatch({ type: 'KBLOCK_DISCARDED' });
+          console.info('[HypergraphEditor] :q! - Discarded K-Block');
+        }
+      }
+
+      // Exit INSERT mode if we were in it
+      if (state.mode === 'INSERT') {
+        dispatch({ type: 'EXIT_INSERT' });
+      }
+
+      return true;
+    },
+    [kblockHook, state.mode, dispatch]
+  );
+
   // Handle command submission
   const handleCommand = useCallback(
-    (command: string) => {
+    async (command: string) => {
       setCommandLineVisible(false);
       dispatch({ type: 'EXIT_COMMAND' });
 
       // Parse and execute command
-      const [cmd, ...args] = command.trim().split(/\s+/);
+      const rawCmd = command.trim();
+      const [cmd, ...args] = rawCmd.split(/\s+/);
 
       if (cmd === 'e' || cmd === 'edit') {
         const path = args.join(' ');
@@ -439,14 +562,41 @@ export const HypergraphEditor = memo(function HypergraphEditor({
           });
         }
       } else if (cmd === 'w' || cmd === 'write') {
-        // Would commit K-Block (Phase 2)
-        console.log('[HypergraphEditor] :w - would commit K-Block');
+        // :w [message] - Save with optional witness message
+        const message = args.join(' ') || undefined;
+        await handleWrite(message);
+      } else if (cmd === 'wq') {
+        // :wq - Save and quit
+        const success = await handleWrite();
+        if (success) {
+          await handleQuit(false);
+        }
+      } else if (cmd === 'q!' || rawCmd === 'q!') {
+        // :q! - Force quit without saving
+        await handleQuit(true);
       } else if (cmd === 'q' || cmd === 'quit') {
-        // Would close node
-        console.log('[HypergraphEditor] :q - would close node');
+        // :q - Quit (warns if dirty)
+        await handleQuit(false);
+      } else if (cmd === 'checkpoint' || cmd === 'cp') {
+        // :checkpoint [name] - Create named checkpoint
+        const name = args.join(' ') || `checkpoint-${Date.now()}`;
+        const cpId = await kblockHook.checkpoint(name);
+        if (cpId) {
+          dispatch({ type: 'KBLOCK_CHECKPOINT', id: cpId, message: name });
+          console.info('[HypergraphEditor] Created checkpoint:', cpId, name);
+        }
+      } else if (cmd === 'rewind') {
+        // :rewind <checkpoint_id> - Rewind to checkpoint
+        const checkpointId = args[0];
+        if (!checkpointId) {
+          console.warn('[HypergraphEditor] :rewind requires checkpoint ID');
+          return;
+        }
+        await kblockHook.rewind(checkpointId);
+        console.info('[HypergraphEditor] Rewound to checkpoint:', checkpointId);
       }
     },
-    [dispatch, loadNode, focusNode, onNavigate, onNodeFocus]
+    [dispatch, loadNode, focusNode, onNavigate, onNodeFocus, handleWrite, handleQuit, kblockHook]
   );
 
   // Handle command cancel
@@ -481,9 +631,11 @@ export const HypergraphEditor = memo(function HypergraphEditor({
           mode={state.mode}
           cursor={state.cursor}
           onContentChange={(content) => {
+            // Update both reducer state and K-Block hook
             if (state.kblock) {
               dispatch({ type: 'KBLOCK_UPDATED', content });
             }
+            kblockHook.updateContent(content);
           }}
           onCursorChange={(line, column) => {
             dispatch({ type: 'MOVE_CURSOR', position: { line, column } });

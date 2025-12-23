@@ -911,13 +911,16 @@ class Logos:
     ) -> LogosNode:
         """Resolve by context type using Phase 2 context resolvers.
 
-        Resolution order (AD-009 Metaphysical Fullstack):
+        Resolution order (AD-009 Metaphysical Fullstack, AD-016 Fail-Fast):
         1. Check NodeRegistry for @node decorated classes (services/)
            - Check most specific path first (e.g., self.forest.session)
            - Fall back to parent path (e.g., self.forest)
         2. Use context-specific resolvers (agents/)
         3. Check SimpleRegistry (legacy)
-        4. JIT generate from spec files
+        4. Raise NodeNotRegisteredError (AD-016: no JIT fallback)
+
+        Note: JIT generation from spec files was removed per AD-016.
+        Use _generate_from_spec() explicitly if needed.
         """
         from .registry import get_registry
 
@@ -966,21 +969,18 @@ class Logos:
         if node:
             return node
 
-        # Check spec for JIT generation
-        spec_path = self.spec_root / context / f"{holon}.md"
-        if spec_path.exists():
-            return self._generate_from_spec(spec_path, handle)
+        # AD-016: Fail-fast on unregistered paths (no JIT fallback)
+        # JIT spec generation was removed because it masked registration bugs.
+        # Spec files can still be used explicitly via logos._generate_from_spec().
+        from .exceptions import NodeNotRegisteredError
 
         # Similar handles for suggestion
         similar = self.registry.list_handles(f"{context}.")
 
-        # Sympathetic error
-        raise PathNotFoundError(
-            f"'{handle}' not found",
+        # AD-016: NodeNotRegisteredError with helpful suggestion
+        raise NodeNotRegisteredError(
             path=handle,
-            available=similar[:5],
-            why=f"No implementation in registry, no spec at {spec_path}",
-            suggestion=f"Create {spec_path} for auto-generation, or use {handle}.define",
+            similar_paths=similar[:5],
         )
 
     def _generate_from_spec(self, spec_path: Path, handle: str) -> LogosNode:
@@ -1005,16 +1005,20 @@ class Logos:
             self._jit_nodes[handle] = jit_node
             return jit_node
         except TastefulnessError:
-            # Re-raise tasteful errors as-is
+            # Re-raise tasteful errors as-is (AD-016: fail-fast)
             raise
-        except Exception:
-            # Fallback to minimal JIT node on compilation failure
-            spec_content = spec_path.read_text()
-            return JITLogosNode(
-                handle=handle,
-                source="",
-                spec=spec_content,
-            )
+        except Exception as e:
+            # AD-016: Fail-fast on compilation failure (no silent fallback)
+            # Previously this silently returned a minimal JIT node, masking bugs
+            raise TastefulnessError(
+                f"JIT compilation failed for '{handle}' from {spec_path}",
+                validation_errors=[str(e)],
+                why="Spec compilation failed and AD-016 forbids silent fallback",
+                suggestion=(
+                    f"Check the spec file at {spec_path} for syntax errors, "
+                    "or register an explicit @node implementation"
+                ),
+            ) from e
 
     # === Phase 4: Autopoiesis (define aspect) ===
 

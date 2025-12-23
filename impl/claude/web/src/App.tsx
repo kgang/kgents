@@ -27,8 +27,8 @@ const HypergraphEditorPage = lazy(() =>
   import('./pages/HypergraphEditorPage').then((m) => ({ default: m.HypergraphEditorPage }))
 );
 
-// Graph Test
-const GraphTestPage = lazy(() => import('./pages/GraphTestPage'));
+// Astronomical Chart (replaced ReactFlow)
+const ChartPage = lazy(() => import('./pages/ChartPage'));
 
 function LoadingFallback() {
   return (
@@ -61,10 +61,10 @@ function WelcomeScreen() {
           Spec Ledger
         </Link>
         <Link
-          to="/graph"
+          to="/chart"
           className="px-2 py-1 rounded bg-surface-2 text-text-secondary hover:text-text-primary"
         >
-          Graph
+          Chart
         </Link>
         <Link
           to="/_/gallery"
@@ -97,7 +97,7 @@ function App() {
     location.pathname.startsWith('/_/') ||
     location.pathname.startsWith('/ledger') ||
     location.pathname.startsWith('/editor') ||
-    location.pathname.startsWith('/graph');
+    location.pathname.startsWith('/chart');
 
   return (
     <ErrorBoundary resetKeys={[location.pathname]}>
@@ -112,7 +112,7 @@ function App() {
                 <Route path="/_/gallery/interactive-text" element={<InteractiveTextGallery />} />
                 <Route path="/ledger" element={<SpecLedgerPage />} />
                 <Route path="/editor" element={<HypergraphEditorPage />} />
-                <Route path="/graph" element={<GraphTestPage />} />
+                <Route path="/chart" element={<ChartPage />} />
               </Routes>
             </PageTransition>
           </AnimatePresence>

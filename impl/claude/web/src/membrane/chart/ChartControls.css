@@ -1,0 +1,246 @@
+/**
+ * ChartControls Styles
+ *
+ * STARK BIOME themed controls panel.
+ * "The frame is humble. The content glows."
+ */
+
+.chart-controls {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface-1, #141418);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 200px;
+  max-width: 280px;
+}
+
+/* =============================================================================
+ * Search
+ * ============================================================================= */
+
+.chart-controls__search {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chart-controls__search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 4px;
+  transition: border-color 0.15s ease;
+}
+
+.chart-controls__search-input-wrapper:focus-within {
+  border-color: var(--life-sage, #4a6b4a);
+}
+
+.chart-controls__search-icon {
+  color: var(--text-muted, #5a5a64);
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.chart-controls__search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary, #e5e7eb);
+  font-size: 12px;
+  outline: none;
+}
+
+.chart-controls__search-input::placeholder {
+  color: var(--text-muted, #5a5a64);
+}
+
+.chart-controls__search-count {
+  font-size: 10px;
+  color: var(--text-muted, #5a5a64);
+  font-family: monospace;
+}
+
+.chart-controls__search-hint {
+  font-size: 9px;
+  color: var(--text-muted, #5a5a64);
+  padding: 0 4px;
+}
+
+.chart-controls__search-hint kbd {
+  display: inline-block;
+  padding: 1px 4px;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 2px;
+  font-family: monospace;
+  font-size: 9px;
+}
+
+/* =============================================================================
+ * Filters
+ * ============================================================================= */
+
+.chart-controls__filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chart-controls__filter-label {
+  font-size: 10px;
+  color: var(--text-secondary, #8a8a94);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chart-controls__select {
+  padding: 6px 8px;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  color: var(--text-primary, #e5e7eb);
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.chart-controls__select:hover {
+  border-color: var(--text-muted, #5a5a64);
+}
+
+.chart-controls__select:focus {
+  outline: none;
+  border-color: var(--life-sage, #4a6b4a);
+}
+
+/* =============================================================================
+ * Tier Buttons
+ * ============================================================================= */
+
+.chart-controls__tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chart-controls__tier-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.chart-controls__tier-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  color: var(--text-muted, #5a5a64);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chart-controls__tier-btn:hover {
+  border-color: var(--tier-color, var(--text-muted));
+  color: var(--text-primary, #e5e7eb);
+}
+
+.chart-controls__tier-btn--active {
+  background: var(--tier-color, var(--life-sage));
+  border-color: var(--tier-color, var(--life-sage));
+  color: #0a0a0c;
+}
+
+.chart-controls__tier-btn--all {
+  width: auto;
+  padding: 0 8px;
+  font-size: 9px;
+}
+
+/* =============================================================================
+ * Zoom Controls
+ * ============================================================================= */
+
+.chart-controls__zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chart-controls__zoom-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  color: var(--text-secondary, #8a8a94);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-controls__zoom-btn:hover {
+  background: var(--surface-3, #28282f);
+  color: var(--text-primary, #e5e7eb);
+  border-color: var(--life-sage, #4a6b4a);
+}
+
+.chart-controls__zoom-level {
+  flex: 1;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted, #5a5a64);
+  font-family: monospace;
+}
+
+/* =============================================================================
+ * Simulation
+ * ============================================================================= */
+
+.chart-controls__simulation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-controls__simulating {
+  font-size: 10px;
+  color: var(--life-sage, #4a6b4a);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.chart-controls__reheat-btn {
+  padding: 6px 12px;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  color: var(--text-secondary, #8a8a94);
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chart-controls__reheat-btn:hover {
+  background: var(--surface-3, #28282f);
+  color: var(--life-sage, #4a6b4a);
+  border-color: var(--life-sage, #4a6b4a);
+}

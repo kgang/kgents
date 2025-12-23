@@ -412,54 +412,22 @@ def project_command(
             print(f"Error: {e}")
             return 1
 
-    # Fall back to Logos for JIT paths
-    from protocols.agentese.logos import create_logos
+    # AD-016: Fail-fast on unregistered paths (no JIT fallback)
+    # Silent JIT fallback masks registration bugs - fail immediately with helpful error
+    from protocols.agentese.exceptions import node_not_registered
 
-    logos = create_logos()
+    # Find similar registered paths for typo correction
+    all_paths = registry.list_paths()
+    context_prefix = node_path.split(".")[0] if "." in node_path else ""
+    similar = [p for p in all_paths if context_prefix and p.startswith(context_prefix)][:5]
 
-    # Get aspect metadata if available, use defaults otherwise
-    try:
-        meta = logos.get_aspect_meta(path)
-        dimensions = derive_dimensions(path, meta)
-    except (AttributeError, KeyError):
-        # Path not registered yet, use defaults
-        dimensions = DEFAULT_DIMENSIONS
+    # If no context matches, show some available paths
+    if not similar:
+        similar = all_paths[:5]
 
-    # Route INTERACTIVE paths to ChatProjection
-    if dimensions.is_interactive or ".chat" in path:
-        return _project_chat(
-            path=path,
-            observer=observer,
-            entity_name=entity_name,
-            one_shot_message=one_shot_message,
-            json_output=json_output,
-        )
-
-    # Create projection
-    projection = CLIProjection(
-        logos=logos,
-        json_output=json_output,
-        trace_mode=trace_mode,
-    )
-
-    # Run async projection
-    try:
-        output = _run_async(projection.project(path, observer, dimensions, kwargs))
-
-        # Render output
-        if json_output:
-            print(output.to_json())
-        else:
-            if output.content:
-                print(output.content)
-            if output.error:
-                print(f"Error: {output.error}")
-
-        return output.exit_code
-
-    except Exception as e:
-        print(f"Error: {e}")
-        return 1
+    error = node_not_registered(node_path, similar=similar)
+    print(f"Error: {error}")
+    return 1
 
 
 async def _invoke_via_registry(

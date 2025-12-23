@@ -84,6 +84,12 @@ class WitnessTopics:
     SPEC_CONTRADICTION_FOUND = "witness.spec.contradiction"
     SPEC_ORPHAN_DETECTED = "witness.spec.orphan"
 
+    # Proxy Handle events (AD-015: Transparent Batch Processes)
+    PROXY_STARTED = "witness.proxy.started"
+    PROXY_COMPLETED = "witness.proxy.completed"
+    PROXY_FAILED = "witness.proxy.failed"
+    PROXY_STALE = "witness.proxy.stale"
+
     # Wildcards
     ALL = "witness.*"
     GIT_ALL = "witness.git.*"
@@ -93,6 +99,7 @@ class WitnessTopics:
     DAEMON_ALL = "witness.daemon.*"
     AGENTESE_ALL = "witness.agentese.*"
     SPEC_ALL = "witness.spec.*"
+    PROXY_ALL = "witness.proxy.*"
 
 
 # =============================================================================

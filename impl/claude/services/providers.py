@@ -72,6 +72,7 @@ if TYPE_CHECKING:
     from services.metabolism.persistence import MetabolismPersistence
     from services.morpheus.persistence import MorpheusPersistence
     from services.principles import PrincipleLoader
+    from services.proxy import ProxyHandleStore
     from services.sovereign.store import SovereignStore
     from services.tooling import ToolExecutor, ToolRegistry
     from services.verification import VerificationPersistence
@@ -547,6 +548,40 @@ async def get_witnessed_graph_service() -> "witnessed_graph.WitnessedGraphServic
 
 
 # =============================================================================
+# Proxy Handle Store (AD-015: Epistemic Hygiene for Computed Data)
+# =============================================================================
+
+
+async def get_proxy_handle_store() -> "ProxyHandleStore":
+    """
+    Get the ProxyHandleStore for explicit computation lifecycle.
+
+    AD-015: Proxy Handles & Transparent Batch Processes.
+
+    Every expensive computation produces a proxy handle—an independent artifact
+    with its own identity, lifecycle, and provenance. This makes staleness,
+    computation state, and refresh mechanics explicit and transparent.
+
+    Used by:
+    - LedgerNode for spec corpus analysis
+    - WitnessedGraphService for graph summaries
+    - AGENTESE self.proxy.* paths
+
+    Example:
+        store = await get_proxy_handle_store()
+        handle = await store.compute(
+            source_type=SourceType.SPEC_CORPUS,
+            compute_fn=analyze_corpus,
+            human_label="Spec corpus analysis",
+        )
+    """
+    from services.proxy import ProxyHandleStore
+
+    # ProxyHandleStore is self-managing singleton
+    return ProxyHandleStore()
+
+
+# =============================================================================
 # Setup Function
 # =============================================================================
 
@@ -631,6 +666,9 @@ async def setup_providers() -> None:
 
     # Hypergraph Editor Crown Jewel (Modal Graph Editing)
     container.register("editor_service", get_editor_service, singleton=True)
+
+    # Proxy Handle Store (AD-015: Epistemic Hygiene)
+    container.register("proxy_handle_store", get_proxy_handle_store, singleton=True)
 
     logger.info(
         "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion)"
@@ -741,12 +779,31 @@ async def setup_providers() -> None:
 
 def setup_providers_sync() -> None:
     """
-    Synchronous provider setup for import-time registration.
+    Synchronous provider setup for CLI projection.
 
-    Registers only sync providers. Call setup_providers() for async ones.
+    Runs the async setup_providers() to ensure all services are registered
+    before AGENTESE invocations. Uses asyncio.run() to bootstrap async
+    providers in a sync context.
+
+    Teaching:
+        gotcha: CLI projection calls this BEFORE invoking via registry.
+                If providers aren't wired, nodes fall through to JIT fallback.
+                This was the cause of `kg graph` returning "Concept: graph" instead
+                of actual graph data.
+                (Evidence: kg graph now returns WitnessedGraph output)
     """
-    _ = get_container()  # Ensure container is initialized
-    logger.debug("Sync providers registered (no-op, use setup_providers for async)")
+    import asyncio
+
+    try:
+        # Check if event loop is already running
+        asyncio.get_running_loop()
+        # If we get here, we're in an async context - can't use asyncio.run()
+        # The caller should have already called setup_providers()
+        logger.debug("Event loop already running, skipping sync setup")
+    except RuntimeError:
+        # No running event loop - safe to bootstrap
+        asyncio.run(setup_providers())
+        logger.debug("Providers bootstrapped synchronously for CLI")
 
 
 # =============================================================================
