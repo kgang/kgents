@@ -21,6 +21,7 @@ import {
   TerrariumCreature,
 } from '@/components/terrarium';
 import { useTerrarium } from '@/hooks/useTerrarium';
+import { LIVING_EARTH, GRAYS } from '@/constants/colors';
 
 /**
  * The Terrarium.
@@ -52,7 +53,7 @@ export default function TerrariumPage() {
       className="terrarium-page"
       style={{
         minHeight: '100vh',
-        background: 'var(--surface-canvas)',
+        background: GRAYS[900],
         padding: '2rem',
         display: 'flex',
         flexDirection: 'column',
@@ -70,10 +71,10 @@ export default function TerrariumPage() {
       >
         <h1
           style={{
-            fontFamily: 'var(--font-mono)',
+            fontFamily: 'monospace',
             fontSize: '1.5rem',
             fontWeight: 600,
-            color: 'var(--text-primary)',
+            color: GRAYS[100],
             margin: 0,
             letterSpacing: '-0.02em',
           }}
@@ -82,9 +83,9 @@ export default function TerrariumPage() {
         </h1>
         <p
           style={{
-            fontFamily: 'var(--font-mono)',
+            fontFamily: 'monospace',
             fontSize: '0.875rem',
-            color: 'var(--text-secondary)',
+            color: GRAYS[400],
             marginTop: '0.5rem',
           }}
         >
@@ -127,8 +128,8 @@ export default function TerrariumPage() {
                   width: '4rem',
                   height: '4rem',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, var(--sage-500), var(--sage-600))',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  background: `linear-gradient(135deg, ${LIVING_EARTH.sage}, ${LIVING_EARTH.fern})`,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                 }}
               />
             </Breathe>
@@ -146,8 +147,8 @@ export default function TerrariumPage() {
                   width: '4rem',
                   height: '4rem',
                   borderRadius: '0.5rem',
-                  background: 'linear-gradient(135deg, var(--copper-500), var(--copper-600))',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  background: `linear-gradient(135deg, ${LIVING_EARTH.copper}, ${LIVING_EARTH.bronze})`,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                 }}
               />
             </Pop>
@@ -165,7 +166,7 @@ export default function TerrariumPage() {
                   width: '4rem',
                   height: '4rem',
                   borderRadius: '0.25rem',
-                  background: 'var(--surface-3)',
+                  background: GRAYS[700],
                 }}
               />
             </Shimmer>
@@ -198,15 +199,15 @@ export default function TerrariumPage() {
             gap: '1rem',
             justifyContent: 'center',
             paddingTop: '1rem',
-            borderTop: '1px solid var(--surface-3)',
+            borderTop: `1px solid ${GRAYS[700]}`,
           }}
         >
           <Link
             to="/_/gallery/layout"
             style={{
-              fontFamily: 'var(--font-mono)',
+              fontFamily: 'monospace',
               fontSize: '0.75rem',
-              color: 'var(--text-tertiary)',
+              color: GRAYS[500],
               textDecoration: 'none',
             }}
           >
@@ -215,9 +216,9 @@ export default function TerrariumPage() {
           <Link
             to="/_/gallery/interactive-text"
             style={{
-              fontFamily: 'var(--font-mono)',
+              fontFamily: 'monospace',
               fontSize: '0.75rem',
-              color: 'var(--text-tertiary)',
+              color: GRAYS[500],
               textDecoration: 'none',
             }}
           >
@@ -238,10 +239,10 @@ export default function TerrariumPage() {
       >
         <p
           style={{
-            fontFamily: 'var(--font-mono)',
+            fontFamily: 'monospace',
             fontSize: '0.75rem',
             fontStyle: 'italic',
-            color: 'var(--text-tertiary)',
+            color: GRAYS[600],
           }}
         >
           "The persona is a garden, not a museum."

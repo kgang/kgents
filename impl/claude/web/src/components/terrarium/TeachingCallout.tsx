@@ -10,6 +10,7 @@
 import type { CSSProperties } from 'react';
 import { Breathe } from '@/components/joy';
 import { describeEntropy } from '@/hooks/useTerrarium';
+import { LIVING_EARTH, GRAYS } from '@/constants/colors';
 
 export interface TeachingCalloutProps {
   /** Current entropy level (0-1) */
@@ -28,9 +29,9 @@ export function TeachingCallout({ entropy, className = '', style }: TeachingCall
       className={`teaching-callout ${className}`}
       style={{
         padding: '1rem 1.5rem',
-        background: 'var(--surface-1)',
+        background: GRAYS[800],
         borderRadius: '0.5rem',
-        borderLeft: '3px solid var(--copper-500)',
+        borderLeft: `3px solid ${LIVING_EARTH.copper}`,
         ...style,
       }}
       role="status"
@@ -40,10 +41,10 @@ export function TeachingCallout({ entropy, className = '', style }: TeachingCall
       <Breathe intensity={0.2} entropy={entropy}>
         <p
           style={{
-            fontFamily: 'var(--font-mono)',
+            fontFamily: 'monospace',
             fontSize: '0.875rem',
             fontStyle: 'italic',
-            color: 'var(--text-secondary)',
+            color: GRAYS[400],
             margin: 0,
             lineHeight: 1.5,
           }}

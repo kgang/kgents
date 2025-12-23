@@ -8,6 +8,7 @@
  */
 
 import type { ReactNode, CSSProperties } from 'react';
+import { GRAYS } from '@/constants/colors';
 
 export interface TerrariumCreatureProps {
   /** Creature name (displayed as label) */
@@ -54,9 +55,9 @@ export function TerrariumCreature({
         alignItems: 'center',
         gap: '0.75rem',
         padding: '1.5rem',
-        background: 'var(--surface-1)',
+        background: GRAYS[800],
         borderRadius: '0.75rem',
-        border: '1px solid var(--surface-3)',
+        border: `1px solid ${GRAYS[700]}`,
         transition: 'border-color 0.3s ease',
         ...style,
       }}
@@ -64,10 +65,10 @@ export function TerrariumCreature({
       {/* Creature name */}
       <span
         style={{
-          fontFamily: 'var(--font-mono)',
+          fontFamily: 'monospace',
           fontSize: '0.75rem',
           fontWeight: 600,
-          color: 'var(--text-primary)',
+          color: GRAYS[200],
           textTransform: 'uppercase',
           letterSpacing: '0.1em',
         }}
@@ -91,9 +92,9 @@ export function TerrariumCreature({
       {/* Entropy response indicator */}
       <span
         style={{
-          fontFamily: 'var(--font-mono)',
+          fontFamily: 'monospace',
           fontSize: '0.625rem',
-          color: 'var(--text-tertiary)',
+          color: GRAYS[500],
           textTransform: 'lowercase',
         }}
       >
@@ -104,9 +105,9 @@ export function TerrariumCreature({
       {description && (
         <p
           style={{
-            fontFamily: 'var(--font-mono)',
+            fontFamily: 'monospace',
             fontSize: '0.625rem',
-            color: 'var(--text-tertiary)',
+            color: GRAYS[500],
             textAlign: 'center',
             margin: 0,
             maxWidth: '10rem',

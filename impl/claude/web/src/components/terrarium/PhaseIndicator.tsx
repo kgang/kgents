@@ -11,6 +11,7 @@
 
 import type { CSSProperties } from 'react';
 import type { TerrariumPhase } from '@/hooks/useTerrarium';
+import { LIVING_EARTH, GRAYS } from '@/constants/colors';
 
 export interface PhaseIndicatorProps {
   /** Current polynomial phase */
@@ -56,7 +57,7 @@ export function PhaseIndicator({
         justifyContent: 'center',
         gap: '0.5rem',
         padding: '0.75rem 1rem',
-        background: 'var(--surface-2)',
+        background: GRAYS[800],
         borderRadius: '0.5rem',
         ...style,
       }}
@@ -93,11 +94,7 @@ export function PhaseIndicator({
               <span
                 style={{
                   fontSize: '1.25rem',
-                  color: isActive
-                    ? 'var(--copper-500)'
-                    : isPast
-                      ? 'var(--sage-500)'
-                      : 'var(--text-tertiary)',
+                  color: isActive ? LIVING_EARTH.copper : isPast ? LIVING_EARTH.sage : GRAYS[600],
                   transition: 'color 0.2s ease',
                 }}
               >
@@ -107,10 +104,10 @@ export function PhaseIndicator({
               {/* Label */}
               <span
                 style={{
-                  fontFamily: 'var(--font-mono)',
+                  fontFamily: 'monospace',
                   fontSize: '0.625rem',
                   fontWeight: isActive ? 600 : 400,
-                  color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                  color: isActive ? GRAYS[100] : GRAYS[500],
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
                   transition: 'color 0.2s ease',
@@ -126,7 +123,7 @@ export function PhaseIndicator({
                 style={{
                   width: '2rem',
                   height: '2px',
-                  background: isPast ? 'var(--sage-500)' : 'var(--surface-3)',
+                  background: isPast ? LIVING_EARTH.sage : GRAYS[700],
                   borderRadius: '1px',
                   transition: 'background 0.2s ease',
                 }}

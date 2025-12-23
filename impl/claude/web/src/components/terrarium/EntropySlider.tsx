@@ -9,6 +9,7 @@
 
 import type { CSSProperties } from 'react';
 import { entropyLabel } from '@/hooks/useTerrarium';
+import { LIVING_EARTH, GRAYS } from '@/constants/colors';
 
 export interface EntropySliderProps {
   /** Current entropy value (0-1) */
@@ -23,17 +24,25 @@ export interface EntropySliderProps {
 
 /**
  * Get track gradient based on entropy level.
- * Calm = muted, Chaotic = vibrant.
+ * Calm = muted green, Chaotic = warm amber.
  */
 function getTrackGradient(value: number): string {
-  // From sage (calm) to copper (active) to amber (chaotic)
   if (value < 0.3) {
-    return 'linear-gradient(to right, var(--sage-600), var(--sage-500))';
+    return `linear-gradient(to right, ${LIVING_EARTH.fern}, ${LIVING_EARTH.sage})`;
   }
   if (value < 0.7) {
-    return 'linear-gradient(to right, var(--sage-500), var(--copper-500))';
+    return `linear-gradient(to right, ${LIVING_EARTH.sage}, ${LIVING_EARTH.copper})`;
   }
-  return 'linear-gradient(to right, var(--copper-500), var(--amber-500))';
+  return `linear-gradient(to right, ${LIVING_EARTH.copper}, ${LIVING_EARTH.amber})`;
+}
+
+/**
+ * Get label color based on entropy level.
+ */
+function getLabelColor(value: number): string {
+  if (value > 0.7) return LIVING_EARTH.amber;
+  if (value > 0.3) return LIVING_EARTH.copper;
+  return LIVING_EARTH.sage;
 }
 
 export function EntropySlider({ value, onChange, className = '', style }: EntropySliderProps) {
@@ -47,7 +56,7 @@ export function EntropySlider({ value, onChange, className = '', style }: Entrop
         alignItems: 'center',
         gap: '1rem',
         padding: '0.75rem 1rem',
-        background: 'var(--surface-2)',
+        background: GRAYS[800],
         borderRadius: '0.5rem',
         ...style,
       }}
@@ -55,10 +64,10 @@ export function EntropySlider({ value, onChange, className = '', style }: Entrop
       <label
         htmlFor="entropy-control"
         style={{
-          fontFamily: 'var(--font-mono)',
+          fontFamily: 'monospace',
           fontSize: '0.75rem',
           fontWeight: 500,
-          color: 'var(--text-secondary)',
+          color: GRAYS[400],
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
           minWidth: '4rem',
@@ -88,15 +97,10 @@ export function EntropySlider({ value, onChange, className = '', style }: Entrop
 
       <span
         style={{
-          fontFamily: 'var(--font-mono)',
+          fontFamily: 'monospace',
           fontSize: '0.75rem',
           fontWeight: 600,
-          color:
-            value > 0.7
-              ? 'var(--amber-500)'
-              : value > 0.3
-                ? 'var(--copper-500)'
-                : 'var(--sage-500)',
+          color: getLabelColor(value),
           minWidth: '4rem',
           textAlign: 'right',
         }}
