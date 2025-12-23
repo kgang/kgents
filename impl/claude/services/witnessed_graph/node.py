@@ -17,15 +17,27 @@ AGENTESE Path: concept.graph
 
 from __future__ import annotations
 
+import json
+from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
-
-from pydantic import BaseModel, Field
 
 from protocols.agentese.contract import Contract, Response
 from protocols.agentese.node import BaseLogosNode, BasicRendering, Observer, Renderable
 from protocols.agentese.registry import node
 
-from .types import EdgeKind
+from .contracts import (
+    EdgeResponse,
+    EvidenceRequest,
+    EvidenceResponse,
+    GraphManifestResponse,
+    NeighborsRequest,
+    NeighborsResponse,
+    SearchRequest,
+    SearchResponse,
+    TracePathResponse,
+    TraceRequest,
+    TraceResponse,
+)
 
 if TYPE_CHECKING:
     from protocols.agentese.umwelt import Umwelt  # type: ignore[import-untyped]
@@ -34,118 +46,20 @@ if TYPE_CHECKING:
 
 
 # =============================================================================
-# Request/Response Models
-# =============================================================================
-
-
-class GraphManifestResponse(BaseModel):
-    """Response for graph manifest."""
-
-    total_edges: int = Field(description="Total edges in unified graph")
-    sources: int = Field(description="Number of composed sources")
-    origin: str = Field(description="Combined origin string")
-    by_origin: dict[str, int] = Field(description="Edge count by source")
-    by_kind: dict[str, int] = Field(description="Edge count by kind")
-
-
-class NeighborsRequest(BaseModel):
-    """Request for neighbors query."""
-
-    path: str = Field(description="Path to find neighbors for")
-
-
-class EdgeResponse(BaseModel):
-    """A single edge in responses."""
-
-    kind: str = Field(description="Edge type (IMPORTS, EVIDENCE, etc.)")
-    source_path: str = Field(description="Origin node path")
-    target_path: str = Field(description="Target node path")
-    origin: str = Field(description="Source system (sovereign, witness, spec_ledger)")
-    context: str | None = Field(None, description="Surrounding context")
-    line_number: int | None = Field(None, description="Line number if known")
-    confidence: float = Field(1.0, description="Confidence score 0.0-1.0")
-    mark_id: str | None = Field(None, description="Witness mark ID if from witness")
-
-
-class NeighborsResponse(BaseModel):
-    """Response for neighbors query."""
-
-    path: str = Field(description="Queried path")
-    incoming: list[EdgeResponse] = Field(description="Edges pointing to this path")
-    outgoing: list[EdgeResponse] = Field(description="Edges from this path")
-    total: int = Field(description="Total connected edges")
-
-
-class EvidenceRequest(BaseModel):
-    """Request for evidence query."""
-
-    spec_path: str = Field(description="Spec path to find evidence for")
-
-
-class EvidenceResponse(BaseModel):
-    """Response for evidence query."""
-
-    spec_path: str = Field(description="Queried spec path")
-    evidence: list[EdgeResponse] = Field(description="Evidence edges")
-    count: int = Field(description="Total evidence count")
-    by_kind: dict[str, int] = Field(description="Count by evidence type")
-
-
-class TraceRequest(BaseModel):
-    """Request for trace query."""
-
-    start: str = Field(description="Starting node path")
-    end: str = Field(description="Ending node path")
-    max_depth: int = Field(5, description="Maximum path length")
-
-
-class TracePathResponse(BaseModel):
-    """A single path in trace response."""
-
-    edges: list[EdgeResponse] = Field(description="Edges in the path")
-    length: int = Field(description="Number of hops")
-    nodes: list[str] = Field(description="Node paths in order")
-
-
-class TraceResponse(BaseModel):
-    """Response for trace query."""
-
-    start: str = Field(description="Starting path")
-    end: str = Field(description="Ending path")
-    paths: list[TracePathResponse] = Field(description="Found paths")
-    found: bool = Field(description="Whether any path was found")
-
-
-class SearchRequest(BaseModel):
-    """Request for search query."""
-
-    query: str = Field(description="Search string")
-    limit: int = Field(100, description="Maximum results")
-
-
-class SearchResponse(BaseModel):
-    """Response for search query."""
-
-    query: str = Field(description="Search string")
-    edges: list[EdgeResponse] = Field(description="Matching edges")
-    count: int = Field(description="Number of results")
-
-
-# =============================================================================
 # GraphNode
 # =============================================================================
 
 
 def _edge_to_response(edge: Any) -> EdgeResponse:
-    """Convert HyperEdge to EdgeResponse."""
+    """Convert HyperEdge to EdgeResponse dataclass."""
     return EdgeResponse(
         kind=edge.kind.name,
         source_path=edge.source_path,
         target_path=edge.target_path,
         origin=edge.origin,
+        confidence=edge.confidence,
         context=edge.context,
         line_number=edge.line_number,
-        confidence=edge.confidence,
         mark_id=edge.mark_id,
     )
 
@@ -199,6 +113,56 @@ class GraphNode(BaseLogosNode):
         """
         self._graph = witnessed_graph_service
 
+    @property
+    def handle(self) -> str:
+        """Return the AGENTESE handle for this node."""
+        return "concept.graph"
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        """
+        Return archetype-specific affordances.
+
+        WitnessedGraph is read-only—all archetypes get full query access.
+        The graph unifies evidence from multiple sources; querying it
+        is always safe (no mutations).
+        """
+        # All archetypes can query the graph
+        return ("manifest", "neighbors", "evidence", "trace", "search")
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Observer | Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Route aspect invocations to the appropriate method.
+
+        Args:
+            aspect: The aspect to invoke
+            observer: The observer context
+            **kwargs: Aspect-specific arguments
+        """
+        if aspect == "manifest":
+            return await self.manifest(observer, **kwargs)
+        elif aspect == "neighbors":
+            path = kwargs.get("path", "")
+            return await self.neighbors(path)
+        elif aspect == "evidence":
+            spec_path = kwargs.get("spec_path", "")
+            return await self.evidence(spec_path)
+        elif aspect == "trace":
+            start = kwargs.get("start", "")
+            end = kwargs.get("end", "")
+            max_depth = kwargs.get("max_depth", 5)
+            return await self.trace(start, end, max_depth)
+        elif aspect == "search":
+            query = kwargs.get("query", "")
+            limit = kwargs.get("limit", 100)
+            return await self.search(query, limit)
+        else:
+            return {"error": f"Unknown aspect: {aspect}"}
+
     async def manifest(
         self,
         observer: "Observer | Umwelt[Any, Any]",
@@ -220,8 +184,8 @@ class GraphNode(BaseLogosNode):
         )
         return BasicRendering(
             summary=f"WitnessedGraph: {stats['total_edges']} edges from {stats['sources']} sources",
-            content=response.model_dump_json(indent=2),
-            metadata=response.model_dump(),
+            content=json.dumps(asdict(response), indent=2),
+            metadata=asdict(response),
         )
 
     async def neighbors(self, path: str) -> NeighborsResponse:

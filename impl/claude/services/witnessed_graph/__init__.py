@@ -29,6 +29,7 @@ See:
     docs/skills/crown-jewel-patterns.md (patterns)
 """
 
+# Contracts (BE/FE synchronization)
 # Core types
 # Composition
 from .composition import (
@@ -37,6 +38,19 @@ from .composition import (
     IdentitySource,
     compose,
     identity,
+)
+from .contracts import (
+    EdgeResponse,
+    EvidenceRequest,
+    EvidenceResponse,
+    GraphManifestResponse,
+    NeighborsRequest,
+    NeighborsResponse,
+    SearchRequest,
+    SearchResponse,
+    TracePathResponse,
+    TraceRequest,
+    TraceResponse,
 )
 
 # Protocol
@@ -65,6 +79,18 @@ except ImportError:
     GraphNode = None  # type: ignore[misc, assignment]
 
 __all__ = [
+    # Contracts
+    "EdgeResponse",
+    "GraphManifestResponse",
+    "NeighborsRequest",
+    "NeighborsResponse",
+    "EvidenceRequest",
+    "EvidenceResponse",
+    "TraceRequest",
+    "TracePathResponse",
+    "TraceResponse",
+    "SearchRequest",
+    "SearchResponse",
     # Types
     "EdgeKind",
     "HyperEdge",
