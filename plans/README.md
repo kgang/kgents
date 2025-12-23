@@ -2,7 +2,7 @@
 
 > *"A single mighty oak casts too much shadow. We cultivate a forest where many trees grow."*
 
-**Quick Start**: Read `CLAUDE.md` (root) → `_forest.md` (canopy) → `_focus.md` (human intent)
+**Quick Start**: `CLAUDE.md` → `_forest.md` → `_focus.md`
 
 ---
 
@@ -29,4 +29,18 @@ cat plans/_focus.md         # Human intent
 
 ---
 
-*For full principles: `spec/principles.md`. For skills: `docs/skills/`.*
+## Spec Navigation
+
+For understanding the spec structure, see `spec/meta.md` — the navigation hub.
+
+| Need | Go To |
+|------|-------|
+| Core philosophy | `spec/principles/CONSTITUTION.md` |
+| Meta-principles | `spec/principles/meta.md` |
+| Operational rules | `spec/principles/operational.md` |
+| Architectural decisions | `spec/principles/decisions/INDEX.md` |
+| Skills | `docs/skills/` |
+
+---
+
+*For full principles: `spec/principles.md`*

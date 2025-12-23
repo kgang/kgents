@@ -1,11 +1,22 @@
 Hydrate context from HYDRATE.md. Apply spec/principles.md rigorously.
 
+## The Meta Structure (from spec/meta.md)
+
+The spec is a **derivation DAG**:
+
+```
+CONSTITUTION (1.0) → Meta-Principles → Operational → ADs → Domain Specs
+```
+
+**Navigation Hub**: `spec/meta.md` — start here for orientation.
+
 ## Agent Protocol
 
 1. **Read first**: `plans/_focus.md` (human intent—NEVER overwrite)
 2. **Read second**: `plans/_forest.md` (canopy view—auto-generated)
-3. **Read third**: `plans/meta.md` (learnings—append only, 50-line cap)
+3. **Read third**: `plans/meta.md` (learnings—append only, **200-line cap**)
 4. **Read fourth**: `HYDRATE.md` (project state—keep terse)
+5. **Reference**: `spec/meta.md` (navigation hub for specs)
 
 ## Boundaries (from spec/principles.md)
 
@@ -15,9 +26,9 @@ Hydrate context from HYDRATE.md. Apply spec/principles.md rigorously.
 | `_forest.md` | Regenerate from plan headers | Add prose |
 | `meta.md` | Append atomic learnings | Add paragraphs (one line per insight) |
 | `HYDRATE.md` | Update stale facts | Bloat (compress, don't expand) |
-| `_epilogues/` | Write new epilogues | Modify existing |
+| `spec/meta.md` | Read for navigation | Modify (bootstrap layer) |
 
-## The Molasses Test (spec/principles.md §9)
+## The Molasses Test (spec/principles.md)
 
 Before adding to ANY meta file:
 1. Is this one atomic insight or a compound? → If compound, distill first

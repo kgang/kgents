@@ -2,29 +2,68 @@
 
 > *"What's happening right now?"*
 
-**Last Updated**: 2025-12-23
-**Session**: Post-Archive Clarity
+**Last Updated**: 2025-12-23 (Evening)
+**Session**: Hardening Phase
+
+---
+
+## The Greater Arc: Burn → Build → Harden
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PHASE 1: THE EXTINCTION (Dec 21)                                           │
+│  ─────────────────────────────────                                          │
+│  67K lines archived. Town, Park, Gestalt, Coalition, Muse, Gardener gone.   │
+│  Focus narrowed: Brain (100%), Witness (98%), Atelier (75%), Liminal (50%)  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PHASE 2: THE REBUILDING (Dec 21-22)                                        │
+│  ───────────────────────────────────                                        │
+│  • Hypergraph Emacs: Six-mode modal editor for conceptual navigation        │
+│  • WitnessedGraph: Evidence-carrying edges with visual confidence           │
+│  • Inbound Sovereignty: External data ingestion with witnessing             │
+│  • Living Spec: Evidence-as-Marks unification, ledger UI                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PHASE 3: THE HARDENING (Dec 23) ← YOU ARE HERE                             │
+│  ──────────────────────────────────                                         │
+│  • Dead Code Audit: ~14K more lines removed (0134babe)                      │
+│  • AD-016: Fail-fast AGENTESE resolution (0d93ea6c)                         │
+│  • AD-015 Radical Unification: LedgerCache → ProxyHandleStore (uncommitted) │
+│  • Edit→Witness→Graph→Visual loop closed (90f5d23d)                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Current Focus
 
-**HYPERGRAPH EMACS + MEMBRANE**: The Conceptual Editor is Live
+**HARDENING**: Infrastructure robustness before feature expansion
 
-*"The file is a lie. There is only the graph."*
+*"One truth. One store."*
 
 ---
 
 ## What's Happening Now
 
-### The Arc: From Documentation to Embodiment
+### Today's Commits (Dec 23)
 
-**67K lines burned. The canvas is blank. Hypergraph Emacs emerged.**
+| Commit | What | Arc |
+|--------|------|-----|
+| `a4a0ad5c` | Sort imports in garden.py | Cleanup |
+| `0134babe` | **Dead code audit: ~14K lines removed** | HARDENING |
+| `90f5d23d` | **Close Edit→Witness→Graph→Visual loop** | BUILDING |
+| `0d93ea6c` | **AD-016 fail-fast resolution** | HARDENING |
+| `93be486c` | Proper JSON output for BasicRendering | Cleanup |
+| `87bc75be` | Hypergraph Phase 2: ContextNode.follow() | BUILDING |
 
-We're past the documentation phase. The frontend is no longer *about* agents—it IS the agent's surface. Two deliverables crystallized:
+### Uncommitted Work
 
-1. **Hypergraph Emacs** (Phase 1-3 Complete) — Six-mode modal editor for conceptual navigation
-2. **The Membrane** (Foundation Complete) — Co-thinking surface with Focus/Witness/Dialogue
+**AD-015 Radical Unification** (just completed):
+- `LedgerCache` class DELETED (~60 lines)
+- `ensure_scanned()` → `proxy_store.get_or_raise(SourceType.SPEC_CORPUS)`
+- `analyze_now()` → `proxy_store.compute()` with reactive invalidation
+- 98 tests passing, mypy clean
+
+### Hypergraph Emacs Status
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -49,9 +88,9 @@ We're past the documentation phase. The frontend is no longer *about* agents—i
 | `hypergraph-emacs.md` | Phase 1-4 ✅ | E2E testing, polish |
 | `_membrane.md` | Foundation ✅ | Polish, keyboard shortcuts |
 | `SPECGRAPH-ASHC-SELF-HOSTING.md` | Phase 2 active | K-Block + Interactive Text |
-| `_inbound-sovereignty.md` | Session 1+2 ✅ | Session 3: Sync Protocol |
+| `_inbound-sovereignty.md` | Session 1-3 ✅ | Polish, edge cases |
 
-**Phase 4 Complete**: WitnessedGraph integration — edges now carry evidence (confidence, origin, markId). Edge gutters show confidence visually.
+**WitnessedGraph Integration**: Edges now carry evidence (confidence, origin, markId). Edge gutters show confidence visually.
 
 ### Tier 2: Ready to Start
 
@@ -96,12 +135,18 @@ We're past the documentation phase. The frontend is no longer *about* agents—i
 
 ## Gotchas for Next Claude
 
+**Hardening Complete**:
+- ✅ AD-015: `LedgerCache` → `ProxyHandleStore` (uncommitted, 98 tests pass)
+- ✅ AD-016: Fail-fast AGENTESE resolution (0d93ea6c)
+- ✅ Edit→Witness→Graph→Visual loop closed (90f5d23d)
+- ✅ `ContextNode.follow()` wired to AGENTESE resolvers (87bc75be)
+- ✅ K-Block `:w [message]` and `:q!` fully wired
+- ✅ `useGraphNode` migrated to WitnessedGraph API
+
+**Known Debt**:
 - ⚠️ Hypergraph Emacs Portal ops (zo/zc) not yet implemented
-- ⚠️ 183 mypy errors (manifest signature mismatches—known debt)
+- ⚠️ 183 mypy errors (manifest signature mismatches)
 - ⚠️ Two PortalToken implementations exist (context vs file_operad)
-- ✅ `ContextNode.follow()` now wired to AGENTESE resolvers (87bc75be)
-- ✅ K-Block `:w [message]` and `:q!` fully wired (Phase 3)
-- ✅ `useGraphNode` migrated to WitnessedGraph API — edges carry evidence (mark-284)
 
 ---
 

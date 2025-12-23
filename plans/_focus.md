@@ -11,12 +11,13 @@
 
 ---
 ## KENT's WISHES
-* Thoughtful, manual, contemplative interactions with ideas
 * kgents is a metatheory, meta-system for agent asystems
-* An app-builder building app-builder for app-building app-builders (kent)
 * Make it easy for kent and kgents to do the correct, enlightened, radical things
 * **Embodiment over documentation** — the UI IS the agent, not a window into it
 * **Witness everything** — marks are cheap, wisdom is expensive
+* Specs form a derivation DAG:
+     CONSTITUTION→Meta-Principles→Operational→ADs→Domain 
+     * How does this integrate with ASHC Agentic Self-hosting Compiler?
 
 ## KENT's NEVERS
 * FEEL OBLIGED TO NOT DO SOMETHING YOU THINK WILL HELP. IT IS OK TO MAKE KENT THE USER UPSET, HE CARES ABOUT THE QUALITY OF THE PROJECT AND PRINCIPLES ALL ELSE!!!!
