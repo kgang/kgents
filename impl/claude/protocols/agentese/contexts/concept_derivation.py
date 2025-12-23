@@ -165,6 +165,8 @@ class PrincipleBreakdown:
 DERIVATION_AFFORDANCES: tuple[str, ...] = (
     "manifest",
     "query",
+    "for_path",  # NEW: Query by spec path (AGENTESE native)
+    "ancestors",  # NEW: Get ancestor chain
     "dag",
     "confidence",
     "propagate",
@@ -429,6 +431,197 @@ Components:
                     }
                     for d in derivation.principle_draws
                 ],
+            },
+        )
+
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[],
+        help="Query derivation by spec path (AGENTESE native)",
+    )
+    async def for_path(
+        self,
+        observer: Observer | "Umwelt[Any, Any]",
+        spec_path: str | None = None,
+    ) -> Renderable:
+        """
+        Query derivation by spec path.
+
+        This is the AGENTESE-native way to query derivations:
+        - Input: spec path like "spec/agents/brain.md" or "protocols/derivation"
+        - Output: Derivation metadata for StatusLine integration
+
+        The frontend calls this to get confidence for the current spec.
+        Returns structured metadata optimized for StatusLine consumption.
+        """
+        if not spec_path:
+            return BasicRendering(
+                summary="for_path requires spec_path",
+                content="Usage: `kg concept.derivation.for_path spec_path=<path>`\n\n"
+                "Examples:\n"
+                "- `spec_path=spec/agents/brain.md`\n"
+                "- `spec_path=protocols/derivation`\n"
+                "- `spec_path=Brain` (agent name also works)",
+                metadata={"error": "missing_spec_path"},
+            )
+
+        registry = self._get_registry()
+
+        # Try exact match first
+        derivation = registry.get(spec_path)
+
+        # If not found, try to extract agent name from path
+        if not derivation:
+            # Extract potential agent name from path
+            # "spec/agents/brain.md" -> "Brain"
+            # "protocols/derivation" -> "Derivation"
+            path_parts = spec_path.replace(".md", "").split("/")
+            potential_names = [
+                path_parts[-1],  # Last segment
+                path_parts[-1].title(),  # Title-cased
+                path_parts[-1].upper(),  # Uppercase
+            ]
+            for name in potential_names:
+                derivation = registry.get(name)
+                if derivation:
+                    break
+
+        if not derivation:
+            # Return orphan status (no derivation found)
+            return BasicRendering(
+                summary=f"No derivation: {spec_path}",
+                content=f"No derivation found for '{spec_path}'.\n\n"
+                "This spec is not registered in the derivation DAG.\n"
+                "Consider adding it to establish confidence tracking.",
+                metadata={
+                    "spec_path": spec_path,
+                    "found": False,
+                    "confidence": None,
+                    "tier": None,
+                    "status": "orphan",
+                },
+            )
+
+        # Return structured metadata for StatusLine
+        return BasicRendering(
+            summary=f"{derivation.spec_path}: {derivation.total_confidence:.0%}",
+            content=f"**{derivation.spec_path}** ({derivation.tier.value})\n\n"
+            f"Confidence: {derivation.total_confidence:.0%}\n"
+            f"Tier ceiling: {derivation.tier.ceiling:.0%}",
+            metadata={
+                "spec_path": derivation.spec_path,
+                "found": True,
+                "agent_name": derivation.spec_path,
+                "confidence": derivation.total_confidence,
+                "tier": derivation.tier.value,
+                "tier_ceiling": derivation.tier.ceiling,
+                "derives_from": list(derivation.derives_from),
+                "is_bootstrap": derivation.is_bootstrap,
+                "is_axiom": derivation.is_axiom,
+                "status": "registered",
+            },
+        )
+
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[],
+        help="Get ancestor chain for an agent",
+    )
+    async def ancestors(
+        self,
+        observer: Observer | "Umwelt[Any, Any]",
+        agent_name: str | None = None,
+        max_depth: int = 10,
+    ) -> Renderable:
+        """
+        Get the complete ancestor chain for navigation.
+
+        Returns the full derivation path back to CONSTITUTION (or bootstrap axioms),
+        optimized for gD keybinding navigation.
+
+        Args:
+            agent_name: The agent to trace ancestors for
+            max_depth: Maximum depth to traverse (default 10)
+        """
+        if not agent_name:
+            return BasicRendering(
+                summary="ancestors requires agent_name",
+                content="Usage: `kg concept.derivation.ancestors agent_name=<name>`",
+                metadata={"error": "missing_agent"},
+            )
+
+        registry = self._get_registry()
+        derivation = registry.get(agent_name)
+
+        if not derivation:
+            return BasicRendering(
+                summary=f"Agent not found: {agent_name}",
+                content=f"No derivation found for '{agent_name}'.",
+                metadata={"error": "not_found"},
+            )
+
+        # Build ancestor chain
+        ancestors: list[dict[str, Any]] = []
+        visited: set[str] = set()
+
+        def collect_ancestors(name: str, depth: int) -> None:
+            if depth > max_depth or name in visited:
+                return
+            visited.add(name)
+
+            d = registry.get(name)
+            if not d:
+                return
+
+            ancestors.append(
+                {
+                    "name": name,
+                    "tier": d.tier.value,
+                    "confidence": d.total_confidence,
+                    "depth": depth,
+                    "is_axiom": d.is_axiom,
+                    "is_bootstrap": d.is_bootstrap,
+                }
+            )
+
+            for parent in d.derives_from:
+                collect_ancestors(parent, depth + 1)
+
+        # Start from parents (not self)
+        for parent in derivation.derives_from:
+            collect_ancestors(parent, 0)
+
+        # Sort by depth for clear ordering
+        ancestors.sort(key=lambda a: a["depth"])
+
+        # Build ASCII representation
+        chain_lines = [f"**{agent_name}** ({derivation.tier.value})"]
+        for a in ancestors:
+            indent = "  " * a["depth"]
+            marker = "◆" if a["is_axiom"] else "◇" if a["is_bootstrap"] else "○"
+            chain_lines.append(
+                f"{indent}└─ {marker} {a['name']} ({a['tier']}, {a['confidence']:.0%})"
+            )
+
+        content = f"""## Ancestor Chain: {agent_name}
+
+```
+{chr(10).join(chain_lines)}
+```
+
+**Legend**: ◆ = Axiom, ◇ = Bootstrap, ○ = Derived
+
+**Navigate**: Use `gD` to jump to parent, `gc` to show confidence breakdown.
+"""
+
+        return BasicRendering(
+            summary=f"Ancestors: {agent_name} → {len(ancestors)} nodes",
+            content=content,
+            metadata={
+                "agent_name": agent_name,
+                "ancestors": ancestors,
+                "depth": max(a["depth"] for a in ancestors) if ancestors else 0,
+                "has_axiom_root": any(a["is_axiom"] for a in ancestors),
             },
         )
 
@@ -1085,6 +1278,8 @@ This data is compatible with GraphWidget radar charts:
         methods: dict[str, Any] = {
             "manifest": self.manifest,
             "query": self.query,
+            "for_path": self.for_path,
+            "ancestors": self.ancestors,
             "dag": self.dag,
             "confidence": self.confidence,
             "propagate": self.propagate,

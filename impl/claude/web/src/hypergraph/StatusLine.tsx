@@ -34,6 +34,22 @@ interface StatusLineProps {
 
   /** Current node path */
   nodePath?: string;
+
+  /**
+   * Derivation confidence (0-1 scale)
+   *
+   * When present, displays a confidence indicator using the health color system:
+   * - >= 0.8: green (healthy)
+   * - >= 0.6: yellow (degraded)
+   * - >= 0.4: orange (warning)
+   * - < 0.4: red (critical)
+   *
+   * Use gD to navigate to derivation parent, gc to show breakdown.
+   */
+  confidence?: number;
+
+  /** Derivation tier (for hover tooltip) */
+  derivationTier?: string;
 }
 
 // =============================================================================
@@ -59,6 +75,32 @@ const MODE_LABELS: Record<EditorMode, string> = {
 };
 
 // =============================================================================
+// Confidence Indicator Helpers
+// =============================================================================
+
+type ConfidenceLevel = 'healthy' | 'degraded' | 'warning' | 'critical';
+
+/**
+ * Get confidence level from 0-1 score.
+ * Matches HEALTH_COLORS thresholds from constants/colors.ts
+ */
+function getConfidenceLevel(confidence: number): ConfidenceLevel {
+  if (confidence >= 0.8) return 'healthy';
+  if (confidence >= 0.6) return 'degraded';
+  if (confidence >= 0.4) return 'warning';
+  return 'critical';
+}
+
+/**
+ * Format confidence as visual bar: ████░░░░ 75%
+ */
+function formatConfidenceBar(confidence: number): string {
+  const filled = Math.round(confidence * 8);
+  const empty = 8 - filled;
+  return '█'.repeat(filled) + '░'.repeat(empty);
+}
+
+// =============================================================================
 // Component
 // =============================================================================
 
@@ -69,9 +111,16 @@ export const StatusLine = memo(function StatusLine({
   pendingSequence,
   kblockStatus,
   nodePath,
+  confidence,
+  derivationTier,
 }: StatusLineProps) {
   const modeColor = MODE_COLORS[mode];
   const modeLabel = MODE_LABELS[mode];
+
+  // Confidence indicator props
+  const confidenceLevel = confidence !== undefined ? getConfidenceLevel(confidence) : null;
+  const confidenceBar = confidence !== undefined ? formatConfidenceBar(confidence) : null;
+  const confidencePercent = confidence !== undefined ? Math.round(confidence * 100) : null;
 
   return (
     <div className="status-line" style={{ '--mode-color': modeColor } as React.CSSProperties}>
@@ -87,6 +136,18 @@ export const StatusLine = memo(function StatusLine({
       {kblockStatus && (
         <div className="status-line__kblock" data-status={kblockStatus}>
           [{kblockStatus}]
+        </div>
+      )}
+
+      {/* Derivation confidence indicator */}
+      {confidence !== undefined && confidenceLevel && confidenceBar && (
+        <div
+          className="status-line__confidence"
+          data-level={confidenceLevel}
+          title={`Derivation: ${confidencePercent}%${derivationTier ? ` (${derivationTier})` : ''} — gD: parent, gc: breakdown`}
+        >
+          <span className="status-line__confidence-bar">{confidenceBar}</span>
+          <span className="status-line__confidence-value">{confidencePercent}%</span>
         </div>
       )}
 

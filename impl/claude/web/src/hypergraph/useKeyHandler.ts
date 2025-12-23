@@ -62,6 +62,9 @@ interface SequenceBinding {
     | 'GO_DEFINITION'
     | 'GO_REFERENCES'
     | 'GO_TESTS'
+    // Derivation navigation (Phase 2)
+    | 'GO_DERIVATION_PARENT'
+    | 'SHOW_CONFIDENCE'
     // Mode switches
     | 'ENTER_EDGE'
     | 'ENTER_WITNESS'
@@ -94,6 +97,10 @@ const NORMAL_MODE_SEQUENCES: SequenceBinding[] = [
   { keys: ['g', 'e'], action: 'ENTER_EDGE', description: 'Enter edge mode (ge)' },
   { keys: ['g', 'w'], action: 'ENTER_WITNESS', description: 'Enter witness mode (gw)' },
 
+  // Derivation navigation (gD/gc — Phase 2)
+  { keys: ['g', 'D'], action: 'GO_DERIVATION_PARENT', description: 'Go to derivation parent (gD)' },
+  { keys: ['g', 'c'], action: 'SHOW_CONFIDENCE', description: 'Show confidence breakdown (gc)' },
+
   // gg - go to start
   { keys: ['g', 'g'], action: { type: 'GOTO_START' }, description: 'Go to start (gg)' },
 
@@ -125,6 +132,14 @@ export interface UseKeyHandlerOptions {
   goDefinition: () => void;
   goReferences: () => void;
   goTests: () => void;
+
+  /**
+   * Derivation navigation (Phase 2)
+   * gD: Navigate to derivation parent (derives_from)
+   * gc: Show confidence breakdown panel
+   */
+  goDerivationParent?: () => void;
+  showConfidence?: () => void;
 
   /** Portal operations (zo/zc — inline edge expansion) */
   openPortal: () => void;
@@ -177,6 +192,8 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     goDefinition,
     goReferences,
     goTests,
+    goDerivationParent,
+    showConfidence,
     openPortal,
     closePortal,
     togglePortal,
@@ -235,6 +252,14 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
           goTests();
           break;
 
+        // Derivation navigation (Phase 2)
+        case 'GO_DERIVATION_PARENT':
+          goDerivationParent?.();
+          break;
+        case 'SHOW_CONFIDENCE':
+          showConfidence?.();
+          break;
+
         // Mode switches
         case 'ENTER_EDGE':
           dispatch({ type: 'ENTER_EDGE' });
@@ -267,6 +292,8 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       goDefinition,
       goReferences,
       goTests,
+      goDerivationParent,
+      showConfidence,
       dispatch,
       openPortal,
       closePortal,

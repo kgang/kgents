@@ -27,6 +27,10 @@ import math
 from dataclasses import replace
 from typing import Callable
 
+from .bootstrap import (
+    BOOTSTRAP_AGENT_NAMES,
+    CONSTITUTION_DERIVATION,
+)
 from .types import (
     BOOTSTRAP_PRINCIPLE_DRAWS,
     Derivation,
@@ -166,25 +170,34 @@ class DerivationRegistry:
 
     def _seed_bootstrap(self) -> None:
         """
-        Seed registry with bootstrap axioms (confidence = 1.0).
+        Seed registry with CONSTITUTION as the axiomatic root.
 
-        Bootstrap agents don't derive from anything—they ARE the axioms.
-        This is Law 3: Bootstrap Indefeasibility.
+        The derivation hierarchy is:
+            CONSTITUTION (AXIOM tier) -> Bootstrap agents (BOOTSTRAP tier)
+
+        CONSTITUTION is the single root of the DAG. All bootstrap agents
+        derive from it, making the full derivation chain explicit.
+
+        Law 3 (Bootstrap Indefeasibility) applies to both AXIOM and BOOTSTRAP tiers.
         """
-        bootstrap_agents = ("Id", "Compose", "Judge", "Ground", "Contradict", "Sublate", "Fix")
+        # First: Register CONSTITUTION as the axiomatic root
+        self._derivations[CONSTITUTION_DERIVATION.agent_name] = CONSTITUTION_DERIVATION
+        self._dag.add_node(CONSTITUTION_DERIVATION.agent_name)
+        self._usage_counts[CONSTITUTION_DERIVATION.agent_name] = 0
 
-        for name in bootstrap_agents:
+        # Second: Register bootstrap agents, deriving from CONSTITUTION
+        for name in BOOTSTRAP_AGENT_NAMES:
             derivation = Derivation(
                 agent_name=name,
                 tier=DerivationTier.BOOTSTRAP,
-                derives_from=(),
+                derives_from=("CONSTITUTION",),  # Now derives from CONSTITUTION
                 principle_draws=BOOTSTRAP_PRINCIPLE_DRAWS.get(name, ()),
-                inherited_confidence=1.0,
+                inherited_confidence=1.0,  # Inherited from CONSTITUTION (1.0)
                 empirical_confidence=1.0,
                 stigmergic_confidence=1.0,
             )
             self._derivations[name] = derivation
-            self._dag.add_node(name)
+            self._dag.add_edges(name, ("CONSTITUTION",))  # Register the edge
             self._usage_counts[name] = 0
 
     def register(
@@ -316,11 +329,7 @@ class DerivationRegistry:
         if tier is None:
             return tuple(sorted(self._derivations.keys()))
 
-        return tuple(
-            name
-            for name, d in sorted(self._derivations.items())
-            if d.tier == tier
-        )
+        return tuple(name for name, d in sorted(self._derivations.items()) if d.tier == tier)
 
     def get_usage_count(self, agent_name: str) -> int:
         """Get usage count for an agent."""
@@ -354,12 +363,13 @@ class DerivationRegistry:
 
         derivation = self._derivations[agent_name]
 
-        # Law 3: Bootstrap Indefeasibility
-        if derivation.is_bootstrap:
+        # Law 3: Bootstrap Indefeasibility (applies to AXIOM and BOOTSTRAP tiers)
+        if derivation.is_indefeasible:
+            tier_name = "AXIOM" if derivation.is_axiom else "BOOTSTRAP"
             raise ValueError(
                 f"Law 3 (Bootstrap Indefeasibility) violated: "
-                f"Cannot update evidence for bootstrap agent '{agent_name}'. "
-                f"Bootstrap agents have fixed confidence = 1.0."
+                f"Cannot update evidence for {tier_name} agent '{agent_name}'. "
+                f"{tier_name} agents have fixed confidence = 1.0."
             )
 
         # Update empirical confidence from ASHC
@@ -429,13 +439,13 @@ class DerivationRegistry:
         Apply time-based decay to all non-categorical evidence.
 
         Returns the count of derivations that were decayed.
-        Bootstrap agents are skipped (Law 3).
+        AXIOM and BOOTSTRAP agents are skipped (Law 3: Indefeasibility).
         """
         decayed_count = 0
 
         for name, derivation in self._derivations.items():
-            if derivation.is_bootstrap:
-                continue  # Law 3: Bootstrap Indefeasibility
+            if derivation.is_indefeasible:
+                continue  # Law 3: AXIOM and BOOTSTRAP are indefeasible
 
             decayed = derivation.decay_evidence(days_elapsed)
             if decayed != derivation:

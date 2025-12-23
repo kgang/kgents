@@ -4,13 +4,16 @@ Tests for the Derivation Registry.
 These tests verify the registry behavior and the five derivation laws:
 1. Monotonicity: Agents derive from same or higher tiers only
 2. Confidence Ceiling: Evidence can't exceed tier ceiling
-3. Bootstrap Indefeasibility: Bootstrap agents never change
+3. Bootstrap Indefeasibility: Bootstrap agents never change (includes AXIOM)
 4. Acyclicity: The derivation graph is a DAG
 5. Propagation: Confidence changes propagate through the DAG
+
+Also tests CONSTITUTION as the axiomatic root of the derivation DAG.
 """
 
 import pytest
 
+from ..bootstrap import BOOTSTRAP_AGENT_NAMES, CONSTITUTION_DERIVATION, SEVEN_PRINCIPLES
 from ..registry import DerivationDAG, DerivationRegistry, get_registry, reset_registry
 from ..types import DerivationTier, EvidenceType, PrincipleDraw
 
@@ -184,8 +187,12 @@ class TestDerivationRegistry:
 
         # Create a valid chain: A -> B -> C (each tier >= parent tier)
         # FUNCTOR derives from BOOTSTRAP (Id), POLYNOMIAL from FUNCTOR, etc.
-        registry.register("A", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR)
-        registry.register("B", derives_from=("A",), principle_draws=(), tier=DerivationTier.POLYNOMIAL)
+        registry.register(
+            "A", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
+        registry.register(
+            "B", derives_from=("A",), principle_draws=(), tier=DerivationTier.POLYNOMIAL
+        )
         registry.register("C", derives_from=("B",), principle_draws=(), tier=DerivationTier.OPERAD)
 
         # The cycle detection is tested in TestDerivationDAG
@@ -201,8 +208,12 @@ class TestDerivationRegistry:
         registry = DerivationRegistry()
 
         # Create chain: A -> B -> C (each tier >= parent tier)
-        registry.register("A", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR)
-        registry.register("B", derives_from=("A",), principle_draws=(), tier=DerivationTier.POLYNOMIAL)
+        registry.register(
+            "A", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
+        registry.register(
+            "B", derives_from=("A",), principle_draws=(), tier=DerivationTier.POLYNOMIAL
+        )
         registry.register("C", derives_from=("B",), principle_draws=(), tier=DerivationTier.OPERAD)
 
         # C's confidence depends on B which depends on A
@@ -223,7 +234,9 @@ class TestDerivationRegistry:
         """ASHC scores update empirical confidence."""
         registry = DerivationRegistry()
 
-        registry.register("Test", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR)
+        registry.register(
+            "Test", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
 
         derivation = registry.update_evidence("Test", ashc_score=0.85)
         assert derivation.empirical_confidence == 0.85
@@ -232,7 +245,9 @@ class TestDerivationRegistry:
         """Usage counts update stigmergic confidence."""
         registry = DerivationRegistry()
 
-        registry.register("Test", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR)
+        registry.register(
+            "Test", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
 
         derivation = registry.update_evidence("Test", usage_count=1000)
         assert derivation.stigmergic_confidence > 0.0
@@ -241,7 +256,9 @@ class TestDerivationRegistry:
         """Usage can be incremented one at a time."""
         registry = DerivationRegistry()
 
-        registry.register("Test", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR)
+        registry.register(
+            "Test", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
 
         # Increment 100 times
         for _ in range(100):
@@ -280,7 +297,9 @@ class TestDerivationRegistry:
         """Can list all agents or filter by tier."""
         registry = DerivationRegistry()
 
-        registry.register("Test", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR)
+        registry.register(
+            "Test", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
 
         all_agents = registry.list_agents()
         assert "Id" in all_agents
@@ -294,8 +313,12 @@ class TestDerivationRegistry:
         """Can get all ancestors of an agent."""
         registry = DerivationRegistry()
 
-        registry.register("A", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR)
-        registry.register("B", derives_from=("A", "Compose"), principle_draws=(), tier=DerivationTier.POLYNOMIAL)
+        registry.register(
+            "A", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
+        registry.register(
+            "B", derives_from=("A", "Compose"), principle_draws=(), tier=DerivationTier.POLYNOMIAL
+        )
 
         ancestors = registry.ancestors("B")
         assert "A" in ancestors
@@ -306,8 +329,12 @@ class TestDerivationRegistry:
         """Can get all dependents of an agent."""
         registry = DerivationRegistry()
 
-        registry.register("A", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR)
-        registry.register("B", derives_from=("A",), principle_draws=(), tier=DerivationTier.POLYNOMIAL)
+        registry.register(
+            "A", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
+        registry.register(
+            "B", derives_from=("A",), principle_draws=(), tier=DerivationTier.POLYNOMIAL
+        )
 
         dependents = registry.dependents("Id")
         assert "A" in dependents
@@ -317,13 +344,16 @@ class TestDerivationRegistry:
         """Registry supports len() and 'in' operator."""
         registry = DerivationRegistry()
 
-        # 7 bootstrap agents
-        assert len(registry) == 7
+        # CONSTITUTION + 7 bootstrap agents = 8
+        assert len(registry) == 8
+        assert "CONSTITUTION" in registry
         assert "Id" in registry
         assert "NotRegistered" not in registry
 
-        registry.register("Test", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR)
-        assert len(registry) == 8
+        registry.register(
+            "Test", derives_from=("Id",), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
+        assert len(registry) == 9
 
 
 class TestGlobalRegistry:
@@ -349,3 +379,135 @@ class TestGlobalRegistry:
 
         r2 = get_registry()
         assert "Test" not in r2
+
+
+class TestConstitutionAsRoot:
+    """
+    Tests for CONSTITUTION as the axiomatic root of the derivation DAG.
+
+    The derivation hierarchy is:
+        CONSTITUTION (AXIOM tier) -> Bootstrap agents (BOOTSTRAP tier) -> ...
+
+    CONSTITUTION is the single root. All agents trace back to it.
+    """
+
+    def test_constitution_is_registered(self) -> None:
+        """CONSTITUTION is automatically registered in a fresh registry."""
+        registry = DerivationRegistry()
+
+        constitution = registry.get("CONSTITUTION")
+        assert constitution is not None
+        assert constitution.agent_name == "CONSTITUTION"
+
+    def test_constitution_is_axiom_tier(self) -> None:
+        """CONSTITUTION is the only AXIOM tier agent."""
+        registry = DerivationRegistry()
+
+        constitution = registry.get("CONSTITUTION")
+        assert constitution is not None
+        assert constitution.tier == DerivationTier.AXIOM
+        assert constitution.is_axiom
+
+    def test_constitution_has_no_parents(self) -> None:
+        """CONSTITUTION is the true root—derives from nothing."""
+        registry = DerivationRegistry()
+
+        constitution = registry.get("CONSTITUTION")
+        assert constitution is not None
+        assert constitution.derives_from == ()
+        assert registry.ancestors("CONSTITUTION") == frozenset()
+
+    def test_constitution_has_all_seven_principles(self) -> None:
+        """CONSTITUTION carries all seven principles with categorical evidence."""
+        registry = DerivationRegistry()
+
+        constitution = registry.get("CONSTITUTION")
+        assert constitution is not None
+
+        principle_names = {d.principle for d in constitution.principle_draws}
+        for principle in SEVEN_PRINCIPLES:
+            assert principle in principle_names, f"Missing principle: {principle}"
+
+        # All should be categorical
+        for draw in constitution.principle_draws:
+            assert draw.evidence_type == EvidenceType.CATEGORICAL
+            assert draw.draw_strength == 1.0
+
+    def test_constitution_has_max_confidence(self) -> None:
+        """CONSTITUTION has confidence = 1.0 (axiomatic truth)."""
+        registry = DerivationRegistry()
+
+        constitution = registry.get("CONSTITUTION")
+        assert constitution is not None
+        assert constitution.total_confidence == 1.0
+        assert constitution.inherited_confidence == 1.0
+
+    def test_bootstrap_agents_derive_from_constitution(self) -> None:
+        """All 7 bootstrap agents derive from CONSTITUTION."""
+        registry = DerivationRegistry()
+
+        for name in BOOTSTRAP_AGENT_NAMES:
+            derivation = registry.get(name)
+            assert derivation is not None
+            assert "CONSTITUTION" in derivation.derives_from
+            assert "CONSTITUTION" in registry.ancestors(name)
+
+    def test_constitution_has_all_bootstrap_as_dependents(self) -> None:
+        """CONSTITUTION's dependents include all bootstrap agents."""
+        registry = DerivationRegistry()
+
+        dependents = registry.dependents("CONSTITUTION")
+        for name in BOOTSTRAP_AGENT_NAMES:
+            assert name in dependents
+
+    def test_constitution_is_indefeasible(self) -> None:
+        """Cannot update CONSTITUTION's evidence (Law 3)."""
+        registry = DerivationRegistry()
+
+        with pytest.raises(ValueError, match="AXIOM"):
+            registry.update_evidence("CONSTITUTION", ashc_score=0.5)
+
+    def test_dag_has_single_root(self) -> None:
+        """The derivation DAG has exactly one root: CONSTITUTION."""
+        registry = DerivationRegistry()
+
+        # Find all nodes with no parents (roots)
+        roots = []
+        for name in registry.list_agents():
+            derivation = registry.get(name)
+            if derivation and derivation.derives_from == ():
+                roots.append(name)
+
+        assert roots == ["CONSTITUTION"], f"Expected single root CONSTITUTION, got {roots}"
+
+    def test_any_agent_can_trace_to_constitution(self) -> None:
+        """Any derived agent can trace its ancestry back to CONSTITUTION."""
+        registry = DerivationRegistry()
+
+        # Register a deep chain
+        registry.register(
+            "Flux", derives_from=("Fix", "Compose"), principle_draws=(), tier=DerivationTier.FUNCTOR
+        )
+        registry.register(
+            "SOUL", derives_from=("Flux",), principle_draws=(), tier=DerivationTier.POLYNOMIAL
+        )
+        registry.register(
+            "Brain", derives_from=("SOUL",), principle_draws=(), tier=DerivationTier.JEWEL
+        )
+
+        # All should have CONSTITUTION in ancestors
+        for name in ("Flux", "SOUL", "Brain"):
+            ancestors = registry.ancestors(name)
+            assert "CONSTITUTION" in ancestors, f"{name} should trace to CONSTITUTION"
+
+    def test_constitution_derivation_matches_bootstrap_module(self) -> None:
+        """Registry's CONSTITUTION matches the CONSTITUTION_DERIVATION constant."""
+        registry = DerivationRegistry()
+
+        constitution = registry.get("CONSTITUTION")
+        assert constitution is not None
+
+        # Should match the constant from bootstrap.py
+        assert constitution.agent_name == CONSTITUTION_DERIVATION.agent_name
+        assert constitution.tier == CONSTITUTION_DERIVATION.tier
+        assert len(constitution.principle_draws) == len(CONSTITUTION_DERIVATION.principle_draws)

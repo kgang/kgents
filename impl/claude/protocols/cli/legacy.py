@@ -87,15 +87,11 @@ LEGACY_COMMANDS: dict[str, str] = {
     "coffee begin": "time.coffee.begin",
     "coffee history": "time.coffee.history",
     "coffee status": "time.coffee.manifest",
-    # Docs / Living Documentation (thin handler mappings)
-    "docs": "concept.docs.manifest",
-    "docs generate": "concept.docs.generate",
-    "docs teaching": "concept.docs.teaching",
-    "docs verify": "concept.docs.verify",
-    "docs lint": "concept.docs.lint",
-    "docs hydrate": "concept.docs.hydrate",
-    "docs relevant": "concept.docs.relevant",
-    "docs crystallize": "concept.docs.crystallize",
+    # Docs / Living Documentation: REMOVED from legacy (2025-12-23)
+    # Now uses thin handler in COMMAND_REGISTRY (handlers/docs.py)
+    # The cmd_docs handler properly routes subcommands (hydrate, relevant, crystallize)
+    # to the living_docs service layer without going through AGENTESE aspects.
+    # Old entries routed through _handle_agentese which expected aspects that don't exist.
     # Status
     "status": "self.status.manifest",
     "status full": "self.status.full",

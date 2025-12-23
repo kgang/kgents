@@ -762,6 +762,14 @@ async def setup_providers() -> None:
     except ImportError as e:
         logger.warning(f"EditorNode not available: {e}")
 
+    # Living Docs Crown Jewel (Docs as Projection)
+    try:
+        from services.living_docs.node import LivingDocsNode, SelfDocsNode  # noqa: F401
+
+        logger.info("LivingDocsNode + SelfDocsNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"LivingDocsNode not available: {e}")
+
     # Wire KgentSoul to SoulNode
     try:
         from agents.k.soul import KgentSoul

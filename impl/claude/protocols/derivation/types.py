@@ -36,11 +36,15 @@ class DerivationTier(str, Enum):
     Each tier has a confidence ceiling—no matter how much evidence,
     an APP agent can't exceed JEWEL confidence. This is Law 2.
 
-    The ordering: BOOTSTRAP < FUNCTOR < POLYNOMIAL < OPERAD < JEWEL < APP
+    The ordering: AXIOM < BOOTSTRAP < FUNCTOR < POLYNOMIAL < OPERAD < JEWEL < APP
     (by confidence ceiling, descending)
+
+    AXIOM tier is special: it has confidence 1.0 by definition—it IS the ground truth.
+    CONSTITUTION is the only AXIOM-tier agent. All bootstrap agents derive from it.
     """
 
-    BOOTSTRAP = "bootstrap"  # Ceiling: 1.00 (categorical proofs)
+    AXIOM = "axiom"  # Ceiling: 1.00 (the constitution itself—axiomatic truth)
+    BOOTSTRAP = "bootstrap"  # Ceiling: 1.00 (categorical proofs, derive from AXIOM)
     FUNCTOR = "functor"  # Ceiling: 0.98 (derived functors: Flux, Cooled, etc.)
     POLYNOMIAL = "polynomial"  # Ceiling: 0.95 (state machines: SOUL, MEMORY)
     OPERAD = "operad"  # Ceiling: 0.92 (composition grammars)
@@ -51,6 +55,7 @@ class DerivationTier(str, Enum):
     def ceiling(self) -> float:
         """Maximum confidence this tier can achieve."""
         ceilings = {
+            DerivationTier.AXIOM: 1.00,
             DerivationTier.BOOTSTRAP: 1.00,
             DerivationTier.FUNCTOR: 0.98,
             DerivationTier.POLYNOMIAL: 0.95,
@@ -64,6 +69,7 @@ class DerivationTier(str, Enum):
     def rank(self) -> int:
         """Numeric rank for tier ordering (lower = more foundational)."""
         ranks = {
+            DerivationTier.AXIOM: -1,  # Most foundational—the ground itself
             DerivationTier.BOOTSTRAP: 0,
             DerivationTier.FUNCTOR: 1,
             DerivationTier.POLYNOMIAL: 2,
@@ -137,9 +143,7 @@ class PrincipleDraw:
     def __post_init__(self) -> None:
         """Validate draw_strength is in [0, 1]."""
         if not 0.0 <= self.draw_strength <= 1.0:
-            object.__setattr__(
-                self, "draw_strength", max(0.0, min(1.0, self.draw_strength))
-            )
+            object.__setattr__(self, "draw_strength", max(0.0, min(1.0, self.draw_strength)))
 
     @property
     def is_categorical(self) -> bool:
@@ -232,6 +236,16 @@ class Derivation:
         """Bootstrap agents are axioms—they don't derive from anything."""
         return self.tier == DerivationTier.BOOTSTRAP
 
+    @property
+    def is_axiom(self) -> bool:
+        """AXIOM tier is the constitution itself—the ground truth."""
+        return self.tier == DerivationTier.AXIOM
+
+    @property
+    def is_indefeasible(self) -> bool:
+        """AXIOM and BOOTSTRAP tiers are indefeasible—confidence can't be modified."""
+        return self.tier in (DerivationTier.AXIOM, DerivationTier.BOOTSTRAP)
+
     def with_evidence(
         self,
         empirical: float | None = None,
@@ -290,9 +304,7 @@ def _make_categorical_draw(
 # The bootstrap agents and their principle draws
 # See spec/bootstrap.md and spec/principles.md
 BOOTSTRAP_PRINCIPLE_DRAWS: dict[str, tuple[PrincipleDraw, ...]] = {
-    "Id": (
-        _make_categorical_draw("Composable", 1.0, "identity-law"),
-    ),
+    "Id": (_make_categorical_draw("Composable", 1.0, "identity-law"),),
     "Compose": (
         _make_categorical_draw("Composable", 1.0, "associativity-law"),
         _make_categorical_draw("Generative", 0.9, "pipelines-derive"),
@@ -306,9 +318,7 @@ BOOTSTRAP_PRINCIPLE_DRAWS: dict[str, tuple[PrincipleDraw, ...]] = {
         _make_categorical_draw("Generative", 1.0, "facts-seed-generation"),
         _make_categorical_draw("Ethical", 0.9, "human-values-source"),
     ),
-    "Contradict": (
-        _make_categorical_draw("Heterarchical", 0.9, "tension-detection"),
-    ),
+    "Contradict": (_make_categorical_draw("Heterarchical", 0.9, "tension-detection"),),
     "Sublate": (
         _make_categorical_draw("Heterarchical", 1.0, "synthesis-function"),
         # Joy-Inducing is aesthetic, not categorical—the creative leap

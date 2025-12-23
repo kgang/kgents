@@ -1,5 +1,16 @@
 """
-Derivation Framework: Bootstrap Proofs as Axiom Base.
+Derivation Framework: CONSTITUTION as Axiomatic Root.
+
+The derivation DAG has a single root: CONSTITUTION (AXIOM tier).
+All bootstrap agents derive from CONSTITUTION, making the hierarchy explicit:
+
+    CONSTITUTION (AXIOM tier, confidence = 1.0)
+         |
+         +-- Id, Compose, Judge, Ground, Contradict, Sublate, Fix (BOOTSTRAP tier)
+                   |
+                   +-- Flux, Cooled, etc. (FUNCTOR tier)
+                            |
+                            +-- ... (lower tiers)
 
 This module implements the Derivation Framework from
 spec/protocols/derivation-framework.md:
@@ -78,6 +89,11 @@ from .ashc_bridge import (
     sync_from_principle_registry,
     sync_to_principle_registry,
     update_derivation_from_ashc,
+)
+from .bootstrap import (
+    BOOTSTRAP_AGENT_NAMES,
+    CONSTITUTION_DERIVATION,
+    SEVEN_PRINCIPLES,
 )
 
 # Phase 4: Decay & Refresh
@@ -177,6 +193,10 @@ __all__ = [
     "DerivationTier",
     "PrincipleDraw",
     "EvidenceType",
+    # Phase 1: Bootstrap (CONSTITUTION as Root)
+    "CONSTITUTION_DERIVATION",
+    "SEVEN_PRINCIPLES",
+    "BOOTSTRAP_AGENT_NAMES",
     # Phase 1: Registry
     "DerivationRegistry",
     "get_registry",
