@@ -78,6 +78,17 @@ class ProxyHandleStore:
     Thread-safe, supports concurrent access with proper locking.
     Uses asyncio.Lock for per-source_type computation coordination.
 
+    Composite Keys (AD-015 extension):
+        For multi-instance caching (e.g., multiple validation initiatives),
+        pass a `key` parameter to create composite keys:
+
+        # Without key: one handle per source_type
+        await store.compute(source_type=SourceType.SPEC_CORPUS, ...)
+
+        # With key: multiple handles per source_type
+        await store.compute(source_type=SourceType.VALIDATION_RUN, key="brain:phase1", ...)
+        await store.compute(source_type=SourceType.VALIDATION_RUN, key="brain:phase2", ...)
+
     Example:
         store = ProxyHandleStore()
 
@@ -104,9 +115,10 @@ class ProxyHandleStore:
     default_ttl: timedelta = field(default_factory=lambda: timedelta(minutes=5))
 
     # Internal state (initialized in __post_init__)
-    _handles: dict[SourceType, ProxyHandle[Any]] = field(default_factory=dict, repr=False)
-    _compute_locks: dict[SourceType, asyncio.Lock] = field(default_factory=dict, repr=False)
-    _compute_futures: dict[SourceType, asyncio.Future[ProxyHandle[Any]]] = field(
+    # Keys are composite: "{source_type.value}" or "{source_type.value}:{key}"
+    _handles: dict[str, ProxyHandle[Any]] = field(default_factory=dict, repr=False)
+    _compute_locks: dict[str, asyncio.Lock] = field(default_factory=dict, repr=False)
+    _compute_futures: dict[str, asyncio.Future[ProxyHandle[Any]]] = field(
         default_factory=dict, repr=False
     )
     _lock: threading.RLock = field(default_factory=threading.RLock, repr=False)
@@ -122,17 +134,42 @@ class ProxyHandleStore:
             self._load_from_disk()
 
     # =========================================================================
+    # Key Management
+    # =========================================================================
+
+    @staticmethod
+    def _make_key(source_type: SourceType, key: str | None = None) -> str:
+        """
+        Create composite key for handle storage.
+
+        Args:
+            source_type: The source type (semantic category)
+            key: Optional disambiguation key for multi-instance caching
+
+        Returns:
+            Composite key string: "{source_type}" or "{source_type}:{key}"
+        """
+        if key:
+            return f"{source_type.value}:{key}"
+        return source_type.value
+
+    # =========================================================================
     # Core Operations
     # =========================================================================
 
-    async def get(self, source_type: SourceType) -> ProxyHandle[Any] | None:
+    async def get(self, source_type: SourceType, key: str | None = None) -> ProxyHandle[Any] | None:
         """
         Get existing handle, or None if doesn't exist.
 
         Does NOT trigger computation. For explicit computation, use compute().
+
+        Args:
+            source_type: The source type to look up
+            key: Optional disambiguation key for multi-instance caching
         """
+        composite_key = self._make_key(source_type, key)
         with self._lock:
-            handle = self._handles.get(source_type)
+            handle = self._handles.get(composite_key)
             if handle:
                 handle.access()
                 await self._emit(
@@ -140,34 +177,48 @@ class ProxyHandleStore:
                         event_type="handle_accessed",
                         source_type=source_type,
                         handle_id=handle.handle_id,
-                        details={"is_fresh": handle.is_fresh()},
+                        details={"is_fresh": handle.is_fresh(), "key": key},
                     )
                 )
             return handle
 
-    async def get_or_raise(self, source_type: SourceType) -> ProxyHandle[Any]:
+    async def get_or_raise(
+        self, source_type: SourceType, key: str | None = None
+    ) -> ProxyHandle[Any]:
         """
         Get existing handle, or raise NoProxyHandleError.
 
         AD-015: This is the preferred method for code that requires data.
         It makes the absence of data explicit, enabling proper error handling.
+
+        Args:
+            source_type: The source type to look up
+            key: Optional disambiguation key for multi-instance caching
         """
-        handle = await self.get(source_type)
+        handle = await self.get(source_type, key)
         if handle is None:
-            raise NoProxyHandleError(source_type)
+            composite_key = self._make_key(source_type, key)
+            raise NoProxyHandleError(source_type, f"No handle for '{composite_key}'")
         return handle
 
-    async def get_fresh_or_raise(self, source_type: SourceType) -> ProxyHandle[Any]:
+    async def get_fresh_or_raise(
+        self, source_type: SourceType, key: str | None = None
+    ) -> ProxyHandle[Any]:
         """
         Get existing FRESH handle, or raise NoProxyHandleError.
 
         Use when stale data is not acceptable.
+
+        Args:
+            source_type: The source type to look up
+            key: Optional disambiguation key for multi-instance caching
         """
-        handle = await self.get_or_raise(source_type)
+        handle = await self.get_or_raise(source_type, key)
         if not handle.is_fresh():
+            composite_key = self._make_key(source_type, key)
             raise NoProxyHandleError(
                 source_type,
-                f"Proxy handle for '{source_type.value}' exists but is stale. "
+                f"Proxy handle for '{composite_key}' exists but is stale. "
                 f"Use compute(force=True) to refresh.",
             )
         return handle
@@ -177,6 +228,7 @@ class ProxyHandleStore:
         source_type: SourceType,
         compute_fn: Callable[[], Awaitable[T]],
         *,
+        key: str | None = None,
         force: bool = False,
         ttl: timedelta | None = None,
         human_label: str,
@@ -188,17 +240,18 @@ class ProxyHandleStore:
 
         AD-015: Computation is always explicit. This method:
         1. Checks if fresh handle exists (returns it unless force=True)
-        2. Acquires per-source_type lock (prevents duplicate work)
+        2. Acquires per-key lock (prevents duplicate work)
         3. Runs compute_fn and creates handle
         4. Emits events for transparency
         5. Persists if configured
 
-        Idempotency: Concurrent calls for same source_type await the same
+        Idempotency: Concurrent calls for same key await the same
         computation. This prevents duplicate expensive work.
 
         Args:
             source_type: What this is a proxy for
             compute_fn: Async function that produces the data
+            key: Optional disambiguation key for multi-instance caching
             force: Force recomputation even if fresh handle exists
             ttl: Time to live (defaults to store default)
             human_label: REQUIRED - explains what this is
@@ -214,38 +267,40 @@ class ProxyHandleStore:
         if not human_label:
             raise ValueError("human_label is required (no anonymous debris)")
 
+        composite_key = self._make_key(source_type, key)
+
         # Check for existing fresh handle (fast path)
         if not force:
             with self._lock:
-                existing = self._handles.get(source_type)
+                existing = self._handles.get(composite_key)
                 if existing and existing.is_fresh():
                     existing.access()
                     return existing
 
-        # Get or create lock for this source type
-        lock = self._get_or_create_lock(source_type)
+        # Get or create lock for this composite key
+        lock = self._get_or_create_lock(composite_key)
 
         async with lock:
             # Double-check after acquiring lock
             if not force:
                 with self._lock:
-                    existing = self._handles.get(source_type)
+                    existing = self._handles.get(composite_key)
                     if existing and existing.is_fresh():
                         existing.access()
                         return existing
 
             # Check for in-progress computation (idempotency)
             with self._lock:
-                if source_type in self._compute_futures:
-                    existing_future = self._compute_futures[source_type]
+                if composite_key in self._compute_futures:
+                    existing_future = self._compute_futures[composite_key]
                     if not existing_future.done():
-                        logger.debug(f"Awaiting existing computation for {source_type.value}")
+                        logger.debug(f"Awaiting existing computation for {composite_key}")
                         return await existing_future
 
                 # Create future for this computation
                 loop = asyncio.get_event_loop()
                 new_future: asyncio.Future[ProxyHandle[Any]] = loop.create_future()
-                self._compute_futures[source_type] = new_future
+                self._compute_futures[composite_key] = new_future
 
             # Mark as computing
             await self._emit(
@@ -253,7 +308,7 @@ class ProxyHandleStore:
                     event_type="computation_started",
                     source_type=source_type,
                     handle_id=None,
-                    details={"force": force, "computed_by": computed_by},
+                    details={"force": force, "computed_by": computed_by, "key": key},
                 )
             )
 
@@ -265,7 +320,7 @@ class ProxyHandleStore:
 
                 # Get previous computation count
                 with self._lock:
-                    prev = self._handles.get(source_type)
+                    prev = self._handles.get(composite_key)
                     prev_count = prev.computation_count if prev else 0
 
                 # Create handle
@@ -282,9 +337,9 @@ class ProxyHandleStore:
                     computation_count=prev_count + 1,
                 )
 
-                # Store handle
+                # Store handle with composite key
                 with self._lock:
-                    self._handles[source_type] = handle
+                    self._handles[composite_key] = handle
                     self._total_computations += 1
                     self._total_computation_time += duration
 
@@ -300,17 +355,18 @@ class ProxyHandleStore:
                         details={
                             "duration": duration,
                             "computation_count": handle.computation_count,
+                            "key": key,
                         },
                     )
                 )
 
                 # Resolve future for waiters
                 with self._lock:
-                    if source_type in self._compute_futures:
-                        self._compute_futures[source_type].set_result(handle)
-                        del self._compute_futures[source_type]
+                    if composite_key in self._compute_futures:
+                        self._compute_futures[composite_key].set_result(handle)
+                        del self._compute_futures[composite_key]
 
-                logger.info(f"Computed proxy handle for {source_type.value} in {duration:.2f}s")
+                logger.info(f"Computed proxy handle for {composite_key} in {duration:.2f}s")
                 return handle
 
             except Exception as e:
@@ -327,7 +383,7 @@ class ProxyHandleStore:
                 )
 
                 with self._lock:
-                    self._handles[source_type] = error_handle
+                    self._handles[composite_key] = error_handle
 
                 # Emit failure event
                 await self._emit(
@@ -335,36 +391,41 @@ class ProxyHandleStore:
                         event_type="computation_failed",
                         source_type=source_type,
                         handle_id=error_handle.handle_id,
-                        details={"error": str(e), "duration": duration},
+                        details={"error": str(e), "duration": duration, "key": key},
                     )
                 )
 
                 # Reject future for waiters
                 with self._lock:
-                    if source_type in self._compute_futures:
-                        self._compute_futures[source_type].set_exception(e)
-                        del self._compute_futures[source_type]
+                    if composite_key in self._compute_futures:
+                        self._compute_futures[composite_key].set_exception(e)
+                        del self._compute_futures[composite_key]
 
-                logger.error(f"Computation failed for {source_type.value}: {e}")
+                logger.error(f"Computation failed for {composite_key}: {e}")
                 raise ComputationError(source_type, e) from e
 
-    async def invalidate(self, source_type: SourceType) -> bool:
+    async def invalidate(self, source_type: SourceType, key: str | None = None) -> bool:
         """
         Mark a handle as STALE (source changed).
 
         Use when you know the source has changed but don't want to
         recompute immediately. Agents can decide when to refresh.
 
+        Args:
+            source_type: The source type to invalidate
+            key: Optional disambiguation key for multi-instance caching
+
         Returns:
             True if handle was invalidated, False if no handle exists
         """
+        composite_key = self._make_key(source_type, key)
         with self._lock:
-            handle = self._handles.get(source_type)
+            handle = self._handles.get(composite_key)
             if handle is None:
                 return False
 
             if handle.status == HandleStatus.COMPUTING:
-                logger.warning(f"Cannot invalidate {source_type.value} - computation in progress")
+                logger.warning(f"Cannot invalidate {composite_key} - computation in progress")
                 return False
 
             handle.status = HandleStatus.STALE
@@ -374,33 +435,38 @@ class ProxyHandleStore:
                 event_type="handle_invalidated",
                 source_type=source_type,
                 handle_id=handle.handle_id,
-                details={},
+                details={"key": key},
             )
         )
 
         await self._persist_if_enabled()
         return True
 
-    async def delete(self, source_type: SourceType) -> bool:
+    async def delete(self, source_type: SourceType, key: str | None = None) -> bool:
         """
         Remove a handle entirely.
+
+        Args:
+            source_type: The source type to delete
+            key: Optional disambiguation key for multi-instance caching
 
         Returns:
             True if handle was deleted, False if no handle exists
         """
+        composite_key = self._make_key(source_type, key)
         with self._lock:
-            handle = self._handles.get(source_type)
+            handle = self._handles.get(composite_key)
             if handle is None:
                 return False
 
-            del self._handles[source_type]
+            del self._handles[composite_key]
 
         await self._emit(
             ProxyHandleEvent(
                 event_type="handle_deleted",
                 source_type=source_type,
                 handle_id=handle.handle_id,
-                details={},
+                details={"key": key},
             )
         )
 
@@ -416,10 +482,23 @@ class ProxyHandleStore:
         with self._lock:
             return list(self._handles.values())
 
-    def source_types(self) -> list[SourceType]:
-        """Get all source types that have handles."""
+    def keys(self) -> list[str]:
+        """Get all composite keys that have handles."""
         with self._lock:
             return list(self._handles.keys())
+
+    def source_types(self) -> list[SourceType]:
+        """
+        Get unique source types that have handles.
+
+        Note: With composite keys, multiple handles may share the same source_type.
+        This returns the deduplicated set of source types.
+        """
+        with self._lock:
+            seen: set[SourceType] = set()
+            for handle in self._handles.values():
+                seen.add(handle.source_type)
+            return list(seen)
 
     def stats(self) -> ProxyStoreStats:
         """Get store statistics."""
@@ -472,12 +551,12 @@ class ProxyHandleStore:
     # Internal Helpers
     # =========================================================================
 
-    def _get_or_create_lock(self, source_type: SourceType) -> asyncio.Lock:
-        """Get or create an asyncio.Lock for a source type."""
+    def _get_or_create_lock(self, composite_key: str) -> asyncio.Lock:
+        """Get or create an asyncio.Lock for a composite key."""
         with self._lock:
-            if source_type not in self._compute_locks:
-                self._compute_locks[source_type] = asyncio.Lock()
-            return self._compute_locks[source_type]
+            if composite_key not in self._compute_locks:
+                self._compute_locks[composite_key] = asyncio.Lock()
+            return self._compute_locks[composite_key]
 
     async def _emit(self, event: ProxyHandleEvent) -> None:
         """
@@ -542,7 +621,8 @@ class ProxyHandleStore:
             self.persist_path.parent.mkdir(parents=True, exist_ok=True)
 
             with self._lock:
-                data = {st.value: handle.to_dict() for st, handle in self._handles.items()}
+                # Keys are now composite strings (e.g., "validation_run:brain:phase1")
+                data = {key: handle.to_dict() for key, handle in self._handles.items()}
 
             content = json.dumps(data, indent=2)
             self.persist_path.write_text(content)
@@ -559,13 +639,13 @@ class ProxyHandleStore:
             content = self.persist_path.read_text()
             data = json.loads(content)
 
-            for source_type_str, handle_data in data.items():
+            for composite_key, handle_data in data.items():
                 try:
-                    source_type = SourceType(source_type_str)
                     handle = ProxyHandle.from_dict(handle_data)
-                    self._handles[source_type] = handle
+                    # Use composite key directly (supports both old and new format)
+                    self._handles[composite_key] = handle
                 except (ValueError, KeyError) as e:
-                    logger.warning(f"Skipping invalid handle data: {e}")
+                    logger.warning(f"Skipping invalid handle data for {composite_key}: {e}")
 
             logger.info(f"Loaded {len(self._handles)} proxy handles from disk")
 
