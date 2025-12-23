@@ -181,6 +181,14 @@ class TestSubcommandRouting:
 
         assert DERIVATION_SUBCOMMAND_TO_PATH["why"] == "concept.derivation.confidence"
 
+    def test_edges_routes_to_edges(self):
+        """Test 'edges' routes to concept.derivation.edges (Phase 3D)."""
+        from protocols.cli.handlers.derivation import (
+            DERIVATION_SUBCOMMAND_TO_PATH,
+        )
+
+        assert DERIVATION_SUBCOMMAND_TO_PATH["edges"] == "concept.derivation.edges"
+
 
 # =============================================================================
 # Argument Parsing
@@ -258,6 +266,42 @@ class TestArgumentParsing:
 
         kwargs = _build_kwargs(["tree", "--focus", "brain"], "tree")
         assert kwargs.get("focus") == "Brain"
+
+    def test_build_kwargs_with_source_flag(self):
+        """Test --source flag parsing."""
+        from protocols.cli.handlers.derivation import _build_kwargs
+
+        kwargs = _build_kwargs(["edges", "--source", "fix"], "edges")
+        assert kwargs.get("source") == "Fix"
+
+    def test_build_kwargs_with_target_flag(self):
+        """Test --target flag parsing (Phase 3D)."""
+        from protocols.cli.handlers.derivation import _build_kwargs
+
+        kwargs = _build_kwargs(["edges", "--target", "brain"], "edges")
+        assert kwargs.get("target") == "Brain"
+
+    def test_build_kwargs_with_source_equals_syntax(self):
+        """Test --source=X syntax parsing."""
+        from protocols.cli.handlers.derivation import _build_kwargs
+
+        kwargs = _build_kwargs(["edges", "--source=fix"], "edges")
+        assert kwargs.get("source") == "Fix"
+
+    def test_build_kwargs_with_target_equals_syntax(self):
+        """Test --target=X syntax parsing (Phase 3D)."""
+        from protocols.cli.handlers.derivation import _build_kwargs
+
+        kwargs = _build_kwargs(["edges", "--target=brain"], "edges")
+        assert kwargs.get("target") == "Brain"
+
+    def test_build_kwargs_edges_with_both_source_and_target(self):
+        """Test edges with both --source and --target (Phase 3D)."""
+        from protocols.cli.handlers.derivation import _build_kwargs
+
+        kwargs = _build_kwargs(["edges", "--source=fix", "--target=brain"], "edges")
+        assert kwargs.get("source") == "Fix"
+        assert kwargs.get("target") == "Brain"
 
 
 # =============================================================================

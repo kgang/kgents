@@ -8,6 +8,7 @@ AGENTESE Path Mapping:
     kg derivation show ...    -> concept.derivation.query
     kg derivation ancestors   -> concept.derivation.navigate (edge=derives_from)
     kg derivation dependents  -> concept.derivation.navigate (edge=dependents)
+    kg derivation edges ...   -> concept.derivation.edges (Phase 3D)
     kg derivation principles  -> concept.derivation.principles
     kg derivation tree        -> concept.derivation.dag
     kg derivation list        -> concept.derivation.manifest
@@ -47,6 +48,8 @@ DERIVATION_SUBCOMMAND_TO_PATH = {
     # Visualization
     "tree": "concept.derivation.dag",
     "dag": "concept.derivation.dag",
+    # Edge evidence (Phase 3D)
+    "edges": "concept.derivation.edges",
     # Principle breakdown
     "principles": "concept.derivation.principles",
     # Confidence explanation
@@ -135,6 +138,15 @@ def _build_kwargs(args: list[str], subcommand: str) -> dict[str, str | bool]:
             kwargs["focus"] = normalize_agent_name(args[i + 1]) or args[i + 1]
         elif arg == "--source" and i + 1 < len(args):
             kwargs["source"] = normalize_agent_name(args[i + 1]) or args[i + 1]
+        elif arg == "--target" and i + 1 < len(args):
+            kwargs["target"] = normalize_agent_name(args[i + 1]) or args[i + 1]
+        # Also support = syntax: --source=Fix --target=Brain
+        elif arg.startswith("--source="):
+            val = arg.split("=", 1)[1]
+            kwargs["source"] = normalize_agent_name(val) or val
+        elif arg.startswith("--target="):
+            val = arg.split("=", 1)[1]
+            kwargs["target"] = normalize_agent_name(val) or val
 
     return kwargs
 
@@ -217,6 +229,7 @@ Commands:
   kg derivation show <agent>         Show derivation details for an agent
   kg derivation ancestors <agent>    Trace lineage to bootstrap axioms
   kg derivation dependents <agent>   Show agents that derive from this one
+  kg derivation edges [<agent>]      Show edge evidence (strength, marks)
   kg derivation principles <agent>   Principle draw breakdown (radar view)
   kg derivation tree [--tier=<t>]    ASCII DAG of all derivations
   kg derivation why <agent>          Explain confidence calculation
@@ -229,7 +242,8 @@ Options:
   --trace                       Show AGENTESE path being invoked
   --tier <tier>                 Filter by tier (bootstrap, functor, jewel, app)
   --focus <agent>               Highlight agent in DAG
-  --source <agent>              Source for propagation
+  --source <agent>              Source agent (for edges or propagation)
+  --target <agent>              Target agent (for specific edge query)
 
 Tiers (by confidence ceiling):
   bootstrap  (1.00)  Id, Compose, Judge, Ground, Contradict, Sublate, Fix
@@ -243,6 +257,7 @@ AGENTESE Paths:
   concept.derivation.manifest    Framework status
   concept.derivation.query       Query specific agent
   concept.derivation.dag         DAG for visualization
+  concept.derivation.edges       Edge evidence (Phase 3D)
   concept.derivation.navigate    Hypergraph navigation
   concept.derivation.principles  Principle breakdown
   concept.derivation.confidence  Confidence explanation
@@ -250,6 +265,9 @@ AGENTESE Paths:
 Examples:
   kg derivation show Brain
   kg derivation ancestors Flux
+  kg derivation edges                           # Summary of all edges
+  kg derivation edges Id                        # Edges for Id
+  kg derivation edges --source=Fix --target=Brain  # Specific edge
   kg derivation tree --tier=jewel
   kg derivation why Witness
 """

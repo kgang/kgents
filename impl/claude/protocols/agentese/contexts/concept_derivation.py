@@ -165,9 +165,10 @@ class PrincipleBreakdown:
 DERIVATION_AFFORDANCES: tuple[str, ...] = (
     "manifest",
     "query",
-    "for_path",  # NEW: Query by spec path (AGENTESE native)
-    "ancestors",  # NEW: Get ancestor chain
+    "for_path",  # Query by spec path (AGENTESE native)
+    "ancestors",  # Get ancestor chain
     "dag",
+    "edges",  # NEW: Query WitnessedEdge evidence (Phase 3D)
     "confidence",
     "propagate",
     "timeline",
@@ -738,6 +739,21 @@ This data is compatible with the web DerivationDAG component.
 Use the `/gestalt/derivation` route for interactive visualization.
 """
 
+        # Enrich edges with evidence metadata (Phase 3D)
+        edge_metadata = []
+        for e in viz.edges:
+            witnessed_edge = registry.get_edge(e.source, e.target)
+            edge_metadata.append(
+                {
+                    "source": e.source,
+                    "target": e.target,
+                    "is_current": e.is_current,
+                    "strength": witnessed_edge.edge_strength,
+                    "evidence_count": witnessed_edge.evidence_count,
+                    "is_categorical": witnessed_edge.is_categorical,
+                }
+            )
+
         return BasicRendering(
             summary=f"DAG: {len(viz.nodes)} nodes, {len(viz.edges)} edges",
             content=content,
@@ -753,12 +769,257 @@ Use the `/gestalt/derivation` route for interactive visualization.
                     }
                     for n in viz.nodes
                 ],
-                "edges": [
-                    {"source": e.source, "target": e.target, "is_current": e.is_current}
-                    for e in viz.edges
-                ],
+                "edges": edge_metadata,
                 "tier_layers": viz.tier_layers,
                 "focus": focus,
+            },
+        )
+
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[],
+        help="Query WitnessedEdge evidence for derivation relationships",
+    )
+    async def edges(
+        self,
+        observer: Observer | "Umwelt[Any, Any]",
+        agent_name: str | None = None,
+        source: str | None = None,
+        target: str | None = None,
+    ) -> Renderable:
+        """
+        Query WitnessedEdge evidence for derivation relationships.
+
+        Three query modes:
+        1. agent_name only: Get all incoming edges (parents → agent)
+        2. source + target: Get specific edge between two agents
+        3. Neither: Show summary of all edges with evidence
+
+        Returns edge strength, evidence counts (marks/tests/proofs), and
+        whether the edge is categorical (indefeasible).
+
+        Teaching:
+            gotcha: Edge strength is computed from evidence, not set directly.
+                    More marks = stronger edge (logarithmic growth).
+
+            gotcha: Bootstrap edges (CONSTITUTION → Id, etc.) are categorical.
+                    They show strength=1.0 regardless of mark count.
+        """
+        registry = self._get_registry()
+
+        # Mode 1: Specific edge query
+        if source and target:
+            edge = registry.get_edge(source, target)
+
+            # Check if edge exists structurally
+            target_deriv = registry.get(target)
+            if not target_deriv or source not in target_deriv.derives_from:
+                return BasicRendering(
+                    summary=f"No edge: {source} → {target}",
+                    content=f"No derivation edge exists from '{source}' to '{target}'.\n\n"
+                    f"This edge is not part of the derivation DAG.",
+                    metadata={"error": "not_found", "source": source, "target": target},
+                )
+
+            # Format evidence breakdown
+            strength_bar = "█" * int(edge.edge_strength * 10) + "░" * (
+                10 - int(edge.edge_strength * 10)
+            )
+
+            content = f"""## Edge: {source} → {target}
+
+### Evidence
+
+| Metric | Value |
+|--------|-------|
+| **Strength** | [{strength_bar}] {edge.edge_strength:.0%} |
+| **Type** | {edge.evidence_type.value} |
+| **Categorical** | {"Yes (indefeasible)" if edge.is_categorical else "No"} |
+
+### Evidence Counts
+
+| Level | Count | Description |
+|-------|-------|-------------|
+| L0 (Marks) | {len(edge.mark_ids)} | Human attention markers |
+| L1 (Tests) | {len(edge.test_ids)} | Automated test evidence |
+| L2 (Proofs) | {len(edge.proof_ids)} | Formal proofs (Dafny/Lean4) |
+| **Total** | {edge.evidence_count} | |
+
+### Last Witnessed
+
+{edge.last_witnessed.isoformat() if edge.last_witnessed else "(never)"}
+
+---
+
+**Formula**: `strength = min(0.95, 0.5 + 0.15 × log₁₀(marks + 1))`
+"""
+
+            return BasicRendering(
+                summary=f"Edge: {source} → {target} ({edge.edge_strength:.0%})",
+                content=content,
+                metadata={
+                    "source": source,
+                    "target": target,
+                    "strength": edge.edge_strength,
+                    "evidence_type": edge.evidence_type.value,
+                    "is_categorical": edge.is_categorical,
+                    "mark_count": len(edge.mark_ids),
+                    "test_count": len(edge.test_ids),
+                    "proof_count": len(edge.proof_ids),
+                    "evidence_count": edge.evidence_count,
+                    "last_witnessed": edge.last_witnessed.isoformat()
+                    if edge.last_witnessed
+                    else None,
+                },
+            )
+
+        # Mode 2: All edges for an agent
+        if agent_name:
+            derivation = registry.get(agent_name)
+            if not derivation:
+                return BasicRendering(
+                    summary=f"Agent not found: {agent_name}",
+                    content=f"No derivation found for '{agent_name}'.",
+                    metadata={"error": "not_found"},
+                )
+
+            incoming_edges = registry.edges_for(agent_name)
+            outgoing_edges = registry.outgoing_edges(agent_name)
+
+            # Format incoming edges
+            incoming_lines = []
+            for e in incoming_edges:
+                bar = "█" * int(e.edge_strength * 5) + "░" * (5 - int(e.edge_strength * 5))
+                cat_mark = "◆" if e.is_categorical else "○"
+                incoming_lines.append(
+                    f"| {cat_mark} {e.source} | [{bar}] {e.edge_strength:.0%} | {e.evidence_count} |"
+                )
+
+            # Format outgoing edges
+            outgoing_lines = []
+            for e in outgoing_edges:
+                bar = "█" * int(e.edge_strength * 5) + "░" * (5 - int(e.edge_strength * 5))
+                cat_mark = "◆" if e.is_categorical else "○"
+                outgoing_lines.append(
+                    f"| {cat_mark} {e.target} | [{bar}] {e.edge_strength:.0%} | {e.evidence_count} |"
+                )
+
+            content = f"""## Edges: {agent_name}
+
+### Incoming (derives_from) — {len(incoming_edges)} edges
+
+| Source | Strength | Evidence |
+|--------|----------|----------|
+{chr(10).join(incoming_lines) if incoming_lines else "| (none) | — | — |"}
+
+### Outgoing (dependents) — {len(outgoing_edges)} edges
+
+| Target | Strength | Evidence |
+|--------|----------|----------|
+{chr(10).join(outgoing_lines) if outgoing_lines else "| (none) | — | — |"}
+
+---
+
+**Legend**: ◆ = Categorical (indefeasible), ○ = Empirical
+
+**Query specific edge**: `concept.derivation.edges source=<name> target=<name>`
+"""
+
+            return BasicRendering(
+                summary=f"Edges: {agent_name} ({len(incoming_edges)} in, {len(outgoing_edges)} out)",
+                content=content,
+                metadata={
+                    "agent_name": agent_name,
+                    "incoming": [
+                        {
+                            "source": e.source,
+                            "target": e.target,
+                            "strength": e.edge_strength,
+                            "evidence_count": e.evidence_count,
+                            "is_categorical": e.is_categorical,
+                        }
+                        for e in incoming_edges
+                    ],
+                    "outgoing": [
+                        {
+                            "source": e.source,
+                            "target": e.target,
+                            "strength": e.edge_strength,
+                            "evidence_count": e.evidence_count,
+                            "is_categorical": e.is_categorical,
+                        }
+                        for e in outgoing_edges
+                    ],
+                },
+            )
+
+        # Mode 3: Summary of all edges with evidence
+        all_agents = registry.list_agents()
+        edges_with_evidence: list[dict[str, Any]] = []
+        categorical_count = 0
+        empirical_count = 0
+
+        for name in all_agents:
+            for edge in registry.edges_for(name):
+                if edge.evidence_count > 0 or edge.is_categorical:
+                    edges_with_evidence.append(
+                        {
+                            "source": edge.source,
+                            "target": edge.target,
+                            "strength": edge.edge_strength,
+                            "evidence_count": edge.evidence_count,
+                            "is_categorical": edge.is_categorical,
+                        }
+                    )
+                    if edge.is_categorical:
+                        categorical_count += 1
+                    else:
+                        empirical_count += 1
+
+        # Sort by strength descending
+        edges_with_evidence.sort(key=lambda e: e["strength"], reverse=True)
+
+        # Format top edges
+        top_lines = []
+        for e in edges_with_evidence[:15]:
+            bar = "█" * int(e["strength"] * 5) + "░" * (5 - int(e["strength"] * 5))
+            cat_mark = "◆" if e["is_categorical"] else "○"
+            top_lines.append(
+                f"| {cat_mark} {e['source']} → {e['target']} | [{bar}] {e['strength']:.0%} | {e['evidence_count']} |"
+            )
+
+        content = f"""## Edge Evidence Summary
+
+### Statistics
+
+| Metric | Value |
+|--------|-------|
+| Total edges with evidence | {len(edges_with_evidence)} |
+| Categorical (indefeasible) | {categorical_count} |
+| Empirical | {empirical_count} |
+
+### Top Edges by Strength
+
+| Edge | Strength | Evidence |
+|------|----------|----------|
+{chr(10).join(top_lines) if top_lines else "| (no edges with evidence) | — | — |"}
+
+---
+
+**Legend**: ◆ = Categorical, ○ = Empirical
+
+**Query by agent**: `concept.derivation.edges agent_name=<name>`
+**Query specific edge**: `concept.derivation.edges source=<name> target=<name>`
+"""
+
+        return BasicRendering(
+            summary=f"Edges: {len(edges_with_evidence)} with evidence ({categorical_count} categorical)",
+            content=content,
+            metadata={
+                "total_with_evidence": len(edges_with_evidence),
+                "categorical_count": categorical_count,
+                "empirical_count": empirical_count,
+                "edges": edges_with_evidence[:50],  # Limit for response size
             },
         )
 
@@ -1281,6 +1542,7 @@ This data is compatible with GraphWidget radar charts:
             "for_path": self.for_path,
             "ancestors": self.ancestors,
             "dag": self.dag,
+            "edges": self.edges,
             "confidence": self.confidence,
             "propagate": self.propagate,
             "timeline": self.timeline,

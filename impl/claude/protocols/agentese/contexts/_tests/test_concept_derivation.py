@@ -224,6 +224,30 @@ class TestDerivationNodeDAG:
 
         assert result.metadata["focus"] == "Flux"
 
+    @pytest.mark.asyncio
+    async def test_dag_edges_include_evidence_metadata(
+        self, derivation_node, mock_observer, fresh_registry
+    ):
+        """DAG edges include evidence metadata (Phase 3D)."""
+        result = await derivation_node.dag(mock_observer)
+
+        edges = result.metadata["edges"]
+        assert len(edges) > 0
+
+        # Check that edges have evidence metadata
+        for edge in edges:
+            assert "source" in edge
+            assert "target" in edge
+            assert "strength" in edge
+            assert "evidence_count" in edge
+            assert "is_categorical" in edge
+
+        # Bootstrap edges should be categorical with strength 1.0
+        bootstrap_edges = [e for e in edges if e["source"] == "CONSTITUTION"]
+        assert len(bootstrap_edges) >= 7
+        assert all(e["is_categorical"] for e in bootstrap_edges)
+        assert all(e["strength"] == 1.0 for e in bootstrap_edges)
+
 
 class TestDerivationNodeConfidence:
     """Tests for concept.derivation.confidence."""
@@ -318,6 +342,91 @@ class TestDerivationNodeNavigate:
         connected = result.metadata["connected"]
         names = [c["agent_name"] for c in connected]
         assert "TestPipeline" in names
+
+
+class TestDerivationNodeEdges:
+    """Tests for concept.derivation.edges (Phase 3D)."""
+
+    @pytest.mark.asyncio
+    async def test_edges_summary_shows_all_with_evidence(
+        self, derivation_node, mock_observer, fresh_registry
+    ):
+        """Edges without args shows summary of all edges with evidence."""
+        result = await derivation_node.edges(mock_observer)
+
+        # Bootstrap edges are categorical with evidence
+        assert result.metadata["total_with_evidence"] >= 7  # CONSTITUTION -> each bootstrap
+        assert result.metadata["categorical_count"] >= 7
+
+    @pytest.mark.asyncio
+    async def test_edges_for_agent_shows_incoming_outgoing(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
+        """Edges for agent shows incoming and outgoing edges."""
+        result = await derivation_node.edges(mock_observer, agent_name="Flux")
+
+        # Flux derives from Fix and Compose
+        assert len(result.metadata["incoming"]) == 2
+        sources = [e["source"] for e in result.metadata["incoming"]]
+        assert "Fix" in sources
+        assert "Compose" in sources
+
+    @pytest.mark.asyncio
+    async def test_edges_for_bootstrap_agent(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
+        """Bootstrap agents have categorical incoming edges from CONSTITUTION."""
+        result = await derivation_node.edges(mock_observer, agent_name="Id")
+
+        # Id derives from CONSTITUTION (categorical edge)
+        incoming = result.metadata["incoming"]
+        assert len(incoming) == 1
+        assert incoming[0]["source"] == "CONSTITUTION"
+        assert incoming[0]["is_categorical"] is True
+        assert incoming[0]["strength"] == 1.0
+
+    @pytest.mark.asyncio
+    async def test_edges_specific_edge_query(self, derivation_node, mock_observer, fresh_registry):
+        """Query specific edge by source and target."""
+        result = await derivation_node.edges(
+            mock_observer,
+            source="CONSTITUTION",
+            target="Id",
+        )
+
+        assert result.metadata["source"] == "CONSTITUTION"
+        assert result.metadata["target"] == "Id"
+        assert result.metadata["is_categorical"] is True
+        assert result.metadata["strength"] == 1.0
+
+    @pytest.mark.asyncio
+    async def test_edges_nonexistent_edge(self, derivation_node, mock_observer, fresh_registry):
+        """Query nonexistent edge returns error."""
+        result = await derivation_node.edges(
+            mock_observer,
+            source="Id",
+            target="Judge",  # Id doesn't derive from Judge
+        )
+
+        assert result.metadata.get("error") == "not_found"
+
+    @pytest.mark.asyncio
+    async def test_edges_includes_evidence_counts(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
+        """Edge metadata includes evidence counts."""
+        # Add a mark to an edge
+        registry = get_registry()
+        registry.attach_mark_to_edge("Fix", "Flux", "test-mark-001")
+
+        result = await derivation_node.edges(
+            mock_observer,
+            source="Fix",
+            target="Flux",
+        )
+
+        assert result.metadata["mark_count"] >= 1
+        assert result.metadata["evidence_count"] >= 1
 
 
 class TestDerivationNodeTimeline:
