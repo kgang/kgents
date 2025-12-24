@@ -1,25 +1,31 @@
 """
-Entity Adapters: Convert DB models to UnifiedEvent.
+Entity Adapters: Convert Universe Crystals to UnifiedEvent.
 
 > *"The file is a lie. There is only the graph."*
 
-Each adapter converts a specific DB model to the UnifiedEvent shape:
-- MarkAdapter: WitnessMark → UnifiedEvent
-- CrystalAdapter: Crystal → UnifiedEvent
-- TrailAdapter: TrailRow → UnifiedEvent
-- EvidenceAdapter: TraceWitness|VerificationGraph|CategoricalViolation → UnifiedEvent
-- TeachingAdapter: TeachingCrystal → UnifiedEvent
-- LemmaAdapter: VerifiedLemmaModel → UnifiedEvent
+Each adapter queries the Universe and converts Crystal data to UnifiedEvent:
+- MarkAdapter: witness.mark → UnifiedEvent
+- CrystalAdapter: brain.crystal → UnifiedEvent
+- TrailAdapter: trail.trail → UnifiedEvent
+- EvidenceAdapter: (Placeholder - no schema yet)
+- TeachingAdapter: (Placeholder - no schema yet)
+- LemmaAdapter: (Placeholder - no schema yet)
 
 The Adapter Protocol:
-- to_unified_event(row) → UnifiedEvent
-- list_recent(session, limit, offset) → list[UnifiedEvent]
-- count(session) → int
+- to_unified_event(crystal) → UnifiedEvent
+- list_recent(universe, limit, offset) → list[UnifiedEvent]
+- count(universe) → int
+
+Migration from SQLAlchemy to Universe:
+- Uses Universe.query() instead of SQLAlchemy session
+- Queries by schema name (e.g., "witness.mark")
+- Converts Crystal dataclasses to UnifiedEvent
+- Preserves public interface for backward compatibility
 
 Teaching:
-    gotcha: Evidence is three subtypes in one adapter. Use EvidenceSubtype discriminator.
-    gotcha: TrailRow has computed evidence_strength from max commitment level.
-    gotcha: TeachingCrystal.is_alive is a property, not a column.
+    gotcha: Universe returns frozen dataclass instances, not SQLAlchemy models
+    gotcha: Timestamp fields are stored as ISO 8601 strings in Crystal
+    gotcha: Adapters without schemas (Evidence, Teaching, Lemma) return empty lists until schemas are defined
 """
 
 from __future__ import annotations
@@ -27,10 +33,9 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from agents.d.universe import Query, Universe, get_universe
 
 from .contracts import (
     CrystalMetadata,
@@ -43,17 +48,6 @@ from .contracts import (
     TrailMetadata,
     UnifiedEvent,
 )
-
-if TYPE_CHECKING:
-    from models.ashc import VerifiedLemmaModel
-    from models.brain import Crystal, TeachingCrystal
-    from models.trail import TrailRow
-    from models.verification import (
-        CategoricalViolation,
-        TraceWitness,
-        VerificationGraph,
-    )
-    from models.witness import WitnessMark
 
 logger = logging.getLogger(__name__)
 
@@ -88,12 +82,12 @@ T = TypeVar("T")
 
 class EntityAdapter(ABC):
     """
-    Base adapter protocol for converting DB models to UnifiedEvent.
+    Base adapter protocol for converting Universe Crystals to UnifiedEvent.
 
     Each adapter must implement:
     - entity_type: The EntityType this adapter handles
-    - to_unified_event(): Convert single row to UnifiedEvent
-    - list_recent(): Query recent rows and convert
+    - to_unified_event(): Convert single Crystal to UnifiedEvent
+    - list_recent(): Query Universe and convert
     - count(): Get total count for this entity type
     """
 
@@ -104,25 +98,25 @@ class EntityAdapter(ABC):
         ...
 
     @abstractmethod
-    def to_unified_event(self, row: Any) -> UnifiedEvent:
-        """Convert a single DB row to UnifiedEvent."""
+    def to_unified_event(self, crystal: Any) -> UnifiedEvent:
+        """Convert a single Crystal to UnifiedEvent."""
         ...
 
     @abstractmethod
     async def list_recent(
         self,
-        session: AsyncSession,
+        universe: Universe,
         limit: int = 50,
         offset: int = 0,
         filters: StreamFilters | None = None,
     ) -> list[UnifiedEvent]:
-        """Query recent rows and convert to UnifiedEvents."""
+        """Query Universe and convert to UnifiedEvents."""
         ...
 
     @abstractmethod
     async def count(
         self,
-        session: AsyncSession,
+        universe: Universe,
         filters: StreamFilters | None = None,
     ) -> int:
         """Get total count for this entity type."""
@@ -135,98 +129,100 @@ class EntityAdapter(ABC):
 
 
 class MarkAdapter(EntityAdapter):
-    """Convert WitnessMark to UnifiedEvent."""
+    """Convert witness.mark Crystal to UnifiedEvent."""
 
     @property
     def entity_type(self) -> EntityType:
         return EntityType.MARK
 
-    def to_unified_event(self, row: WitnessMark) -> UnifiedEvent:
-        """Convert WitnessMark to UnifiedEvent."""
+    def to_unified_event(self, mark: Any) -> UnifiedEvent:
+        """Convert WitnessMark Crystal to UnifiedEvent."""
+        from agents.d.schemas.witness import WitnessMark
+
+        # Ensure we have a WitnessMark instance
+        if not isinstance(mark, WitnessMark):
+            raise TypeError(f"Expected WitnessMark, got {type(mark)}")
+
         # Build metadata
         metadata = MarkMetadata(
             type="mark",
-            action=row.action,
-            reasoning=row.reasoning,
-            principles=list(row.principles) if row.principles else [],
-            tags=list(row.tags) if row.tags else [],
-            author=row.author or "kent",
-            session_id=row.session_id,
-            parent_mark_id=row.parent_mark_id,
+            action=mark.action,
+            reasoning=mark.reasoning,
+            principles=list(mark.principles) if mark.principles else [],
+            tags=list(mark.tags) if mark.tags else [],
+            author=mark.author or "kent",
+            session_id=mark.context.get("session_id") if mark.context else None,
+            parent_mark_id=mark.parent_mark_id,
         )
 
         # Build title from action (truncate if long)
-        title = row.action[:80] + "..." if len(row.action) > 80 else row.action
+        title = mark.action[:80] + "..." if len(mark.action) > 80 else mark.action
 
         # Build summary from reasoning or principles
-        if row.reasoning:
-            summary = row.reasoning[:120] + "..." if len(row.reasoning) > 120 else row.reasoning
-        elif row.principles:
-            summary = f"Honors: {', '.join(row.principles[:3])}"
+        if mark.reasoning:
+            summary = mark.reasoning[:120] + "..." if len(mark.reasoning) > 120 else mark.reasoning
+        elif mark.principles:
+            summary = f"Honors: {', '.join(mark.principles[:3])}"
         else:
-            summary = f"By {row.author or 'kent'}"
+            summary = f"By {mark.author or 'kent'}"
+
+        # Extract ID from context (Universe stores it there)
+        mark_id = mark.context.get("id", "unknown") if mark.context else "unknown"
+
+        # Extract timestamp from context
+        timestamp = mark.context.get("created_at", datetime.utcnow().isoformat()) if mark.context else datetime.utcnow().isoformat()
 
         return UnifiedEvent(
-            id=row.id,
+            id=mark_id,
             type=EntityType.MARK,
             title=title,
             summary=summary,
-            timestamp=_safe_timestamp(row.created_at),
+            timestamp=_safe_timestamp(timestamp),
             metadata=metadata.__dict__,
         )
 
     async def list_recent(
         self,
-        session: AsyncSession,
+        universe: Universe,
         limit: int = 50,
         offset: int = 0,
         filters: StreamFilters | None = None,
     ) -> list[UnifiedEvent]:
-        """Query recent marks and convert."""
-        from models.witness import WitnessMark
+        """Query recent marks from Universe and convert."""
+        # Query witness.mark schema
+        # Note: Universe doesn't support offset yet, so we'll fetch and slice
+        query = Query(
+            schema="witness.mark",
+            limit=limit + offset,  # Fetch enough to account for offset
+        )
 
-        stmt = select(WitnessMark).order_by(WitnessMark.created_at.desc())
+        crystals = await universe.query(query)
 
-        # Apply filters
-        if filters:
-            if filters.author:
-                stmt = stmt.where(WitnessMark.author == filters.author)
-            if filters.date_start:
-                stmt = stmt.where(WitnessMark.created_at >= filters.date_start)
-            if filters.date_end:
-                stmt = stmt.where(WitnessMark.created_at <= filters.date_end)
-            if filters.tags:
-                # JSON array contains any of the tags
-                for tag in filters.tags:
-                    stmt = stmt.where(WitnessMark.tags.contains([tag]))
+        # Apply offset manually (Universe doesn't support it yet)
+        if offset > 0:
+            crystals = crystals[offset:]
 
-        stmt = stmt.offset(offset).limit(limit)
+        # Convert to UnifiedEvents
+        events = []
+        for crystal in crystals[:limit]:
+            try:
+                events.append(self.to_unified_event(crystal))
+            except Exception as e:
+                logger.warning(f"Failed to convert mark crystal: {e}")
+                continue
 
-        result = await session.execute(stmt)
-        rows = result.scalars().all()
-
-        return [self.to_unified_event(row) for row in rows]
+        return events
 
     async def count(
         self,
-        session: AsyncSession,
+        universe: Universe,
         filters: StreamFilters | None = None,
     ) -> int:
-        """Get total mark count."""
-        from models.witness import WitnessMark
-
-        stmt = select(func.count()).select_from(WitnessMark)
-
-        if filters:
-            if filters.author:
-                stmt = stmt.where(WitnessMark.author == filters.author)
-            if filters.date_start:
-                stmt = stmt.where(WitnessMark.created_at >= filters.date_start)
-            if filters.date_end:
-                stmt = stmt.where(WitnessMark.created_at <= filters.date_end)
-
-        result = await session.execute(stmt)
-        return result.scalar() or 0
+        """Get total mark count from Universe."""
+        # Query all marks (Universe doesn't have count API yet)
+        query = Query(schema="witness.mark", limit=10000)  # High limit to get all
+        crystals = await universe.query(query)
+        return len(crystals)
 
 
 # =============================================================================
@@ -235,91 +231,94 @@ class MarkAdapter(EntityAdapter):
 
 
 class CrystalAdapter(EntityAdapter):
-    """Convert Crystal to UnifiedEvent."""
+    """Convert brain.crystal to UnifiedEvent."""
 
     @property
     def entity_type(self) -> EntityType:
         return EntityType.CRYSTAL
 
-    def to_unified_event(self, row: Crystal) -> UnifiedEvent:
-        """Convert Crystal to UnifiedEvent."""
+    def to_unified_event(self, crystal: Any) -> UnifiedEvent:
+        """Convert BrainCrystal to UnifiedEvent."""
+        from agents.d.schemas.brain import BrainCrystal
+
+        # Ensure we have a BrainCrystal instance
+        if not isinstance(crystal, BrainCrystal):
+            raise TypeError(f"Expected BrainCrystal, got {type(crystal)}")
+
         metadata = CrystalMetadata(
             type="crystal",
-            content_hash=row.content_hash or "",
-            tags=list(row.tags) if row.tags else [],
-            access_count=row.access_count or 0,
-            last_accessed=_safe_timestamp(row.last_accessed) if row.last_accessed else None,
-            source_type=row.source_type,
-            source_ref=row.source_ref,
-            datum_id=row.datum_id,
+            content_hash=crystal.content_hash or "",
+            tags=list(crystal.tags) if crystal.tags else [],
+            access_count=crystal.access_count or 0,
+            last_accessed=crystal.last_accessed,
+            source_type=crystal.source_type,
+            source_ref=crystal.source_ref,
+            datum_id=crystal.datum_id,
         )
 
         # Title is summary (truncated)
-        title = row.summary[:80] + "..." if len(row.summary) > 80 else row.summary
+        title = crystal.summary[:80] + "..." if len(crystal.summary) > 80 else crystal.summary
 
         # Summary includes access info and tags
         parts = []
-        if row.access_count:
-            parts.append(f"Accessed {row.access_count}x")
-        if row.tags:
-            parts.append(f"Tags: {', '.join(row.tags[:3])}")
-        summary = " | ".join(parts) if parts else "Crystallized knowledge"
+        if crystal.access_count:
+            parts.append(f"Accessed {crystal.access_count}x")
+        if crystal.tags:
+            parts.append(f"Tags: {', '.join(crystal.tags[:3])}")
+        summary_text = " | ".join(parts) if parts else "Crystallized knowledge"
+
+        # Extract ID and timestamp from storage (would be added by Universe)
+        # For now, use content_hash as ID if not available
+        crystal_id = crystal.content_hash[:12]  # Short hash as ID
 
         return UnifiedEvent(
-            id=row.id,
+            id=crystal_id,
             type=EntityType.CRYSTAL,
             title=title,
-            summary=summary,
-            timestamp=_safe_timestamp(row.created_at),
+            summary=summary_text,
+            timestamp=crystal.last_accessed or datetime.utcnow().isoformat(),
             metadata=metadata.__dict__,
         )
 
     async def list_recent(
         self,
-        session: AsyncSession,
+        universe: Universe,
         limit: int = 50,
         offset: int = 0,
         filters: StreamFilters | None = None,
     ) -> list[UnifiedEvent]:
-        """Query recent crystals and convert."""
-        from models.brain import Crystal
+        """Query recent crystals from Universe and convert."""
+        query = Query(
+            schema="brain.crystal",
+            limit=limit + offset,
+        )
 
-        stmt = select(Crystal).order_by(Crystal.created_at.desc())
+        crystals = await universe.query(query)
 
-        if filters:
-            if filters.date_start:
-                stmt = stmt.where(Crystal.created_at >= filters.date_start)
-            if filters.date_end:
-                stmt = stmt.where(Crystal.created_at <= filters.date_end)
-            if filters.tags:
-                for tag in filters.tags:
-                    stmt = stmt.where(Crystal.tags.contains([tag]))
+        # Apply offset manually
+        if offset > 0:
+            crystals = crystals[offset:]
 
-        stmt = stmt.offset(offset).limit(limit)
+        # Convert to UnifiedEvents
+        events = []
+        for crystal in crystals[:limit]:
+            try:
+                events.append(self.to_unified_event(crystal))
+            except Exception as e:
+                logger.warning(f"Failed to convert brain crystal: {e}")
+                continue
 
-        result = await session.execute(stmt)
-        rows = result.scalars().all()
-
-        return [self.to_unified_event(row) for row in rows]
+        return events
 
     async def count(
         self,
-        session: AsyncSession,
+        universe: Universe,
         filters: StreamFilters | None = None,
     ) -> int:
-        """Get total crystal count."""
-        from models.brain import Crystal
-
-        stmt = select(func.count()).select_from(Crystal)
-
-        if filters:
-            if filters.date_start:
-                stmt = stmt.where(Crystal.created_at >= filters.date_start)
-            if filters.date_end:
-                stmt = stmt.where(Crystal.created_at <= filters.date_end)
-
-        result = await session.execute(stmt)
-        return result.scalar() or 0
+        """Get total crystal count from Universe."""
+        query = Query(schema="brain.crystal", limit=10000)
+        crystals = await universe.query(query)
+        return len(crystals)
 
 
 # =============================================================================
@@ -328,476 +327,231 @@ class CrystalAdapter(EntityAdapter):
 
 
 class TrailAdapter(EntityAdapter):
-    """Convert TrailRow to UnifiedEvent."""
+    """Convert trail.trail to UnifiedEvent."""
 
     @property
     def entity_type(self) -> EntityType:
         return EntityType.TRAIL
 
-    def _compute_evidence_strength(self, row: TrailRow) -> str:
-        """Compute evidence strength from commitments."""
-        # Check if there are any commitments loaded
-        if hasattr(row, "commitments") and row.commitments:
-            levels = [c.level for c in row.commitments]
-            if "definitive" in levels:
-                return "definitive"
-            if "strong" in levels:
-                return "strong"
-            if "moderate" in levels:
-                return "moderate"
-        return "weak"
+    def to_unified_event(self, trail: Any) -> UnifiedEvent:
+        """Convert Trail to UnifiedEvent."""
+        from agents.d.schemas.trail import Trail
 
-    def to_unified_event(self, row: TrailRow) -> UnifiedEvent:
-        """Convert TrailRow to UnifiedEvent."""
-        step_count = len(row.steps) if hasattr(row, "steps") and row.steps else 0
+        # Ensure we have a Trail instance
+        if not isinstance(trail, Trail):
+            raise TypeError(f"Expected Trail, got {type(trail)}")
 
         metadata = TrailMetadata(
             type="trail",
-            name=row.name,
-            step_count=step_count,
-            topics=list(row.topics) if row.topics else [],
-            evidence_strength=self._compute_evidence_strength(row),
-            forked_from_id=row.forked_from_id,
-            is_active=row.is_active if hasattr(row, "is_active") else True,
+            name=trail.name,
+            step_count=0,  # Would need to join with trail.step to get this
+            topics=[],  # Not in Trail schema yet
+            evidence_strength="weak",  # Would need commitments
+            forked_from_id=trail.forked_from_id,
+            is_active=trail.is_active,
         )
 
         # Title is trail name
-        title = row.name
+        title = trail.name
 
-        # Summary includes step count and topics
-        parts = [f"{step_count} steps"]
-        if row.topics:
-            parts.append(f"Topics: {', '.join(row.topics[:2])}")
-        summary = " | ".join(parts)
+        # Summary from description
+        summary = trail.description[:120] + "..." if len(trail.description) > 120 else trail.description
+
+        # Extract ID from trail (would be set by Universe)
+        trail_id = "trail-" + trail.name[:20]  # Simplified ID
 
         return UnifiedEvent(
-            id=row.id,
+            id=trail_id,
             type=EntityType.TRAIL,
             title=title,
             summary=summary,
-            timestamp=_safe_timestamp(row.created_at),
+            timestamp=datetime.utcnow().isoformat(),  # No timestamp in Trail schema
             metadata=metadata.__dict__,
         )
 
     async def list_recent(
         self,
-        session: AsyncSession,
+        universe: Universe,
         limit: int = 50,
         offset: int = 0,
         filters: StreamFilters | None = None,
     ) -> list[UnifiedEvent]:
-        """Query recent trails and convert."""
-        from sqlalchemy.orm import selectinload
-
-        from models.trail import TrailRow
-
-        # Eagerly load relationships to avoid lazy-load in async context
-        stmt = (
-            select(TrailRow)
-            .options(
-                selectinload(TrailRow.steps),
-                selectinload(TrailRow.commitments),
-            )
-            .order_by(TrailRow.created_at.desc())
+        """Query recent trails from Universe and convert."""
+        query = Query(
+            schema="trail.trail",
+            limit=limit + offset,
         )
 
-        if filters:
-            if filters.date_start:
-                stmt = stmt.where(TrailRow.created_at >= filters.date_start)
-            if filters.date_end:
-                stmt = stmt.where(TrailRow.created_at <= filters.date_end)
+        crystals = await universe.query(query)
 
-        stmt = stmt.offset(offset).limit(limit)
+        # Apply offset manually
+        if offset > 0:
+            crystals = crystals[offset:]
 
-        result = await session.execute(stmt)
-        rows = result.scalars().all()
+        # Convert to UnifiedEvents
+        events = []
+        for crystal in crystals[:limit]:
+            try:
+                events.append(self.to_unified_event(crystal))
+            except Exception as e:
+                logger.warning(f"Failed to convert trail crystal: {e}")
+                continue
 
-        return [self.to_unified_event(row) for row in rows]
+        return events
 
     async def count(
         self,
-        session: AsyncSession,
+        universe: Universe,
         filters: StreamFilters | None = None,
     ) -> int:
-        """Get total trail count."""
-        from models.trail import TrailRow
-
-        stmt = select(func.count()).select_from(TrailRow)
-
-        if filters:
-            if filters.date_start:
-                stmt = stmt.where(TrailRow.created_at >= filters.date_start)
-            if filters.date_end:
-                stmt = stmt.where(TrailRow.created_at <= filters.date_end)
-
-        result = await session.execute(stmt)
-        return result.scalar() or 0
+        """Get total trail count from Universe."""
+        query = Query(schema="trail.trail", limit=10000)
+        crystals = await universe.query(query)
+        return len(crystals)
 
 
 # =============================================================================
-# Evidence Adapter (handles 3 subtypes)
+# Evidence Adapter (Placeholder - No schema yet)
 # =============================================================================
 
 
 class EvidenceAdapter(EntityAdapter):
-    """Convert TraceWitness, VerificationGraph, or CategoricalViolation to UnifiedEvent."""
+    """
+    Placeholder adapter for Evidence.
+
+    No schema defined yet for verification evidence in the Crystal system.
+    Returns empty lists until schema is created.
+    """
 
     @property
     def entity_type(self) -> EntityType:
         return EntityType.EVIDENCE
 
-    def _convert_trace_witness(self, row: TraceWitness) -> UnifiedEvent:
-        """Convert TraceWitness to UnifiedEvent."""
-        metadata = EvidenceMetadata(
-            type="evidence",
-            subtype="trace_witness",
-            agent_path=row.agent_path,
-            status=row.verification_status.value
-            if hasattr(row.verification_status, "value")
-            else str(row.verification_status),
-            violation_type=None,
-            is_resolved=None,
-        )
-
-        title = f"Trace: {row.agent_path}" if row.agent_path else "Trace Witness"
-        summary = f"Status: {metadata.status}"
-
+    def to_unified_event(self, evidence: Any) -> UnifiedEvent:
+        """Placeholder - no schema yet."""
         return UnifiedEvent(
-            id=row.id,
+            id="evidence-placeholder",
             type=EntityType.EVIDENCE,
-            title=title,
-            summary=summary,
-            timestamp=_safe_timestamp(row.created_at),
-            metadata=metadata.__dict__,
+            title="Evidence",
+            summary="Schema not yet defined",
+            timestamp=datetime.utcnow().isoformat(),
+            metadata={"type": "evidence", "subtype": "unknown"},
         )
-
-    def _convert_verification_graph(self, row: VerificationGraph) -> UnifiedEvent:
-        """Convert VerificationGraph to UnifiedEvent."""
-        metadata = EvidenceMetadata(
-            type="evidence",
-            subtype="verification_graph",
-            agent_path=None,
-            status=row.status.value if hasattr(row.status, "value") else str(row.status),
-            violation_type=None,
-            is_resolved=None,
-        )
-
-        title = row.name if row.name else "Verification Graph"
-        node_count = row.node_count if hasattr(row, "node_count") else 0
-        edge_count = row.edge_count if hasattr(row, "edge_count") else 0
-        summary = f"{node_count} nodes, {edge_count} edges | Status: {metadata.status}"
-
-        return UnifiedEvent(
-            id=row.id,
-            type=EntityType.EVIDENCE,
-            title=title,
-            summary=summary,
-            timestamp=_safe_timestamp(row.created_at),
-            metadata=metadata.__dict__,
-        )
-
-    def _convert_categorical_violation(self, row: CategoricalViolation) -> UnifiedEvent:
-        """Convert CategoricalViolation to UnifiedEvent."""
-        violation_type = (
-            row.violation_type.value
-            if hasattr(row.violation_type, "value")
-            else str(row.violation_type)
-        )
-
-        metadata = EvidenceMetadata(
-            type="evidence",
-            subtype="categorical_violation",
-            agent_path=None,
-            status="success" if row.is_resolved else "failure",
-            violation_type=violation_type,
-            is_resolved=row.is_resolved,
-        )
-
-        title = f"Violation: {violation_type}"
-        summary = row.law_description[:80] if row.law_description else "Categorical law violation"
-
-        return UnifiedEvent(
-            id=row.id,
-            type=EntityType.EVIDENCE,
-            title=title,
-            summary=summary,
-            timestamp=_safe_timestamp(row.created_at),
-            metadata=metadata.__dict__,
-        )
-
-    def to_unified_event(self, row: Any) -> UnifiedEvent:
-        """Convert evidence row to UnifiedEvent (dispatches by type)."""
-        from models.verification import (
-            CategoricalViolation,
-            TraceWitness,
-            VerificationGraph,
-        )
-
-        if isinstance(row, TraceWitness):
-            return self._convert_trace_witness(row)
-        elif isinstance(row, VerificationGraph):
-            return self._convert_verification_graph(row)
-        elif isinstance(row, CategoricalViolation):
-            return self._convert_categorical_violation(row)
-        else:
-            # Fallback
-            return UnifiedEvent(
-                id=getattr(row, "id", "unknown"),
-                type=EntityType.EVIDENCE,
-                title="Unknown Evidence",
-                summary="Unknown evidence type",
-                timestamp=datetime.utcnow().isoformat(),
-                metadata={"type": "evidence", "subtype": "unknown"},
-            )
 
     async def list_recent(
         self,
-        session: AsyncSession,
+        universe: Universe,
         limit: int = 50,
         offset: int = 0,
         filters: StreamFilters | None = None,
     ) -> list[UnifiedEvent]:
-        """Query recent evidence from all three tables and merge."""
-        from models.verification import (
-            CategoricalViolation,
-            TraceWitness,
-            VerificationGraph,
-        )
-
-        events: list[UnifiedEvent] = []
-
-        # Query each table with limit/3 (rough distribution)
-        per_table_limit = max(limit // 3, 10)
-
-        # TraceWitness
-        tw_stmt = (
-            select(TraceWitness).order_by(TraceWitness.created_at.desc()).limit(per_table_limit)
-        )
-        tw_result = await session.execute(tw_stmt)
-        for tw_row in tw_result.scalars().all():
-            events.append(self._convert_trace_witness(tw_row))
-
-        # VerificationGraph
-        vg_stmt = (
-            select(VerificationGraph)
-            .order_by(VerificationGraph.created_at.desc())
-            .limit(per_table_limit)
-        )
-        vg_result = await session.execute(vg_stmt)
-        for vg_row in vg_result.scalars().all():
-            events.append(self._convert_verification_graph(vg_row))
-
-        # CategoricalViolation
-        cv_stmt = (
-            select(CategoricalViolation)
-            .order_by(CategoricalViolation.created_at.desc())
-            .limit(per_table_limit)
-        )
-        cv_result = await session.execute(cv_stmt)
-        for cv_row in cv_result.scalars().all():
-            events.append(self._convert_categorical_violation(cv_row))
-
-        # Sort by timestamp descending and apply limit
-        events.sort(key=lambda e: e.timestamp, reverse=True)
-        return events[offset : offset + limit]
+        """Return empty list - no schema defined yet."""
+        logger.debug("Evidence schema not defined - returning empty list")
+        return []
 
     async def count(
         self,
-        session: AsyncSession,
+        universe: Universe,
         filters: StreamFilters | None = None,
     ) -> int:
-        """Get total evidence count (all three tables)."""
-        from models.verification import (
-            CategoricalViolation,
-            TraceWitness,
-            VerificationGraph,
-        )
-
-        total = 0
-
-        for model in [TraceWitness, VerificationGraph, CategoricalViolation]:
-            stmt = select(func.count()).select_from(model)
-            result = await session.execute(stmt)
-            total += result.scalar() or 0
-
-        return total
+        """Return 0 - no schema defined yet."""
+        return 0
 
 
 # =============================================================================
-# Teaching Adapter
+# Teaching Adapter (Placeholder - No schema yet)
 # =============================================================================
 
 
 class TeachingAdapter(EntityAdapter):
-    """Convert TeachingCrystal to UnifiedEvent."""
+    """
+    Placeholder adapter for Teaching.
+
+    No schema defined yet for teaching crystals in the Crystal system.
+    Returns empty lists until schema is created.
+    """
 
     @property
     def entity_type(self) -> EntityType:
         return EntityType.TEACHING
 
-    def to_unified_event(self, row: TeachingCrystal) -> UnifiedEvent:
-        """Convert TeachingCrystal to UnifiedEvent."""
-        # is_alive is a property on the model
-        is_alive = row.died_at is None
-
-        metadata = TeachingMetadata(
-            type="teaching",
-            insight=row.insight,
-            severity=row.severity or "info",
-            source_module=row.source_module or "",
-            source_symbol=row.source_symbol or "",
-            is_alive=is_alive,
-            died_at=_safe_timestamp(row.died_at) if row.died_at else None,
-            successor_module=row.successor_module,
-            extinction_id=None,  # Would need join to get this
-        )
-
-        # Title is insight (truncated)
-        title = row.insight[:80] + "..." if len(row.insight) > 80 else row.insight
-
-        # Summary includes severity and source
-        parts = [f"[{row.severity or 'info'}]"]
-        if row.source_module:
-            parts.append(f"from {row.source_module}")
-        if not is_alive:
-            parts.append("(extinct)")
-        summary = " ".join(parts)
-
+    def to_unified_event(self, teaching: Any) -> UnifiedEvent:
+        """Placeholder - no schema yet."""
         return UnifiedEvent(
-            id=row.id,
+            id="teaching-placeholder",
             type=EntityType.TEACHING,
-            title=title,
-            summary=summary,
-            timestamp=_safe_timestamp(row.created_at),
-            metadata=metadata.__dict__,
+            title="Teaching",
+            summary="Schema not yet defined",
+            timestamp=datetime.utcnow().isoformat(),
+            metadata={"type": "teaching"},
         )
 
     async def list_recent(
         self,
-        session: AsyncSession,
+        universe: Universe,
         limit: int = 50,
         offset: int = 0,
         filters: StreamFilters | None = None,
     ) -> list[UnifiedEvent]:
-        """Query recent teachings and convert."""
-        from models.brain import TeachingCrystal
-
-        stmt = select(TeachingCrystal).order_by(TeachingCrystal.created_at.desc())
-
-        if filters:
-            if filters.date_start:
-                stmt = stmt.where(TeachingCrystal.created_at >= filters.date_start)
-            if filters.date_end:
-                stmt = stmt.where(TeachingCrystal.created_at <= filters.date_end)
-
-        stmt = stmt.offset(offset).limit(limit)
-
-        result = await session.execute(stmt)
-        rows = result.scalars().all()
-
-        return [self.to_unified_event(row) for row in rows]
+        """Return empty list - no schema defined yet."""
+        logger.debug("Teaching schema not defined - returning empty list")
+        return []
 
     async def count(
         self,
-        session: AsyncSession,
+        universe: Universe,
         filters: StreamFilters | None = None,
     ) -> int:
-        """Get total teaching count."""
-        from models.brain import TeachingCrystal
-
-        stmt = select(func.count()).select_from(TeachingCrystal)
-
-        if filters:
-            if filters.date_start:
-                stmt = stmt.where(TeachingCrystal.created_at >= filters.date_start)
-            if filters.date_end:
-                stmt = stmt.where(TeachingCrystal.created_at <= filters.date_end)
-
-        result = await session.execute(stmt)
-        return result.scalar() or 0
+        """Return 0 - no schema defined yet."""
+        return 0
 
 
 # =============================================================================
-# Lemma Adapter
+# Lemma Adapter (Placeholder - No schema yet)
 # =============================================================================
 
 
 class LemmaAdapter(EntityAdapter):
-    """Convert VerifiedLemmaModel to UnifiedEvent."""
+    """
+    Placeholder adapter for Lemma.
+
+    No schema defined yet for verified lemmas in the Crystal system.
+    Returns empty lists until schema is created.
+    """
 
     @property
     def entity_type(self) -> EntityType:
         return EntityType.LEMMA
 
-    def to_unified_event(self, row: VerifiedLemmaModel) -> UnifiedEvent:
-        """Convert VerifiedLemmaModel to UnifiedEvent."""
-        metadata = LemmaMetadata(
-            type="lemma",
-            statement=row.statement,
-            checker=row.checker or "lean4",
-            usage_count=row.usage_count or 0,
-            obligation_id=row.obligation_id or "",
-            dependencies=list(row.dependencies) if row.dependencies else [],
-        )
-
-        # Title is statement (truncated)
-        title = row.statement[:80] + "..." if len(row.statement) > 80 else row.statement
-
-        # Summary includes checker and usage
-        summary = f"Verified by {row.checker} | Used {row.usage_count}x"
-
+    def to_unified_event(self, lemma: Any) -> UnifiedEvent:
+        """Placeholder - no schema yet."""
         return UnifiedEvent(
-            id=row.id,
+            id="lemma-placeholder",
             type=EntityType.LEMMA,
-            title=title,
-            summary=summary,
-            timestamp=_safe_timestamp(row.created_at),
-            metadata=metadata.__dict__,
+            title="Lemma",
+            summary="Schema not yet defined",
+            timestamp=datetime.utcnow().isoformat(),
+            metadata={"type": "lemma"},
         )
 
     async def list_recent(
         self,
-        session: AsyncSession,
+        universe: Universe,
         limit: int = 50,
         offset: int = 0,
         filters: StreamFilters | None = None,
     ) -> list[UnifiedEvent]:
-        """Query recent lemmas and convert."""
-        from models.ashc import VerifiedLemmaModel
-
-        stmt = select(VerifiedLemmaModel).order_by(VerifiedLemmaModel.created_at.desc())
-
-        if filters:
-            if filters.date_start:
-                stmt = stmt.where(VerifiedLemmaModel.created_at >= filters.date_start)
-            if filters.date_end:
-                stmt = stmt.where(VerifiedLemmaModel.created_at <= filters.date_end)
-
-        stmt = stmt.offset(offset).limit(limit)
-
-        result = await session.execute(stmt)
-        rows = result.scalars().all()
-
-        return [self.to_unified_event(row) for row in rows]
+        """Return empty list - no schema defined yet."""
+        logger.debug("Lemma schema not defined - returning empty list")
+        return []
 
     async def count(
         self,
-        session: AsyncSession,
+        universe: Universe,
         filters: StreamFilters | None = None,
     ) -> int:
-        """Get total lemma count."""
-        from models.ashc import VerifiedLemmaModel
-
-        stmt = select(func.count()).select_from(VerifiedLemmaModel)
-
-        if filters:
-            if filters.date_start:
-                stmt = stmt.where(VerifiedLemmaModel.created_at >= filters.date_start)
-            if filters.date_end:
-                stmt = stmt.where(VerifiedLemmaModel.created_at <= filters.date_end)
-
-        result = await session.execute(stmt)
-        return result.scalar() or 0
+        """Return 0 - no schema defined yet."""
+        return 0
 
 
 # =============================================================================

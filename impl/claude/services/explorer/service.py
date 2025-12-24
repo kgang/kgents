@@ -14,6 +14,11 @@ Design Principles:
 - Pattern 6: Async-Safe Event Emission (parallel adapter calls)
 - Pattern 15: No Hollow Services (always go through DI)
 
+Migration to Universe:
+- Uses Universe instead of SQLAlchemy session
+- Adapters query Crystal system via Universe.query()
+- Parallel queries still work (Universe is async-safe)
+
 Teaching:
     gotcha: Empty types filter means ALL types, not NO types.
     gotcha: Parallel queries can fail independently. Use gather(return_exceptions=True).
@@ -28,7 +33,7 @@ import random
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from agents.d.universe import Universe, get_universe
 
 from .adapters import (
     CrystalAdapter,
@@ -64,7 +69,7 @@ class UnifiedQueryService:
     Orchestrates parallel queries across all entity types.
 
     Usage:
-        >>> service = UnifiedQueryService(session_factory)
+        >>> service = UnifiedQueryService(universe)
         >>> response = await service.list_events(ListEventsRequest(limit=50))
         >>> print(f"Got {len(response.events)} events")
 
@@ -75,14 +80,17 @@ class UnifiedQueryService:
     4. Returns paginated response
     """
 
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession]):
+    def __init__(self, universe: Universe | None = None):
         """
-        Initialize with SQLAlchemy session factory.
+        Initialize with Universe instance.
 
         Args:
-            session_factory: Async session factory for database access.
+            universe: Universe instance for data access. If None, uses singleton.
         """
-        self.session_factory = session_factory
+        self.universe = universe or get_universe()
+
+        # Register schemas with Universe for proper deserialization
+        self._register_schemas()
 
         # Initialize all adapters
         self._adapters: dict[EntityType, EntityAdapter] = {
@@ -93,6 +101,16 @@ class UnifiedQueryService:
             EntityType.TEACHING: TeachingAdapter(),
             EntityType.LEMMA: LemmaAdapter(),
         }
+
+    def _register_schemas(self) -> None:
+        """Register all Crystal schemas with Universe."""
+        from agents.d.schemas.witness import WitnessMark
+        from agents.d.schemas.brain import BrainCrystal
+        from agents.d.schemas.trail import Trail
+
+        self.universe.register_type("witness.mark", WitnessMark)
+        self.universe.register_type("brain.crystal", BrainCrystal)
+        self.universe.register_type("trail.trail", Trail)
 
     def _get_requested_adapters(self, types: list[EntityType] | None) -> list[EntityAdapter]:
         """
@@ -131,17 +149,15 @@ class UnifiedQueryService:
         # Request extra to determine has_more
         per_adapter_limit = limit + 1
 
-        # Each adapter gets its own session for true parallelism
-        # (SQLAlchemy async sessions don't support concurrent operations on same connection)
+        # Query adapters in parallel (Universe is async-safe)
         async def query_adapter(adapter: EntityAdapter) -> list[UnifiedEvent]:
             try:
-                async with self.session_factory() as session:
-                    return await adapter.list_recent(
-                        session,
-                        limit=per_adapter_limit,
-                        offset=0,  # We'll handle offset after merge
-                        filters=filters,
-                    )
+                return await adapter.list_recent(
+                    self.universe,
+                    limit=per_adapter_limit,
+                    offset=0,  # We'll handle offset after merge
+                    filters=filters,
+                )
             except Exception as e:
                 logger.warning(f"Adapter {adapter.entity_type} failed: {e}")
                 return []
@@ -165,11 +181,10 @@ class UnifiedQueryService:
         has_more = len(paginated) > limit
         events = paginated[:limit]
 
-        # Get total count (parallel, each with own session)
+        # Get total count (parallel queries)
         async def count_adapter(adapter: EntityAdapter) -> int:
             try:
-                async with self.session_factory() as session:
-                    return await adapter.count(session, filters=filters)
+                return await adapter.count(self.universe, filters=filters)
             except Exception as e:
                 logger.warning(f"Count for {adapter.entity_type} failed: {e}")
                 return 0
@@ -207,12 +222,11 @@ class UnifiedQueryService:
 
         adapters = self._get_requested_adapters(requested_types)
 
-        # Each adapter gets its own session for true parallelism
+        # Query adapters in parallel
         async def query_adapter(adapter: EntityAdapter) -> list[UnifiedEvent]:
             try:
-                async with self.session_factory() as session:
-                    # Get more than limit to allow for filtering
-                    return await adapter.list_recent(session, limit=limit * 3)
+                # Get more than limit to allow for filtering
+                return await adapter.list_recent(self.universe, limit=limit * 3)
             except Exception as e:
                 logger.warning(f"Search adapter {adapter.entity_type} failed: {e}")
                 return []
@@ -287,14 +301,13 @@ class UnifiedQueryService:
         if not adapter:
             return None
 
-        async with self.session_factory() as session:
-            # Query with ID filter - for now, list and filter
-            # TODO: Add get_by_id to adapters for efficiency
-            events = await adapter.list_recent(session, limit=1000)
-            for event in events:
-                if event.id == entity_id:
-                    return event
-            return None
+        # Query with ID filter - for now, list and filter
+        # TODO: Add get_by_id to adapters for efficiency
+        events = await adapter.list_recent(self.universe, limit=1000)
+        for event in events:
+            if event.id == entity_id:
+                return event
+        return None
 
     async def surface_random(
         self,
@@ -313,42 +326,41 @@ class UnifiedQueryService:
         """
         adapters = self._get_requested_adapters(types)
 
-        async with self.session_factory() as session:
-            # Get counts to weight random selection
-            counts: dict[EntityType, int] = {}
-            for adapter in adapters:
-                try:
-                    count = await adapter.count(session)
-                    if count > 0:
-                        counts[adapter.entity_type] = count
-                except Exception:
-                    pass
+        # Get counts to weight random selection
+        counts: dict[EntityType, int] = {}
+        for adapter in adapters:
+            try:
+                count = await adapter.count(self.universe)
+                if count > 0:
+                    counts[adapter.entity_type] = count
+            except Exception:
+                pass
 
-            if not counts:
-                return None
+        if not counts:
+            return None
 
-            # Weight by count
-            total = sum(counts.values())
-            r = random.randint(1, total)
-            cumulative = 0
+        # Weight by count
+        total = sum(counts.values())
+        r = random.randint(1, total)
+        cumulative = 0
 
-            selected_type: EntityType | None = None
-            for entity_type, count in counts.items():
-                cumulative += count
-                if r <= cumulative:
-                    selected_type = entity_type
-                    break
+        selected_type: EntityType | None = None
+        for entity_type, count in counts.items():
+            cumulative += count
+            if r <= cumulative:
+                selected_type = entity_type
+                break
 
-            if not selected_type:
-                return None
+        if not selected_type:
+            return None
 
-            # Get random offset within type
-            adapter = self._adapters[selected_type]
-            count = counts[selected_type]
-            offset = random.randint(0, max(0, count - 1))
+        # Get random offset within type
+        adapter = self._adapters[selected_type]
+        count = counts[selected_type]
+        offset = random.randint(0, max(0, count - 1))
 
-            events = await adapter.list_recent(session, limit=1, offset=offset)
-            return events[0] if events else None
+        events = await adapter.list_recent(self.universe, limit=1, offset=offset)
+        return events[0] if events else None
 
     async def manifest(self) -> ExplorerManifestResponse:
         """
@@ -358,14 +370,13 @@ class UnifiedQueryService:
             Manifest with counts and status.
         """
 
-        # Each adapter gets its own session for true parallelism
+        # Count all entity types in parallel
         async def count_for_type(
             entity_type: EntityType, adapter: EntityAdapter
         ) -> tuple[str, int]:
             try:
-                async with self.session_factory() as session:
-                    count = await adapter.count(session)
-                    return (entity_type.value, count)
+                count = await adapter.count(self.universe)
+                return (entity_type.value, count)
             except Exception as e:
                 logger.warning(f"Count for {entity_type} failed: {e}")
                 return (entity_type.value, 0)
@@ -382,10 +393,13 @@ class UnifiedQueryService:
         # Determine connected services based on non-zero counts
         connected = [k for k, v in counts_by_type.items() if v > 0]
 
+        # Get backend info from Universe stats
+        stats = await self.universe.stats()
+
         return ExplorerManifestResponse(
             total_events=total,
             counts_by_type=counts_by_type,
-            storage_backend="postgresql",  # Could detect from session
+            storage_backend=stats.backend,  # From Universe (postgres/sqlite/memory)
             connected_services=connected,
             stream_connected=True,  # SSE is now implemented
         )
