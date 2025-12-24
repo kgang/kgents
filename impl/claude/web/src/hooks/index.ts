@@ -150,3 +150,28 @@ export {
   type UseAnimationCoordinationOptions,
   type UseAnimationCoordinationResult,
 } from './useDesignPolynomial';
+
+// Galois loss signatures (loss-native frontend)
+export {
+  useLoss,
+  useLossBatch,
+  lossToHue,
+  lossToColor,
+  type LossSignature,
+  type LossComponents,
+  type UseLossResult,
+} from './useLoss';
+
+// Telescope navigation (unified focal distance navigation)
+export {
+  useTelescope,
+  useTelescopeState,
+  TelescopeProvider,
+  focalDistanceToLayers,
+  layerToFocalDistance,
+  getLayerName,
+  getLayerIcon,
+  type TelescopeState,
+  type TelescopeAction,
+  type TelescopeContextValue,
+} from './useTelescopeState';

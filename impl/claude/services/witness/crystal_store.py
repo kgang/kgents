@@ -293,6 +293,35 @@ class CrystalStore:
             return [self._crystals[cid] for cid in level_ids[-limit:]]
         return [self._crystals[cid] for cid in self._timeline[-limit:]]
 
+    def recent_filtered(
+        self,
+        limit: int = 10,
+        level: CrystalLevel | None = None,
+        min_confidence: float = 0.5,
+    ) -> list[Crystal]:
+        """
+        Get recent crystals filtered by confidence threshold.
+
+        Args:
+            limit: Maximum crystals to return
+            level: Optional level filter
+            min_confidence: Minimum confidence threshold (default 0.5)
+
+        Returns:
+            List of crystals meeting the confidence threshold
+        """
+        # Get candidates
+        if level is not None:
+            candidates = self.by_level(level)
+        else:
+            candidates = [self._crystals[cid] for cid in self._timeline]
+
+        # Filter by confidence
+        filtered = [c for c in candidates if c.confidence >= min_confidence]
+
+        # Return most recent
+        return filtered[-limit:] if len(filtered) > limit else filtered
+
     # =========================================================================
     # Provenance Navigation (Temporal Zoom)
     # =========================================================================

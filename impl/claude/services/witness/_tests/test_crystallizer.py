@@ -490,7 +490,7 @@ class MockSoul:
         class MockResponse:
             response = (
                 self._response
-                or '{"insight": "Mock insight", "significance": "Mock significance", "principles": ["composable"], "topics": ["test"], "confidence": 0.9}'
+                or '{"insight": "Mock insight that is long enough to pass validation", "significance": "Mock significance", "principles": ["composable"], "topics": ["test"], "confidence": 0.9}'
             )
 
         return MockResponse()
@@ -508,7 +508,7 @@ class TestCrystallizer:
         crystal = await crystallizer.crystallize_marks(sample_marks)
 
         assert crystal.level == CrystalLevel.SESSION
-        assert crystal.insight == "Mock insight"
+        assert crystal.insight == "Mock insight that is long enough to pass validation"
         assert crystal.significance == "Mock significance"
         assert "composable" in crystal.principles
         assert len(crystal.source_marks) == 10
@@ -629,10 +629,11 @@ class TestCrystallizer:
         """Test parsing valid LLM JSON response."""
         crystallizer = Crystallizer(None)
 
-        response = '{"insight": "Test", "significance": "Sig", "principles": ["a"], "topics": ["b"], "confidence": 0.85}'
+        response = '{"insight": "This is a valid long enough insight for testing", "significance": "Sig", "principles": ["a"], "topics": ["b"], "confidence": 0.85}'
         result = crystallizer._parse_llm_response(response)
 
-        assert result.insight == "Test"
+        assert result is not None
+        assert result.insight == "This is a valid long enough insight for testing"
         assert result.significance == "Sig"
         assert result.principles == ["a"]
         assert result.topics == ["b"]
@@ -643,21 +644,65 @@ class TestCrystallizer:
         crystallizer = Crystallizer(None)
 
         response = """```json
-{"insight": "Test", "significance": "", "principles": [], "topics": [], "confidence": 0.8}
+{"insight": "This is a properly long test insight in markdown", "significance": "", "principles": [], "topics": [], "confidence": 0.8}
 ```"""
         result = crystallizer._parse_llm_response(response)
 
-        assert result.insight == "Test"
+        assert result is not None
+        assert result.insight == "This is a properly long test insight in markdown"
 
     def test_parse_llm_response_invalid_json(self) -> None:
         """Test fallback when JSON is invalid."""
         crystallizer = Crystallizer(None)
 
-        response = 'This is not JSON but has "insight": "Partial match"'
+        response = 'This is not JSON but has "insight": "This is a properly long partial match for testing"'
         result = crystallizer._parse_llm_response(response)
 
         # Should use regex fallback
-        assert result.insight == "Partial match"
+        assert result is not None
+        assert result.insight == "This is a properly long partial match for testing"
+        # Confidence should be penalized for regex extraction
+        assert result.confidence == pytest.approx(0.6 * 0.7, rel=0.01)
+
+    def test_parse_llm_response_too_short(self) -> None:
+        """Test that too-short insights are rejected."""
+        crystallizer = Crystallizer(None)
+
+        response = '{"insight": "short", "significance": "", "principles": [], "topics": [], "confidence": 0.8}'
+        result = crystallizer._parse_llm_response(response)
+
+        # Should be rejected due to validation
+        assert result is None
+
+    def test_parse_llm_response_error_pattern(self) -> None:
+        """Test that error patterns are rejected."""
+        crystallizer = Crystallizer(None)
+
+        response = '{"insight": "error: something went wrong here", "significance": "", "principles": [], "topics": [], "confidence": 0.8}'
+        result = crystallizer._parse_llm_response(response)
+
+        # Should be rejected due to error pattern
+        assert result is None
+
+    def test_parse_llm_response_json_fragment(self) -> None:
+        """Test that JSON fragments in insight are rejected."""
+        crystallizer = Crystallizer(None)
+
+        response = '{"insight": "{ partial json fragment", "significance": "", "principles": [], "topics": [], "confidence": 0.8}'
+        result = crystallizer._parse_llm_response(response)
+
+        # Should be rejected due to JSON fragment
+        assert result is None
+
+    def test_parse_llm_response_no_extractable_fields(self) -> None:
+        """Test that responses with no extractable fields return None."""
+        crystallizer = Crystallizer(None)
+
+        response = 'This is just raw text with no JSON structure at all'
+        result = crystallizer._parse_llm_response(response)
+
+        # Should return None (no valid extraction)
+        assert result is None
 
 
 # =============================================================================
@@ -686,7 +731,7 @@ class TestCrystalIntegration:
         # Retrieve
         retrieved = crystal_store.get(crystal.id)
         assert retrieved is not None
-        assert retrieved.insight == "Mock insight"
+        assert retrieved.insight == "Mock insight that is long enough to pass validation"
         assert retrieved.session_id == "test"
 
         # Expand

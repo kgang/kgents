@@ -370,6 +370,12 @@ class Crystallizer:
             )
 
             result = self._parse_llm_response(response.response)
+
+            # If parsing/validation failed, fall back to template
+            if result is None:
+                logger.warning("LLM response failed validation, falling back to template")
+                return self._template_crystallize_marks(marks)
+
             result.used_llm = True
             result.raw_response = response.response
             return result
@@ -421,6 +427,12 @@ class Crystallizer:
             )
 
             result = self._parse_llm_response(response.response)
+
+            # If parsing/validation failed, fall back to template
+            if result is None:
+                logger.warning("LLM response failed validation, falling back to template")
+                return self._template_crystallize_crystals(crystals, level)
+
             result.used_llm = True
             result.raw_response = response.response
             return result
@@ -565,8 +577,41 @@ class Crystallizer:
         else:
             return f"{duration.seconds // 60}m"
 
-    def _parse_llm_response(self, response: str) -> CrystallizationResult:
-        """Parse LLM JSON response into CrystallizationResult."""
+    def _validate_result(self, result: CrystallizationResult) -> bool:
+        """
+        Validate a crystallization result to prevent gibberish from being stored.
+
+        Returns:
+            True if the result is valid, False if it contains gibberish.
+        """
+        insight = result.insight.strip()
+
+        # Reject if insight is too short
+        if len(insight) < 20:
+            logger.warning(f"Rejected insight (too short): {insight[:50]}")
+            return False
+
+        # Reject if insight starts with JSON syntax
+        if insight.startswith("{") or insight.startswith("["):
+            logger.warning(f"Rejected insight (JSON fragment): {insight[:50]}")
+            return False
+
+        # Reject if insight contains error patterns
+        error_patterns = ["error:", "exception:", "traceback:", "system:", "```json"]
+        for pattern in error_patterns:
+            if pattern in insight.lower():
+                logger.warning(f"Rejected insight (error pattern '{pattern}'): {insight[:50]}")
+                return False
+
+        return True
+
+    def _parse_llm_response(self, response: str) -> CrystallizationResult | None:
+        """
+        Parse LLM JSON response into CrystallizationResult.
+
+        Returns:
+            CrystallizationResult if valid, None if parsing or validation fails.
+        """
         # Clean response - remove markdown code fences if present
         cleaned = response.strip()
         if cleaned.startswith("```"):
@@ -579,20 +624,32 @@ class Crystallizer:
 
         try:
             data = json.loads(cleaned)
-            return CrystallizationResult(
+            result = CrystallizationResult(
                 insight=data.get("insight", ""),
                 significance=data.get("significance", ""),
                 principles=data.get("principles", []),
                 topics=data.get("topics", []),
                 confidence=float(data.get("confidence", 0.8)),
             )
+
+            # Validate the parsed result
+            if not self._validate_result(result):
+                logger.warning("JSON parsed successfully but validation failed")
+                return None
+
+            return result
         except json.JSONDecodeError as e:
             logger.warning(f"Failed to parse LLM JSON: {e}")
             # Attempt to extract fields with regex as fallback
             return self._regex_extract(response)
 
-    def _regex_extract(self, response: str) -> CrystallizationResult:
-        """Fallback: extract fields with regex if JSON parsing fails."""
+    def _regex_extract(self, response: str) -> CrystallizationResult | None:
+        """
+        Fallback: extract fields with regex if JSON parsing fails.
+
+        Returns:
+            CrystallizationResult if valid fields were extracted, None otherwise.
+        """
         insight = ""
         significance = ""
         principles: list[str] = []
@@ -617,24 +674,25 @@ class Crystallizer:
             except ValueError:
                 pass
 
-        # If we got something, use it
+        # If we got something, validate it
         if insight:
-            return CrystallizationResult(
+            result = CrystallizationResult(
                 insight=insight,
                 significance=significance,
                 principles=principles,
                 topics=topics,
-                confidence=confidence,
+                confidence=confidence * 0.7,  # Penalize regex extraction
             )
 
-        # Last resort: use response as insight
-        return CrystallizationResult(
-            insight=response[:200] if response else "Crystallization completed",
-            significance="",
-            principles=[],
-            topics=[],
-            confidence=0.3,
-        )
+            if self._validate_result(result):
+                return result
+            else:
+                logger.warning("Regex extraction succeeded but validation failed")
+                return None
+
+        # No valid extraction possible
+        logger.warning("Regex extraction found no valid insight field")
+        return None
 
 
 # =============================================================================

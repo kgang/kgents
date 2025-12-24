@@ -562,7 +562,7 @@ async def test_auto_promote_crystals_empty() -> None:
 
 def test_cmd_promote_candidates_empty_store() -> None:
     """Test promote --candidates with empty store."""
-    from protocols.cli.handlers.witness_thin import cmd_promote
+    from protocols.cli.handlers.witness import cmd_promote
 
     empty_store = CrystalStore()
     set_crystal_store(empty_store)

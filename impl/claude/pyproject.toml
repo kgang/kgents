@@ -54,6 +54,9 @@ dev = [
 textgrad = [
     "textgrad>=0.1.0",  # Automatic differentiation via text for LLM optimization
 ]
+clipboard = [
+    "pyperclip>=1.8.0",  # Cross-platform clipboard access
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["bootstrap", "agents", "runtime", "protocols", "services"]

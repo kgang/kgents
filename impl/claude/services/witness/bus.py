@@ -57,6 +57,10 @@ class WitnessTopics:
     GIT_PUSH = "witness.git.push"
     GIT_MERGE = "witness.git.merge"
 
+    # Mark events (API-created marks)
+    MARK_CREATED = "witness.mark.created"
+    MARK_RETRACTED = "witness.mark.retracted"
+
     # Thought events
     THOUGHT_CAPTURED = "witness.thought.captured"
 
@@ -108,6 +112,7 @@ class WitnessTopics:
 
     # Wildcards
     ALL = "witness.*"
+    MARK_ALL = "witness.mark.*"
     GIT_ALL = "witness.git.*"
     THOUGHT_ALL = "witness.thought.*"
     TRAIL_ALL = "witness.trail.*"

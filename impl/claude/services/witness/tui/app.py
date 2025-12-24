@@ -373,8 +373,26 @@ def run_witness_tui(initial_level: int | None = None) -> int:
 
     Returns:
         Exit code (0 for success)
+
+    Note:
+        This must be called from the main thread with no running event loop.
+        hollow.py ensures this by intercepting "witness dashboard" before
+        daemon routing or asyncio.run() wrapping.
     """
+    import sys
+
+    # Check if we have a real terminal
+    if not sys.stdin.isatty():
+        print(
+            "Error: TUI requires an interactive terminal.\n"
+            "\n"
+            "Or use the classic Rich dashboard:\n"
+            "  kg witness dashboard --classic"
+        )
+        return 1
+
     app = WitnessDashApp(initial_level=initial_level)
+
     try:
         app.run()
         return 0

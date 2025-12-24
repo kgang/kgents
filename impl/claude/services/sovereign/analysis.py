@@ -44,6 +44,7 @@ class AnalysisStatus(Enum):
     ANALYZING = "analyzing"  # Analysis in progress
     ANALYZED = "analyzed"  # Analysis complete
     FAILED = "failed"  # Analysis failed
+    STALE = "stale"  # Deprecated, needs re-analysis
 
 
 # =============================================================================
