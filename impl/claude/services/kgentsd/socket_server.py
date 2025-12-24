@@ -174,20 +174,22 @@ class CLIStreamMessage:
         )
 
     @classmethod
-    def event(
-        cls, correlation_id: str, event: dict[str, Any], seq: int = 0
+    def create_event(
+        cls, correlation_id: str, event_data: dict[str, Any], seq: int = 0
     ) -> CLIStreamMessage:
         """Create an event message (daemon → client).
 
         Use for structured data like progress updates, status changes, etc.
 
+        Note: Named create_event (not event) to avoid shadowing the 'event' field.
+
         Args:
             correlation_id: Request tracking ID
-            event: Event payload (e.g., {"type": "progress", "percent": 50})
+            event_data: Event payload (e.g., {"type": "progress", "percent": 50})
             seq: Sequence number
         """
         return cls(
-            type="event", correlation_id=correlation_id, event=event, seq=seq
+            type="event", correlation_id=correlation_id, event=event_data, seq=seq
         )
 
     @classmethod
@@ -523,34 +525,19 @@ class CLISocketServer:
     ) -> None:
         """Handle a PTY streaming session.
 
+        DEPRECATED (2025-12-24): PTY mode has been disabled.
+        Client always sets pty=False, so this method is no longer called.
+        Kept for backward compatibility but will be removed in future.
+
         Routes based on handler tier:
         - Tier 2: Execute in daemon with PTY I/O bridge (no subprocess)
         - Tier 3: True subprocess with PTY (fork-exec, for external commands)
         - Default: Fall back to Tier 2 if handler exists, else Tier 3
         """
-        from protocols.cli.handler_meta import get_handler_meta, infer_handler_meta
-        from protocols.cli.hollow import resolve_command
-
-        correlation_id = request.correlation_id
-
-        # Get handler metadata to determine tier
-        meta = get_handler_meta(request.command)
-        if meta is None:
-            # Infer from handler
-            handler = resolve_command(request.command)
-            if handler is not None:
-                meta = infer_handler_meta(request.command, handler)
-
-        # Determine execution mode
-        if meta is not None and meta.tier == 3:
-            # Tier 3: True subprocess (external commands)
-            await self._handle_pty_session_subprocess(reader, writer, request)
-        elif meta is not None and (meta.tier == 2 or meta.tier == 1):
-            # Tier 1 or 2: Execute in daemon with I/O bridge
-            await self._handle_pty_session_bridged(reader, writer, request, meta)
-        else:
-            # Unknown command - try subprocess fallback
-            await self._handle_pty_session_subprocess(reader, writer, request)
+        logger.warning("PTY session requested but PTY mode is deprecated. Using simple mode instead.")
+        # PTY code has been removed. Client should never set pty=True.
+        # If you need TUI functionality, run daemon in foreground: kgentsd summon -f
+        return
 
     async def _handle_pty_session_bridged(
         self,
@@ -561,9 +548,12 @@ class CLISocketServer:
     ) -> None:
         """Handle PTY session via I/O bridge (Tier 1 & 2).
 
+        DEPRECATED (2025-12-24): PTY mode disabled. This method is never called.
+
         Executes the handler directly in the daemon's process,
         bridging I/O to the client via the socket.
         """
+        raise NotImplementedError("PTY bridged mode deprecated - use simple mode")
         logger.info(f"Starting bridged PTY session: {request.command} (tier={meta.tier})")
 
         try:
@@ -621,9 +611,12 @@ class CLISocketServer:
     ) -> None:
         """Handle PTY session via true subprocess (Tier 3).
 
+        DEPRECATED (2025-12-24): PTY mode disabled. This method is never called.
+
         Spawns a subprocess with PTY for bidirectional I/O.
         Used for external commands that need full PTY support.
         """
+        raise NotImplementedError("PTY subprocess mode deprecated - use simple mode")
         from .pty_executor import PTYConfig, PTYSession, PTYStreamExecutor
 
         correlation_id = request.correlation_id

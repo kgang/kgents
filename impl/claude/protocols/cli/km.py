@@ -95,7 +95,7 @@ def main(argv: list[str] | None = None) -> int:
             pass
 
     # Direct execution (inside daemon or fallback)
-    from protocols.cli.handlers.witness_thin import cmd_mark
+    from protocols.cli.handlers.witness import cmd_mark
 
     return cmd_mark(list(argv))
 

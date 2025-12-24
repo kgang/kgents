@@ -58,59 +58,37 @@ class CapturedOutput:
 
 
 class OutputCapture:
-    """Context manager for capturing command output."""
+    """Context manager for capturing command output.
+
+    Simplified to capture only stdout/stderr. The FD3 semantic channel
+    has been removed to eliminate temp file overhead and simplify the
+    output pipeline. Semantic data should be returned via normal stdout
+    as JSON when --json flag is used.
+    """
 
     def __init__(self) -> None:
         self.stdout_buffer = io.StringIO()
         self.stderr_buffer = io.StringIO()
-        self.semantic: dict[str, Any] | None = None
         self._old_stdout: Any = None
         self._old_stderr: Any = None
-        self._fd3_path: str | None = None
 
     def __enter__(self) -> OutputCapture:
         self._old_stdout = sys.stdout
         self._old_stderr = sys.stderr
         sys.stdout = self.stdout_buffer
         sys.stderr = self.stderr_buffer
-
-        # Set up FD3 capture via temp file
-        import tempfile
-
-        fd, self._fd3_path = tempfile.mkstemp(prefix="kgentsd_fd3_", suffix=".json")
-        os.close(fd)
-        os.environ["KGENTS_FD3"] = self._fd3_path
-
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         sys.stdout = self._old_stdout
         sys.stderr = self._old_stderr
 
-        # Read FD3 semantic output if available
-        if self._fd3_path:
-            try:
-                if os.path.exists(self._fd3_path) and os.path.getsize(self._fd3_path) > 0:
-                    import json
-
-                    with open(self._fd3_path) as f:
-                        self.semantic = json.load(f)
-            except (OSError, json.JSONDecodeError):
-                pass
-            finally:
-                try:
-                    os.unlink(self._fd3_path)
-                except OSError:
-                    pass
-                if "KGENTS_FD3" in os.environ:
-                    del os.environ["KGENTS_FD3"]
-
     def get_output(self) -> CapturedOutput:
         """Get the captured output."""
         return CapturedOutput(
             stdout=self.stdout_buffer.getvalue(),
             stderr=self.stderr_buffer.getvalue(),
-            semantic=self.semantic,
+            semantic=None,  # FD3 removed - use stdout JSON instead
         )
 
 
@@ -575,6 +553,13 @@ class CommandExecutor:
 
             for key, value in request.env.items():
                 os.environ[key] = value
+
+            # Set terminal size for Rich and other terminal-aware libraries
+            # These env vars are respected by shutil.get_terminal_size() and Rich Console
+            if request.term_size:
+                rows, cols = request.term_size
+                os.environ["LINES"] = str(rows)
+                os.environ["COLUMNS"] = str(cols)
 
             yield
 

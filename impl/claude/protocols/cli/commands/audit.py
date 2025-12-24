@@ -314,7 +314,7 @@ def _generate_action_items(result: Any) -> list[str]:
 
 async def _emit_audit_mark_async(result: Any) -> str:
     """Emit a witness mark for the audit."""
-    from protocols.cli.handlers.witness_thin import _create_mark_async
+    from protocols.cli.handlers.witness.marks import _create_mark_async
 
     action = f"Audited {result.spec_path.name}"
     reasoning = result.summary()

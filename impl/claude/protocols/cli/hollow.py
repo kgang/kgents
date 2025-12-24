@@ -113,9 +113,9 @@ COMMAND_REGISTRY: dict[str, str] = {
     "brain": "protocols.cli.handlers.brain_thin:cmd_brain",
     # ==========================================================================
     # Witness (8th Crown Jewel - The Witnessing Ghost)
-    # Uses thin routing shim - all logic in services/witness/
+    # Modular CLI package - see protocols/cli/handlers/witness/
     # ==========================================================================
-    "witness": "protocols.cli.handlers.witness_thin:cmd_witness",
+    "witness": "protocols.cli.handlers.witness:cmd_witness",
     # ==========================================================================
     # WitnessedGraph (9th Crown Jewel - Unified Edge Composition)
     # Uses thin routing shim - delegates to concept.graph.* paths
@@ -169,6 +169,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Uses thin routing shim - all logic in services/archaeology/
     # ==========================================================================
     "archaeology": "protocols.cli.handlers.archaeology:cmd_archaeology",
+    # ==========================================================================
+    # EVIDENCE: Evidence Mining & ROI Tracking
+    # Uses thin routing shim - all logic in services/evidence/
+    # ==========================================================================
+    "evidence": "protocols.cli.handlers.evidence:cmd_evidence",
     # ==========================================================================
     # AUDIT: Spec validation against principles and implementation (Phase 1)
     # Validates specs against 7 constitutional principles and detects drift
@@ -225,6 +230,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     # VoidHarness execution, Bayesian stopping, parse experiments
     # ==========================================================================
     "experiment": "protocols.cli.commands.experiment:main",
+    # ==========================================================================
+    # ANALYZE: Four-mode spec analysis (categorical, epistemic, dialectical, generative)
+    # Analysis Operad operations - law verification, grounding, tensions, regenerability
+    # ==========================================================================
+    "analyze": "protocols.cli.handlers.analyze:cmd_analyze",
 }
 
 
@@ -771,8 +781,9 @@ def _print_daemon_required_error() -> None:
             "[dim]The daemon provides:[/dim]\n"
             "  • Persistent context across commands\n"
             "  • Trust-gated execution\n"
-            "  • Audit logging\n"
-            "  • Interactive terminal support"
+            "  • Audit logging\n\n"
+            "[dim]Fallback mode (no daemon):[/dim]\n"
+            "  [cyan]KGENTS_NO_DAEMON=1 kg <command>[/cyan]"
         )
         console.print(Panel(content, border_style="red", padding=(1, 2)))
     except ImportError:
@@ -784,11 +795,8 @@ def _print_daemon_required_error() -> None:
         print("│  Start the daemon:                                  │", file=sys.stderr)
         print("│    kgentsd summon                                   │", file=sys.stderr)
         print("│                                                     │", file=sys.stderr)
-        print("│  The daemon provides:                               │", file=sys.stderr)
-        print("│    • Persistent context across commands             │", file=sys.stderr)
-        print("│    • Trust-gated execution                          │", file=sys.stderr)
-        print("│    • Audit logging                                  │", file=sys.stderr)
-        print("│    • Interactive terminal support                   │", file=sys.stderr)
+        print("│  Or run without daemon (fallback):                  │", file=sys.stderr)
+        print("│    KGENTS_NO_DAEMON=1 kg <command>                  │", file=sys.stderr)
         print("╰─────────────────────────────────────────────────────╯", file=sys.stderr)
         print("", file=sys.stderr)
 
@@ -919,20 +927,86 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
 
     # =========================================================================
+    # TUI Commands (Bypass Daemon + Async)
+    # =========================================================================
+    # TUI applications (Textual) require:
+    # 1. Main thread (for signal handlers)
+    # 2. Direct terminal access
+    # 3. Their own event loop (can't nest asyncio.run())
+    #
+    # These commands bypass daemon AND run synchronously (no asyncio.run()).
+    # =========================================================================
+    TUI_COMMANDS = {"dawn", "coffee"}
+    TUI_SUBCOMMANDS = {
+        "witness": {"dashboard", "dash"},
+    }
+
+    is_tui_command = command in TUI_COMMANDS
+    is_tui_subcommand = (
+        command in TUI_SUBCOMMANDS
+        and command_args
+        and command_args[0] in TUI_SUBCOMMANDS[command]
+    )
+
+    if is_tui_command or is_tui_subcommand:
+        # TUI commands run locally, synchronously, in main thread
+        # Skip both daemon routing AND asyncio.run() wrapping
+        try:
+            if is_tui_subcommand:
+                # For subcommands like "witness dashboard", call the subcommand directly
+                # This avoids going through the async parent handler
+                if command == "witness" and command_args[0] in {"dashboard", "dash"}:
+                    from protocols.cli.handlers.witness import cmd_dashboard
+                    return cmd_dashboard(command_args[1:])
+                # Add other TUI subcommands here as needed
+
+            # For top-level TUI commands (dawn, coffee)
+            handler = resolve_command(command)
+            if handler:
+                result = handler(command_args)
+                import inspect
+                if inspect.iscoroutine(result):
+                    print("Error: TUI commands must use synchronous handlers")
+                    result.close()
+                    return 1
+                return int(result) if result is not None else 0
+            else:
+                print_suggestions(command)
+                return 1
+        except KeyboardInterrupt:
+            return 130
+        except Exception as e:
+            print(f"Error: {e}")
+            return 1
+
+    # =========================================================================
     # Daemon Routing (All Commands)
     # =========================================================================
     # ALL commands route through the kgentsd daemon. This provides:
     # - Centralized execution with daemon context
     # - Trust-gated operations via ActionGate
     # - Audit logging for all CLI activity
-    # - PTY support for interactive commands
     #
-    # If daemon is not running, we fail with a helpful error message.
+    # If daemon is not running:
+    # - Set KGENTS_NO_DAEMON=1 for fallback to local execution (with warning)
+    # - Otherwise fail with a helpful error message
     #
-    # KGENTS_INSIDE_DAEMON: Set by daemon when spawning PTY subprocess.
-    # Prevents recursive routing (daemon -> PTY -> daemon -> PTY -> ...).
+    # KGENTS_INSIDE_DAEMON: Set by daemon when spawning subprocess.
+    # Prevents recursive routing (daemon -> subprocess -> daemon -> ...).
     # =========================================================================
-    if not os.environ.get("KGENTS_INSIDE_DAEMON"):
+    allow_no_daemon = os.environ.get("KGENTS_NO_DAEMON") == "1"
+
+    # Skip daemon routing if:
+    # - Command is a TUI command (needs direct terminal)
+    # - KGENTS_NO_DAEMON=1 (explicit bypass)
+    # - KGENTS_INSIDE_DAEMON is set (already in daemon)
+    skip_daemon = (
+        command in TUI_COMMANDS
+        or allow_no_daemon
+        or os.environ.get("KGENTS_INSIDE_DAEMON")
+    )
+
+    if not skip_daemon:
         try:
             from services.kgentsd.socket_client import (
                 DaemonConnectionError,
@@ -944,7 +1018,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
 
             if is_daemon_available():
-                # Route through daemon (PTY mode auto-selected if stdin/stdout are TTYs)
+                # Route through daemon
                 try:
                     response = route_command(command, command_args, flags)
                     if response.stdout:
@@ -1034,7 +1108,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Execute handler
     exit_code = 0
     try:
-        exit_code = int(handler(command_args))
+        import asyncio
+        import inspect
+
+        result = handler(command_args)
+        # Handle async handlers
+        if inspect.iscoroutine(result):
+            exit_code = int(asyncio.run(result))
+        else:
+            exit_code = int(result)
         return exit_code
     except KeyboardInterrupt:
         print("\n[...] Interrupted. No worries—nothing was left in a bad state.")

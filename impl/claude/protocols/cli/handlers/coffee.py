@@ -95,13 +95,16 @@ def _get_service() -> Any:
 # =============================================================================
 
 
-@handler("coffee", is_async=False, needs_pty=True, tier=3, description="Morning Coffee ritual")
+@handler("coffee", is_async=False, needs_pty=False, tier=1, description="Morning Coffee ritual")
 def cmd_coffee(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Morning Coffee: Liminal transition from rest to work.
 
     This handler provides rich formatting for the ritual.
     For JSON output, use --json flag.
+
+    NOTE: TUI mode requires foreground daemon (kgentsd summon -f)
+    or direct invocation (KGENTS_INSIDE_DAEMON=1 kg coffee).
     """
     # Parse flags
     json_output = "--json" in args

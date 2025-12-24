@@ -490,9 +490,48 @@ def run_dawn_tui(
     Returns:
         Exit code (0 for success)
     """
+    import asyncio
+    import sys
+
+    # Check if we have a real terminal
+    if not sys.stdin.isatty():
+        print(
+            "Error: TUI requires an interactive terminal.\n"
+            "\n"
+            "Or use CLI mode:\n"
+            "  kg dawn --cli"
+        )
+        return 1
+
     app = DawnCockpit(focus_manager, snippet_library)
+
     try:
-        app.run()
+        # Check if there's already an event loop running
+        # This happens when called from an async handler via asyncio.run()
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop is not None:
+            # Already in an event loop - run Textual in a separate thread
+            import concurrent.futures
+
+            def run_in_thread():
+                new_loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(new_loop)
+                try:
+                    app.run()
+                finally:
+                    new_loop.close()
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(run_in_thread)
+                future.result()
+        else:
+            # No running loop - normal synchronous run
+            app.run()
+
         return 0
     except Exception as e:
         logger.exception("Dawn TUI error: %s", e)

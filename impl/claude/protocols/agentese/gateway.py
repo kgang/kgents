@@ -136,6 +136,12 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (concept.*): {e}")
 
+        # === Zero Seed Protocol nodes (void.axiom.*, void.value.*, concept.goal.*, etc.) ===
+        try:
+            from .contexts import zero_seed  # noqa: F401  # Zero Seed Galois Integration
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (zero_seed): {e}")
+
         # === Living Docs (concept.docs.*, self.docs.*) ===
         try:
             from services.living_docs import node as living_docs_node  # noqa: F401
@@ -177,6 +183,12 @@ def _import_node_modules() -> None:
             from services.proxy import node as proxy_node  # noqa: F401  # self.proxy.*
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (proxy): {e}")
+
+        # === Analysis Operad Crown Jewel (concept.analysis.*) ===
+        try:
+            from services.analysis import node as analysis_node  # noqa: F401  # concept.analysis.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (analysis): {e}")
 
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:

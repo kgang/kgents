@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
 
-@handler("subscribe", is_async=False, needs_pty=True, tier=2, description="Subscribe to AGENTESE events")
+@handler("subscribe", is_async=False, needs_pty=False, tier=1, description="Subscribe to AGENTESE events")
 def cmd_subscribe(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Subscribe to AGENTESE events.

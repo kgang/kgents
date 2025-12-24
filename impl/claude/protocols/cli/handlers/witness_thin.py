@@ -56,7 +56,15 @@ def _get_console() -> Any:
 
 def _print_mark(mark: dict[str, Any], verbose: bool = False) -> None:
     """Print a single mark."""
+    import shutil
+
     console = _get_console()
+
+    # Get terminal width for truncation
+    try:
+        term_width = shutil.get_terminal_size().columns
+    except Exception:
+        term_width = 80
 
     # Extract fields
     timestamp = mark.get("timestamp", "")
@@ -72,19 +80,26 @@ def _print_mark(mark: dict[str, Any], verbose: bool = False) -> None:
     except (ValueError, AttributeError):
         ts_str = "??:??"
 
+    # Truncate long actions to fit terminal width
+    # Reserve space for timestamp (8), indent (2), and ellipsis (3)
+    max_action_len = term_width - 15
+    display_action = action
+    if len(action) > max_action_len and max_action_len > 10:
+        display_action = action[: max_action_len - 3] + "..."
+
     if console:
-        # Rich output
+        # Rich output with no_wrap to prevent line breaking
         principle_str = " ".join(f"[dim][{p}][/dim]" for p in principles) if principles else ""
-        line = f"  [dim]{ts_str}[/dim]  {action}"
+        line = f"  [dim]{ts_str}[/dim]  {display_action}"
         if principle_str:
             line += f" {principle_str}"
-        console.print(line)
+        console.print(line, overflow="ignore", no_wrap=True)
 
         if verbose and reasoning:
-            console.print(f"         [dim]-> {reasoning}[/dim]")
+            console.print(f"         [dim]-> {reasoning}[/dim]", overflow="ignore", no_wrap=True)
     else:
         # Plain text
-        line = f"  {ts_str}  {action}"
+        line = f"  {ts_str}  {display_action}"
         if principles:
             line += f" [{', '.join(principles)}]"
         print(line)
@@ -677,20 +692,38 @@ async def _crystallize_async(
         return {"error": f"Level '{level}' crystallization not yet implemented"}
 
 
-async def _get_crystals_async(
+async def _get_crystals_async_DEPRECATED_DO_NOT_USE(
     limit: int = 10,
     level: int | None = None,
+    min_confidence: float | None = None,
+    show_all: bool = False,
 ) -> list[dict[str, Any]]:
     """Get recent crystals from store."""
     from services.witness.crystal import CrystalLevel
     from services.witness.crystal_store import get_crystal_store
+    from services.witness.quality import DEFAULT_MIN_CONFIDENCE
 
     store = get_crystal_store()
 
-    if level is not None:
-        crystals = store.recent(limit, CrystalLevel(level))
+    # Determine confidence threshold
+    if show_all:
+        confidence_threshold = 0.0
+    elif min_confidence is not None:
+        confidence_threshold = min_confidence
     else:
-        crystals = store.recent(limit)
+        confidence_threshold = DEFAULT_MIN_CONFIDENCE
+
+    # Get crystals with filtering
+    if level is not None:
+        if confidence_threshold > 0.0:
+            crystals = store.recent_filtered(limit, CrystalLevel(level), confidence_threshold)
+        else:
+            crystals = store.recent(limit, CrystalLevel(level))
+    else:
+        if confidence_threshold > 0.0:
+            crystals = store.recent_filtered(limit, None, confidence_threshold)
+        else:
+            crystals = store.recent(limit)
 
     return [
         {
@@ -795,6 +828,17 @@ _get_crystal = _run_async_factory(_get_crystal_async)
 _expand_crystal = _run_async_factory(_expand_crystal_async)
 
 
+def _get_all_crystals_count(level: int | None = None) -> int:
+    """Get total count of crystals (without filtering) for comparison."""
+    from services.witness.crystal import CrystalLevel
+    from services.witness.crystal_store import get_crystal_store
+
+    store = get_crystal_store()
+    if level is not None:
+        return len(store.by_level(CrystalLevel(level)))
+    return len(store)
+
+
 def cmd_crystallize(args: list[str]) -> int:
     """
     Crystallize marks into a crystal.
@@ -887,19 +931,32 @@ def cmd_crystals(args: list[str]) -> int:
     List recent crystals.
 
     Usage:
-        kg witness crystals             # Show recent crystals
-        kg witness crystals --level 0   # Show only session crystals
-        kg witness crystals --level 1   # Show only day crystals
-        kg witness crystals --json      # Output as JSON
+        kg witness crystals                    # Show recent crystals (confidence >= 0.5)
+        kg witness crystals --level 0          # Show only session crystals
+        kg witness crystals --level 1          # Show only day crystals
+        kg witness crystals --all              # Show all crystals including low-confidence
+        kg witness crystals --min-confidence N # Set custom confidence threshold
+        kg witness crystals --json             # Output as JSON
+
+    QUALITY FILTERING:
+      --all                 Show all crystals including low-confidence
+      --min-confidence N    Set minimum confidence threshold (default: 0.5)
+
+      By default, crystals with confidence < 0.5 are hidden. These are often
+      from failed LLM parsing and may contain malformed data.
     """
     limit = 10
     level = None
+    min_confidence = None
+    show_all = "--all" in args
     json_output = "--json" in args
 
     i = 0
     while i < len(args):
         arg = args[i]
         if arg == "--json":
+            i += 1
+        elif arg == "--all":
             i += 1
         elif arg in ("--limit", "-l") and i + 1 < len(args):
             try:
@@ -913,13 +970,20 @@ def cmd_crystals(args: list[str]) -> int:
             except ValueError:
                 pass
             i += 2
+        elif arg == "--min-confidence" and i + 1 < len(args):
+            try:
+                min_confidence = float(args[i + 1])
+                min_confidence = max(0.0, min(1.0, min_confidence))
+            except ValueError:
+                pass
+            i += 2
         else:
             i += 1
 
     console = _get_console()
 
     try:
-        crystals = _get_crystals(limit, level)
+        crystals = _get_crystals(limit, level, min_confidence, show_all)
 
         if json_output:
             print(json.dumps(crystals))
@@ -933,6 +997,25 @@ def cmd_crystals(args: list[str]) -> int:
             else:
                 print("No crystals found. Use 'kg witness crystallize' to create one.")
             return 0
+
+        # Show quality filtering info if not showing all
+        if not show_all:
+            total_count = _get_all_crystals_count(level)
+            hidden_count = total_count - len(crystals)
+            if hidden_count > 0:
+                threshold = min_confidence if min_confidence is not None else 0.5
+                if console:
+                    console.print(
+                        f"[dim]Showing {len(crystals)} crystals (hiding {hidden_count} with confidence < {threshold:.1f})[/dim]"
+                    )
+                    console.print(
+                        "[dim]Use --all to show all crystals or --min-confidence N to adjust threshold[/dim]"
+                    )
+                else:
+                    print(
+                        f"Showing {len(crystals)} crystals (hiding {hidden_count} with confidence < {threshold:.1f})"
+                    )
+                    print("Use --all to show all crystals or --min-confidence N to adjust threshold")
 
         level_name = f"Level {level}" if level is not None else "All"
         if console:
@@ -2083,7 +2166,11 @@ def cmd_graph(args: list[str]) -> int:
 # =============================================================================
 
 
-@handler("witness", is_async=True, tier=1, description="Everyday mark-making")
+# DEPRECATED: This monolithic handler has been replaced by the modular version in witness/
+# See: protocols/cli/handlers/witness/__init__.py
+# The @handler decorator is commented out to prevent registration conflicts.
+#
+# @handler("witness", is_async=True, tier=1, description="Everyday mark-making")
 async def cmd_witness(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Witness Crown Jewel: Mark-making CLI.
@@ -2373,7 +2460,14 @@ CRYSTALLIZE OPTIONS:
 CRYSTALS OPTIONS:
   --level 0|1|2|3             Filter by level (0=session, 1=day, etc)
   -l, --limit N               Number to show (default: 10)
+  --all                       Show all crystals including low-confidence
+  --min-confidence N          Set minimum confidence threshold (default: 0.5)
   --json                      Output as JSON
+
+QUALITY FILTERING:
+  By default, crystals with confidence < 0.5 are hidden. These are often
+  from failed LLM parsing and may contain malformed data.
+  Use --all to show everything, or --min-confidence N to set a custom threshold.
 
 CONTEXT OPTIONS:
   --budget N                  Token budget (default: 2000)

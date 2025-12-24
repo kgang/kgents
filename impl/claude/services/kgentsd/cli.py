@@ -51,6 +51,8 @@ USAGE:
   kgentsd summon [OPTIONS]    Awaken the Witness (start daemon)
   kgentsd banish [OPTIONS]    Banish the Witness (stop daemon)
   kgentsd release             Release the Witness (alias for banish)
+  kgentsd restart             Restart the Witness (preserves watchers)
+  kgentsd reload              Reload daemon configuration (send SIGHUP)
   kgentsd status [--trust]    Show Witness state + trust metrics + pool stats
   kgentsd thoughts [--limit N]  View thought stream
   kgentsd ask "..."           Direct query
@@ -700,6 +702,104 @@ def cmd_ask(args: list[str]) -> int:
     return 0
 
 
+def cmd_restart(args: list[str]) -> int:
+    """
+    Restart the Witness daemon (preserves watcher configuration).
+
+    This stops the daemon and restarts it with the same watchers that were enabled.
+    """
+    if "--help" in args or "-h" in args:
+        print("kgentsd restart - Restart the Witness")
+        print()
+        print("Restarts the daemon, preserving the current watcher configuration.")
+        print()
+        print("This is equivalent to: banish + summon with the same watchers.")
+        return 0
+
+    # Get current status to capture watchers
+    status = get_daemon_status()
+
+    if not status.get("running", False):
+        print("Witness is not running. Use `kgentsd summon` to start it.")
+        return 1
+
+    # Capture enabled watchers
+    watchers = status.get("enabled_watchers", ["git"])
+
+    console = _get_console()
+    if console:
+        console.print(f"[yellow]Restarting Witness with watchers: {', '.join(watchers)}[/yellow]")
+    else:
+        print(f"Restarting Witness with watchers: {', '.join(watchers)}")
+
+    # Stop the daemon
+    result = cmd_banish([])
+    if result != 0:
+        return result
+
+    # Wait for socket cleanup
+    import time
+    time.sleep(0.5)
+
+    # Restart with same watchers in background
+    watcher_arg = ",".join(watchers)
+    result = cmd_summon(["--watchers", watcher_arg, "-b"])
+
+    if result == 0:
+        if console:
+            console.print("[green]🔮 Witness restarted successfully.[/green]")
+        else:
+            print("🔮 Witness restarted successfully.")
+
+    return result
+
+
+def cmd_reload(args: list[str]) -> int:
+    """
+    Reload the Witness daemon configuration (send SIGHUP).
+
+    This signals the running daemon to reload its configuration without restarting.
+    """
+    if "--help" in args or "-h" in args:
+        print("kgentsd reload - Reload daemon configuration")
+        print()
+        print("Sends SIGHUP to the running daemon to reload configuration.")
+        print()
+        print("This is useful for applying configuration changes without restarting.")
+        return 0
+
+    # Check if daemon is running
+    is_running, pid = check_daemon_status()
+
+    if not is_running or pid is None:
+        console = _get_console()
+        if console:
+            console.print("[yellow]Witness is not running. Use `kgentsd summon` to start it.[/yellow]")
+        else:
+            print("Witness is not running. Use `kgentsd summon` to start it.")
+        return 1
+
+    # Send SIGHUP signal
+    try:
+        os.kill(pid, signal.SIGHUP)
+
+        console = _get_console()
+        if console:
+            console.print(f"[green]🔮 Sent SIGHUP to Witness (PID {pid}). Configuration reloading.[/green]")
+        else:
+            print(f"🔮 Sent SIGHUP to Witness (PID {pid}). Configuration reloading.")
+
+        return 0
+
+    except OSError as e:
+        console = _get_console()
+        if console:
+            console.print(f"[red]Failed to send SIGHUP: {e}[/red]")
+        else:
+            print(f"Failed to send SIGHUP: {e}")
+        return 1
+
+
 # =============================================================================
 # Main Entry Point
 # =============================================================================
@@ -725,6 +825,8 @@ def main(argv: list[str] | None = None) -> int:
         "summon": cmd_summon,
         "banish": cmd_banish,
         "release": cmd_release,
+        "restart": cmd_restart,
+        "reload": cmd_reload,
         "status": cmd_status,
         "thoughts": cmd_thoughts,
         "ask": cmd_ask,
@@ -745,7 +847,7 @@ def main(argv: list[str] | None = None) -> int:
     if handler is None:
         print(f"Unknown command: {command}")
         print()
-        print("Available commands: summon, release, status, thoughts, ask")
+        print("Available commands: summon, banish, release, restart, reload, status, thoughts, ask")
         print("Run `kgentsd --help` for more information.")
         return 1
 

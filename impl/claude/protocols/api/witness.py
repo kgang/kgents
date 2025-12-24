@@ -76,6 +76,49 @@ class RetractRequest(BaseModel):
     reason: str = Field(..., description="Reason for retraction")
 
 
+class DialecticPosition(BaseModel):
+    """One side of a dialectic decision."""
+
+    author: str = Field(..., description="kent or claude")
+    content: str = Field(..., description="The position statement")
+    reasoning: str = Field(..., description="Why this position")
+
+
+class DialecticDecisionResponse(BaseModel):
+    """A dialectic decision (thesis + antithesis → synthesis)."""
+
+    model_config = {"populate_by_name": True}
+
+    id: str
+    timestamp: str
+    thesis: DialecticPosition
+    antithesis: DialecticPosition
+    synthesis: str
+    why: str
+    vetoed: bool = False
+    vetoReason: str | None = Field(default=None, alias="veto_reason")
+    tags: list[str] = []
+
+
+class DialecticDecisionListResponse(BaseModel):
+    """List of dialectic decisions."""
+
+    decisions: list[DialecticDecisionResponse]
+    total: int
+
+
+class CreateDialecticDecisionRequest(BaseModel):
+    """Request to create a dialectic decision."""
+
+    thesis_content: str = Field(..., description="Kent's position")
+    thesis_reasoning: str = Field(..., description="Kent's reasoning")
+    antithesis_content: str = Field(..., description="Claude's position")
+    antithesis_reasoning: str = Field(..., description="Claude's reasoning")
+    synthesis: str = Field(..., description="The fused decision")
+    why: str = Field(..., description="Why this synthesis")
+    tags: list[str] = Field(default_factory=list)
+
+
 # =============================================================================
 # Router Factory
 # =============================================================================
@@ -172,11 +215,15 @@ def create_witness_router() -> "APIRouter | None":
         """
         Create a new mark.
 
+        Marks are saved to persistence AND published to WitnessSynergyBus
+        for real-time SSE streaming to connected frontends.
+
         Args:
             request: Mark creation request
         """
         try:
             from services.providers import get_witness_persistence
+            from services.witness.bus import WitnessTopics, get_synergy_bus
 
             persistence = await get_witness_persistence()
             result = await persistence.save_mark(
@@ -186,6 +233,24 @@ def create_witness_router() -> "APIRouter | None":
                 author=request.author,
                 parent_mark_id=request.parent_mark_id,
             )
+
+            # Publish to WitnessSynergyBus for real-time SSE streaming
+            # "The proof IS the decision. The mark IS the witness."
+            bus = get_synergy_bus()
+            await bus.publish(
+                WitnessTopics.MARK_CREATED,
+                {
+                    "id": result.mark_id,
+                    "action": result.action,
+                    "reasoning": result.reasoning,
+                    "principles": result.principles,
+                    "author": result.author,
+                    "timestamp": result.timestamp.isoformat(),
+                    "parent_mark_id": result.parent_mark_id,
+                    "type": "mark",  # Event type for frontend
+                },
+            )
+            logger.debug(f"Published mark {result.mark_id} to WitnessSynergyBus")
 
             return MarkResponse(
                 id=result.mark_id,
@@ -227,6 +292,88 @@ def create_witness_router() -> "APIRouter | None":
         except Exception as e:
             logger.exception("Error retracting mark")
             raise HTTPException(status_code=500, detail=str(e))
+
+    # =========================================================================
+    # Dialectic Decisions (Thesis + Antithesis → Synthesis)
+    # =========================================================================
+
+    # In-memory storage for now (will be persisted later)
+    _decisions: list[DialecticDecisionResponse] = []
+
+    @router.get("/decisions", response_model=DialecticDecisionListResponse)
+    async def list_decisions(
+        limit: int = Query(default=50, ge=1, le=200),
+        since: str | None = Query(default=None),
+        tags: str | None = Query(default=None),
+    ) -> DialecticDecisionListResponse:
+        """
+        List dialectic decisions.
+
+        Args:
+            limit: Maximum number of decisions to return
+            since: ISO timestamp to filter decisions after
+            tags: Comma-separated list of tags to filter by
+        """
+        decisions = _decisions.copy()
+
+        # Filter by timestamp
+        if since:
+            try:
+                since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
+                decisions = [
+                    d for d in decisions
+                    if datetime.fromisoformat(d.timestamp.replace("Z", "+00:00")) >= since_dt
+                ]
+            except ValueError:
+                pass
+
+        # Filter by tags
+        if tags:
+            tag_list = [t.strip().lower() for t in tags.split(",")]
+            decisions = [
+                d for d in decisions
+                if any(t.lower() in tag_list for t in d.tags)
+            ]
+
+        # Sort by timestamp descending (newest first)
+        decisions.sort(key=lambda d: d.timestamp, reverse=True)
+
+        # Apply limit
+        decisions = decisions[:limit]
+
+        return DialecticDecisionListResponse(decisions=decisions, total=len(_decisions))
+
+    @router.post("/decisions", response_model=DialecticDecisionResponse)
+    async def create_decision(request: CreateDialecticDecisionRequest) -> DialecticDecisionResponse:
+        """
+        Create a new dialectic decision.
+
+        "Kent's view + Claude's view → a third thing, better than either."
+        """
+        import uuid
+
+        decision = DialecticDecisionResponse(
+            id=str(uuid.uuid4()),
+            timestamp=datetime.now().isoformat(),
+            thesis=DialecticPosition(
+                author="kent",
+                content=request.thesis_content,
+                reasoning=request.thesis_reasoning,
+            ),
+            antithesis=DialecticPosition(
+                author="claude",
+                content=request.antithesis_content,
+                reasoning=request.antithesis_reasoning,
+            ),
+            synthesis=request.synthesis,
+            why=request.why,
+            tags=request.tags,
+        )
+
+        _decisions.append(decision)
+
+        logger.info(f"Created dialectic decision: {decision.id}")
+        return decision
 
     @router.get("/stream")
     async def stream_marks() -> StreamingResponse:

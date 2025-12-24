@@ -211,7 +211,7 @@ def _print_help() -> None:
     print("  (Visualize how deep the inquiry went)")
 
 
-@handler("why", is_async=False, needs_pty=True, tier=2, description="Recursive why inquiry")
+@handler("why", is_async=False, needs_pty=False, tier=1, description="Recursive why inquiry")
 def cmd_why(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Recursive why: Dig to bedrock assumptions.

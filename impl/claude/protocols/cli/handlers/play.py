@@ -46,7 +46,7 @@ def _print_help() -> None:
     print("  --help, -h  Show this help")
 
 
-@handler("play", is_async=False, needs_pty=True, tier=2, description="Interactive playground tutorials")
+@handler("play", is_async=False, needs_pty=False, tier=1, description="Interactive playground tutorials")
 def cmd_play(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Interactive Playground: Learn kgents by doing.

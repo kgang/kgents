@@ -12,6 +12,7 @@ Architecture:
             └── routes events through WitnessPolynomial
             └── sends thoughts to AGENTESE gateway
             └── listens for SIGTERM to gracefully stop
+            └── listens for SIGHUP to reload watcher config
 
 Integration:
     - PID file: ~/.kgents/witness.pid
@@ -399,6 +400,7 @@ class WitnessDaemon:
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGTERM, signal.SIGINT):
             loop.add_signal_handler(sig, self._handle_signal)
+        loop.add_signal_handler(signal.SIGHUP, self._handle_reload)
 
         self._running = True
         self.started_at = datetime.now()
@@ -795,6 +797,75 @@ class WitnessDaemon:
         """Handle shutdown signals."""
         logger.info("Received shutdown signal")
         self._stop_event.set()
+
+    def _handle_reload(self) -> None:
+        """Handle SIGHUP for config reload."""
+        logger.info("Received SIGHUP signal - reloading watchers")
+        asyncio.create_task(self._reload_watchers())
+
+    async def _reload_watchers(self) -> None:
+        """Reload watcher configuration and restart watchers."""
+        try:
+            logger.info("Reloading watcher configuration...")
+
+            # Stop all existing watchers
+            logger.info(f"Stopping {len(self._watchers)} existing watcher(s)...")
+            stop_tasks = [watcher.stop() for watcher in self._watchers.values()]
+            await asyncio.gather(*stop_tasks, return_exceptions=True)
+
+            # Clear watcher dict and stats
+            self._watchers.clear()
+            self.events_by_watcher.clear()
+
+            # Re-read config from environment
+            watchers_str = os.environ.get("KGENTS_WITNESS_WATCHERS", "")
+            new_watchers = tuple(watchers_str.split(",")) if watchers_str else DEFAULT_WATCHERS
+
+            # Update config if changed
+            if new_watchers != self.config.enabled_watchers:
+                logger.info(f"Watchers changed: {self.config.enabled_watchers} -> {new_watchers}")
+                self.config.enabled_watchers = new_watchers
+
+            # Validate new config
+            errors = self.config.validate()
+            if errors:
+                for err in errors:
+                    logger.error(f"Config error during reload: {err}")
+                raise ValueError(f"Invalid configuration: {', '.join(errors)}")
+
+            # Recreate watchers
+            for watcher_type in self.config.enabled_watchers:
+                watcher = create_watcher(watcher_type, self.config)
+                if watcher:
+                    self._watchers[watcher_type] = watcher
+                    self.events_by_watcher[watcher_type] = 0
+                    logger.info(f"Created {watcher_type} watcher")
+
+            if not self._watchers:
+                logger.error("No watchers could be created after reload")
+                return
+
+            # Register event handlers
+            from typing import Callable
+
+            def make_handler(wtype: str) -> Callable[[Any], None]:
+                def handler(event: Any) -> None:
+                    asyncio.create_task(self._handle_event(wtype, event))
+
+                return handler
+
+            for watcher_type, watcher in self._watchers.items():
+                watcher.add_handler(make_handler(watcher_type))
+
+            # Start all new watchers
+            start_tasks = [watcher.start() for watcher in self._watchers.values()]
+            await asyncio.gather(*start_tasks, return_exceptions=True)
+
+            logger.info(f"Successfully reloaded {len(self._watchers)} watcher(s)")
+
+        except Exception as e:
+            logger.error(f"Error reloading watchers: {e}")
+            logger.error("Watchers may be in an inconsistent state")
 
     async def _cleanup(self) -> None:
         """Cleanup resources on shutdown."""

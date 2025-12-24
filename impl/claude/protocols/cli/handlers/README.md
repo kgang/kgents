@@ -167,6 +167,96 @@ Users can invoke via:
 
 All routes converge on the same AGENTESE path, with thin handlers providing rich UX.
 
+## Handler Registration (Required)
+
+Every handler MUST be:
+1. **Decorated** with `@handler()` for metadata
+2. **Registered** in `hollow.py` COMMAND_REGISTRY
+
+```python
+# In your handler file
+from protocols.cli.handler_meta import handler
+
+@handler("mycommand", is_async=True, tier=1, description="My command description")
+async def cmd_mycommand(args: list[str], ctx: InvocationContext | None = None) -> int:
+    ...
+```
+
+```python
+# In hollow.py COMMAND_REGISTRY
+COMMAND_REGISTRY = {
+    "mycommand": "protocols.cli.handlers.mycommand_thin:cmd_mycommand",
+    ...
+}
+```
+
+### Handler Metadata
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `is_async` | False | If True, handler is awaited |
+| `tier` | 1 | Execution tier (1 = async, 2/3 deprecated) |
+| `needs_pty` | False | DEPRECATED - always False |
+| `cpu_bound` | False | Routes to process pool |
+| `io_bound` | True | Routes to thread pool |
+| `description` | "" | Short help text |
+
+**Note**: Tier 2 and Tier 3 (PTY modes) were deprecated on 2025-12-24.
+All handlers now use Tier 1 (async in daemon event loop or sync in thread pool).
+
+**Exception**: TUI commands (`dawn`, `coffee`) bypass the daemon entirely and run locally.
+They require main thread + terminal access for Textual to work properly.
+
+## Daemon Integration
+
+All CLI commands route through the kgentsd daemon. The daemon provides:
+- Persistent state across commands
+- Trust-gated execution
+- Audit logging
+
+### Daemon-Aware Dispatch
+
+Handlers can detect if they're running in the daemon:
+
+```python
+import os
+
+in_daemon = os.environ.get("KGENTS_DAEMON_WORKER") is not None
+
+if in_daemon:
+    # Use daemon's event loop - handlers called directly
+    # ctx.daemon provides access to daemon state
+    pass
+else:
+    # Running locally (KGENTS_NO_DAEMON=1) - bootstrap fresh
+    pass
+```
+
+### Accessing Daemon Context
+
+```python
+@handler("mycommand", is_async=True, tier=1)
+async def cmd_mycommand(args: list[str], ctx: InvocationContext | None = None) -> int:
+    if ctx and ctx.daemon:
+        # Access daemon state
+        storage = ctx.daemon.storage_provider
+        trust = ctx.daemon.trust_level
+    ...
+```
+
+## Fallback Mode
+
+Users can run commands without the daemon:
+
+```bash
+KGENTS_NO_DAEMON=1 kg mycommand
+```
+
+This runs the command locally (with a warning). Useful for:
+- Development without daemon infrastructure
+- Quick commands when daemon is not started
+- Debugging handler code
+
 ## Testing
 
 Thin handlers should be testable via:

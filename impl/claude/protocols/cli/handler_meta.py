@@ -35,6 +35,28 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 # =============================================================================
+# Handler Timeouts (Static Registry)
+# =============================================================================
+# This dict maps command names to their socket timeouts.
+# It's populated statically so socket_client can look up timeouts
+# without importing all handler modules (which are lazy-loaded).
+#
+# When adding a new long-running handler, add it here:
+
+HANDLER_TIMEOUTS: dict[str, float] = {
+    "analyze": 180.0,  # LLM-backed analysis can take 1-2 minutes
+    # Add other long-running handlers here as needed
+    # "crystallize": 300.0,
+    # "archaeology": 120.0,
+}
+
+
+def get_handler_timeout(command: str, default: float = 30.0) -> float:
+    """Get timeout for a command without importing the handler module."""
+    return HANDLER_TIMEOUTS.get(command, default)
+
+
+# =============================================================================
 # Handler Metadata
 # =============================================================================
 
@@ -57,6 +79,7 @@ class HandlerMeta:
         cpu_bound: Whether to route to process pool (LLM, crystallization)
         io_bound: Whether to route to thread pool (database, file I/O)
         description: Optional human-readable description
+        timeout: Socket timeout in seconds (default 30.0)
     """
 
     name: str
@@ -66,6 +89,7 @@ class HandlerMeta:
     cpu_bound: bool = False
     io_bound: bool = True
     description: str = ""
+    timeout: float = 30.0
 
     def __post_init__(self) -> None:
         """Validate metadata consistency."""
@@ -151,6 +175,7 @@ def handler(
     tier: Literal[1, 2, 3] = 1,
     cpu_bound: bool = False,
     description: str = "",
+    timeout: float = 30.0,
 ) -> Callable[[F], F]:
     """
     Decorator to register handler metadata.
@@ -165,6 +190,7 @@ def handler(
         tier: Execution tier (1=pure async, 2=PTY-bridged, 3=subprocess)
         cpu_bound: True to route to process pool
         description: Human-readable description
+        timeout: Socket timeout in seconds (default 30.0)
 
     Returns:
         Decorated function (unchanged, metadata registered)
@@ -177,6 +203,10 @@ def handler(
         @handler("soul", is_async=True, needs_pty=True, tier=2, cpu_bound=True)
         async def cmd_soul(args: list[str], ctx=None) -> int:
             ...
+
+        @handler("analyze", is_async=True, tier=1, timeout=180.0)
+        async def cmd_analyze(args: list[str], ctx=None) -> int:
+            ...
     """
 
     def decorator(fn: F) -> F:
@@ -188,6 +218,7 @@ def handler(
             cpu_bound=cpu_bound,
             io_bound=not cpu_bound,
             description=description or fn.__doc__ or "",
+            timeout=timeout,
         )
         register_handler_meta(meta)
 
@@ -220,6 +251,7 @@ TIER_1_COMMANDS: frozenset[str] = frozenset(
         "explore",
         "docs",
         "archaeology",
+        "evidence",
         "query",
         "q",
         "shortcut",
@@ -238,6 +270,7 @@ TIER_1_COMMANDS: frozenset[str] = frozenset(
         "context",
         "op",
         "experiment",
+        "analyze",
     }
 )
 

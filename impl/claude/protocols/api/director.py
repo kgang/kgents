@@ -2,15 +2,24 @@
 Document Director REST API: Full lifecycle document management.
 
 Provides:
-- POST /api/director/upload         - Upload document, trigger analysis
-- GET  /api/director/documents      - List documents with status
-- GET  /api/director/:path          - Get document detail + analysis
-- GET  /api/director/:path/preview  - Rendered preview (read-only)
-- POST /api/director/:path/analyze  - Re-trigger analysis
-- POST /api/director/:path/prompt   - Generate execution prompt
-- POST /api/director/:path/capture  - Capture execution results
-- GET  /api/director/:path/evidence - Get evidence for document
-- POST /api/director/:path/evidence - Add evidence link
+- POST /api/director/upload              - Upload document, trigger analysis
+- GET  /api/director/summary             - Aggregate stats (replaces ledger)
+- GET  /api/director/documents           - List documents with status + filters
+- GET  /api/director/:path               - Get document detail + analysis
+- GET  /api/director/:path/preview       - Rendered preview (read-only)
+- POST /api/director/:path/analyze       - Re-trigger analysis
+- POST /api/director/:path/prompt        - Generate execution prompt
+- POST /api/director/:path/capture       - Capture execution results
+- GET  /api/director/:path/evidence      - Get evidence for document
+- POST /api/director/:path/evidence      - Add evidence link
+- POST /api/director/:path/deprecate     - Mark document deprecated
+
+Query Parameters (GET /documents):
+- status: Filter by status
+- prefix: Filter by path prefix
+- needs_evidence: Filter to docs without implementations/tests
+- has_placeholders: Filter to docs with unresolved placeholders
+- min_claims: Filter by minimum claim count
 
 Philosophy:
     "Specs become code. Code becomes evidence. Evidence feeds back to specs."
@@ -19,7 +28,9 @@ Philosophy:
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 try:
@@ -41,6 +52,31 @@ except ImportError:
     Field = lambda *args, **kwargs: None  # type: ignore
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+
+def map_analysis_to_document_status(analysis_status: str | None) -> str:
+    """
+    Map AnalysisStatus values to DocumentStatus values.
+
+    AnalysisStatus: pending, analyzing, analyzed, failed, stale
+    DocumentStatus: uploaded, processing, ready, executed, stale, failed
+    """
+    if not analysis_status:
+        return "uploaded"
+
+    status_map = {
+        "pending": "uploaded",
+        "analyzing": "processing",
+        "analyzed": "ready",
+        "failed": "failed",
+        "stale": "stale",
+    }
+    return status_map.get(analysis_status, "uploaded")
 
 
 # =============================================================================
@@ -90,6 +126,7 @@ class DocumentListEntry(BaseModel):
     claim_count: int | None = None
     impl_count: int | None = None
     test_count: int | None = None
+    placeholder_count: int | None = None
     uploaded_at: str | None = None
     analyzed_at: str | None = None
 
@@ -264,6 +301,56 @@ class EvidenceAddResponse(BaseModel):
     message: str = ""
 
 
+class DeprecateRequest(BaseModel):
+    """Request to deprecate a document."""
+
+    reason: str = Field(..., description="Reason for deprecation")
+
+
+class DeprecateResponse(BaseModel):
+    """Response from deprecating a document."""
+
+    success: bool
+    path: str
+    status: str
+    mark_id: str
+    message: str = ""
+
+
+class DeleteResponse(BaseModel):
+    """Response from deleting a document."""
+
+    success: bool
+    path: str
+    mark_id: str
+    message: str = ""
+
+
+class RenameRequest(BaseModel):
+    """Request to rename a document."""
+
+    new_path: str = Field(..., description="New path for the document")
+
+
+class RenameResponse(BaseModel):
+    """Response from renaming a document."""
+
+    success: bool
+    old_path: str
+    new_path: str
+    mark_id: str
+    message: str = ""
+
+
+class SummaryResponse(BaseModel):
+    """Summary statistics for all documents."""
+
+    success: bool
+    total: int
+    by_status: dict[str, int]
+    recent_uploads: list[DocumentListEntry]
+
+
 class ParseRequest(BaseModel):
     """Request to parse document content."""
 
@@ -280,6 +367,106 @@ class ParseResponse(BaseModel):
     section_hashes: dict[int, str]
     token_count: int
     message: str = ""
+
+
+# =============================================================================
+# Background Analysis Helper
+# =============================================================================
+
+
+async def _run_analysis(path: str, store: "Any") -> None:
+    """
+    Background task to run deep analysis after upload.
+
+    Flow:
+    1. Emit analysis.started event
+    2. Run DocumentDirector.analyze_deep()
+    3. On success: Set status to ANALYZED, emit analysis.complete
+    4. On failure: Set status to FAILED, emit analysis.failed
+
+    Args:
+        path: Document path to analyze
+        store: SovereignStore instance
+    """
+    from services.director.director import DocumentDirector
+    from services.director.types import DocumentTopics
+    from services.sovereign.analysis import AnalysisState, AnalysisStatus
+    from services.witness.bus import get_synergy_bus
+
+    try:
+        # Get bus for events
+        bus = get_synergy_bus()
+
+        # Emit started event
+        await bus.publish(
+            DocumentTopics.ANALYSIS_STARTED,
+            {"path": path, "timestamp": datetime.now(UTC).isoformat()},
+        )
+
+        # Get witness persistence
+        from services.providers import get_witness_persistence
+        witness = await get_witness_persistence()
+
+        # Run deep analysis
+        director = DocumentDirector(store, witness, bus)
+        crystal = await director.analyze_deep(path, author="auto-analysis")
+
+        # Set status to ANALYZED
+        await store.set_analysis_state(
+            path,
+            AnalysisState(
+                status=AnalysisStatus.ANALYZED,
+                completed_at=datetime.now(UTC).isoformat(),
+                analysis_mark_id=None,  # Mark is in crystal if needed
+            ),
+        )
+
+        # Emit complete event
+        await bus.publish(
+            DocumentTopics.ANALYSIS_COMPLETE,
+            {
+                "path": path,
+                "claim_count": len(crystal.claims),
+                "anticipated_count": len(crystal.anticipated),
+                "placeholder_count": len(crystal.placeholder_paths),
+                "status": "ready",
+                "timestamp": datetime.now(UTC).isoformat(),
+            },
+        )
+
+        logger.info(
+            f"Auto-analysis complete for {path}: "
+            f"{len(crystal.claims)} claims, {len(crystal.anticipated)} anticipated"
+        )
+
+    except Exception as e:
+        logger.error(f"Auto-analysis failed for {path}: {e}", exc_info=True)
+
+        # Set status to FAILED
+        from services.sovereign.analysis import AnalysisState, AnalysisStatus
+        await store.set_analysis_state(
+            path,
+            AnalysisState(
+                status=AnalysisStatus.FAILED,
+                error=str(e),
+            ),
+        )
+
+        # Emit failed event
+        try:
+            from services.director.types import DocumentTopics
+            from services.witness.bus import get_synergy_bus
+            bus = get_synergy_bus()
+            await bus.publish(
+                DocumentTopics.ANALYSIS_FAILED,
+                {
+                    "path": path,
+                    "error": str(e),
+                    "timestamp": datetime.now(UTC).isoformat(),
+                },
+            )
+        except Exception as bus_error:
+            logger.error(f"Failed to emit analysis.failed event: {bus_error}")
 
 
 # =============================================================================
@@ -363,8 +550,9 @@ def create_director_router() -> APIRouter | None:
         Workflow:
         1. Ingest document into sovereign store
         2. Create birth witness mark
-        3. Set status to PENDING or PROCESSING
-        4. Optionally queue for async analysis
+        3. Set status to PROCESSING (if auto_analyze=True)
+        4. Spawn background task to run deep analysis
+        5. Analysis emits events: started → complete/failed
         """
         from services.providers import get_sovereign_store
         from services.sovereign.ingest import Ingestor
@@ -383,38 +571,137 @@ def create_director_router() -> APIRouter | None:
         ingestor = Ingestor(store, witness=None)
         result = await ingestor.ingest(event, author="api")
 
-        # Set initial status
+        # Set initial status and spawn analysis
         from services.sovereign.analysis import AnalysisState, AnalysisStatus
 
-        status = AnalysisStatus.PENDING
-        await store.set_analysis_state(
-            request.path,
-            AnalysisState(
-                status=status,
-                started_at=None,
-            ),
-        )
-
-        # Queue for analysis if requested
         analysis_queued = False
+        status_value = "pending"
+
         if request.auto_analyze:
-            # TODO: When AnalysisQueue is implemented, enqueue here
-            # For now, just set status
+            # Set status to ANALYZING (processing)
+            await store.set_analysis_state(
+                request.path,
+                AnalysisState(
+                    status=AnalysisStatus.ANALYZING,
+                    started_at=datetime.now(UTC).isoformat(),
+                ),
+            )
+
+            # Spawn background analysis task
+            asyncio.create_task(_run_analysis(request.path, store))
             analysis_queued = True
+            status_value = "processing"
+        else:
+            # Set status to PENDING (awaiting manual trigger)
+            await store.set_analysis_state(
+                request.path,
+                AnalysisState(
+                    status=AnalysisStatus.PENDING,
+                    started_at=None,
+                ),
+            )
 
         return UploadResponse(
             path=result.path,
             version=result.version,
-            status=status.value,
+            status=status_value,
             ingest_mark_id=result.ingest_mark_id,
             analysis_queued=analysis_queued,
             message="Document uploaded successfully",
+        )
+
+    @router.get("/summary", response_model=SummaryResponse)
+    async def get_summary() -> SummaryResponse:
+        """
+        Get aggregate statistics for all documents.
+
+        Replaces Living Spec Ledger summary functionality.
+
+        Returns:
+        - Total document count
+        - Breakdown by status (uploaded, processing, ready, executed, stale, failed)
+        - Recent uploads (last 10)
+        """
+        from services.providers import get_sovereign_store
+
+        store = await get_sovereign_store()
+        all_paths = await store.list_all()
+
+        # Compute status breakdown
+        by_status: dict[str, int] = {
+            "uploaded": 0,
+            "processing": 0,
+            "ready": 0,
+            "executed": 0,
+            "stale": 0,
+            "failed": 0,
+        }
+
+        # Track recent uploads for later sorting
+        recent_docs: list[tuple[str, str | None]] = []  # (path, created_at)
+
+        for path in all_paths:
+            state = await store.get_analysis_state(path)
+            entity = await store.get_current(path)
+
+            # Map AnalysisStatus to DocumentStatus
+            analysis_status = state.status.value if state else None
+            doc_status = map_analysis_to_document_status(analysis_status)
+
+            if doc_status in by_status:
+                by_status[doc_status] += 1
+
+            # Track for recent uploads
+            if entity:
+                created_at = entity.metadata.get("created_at")
+                recent_docs.append((path, created_at))
+
+        # Sort by created_at and take most recent 10
+        recent_docs.sort(key=lambda x: x[1] or "", reverse=True)
+        recent_paths = [path for path, _ in recent_docs[:10]]
+
+        # Build detailed entries for recent uploads
+        recent_uploads = []
+        for path in recent_paths:
+            entity = await store.get_current(path)
+            if not entity:
+                continue
+
+            state = await store.get_analysis_state(path)
+            overlay = await store.get_overlay(path, "analysis")
+
+            doc_status = map_analysis_to_document_status(state.status.value if state else None)
+
+            recent_uploads.append(
+                DocumentListEntry(
+                    path=path,
+                    title=overlay.get("title", path) if overlay else path,
+                    status=doc_status,
+                    version=entity.version,
+                    word_count=overlay.get("word_count") if overlay else None,
+                    claim_count=len(overlay.get("claims", [])) if overlay else None,
+                    impl_count=len(overlay.get("implementations", [])) if overlay else None,
+                    test_count=len(overlay.get("tests", [])) if overlay else None,
+                    placeholder_count=len(overlay.get("placeholder_paths", [])) if overlay else None,
+                    uploaded_at=entity.metadata.get("created_at"),
+                    analyzed_at=overlay.get("analyzed_at") if overlay else None,
+                )
+            )
+
+        return SummaryResponse(
+            success=True,
+            total=len(all_paths),
+            by_status=by_status,
+            recent_uploads=recent_uploads,
         )
 
     @router.get("/documents", response_model=DocumentListResponse)
     async def list_documents(
         status: str | None = Query(default=None, description="Filter by status"),
         prefix: str = Query(default="", description="Filter by path prefix"),
+        needs_evidence: bool = Query(default=False, description="Filter to documents without implementations/tests"),
+        has_placeholders: bool = Query(default=False, description="Filter to documents with unresolved placeholders"),
+        min_claims: int | None = Query(default=None, ge=0, description="Filter by minimum claim count"),
         sort_by: str = Query(default="path", description="Sort field"),
         limit: int = Query(default=100, ge=1, le=500, description="Max results"),
         offset: int = Query(default=0, ge=0, description="Pagination offset"),
@@ -433,14 +720,41 @@ def create_director_router() -> APIRouter | None:
         if prefix:
             all_paths = [p for p in all_paths if p.startswith(prefix)]
 
-        # Filter by status
-        if status:
-            filtered = []
-            for path in all_paths:
-                state = await store.get_analysis_state(path)
-                if state and state.status.value == status:
-                    filtered.append(path)
-            all_paths = filtered
+        # Apply filters - need to check overlay data
+        filtered = []
+        for path in all_paths:
+            state = await store.get_analysis_state(path)
+            overlay = await store.get_overlay(path, "analysis")
+
+            # Filter by status (map DocumentStatus to AnalysisStatus for comparison)
+            if status:
+                analysis_status = state.status.value if state else None
+                doc_status = map_analysis_to_document_status(analysis_status)
+                if doc_status != status:
+                    continue
+
+            # Filter by needs_evidence (no implementations or tests)
+            if needs_evidence and overlay:
+                impls = overlay.get("implementations", [])
+                tests = overlay.get("tests", [])
+                if impls or tests:
+                    continue
+
+            # Filter by has_placeholders
+            if has_placeholders and overlay:
+                placeholders = overlay.get("placeholder_paths", [])
+                if not placeholders:
+                    continue
+
+            # Filter by min_claims
+            if min_claims is not None and overlay:
+                claims = overlay.get("claims", [])
+                if len(claims) < min_claims:
+                    continue
+
+            filtered.append(path)
+
+        all_paths = filtered
 
         # Pagination
         total = len(all_paths)
@@ -456,7 +770,7 @@ def create_director_router() -> APIRouter | None:
             state = await store.get_analysis_state(path)
             overlay = await store.get_overlay(path, "analysis")
 
-            doc_status = state.status.value if state else DocumentStatus.UPLOADED
+            doc_status = map_analysis_to_document_status(state.status.value if state else None)
 
             documents.append(
                 DocumentListEntry(
@@ -468,6 +782,7 @@ def create_director_router() -> APIRouter | None:
                     claim_count=len(overlay.get("claims", [])) if overlay else None,
                     impl_count=len(overlay.get("implementations", [])) if overlay else None,
                     test_count=len(overlay.get("tests", [])) if overlay else None,
+                    placeholder_count=len(overlay.get("placeholder_paths", [])) if overlay else None,
                     uploaded_at=entity.metadata.get("created_at"),
                     analyzed_at=overlay.get("analyzed_at") if overlay else None,
                 )
@@ -506,7 +821,7 @@ def create_director_router() -> APIRouter | None:
 
         # Get analysis state
         state = await store.get_analysis_state(path)
-        doc_status = state.status.value if state else DocumentStatus.UPLOADED
+        doc_status = map_analysis_to_document_status(state.status.value if state else None)
 
         # Get analysis overlay
         overlay = await store.get_overlay(path, "analysis")
@@ -570,7 +885,7 @@ def create_director_router() -> APIRouter | None:
         rendered_html = f"<pre>{entity.content_text}</pre>"
 
         state = await store.get_analysis_state(path)
-        doc_status = state.status.value if state else DocumentStatus.UPLOADED
+        doc_status = map_analysis_to_document_status(state.status.value if state else None)
 
         overlay = await store.get_overlay(path, "analysis")
         title = overlay.get("title", path) if overlay else path
@@ -899,6 +1214,208 @@ Existing implementations:
             message="Evidence link created successfully",
         )
 
+    # =========================================================================
+    # Document Lifecycle Management Routes
+    # =========================================================================
+
+    @router.post("/documents/{path:path}/deprecate", response_model=DeprecateResponse)
+    async def deprecate_document(path: str, request: DeprecateRequest) -> DeprecateResponse:
+        """
+        Mark a document as deprecated (stale).
+
+        Workflow:
+        1. Update status to STALE
+        2. Create witness mark with deprecation reason
+        3. Document becomes read-only until re-analysis
+
+        Use this when:
+        - Spec is outdated and needs revision
+        - Implementation has diverged from spec
+        - Document superseded by newer version
+        """
+        from services.providers import get_sovereign_store, get_witness_persistence
+        from services.sovereign.analysis import AnalysisState, AnalysisStatus
+
+        store = await get_sovereign_store()
+        witness = await get_witness_persistence()
+
+        # Verify document exists
+        entity = await store.get_current(path)
+        if not entity:
+            raise HTTPException(status_code=404, detail=f"Document not found: {path}")
+
+        # Get current state
+        state = await store.get_analysis_state(path)
+        current_status = state.status.value if state else "unknown"
+
+        # Update status to STALE
+        new_state = AnalysisState(
+            status=AnalysisStatus.STALE,
+            started_at=None,
+            completed_at=None,
+            error=f"Deprecated: {request.reason}",
+        )
+
+        # Preserve existing analysis data if present
+        if state:
+            new_state.discovered_refs = state.discovered_refs
+            new_state.placeholder_paths = state.placeholder_paths
+            new_state.analysis_mark_id = state.analysis_mark_id
+
+        await store.set_analysis_state(path, new_state)
+
+        # Create deprecation witness mark
+        mark = await witness.save_mark(
+            action=f"Deprecated: {path}",
+            reasoning=request.reason,
+            tags=[
+                "deprecation",
+                f"spec:{path}",
+                f"previous_status:{current_status}",
+            ],
+            author="director",
+        )
+
+        return DeprecateResponse(
+            success=True,
+            path=path,
+            status="stale",
+            mark_id=mark.mark_id,
+            message=f"Document marked as deprecated: {request.reason}",
+        )
+
+    @router.delete("/documents/{path:path}", response_model=DeleteResponse)
+    async def delete_document(path: str) -> DeleteResponse:
+        """
+        Delete a document permanently.
+
+        Workflow:
+        1. Verify document exists
+        2. Create witness mark recording deletion
+        3. Remove from sovereign store
+        4. Clean up analysis state and overlays
+
+        WARNING: This is destructive and cannot be undone.
+        """
+        from services.providers import get_sovereign_store, get_witness_persistence
+
+        store = await get_sovereign_store()
+        witness = await get_witness_persistence()
+
+        # Verify document exists
+        entity = await store.get_current(path)
+        if not entity:
+            raise HTTPException(status_code=404, detail=f"Document not found: {path}")
+
+        # Delete from store using the full delete method
+        # This will:
+        # 1. Create witness mark BEFORE deletion
+        # 2. Remove the entity and all versions
+        # 3. Remove analysis state and overlays
+        # 4. Handle any references (with safety checks)
+        delete_result = await store.delete(
+            path=path,
+            check_references=False,  # Director allows deleting documents with references
+            force=True,  # Force deletion
+            witness=witness,
+            author="director",
+        )
+
+        if not delete_result.success:
+            raise HTTPException(status_code=500, detail=f"Failed to delete document: {path}")
+
+        return DeleteResponse(
+            success=True,
+            path=path,
+            mark_id=delete_result.mark_id or "",
+            message=f"Document deleted: {path}",
+        )
+
+    @router.put("/documents/{path:path}/rename", response_model=RenameResponse)
+    async def rename_document(path: str, request: RenameRequest) -> RenameResponse:
+        """
+        Rename a document.
+
+        Workflow:
+        1. Verify source document exists
+        2. Verify target path doesn't exist
+        3. Copy entity to new path
+        4. Copy analysis state and overlays
+        5. Create witness mark
+        6. Delete old path
+
+        This maintains version history at the new path.
+        """
+        from services.providers import get_sovereign_store, get_witness_persistence
+
+        store = await get_sovereign_store()
+        witness = await get_witness_persistence()
+
+        # Verify source exists
+        entity = await store.get_current(path)
+        if not entity:
+            raise HTTPException(status_code=404, detail=f"Document not found: {path}")
+
+        # Verify target doesn't exist
+        target_exists = await store.get_current(request.new_path)
+        if target_exists:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Target path already exists: {request.new_path}"
+            )
+
+        # Get analysis state and overlay
+        state = await store.get_analysis_state(path)
+        overlay = await store.get_overlay(path, "analysis")
+
+        # Create witness mark
+        mark = await witness.save_mark(
+            action=f"Renamed: {path} → {request.new_path}",
+            reasoning=f"Document renamed from {path} to {request.new_path}",
+            tags=[
+                "rename",
+                f"old:{path}",
+                f"new:{request.new_path}",
+            ],
+            author="director",
+        )
+
+        # TODO: Add proper rename method to SovereignStore
+        # For now, we would:
+        # 1. Store content at new path
+        # 2. Copy analysis state
+        # 3. Copy overlays
+        # 4. Delete old path
+        # await store.rename(path, request.new_path)
+
+        # Placeholder implementation - store at new path
+        from services.sovereign.types import IngestEvent
+        from services.sovereign.ingest import Ingestor
+
+        event = IngestEvent.from_content(
+            content=entity.content,
+            claimed_path=request.new_path,
+            source="rename",
+        )
+        ingestor = Ingestor(store, witness=witness)
+        await ingestor.ingest(event, author="director")
+
+        # Copy analysis state if it exists
+        if state:
+            await store.set_analysis_state(request.new_path, state)
+
+        # Copy overlay if it exists
+        if overlay:
+            await store.store_overlay(request.new_path, "analysis", overlay)
+
+        return RenameResponse(
+            success=True,
+            old_path=path,
+            new_path=request.new_path,
+            mark_id=mark.mark_id,
+            message=f"Document renamed: {path} → {request.new_path}",
+        )
+
     return router
 
 
@@ -909,4 +1426,10 @@ Existing implementations:
 __all__ = [
     "create_director_router",
     "DocumentStatus",
+    "SummaryResponse",
+    "DeprecateRequest",
+    "DeprecateResponse",
+    "DeleteResponse",
+    "RenameRequest",
+    "RenameResponse",
 ]

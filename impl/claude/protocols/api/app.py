@@ -285,14 +285,6 @@ def create_app(
         app.include_router(witness_router)
         logger.info("Witness API mounted at /api/witness")
 
-    # Spec Ledger REST API (living spec dashboard)
-    from .spec_ledger import create_spec_ledger_router
-
-    spec_ledger_router = create_spec_ledger_router()
-    if spec_ledger_router is not None:
-        app.include_router(spec_ledger_router)
-        logger.info("Spec Ledger API mounted at /api/spec")
-
     # === Sovereign API ===
     from .sovereign import create_sovereign_router
 
@@ -316,6 +308,14 @@ def create_app(
     if director_router is not None:
         app.include_router(director_router)
         logger.info("Document Director API mounted at /api/director")
+
+    # === Zero Seed API ===
+    from .zero_seed import create_zero_seed_router
+
+    zero_seed_router = create_zero_seed_router()
+    if zero_seed_router is not None:
+        app.include_router(zero_seed_router)
+        logger.info("Zero Seed API mounted at /api/zero-seed")
 
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
@@ -620,6 +620,16 @@ def create_app(
                     "capture": "POST /api/director/documents/{path}/capture",
                     "evidence": "GET /api/director/documents/{path}/evidence",
                     "evidence_add": "POST /api/director/documents/{path}/evidence",
+                },
+                "zero_seed": {
+                    "note": "Epistemic graph navigation with Galois loss visualization",
+                    "axioms": "GET /api/zero-seed/axioms",
+                    "proofs": "GET /api/zero-seed/proofs",
+                    "health": "GET /api/zero-seed/health",
+                    "telescope": "GET /api/zero-seed/telescope",
+                    "navigate": "POST /api/zero-seed/navigate",
+                    "node_detail": "GET /api/zero-seed/nodes/{node_id}",
+                    "layer_nodes": "GET /api/zero-seed/layers/{layer}",
                 },
                 "webhooks": {
                     "stripe": "/webhooks/stripe",

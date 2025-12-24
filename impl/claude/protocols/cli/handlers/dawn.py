@@ -95,13 +95,16 @@ def _get_managers() -> tuple[Any, Any]:
 # =============================================================================
 
 
-@handler("dawn", is_async=False, needs_pty=True, tier=3, description="Dawn Cockpit TUI")
+@handler("dawn", is_async=False, needs_pty=False, tier=1, description="Dawn Cockpit TUI")
 def cmd_dawn(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Dawn Cockpit: Your daily operating surface.
 
     Default: Launch the TUI.
     Use --cli for command-line only operations.
+
+    NOTE: TUI mode requires foreground daemon (kgentsd summon -f)
+    or direct invocation (KGENTS_INSIDE_DAEMON=1 kg dawn).
     """
     # Parse flags
     json_output = "--json" in args

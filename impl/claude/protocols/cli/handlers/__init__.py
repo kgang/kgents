@@ -18,6 +18,9 @@ Structure:
 - soul.py: K-gent Digital Soul (Middleware of Consciousness)
 - semaphore.py: Agent Semaphores (Rodizio Pattern)
 - prompt.py: Evergreen Prompt System (Wave 6 Living CLI)
+- archaeology.py: Git history mining for priors and teachings
+- evidence.py: Evidence mining & ROI tracking (stratified evidence ladder)
+- analyze.py: Four-mode spec analysis (categorical, epistemic, dialectical, generative)
 
 All handlers follow the signature:
     def cmd_<name>(args: list[str]) -> int

@@ -48,7 +48,6 @@ DEFAULT_TIMEOUT = 30.0  # seconds
 SAFE_ENV_VARS = frozenset(
     {
         # kgents-specific
-        "KGENTS_FD3",
         "KGENTS_DATABASE_URL",
         "KGENTS_DEBUG",
         "KGENTS_GATEWAY_URL",
@@ -127,6 +126,24 @@ def is_daemon_available(socket_path: Path | None = None) -> bool:
         return False
 
 
+def _should_use_pty(command: str) -> bool:
+    """Determine if a command should use PTY mode.
+
+    PTY ELIMINATION (2025-12-24):
+    PTY mode has been disabled to simplify daemon architecture.
+    All commands now use simple request-response mode with streaming output.
+
+    For TUI applications (dawn, coffee), run in foreground mode:
+        kgentsd summon -f
+
+    Returns:
+        Always False - PTY mode is disabled
+    """
+    # PTY eliminated for architectural simplicity
+    # See: plans/vision-command-substrate.md
+    return False
+
+
 def route_command(
     command: str,
     args: list[str],
@@ -137,14 +154,15 @@ def route_command(
 ) -> CLIResponse:
     """Route a command through the daemon via Unix socket.
 
-    Automatically selects PTY mode if stdin/stdout are TTYs.
+    Automatically selects PTY mode only for Tier 2 handlers (interactive).
+    Tier 1 handlers use simple mode even from TTY to avoid raw mode issues.
 
     Args:
         command: The command name (e.g., "brain")
         args: Command arguments (e.g., ["capture", "hello"])
         flags: Global flags from hollow.py (--format, --budget, etc.)
         socket_path: Override socket path (for testing)
-        timeout: Socket timeout in seconds
+        timeout: Socket timeout in seconds (overrides handler metadata)
 
     Returns:
         CLIResponse with exit_code, stdout, stderr, semantic
@@ -155,8 +173,24 @@ def route_command(
         DaemonTimeoutError: No response within timeout
         DaemonProtocolError: Invalid response format
     """
-    # Auto-select PTY mode if both stdin and stdout are TTYs
+    # Look up handler-specific timeout if not explicitly provided
+    # This allows operations like 'analyze' to declare longer timeouts
+    if timeout == DEFAULT_TIMEOUT:
+        try:
+            from protocols.cli.handler_meta import get_handler_timeout
+            timeout = get_handler_timeout(command, DEFAULT_TIMEOUT)
+        except ImportError:
+            # Fallback gracefully if handler_meta not available
+            pass
+
+    # PTY mode ONLY for Tier 2 handlers (interactive commands that need terminal I/O)
+    # Tier 1 handlers should use simple mode to avoid raw terminal mode corruption
+    use_pty = False
     if sys.stdin.isatty() and sys.stdout.isatty():
+        # Check if this command requires PTY (Tier 2)
+        use_pty = _should_use_pty(command)
+
+    if use_pty:
         return route_command_pty(
             command, args, flags, socket_path=socket_path, timeout=timeout
         )
@@ -181,6 +215,9 @@ def route_command_simple(
     path = socket_path or SOCKET_PATH
 
     # Build request
+    # Get terminal size for proper formatting
+    term_size = _get_terminal_size()
+
     request = CLIRequest(
         command=command,
         args=args,
@@ -189,6 +226,7 @@ def route_command_simple(
         flags=flags,
         correlation_id=str(uuid.uuid4()),
         pty=False,
+        term_size=term_size,
     )
 
     # Connect

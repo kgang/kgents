@@ -5,14 +5,23 @@ An LLMAgent wraps the bootstrap Agent with an LLM execution strategy.
 The runtime handles the actual API calls and response parsing.
 
 Uses bootstrap Fix pattern for retry logic with convergence tracking.
+
+Teaching:
+    gotcha: Do NOT import from agents.* at module level here!
+            This causes circular imports because agents/ imports runtime/.
+            Use TYPE_CHECKING for type hints, lazy imports for runtime use.
+            (Evidence: agents/a/creativity.py imports from runtime.base)
 """
 
 import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable, Generic, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Generic, Optional, TypeVar, Union
 
-from agents.poly import Agent, Fix, FixConfig, FixResult
+# Lazy import to avoid circular dependency
+# agents/ imports runtime/, runtime/ must not import agents/ at module level
+if TYPE_CHECKING:
+    from agents.poly import Agent, Fix, FixConfig, FixResult
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -126,13 +135,16 @@ class AgentResult(Generic[B]):
         return self.usage.get("total_tokens", 0)
 
 
-class LLMAgent(Agent[A, B], ABC):
+class LLMAgent(ABC, Generic[A, B]):
     """
     Base class for LLM-backed agents.
 
-    Extends the bootstrap Agent interface with LLM-specific methods:
+    Implements the Agent interface (name, invoke, >>) with LLM-specific methods:
     - build_prompt: Convert input to LLM prompt
     - parse_response: Extract output from LLM response
+
+    Note: Does not extend agents.poly.Agent to avoid circular imports.
+    Implements the same interface via duck typing.
 
     Usage:
         class MyAgent(LLMAgent[str, dict]):
@@ -358,14 +370,17 @@ async def with_retry(
         """Converged when succeeded or hit max attempts."""
         return b.succeeded or b.attempt >= max_attempts
 
-    config: FixConfig[RetryState[B]] = FixConfig(
+    # Lazy import to avoid circular dependency at module level
+    from agents.poly import Fix, FixConfig
+
+    config: "FixConfig[RetryState[B]]" = FixConfig(
         max_iterations=max_attempts,
         equality_check=has_converged,
     )
 
     initial_state: RetryState[B] = RetryState()
-    fix_agent: Fix[RetryState[B]] = Fix(config)
-    fix_result: FixResult[RetryState[B]] = await fix_agent.invoke((retry_transform, initial_state))
+    fix_agent: "Fix[RetryState[B]]" = Fix(config)
+    fix_result = await fix_agent.invoke((retry_transform, initial_state))
 
     final_state = fix_result.value
 
