@@ -1,0 +1,676 @@
+/**
+ * AnalysisQuadrant Styles
+ *
+ * Four-panel layout for categorical, epistemic, dialectical, generative analysis.
+ * Uses viridis palette for loss-aware coloring.
+ */
+
+/* =============================================================================
+   Quadrant Container
+   ============================================================================= */
+
+.analysis-quadrant {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--color-bg-secondary, #0a0a0f);
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #2a2a3a);
+}
+
+.analysis-quadrant__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border, #2a2a3a);
+}
+
+.analysis-quadrant__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary, #e0e0f0);
+  margin: 0;
+}
+
+.analysis-quadrant__node-id {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  color: var(--color-text-secondary, #a0a0b0);
+}
+
+.analysis-quadrant__close {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #a0a0b0);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 150ms ease;
+}
+
+.analysis-quadrant__close:hover {
+  background: var(--color-bg-tertiary, #1a1a25);
+  color: var(--color-text-primary, #e0e0f0);
+}
+
+/* =============================================================================
+   Grid Layout
+   ============================================================================= */
+
+.analysis-quadrant__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Responsive: stack on mobile */
+@media (max-width: 768px) {
+  .analysis-quadrant__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =============================================================================
+   Panel Base
+   ============================================================================= */
+
+.analysis-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--color-bg-tertiary, #1a1a25);
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #2a2a3a);
+  min-height: 200px;
+}
+
+.analysis-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border, #2a2a3a);
+}
+
+.analysis-panel__icon {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.analysis-panel__title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary, #a0a0b0);
+  margin: 0;
+  flex: 1;
+}
+
+.analysis-panel__status {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.analysis-panel__status--pass {
+  color: var(--viridis-30, #31688e);
+}
+
+.analysis-panel__status--fail {
+  color: var(--viridis-70, #6ece58);
+}
+
+.analysis-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.analysis-panel__loading,
+.analysis-panel__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-tertiary, #606070);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* =============================================================================
+   Mode-Specific Accents
+   ============================================================================= */
+
+.analysis-panel--categorical {
+  border-left: 3px solid var(--viridis-30, #31688e);
+}
+
+.analysis-panel--categorical .analysis-panel__icon {
+  color: var(--viridis-30, #31688e);
+}
+
+.analysis-panel--epistemic {
+  border-left: 3px solid var(--viridis-50, #1f9e89);
+}
+
+.analysis-panel--epistemic .analysis-panel__icon {
+  color: var(--viridis-50, #1f9e89);
+}
+
+.analysis-panel--dialectical {
+  border-left: 3px solid var(--viridis-60, #35b779);
+}
+
+.analysis-panel--dialectical .analysis-panel__icon {
+  color: var(--viridis-60, #35b779);
+}
+
+.analysis-panel--generative {
+  border-left: 3px solid var(--viridis-40, #26838f);
+}
+
+.analysis-panel--generative .analysis-panel__icon {
+  color: var(--viridis-40, #26838f);
+}
+
+/* =============================================================================
+   Metrics
+   ============================================================================= */
+
+.analysis-metric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.analysis-metric__label {
+  font-size: 12px;
+  color: var(--color-text-secondary, #a0a0b0);
+}
+
+.analysis-metric__value {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  color: var(--color-text-primary, #e0e0f0);
+}
+
+/* =============================================================================
+   Categorical: Law List
+   ============================================================================= */
+
+.law-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.law-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--color-bg-secondary, #0a0a0f);
+  border-radius: 4px;
+}
+
+.law-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.law-status--passed {
+  background: var(--viridis-30, #31688e);
+  color: white;
+}
+
+.law-status--structural {
+  background: var(--viridis-50, #1f9e89);
+  color: white;
+}
+
+.law-status--failed {
+  background: var(--viridis-70, #6ece58);
+  color: black;
+}
+
+.law-status--undecidable {
+  background: var(--color-bg-tertiary, #1a1a25);
+  border: 1px solid var(--color-border, #2a2a3a);
+  color: var(--color-text-secondary, #a0a0b0);
+}
+
+.law-name {
+  font-size: 12px;
+  color: var(--color-text-primary, #e0e0f0);
+}
+
+.fixed-point-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--viridis-0, #440154);
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.fixed-point-icon {
+  font-size: 14px;
+  color: white;
+}
+
+.fixed-point-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+}
+
+/* =============================================================================
+   Epistemic: Grounding Chain
+   ============================================================================= */
+
+.evidence-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--viridis-50, #1f9e89);
+  color: white;
+  border-radius: 3px;
+}
+
+.grounding-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.grounding-chain__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #a0a0b0);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.grounding-chain__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.grounding-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: var(--color-bg-secondary, #0a0a0f);
+  border-radius: 4px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 11px;
+}
+
+.grounding-step__layer {
+  font-weight: 700;
+  color: var(--viridis-50, #1f9e89);
+}
+
+.grounding-step__arrow {
+  color: var(--color-text-tertiary, #606070);
+}
+
+.grounding-step__node {
+  flex: 1;
+  color: var(--color-text-primary, #e0e0f0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grounding-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--color-bg-secondary, #0a0a0f);
+  border-radius: 4px;
+}
+
+.grounding-status__icon {
+  font-size: 14px;
+}
+
+.grounding-status__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary, #e0e0f0);
+}
+
+/* =============================================================================
+   Dialectical: Tensions
+   ============================================================================= */
+
+.tension-breakdown {
+  display: flex;
+  gap: 10px;
+}
+
+.tension-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  padding: 8px;
+  background: var(--color-bg-secondary, #0a0a0f);
+  border-radius: 4px;
+}
+
+.tension-stat__icon {
+  font-size: 16px;
+}
+
+.tension-stat--productive .tension-stat__icon {
+  color: var(--viridis-60, #35b779);
+}
+
+.tension-stat--problematic .tension-stat__icon {
+  color: var(--viridis-70, #6ece58);
+}
+
+.tension-stat__count {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary, #e0e0f0);
+}
+
+.tension-stat__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--color-text-secondary, #a0a0b0);
+}
+
+.tension-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tension-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--color-bg-secondary, #0a0a0f);
+  border-radius: 4px;
+  border-left: 3px solid transparent;
+}
+
+.tension-item--productive {
+  border-left-color: var(--viridis-60, #35b779);
+}
+
+.tension-item--problematic {
+  border-left-color: var(--viridis-70, #6ece58);
+}
+
+.tension-item--paraconsistent {
+  border-left-color: var(--viridis-50, #1f9e89);
+}
+
+.tension-item__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tension-item__icon {
+  font-size: 12px;
+}
+
+.tension-item__type {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--color-text-secondary, #a0a0b0);
+}
+
+.tension-item__resolved {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--viridis-30, #31688e);
+}
+
+.tension-item__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.tension-item__thesis,
+.tension-item__antithesis {
+  color: var(--color-text-primary, #e0e0f0);
+  line-height: 1.4;
+}
+
+.tension-item__vs {
+  align-self: center;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, #606070);
+}
+
+/* =============================================================================
+   Generative: Compression & Kernel
+   ============================================================================= */
+
+.compression-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.compression-metric__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #a0a0b0);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.compression-metric__value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.compression-ratio {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+.compression-quality {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.compression-quality--excellent {
+  background: var(--viridis-30, #31688e);
+  color: white;
+}
+
+.compression-quality--good {
+  background: var(--viridis-50, #1f9e89);
+  color: white;
+}
+
+.compression-quality--poor {
+  background: var(--viridis-70, #6ece58);
+  color: black;
+}
+
+.compression-bar {
+  height: 4px;
+  background: var(--color-bg-secondary, #0a0a0f);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.compression-bar__fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 300ms ease;
+}
+
+.kernel-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kernel-metric__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #a0a0b0);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.kernel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kernel-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: var(--color-bg-secondary, #0a0a0f);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.kernel-item__bullet {
+  color: var(--viridis-40, #26838f);
+  font-size: 14px;
+}
+
+.kernel-item__text {
+  color: var(--color-text-primary, #e0e0f0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kernel-item--more {
+  font-style: italic;
+  color: var(--color-text-tertiary, #606070);
+  justify-content: center;
+}
+
+/* =============================================================================
+   Summary
+   ============================================================================= */
+
+.analysis-summary {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border, #2a2a3a);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--color-text-secondary, #a0a0b0);
+  font-style: italic;
+}
+
+/* =============================================================================
+   Footer
+   ============================================================================= */
+
+.analysis-quadrant__footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border, #2a2a3a);
+}
+
+.analysis-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.analysis-status--valid {
+  background: var(--viridis-30, #31688e);
+  color: white;
+}
+
+.analysis-status--invalid {
+  background: var(--viridis-70, #6ece58);
+  color: black;
+}
+
+.analysis-status__icon {
+  font-size: 16px;
+}
+
+.analysis-status__text {
+  font-size: 13px;
+}
+
+/* =============================================================================
+   Error State
+   ============================================================================= */
+
+.analysis-quadrant--error {
+  min-height: 200px;
+}
+
+.analysis-quadrant__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  text-align: center;
+}
+
+.analysis-quadrant__error-icon {
+  font-size: 48px;
+  color: var(--viridis-70, #6ece58);
+}
+
+.analysis-quadrant__error-message {
+  font-size: 14px;
+  color: var(--color-text-secondary, #a0a0b0);
+}
