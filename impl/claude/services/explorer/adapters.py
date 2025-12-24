@@ -61,12 +61,23 @@ def _safe_timestamp(value: Any) -> str:
     """
     Safely convert a timestamp to ISO format string.
 
-    Handles: datetime, string, None, and other types gracefully.
+    Handles: datetime, string, float (Unix timestamp), None, and other types.
+    Always returns ISO 8601 format for frontend compatibility.
     """
     if value is None:
         return datetime.utcnow().isoformat()
+    if isinstance(value, (int, float)):
+        # Unix timestamp - convert to ISO
+        return datetime.fromtimestamp(value).isoformat()
     if isinstance(value, str):
-        return value  # Already a string
+        # Check if it looks like a Unix timestamp (numeric string)
+        try:
+            ts = float(value)
+            if ts > 1000000000:  # Looks like a Unix timestamp (after 2001)
+                return datetime.fromtimestamp(ts).isoformat()
+        except ValueError:
+            pass
+        return value  # Already ISO format string
     if hasattr(value, "isoformat"):
         return str(value.isoformat())
     return str(value)
