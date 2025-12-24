@@ -176,7 +176,7 @@ export function useWitnessedGraphData(
         label: pathToLabel(path),
         path,
         tier: pathToTier(path),
-        status: 'ACTIVE' as const, // Graph nodes are always "active"
+        status: 'active' as const, // Graph nodes are always "active"
         claimCount: 0,
         implCount: edgeCount, // Use edge count as proxy for "impl count"
         testCount: 0,

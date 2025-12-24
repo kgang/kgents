@@ -26,11 +26,22 @@ import { useNavigation } from './useNavigation';
 import { useKeyHandler } from './useKeyHandler';
 import { useKBlock } from './useKBlock';
 import { useDirector } from '../hooks/useDirector';
+import { useLivingCanvas } from './useLivingCanvas';
+import { useLossNavigation } from './useLossNavigation';
 import { StatusLine } from './StatusLine';
 import { CommandLine } from './CommandLine';
+import { CommandPalette } from './CommandPalette';
 import { EdgePanel } from './EdgePanel';
 import { WitnessPanel } from './WitnessPanel';
 import { HelpPanel } from './HelpPanel';
+import { GraphSidebar } from './GraphSidebar';
+import { DialogueView } from './DialogueView';
+import { DialecticModal } from './DialecticModal';
+import { DecisionFooterWidget } from './DecisionFooterWidget';
+import { DecisionStream } from './DecisionStream';
+import { VetoPanel } from './VetoPanel';
+import { useDialecticDecisions } from './useDialecticDecisions';
+import type { DialecticDecision, QuickDecisionInput, FullDialecticInput } from './types/dialectic';
 import { MarkdownEditorRef } from '../components/editor';
 import { Header, TrailBar, EdgeGutter, ContentPane } from './panes';
 import type { GraphNode, Edge } from './state/types';
@@ -56,6 +67,9 @@ interface HypergraphEditorProps {
 
   /** External function to load siblings */
   loadSiblings?: (node: GraphNode) => Promise<GraphNode[]>;
+
+  /** Callback to navigate to Zero Seed page */
+  onZeroSeed?: (tab?: string) => void;
 }
 
 // =============================================================================
@@ -68,14 +82,13 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   onNavigate,
   loadNode,
   loadSiblings,
+  onZeroSeed,
 }: HypergraphEditorProps) {
   const navigation = useNavigation();
   const {
     state,
     dispatch,
     focusNode,
-    goParent,
-    goChild,
     goDefinition,
     goReferences,
     goTests,
@@ -96,12 +109,37 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     autoFetch: state.currentNode?.kind === 'spec',
   });
 
+  // Living Canvas (graph sidebar)
+  const handleGraphNodeClick = useCallback(
+    (path: string) => {
+      onNavigate?.(path);
+      if (loadNode) {
+        loadNode(path).then((node) => {
+          if (node) {
+            focusNode(node);
+            onNodeFocus?.(node);
+          }
+        });
+      }
+    },
+    [onNavigate, loadNode, focusNode, onNodeFocus]
+  );
+
+  const livingCanvas = useLivingCanvas({
+    onNodeClick: handleGraphNodeClick,
+    editorFocusedPath: state.currentNode?.path,
+  });
+
+  // Loss navigation
+  const lossNav = useLossNavigation();
+
   // Refs
   const commandLineRef = useRef<HTMLInputElement>(null);
   const readerEditorRef = useRef<MarkdownEditorRef>(null);
 
   // UI state
   const [commandLineVisible, setCommandLineVisible] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [witnessLoading, setWitnessLoading] = useState(false);
   const [confidenceVisible, setConfidenceVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
@@ -110,6 +148,23 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     type: 'success' | 'warning' | 'error';
     text: string;
   } | null>(null);
+
+  // Dialectic UI state
+  const [dialecticModalOpen, setDialecticModalOpen] = useState(false);
+  const [dialogueViewOpen, setDialogueViewOpen] = useState(false);
+  const [decisionStreamOpen, setDecisionStreamOpen] = useState(false);
+  const [vetoPanelOpen, setVetoPanelOpen] = useState(false);
+  const [selectedDecision, setSelectedDecision] = useState<DialecticDecision | null>(null);
+  const [dialecticLoading, setDialecticLoading] = useState(false);
+
+  // Loss navigation state
+  const [focalDistance, setFocalDistance] = useState(1.0);
+
+  // Dialectic decisions hook
+  const dialectic = useDialecticDecisions({
+    pollInterval: 60000, // Poll every minute
+    autoFetch: true,
+  });
 
   // =============================================================================
   // Derivation Navigation (gD/gc)
@@ -291,6 +346,131 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     },
     [dispatch]
   );
+
+  // =============================================================================
+  // Dialectic Decision Handlers
+  // =============================================================================
+
+  // Handle decision save (quick or full)
+  const handleDecisionSave = useCallback(
+    async (input: QuickDecisionInput | FullDialecticInput) => {
+      setDialecticLoading(true);
+      try {
+        const response = await fetch('/api/witness/fusion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to save decision: ${response.statusText}`);
+        }
+
+        const decision = await response.json();
+        console.info('[HypergraphEditor] Decision saved:', decision);
+
+        // Refresh decision list
+        await dialectic.refresh();
+
+        // Close modal
+        setDialecticModalOpen(false);
+
+        // Show success feedback
+        setFeedbackMessage({
+          type: 'success',
+          text: 'Decision saved',
+        });
+        setTimeout(() => setFeedbackMessage(null), 3000);
+      } catch (error) {
+        console.error('[HypergraphEditor] Failed to save decision:', error);
+        setFeedbackMessage({
+          type: 'error',
+          text: 'Failed to save decision',
+        });
+        setTimeout(() => setFeedbackMessage(null), 4000);
+      } finally {
+        setDialecticLoading(false);
+      }
+    },
+    [dialectic]
+  );
+
+  // Handle veto
+  const handleVeto = useCallback(
+    async (reason?: string) => {
+      if (!selectedDecision) return;
+
+      setDialecticLoading(true);
+      try {
+        const response = await fetch(`/api/witness/fusion/${selectedDecision.id}/veto`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to veto decision: ${response.statusText}`);
+        }
+
+        console.info('[HypergraphEditor] Decision vetoed:', selectedDecision.id);
+
+        // Refresh decision list
+        await dialectic.refresh();
+
+        // Close panels
+        setVetoPanelOpen(false);
+        setDialogueViewOpen(false);
+
+        // Show success feedback
+        setFeedbackMessage({
+          type: 'success',
+          text: 'Decision vetoed',
+        });
+        setTimeout(() => setFeedbackMessage(null), 3000);
+      } catch (error) {
+        console.error('[HypergraphEditor] Failed to veto decision:', error);
+        setFeedbackMessage({
+          type: 'error',
+          text: 'Failed to veto decision',
+        });
+        setTimeout(() => setFeedbackMessage(null), 4000);
+      } finally {
+        setDialecticLoading(false);
+      }
+    },
+    [selectedDecision, dialectic]
+  );
+
+  // Handle decision click (open DialogueView)
+  const handleDecisionClick = useCallback((decision: DialecticDecision) => {
+    setSelectedDecision(decision);
+    setDialogueViewOpen(true);
+    setDecisionStreamOpen(false);
+  }, []);
+
+  // Get last decision for footer widget
+  const lastDecision = dialectic.decisions.length > 0 ? dialectic.decisions[0] : null;
+
+  // Dialectic keyboard shortcuts
+  useEffect(() => {
+    const handleDialecticKeys = (e: KeyboardEvent) => {
+      // Cmd+Shift+D - Open dialectic modal (quick decision)
+      if (e.metaKey && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        setDialecticModalOpen(true);
+      }
+
+      // Cmd+Shift+L - Open decision stream (list)
+      if (e.metaKey && e.shiftKey && e.key === 'L') {
+        e.preventDefault();
+        setDecisionStreamOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleDialecticKeys);
+    return () => window.removeEventListener('keydown', handleDialecticKeys);
+  }, []);
+
   // Handle EDGE mode confirmation - create witness mark
   const handleEdgeConfirm = useCallback(async () => {
     if (!state.edgePending) return;
@@ -317,12 +497,70 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     }
   }, [state.edgePending, dispatch]);
 
+  // =============================================================================
+  // Loss-Gradient Navigation (gl/gh/gL/gH)
+  // =============================================================================
+
+  /**
+   * gl - Navigate to lowest-loss neighbor.
+   * Follows the gradient toward stability (min loss).
+   */
+  const handleGoLowestLoss = useCallback(async () => {
+    if (!state.currentNode) return;
+
+    const targetId = await lossNav.findLowestLossNeighbor(state.currentNode);
+    if (!targetId || !loadNode) return;
+
+    onNavigate?.(targetId);
+    loadNode(targetId).then((node) => {
+      if (node) {
+        focusNode(node);
+        onNodeFocus?.(node);
+        console.info('[LossNav] Navigated to lowest-loss neighbor:', targetId);
+      }
+    });
+  }, [state.currentNode, lossNav, loadNode, focusNode, onNavigate, onNodeFocus]);
+
+  /**
+   * gh - Navigate to highest-loss neighbor.
+   * Investigates instability (max loss).
+   */
+  const handleGoHighestLoss = useCallback(async () => {
+    if (!state.currentNode) return;
+
+    const targetId = await lossNav.findHighestLossNeighbor(state.currentNode);
+    if (!targetId || !loadNode) return;
+
+    onNavigate?.(targetId);
+    loadNode(targetId).then((node) => {
+      if (node) {
+        focusNode(node);
+        onNodeFocus?.(node);
+        console.info('[LossNav] Navigated to highest-loss neighbor:', targetId);
+      }
+    });
+  }, [state.currentNode, lossNav, loadNode, focusNode, onNavigate, onNodeFocus]);
+
+  /**
+   * gL - Zoom out (increase focal distance).
+   */
+  const handleZoomOut = useCallback(() => {
+    setFocalDistance((prev) => prev * 10);
+    console.info('[LossNav] Zoomed out, focal distance:', focalDistance * 10);
+  }, [focalDistance]);
+
+  /**
+   * gH - Zoom in (decrease focal distance).
+   */
+  const handleZoomIn = useCallback(() => {
+    setFocalDistance((prev) => Math.max(0.01, prev / 10));
+    console.info('[LossNav] Zoomed in, focal distance:', Math.max(0.01, focalDistance / 10));
+  }, [focalDistance]);
+
   // Key handler
   const { pendingSequence } = useKeyHandler({
     state,
     dispatch,
-    goParent,
-    goChild,
     goDefinition,
     goReferences,
     goTests,
@@ -351,7 +589,17 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     onEnterInsert: handleEnterInsert,
     onEdgeConfirm: handleEdgeConfirm,
     onShowHelp: () => setHelpVisible(true),
-    enabled: !commandLineVisible && state.mode !== 'WITNESS',
+    onOpenCommandPalette: () => setCommandPaletteOpen(true),
+    // Graph sidebar (Living Canvas)
+    onToggleGraphSidebar: () => livingCanvas.actions.toggle(),
+    // Decision stream (witness history)
+    onToggleDecisionStream: () => setDecisionStreamOpen((prev) => !prev),
+    // Loss-gradient navigation (gl/gh/gL/gH)
+    goLowestLoss: handleGoLowestLoss,
+    goHighestLoss: handleGoHighestLoss,
+    zoomOut: handleZoomOut,
+    zoomIn: handleZoomIn,
+    enabled: !commandLineVisible && !commandPaletteOpen && state.mode !== 'WITNESS',
   });
 
   // Load initial node
@@ -731,6 +979,31 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         <CommandLine ref={commandLineRef} onSubmit={handleCommand} onCancel={handleCommandCancel} />
       )}
 
+      {/* Command palette (Cmd+K) */}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onNavigate={(path) => {
+          onNavigate?.(path);
+          if (loadNode) {
+            loadNode(path).then((node) => {
+              if (node) {
+                focusNode(node);
+                onNodeFocus?.(node);
+              }
+            });
+          }
+        }}
+        onWitnessMode={() => dispatch({ type: 'ENTER_WITNESS' })}
+        onSave={handleWrite}
+        onReanalyze={handleReanalyze}
+        onAgentese={(path) => {
+          console.info('[HypergraphEditor] AGENTESE invoked:', path);
+          // TODO: Implement AGENTESE navigation/invocation
+        }}
+        onZeroSeed={onZeroSeed}
+      />
+
       {/* Edge panel (when in EDGE mode) */}
       {state.mode === 'EDGE' && state.edgePending && <EdgePanel edgePending={state.edgePending} />}
 
@@ -755,6 +1028,16 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
       {/* Help panel (? key) */}
       {helpVisible && <HelpPanel onClose={() => setHelpVisible(false)} />}
+
+      {/* Graph Sidebar (Living Canvas) - 'gs' keybinding */}
+      <GraphSidebar
+        isOpen={livingCanvas.state.isOpen}
+        width={livingCanvas.state.width}
+        focusedPath={livingCanvas.state.focusedPath}
+        onClose={livingCanvas.actions.close}
+        onNodeClick={livingCanvas.actions.focusNode}
+        onWidthChange={livingCanvas.actions.setWidth}
+      />
 
       {/* Confidence breakdown panel (gc toggle) */}
       {confidenceVisible && state.currentNode && (
@@ -797,6 +1080,60 @@ export const HypergraphEditor = memo(function HypergraphEditor({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Dialectic Modal (quick decision capture - Cmd+Shift+D) */}
+      {dialecticModalOpen && (
+        <DialecticModal
+          onSave={handleDecisionSave}
+          onClose={() => setDialecticModalOpen(false)}
+          loading={dialecticLoading}
+        />
+      )}
+
+      {/* DialogueView (full dialectic display) */}
+      {dialogueViewOpen && selectedDecision && (
+        <DialogueView
+          decision={selectedDecision}
+          onSave={handleDecisionSave}
+          onClose={() => {
+            setDialogueViewOpen(false);
+            setSelectedDecision(null);
+          }}
+          onVeto={async () => {
+            setVetoPanelOpen(true);
+          }}
+          loading={dialecticLoading}
+          editable={false}
+        />
+      )}
+
+      {/* DecisionStream (list of all decisions) */}
+      {decisionStreamOpen && (
+        <DecisionStream
+          onDecisionClick={handleDecisionClick}
+          onClose={() => setDecisionStreamOpen(false)}
+        />
+      )}
+
+      {/* VetoPanel (disgust veto) */}
+      {vetoPanelOpen && (
+        <VetoPanel
+          onVeto={handleVeto}
+          onCancel={() => setVetoPanelOpen(false)}
+          loading={dialecticLoading}
+        />
+      )}
+
+      {/* DecisionFooterWidget (last decision in status area) */}
+      {lastDecision && !decisionStreamOpen && (
+        <DecisionFooterWidget
+          lastDecision={lastDecision}
+          onClick={handleDecisionClick}
+          onClose={() => {
+            // Hide footer by clearing decision (or add a flag)
+          }}
+        />
       )}
 
       {/* Status line */}

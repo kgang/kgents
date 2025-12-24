@@ -37,10 +37,15 @@ export type { UseKeyHandlerOptions, UseKeyHandlerResult } from './useKeyHandler'
 export { HypergraphEditor } from './HypergraphEditor';
 export { StatusLine } from './StatusLine';
 export { CommandLine } from './CommandLine';
+export { GraphSidebar } from './GraphSidebar';
 export { FileExplorer } from './FileExplorer';
 export type { UploadedFile } from './FileExplorer';
 export { PlaceholderNode, PlaceholderNodeCompact } from './PlaceholderNode';
 export type { PlaceholderData } from './PlaceholderNode';
+
+// Living Canvas (graph sidebar)
+export { useLivingCanvas } from './useLivingCanvas';
+export type { LiveCanvasState, LiveCanvasActions, UseLivingCanvasOptions } from './useLivingCanvas';
 
 // API Bridge
 export { useGraphNode, normalizePath } from './useGraphNode';

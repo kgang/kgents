@@ -84,7 +84,7 @@ export function createStarGraphic(star: StarData): PIXI.Graphics {
   g.endFill();
 
   // Add subtle core glow for active specs with evidence
-  if (star.status === 'ACTIVE' && star.implCount + star.testCount > 0) {
+  if (star.status === 'active' && star.implCount + star.testCount > 0) {
     g.beginFill(0xffffff, 0.3);
     g.drawCircle(0, 0, star.radius * 0.4);
     g.endFill();
@@ -125,7 +125,24 @@ export function createGlowRing(radius: number, type: 'selection' | 'hover'): PIX
 }
 
 /**
+ * Get color for connection based on confidence/strength.
+ * Weak edges glow amber, strong edges glow green.
+ */
+export function getConnectionColor(strength: number, relationship?: string): number {
+  // Use confidence-based colors for generic connections
+  if (!relationship || relationship.toLowerCase() === 'references') {
+    if (strength >= 0.8) return 0x22c55e; // green-500 (strong)
+    if (strength >= 0.5) return 0xeab308; // yellow-500 (medium)
+    return 0xf97316; // orange-500 (weak/amber)
+  }
+
+  // Use relationship colors for specific edge types
+  return RELATIONSHIP_COLORS[relationship.toLowerCase()] ?? RELATIONSHIP_COLORS.references;
+}
+
+/**
  * Create a connection line between two stars.
+ * Now with confidence-based coloring.
  */
 export function drawConnection(
   graphics: PIXI.Graphics,
@@ -135,7 +152,7 @@ export function drawConnection(
   strength: number,
   alpha: number = 0.3
 ): void {
-  const color = RELATIONSHIP_COLORS[relationship.toLowerCase()] ?? RELATIONSHIP_COLORS.references;
+  const color = getConnectionColor(strength, relationship);
   const lineWidth = 0.5 + strength * 1.5; // 0.5 to 2.0
 
   graphics.lineStyle(lineWidth, color, alpha * strength);

@@ -1,0 +1,232 @@
+/**
+ * FocalDistanceRuler Styles
+ *
+ * Vertical navigation control showing epistemic hierarchy.
+ * Viridis gradient (L1 purple → L7 yellow) indicates layer stability.
+ */
+
+/* =============================================================================
+   Container
+   ============================================================================= */
+
+.focal-distance-ruler {
+  position: fixed;
+  left: 0;
+  top: var(--navbar-height);
+  bottom: var(--footer-height);
+  width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--elastic-gap-md) 0;
+  background: var(--surface-1);
+  border-right: 1px solid var(--surface-3);
+  z-index: var(--elastic-z-sticky);
+  transition: width var(--elastic-transition-fast);
+}
+
+.focal-distance-ruler--compact {
+  width: 48px;
+}
+
+/* =============================================================================
+   Layers
+   ============================================================================= */
+
+.focal-distance-ruler__layers {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: var(--elastic-gap-sm);
+  width: 100%;
+  padding: var(--elastic-gap-md) var(--elastic-gap-sm);
+  position: relative;
+}
+
+.focal-distance-ruler__layer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  padding: var(--elastic-gap-xs);
+  background: none;
+  border: none;
+  border-radius: var(--radius-bare);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--elastic-transition-fast);
+  position: relative;
+}
+
+.focal-distance-ruler__layer::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 100%;
+  background: transparent;
+  transition: background var(--elastic-transition-fast);
+}
+
+.focal-distance-ruler__layer:hover {
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.focal-distance-ruler__layer:hover::before {
+  background: var(--layer-color);
+}
+
+.focal-distance-ruler__layer--visible {
+  color: var(--text-secondary);
+}
+
+.focal-distance-ruler__layer--visible::before {
+  background: var(--layer-color);
+  opacity: 0.5;
+}
+
+.focal-distance-ruler__layer--current {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.focal-distance-ruler__layer--current::before {
+  background: var(--layer-color);
+  opacity: 1;
+  width: 3px;
+}
+
+.focal-distance-ruler__icon {
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity var(--elastic-transition-fast);
+}
+
+.focal-distance-ruler__layer:hover .focal-distance-ruler__icon,
+.focal-distance-ruler__layer--current .focal-distance-ruler__icon {
+  opacity: 1;
+}
+
+.focal-distance-ruler__label {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  opacity: 0.6;
+  transition: opacity var(--elastic-transition-fast);
+}
+
+.focal-distance-ruler__layer:hover .focal-distance-ruler__label,
+.focal-distance-ruler__layer--current .focal-distance-ruler__label {
+  opacity: 1;
+}
+
+.focal-distance-ruler--compact .focal-distance-ruler__label {
+  display: none;
+}
+
+/* =============================================================================
+   Current Position Indicator
+   ============================================================================= */
+
+.focal-distance-ruler__indicator {
+  position: absolute;
+  left: 0;
+  top: var(--indicator-position, 0%);
+  width: 3px;
+  height: 8px;
+  background: var(--indicator-color);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px var(--indicator-color);
+  transition:
+    top var(--elastic-transition-smooth),
+    background var(--elastic-transition-fast);
+  pointer-events: none;
+}
+
+/* =============================================================================
+   Keyboard Hints
+   ============================================================================= */
+
+.focal-distance-ruler__hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--elastic-gap-xs);
+  margin-top: var(--elastic-gap-sm);
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.focal-distance-ruler__hint kbd {
+  display: inline-block;
+  padding: 1px 3px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--text-muted);
+}
+
+.focal-distance-ruler--compact .focal-distance-ruler__hint {
+  display: none;
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .focal-distance-ruler {
+    width: 48px;
+  }
+
+  .focal-distance-ruler__label {
+    display: none;
+  }
+
+  .focal-distance-ruler__hint {
+    display: none;
+  }
+}
+
+/* =============================================================================
+   Focus States
+   ============================================================================= */
+
+.focal-distance-ruler__layer:focus-visible {
+  outline: 2px solid var(--layer-color);
+  outline-offset: 2px;
+  background: var(--surface-2);
+}
+
+/* =============================================================================
+   Animation: Breathing Effect
+   ============================================================================= */
+
+.focal-distance-ruler__layer--current .focal-distance-ruler__icon {
+  animation: layer-breathe 3s ease-in-out infinite;
+}
+
+@keyframes layer-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
+}

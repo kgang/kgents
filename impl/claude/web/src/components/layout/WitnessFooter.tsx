@@ -92,50 +92,75 @@ function CompactEvent({ event }: CompactEventProps) {
 }
 
 // =============================================================================
-// Expanded Event (full details)
+// Log Entry (tail -f style)
 // =============================================================================
 
-interface ExpandedEventProps {
+interface LogEntryProps {
   event: WitnessEvent;
 }
 
-function ExpandedEvent({ event }: ExpandedEventProps) {
-  // Show first 2 principles + "+N more" badge
-  const visiblePrinciples = event.principles?.slice(0, 2) || [];
-  const remainingCount = (event.principles?.length || 0) - visiblePrinciples.length;
+function formatTimeWithSeconds(date: Date): string {
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+}
+
+function LogEntry({ event }: LogEntryProps) {
+  const time = formatTimeWithSeconds(event.timestamp);
+  const type = event.type.toUpperCase().padEnd(7);
+  const author = event.author ? `[${event.author}]` : '';
+
+  // Build the main content based on event type
+  let content = '';
+  let detail = '';
+
+  switch (event.type) {
+    case 'mark':
+      content = event.action || 'mark';
+      detail = event.reasoning || '';
+      break;
+    case 'kblock':
+      content = event.path?.split('/').pop() || 'edit';
+      detail = event.semanticDeltas?.length ? `${event.semanticDeltas.length} changes` : '';
+      break;
+    case 'crystal':
+      content = event.insight || 'crystal';
+      detail = event.level ? `L${event.level}` : '';
+      break;
+    case 'thought':
+      content = event.content || 'thought';
+      detail = event.source || '';
+      break;
+    case 'trail':
+      content = event.path || 'trail';
+      break;
+    case 'spec':
+      content = event.specAction || 'spec';
+      detail = event.specPaths?.join(', ') || '';
+      break;
+    case 'connected':
+      content = 'stream connected';
+      break;
+    default:
+      content = event.type;
+  }
+
+  // Format principles as tags
+  const tags = event.principles?.length
+    ? event.principles.map(p => `#${p}`).join(' ')
+    : '';
 
   return (
-    <div className="witness-footer__expanded-event" data-type={event.type}>
-      <div className="witness-footer__expanded-header">
-        <span className="witness-footer__event-icon">{getEventIcon(event.type)}</span>
-        <span className="witness-footer__expanded-type">{event.type.toUpperCase()}</span>
-        <span className="witness-footer__event-time">{formatTime(event.timestamp)}</span>
-        {event.author && <span className="witness-footer__expanded-author">by {event.author}</span>}
-      </div>
-      <div className="witness-footer__expanded-content">
-        {event.action && <p className="witness-footer__expanded-action">{event.action}</p>}
-        {event.reasoning && <p className="witness-footer__expanded-reasoning">{event.reasoning}</p>}
-        {event.principles && event.principles.length > 0 && (
-          <div className="witness-footer__expanded-principles">
-            {visiblePrinciples.map((p) => (
-              <span key={p} className="witness-footer__principle-tag">
-                {p}
-              </span>
-            ))}
-            {remainingCount > 0 && (
-              <span className="witness-footer__principle-tag witness-footer__principle-badge">
-                +{remainingCount}
-              </span>
-            )}
-          </div>
-        )}
-        {event.insight && <p className="witness-footer__expanded-insight">{event.insight}</p>}
-        {event.path && (
-          <p className="witness-footer__expanded-path">
-            <code>{event.path}</code>
-          </p>
-        )}
-      </div>
+    <div className="witness-log__entry" data-type={event.type}>
+      <span className="witness-log__time">{time}</span>
+      <span className="witness-log__type">{type}</span>
+      <span className="witness-log__author">{author}</span>
+      <span className="witness-log__content">{content}</span>
+      {detail && <span className="witness-log__detail">• {detail}</span>}
+      {tags && <span className="witness-log__tags">{tags}</span>}
     </div>
   );
 }
@@ -207,13 +232,13 @@ export function WitnessFooter() {
                 </button>
               )}
             </div>
-            <div className="witness-footer__panel-list">
+            <div className="witness-log">
               {allEvents.length > 0 ? (
-                allEvents.map((event) => <ExpandedEvent key={event.id} event={event} />)
+                allEvents.map((event) => <LogEntry key={event.id} event={event} />)
               ) : (
-                <p className="witness-footer__panel-empty">
-                  Awaiting first mark. Actions witnessed here.
-                </p>
+                <div className="witness-log__empty">
+                  Awaiting first mark...
+                </div>
               )}
             </div>
           </motion.div>

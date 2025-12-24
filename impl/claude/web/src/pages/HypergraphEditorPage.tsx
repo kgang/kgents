@@ -56,6 +56,18 @@ export function HypergraphEditorPage() {
     [navigate, addRecentFile]
   );
 
+  // Handle Zero Seed navigation
+  const handleZeroSeed = useCallback(
+    (tab?: string) => {
+      if (tab) {
+        navigate(`/zero-seed?tab=${tab}`);
+      } else {
+        navigate('/zero-seed');
+      }
+    },
+    [navigate]
+  );
+
   return (
     <div className="hypergraph-editor-page">
       {currentPath ? (
@@ -63,6 +75,7 @@ export function HypergraphEditorPage() {
           initialPath={currentPath}
           onNavigate={handleOpenFile}
           loadNode={loadNode}
+          onZeroSeed={handleZeroSeed}
         />
       ) : (
         <FileExplorer

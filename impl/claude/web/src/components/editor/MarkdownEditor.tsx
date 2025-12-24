@@ -8,9 +8,12 @@
  * When readonly prop changes, the editor reconfigures without remounting.
  */
 
-import React, { useEffect, forwardRef, useImperativeHandle, useState, useRef, useCallback } from 'react';
+import React, { useEffect, forwardRef, useImperativeHandle, useState, useRef, useCallback, useMemo } from 'react';
 import { useCodeMirror, UseCodeMirrorOptions } from './useCodeMirror';
+import { ghostTextExtension } from './ghostText';
+import { useGhostTextSources } from './useGhostTextSources';
 import './MarkdownEditor.css';
+import './ghostText.css';
 
 /** Scroll cursor fade duration in ms (fast fade for smooth reading) */
 const SCROLL_CURSOR_FADE_MS = 650;
@@ -38,6 +41,8 @@ export interface MarkdownEditorProps {
   maxHeight?: string | number;
   /** Fill parent height */
   fillHeight?: boolean;
+  /** Enable ghost text completions (only in INSERT mode) */
+  enableGhostText?: boolean;
 }
 
 export interface MarkdownEditorRef {
@@ -83,7 +88,27 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       minHeight,
       maxHeight,
       fillHeight = false,
+      enableGhostText = false,
     } = props;
+
+    // Ghost text sources
+    const { getCompletion } = useGhostTextSources();
+
+    // Build extensions including ghost text if enabled and not readonly
+    const extensions = useMemo(() => {
+      const exts = [];
+
+      // Add ghost text extension only if enabled and not readonly
+      if (enableGhostText && !readonly) {
+        exts.push(
+          ghostTextExtension({
+            fetcher: getCompletion,
+          })
+        );
+      }
+
+      return exts;
+    }, [enableGhostText, readonly, getCompletion]);
 
     const options: UseCodeMirrorOptions = {
       initialValue: value,
@@ -95,6 +120,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       placeholder,
       autoFocus,
       lineWrapping: true,
+      extensions,
     };
 
     const {

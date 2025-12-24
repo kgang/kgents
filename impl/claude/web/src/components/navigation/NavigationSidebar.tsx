@@ -5,22 +5,22 @@
  *
  * Adapts content based on current surface:
  * - Editor: Recent nodes, trail breadcrumbs, quick actions
- * - Ledger: Corpus overview, tier filters
+ * - Docs: Corpus overview, tier filters
  * - Chart: Constellation picker
- * - Brain: Memory categories
+ * - Feed: Memory categories
  */
 
 import { memo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FloatingSidebar } from '../elastic/FloatingSidebar';
-import { FileText, GitBranch, BarChart3, Brain, Clock, ChevronRight } from 'lucide-react';
+import { FileText, BarChart3, Brain, Clock, ChevronRight, Layers, Compass } from 'lucide-react';
 import './NavigationSidebar.css';
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type Surface = 'editor' | 'ledger' | 'chart' | 'brain';
+export type Surface = 'editor' | 'director' | 'chart' | 'brain' | 'zero-seed';
 
 interface NavigationSidebarProps {
   /** Current surface/page */
@@ -47,16 +47,18 @@ interface NavigationSidebarProps {
 
 const SURFACE_ICONS: Record<Surface, typeof FileText> = {
   editor: FileText,
-  ledger: GitBranch,
+  director: Layers,
   chart: BarChart3,
   brain: Brain,
+  'zero-seed': Compass,
 };
 
 const SURFACE_LABELS: Record<Surface, string> = {
   editor: 'Editor',
-  ledger: 'Ledger',
+  director: 'Docs',
   chart: 'Chart',
-  brain: 'Brain',
+  brain: 'Feed',
+  'zero-seed': 'Zero Seed',
 };
 
 // =============================================================================
@@ -173,13 +175,16 @@ const SurfaceContent = memo(function SurfaceContent({
         </div>
       );
 
-    case 'ledger':
+    case 'director':
       return (
         <div className="nav-sidebar__surface-content">
           <section className="nav-sidebar__section">
-            <h3 className="nav-sidebar__section-title">Corpus Health</h3>
-            {/* Stats sync with backend on ledger page load */}
-            <div className="nav-sidebar__empty">View ledger to see corpus stats</div>
+            <h3 className="nav-sidebar__section-title">Document Canvas</h3>
+            <div className="nav-sidebar__empty">
+              <kbd>j</kbd>/<kbd>k</kbd> navigate<br />
+              <kbd>/</kbd> search<br />
+              <kbd>Enter</kbd> open
+            </div>
           </section>
         </div>
       );
@@ -209,6 +214,21 @@ const SurfaceContent = memo(function SurfaceContent({
         </div>
       );
 
+    case 'zero-seed':
+      return (
+        <div className="nav-sidebar__surface-content">
+          <section className="nav-sidebar__section">
+            <h3 className="nav-sidebar__section-title">Epistemic Graph</h3>
+            <div className="nav-sidebar__empty">
+              <kbd>1</kbd> L1-L2 Axioms<br />
+              <kbd>2</kbd> L3-L4 Proofs<br />
+              <kbd>3</kbd> L5-L6 Health<br />
+              <kbd>4</kbd> L7 Telescope
+            </div>
+          </section>
+        </div>
+      );
+
     default:
       return null;
   }
@@ -233,9 +253,10 @@ export const NavigationSidebar = memo(function NavigationSidebar({
   // Determine active surface from route
   const getActiveRoute = (path: string): Surface => {
     if (path.startsWith('/editor')) return 'editor';
-    if (path.startsWith('/ledger')) return 'ledger';
+    if (path.startsWith('/director')) return 'director';
     if (path.startsWith('/chart')) return 'chart';
     if (path.startsWith('/brain')) return 'brain';
+    if (path.startsWith('/zero-seed')) return 'zero-seed';
     return 'editor';
   };
 
@@ -261,9 +282,10 @@ export const NavigationSidebar = memo(function NavigationSidebar({
         {/* Surface navigation */}
         <nav className="nav-sidebar__nav">
           <NavItem icon={SURFACE_ICONS.editor} label={SURFACE_LABELS.editor} href="/editor" isActive={activeSurface === 'editor'} shortcut="⇧E" />
-          <NavItem icon={SURFACE_ICONS.ledger} label={SURFACE_LABELS.ledger} href="/ledger" isActive={activeSurface === 'ledger'} shortcut="⇧L" />
+          <NavItem icon={SURFACE_ICONS.director} label={SURFACE_LABELS.director} href="/director" isActive={activeSurface === 'director'} shortcut="⇧D" />
           <NavItem icon={SURFACE_ICONS.chart} label={SURFACE_LABELS.chart} href="/chart" isActive={activeSurface === 'chart'} shortcut="⇧C" />
           <NavItem icon={SURFACE_ICONS.brain} label={SURFACE_LABELS.brain} href="/brain" isActive={activeSurface === 'brain'} shortcut="⇧B" />
+          <NavItem icon={SURFACE_ICONS['zero-seed']} label={SURFACE_LABELS['zero-seed']} href="/zero-seed" isActive={activeSurface === 'zero-seed'} shortcut="⇧Z" />
         </nav>
 
         <div className="nav-sidebar__divider" />

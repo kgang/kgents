@@ -19,6 +19,8 @@ import { useVitalityCollapse, VitalityToken } from '@/hooks/useVitalityOperad';
 import { useSpringTilt, useKeyPulse } from '@/hooks/useSpringTilt';
 import { useQuoteRotation, CURATED_QUOTES } from '@/hooks/useQuoteRotation';
 import { useTitleScatter } from '@/hooks/useTitleScatter';
+import { WitnessStream } from '@/components/welcome/WitnessStream';
+import { AxiomGarden } from '@/components/welcome/AxiomGarden';
 
 import './WelcomePage.css';
 
@@ -168,6 +170,10 @@ function VitalityLayer({ tokens, getTokenStyle }: VitalityLayerProps) {
 export function WelcomeView() {
   const navigate = useNavigate();
 
+  // Easter egg state
+  const [showEasterEgg, setShowEasterEgg] = useState(false);
+  const konamiRef = useRef<string[]>([]);
+
   // Reduced motion check
   const prefersReducedMotion = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -224,8 +230,42 @@ export function WelcomeView() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [prefersReducedMotion]);
 
+  // Easter egg: Type "zero" to trigger whimsical animation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ignore if typing in input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      konamiRef.current = [...konamiRef.current, e.key.toLowerCase()].slice(-4);
+
+      if (konamiRef.current.join('') === 'zero') {
+        setShowEasterEgg(true);
+        // Auto-hide after 3 seconds
+        setTimeout(() => setShowEasterEgg(false), 3000);
+        // Navigate to zero-seed after a delay
+        setTimeout(() => navigate('/zero-seed'), 1500);
+        konamiRef.current = [];
+      }
+    };
+
+    window.addEventListener('keypress', handleKeyPress);
+    return () => window.removeEventListener('keypress', handleKeyPress);
+  }, [navigate]);
+
   return (
     <div className="welcome-view" ref={containerRef}>
+      {/* Easter egg overlay */}
+      {showEasterEgg && (
+        <div className="welcome-view__easter-egg">
+          <div className="welcome-view__easter-egg-content">
+            <span className="welcome-view__easter-egg-glyph">◇</span>
+            <span className="welcome-view__easter-egg-text">
+              "The seed is not the garden. The seed is the capacity for gardening."
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Vitality Layer — ambient tokens */}
       <VitalityLayer tokens={tokens} getTokenStyle={getTokenStyle} />
 
@@ -297,25 +337,41 @@ export function WelcomeView() {
           Press <kbd>1</kbd>-<kbd>7</kbd> to feel each principle
         </p>
 
+        {/* Zero Seed Interactive Components */}
+        <AxiomGarden />
+        <WitnessStream />
+
         {/* CTA Buttons — Navigation */}
         <div className="welcome-view__cta">
           <button
             className="welcome-view__cta-button welcome-view__cta-button--primary"
-            onClick={() => navigate('/hypergraph')}
+            onClick={() => navigate('/editor')}
           >
             Open Editor
           </button>
           <button
             className="welcome-view__cta-button"
+            onClick={() => navigate('/director')}
+          >
+            Docs
+          </button>
+          <button
+            className="welcome-view__cta-button"
             onClick={() => navigate('/brain')}
           >
-            Explore Brain
+            Feed
           </button>
           <button
             className="welcome-view__cta-button"
             onClick={() => navigate('/chart')}
           >
-            View Chart
+            Chart
+          </button>
+          <button
+            className="welcome-view__cta-button welcome-view__cta-button--zero-seed"
+            onClick={() => navigate('/zero-seed')}
+          >
+            Zero Seed
           </button>
         </div>
       </div>

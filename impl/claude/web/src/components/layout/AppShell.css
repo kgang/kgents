@@ -5,6 +5,19 @@
  * Cathedral navigation with earned accents.
  */
 
+/* =============================================================================
+ * LAYOUT ARCHITECTURE
+ * =============================================================================
+ * Single source of truth for layout dimensions via CSS custom properties.
+ * All components inherit these values to maintain coherent spacing.
+ */
+
+:root {
+  --navbar-height: 40px;
+  --footer-height: 32px;
+  --content-height: calc(100vh - var(--navbar-height) - var(--footer-height));
+}
+
 .app-shell {
   display: flex;
   flex-direction: column;
@@ -17,7 +30,7 @@
 .app-shell__navbar {
   display: flex;
   align-items: center;
-  height: 40px;
+  height: var(--navbar-height);
   padding: 0 1rem;
   background: var(--surface-1, #12121f);
   border-bottom: 1px solid var(--surface-2, #1a1a2e);
@@ -144,11 +157,11 @@
 
 /* Main content */
 .app-shell__content {
-  flex: 1;
+  /* Fixed height accounting for navbar + footer */
+  height: var(--content-height);
   min-height: 0;
-  overflow: auto;
-  /* Account for footer height */
-  padding-bottom: 32px;
+  overflow: hidden; /* Children manage their own overflow */
+  position: relative;
 }
 
 /* Responsive adjustments */

@@ -11,3 +11,11 @@ export { useCodeMirror, configureVimDefaults } from './useCodeMirror';
 export type { UseCodeMirrorOptions, UseCodeMirrorReturn } from './useCodeMirror';
 
 export { starkBiome, starkBiomeTheme, starkBiomeHighlighting } from './starkBiomeTheme';
+
+export { ghostTextExtension, getGhostTextState, triggerGhostText, clearGhostTextManual } from './ghostText';
+export type { GhostTextExtensionOptions } from './ghostText';
+
+export { useGhostTextSources } from './useGhostTextSources';
+export type { CompletionSource, GhostTextCompletion } from './useGhostTextSources';
+
+export { AGENTESE_PATHS, matchAgentesePath, getPathsByContext, suggestNextSegment } from './agentesePaths';

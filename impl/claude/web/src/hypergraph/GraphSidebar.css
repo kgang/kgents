@@ -1,0 +1,191 @@
+/**
+ * GraphSidebar Styles
+ *
+ * "The map IS the territory—when the map is alive."
+ *
+ * STARK BIOME themed sidebar with smooth slide-in animation.
+ */
+
+/* =============================================================================
+ * Container
+ * ============================================================================= */
+
+.graph-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 350px;
+  background: rgba(13, 13, 13, 0.98);
+  border-left: 1px solid var(--steel-700);
+  z-index: var(--z-sidebar);
+  transform: translateX(100%);
+  transition: transform var(--transition-slow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.graph-sidebar--open {
+  transform: translateX(0);
+}
+
+/* =============================================================================
+ * Header
+ * ============================================================================= */
+
+.graph-sidebar__header {
+  flex-shrink: 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--steel-900);
+  border-bottom: 1px solid var(--steel-800);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.graph-sidebar__title {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--steel-400);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.graph-sidebar__close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--steel-700);
+  color: var(--steel-500);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.graph-sidebar__close:hover {
+  background: var(--steel-800);
+  color: var(--steel-200);
+  border-color: var(--status-insert);
+}
+
+/* =============================================================================
+ * Content (AstronomicalChart container)
+ * ============================================================================= */
+
+.graph-sidebar__content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--steel-950);
+}
+
+/* =============================================================================
+ * Resize Handle
+ * ============================================================================= */
+
+.graph-sidebar__resize-handle {
+  position: absolute;
+  left: -4px;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 101;
+  background: transparent;
+  transition: var(--transition-fast);
+}
+
+.graph-sidebar__resize-handle:hover,
+.graph-sidebar__resize-handle--dragging {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.graph-sidebar__resize-handle::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 40px;
+  background: var(--steel-700);
+  border-radius: 1px;
+  opacity: 0;
+  transition: var(--transition-fast);
+}
+
+.graph-sidebar__resize-handle:hover::after,
+.graph-sidebar__resize-handle--dragging::after {
+  opacity: 1;
+}
+
+/* =============================================================================
+ * Hint (when closed)
+ * ============================================================================= */
+
+.graph-sidebar__hint {
+  position: fixed;
+  top: 50%;
+  right: var(--space-md);
+  transform: translateY(-50%);
+  padding: var(--space-sm) var(--space-sm);
+  background: var(--steel-900);
+  border: 1px solid var(--steel-700);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--steel-500);
+  pointer-events: none;
+  opacity: 0;
+  transition: var(--transition-slow);
+  z-index: 99;
+}
+
+.graph-sidebar__hint--visible {
+  opacity: 1;
+}
+
+.graph-sidebar__hint kbd {
+  margin-left: var(--space-xs);
+  color: var(--status-insert);
+}
+
+/* =============================================================================
+ * Focus Indicator (node highlight pulse)
+ * ============================================================================= */
+
+@keyframes focus-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Applied by AstronomicalChart when a node is focused from editor */
+.graph-sidebar .star--focused {
+  animation: focus-pulse 1s ease-in-out 2;
+}
+
+/* =============================================================================
+ * Responsive Behavior
+ * ============================================================================= */
+
+@media (max-width: 768px) {
+  .graph-sidebar {
+    width: 100%;
+    max-width: 400px;
+  }
+}

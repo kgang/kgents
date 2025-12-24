@@ -23,11 +23,19 @@ export interface DocumentEntry {
   path: string;
   title: string;
   status: DocumentStatus;
-  claim_count: number;
-  ref_count: number;
-  placeholder_count: number;
+  version: number;
+  word_count: number | null;
+  claim_count: number | null;
+  impl_count: number | null;
+  test_count: number | null;
+  placeholder_count: number | null;
   analyzed_at: string | null;
-  uploaded_at: string;
+  uploaded_at: string | null;
+}
+
+// Helper to compute ref_count for backwards compatibility
+export function getRefCount(doc: DocumentEntry): number {
+  return (doc.impl_count ?? 0) + (doc.test_count ?? 0);
 }
 
 export interface DocumentListResponse {
@@ -203,9 +211,12 @@ export async function listDocuments(options?: {
 /**
  * Get metrics summary.
  * Computed from document list since backend doesn't have dedicated endpoint.
+ *
+ * Note: Paginates through all documents to compute accurate totals.
+ * Backend limit is 500 per request.
  */
 export async function getMetrics(): Promise<MetricsSummary> {
-  const list = await listDocuments({ limit: 1000 });
+  const BACKEND_LIMIT = 500;
   const by_status: Record<DocumentStatus, number> = {
     uploaded: 0,
     processing: 0,
@@ -214,10 +225,28 @@ export async function getMetrics(): Promise<MetricsSummary> {
     stale: 0,
     failed: 0,
   };
-  for (const doc of list.documents) {
-    by_status[doc.status] = (by_status[doc.status] || 0) + 1;
+
+  let offset = 0;
+  let totalDocuments = 0;
+
+  // Paginate through all documents
+  while (true) {
+    const list = await listDocuments({ limit: BACKEND_LIMIT, offset });
+
+    for (const doc of list.documents) {
+      by_status[doc.status] = (by_status[doc.status] || 0) + 1;
+    }
+
+    totalDocuments = list.total;
+    offset += list.documents.length;
+
+    // Stop when we've fetched all documents or no more returned
+    if (list.documents.length < BACKEND_LIMIT || offset >= list.total) {
+      break;
+    }
   }
-  return { total: list.total, by_status };
+
+  return { total: totalDocuments, by_status };
 }
 
 /**
@@ -304,4 +333,35 @@ export async function markDocumentViewed(path: string): Promise<{ success: boole
   return fetchJson<{ success: boolean }>(`${API_BASE}/${encodedPath}/mark-viewed`, {
     method: 'POST',
   });
+}
+
+/**
+ * Delete a document permanently.
+ * Backend: DELETE /api/director/documents/{path}
+ *
+ * WARNING: This is destructive and cannot be undone.
+ */
+export async function deleteDocument(path: string): Promise<{ success: boolean; message: string; mark_id: string }> {
+  const encodedPath = encodeURIComponent(path);
+  return fetchJson<{ success: boolean; message: string; mark_id: string }>(`${API_BASE}/${encodedPath}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Rename a document.
+ * Backend: PUT /api/director/documents/{path}/rename
+ */
+export async function renameDocument(
+  oldPath: string,
+  newPath: string
+): Promise<{ success: boolean; old_path: string; new_path: string; mark_id: string; message: string }> {
+  const encodedPath = encodeURIComponent(oldPath);
+  return fetchJson<{ success: boolean; old_path: string; new_path: string; mark_id: string; message: string }>(
+    `${API_BASE}/${encodedPath}/rename`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ new_path: newPath }),
+    }
+  );
 }

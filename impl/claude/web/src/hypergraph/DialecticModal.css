@@ -1,0 +1,388 @@
+/**
+ * DialecticModal — Quick decision capture styles
+ *
+ * Compact modal for fast dialectic entry.
+ * Dialectic accent: #9c27b0 (purple)
+ */
+
+/* =============================================================================
+   Overlay
+   ============================================================================= */
+
+.dialectic-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  animation: dialectic-fade-in 0.15s ease-out;
+}
+
+@keyframes dialectic-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* =============================================================================
+   Modal
+   ============================================================================= */
+
+.dialectic-modal {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh;
+  background: var(--steel-950, #0a0a0c);
+  border: 2px solid var(--status-visual, #9c27b0);
+  border-radius: 6px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  animation: dialectic-slide-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dialectic-slide-in {
+  from {
+    transform: translateY(15px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* =============================================================================
+   Header
+   ============================================================================= */
+
+.dialectic-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: var(--steel-900, #12121a);
+  border-bottom: 1px solid var(--steel-800, #252525);
+}
+
+.dialectic-modal__badge {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--status-visual, #9c27b0);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.dialectic-modal__mode-toggle {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--steel-800, #252525);
+  border-radius: 4px;
+  padding: 0.125rem;
+}
+
+.dialectic-modal__mode-button {
+  padding: 0.375rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  color: var(--steel-400, #888);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dialectic-modal__mode-button:hover:not(:disabled) {
+  color: var(--steel-200, #ccc);
+}
+
+.dialectic-modal__mode-button--active {
+  background: var(--status-visual, #9c27b0);
+  color: white;
+}
+
+.dialectic-modal__mode-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+   Content
+   ============================================================================= */
+
+.dialectic-modal__content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.dialectic-modal__content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dialectic-modal__content::-webkit-scrollbar-track {
+  background: var(--steel-900, #1a1a1a);
+}
+
+.dialectic-modal__content::-webkit-scrollbar-thumb {
+  background: var(--steel-700, #3a3a42);
+  border-radius: 4px;
+}
+
+.dialectic-modal__content::-webkit-scrollbar-thumb:hover {
+  background: var(--steel-600, #444);
+}
+
+/* =============================================================================
+   Fields
+   ============================================================================= */
+
+.dialectic-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.dialectic-modal__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--steel-500, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dialectic-modal__input,
+.dialectic-modal__textarea {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: var(--steel-900, #1a1a1a);
+  border: 1px solid var(--steel-700, #3a3a42);
+  border-radius: 4px;
+  color: var(--steel-100, #e0e0e0);
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  transition: border-color 0.15s ease;
+}
+
+.dialectic-modal__input:focus,
+.dialectic-modal__textarea:focus {
+  outline: none;
+  border-color: var(--status-visual, #9c27b0);
+  box-shadow: 0 0 0 1px var(--status-visual, #9c27b0);
+}
+
+.dialectic-modal__input::placeholder,
+.dialectic-modal__textarea::placeholder {
+  color: var(--steel-600, #444);
+}
+
+.dialectic-modal__input:disabled,
+.dialectic-modal__textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dialectic-modal__textarea {
+  resize: vertical;
+  min-height: 3.5rem;
+}
+
+.dialectic-modal__textarea--small {
+  min-height: 2.5rem;
+}
+
+.dialectic-modal__textarea--synthesis {
+  background: rgba(156, 39, 176, 0.08);
+  border-color: var(--status-visual, #9c27b0);
+}
+
+/* =============================================================================
+   Two-Column Layout (Full Mode)
+   ============================================================================= */
+
+.dialectic-modal__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dialectic-modal__column {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .dialectic-modal__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =============================================================================
+   Tags
+   ============================================================================= */
+
+.dialectic-modal__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dialectic-modal__tag {
+  padding: 0.375rem 0.875rem;
+  background: var(--steel-800, #252525);
+  border: 1px solid var(--steel-700, #3a3a42);
+  border-radius: 12px;
+  color: var(--steel-400, #888);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dialectic-modal__tag:hover:not(:disabled) {
+  background: var(--steel-700, #3a3a42);
+  border-color: var(--steel-600, #444);
+  color: var(--steel-300, #a0a0a0);
+}
+
+.dialectic-modal__tag--selected {
+  background: var(--status-visual, #9c27b0);
+  border-color: var(--status-visual, #9c27b0);
+  color: white;
+  font-weight: 600;
+}
+
+.dialectic-modal__tag--selected:hover:not(:disabled) {
+  background: #7b1fa2;
+  border-color: #7b1fa2;
+}
+
+.dialectic-modal__tag:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+   Footer
+   ============================================================================= */
+
+.dialectic-modal__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: var(--steel-900, #12121a);
+  border-top: 1px solid var(--steel-800, #252525);
+}
+
+.dialectic-modal__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dialectic-modal__button {
+  padding: 0.5rem 1.25rem;
+  background: var(--steel-800, #252525);
+  border: 1px solid var(--steel-700, #3a3a42);
+  border-radius: 4px;
+  color: var(--steel-100, #e0e0e0);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dialectic-modal__button:hover:not(:disabled) {
+  background: var(--steel-700, #3a3a42);
+  border-color: var(--steel-600, #444);
+}
+
+.dialectic-modal__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dialectic-modal__button--primary {
+  background: var(--status-visual, #9c27b0);
+  border-color: var(--status-visual, #9c27b0);
+  color: white;
+  font-weight: 600;
+}
+
+.dialectic-modal__button--primary:hover:not(:disabled) {
+  background: #7b1fa2;
+  border-color: #7b1fa2;
+}
+
+/* =============================================================================
+   Hints
+   ============================================================================= */
+
+.dialectic-modal__hints {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--steel-800, #252525);
+  font-size: 0.75rem;
+  color: var(--steel-500, #666);
+}
+
+.dialectic-modal__hints kbd {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  background: var(--steel-800, #252525);
+  border: 1px solid var(--steel-700, #3a3a42);
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 0.625rem;
+  color: var(--steel-300, #a0a0a0);
+}
+
+.dialectic-modal__separator {
+  color: var(--steel-700, #3a3a42);
+  margin: 0 0.25rem;
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .dialectic-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .dialectic-modal__header,
+  .dialectic-modal__footer {
+    padding: 0.875rem 1rem;
+  }
+
+  .dialectic-modal__content {
+    padding: 1rem;
+  }
+
+  .dialectic-modal__tags {
+    gap: 0.375rem;
+  }
+
+  .dialectic-modal__tag {
+    font-size: 0.625rem;
+    padding: 0.25rem 0.625rem;
+  }
+}

@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { listDocuments, type DocumentEntry, type DocumentStatus } from '../../api/director';
+import { listDocuments, getRefCount, type DocumentEntry, type DocumentStatus } from '../../api/director';
 
 import { DocumentStatusBadge } from './DocumentStatus';
 
@@ -90,16 +90,16 @@ export function DocumentTable({
             bVal = b.status;
             break;
           case 'claims':
-            aVal = a.claim_count;
-            bVal = b.claim_count;
+            aVal = a.claim_count ?? 0;
+            bVal = b.claim_count ?? 0;
             break;
           case 'refs':
-            aVal = a.ref_count;
-            bVal = b.ref_count;
+            aVal = getRefCount(a);
+            bVal = getRefCount(b);
             break;
           case 'placeholders':
-            aVal = a.placeholder_count;
-            bVal = b.placeholder_count;
+            aVal = a.placeholder_count ?? 0;
+            bVal = b.placeholder_count ?? 0;
             break;
         }
 
@@ -247,9 +247,9 @@ export function DocumentTable({
                   <td>
                     <DocumentStatusBadge status={doc.status} />
                   </td>
-                  <td className="document-table__cell-num">{doc.claim_count}</td>
-                  <td className="document-table__cell-num">{doc.ref_count}</td>
-                  <td className="document-table__cell-num">{doc.placeholder_count}</td>
+                  <td className="document-table__cell-num">{doc.claim_count ?? 0}</td>
+                  <td className="document-table__cell-num">{getRefCount(doc)}</td>
+                  <td className="document-table__cell-num">{doc.placeholder_count ?? 0}</td>
                   <td className="document-table__cell-actions">
                     <button
                       className="document-table__action-btn"

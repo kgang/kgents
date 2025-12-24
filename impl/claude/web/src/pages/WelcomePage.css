@@ -382,6 +382,40 @@
     0 0 20px rgba(74, 107, 74, 0.1);
 }
 
+.welcome-view__cta-button--zero-seed {
+  background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface-1) 100%);
+  border-color: var(--glow-spore);
+  color: var(--glow-light);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-view__cta-button--zero-seed::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196, 167, 125, 0.2) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease-out, height 0.6s ease-out;
+}
+
+.welcome-view__cta-button--zero-seed:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.welcome-view__cta-button--zero-seed:hover {
+  border-color: var(--glow-light);
+  color: var(--glow-light);
+  box-shadow:
+    0 2px 16px rgba(196, 167, 125, 0.3),
+    0 0 30px rgba(196, 167, 125, 0.15);
+}
+
 .welcome-view__cta-button:focus-visible {
   outline: 2px solid var(--life-sage);
   outline-offset: 2px;
@@ -394,6 +428,80 @@
     align-items: stretch;
     gap: 0.5rem;
   }
+}
+
+/* =============================================================================
+ * Easter Egg — "zero" typed triggers overlay
+ * ============================================================================= */
+
+.welcome-view__easter-egg {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  animation: easter-egg-fade-in 0.3s ease-out;
+}
+
+@keyframes easter-egg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.welcome-view__easter-egg-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 3rem;
+  animation: easter-egg-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes easter-egg-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+.welcome-view__easter-egg-glyph {
+  font-size: 4rem;
+  color: var(--glow-light);
+  text-shadow:
+    0 0 30px var(--glow-spore),
+    0 0 60px var(--glow-spore),
+    0 0 90px var(--glow-spore);
+  animation: easter-egg-glyph-rotate 3s linear infinite;
+}
+
+@keyframes easter-egg-glyph-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.welcome-view__easter-egg-text {
+  font-size: 1.25rem;
+  color: var(--glow-light);
+  font-style: italic;
+  text-align: center;
+  max-width: 500px;
+  line-height: 1.6;
+  text-shadow: 0 0 20px rgba(196, 167, 125, 0.5);
 }
 
 /* =============================================================================
@@ -434,6 +542,18 @@
     opacity: 1;
     transform: none;
     animation: none !important;
+  }
+
+  .welcome-view__easter-egg {
+    animation: none;
+  }
+
+  .welcome-view__easter-egg-content {
+    animation: none;
+  }
+
+  .welcome-view__easter-egg-glyph {
+    animation: none;
   }
 }
 

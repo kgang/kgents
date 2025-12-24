@@ -48,6 +48,8 @@ interface AstronomicalChartProps {
   showControls?: boolean;
   /** Show legend */
   showLegend?: boolean;
+  /** Focused node path (from editor, for bidirectional sync) */
+  focusedNodePath?: string | null;
 }
 
 // =============================================================================
@@ -60,6 +62,7 @@ export function AstronomicalChart({
   onNodeClick,
   showControls = true,
   showLegend = true,
+  focusedNodePath = null,
 }: AstronomicalChartProps) {
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -315,6 +318,63 @@ export function AstronomicalChart({
       }
     });
   }, [connections, hoveredStar, selectedStar, positionedStars]);
+
+  // Focus node from external control (editor navigation)
+  useEffect(() => {
+    if (!focusedNodePath || !viewportContainerRef.current) return;
+
+    const star = positionedStars.find((s) => s.path === focusedNodePath);
+    if (!star) return;
+
+    // Pan viewport to center the focused star
+    const viewport = viewportContainerRef.current;
+    const targetX = -star.x;
+    const targetY = -star.y;
+
+    // Smooth pan animation with cleanup
+    const startX = viewport.position.x - dimensions.width / 2;
+    const startY = viewport.position.y - dimensions.height / 2;
+    const duration = 500; // ms
+    const startTime = Date.now();
+    let cancelled = false;
+    let animationId: number;
+
+    const animate = () => {
+      // Check if animation was cancelled or viewport destroyed
+      if (cancelled || !viewportContainerRef.current || !viewportContainerRef.current.transform) {
+        return;
+      }
+
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+
+      const currentX = startX + (targetX - startX) * eased;
+      const currentY = startY + (targetY - startY) * eased;
+
+      viewportContainerRef.current.position.set(
+        dimensions.width / 2 + currentX * viewportContainerRef.current.scale.x,
+        dimensions.height / 2 + currentY * viewportContainerRef.current.scale.y
+      );
+
+      if (progress < 1) {
+        animationId = requestAnimationFrame(animate);
+      } else {
+        // Select the star after animation completes
+        setSelectedStar(star);
+      }
+    };
+
+    animationId = requestAnimationFrame(animate);
+
+    // Cleanup: cancel animation on unmount or dependency change
+    return () => {
+      cancelled = true;
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [focusedNodePath, positionedStars, dimensions, setSelectedStar]);
 
   // Add glow ring for selection/hover
   useEffect(() => {

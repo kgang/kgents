@@ -1,5 +1,5 @@
 /**
- * Brain API Client — Extended operations for BrainPage
+ * Brain API Client — Extended operations for FeedPage
  *
  * Extends the base brainApi in client.ts with additional operations:
  * - search: Semantic search through memories

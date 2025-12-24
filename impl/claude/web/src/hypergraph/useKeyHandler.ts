@@ -46,6 +46,7 @@ type ActionType =
   | 'ENTER_INSERT'
   | 'ENTER_COMMAND'
   | 'SHOW_HELP'
+  | 'OPEN_COMMAND_PALETTE'
   // Scroll navigation (reader mode)
   | 'SCROLL_DOWN'
   | 'SCROLL_UP'
@@ -53,6 +54,15 @@ type ActionType =
   | 'SCROLL_PARAGRAPH_UP'
   | 'SCROLL_TO_TOP'
   | 'SCROLL_TO_BOTTOM'
+  // Graph sidebar
+  | 'TOGGLE_GRAPH_SIDEBAR'
+  // Decision stream (witness history)
+  | 'TOGGLE_DECISION_STREAM'
+  // Loss-gradient navigation
+  | 'GO_LOWEST_LOSS'
+  | 'GO_HIGHEST_LOSS'
+  | 'ZOOM_OUT'
+  | 'ZOOM_IN'
   // Dispatch actions (sent directly to reducer)
   | NavigationAction;
 
@@ -88,10 +98,14 @@ const NORMAL_BINDINGS: Binding[] = [
   { keys: ['a'], action: 'ENTER_INSERT', description: 'Enter insert mode (append)' },
   { keys: [':'], action: 'ENTER_COMMAND', description: 'Enter command mode' },
   { keys: ['?'], action: 'SHOW_HELP', description: 'Show keyboard shortcuts' },
+  {
+    keys: ['k'],
+    modifiers: { meta: true },
+    action: 'OPEN_COMMAND_PALETTE',
+    description: 'Open command palette',
+  },
 
   // --- Graph Navigation (g-prefix) ---
-  { keys: ['g', 'h'], action: 'GO_PARENT', description: 'Go to parent node' },
-  { keys: ['g', 'l'], action: 'GO_CHILD', description: 'Go to child node' },
   {
     keys: ['g', 'j'],
     action: { type: 'GO_SIBLING', direction: 1 },
@@ -110,6 +124,14 @@ const NORMAL_BINDINGS: Binding[] = [
   { keys: ['g', 'e'], action: { type: 'ENTER_EDGE' }, description: 'Enter edge mode' },
   { keys: ['g', 'w'], action: { type: 'ENTER_WITNESS' }, description: 'Enter witness mode' },
   { keys: ['g', 'g'], action: 'SCROLL_TO_TOP', description: 'Go to top of document' },
+  { keys: ['g', 's'], action: 'TOGGLE_GRAPH_SIDEBAR', description: 'Toggle graph sidebar (Living Canvas)' },
+  { keys: ['g', 'm'], action: 'TOGGLE_DECISION_STREAM', description: 'Toggle decision stream (witness marks)' },
+
+  // --- Loss-Gradient Navigation (vim-style) ---
+  { keys: ['g', 'l'], action: 'GO_LOWEST_LOSS', description: 'Go to lowest-loss neighbor (follow gradient)' },
+  { keys: ['g', 'h'], action: 'GO_HIGHEST_LOSS', description: 'Go to highest-loss neighbor (investigate)' },
+  { keys: ['g', 'L'], action: 'ZOOM_OUT', description: 'Zoom out (increase focal distance)' },
+  { keys: ['g', 'H'], action: 'ZOOM_IN', description: 'Zoom in (decrease focal distance)' },
 
   // --- Scroll & Position ---
   { keys: ['G'], action: 'SCROLL_TO_BOTTOM', description: 'Go to bottom of document' },
@@ -137,8 +159,6 @@ export interface UseKeyHandlerOptions {
   dispatch: React.Dispatch<NavigationAction>;
 
   // Graph navigation callbacks
-  goParent: () => void;
-  goChild: () => void;
   goDefinition: () => void;
   goReferences: () => void;
   goTests: () => void;
@@ -165,6 +185,19 @@ export interface UseKeyHandlerOptions {
   onEnterInsert?: () => void | Promise<void>;
   onEdgeConfirm?: () => Promise<void>;
   onShowHelp?: () => void;
+  onOpenCommandPalette?: () => void;
+
+  // Graph sidebar
+  onToggleGraphSidebar?: () => void;
+
+  // Decision stream (witness history)
+  onToggleDecisionStream?: () => void;
+
+  // Loss-gradient navigation
+  goLowestLoss?: () => void | Promise<void>;
+  goHighestLoss?: () => void | Promise<void>;
+  zoomOut?: () => void;
+  zoomIn?: () => void;
 
   /** Whether key handling is enabled */
   enabled?: boolean;
@@ -185,8 +218,6 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
   const {
     state,
     dispatch,
-    goParent,
-    goChild,
     goDefinition,
     goReferences,
     goTests,
@@ -207,6 +238,13 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     onEnterInsert,
     onEdgeConfirm,
     onShowHelp,
+    onOpenCommandPalette,
+    onToggleGraphSidebar,
+    onToggleDecisionStream,
+    goLowestLoss,
+    goHighestLoss,
+    zoomOut,
+    zoomIn,
     enabled = true,
   } = options;
 
@@ -223,8 +261,6 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
   // String actions mapped to callbacks (avoids giant switch statement)
   const actionMap = useCallback(
     (): Record<string, () => void> => ({
-      GO_PARENT: goParent,
-      GO_CHILD: goChild,
       GO_DEFINITION: goDefinition,
       GO_REFERENCES: goReferences,
       GO_TESTS: goTests,
@@ -255,11 +291,25 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
         onEnterCommand?.();
       },
       SHOW_HELP: () => onShowHelp?.(),
+      OPEN_COMMAND_PALETTE: () => onOpenCommandPalette?.(),
+      TOGGLE_GRAPH_SIDEBAR: () => onToggleGraphSidebar?.(),
+      TOGGLE_DECISION_STREAM: () => onToggleDecisionStream?.(),
+      // Loss-gradient navigation
+      GO_LOWEST_LOSS: () => {
+        if (goLowestLoss) {
+          void goLowestLoss();
+        }
+      },
+      GO_HIGHEST_LOSS: () => {
+        if (goHighestLoss) {
+          void goHighestLoss();
+        }
+      },
+      ZOOM_OUT: () => zoomOut?.(),
+      ZOOM_IN: () => zoomIn?.(),
     }),
     [
       dispatch,
-      goParent,
-      goChild,
       goDefinition,
       goReferences,
       goTests,
@@ -279,6 +329,13 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       onEnterCommand,
       onEnterInsert,
       onShowHelp,
+      onOpenCommandPalette,
+      onToggleGraphSidebar,
+      onToggleDecisionStream,
+      goLowestLoss,
+      goHighestLoss,
+      zoomOut,
+      zoomIn,
     ]
   );
 
@@ -448,6 +505,13 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       const target = e.target as HTMLElement;
       const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
 
+      // Universal: Cmd+K opens command palette (works in ANY mode)
+      if (e.key === 'k' && e.metaKey) {
+        e.preventDefault();
+        onOpenCommandPalette?.();
+        return;
+      }
+
       // Universal: Escape always exits to NORMAL
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -455,6 +519,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
         if (state.mode !== 'NORMAL') {
           dispatch({ type: 'SET_MODE', mode: 'NORMAL' });
         }
+        // Note: CommandPalette handles its own Escape (via cmdk)
         return;
       }
 
@@ -485,7 +550,15 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
         handleEdgeMode(e);
       }
     },
-    [enabled, state.mode, resetSequence, dispatch, handleNormalMode, handleEdgeMode]
+    [
+      enabled,
+      state.mode,
+      resetSequence,
+      dispatch,
+      handleNormalMode,
+      handleEdgeMode,
+      onOpenCommandPalette,
+    ]
   );
 
   // --- Event Listener ---

@@ -1,0 +1,222 @@
+/**
+ * TelescopeShell Styles
+ *
+ * Unified navigation shell that wraps the entire application.
+ * Provides focal distance ruler and loss threshold controls.
+ */
+
+/* =============================================================================
+   Shell Container
+   ============================================================================= */
+
+.telescope-shell {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--surface-0);
+}
+
+.telescope-shell__content {
+  /* Account for focal distance ruler */
+  margin-left: 64px;
+  height: 100vh;
+  transition: margin-left var(--elastic-transition-fast);
+}
+
+@media (max-width: 768px) {
+  .telescope-shell__content {
+    margin-left: 48px;
+  }
+}
+
+/* =============================================================================
+   Controls Overlay (Top Right)
+   ============================================================================= */
+
+.telescope-shell__controls {
+  position: fixed;
+  top: var(--navbar-height);
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: var(--elastic-gap-md);
+  padding: var(--elastic-gap-sm);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-bare);
+  z-index: var(--elastic-z-sticky);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* =============================================================================
+   Loss Threshold Slider
+   ============================================================================= */
+
+.loss-threshold-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--elastic-gap-sm);
+  padding: var(--elastic-gap-xs);
+}
+
+.loss-threshold-slider__label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.loss-threshold-slider__input {
+  width: 100px;
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  transition: background var(--elastic-transition-fast);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Webkit (Chrome, Safari) */
+.loss-threshold-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+  transition:
+    transform var(--elastic-transition-fast),
+    box-shadow var(--elastic-transition-fast);
+}
+
+.loss-threshold-slider__input::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 8px var(--accent-primary);
+}
+
+.loss-threshold-slider--dragging .loss-threshold-slider__input::-webkit-slider-thumb {
+  transform: scale(1.3);
+  box-shadow: 0 0 12px var(--accent-primary);
+}
+
+/* Firefox */
+.loss-threshold-slider__input::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+  transition:
+    transform var(--elastic-transition-fast),
+    box-shadow var(--elastic-transition-fast);
+}
+
+.loss-threshold-slider__input::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 8px var(--accent-primary);
+}
+
+.loss-threshold-slider--dragging .loss-threshold-slider__input::-moz-range-thumb {
+  transform: scale(1.3);
+  box-shadow: 0 0 12px var(--accent-primary);
+}
+
+/* Track focus */
+.loss-threshold-slider__input:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.loss-threshold-slider__value {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+/* =============================================================================
+   Gradient Toggle
+   ============================================================================= */
+
+.gradient-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-bare);
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background var(--elastic-transition-fast),
+    color var(--elastic-transition-fast),
+    border-color var(--elastic-transition-fast);
+}
+
+.gradient-toggle:hover {
+  background: var(--surface-3);
+  color: var(--text-secondary);
+}
+
+.gradient-toggle--active {
+  background: var(--surface-3);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.gradient-toggle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.gradient-toggle__icon {
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* =============================================================================
+   Responsive Adjustments
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .telescope-shell__controls {
+    top: calc(var(--navbar-height) + 4px);
+    right: 0.5rem;
+    padding: var(--elastic-gap-xs);
+    gap: var(--elastic-gap-sm);
+  }
+
+  .loss-threshold-slider__input {
+    width: 80px;
+  }
+
+  .gradient-toggle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.875rem;
+  }
+}
+
+/* =============================================================================
+   Accessibility
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .telescope-shell__content,
+  .loss-threshold-slider__input::-webkit-slider-thumb,
+  .loss-threshold-slider__input::-moz-range-thumb,
+  .gradient-toggle {
+    transition: none;
+  }
+}

@@ -1,24 +1,32 @@
 /**
- * useTokenRegistry Hook
+ * useTokenRegistry Hook - STUB IMPLEMENTATION
  *
- * Fetches spec ledger data and transforms to TokenItems.
- * Provides filtering, sorting, and selection state.
+ * The old spec ledger backend has been removed. This hook now returns
+ * empty data to prevent breaking components that still reference it.
  *
- * "The frame is humble. The content glows."
+ * Use the Document Director (/director) for document management.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getLedger, type SpecEntry, type LedgerSummary } from '../../api/specLedger';
+import { useCallback, useMemo, useState } from 'react';
 import {
   type TokenItem,
   type TokenType,
   type TokenStatus,
   type FilterState,
   DEFAULT_FILTERS,
-  detectTier,
-  detectType,
-  getTierIcon,
 } from './types';
+
+// Stub type for removed LedgerSummary
+interface LedgerSummary {
+  total_specs: number;
+  active: number;
+  orphans: number;
+  deprecated: number;
+  archived: number;
+  total_claims: number;
+  contradictions: number;
+  harmonies: number;
+}
 
 // =============================================================================
 // Types
@@ -56,103 +64,15 @@ export interface RegistryActions {
 export type UseTokenRegistryResult = RegistryState & RegistryActions;
 
 // =============================================================================
-// Transform Functions
-// =============================================================================
-
-/**
- * Extract display name from path.
- * e.g., "spec/protocols/witness.md" → "witness"
- */
-function extractName(path: string): string {
-  const filename = path.split('/').pop() || path;
-  return filename.replace(/\.(md|py|ts|tsx|js|jsx)$/, '');
-}
-
-/**
- * Transform SpecEntry → TokenItem.
- */
-function transformSpec(spec: SpecEntry): TokenItem {
-  const tier = detectTier(spec.path) as 0 | 1 | 2 | 3 | 4;
-  const type = detectType(spec.path);
-
-  return {
-    id: spec.path,
-    name: extractName(spec.path),
-    type,
-    tier,
-    status: spec.status,
-    icon: getTierIcon(tier),
-    hasEvidence: spec.impl_count > 0 || spec.test_count > 0,
-    claimCount: spec.claim_count,
-    implCount: spec.impl_count,
-    testCount: spec.test_count,
-    wordCount: spec.word_count,
-  };
-}
-
-// =============================================================================
-// Filter Functions
-// =============================================================================
-
-/**
- * Apply filters to token list.
- */
-function applyFilters(tokens: TokenItem[], filters: FilterState): TokenItem[] {
-  return tokens.filter((token) => {
-    // Search filter (case-insensitive)
-    if (filters.search) {
-      const query = filters.search.toLowerCase();
-      const matchesName = token.name.toLowerCase().includes(query);
-      const matchesId = token.id.toLowerCase().includes(query);
-      if (!matchesName && !matchesId) return false;
-    }
-
-    // Type filter (OR within types)
-    if (filters.types.length > 0 && !filters.types.includes(token.type)) {
-      return false;
-    }
-
-    // Status filter (OR within statuses)
-    if (filters.statuses.length > 0 && !filters.statuses.includes(token.status)) {
-      return false;
-    }
-
-    // Tier filter (OR within tiers)
-    if (filters.tiers.length > 0 && !filters.tiers.includes(token.tier)) {
-      return false;
-    }
-
-    // Evidence filter
-    if (filters.hasEvidence !== null && token.hasEvidence !== filters.hasEvidence) {
-      return false;
-    }
-
-    return true;
-  });
-}
-
-/**
- * Sort tokens by tier, then name.
- */
-function sortTokens(tokens: TokenItem[]): TokenItem[] {
-  return [...tokens].sort((a, b) => {
-    // Primary: tier ascending (principles first)
-    if (a.tier !== b.tier) return a.tier - b.tier;
-    // Secondary: name alphabetically
-    return a.name.localeCompare(b.name);
-  });
-}
-
-// =============================================================================
-// Hook
+// Stub Hook (Spec Ledger API removed)
 // =============================================================================
 
 export function useTokenRegistry(): UseTokenRegistryResult {
-  // Core state
-  const [tokens, setTokens] = useState<TokenItem[]>([]);
-  const [summary, setSummary] = useState<LedgerSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Core state - all stubbed to empty
+  const [tokens] = useState<TokenItem[]>([]);
+  const [summary] = useState<LedgerSummary | null>(null);
+  const [loading] = useState(false);
+  const [error] = useState<string | null>(null);
 
   // Filter state
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
@@ -160,37 +80,8 @@ export function useTokenRegistry(): UseTokenRegistryResult {
   // Selection state
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Fetch data
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Fetch specs (API max is 500, pagination can be added later)
-      const response = await getLedger({ limit: 500 });
-      const transformed = response.specs.map(transformSpec);
-      const sorted = sortTokens(transformed);
-
-      setTokens(sorted);
-      setSummary(response.summary);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load registry';
-      setError(message);
-      console.error('[TokenRegistry] Fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Initial fetch
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  // Filtered tokens (memoized)
-  const filteredTokens = useMemo(() => {
-    return applyFilters(tokens, filters);
-  }, [tokens, filters]);
+  // Filtered tokens (always empty)
+  const filteredTokens = useMemo(() => [] as TokenItem[], []);
 
   // ==========================================================================
   // Filter Actions
@@ -306,6 +197,11 @@ export function useTokenRegistry(): UseTokenRegistryResult {
     [filteredTokens, selectedId]
   );
 
+  // Stub refresh function
+  const refresh = useCallback(async () => {
+    console.warn('useTokenRegistry: Spec ledger backend removed. Use Document Director instead.');
+  }, []);
+
   // ==========================================================================
   // Return
   // ==========================================================================
@@ -319,8 +215,8 @@ export function useTokenRegistry(): UseTokenRegistryResult {
     error,
     filters,
     selectedId,
-    totalCount: tokens.length,
-    filteredCount: filteredTokens.length,
+    totalCount: 0,
+    filteredCount: 0,
 
     // Actions
     setFilters,
@@ -336,6 +232,6 @@ export function useTokenRegistry(): UseTokenRegistryResult {
     selectPrev,
     selectNextRow,
     selectPrevRow,
-    refresh: fetchData,
+    refresh,
   };
 }

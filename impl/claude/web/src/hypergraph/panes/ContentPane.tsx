@@ -168,7 +168,7 @@ export const ContentPane = memo(function ContentPane({
     );
   }
 
-  // INSERT mode: Full CodeMirror editor
+  // INSERT mode: Full CodeMirror editor with ghost text
   if (isInsertMode) {
     return (
       <div className="content-pane content-pane--insert">
@@ -181,6 +181,7 @@ export const ContentPane = memo(function ContentPane({
           placeholder="Enter content..."
           fillHeight
           autoFocus
+          enableGhostText
         />
         <AnimatePresence>
           {portalArray.map((portal) => (

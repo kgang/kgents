@@ -9,22 +9,24 @@ import { WelcomeView } from './pages/WelcomePage';
 /**
  * kgents Web — The Cathedral Navigation Experience
  *
- * Four surfaces, one coherent experience:
+ * Five surfaces, one coherent experience:
  * - Editor: Hypergraph Emacs for spec navigation/editing
- * - Ledger: Spec corpus health dashboard
+ * - Docs: Living document canvas (Document Director)
  * - Chart: Astronomical visualization
- * - Brain: Memory exploration (crystals, teaching, wisdom)
+ * - Feed: Memory exploration (crystals, teaching, wisdom)
+ * - Zero Seed: Epistemic graph navigation (axioms, proofs, health, telescope)
  *
  * AppShell provides navbar + WitnessFooter (always-on)
  */
 
 // Main surfaces
-const SpecLedgerPage = lazy(() => import('./pages/SpecLedgerPage'));
+const DirectorPage = lazy(() => import('./pages/DirectorPage'));
 const HypergraphEditorPage = lazy(() =>
   import('./pages/HypergraphEditorPage').then((m) => ({ default: m.HypergraphEditorPage }))
 );
 const ChartPage = lazy(() => import('./pages/ChartPage'));
-const BrainPage = lazy(() => import('./pages/BrainPage'));
+const FeedPage = lazy(() => import('./pages/FeedPage'));
+const ZeroSeedPage = lazy(() => import('./pages/ZeroSeedPage'));
 
 function LoadingFallback() {
   return (
@@ -51,9 +53,10 @@ function App() {
   // Main app surfaces use AppShell
   const isAppSurface =
     location.pathname.startsWith('/editor') ||
-    location.pathname.startsWith('/ledger') ||
+    location.pathname.startsWith('/director') ||
     location.pathname.startsWith('/chart') ||
-    location.pathname.startsWith('/brain');
+    location.pathname.startsWith('/brain') ||
+    location.pathname.startsWith('/zero-seed');
 
   return (
     <ErrorBoundary resetKeys={[location.pathname]}>
@@ -65,9 +68,10 @@ function App() {
               <PageTransition key={location.pathname} variant="fade">
                 <Routes location={location}>
                   <Route path="/editor/*" element={<HypergraphEditorPage />} />
-                  <Route path="/ledger" element={<SpecLedgerPage />} />
+                  <Route path="/director" element={<DirectorPage />} />
                   <Route path="/chart" element={<ChartPage />} />
-                  <Route path="/brain" element={<BrainPage />} />
+                  <Route path="/brain" element={<FeedPage />} />
+                  <Route path="/zero-seed" element={<ZeroSeedPage />} />
                 </Routes>
               </PageTransition>
             </AnimatePresence>

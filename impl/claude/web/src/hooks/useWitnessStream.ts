@@ -113,18 +113,19 @@ export function useWitnessStream(): UseWitnessStream {
       setEvents((prev) => [connectionEvent, ...prev].slice(0, MAX_EVENTS));
     };
 
-    eventSource.onmessage = (e) => {
+    // Helper to process incoming events
+    const processEvent = (e: MessageEvent, eventType: WitnessEventType) => {
       try {
         const data = JSON.parse(e.data);
 
         // Skip heartbeats in the event list (but they confirm connection)
-        if (data.type === 'heartbeat') {
+        if (data.type === 'heartbeat' || eventType === 'heartbeat') {
           return;
         }
 
         const event: WitnessEvent = {
           id: data.id || `evt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          type: data.type || 'mark',
+          type: eventType,
           timestamp: new Date(data.timestamp || Date.now()),
           // Mark fields
           action: data.action,
@@ -157,6 +158,27 @@ export function useWitnessStream(): UseWitnessStream {
         console.error('Failed to parse witness event:', error);
       }
     };
+
+    // SSE uses NAMED events (event: mark\ndata: {...})
+    // We must use addEventListener for each event type, NOT onmessage
+    // onmessage only catches unnamed events or "message" events
+    // Note: 'connected' is handled by onopen, 'heartbeat' is skipped - don't add listeners for these
+    const eventTypes: WitnessEventType[] = [
+      'mark',
+      'thought',
+      'crystal',
+      'kblock',
+      'trail',
+      'spec',
+      'sovereign',
+    ];
+
+    eventTypes.forEach((eventType) => {
+      eventSource.addEventListener(eventType, (e) => processEvent(e as MessageEvent, eventType));
+    });
+
+    // Also handle any unnamed events (fallback)
+    eventSource.onmessage = (e) => processEvent(e, 'mark');
 
     eventSource.onerror = () => {
       setConnected(false);

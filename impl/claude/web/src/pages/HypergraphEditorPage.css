@@ -1,10 +1,12 @@
 /**
  * HypergraphEditorPage — Minimal page wrapper
+ * Uses --content-height from AppShell to properly account for navbar + footer
  */
 
 .hypergraph-editor-page {
-  height: 100vh;
+  height: 100%;
   background: var(--steel-950, #0d0d0d);
   color: var(--steel-100, #e0e0e0);
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  overflow: hidden;
 }

@@ -2,17 +2,16 @@
  * AppShell — The cathedral navigation experience
  *
  * Wraps all surfaces with:
- * - Top navbar for surface switching (Editor, Ledger, Chart, Brain)
+ * - Top navbar for surface switching (Editor, Docs, Chart, Feed)
  * - Bottom WitnessFooter (always-on compact stream)
  *
  * "Stop documenting agents. Become the agent."
  */
 
-import { ReactNode, useCallback, useState } from 'react';
+import { ReactNode, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { WitnessFooter } from './WitnessFooter';
-import { NavigationSidebar, type Surface } from '../navigation';
 
 import './AppShell.css';
 
@@ -37,9 +36,8 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { path: '/editor', label: 'Editor', shortcut: 'E', icon: '⌨' },
-  { path: '/ledger', label: 'Ledger', shortcut: 'L', icon: '📊' },
-  { path: '/chart', label: 'Chart', shortcut: 'C', icon: '✦' },
-  { path: '/brain', label: 'Brain', shortcut: 'B', icon: '🧠' },
+  { path: '/director', label: 'Docs', shortcut: 'D', icon: '📋' },
+  { path: '/brain', label: 'Feed', shortcut: 'B', icon: '📡' },
 ];
 
 // =============================================================================
@@ -72,19 +70,9 @@ function NavLink({ item, isActive }: NavLinkProps) {
 export function AppShell({ children }: AppShellProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   // Determine active surface
   const activePath = NAV_ITEMS.find((item) => location.pathname.startsWith(item.path))?.path;
-
-  // Map path to surface type
-  const getSurface = (): Surface => {
-    if (location.pathname.startsWith('/editor')) return 'editor';
-    if (location.pathname.startsWith('/ledger')) return 'ledger';
-    if (location.pathname.startsWith('/chart')) return 'chart';
-    if (location.pathname.startsWith('/brain')) return 'brain';
-    return 'editor';
-  };
 
   // Global keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -95,13 +83,6 @@ export function AppShell({ children }: AppShellProps) {
         e.target instanceof HTMLTextAreaElement ||
         (e.target as HTMLElement).isContentEditable
       ) {
-        return;
-      }
-
-      // Ctrl+b or Cmd+b: Toggle sidebar
-      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-        e.preventDefault();
-        setSidebarExpanded((prev) => !prev);
         return;
       }
 
@@ -142,7 +123,7 @@ export function AppShell({ children }: AppShellProps) {
             title="Keyboard shortcuts"
             onClick={() => {
               console.info(
-                'Shortcuts: Shift+E: Editor | Shift+L: Ledger | Shift+C: Chart | Shift+B: Brain'
+                'Shortcuts: Shift+E: Editor | Shift+D: Docs | Shift+B: Feed'
               );
             }}
           >
@@ -150,15 +131,6 @@ export function AppShell({ children }: AppShellProps) {
           </button>
         </div>
       </nav>
-
-      {/* Navigation sidebar */}
-      <NavigationSidebar
-        surface={getSurface()}
-        isExpanded={sidebarExpanded}
-        onToggle={() => setSidebarExpanded((prev) => !prev)}
-        topOffset="48px" /* navbar height */
-        bottomOffset="40px" /* witness footer height */
-      />
 
       {/* Main content area */}
       <main className="app-shell__content">{children}</main>

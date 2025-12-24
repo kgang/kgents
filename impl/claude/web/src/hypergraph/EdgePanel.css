@@ -10,13 +10,13 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 12px 16px;
-  background: var(--surface-1, #141418);
-  border: 1px solid var(--surface-3, #28282f);
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  background: var(--steel-900);
+  border: 1px solid var(--steel-700);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
   min-width: 400px;
   max-width: 600px;
-  z-index: 100;
+  z-index: var(--z-panel);
 }
 
 .edge-panel__header {
@@ -28,18 +28,18 @@
 
 .edge-panel__badge {
   padding: 3px 8px;
-  background: #88c0d0;
-  color: var(--surface-0, #0a0a0c);
-  font-size: 10px;
+  background: var(--status-edge);
+  color: var(--steel-950);
+  font-size: var(--font-size-xs);
   font-weight: 700;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .edge-panel__phase {
-  color: var(--text-secondary, #8a8a94);
-  font-size: 12px;
+  color: var(--steel-400);
+  font-size: var(--font-size-sm);
 }
 
 /* Edge visualization */
@@ -49,17 +49,17 @@
   gap: 8px;
   margin-bottom: 12px;
   padding: 10px;
-  background: var(--surface-0, #0a0a0c);
-  border-radius: 6px;
+  background: var(--steel-950);
+  border-radius: var(--radius-lg);
 }
 
 .edge-panel__node {
   padding: 6px 12px;
-  background: var(--surface-2, #1c1c22);
-  border-radius: 4px;
-  font-size: 12px;
+  background: var(--steel-850);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
   font-weight: 500;
-  color: var(--text-primary, #e5e7eb);
+  color: var(--steel-100);
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -67,31 +67,31 @@
 }
 
 .edge-panel__node--source {
-  border-left: 3px solid var(--life-sage, #4a6b4a);
+  border-left: 3px solid var(--status-insert);
 }
 
 .edge-panel__node--target {
-  border-left: 3px solid #88c0d0;
+  border-left: 3px solid var(--status-edge);
 }
 
 .edge-panel__node--pending {
-  color: var(--text-muted, #5a5a64);
+  color: var(--steel-500);
   font-style: italic;
 }
 
 .edge-panel__arrow {
   flex: 1;
   text-align: center;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
 }
 
 .edge-panel__edge-type {
-  color: var(--accent-primary, #c4a77d);
+  color: var(--accent-gold);
 }
 
 .edge-panel__edge-placeholder {
-  color: var(--text-muted, #5a5a64);
+  color: var(--steel-500);
 }
 
 /* Instructions */
@@ -111,18 +111,18 @@
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  background: var(--surface-2, #1c1c22);
-  border-radius: 4px;
+  background: var(--steel-850);
+  border-radius: var(--radius-md);
   font-size: 11px;
-  color: var(--text-secondary, #8a8a94);
+  color: var(--steel-400);
 }
 
 .edge-panel__type-option kbd {
   padding: 2px 5px;
-  background: var(--surface-3, #28282f);
-  border-radius: 3px;
-  font-size: 10px;
-  color: var(--accent-primary, #c4a77d);
+  background: var(--steel-800);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--accent-gold);
 }
 
 /* Hints */
@@ -131,15 +131,15 @@
   gap: 16px;
   justify-content: center;
   font-size: 11px;
-  color: var(--text-muted, #5a5a64);
+  color: var(--steel-500);
 }
 
 .edge-panel__hints kbd {
   padding: 2px 5px;
-  background: var(--surface-2, #1c1c22);
-  border-radius: 3px;
-  font-size: 10px;
-  color: var(--text-secondary, #8a8a94);
+  background: var(--steel-850);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--steel-400);
 }
 
 /* Confirm */
@@ -150,7 +150,7 @@
 .edge-panel__confirm-prompt {
   display: block;
   font-size: 13px;
-  color: var(--text-primary, #e5e7eb);
+  color: var(--steel-100);
   margin-bottom: 8px;
 }
 
@@ -159,13 +159,13 @@
   justify-content: center;
   gap: 20px;
   font-size: 11px;
-  color: var(--text-muted, #5a5a64);
+  color: var(--steel-500);
 }
 
 .edge-panel__confirm-actions kbd {
   padding: 2px 5px;
-  background: var(--life-sage, #4a6b4a);
-  border-radius: 3px;
-  font-size: 10px;
-  color: var(--text-primary, #e5e7eb);
+  background: var(--status-insert);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--steel-100);
 }
