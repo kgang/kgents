@@ -1,0 +1,237 @@
+/**
+ * ConstitutionScorecard styles
+ *
+ * Table-like layout. Stark, informational. Structure reveals truth.
+ */
+
+.constitution-scorecard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--steel-900);
+  border: 1px solid var(--steel-700);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-mono);
+}
+
+.constitution-scorecard[data-compact='true'] {
+  padding: var(--space-sm);
+  gap: var(--space-sm);
+}
+
+.constitution-scorecard--empty {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.constitution-scorecard__placeholder {
+  font-size: var(--font-size-sm);
+  color: var(--steel-500);
+}
+
+/* Header */
+.constitution-scorecard__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--steel-700);
+}
+
+.constitution-scorecard__title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--steel-200);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.constitution-scorecard__summary {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  font-size: var(--font-size-sm);
+}
+
+.constitution-scorecard__agent {
+  color: var(--steel-400);
+}
+
+.constitution-scorecard__violations {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--health-warning);
+  color: var(--steel-950);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: var(--font-size-xs);
+}
+
+/* Overall score */
+.constitution-scorecard__overall {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm);
+  background: var(--steel-850);
+  border-radius: var(--radius-md);
+}
+
+.constitution-scorecard__overall-label {
+  font-size: var(--font-size-sm);
+  color: var(--steel-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.constitution-scorecard__overall-value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.constitution-scorecard__overall-min {
+  font-size: var(--font-size-xs);
+  color: var(--steel-500);
+  margin-left: auto;
+}
+
+/* Principle rows */
+.constitution-scorecard__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* Principle row */
+.constitution-scorecard-row {
+  display: grid;
+  grid-template-columns: 1fr 200px 80px 80px;
+  gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+  cursor: pointer;
+}
+
+.constitution-scorecard-row[data-compact='true'] {
+  grid-template-columns: 1fr 150px 70px;
+  gap: var(--space-sm);
+  padding: var(--space-xs);
+}
+
+.constitution-scorecard-row:hover {
+  background: var(--steel-850);
+}
+
+.constitution-scorecard-row[data-warning='true'] {
+  border-left: 3px solid var(--health-warning);
+  padding-left: calc(var(--space-sm) - 3px);
+}
+
+/* Name column */
+.constitution-scorecard-row__name {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.constitution-scorecard-row__label {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--steel-200);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.constitution-scorecard-row__description {
+  font-size: var(--font-size-xs);
+  color: var(--steel-500);
+}
+
+/* Score bar */
+.constitution-scorecard-row__score-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.constitution-scorecard-row__bar {
+  flex: 1;
+  height: 8px;
+  background: var(--steel-800);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.constitution-scorecard-row__bar-fill {
+  height: 100%;
+  transition: width var(--transition-slow);
+  border-radius: var(--radius-pill);
+}
+
+.constitution-scorecard-row__percentage {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  min-width: 3ch;
+  text-align: right;
+}
+
+/* Health indicator */
+.constitution-scorecard-row__health {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Weight */
+.constitution-scorecard-row__weight {
+  font-size: var(--font-size-sm);
+  color: var(--steel-400);
+  text-align: right;
+}
+
+.constitution-scorecard-row__weighted {
+  font-size: var(--font-size-xs);
+  color: var(--steel-500);
+  margin-left: var(--space-xs);
+}
+
+/* Evidence (expandable) */
+.constitution-scorecard-row__evidence {
+  grid-column: 1 / -1;
+  margin-top: var(--space-xs);
+  padding: var(--space-sm);
+  background: var(--steel-950);
+  border-left: 2px solid var(--steel-700);
+  border-radius: var(--radius-sm);
+}
+
+.constitution-scorecard-row__evidence-label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--steel-500);
+  margin-bottom: var(--space-xs);
+}
+
+.constitution-scorecard-row__evidence-text {
+  font-size: var(--font-size-sm);
+  color: var(--steel-300);
+  line-height: var(--line-height-relaxed);
+}
+
+/* Footer */
+.constitution-scorecard__footer {
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--steel-700);
+  font-size: var(--font-size-xs);
+  color: var(--steel-500);
+  text-align: center;
+  font-style: italic;
+}
