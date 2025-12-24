@@ -1,0 +1,275 @@
+/**
+ * GaloisTelescope Styles
+ *
+ * Loss-guided navigation visualization with STARK BIOME palette.
+ */
+
+/* Container */
+.galois-telescope {
+  position: relative;
+  background: var(--steel-900, #0d1117);
+  border-radius: 8px;
+  overflow: hidden;
+  outline: none;
+}
+
+.galois-telescope:focus {
+  box-shadow: 0 0 0 2px var(--status-edge, #f59e0b);
+}
+
+/* SVG Canvas */
+.galois-telescope__canvas {
+  display: block;
+}
+
+/* Nodes */
+.galois-telescope__nodes {
+  /* Container for all nodes */
+}
+
+.loss-node {
+  transition: opacity 0.2s ease;
+}
+
+.loss-node:hover {
+  opacity: 1 !important;
+}
+
+.loss-node__glow {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+.loss-node__focal {
+  animation: focal-ring 1.5s ease-in-out infinite;
+}
+
+@keyframes focal-ring {
+  0%, 100% { stroke-opacity: 1; }
+  50% { stroke-opacity: 0.5; }
+}
+
+/* Gradient Field */
+.gradient-field__arrow {
+  transition: opacity 0.2s ease;
+}
+
+/* Tooltip */
+.galois-telescope__tooltip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--steel-800, #161b22);
+  border: 1px solid var(--steel-600, #30363d);
+  border-radius: 6px;
+  padding: 12px;
+  min-width: 200px;
+  max-width: 280px;
+  font-size: 12px;
+  color: var(--steel-100, #c9d1d9);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.galois-telescope__tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--steel-700, #21262d);
+}
+
+.galois-telescope__tooltip-id {
+  font-weight: 600;
+  color: var(--steel-50, #f0f6fc);
+}
+
+.galois-telescope__tooltip-layer {
+  font-size: 10px;
+  color: var(--steel-400, #8b949e);
+}
+
+.galois-telescope__tooltip-loss {
+  margin-bottom: 8px;
+}
+
+.galois-telescope__tooltip-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.galois-telescope__tooltip-status {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.galois-telescope__tooltip-status--visible {
+  background: var(--status-insert, #22c55e);
+  color: #000;
+}
+
+.galois-telescope__tooltip-status--hidden {
+  background: var(--status-edge, #f59e0b);
+  color: #000;
+}
+
+.galois-telescope__tooltip-components {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--steel-400, #8b949e);
+}
+
+.galois-telescope__tooltip-warning {
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--status-error, #ef4444);
+  border-radius: 4px;
+  color: var(--status-error, #ef4444);
+  font-size: 10px;
+  text-align: center;
+}
+
+/* Warnings Panel */
+.galois-telescope__warnings {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: var(--steel-800, #161b22);
+  border: 1px solid var(--status-error, #ef4444);
+  border-radius: 6px;
+  padding: 8px;
+  min-width: 200px;
+  max-width: 280px;
+  font-size: 11px;
+  z-index: 10;
+}
+
+.galois-telescope__warning-header {
+  font-weight: 600;
+  color: var(--status-error, #ef4444);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--steel-700, #21262d);
+}
+
+.galois-telescope__warning-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px;
+  padding: 4px 0;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.galois-telescope__warning-item:hover {
+  background: var(--steel-700, #21262d);
+}
+
+.galois-telescope__warning-id {
+  color: var(--steel-200, #b1bac4);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.galois-telescope__warning-loss {
+  color: var(--status-error, #ef4444);
+  font-weight: 600;
+}
+
+.galois-telescope__warning-reason {
+  grid-column: 1 / -1;
+  color: var(--steel-400, #8b949e);
+  font-size: 10px;
+}
+
+/* Loss Legend */
+.loss-legend {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: var(--steel-800, #161b22);
+  border: 1px solid var(--steel-600, #30363d);
+  border-radius: 6px;
+  padding: 8px 12px;
+  min-width: 180px;
+  font-size: 11px;
+  z-index: 10;
+}
+
+.loss-legend__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.loss-legend__title {
+  color: var(--steel-200, #b1bac4);
+  font-weight: 500;
+}
+
+.loss-legend__toggles {
+  display: flex;
+  gap: 4px;
+}
+
+.loss-legend__toggle {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--steel-700, #21262d);
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--steel-400, #8b949e);
+}
+
+.loss-legend__toggle--active {
+  background: var(--status-insert, #22c55e);
+  color: #000;
+}
+
+/* Status Bar */
+.galois-telescope__status {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  gap: 12px;
+  background: var(--steel-800, #161b22);
+  border: 1px solid var(--steel-600, #30363d);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 10px;
+  color: var(--steel-400, #8b949e);
+  z-index: 10;
+}
+
+.galois-telescope__status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.galois-telescope__status-focal {
+  color: #ffd700;
+  font-weight: 500;
+}
