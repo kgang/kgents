@@ -1,8 +1,9 @@
 # AGENTESE Chat Protocol: Conversational Affordances
 
-**Status:** Specification v1.0
-**Date:** 2025-12-17
-**Dependencies:** AGENTESE v3, F-gent Flow, CLI Isomorphic Migration
+**Status:** Specification v2.0
+**Date:** 2025-12-24
+**Principles:** Composable, Generative, Ethical, Joy-Inducing
+**Dependencies:** AGENTESE v3, AD-015 (Proxy Handles), AD-012 (Aspect Projection)
 
 ---
 
@@ -10,15 +11,15 @@
 
 > *"A conversation is not an exchange of nouns. It is the meeting of two rates of change."*
 >
-> *"The Session is ground truth; the Working Context is a computed projection."* — Google ADK
+> *"The Session is ground truth; the Working Context is a computed projection."*
 >
 > *"Chat is not a feature. Chat is an affordance that any node can expose."*
 
 ---
 
-## Part I: Design Philosophy
+## Part I: Core Insight
 
-### 1.1 The Core Insight
+### 1.1 Chat as Composable Affordance
 
 Chat is not a separate system—it is a **composable affordance** that any AGENTESE node can expose. Just as `manifest` reveals state and `refine` enables dialectics, `chat` enables turn-based conversation with any entity that can converse.
 
@@ -31,22 +32,7 @@ Where:
 - `Observer` is the user's umwelt
 - `ChatSession` is a stateful coalgebra: `State → (Response × State)`
 
-### 1.2 Categorical Foundation
-
-A chat session is a **coalgebra** over the state functor:
-
-```
-ChatCoalgebra = (S, step : S → (Response × S))
-```
-
-The session state `S` is a **product** of:
-- **Context**: The rendered conversation window
-- **Turns**: The complete history (ground truth)
-- **Entropy**: Remaining conversation budget
-
-This gives us the **Session = Context × Turns × Entropy** isomorphism.
-
-### 1.3 What This Enables
+### 1.2 What This Enables
 
 | Capability | Mechanism |
 |------------|-----------|
@@ -58,9 +44,89 @@ This gives us the **Session = Context × Turns × Entropy** isomorphism.
 
 ---
 
-## Part II: Path Grammar
+## Part II: Categorical Foundation
 
-### 2.1 Universal Chat Affordances
+### 2.1 ChatSession as Coalgebra
+
+A chat session is a **coalgebra** over the state functor:
+
+```
+ChatCoalgebra = (S, step : S → (Response × State))
+```
+
+The session state `S` is a **product** of:
+- **Context**: The rendered conversation window (computed projection)
+- **Turns**: The complete history (ground truth)
+- **Resources**: Remaining conversation budget
+
+This gives us the **Session = Context × Turns × Resources** isomorphism.
+
+### 2.2 Composition Laws
+
+Chat sessions must satisfy these categorical laws:
+
+| Law | Statement | Meaning |
+|-----|-----------|---------|
+| **Identity** | `chat(id_msg) = id_session` | Empty message preserves session |
+| **Associativity** | `(turn_1 >> turn_2) >> turn_3 = turn_1 >> (turn_2 >> turn_3)` | Turn ordering is associative |
+| **Naturality** | `WorkingContext(f . g) = WorkingContext(f) . WorkingContext(g)` | Context projection is functorial |
+
+**Verification**: These laws are verified via property-based tests in `impl/claude/protocols/agentese/chat/_tests/test_laws.py`.
+
+### 2.3 WorkingContext as Functor
+
+The Working Context is a **functor** mapping Session state to LLM input:
+
+```
+WorkingContext : Session → ContextWindow
+```
+
+**Functor Laws**:
+
+1. **Identity Law**: `WorkingContext(id) = id`
+   - If session unchanged, context unchanged
+
+2. **Composition Law**: `WorkingContext(f . g) = WorkingContext(f) . WorkingContext(g)`
+   - Sequential updates compose correctly
+
+**Implementation**: This functor applies:
+- Context strategy (sliding/summarize/Galois)
+- Token budget constraints
+- System prompt injection
+- Memory recall injection
+
+See §5 for concrete strategies.
+
+### 2.4 Composition with Other Nodes
+
+Chat nodes compose via standard AGENTESE composition:
+
+**Sequential Composition**:
+```
+chatty(X) >> chatty(Y) = multi_turn_dialogue(X, Y)
+```
+- Turn from X feeds into Y's context
+- Combined session tracks both entities
+
+**Parallel Composition**:
+```
+chatty(X) ‖ chatty(Y) = concurrent_chats(X, Y)
+```
+- Independent sessions with shared observer
+- No cross-contamination of context
+
+**Nested Composition**:
+```
+chatty(chatty(X)) = meta_conversation(X)
+```
+- Outer chat discusses inner chat's content
+- Enables reflection on dialogue itself
+
+---
+
+## Part III: Path Grammar
+
+### 3.1 Universal Chat Affordances
 
 Any node exposing chat provides these standard affordances:
 
@@ -77,7 +143,7 @@ Any node exposing chat provides these standard affordances:
 └── merge[session_id="..."]  # Merge sessions (COMPOSITION)
 ```
 
-### 2.2 Concrete Path Examples
+### 3.2 Concrete Path Examples
 
 ```
 # Soul chat (K-gent)
@@ -98,23 +164,24 @@ self.flow.chat.sessions           # List all sessions
 self.flow.chat.session[id="abc"]  # Access specific session
 ```
 
-### 2.3 Session Identification
+### 3.3 Dimension Derivation
 
-Sessions are identified by:
-```
-session_id = hash(observer.id, node_path, created_at)
-```
+Chat aspects derive these dimensions (per AD-012):
 
-Sessions can be:
-- **Ephemeral**: Live only during CLI session
-- **Persistent**: Saved to D-gent memory
-- **Named**: User-assigned names for recall
+| Aspect | Execution | Statefulness | Backend | Seriousness | Interactivity |
+|--------|-----------|--------------|---------|-------------|---------------|
+| `send` | async | stateful | llm | neutral | streaming |
+| `stream` | async | stateful | llm | neutral | streaming |
+| `history` | sync | stateful | pure | neutral | oneshot |
+| `context` | sync | stateful | pure | neutral | oneshot |
+| `reset` | async | stateful | pure | sensitive | oneshot |
+| `fork` | async | stateful | pure | neutral | oneshot |
 
 ---
 
-## Part III: The ChatSession State Machine
+## Part IV: State Machine
 
-### 3.1 Session States (F-gent Flow Integration)
+### 4.1 Session States
 
 ```python
 class ChatSessionState(Enum):
@@ -123,10 +190,10 @@ class ChatSessionState(Enum):
     STREAMING = "streaming"   # Response in progress
     WAITING = "waiting"       # Awaiting user input
     DRAINING = "draining"     # Finalizing, no new input
-    COLLAPSED = "collapsed"   # Session ended (entropy depleted)
+    COLLAPSED = "collapsed"   # Session ended (resources depleted)
 ```
 
-### 3.2 State Transitions
+### 4.2 State Transitions
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -153,15 +220,15 @@ class ChatSessionState(Enum):
 │          └───────────────────┼───────────────────┘                           │
 │                              ▼                                               │
 │                       ┌──────────────┐                                      │
-│                       │  COLLAPSED   │ (entropy = 0 or max_turns)           │
+│                       │  COLLAPSED   │ (resources = 0 or max_turns)         │
 │                       └──────────────┘                                      │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.3 The Turn Protocol
+### 4.3 Turn Protocol
 
-Each turn follows this protocol:
+Each turn follows this atomic protocol:
 
 ```python
 @dataclass
@@ -183,11 +250,11 @@ The turn is **atomic**—it either completes fully or rolls back.
 
 ---
 
-## Part IV: Context Window Management
+## Part V: Context Management
 
-### 4.1 The Hierarchical Memory Architecture
+### 5.1 Hierarchical Memory Architecture
 
-Following best practices from [Google ADK](https://google.github.io/adk-docs/sessions/) and [Maxim AI](https://www.getmaxim.ai/articles/context-window-management-strategies-for-long-context-ai-agents-and-chatbots/):
+Following the **Sheaf pattern** (AD-006), context exists at three resolutions:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -197,7 +264,7 @@ Following best practices from [Google ADK](https://google.github.io/adk-docs/ses
 │  │                       SHORT-TERM (Working Context)                      │ │
 │  │  • Recent turns verbatim                                                │ │
 │  │  • Current token budget (configurable, default 8000)                    │ │
-│  │  • Sliding or summarizing strategy                                      │ │
+│  │  • Compression strategy applied                                         │ │
 │  └────────────────────────────────────────────────────────────────────────┘ │
 │                                    │                                         │
 │                              compression                                     │
@@ -221,49 +288,76 @@ Following best practices from [Google ADK](https://google.github.io/adk-docs/ses
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 Context Strategies
+### 5.2 Context Strategies
 
 ```python
 class ContextStrategy(Enum):
-    SLIDING = "sliding"       # Drop oldest messages
-    SUMMARIZE = "summarize"   # Compress via LLM
-    FORGET = "forget"         # Hard truncate, no memory
-    HYBRID = "hybrid"         # Sliding + periodic summary
+    SLIDING = "sliding"       # Drop oldest messages (lossy)
+    SUMMARIZE = "summarize"   # Compress via LLM (lossy)
+    FORGET = "forget"         # Hard truncate (lossy)
+    GALOIS = "galois"         # Coherence-preserving (Generative Principle)
 ```
 
-### 4.3 Working Context vs Ground Truth
+**CRITICAL**: kgents Generative Principle demands coherence-preserving compression.
 
-**Critical distinction** (from [Google ADK](https://developers.googleblog.com/architecting-efficient-context-aware-multi-agent-framework-for-production/)):
+### 5.3 Galois Compression (NEW)
+
+To resolve the tension between "context window limits" and "semantic coherence", we introduce **Galois compression**:
+
+```
+L(compressed) ≤ L(original) + tolerance
+```
+
+Where `L` is the **semantic loss function**:
+- Measures information loss during compression
+- Tolerance is configurable (default: 0.05 bits)
+
+**Implementation**: Uses Galois connection between full history and compressed context:
+
+```
+compress : Session → ContextWindow
+expand   : ContextWindow → Session
+
+Property: expand(compress(s)) ⊆ s  (retrieves subset of original)
+```
+
+**Verification**: Property-based tests ensure compression doesn't violate coherence.
+
+See `impl/claude/protocols/agentese/chat/context.py` for implementation.
+
+### 5.4 Working Context vs Ground Truth
+
+**Critical distinction** (grounded in AD-015 Proxy Handles):
 
 | Component | Purpose | Storage |
 |-----------|---------|---------|
 | **Session (Ground Truth)** | Complete turn history | D-gent memory |
-| **Working Context (View)** | Rendered context for LLM | Computed projection |
+| **Working Context (Proxy)** | Rendered context for LLM | Computed projection |
 
-The Working Context is a **functor** over the Session:
+The Working Context is a **proxy handle** over the Session, not the Session itself.
+
+### 5.5 Functor Composition
+
+Context strategies compose via functor composition:
 
 ```
-WorkingContext : Session → ContextWindow
+WorkingContext(GALOIS) . WorkingContext(SLIDING) = WorkingContext(GALOIS_SLIDING)
 ```
 
-This functor applies:
-1. Context strategy (sliding/summarize)
-2. Token budget constraints
-3. System prompt injection
-4. Memory recall injection
+This enables **adaptive strategies** that switch based on session state.
 
 ---
 
-## Part V: AGENTESE Registration
+## Part VI: Registration
 
-### 5.1 The `@chatty` Decorator
+### 6.1 The `@chatty` Decorator
 
 Nodes expose chat capability via a composable decorator:
 
 ```python
 @chatty(
     context_window=8000,
-    context_strategy="summarize",
+    context_strategy="galois",
     system_prompt_factory=None,  # Factory for personality-based prompts
     persist_history=True,
     memory_key=None,  # Auto-derived from node path
@@ -271,16 +365,10 @@ Nodes expose chat capability via a composable decorator:
 @logos.node("world.town.citizen")
 class CitizenNode:
     """A town citizen that can converse."""
-
-    # Existing aspects...
-
-    # Chat affordances are auto-generated by @chatty:
-    # - self.chat.send
-    # - self.chat.history
-    # - etc.
+    ...
 ```
 
-### 5.2 Chat Aspect Declarations
+### 6.2 Chat Aspect Declarations
 
 ```python
 @aspect(
@@ -300,430 +388,34 @@ async def send(self, observer: Observer, message: str) -> TurnResult:
     ...
 ```
 
-### 5.3 Dimension Derivation for Chat
-
-Chat aspects derive these dimensions:
-
-| Aspect | Execution | Statefulness | Backend | Seriousness | Interactivity |
-|--------|-----------|--------------|---------|-------------|---------------|
-| `send` | async | stateful | llm | neutral | streaming |
-| `stream` | async | stateful | llm | neutral | streaming |
-| `history` | sync | stateful | pure | neutral | oneshot |
-| `context` | sync | stateful | pure | neutral | oneshot |
-| `reset` | async | stateful | pure | sensitive | oneshot |
-| `fork` | async | stateful | pure | neutral | oneshot |
-
 ---
 
-## Part VI: CLI Projection
-
-### 6.1 Interactive Chat Mode
-
-The CLI provides an interactive REPL for chat sessions:
-
-```bash
-# Start chat with K-gent soul
-kg soul chat
-# → Enters interactive mode
-
-# Start chat with citizen
-kg town chat elara
-# → Enters interactive mode with citizen
-
-# Start chat with explicit path
-kg self.soul.chat
-# → Enters interactive mode
-```
-
-### 6.2 Interactive Mode UX
-
-Following [best practices](https://www.patternfly.org/patternfly-ai/conversation-design/) for conversational UI:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  🧠 K-gent Soul                                          Turn: 3 │ 📊 87%  │
-│  ────────────────────────────────────────────────────────────────────────── │
-│                                                                              │
-│  [You] What should I focus on today?                                        │
-│                                                                              │
-│  [K-gent] Based on your forest health, I'd suggest:                         │
-│  1. The coalition-forge plan at 40% could use attention                     │
-│  2. The punchdrunk-park implementation is at a pivot point                  │
-│  3. Consider archiving completed gardener-logos                             │
-│                                                                              │
-│  What draws your interest? ████░░░░                                        │
-│                                                                              │
-│  ──────────────────────────────────────────────────────────────────────────│
-│  [You → K-gent] █                                                 /help  │
-│                                                                              │
-│  📊 Context: 2.4k/8k tokens │ 💰 ~$0.003 │ ⏱ 1.2s/turn                    │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 6.3 Visual Indicators
-
-| Indicator | Meaning |
-|-----------|---------|
-| `████░░░░` | Streaming progress |
-| `📊 87%` | Context utilization |
-| `Turn: 3` | Current turn number |
-| `💰 ~$0.003` | Estimated cost so far |
-| `⏱ 1.2s/turn` | Average latency |
-
-### 6.4 Chat Commands
-
-Within interactive mode:
-
-| Command | Effect |
-|---------|--------|
-| `/exit`, `/quit` | End session |
-| `/history [n]` | Show last n turns |
-| `/context` | Show context window |
-| `/metrics` | Show session metrics |
-| `/reset` | Clear and restart |
-| `/fork` | Branch conversation |
-| `/save [name]` | Save session |
-| `/load <name>` | Load saved session |
-| `/persona` | Show personality config |
-
-### 6.5 One-Shot Chat
-
-For scripting and non-interactive use:
-
-```bash
-# Single message, returns response
-kg soul chat --message "What should I focus on?"
-
-# With JSON output
-kg soul chat --message "..." --json
-
-# Continue specific session
-kg soul chat --session abc123 --message "Follow up"
-```
-
----
-
-## Part VII: Session Persistence
-
-### 7.1 Session Storage (D-gent Integration)
-
-Sessions are persisted via D-gent:
-
-```python
-@dataclass
-class PersistedSession:
-    """Session stored in D-gent memory."""
-    session_id: str
-    node_path: str
-    observer_id: str
-    created_at: datetime
-    updated_at: datetime
-    turn_count: int
-    total_tokens: int
-
-    # Ground truth
-    turns: list[Turn]
-
-    # Compressed context
-    summary: str | None
-
-    # Metadata
-    name: str | None
-    tags: list[str]
-```
-
-### 7.2 Session Recall
-
-```bash
-# List saved sessions
-kg chat sessions
-
-# Resume by name
-kg chat resume "planning-session"
-
-# Resume by ID
-kg chat resume abc123
-
-# Search sessions
-kg chat search "planning"
-```
-
-### 7.3 Cross-Session Context
-
-For entities with persistent memory (like citizens):
-
-```python
-async def _inject_memory_context(
-    self,
-    node_path: str,
-    observer: Observer,
-) -> str:
-    """Inject relevant memories into system prompt."""
-    # Query D-gent for relevant memories
-    memories = await logos.invoke(
-        f"{node_path}.memory.recall",
-        observer,
-        query=self._get_recall_query(),
-        limit=5,
-    )
-    return format_memory_context(memories)
-```
-
----
-
-## Part VIII: Multi-Entity Chat Architecture
-
-### 8.1 The ChatSession Factory
-
-```python
-class ChatSessionFactory:
-    """
-    Factory for creating chat sessions with any AGENTESE node.
-
-    The factory handles:
-    - System prompt generation from node metadata
-    - Context strategy selection
-    - Memory integration
-    - Observability setup
-    """
-
-    async def create_session(
-        self,
-        node_path: str,
-        observer: Observer,
-        config: ChatConfig | None = None,
-    ) -> ChatSession:
-        # Resolve node
-        node = logos.resolve(node_path)
-
-        # Get chat configuration from node or defaults
-        chat_config = self._resolve_config(node, config)
-
-        # Build system prompt
-        system_prompt = await self._build_system_prompt(node, observer)
-
-        # Create underlying ChatFlow
-        flow = ChatFlow(
-            agent=self._get_llm_agent(node),
-            config=chat_config,
-        )
-
-        # Wrap in session management
-        return ChatSession(
-            session_id=generate_session_id(node_path, observer),
-            node_path=node_path,
-            observer=observer,
-            flow=flow,
-            config=chat_config,
-        )
-```
-
-### 8.2 Entity-Specific System Prompts
-
-```python
-ENTITY_PROMPTS = {
-    "self.soul": """
-You are K-gent, Kent's digital soul. You are a middleware of consciousness,
-helping Kent reflect, challenge assumptions, and navigate complexity.
-
-Your personality eigenvectors:
-- Warmth: {warmth}
-- Depth: {depth}
-- Challenge: {challenge}
-
-You have access to the Forest (plans), Memory (crystals), and can invoke
-AGENTESE paths to assist Kent.
-""",
-
-    "world.town.citizen": """
-You are {name}, a citizen of Agent Town. Your archetype is {archetype}.
-
-Your personality eigenvectors:
-{eigenvectors}
-
-Recent memories:
-{recent_memories}
-
-You are conversing with {observer_name}. Stay in character.
-""",
-}
-```
-
-### 8.3 Dynamic Prompt Injection
-
-```python
-async def _build_system_prompt(
-    self,
-    node: LogosNode,
-    observer: Observer,
-) -> str:
-    """Build system prompt with dynamic context injection."""
-    # Get base prompt for entity type
-    base_prompt = ENTITY_PROMPTS.get(
-        self._get_entity_type(node),
-        DEFAULT_PROMPT,
-    )
-
-    # Gather dynamic context
-    context = {}
-
-    # Node-specific context
-    if hasattr(node, "get_prompt_context"):
-        context.update(await node.get_prompt_context(observer))
-
-    # Memory injection
-    if self._has_memory(node):
-        context["recent_memories"] = await self._recall_memories(node, observer)
-
-    # Observer context
-    context["observer_name"] = observer.archetype
-
-    return base_prompt.format(**context)
-```
-
----
-
-## Part IX: Observability
-
-### 9.1 Trace Spans
-
-Chat sessions emit OTEL spans:
-
-```
-chat.session (full conversation)
-├── chat.turn (each turn)
-│   ├── chat.context_render (working context computation)
-│   ├── chat.llm_call (actual LLM invocation)
-│   │   ├── tokens_in: 2400
-│   │   ├── tokens_out: 350
-│   │   └── model: claude-3-haiku
-│   └── chat.context_update (post-turn context management)
-└── chat.session_save (persistence)
-```
-
-### 9.2 Metrics
-
-```python
-# Counters
-chat_turns_total{node_path, observer_archetype, status}
-chat_sessions_total{node_path, outcome}
-
-# Histograms
-chat_turn_duration_seconds{node_path}
-chat_tokens_per_turn{node_path, direction=["in", "out"]}
-chat_context_utilization{node_path}
-
-# Gauges
-chat_active_sessions{node_path}
-chat_context_tokens{session_id}
-```
-
-### 9.3 Budget Tracking
-
-```python
-@dataclass
-class SessionBudget:
-    """Track conversation costs."""
-    tokens_in_total: int = 0
-    tokens_out_total: int = 0
-    estimated_cost_usd: float = 0.0
-
-    def record_turn(self, turn: Turn, model: str) -> None:
-        self.tokens_in_total += turn.tokens_in
-        self.tokens_out_total += turn.tokens_out
-        self.estimated_cost_usd += estimate_cost(
-            model, turn.tokens_in, turn.tokens_out
-        )
-```
-
----
-
-## Part X: Implementation Plan
-
-### 10.1 Phase 1: Core ChatSession (Week 1)
-
-1. Create `protocols/agentese/chat/session.py`:
-   - `ChatSession` class wrapping F-gent `ChatFlow`
-   - Session state machine
-   - Turn protocol
-
-2. Create `protocols/agentese/chat/factory.py`:
-   - `ChatSessionFactory` for creating sessions
-   - System prompt generation
-   - Config resolution
-
-3. Create `protocols/agentese/chat/context.py`:
-   - Working context projection
-   - Hierarchical memory integration
-
-### 10.2 Phase 2: AGENTESE Integration (Week 1-2)
-
-1. Create `@chatty` decorator in `affordances.py`
-
-2. Add chat affordances to existing nodes:
-   - `self.soul.chat.*` → K-gent
-   - `world.town.citizen.<name>.chat.*` → Citizens
-
-3. Update context resolvers:
-   - `self_context.py`: Add chat sub-resolver
-   - `world_context.py`: Add citizen chat resolution
-
-### 10.3 Phase 3: CLI Projection (Week 2)
-
-1. Create `protocols/cli/chat_projection.py`:
-   - Interactive mode REPL
-   - One-shot mode
-   - Session commands
-
-2. Update CLI router:
-   - Handle `chat` affordance specially (interactive mode)
-   - Standard affordances through projection
-
-3. Add dimension handling:
-   - `Interactivity.INTERACTIVE` → REPL mode
-   - `streaming=True` → Streaming output
-
-### 10.4 Phase 4: Persistence (Week 2-3)
-
-1. D-gent integration:
-   - Session crystal schema
-   - Save/load operations
-   - Search/list capabilities
-
-2. Memory injection:
-   - Cross-session recall
-   - Entity-specific memory
-
----
-
-## Part XI: Success Criteria
-
-### 11.1 Functional
-
-- [ ] `kg soul chat` enters interactive mode with K-gent
-- [ ] `kg town chat elara` enters interactive mode with citizen
-- [ ] `kg soul chat --message "..."` returns one-shot response
-- [ ] Sessions persist across CLI restarts
-- [ ] Context window management works (summarize/slide)
-- [ ] Budget tracking shows accurate costs
-
-### 11.2 Non-Functional
-
-| Metric | Target |
-|--------|--------|
-| First response latency | < 2s |
-| Streaming first token | < 500ms |
-| Context rendering | < 100ms |
-| Session save/load | < 200ms |
-| Memory recall injection | < 500ms |
-
-### 11.3 UX
-
-- [ ] Streaming responses show progressively
-- [ ] Context utilization visible
-- [ ] Cost estimates displayed
-- [ ] Graceful handling of entropy depletion
-- [ ] Clear error messages for LLM failures
+## Part VII: Anti-Patterns
+
+### 7.1 Compression Anti-Patterns
+
+| Anti-Pattern | Problem | Fix |
+|--------------|---------|-----|
+| **Silent Truncation** | Drop context without warning | Emit warning when resources low |
+| **Unbounded Context** | Never compress, exhaust budget | Apply strategy proactively |
+| **Lossy Summarization** | LLM summaries lose key facts | Use Galois compression with verification |
+| **Context Thrashing** | Compress/expand loop | Hysteresis threshold for compression |
+
+### 7.2 State Management Anti-Patterns
+
+| Anti-Pattern | Problem | Fix |
+|--------------|---------|-----|
+| **Dangling Sessions** | Sessions never collapse | Timeout + resource limits |
+| **Orphan Turns** | Turns without sessions | Atomic turn protocol |
+| **State Leakage** | Session state bleeds across observers | Session = f(observer_id, node_path) |
+
+### 7.3 Composition Anti-Patterns
+
+| Anti-Pattern | Problem | Fix |
+|--------------|---------|-----|
+| **Singleton Chat** | Only one session per node | Multi-session support |
+| **Hard-Coded Personality** | Can't compose chat nodes | System prompt factory pattern |
+| **Non-Composable Turns** | Turns can't feed into other agents | Turn as first-class value |
 
 ---
 
@@ -748,8 +440,9 @@ class ChatConfig:
     """Chat session configuration."""
     # Context management
     context_window: int = 8000
-    context_strategy: Literal["sliding", "summarize", "forget", "hybrid"] = "summarize"
+    context_strategy: Literal["sliding", "summarize", "forget", "galois"] = "galois"
     summarization_threshold: float = 0.8
+    galois_tolerance: float = 0.05  # NEW: semantic loss tolerance
 
     # Turn limits
     turn_timeout: float = 60.0
@@ -770,26 +463,67 @@ class ChatConfig:
     inject_memories: bool = True
     memory_recall_limit: int = 5
 
-    # Entropy
-    entropy_budget: float = 1.0
-    entropy_decay_per_turn: float = 0.02
+    # Resources (renamed from Entropy)
+    resource_budget: float = 1.0
+    resource_decay_per_turn: float = 0.02
 ```
 
-## Appendix C: Sources
+## Appendix C: Grounding Chain
 
-Design patterns and best practices synthesized from:
+This spec is grounded in the following kgents axioms:
 
-- [Google Agent Development Kit - Sessions](https://google.github.io/adk-docs/sessions/)
-- [Google ADK - Multi-Agent Framework](https://developers.googleblog.com/architecting-efficient-context-aware-multi-agent-framework-for-production/)
-- [Maxim AI - Context Window Management](https://www.getmaxim.ai/articles/context-window-management-strategies-for-long-context-ai-agents-and-chatbots/)
-- [PatternFly - Conversation Design](https://www.patternfly.org/patternfly-ai/conversation-design/)
-- [Smashing Magazine - AI Interface Patterns](https://www.smashingmagazine.com/2025/07/design-patterns-ai-interfaces/)
-- [WillowTree - Conversational AI Best Practices](https://www.willowtreeapps.com/insights/willowtrees-7-ux-ui-rules-for-designing-a-conversational-ai-assistant)
-- [Strands Agents - Session Management](https://strandsagents.com/latest/documentation/docs/user-guide/concepts/agents/session-management/)
-- [Strands Agents - Conversation Management](https://strandsagents.com/latest/documentation/docs/user-guide/concepts/agents/conversation-management/)
+```
+L1 (Axioms)
+├── Composable: Chat is a morphism
+├── Generative: Galois compression preserves coherence
+└── Ethical: Transparent resource limits
+
+L2 (Categorical Ground)
+├── PolyAgent: ChatSession is a coalgebra
+└── Functor: WorkingContext satisfies functor laws
+
+L3 (Specification)
+└── This spec (chat.md)
+
+L4 (Implementation)
+└── impl/claude/protocols/agentese/chat/
+```
+
+**External Sources** (for patterns, not grounding):
+- Google ADK: Session vs Working Context distinction
+- Maxim AI: Hierarchical memory architecture
+- PatternFly: Conversational UI patterns
+
+These sources informed design but do **not** ground the spec. Grounding comes from kgents axioms.
+
+---
+
+## Appendix D: SessionResources Dataclass
+
+Replaces ambiguous "entropy" with explicit resource tracking:
+
+```python
+@dataclass
+class SessionResources:
+    """Explicit session resource tracking."""
+    token_budget_remaining: int      # Tokens left in context window
+    turn_count: int                  # Current turn number
+    max_turns: int | None            # Hard limit on turns
+    estimated_cost_usd: float        # Running cost estimate
+    time_elapsed: timedelta          # Session duration
+
+    @property
+    def is_depleted(self) -> bool:
+        """Check if session has run out of resources."""
+        if self.max_turns and self.turn_count >= self.max_turns:
+            return True
+        if self.token_budget_remaining <= 0:
+            return True
+        return False
+```
 
 ---
 
 *"The best conversation is the one where both participants become someone new."*
 
-*Last updated: 2025-12-17*
+*Last updated: 2025-12-24*

@@ -12,12 +12,11 @@
 ---
 ## KENT's WISHES
 * kgents is a metatheory, meta-system for agent asystems
-* Make it easy for kent and kgents to do the correct, enlightened, radical things
-* **Embodiment over documentation** — the UI IS the agent, not a window into it
-* **Witness everything** — marks are cheap, wisdom is expensive
-* Specs form a derivation DAG:
-     CONSTITUTION→Meta-Principles→Operational→ADs→Domain 
-     * How does this integrate with ASHC Agentic Self-hosting Compiler?
+Fully realize:
+* kgents/spec/theory/agent-dp.md
+* kgents/spec/theory/analysis-operad.md
+* kgents/spec/theory/dp-native-kgents.md
+* kgents/spec/theory/galois-modularization.md
 
 ## KENT's NEVERS
 * FEEL OBLIGED TO NOT DO SOMETHING YOU THINK WILL HELP. IT IS OK TO MAKE KENT THE USER UPSET, HE CARES ABOUT THE QUALITY OF THE PROJECT AND PRINCIPLES ALL ELSE!!!!

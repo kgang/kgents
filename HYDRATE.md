@@ -123,7 +123,12 @@ kg witness context --budget 2000       # Budget-aware context
 # Session start
 kg probe health --all
 
-# Before modifying spec
+# Before modifying spec (four-mode analysis)
+kg analyze <spec>                  # Full LLM analysis (cat+epi → dia+gen)
+kg analyze <spec> --mode cat       # Categorical only (laws, fixed points)
+kg analyze <spec> --structural     # Fast structural mode (no LLM)
+
+# Before modifying spec (audit)
 kg audit spec/protocols/witness.md --full
 
 # After implementation
@@ -143,6 +148,29 @@ Full guide: `docs/skills/cli-strategy-tools.md`
 
 ---
 
+## Analysis Operad: Four Modes
+
+> *"Analysis is not one thing but four."*
+
+```bash
+kg analyze <spec>                  # Full four-mode LLM analysis
+kg analyze <spec> --mode cat       # Categorical (laws, fixed points)
+kg analyze <spec> --mode epi       # Epistemic (grounding, Toulmin)
+kg analyze <spec> --mode dia       # Dialectical (tensions, synthesis)
+kg analyze <spec> --mode gen       # Generative (compression, regeneration)
+kg analyze --self                  # Self-analysis (meta-applicability)
+```
+
+**Modes**: `categorical` `epistemic` `dialectical` `generative` `full`
+
+**Two Backends**:
+- **LLM** (default): Real Claude-powered analysis via `services/analysis/`
+- **Structural** (`--structural`): Fast fallback, verifies what holds by construction
+
+**Integration with Witness**: Analysis marks are emitted to the Witness system for traceability.
+
+---
+
 ## Commands
 
 ```bash
@@ -155,4 +183,4 @@ cd impl/claude/web && npm run typecheck && npm run lint
 
 ---
 
-*Lines: 120. Ceiling: 120.*
+*Lines: 145. Ceiling: 150.*

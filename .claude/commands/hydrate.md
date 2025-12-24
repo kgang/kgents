@@ -134,6 +134,49 @@ This surfaces:
 - **Related Modules**: Files you'll likely touch
 - **Voice Anchors**: Kent's phrases to preserve
 
+## Analysis Operad Integration
+
+> *"Analysis is not one thing but four."*
+
+When working on or modifying **specifications**, use the Analysis Operad:
+
+```bash
+# Before modifying a spec (run full four-mode analysis)
+kg analyze <spec>
+
+# Quick structural check (no LLM, fast)
+kg analyze <spec> --structural
+
+# Specific modes when relevant
+kg analyze <spec> --mode cat   # Verify composition laws
+kg analyze <spec> --mode dia   # Find tensions in design
+kg analyze <spec> --mode gen   # Check compression/regenerability
+
+# Self-analysis (meta-applicability check)
+kg analyze --self
+```
+
+**When to Analyze**:
+1. **Before modifying any spec** → Run `kg analyze <spec>` to understand issues
+2. **When spec seems bloated** → Run `kg analyze --mode gen` to check compression
+3. **When design has tensions** → Run `kg analyze --mode dia` for dialectical synthesis
+4. **After major changes** → Re-run analysis to verify no regressions
+
+**Four Modes**:
+| Mode | Question | Use When |
+|------|----------|----------|
+| **categorical** | Do composition laws hold? | Architectural changes |
+| **epistemic** | Is this properly grounded? | Justification questions |
+| **dialectical** | What tensions exist? | Design trade-offs |
+| **generative** | Can this regenerate impl? | Checking spec quality |
+
+**Output Interpretation**:
+- ✓ **PASS**: Mode finds no issues
+- ⚠️ **ISSUES**: Mode found problems (see summary)
+- Structural mode notes what requires LLM for full analysis
+
+**Integration with Witness**: Analysis creates marks—every spec check is traced.
+
 ## End of Session
 
 Before ending a productive session, run `/crystallize` to:
