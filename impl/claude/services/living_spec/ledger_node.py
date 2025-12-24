@@ -34,7 +34,6 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import timedelta
-from pathlib import Path
 from typing import Any
 
 from services.proxy.exceptions import NoProxyHandleError
@@ -47,7 +46,8 @@ from .analyzer import (
     LedgerReport,
     SpecRecord,
     SpecStatus,
-    analyze_spec_corpus,
+    analyze_specs,
+    parse_spec_content,
 )
 
 logger = logging.getLogger(__name__)
@@ -113,17 +113,6 @@ async def _get_witness_persistence() -> Any | None:
         return None
 
 
-def get_spec_root() -> Path:
-    """Get the spec root directory."""
-    # Navigate up from this file to find spec/
-    current = Path(__file__).resolve()
-    for parent in current.parents:
-        spec_dir = parent / "spec"
-        if spec_dir.exists() and spec_dir.is_dir():
-            return spec_dir
-    raise FileNotFoundError("Could not find spec/ directory")
-
-
 async def ensure_scanned() -> LedgerReport:
     """
     Get the pre-computed ledger report from ProxyHandleStore.
@@ -163,20 +152,37 @@ async def analyze_now(force: bool = False) -> LedgerReport:
     - Emits events for transparency
     - Enables reactive invalidation
 
+    Specs come from sovereign store (uploaded specs), not filesystem.
+
     Args:
         force: Force re-analysis even if cache is fresh
 
     Returns:
         The analyzed LedgerReport
     """
+    from services.providers import get_sovereign_store
+
     store = get_proxy_handle_store()
 
     async def compute_fn() -> LedgerReport:
-        """Compute spec corpus analysis in thread pool."""
-        spec_root = get_spec_root()
-        loop = asyncio.get_event_loop()
-        report = await loop.run_in_executor(None, analyze_spec_corpus, spec_root)
-        logger.info(f"Spec corpus analyzed: {len(report.specs)} specs")
+        """Compute spec corpus analysis from sovereign store."""
+        sovereign = await get_sovereign_store()
+
+        # Get all spec paths from sovereign store
+        all_paths = await sovereign.list_all()
+        spec_paths = [p for p in all_paths if p.endswith(".md")]
+
+        # Parse each spec
+        specs: list[SpecRecord] = []
+        for path in spec_paths:
+            entity = await sovereign.get_current(path)
+            if entity and entity.content_text:
+                spec = parse_spec_content(path, entity.content_text)
+                specs.append(spec)
+
+        # Analyze
+        report = analyze_specs(specs)
+        logger.info(f"Spec corpus analyzed: {len(report.specs)} specs from sovereign store")
         return report
 
     handle = await store.compute(
@@ -979,7 +985,7 @@ class LedgerNode:
         """
         Mark specs as deprecated.
 
-        Modifies spec files to add deprecation notice at top.
+        Modifies spec entities in sovereign store to add deprecation notice.
 
         Args:
             paths: List of spec paths to deprecate
@@ -993,7 +999,11 @@ class LedgerNode:
         """
         import time
 
-        spec_root = get_spec_root()
+        from services.providers import get_sovereign_store
+        from services.sovereign.ingest import Ingestor
+        from services.sovereign.types import IngestEvent
+
+        sovereign = await get_sovereign_store()
         deprecated_paths: list[str] = []
         failed_paths: list[tuple[str, str]] = []
 
@@ -1008,17 +1018,13 @@ class LedgerNode:
 
         for path in paths:
             try:
-                # Resolve path relative to spec root
-                full_path = spec_root / path.replace("spec/", "")
-                if not full_path.exists():
-                    # Try without adjustment
-                    full_path = Path(path)
-                    if not full_path.exists():
-                        failed_paths.append((path, "File not found"))
-                        continue
+                # Get entity from sovereign store
+                entity = await sovereign.get_current(path)
+                if not entity:
+                    failed_paths.append((path, "Entity not found"))
+                    continue
 
-                # Read current content
-                content = full_path.read_text(encoding="utf-8")
+                content = entity.content_text
 
                 # Check if already deprecated
                 if "**⚠️ DEPRECATED**" in content or "> **DEPRECATED**" in content:
@@ -1027,7 +1033,15 @@ class LedgerNode:
 
                 # Prepend deprecation notice
                 new_content = deprecation_notice + content
-                full_path.write_text(new_content, encoding="utf-8")
+
+                # Re-ingest with updated content
+                event = IngestEvent.from_content(
+                    content=new_content.encode("utf-8"),
+                    claimed_path=path,
+                    source="deprecation",
+                )
+                ingestor = Ingestor(sovereign, witness=None)
+                await ingestor.ingest(event, author="ledger_node.deprecate")
 
                 deprecated_paths.append(path)
                 logger.info(f"Deprecated spec: {path}")
@@ -1098,7 +1112,6 @@ __all__ = [
     # Core functions
     "ensure_scanned",
     "analyze_now",
-    "get_spec_root",
     # Response types
     "LedgerSummary",
     "SpecEntry",

@@ -90,6 +90,22 @@ class WitnessTopics:
     PROXY_FAILED = "witness.proxy.failed"
     PROXY_STALE = "witness.proxy.stale"
 
+    # Sovereign Ingest events (Inbound Sovereignty ingest flow)
+    SOVEREIGN_INGESTED = "witness.sovereign.ingested"
+
+    # Sovereign Analysis events (Inbound Sovereignty analysis flow)
+    SOVEREIGN_ANALYSIS_STARTED = "witness.sovereign.analysis_started"
+    SOVEREIGN_ANALYSIS_COMPLETED = "witness.sovereign.analysis_completed"
+    SOVEREIGN_ANALYSIS_FAILED = "witness.sovereign.analysis_failed"
+    SOVEREIGN_PLACEHOLDER_CREATED = "witness.sovereign.placeholder_created"
+
+    # Document Director events (Full lifecycle orchestration)
+    DIRECTOR_ANALYSIS_COMPLETE = "witness.director.analysis_complete"
+    DIRECTOR_PROMPT_GENERATED = "witness.director.prompt_generated"
+    DIRECTOR_EXECUTION_CAPTURED = "witness.director.execution_captured"
+    DIRECTOR_PLACEHOLDER_RESOLVED = "witness.director.placeholder_resolved"
+    DIRECTOR_STATUS_CHANGED = "witness.director.status_changed"
+
     # Wildcards
     ALL = "witness.*"
     GIT_ALL = "witness.git.*"
@@ -100,6 +116,8 @@ class WitnessTopics:
     AGENTESE_ALL = "witness.agentese.*"
     SPEC_ALL = "witness.spec.*"
     PROXY_ALL = "witness.proxy.*"
+    SOVEREIGN_ALL = "witness.sovereign.*"
+    DIRECTOR_ALL = "witness.director.*"
 
 
 # =============================================================================

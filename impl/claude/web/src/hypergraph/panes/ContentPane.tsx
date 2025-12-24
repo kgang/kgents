@@ -1,0 +1,215 @@
+/**
+ * ContentPane — The heart of the editor
+ *
+ * Vim-like mode philosophy:
+ * - NORMAL: Rendered view with interactive tokens (clickable links, toggleable tasks)
+ * - INSERT: Full editing mode via CodeMirror
+ *
+ * Architecture:
+ * - NORMAL mode: Uses InteractiveDocument to render parsed SceneGraph
+ *   → AGENTESE paths are clickable
+ *   → Checkboxes are toggleable
+ *   → Code blocks have syntax highlighting + copy
+ *   → "Specs stop being documentation and become live control surfaces"
+ *
+ * - INSERT mode: Uses MarkdownEditor (CodeMirror) with editable mode
+ *   → Full text editing with history
+ *   → Preserves scroll position on mode switch
+ *
+ * Content flow:
+ * - workingContent (from K-Block) is the source of truth during edits
+ * - Falls back to node.content when no working content exists
+ */
+
+import { memo, useCallback, useEffect, useRef } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { MarkdownEditor, MarkdownEditorRef } from '../../components/editor';
+import { InteractiveDocument } from '../../components/tokens';
+import { Portal } from './Portal';
+import { useDocumentParser, createFallbackSceneGraph } from '../useDocumentParser';
+import type { GraphNode, PortalState } from '../state/types';
+
+interface ContentPaneProps {
+  node: GraphNode | null;
+  mode: string;
+  cursor: { line: number; column: number };
+  workingContent?: string;
+  onContentChange?: (content: string) => void;
+  onNavigate?: (path: string) => void;
+  onToggle?: (newState: boolean, taskId?: string) => Promise<void>;
+  readerRef?: React.RefObject<MarkdownEditorRef | null>;
+  portals?: Map<string, PortalState>;
+  onCursorChange?: (line: number, column: number) => void;
+}
+
+export const ContentPane = memo(function ContentPane({
+  node,
+  mode,
+  cursor: _cursor,
+  workingContent,
+  onContentChange,
+  onNavigate,
+  onToggle,
+  onCursorChange: _onCursorChange,
+  readerRef,
+  portals,
+}: ContentPaneProps) {
+  // Editor ref for INSERT mode
+  const editorRef = useRef<MarkdownEditorRef>(null);
+  const prevModeRef = useRef(mode);
+
+  // Use working content if available (edited content), otherwise use node content
+  const displayContent = workingContent ?? node?.content ?? '';
+
+  // Convert portals Map to array for rendering
+  const portalArray = portals ? Array.from(portals.values()) : [];
+
+  // Determine if we're in INSERT mode
+  const isInsertMode = mode === 'INSERT';
+
+  // Parse content to SceneGraph for NORMAL mode
+  // Skip parsing in INSERT mode for performance
+  const { sceneGraph, isLoading: _isLoading } = useDocumentParser({
+    content: displayContent,
+    layoutMode: 'COMFORTABLE',
+    skip: isInsertMode, // Don't parse in INSERT mode
+    debounceMs: 150, // Fast debounce for responsive feel
+  });
+
+  // Handle mode transitions
+  useEffect(() => {
+    const wasInsert = prevModeRef.current === 'INSERT';
+    const isInsert = mode === 'INSERT';
+
+    // Entering INSERT mode
+    if (isInsert && !wasInsert) {
+      requestAnimationFrame(() => {
+        editorRef.current?.setReadonly(false);
+        editorRef.current?.focus();
+      });
+    }
+
+    // Exiting INSERT mode (back to NORMAL)
+    if (!isInsert && wasInsert) {
+      requestAnimationFrame(() => {
+        editorRef.current?.setReadonly(true);
+      });
+    }
+
+    prevModeRef.current = mode;
+  }, [mode]);
+
+  // Forward ref to parent for NORMAL mode scroll navigation (on editor when visible)
+  useEffect(() => {
+    if (readerRef && 'current' in readerRef) {
+      (readerRef as React.MutableRefObject<MarkdownEditorRef | null>).current = editorRef.current;
+    }
+  }, [readerRef, editorRef.current]);
+
+  // Handle content changes from CodeMirror
+  const handleContentChange = useCallback(
+    (newContent: string) => {
+      onContentChange?.(newContent);
+    },
+    [onContentChange]
+  );
+
+  // Handle navigation from InteractiveDocument (AGENTESE paths, links)
+  const handleNavigate = useCallback(
+    (path: string) => {
+      onNavigate?.(path);
+    },
+    [onNavigate]
+  );
+
+  // Handle toggle from InteractiveDocument (task checkboxes)
+  const handleToggle = useCallback(
+    async (newState: boolean, taskId?: string) => {
+      await onToggle?.(newState, taskId);
+    },
+    [onToggle]
+  );
+
+  // Empty state
+  if (!node) {
+    return (
+      <div className="content-pane content-pane--empty">
+        <div className="content-pane__welcome">
+          <h2>Membrane Editor</h2>
+          <p>&quot;The file is a lie. There is only the graph.&quot;</p>
+          <div className="content-pane__hints">
+            <p>
+              <kbd>:e &lt;path&gt;</kbd> Open a node
+            </p>
+            <p>
+              <kbd>gh/gl</kbd> Navigate parent/child
+            </p>
+            <p>
+              <kbd>gj/gk</kbd> Navigate siblings
+            </p>
+            <p>
+              <kbd>gd</kbd> Go to definition
+            </p>
+            <p>
+              <kbd>gr</kbd> Go to references
+            </p>
+            <p>
+              <kbd>zo/zc</kbd> Open/close portals
+            </p>
+            <p>
+              <kbd>i</kbd> Enter INSERT mode
+            </p>
+            <p>
+              <kbd>Escape</kbd> Return to NORMAL mode
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // INSERT mode: Full CodeMirror editor
+  if (isInsertMode) {
+    return (
+      <div className="content-pane content-pane--insert">
+        <MarkdownEditor
+          ref={editorRef}
+          value={displayContent}
+          onChange={handleContentChange}
+          readonly={false}
+          vimMode={false}
+          placeholder="Enter content..."
+          fillHeight
+          autoFocus
+        />
+        <AnimatePresence>
+          {portalArray.map((portal) => (
+            <Portal key={portal.edgeId} portal={portal} />
+          ))}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // NORMAL mode: Interactive rendered view with tokens
+  // Use SceneGraph if available, otherwise create fallback
+  const renderGraph = sceneGraph || createFallbackSceneGraph(displayContent);
+
+  return (
+    <div className="content-pane content-pane--normal">
+      <div className="content-pane__interactive-container">
+        <InteractiveDocument
+          sceneGraph={renderGraph}
+          onNavigate={handleNavigate}
+          onToggle={handleToggle}
+          className="content-pane__interactive"
+        />
+      </div>
+      <AnimatePresence>
+        {portalArray.map((portal) => (
+          <Portal key={portal.edgeId} portal={portal} />
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+});

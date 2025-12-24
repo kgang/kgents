@@ -92,6 +92,12 @@ DEFAULT_TRIGGERS: tuple[InvalidationTrigger, ...] = (
         topic="witness.spec.orphan",
         source_types=(SourceType.SPEC_CORPUS,),
     ),
+    # Sovereign ingest invalidation
+    # When a new document is ingested, spec corpus must refresh
+    InvalidationTrigger(
+        topic="witness.sovereign.ingested",
+        source_types=(SourceType.SPEC_CORPUS,),
+    ),
     # Git commit invalidation (filtered by path)
     InvalidationTrigger(
         topic="witness.git.commit",

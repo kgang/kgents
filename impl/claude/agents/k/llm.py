@@ -164,19 +164,25 @@ class ClaudeLLMClient(BaseLLMClient):
     doesn't accept directly.
     """
 
+    # Default to Sonnet for cost efficiency
+    DEFAULT_MODEL = "claude-sonnet-4-20250514"
+
     def __init__(
         self,
         timeout: float = 120.0,
         verbose: bool = False,
+        model: str | None = None,
     ):
         """Initialize Claude LLM client.
 
         Args:
             timeout: Timeout in seconds for CLI execution.
             verbose: Print progress messages during execution.
+            model: Model to use (default: claude-sonnet-4-20250514 for cost efficiency).
         """
         self._timeout = timeout
         self._verbose = verbose
+        self._model = model or self.DEFAULT_MODEL
         self._runtime: Any = None
 
     def _ensure_runtime(self) -> None:
@@ -187,6 +193,7 @@ class ClaudeLLMClient(BaseLLMClient):
             self._runtime = ClaudeCLIRuntime(
                 timeout=self._timeout,
                 verbose=self._verbose,
+                model=self._model,
             )
 
     async def generate(
@@ -382,6 +389,7 @@ def create_llm_client(
     mock: bool = False,
     mock_responses: Optional[list[str]] = None,
     prefer_morpheus: bool = True,
+    model: str | None = None,
 ) -> LLMClient:
     """Create an LLM client for K-gent.
 
@@ -396,6 +404,7 @@ def create_llm_client(
         mock: If True, return a mock client.
         mock_responses: Responses for mock client.
         prefer_morpheus: If True, prefer Morpheus Gateway when available.
+        model: Model to use (default: claude-sonnet-4-20250514 for cost efficiency).
 
     Returns:
         An LLM client instance.
@@ -413,10 +422,11 @@ def create_llm_client(
 
         return cast(LLMClient, MorpheusLLMClient())
 
-    # Fallback to CLI (local development)
+    # Fallback to CLI (local development) - default to Sonnet for cost
     return ClaudeLLMClient(
         timeout=timeout,
         verbose=verbose,
+        model=model,
     )
 
 

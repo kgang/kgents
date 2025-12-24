@@ -23,6 +23,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from protocols.cli.handler_meta import handler
 from protocols.cli.projection import project_command, route_to_path
 
 if TYPE_CHECKING:
@@ -49,6 +50,7 @@ DEFAULT_PATH = "concept.sovereign.manifest"
 # === Main Entry Point ===
 
 
+@handler("sovereign", is_async=False, tier=1, description="Inbound sovereignty control")
 def cmd_sovereign(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Inbound Sovereignty: Route to AGENTESE concept.sovereign.* paths.

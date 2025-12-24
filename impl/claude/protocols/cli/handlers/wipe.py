@@ -20,6 +20,8 @@ import shutil
 import sys
 from pathlib import Path
 
+from protocols.cli.handler_meta import handler
+
 
 def _print_help() -> None:
     """Print help for wipe command."""
@@ -162,6 +164,7 @@ def _wipe_path(path: Path, label: str, dry_run: bool = False) -> bool:
         return False
 
 
+@handler("wipe", is_async=False, tier=1, description="Remove kgents databases")
 def cmd_wipe(args: list[str]) -> int:
     """Handle wipe command: Remove kgents databases."""
     # Parse args

@@ -553,18 +553,56 @@ def _parse_kwargs_from_args(args: list[str], path: str) -> dict[str, Any]:
 
 
 def _run_async(coro: Any) -> Any:
-    """Run an async coroutine synchronously, handling running event loops."""
+    """Run an async coroutine synchronously, handling running event loops.
+
+    This function handles three cases:
+    1. No event loop running (normal CLI): Use asyncio.run()
+    2. Event loop running in current thread: Spawn thread to run asyncio.run()
+    3. Inside daemon thread pool: Create fresh event loop for this coroutine
+
+    The key insight is that database sessions must be created and used within
+    the same event loop. When running in daemon context, we create a fresh
+    loop that lives for the duration of this coroutine.
+    """
+    import os
+
     try:
-        asyncio.get_running_loop()
-        # If we get here, an event loop is already running
+        loop = asyncio.get_running_loop()
+        # Event loop already running in this thread
+        # Spawn a new thread with its own loop
         import concurrent.futures
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(asyncio.run, coro)
             return future.result()
     except RuntimeError:
-        # No running event loop, safe to use asyncio.run
-        return asyncio.run(coro)
+        # No running event loop in this thread
+        # Check if we're inside daemon context (thread pool)
+        inside_daemon = os.environ.get("KGENTS_INSIDE_DAEMON") is None and \
+                       os.environ.get("KGENTS_DAEMON_WORKER") is not None
+
+        if inside_daemon:
+            # Running in daemon worker thread - create a fresh loop
+            # that will be properly closed after the coroutine completes
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                return loop.run_until_complete(coro)
+            finally:
+                # Clean up pending tasks
+                try:
+                    pending = asyncio.all_tasks(loop)
+                    for task in pending:
+                        task.cancel()
+                    if pending:
+                        loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                except Exception:
+                    pass
+                loop.close()
+                asyncio.set_event_loop(None)
+        else:
+            # Normal CLI execution - use asyncio.run()
+            return asyncio.run(coro)
 
 
 # === Subcommand Routing ===

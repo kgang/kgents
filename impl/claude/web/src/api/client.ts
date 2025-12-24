@@ -1026,12 +1026,32 @@ export const parkApi = {
 // =============================================================================
 
 /**
+ * Section boundary from document parsing.
+ */
+export interface ParsedSection {
+  index: number;
+  range_start: number;
+  range_end: number;
+  section_hash: string;
+  section_type: {
+    kind: string;
+    level?: number;
+    language?: string;
+  };
+  heading?: string;
+}
+
+/**
  * Response from document parsing.
  */
 export interface DocumentParseResponse {
   scene_graph: unknown;
   token_count: number;
   token_types: Record<string, number>;
+  /** Section boundaries with hashes for incremental updates (Document Proxy) */
+  sections?: ParsedSection[];
+  /** Section hash map for change detection */
+  section_hashes?: Record<number, string>;
 }
 
 /**
@@ -1150,15 +1170,110 @@ export interface SovereignQueryResponse {
   overlay?: Record<string, unknown>;
 }
 
+// AGENTESE ingest/query methods are merged into sovereignApi below
+
+// =============================================================================
+// Analysis API (Sovereign Analysis Flow) - AGENTESE Universal Protocol
+// Routes:
+//   concept.sovereign.analyze - Start async analysis
+//   concept.sovereign.analysis_status - Get analysis status
+// =============================================================================
+
+/**
+ * Analysis status response from sovereign analyzer.
+ */
+export interface AnalysisStatusResponse {
+  path: string;
+  status: 'pending' | 'analyzing' | 'analyzed' | 'failed';
+  progress?: number;
+  error?: string;
+  started_at?: string;
+  completed_at?: string;
+  placeholders?: Array<{ path: string; referenced_by: string[] }>;
+}
+
+export const analysisApi = {
+  /**
+   * Start async analysis via AGENTESE: concept.sovereign.analyze
+   *
+   * @param path - File path to analyze
+   * @returns Analysis ID for tracking
+   */
+  start: async (path: string): Promise<{ analysis_id: string }> => {
+    const response = await apiClient.post<AgenteseResponse<{ analysis_id: string }>>(
+      '/agentese/concept/sovereign/analyze',
+      { path }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Get analysis status via AGENTESE: concept.sovereign.analysis_status
+   *
+   * @param path - File path to check status for
+   * @returns Current analysis state and progress
+   */
+  getStatus: async (path: string): Promise<AnalysisStatusResponse> => {
+    const response = await apiClient.post<AgenteseResponse<AnalysisStatusResponse>>(
+      '/agentese/concept/sovereign/analysis_status',
+      { path }
+    );
+    return unwrapAgentese(response);
+  },
+};
+
+// =============================================================================
+// Sovereign API (File Management & Collections)
+// Routes:
+//   GET    /api/sovereign/entities        - List all entities
+//   GET    /api/sovereign/entity          - Get entity with metadata
+//   POST   /api/sovereign/entity          - Upload/ingest new entity
+//   PUT    /api/sovereign/entity/rename   - Rename entity
+//   DELETE /api/sovereign/entity          - Delete entity
+//   GET    /api/sovereign/collections     - List collections
+//   POST   /api/sovereign/collections     - Create collection
+//   GET    /api/sovereign/export          - Export entities
+//
+// Philosophy:
+//   "We don't reference. We possess."
+//   "Law 3: No Export Without Witness."
+// =============================================================================
+
+export interface SovereignEntity {
+  path: string;
+  version: number;
+  content?: string;
+  content_hash: string;
+  metadata?: Record<string, unknown>;
+  overlay?: Record<string, unknown>;
+  analysis_status?: string;
+  is_analyzed?: boolean;
+}
+
+export interface SovereignCollection {
+  id: string;
+  name: string;
+  description: string | null;
+  paths: string[];
+  parent_id: string | null;
+  analysis_status: string;
+  analyzed_count: number;
+  entity_count?: number;
+}
+
+export interface EntityReference {
+  from_path: string;
+  edge_type: string;
+  line?: number;
+  context?: string;
+}
+
 export const sovereignApi = {
+  // AGENTESE-based methods
   /**
    * Ingest content into sovereign store via AGENTESE: concept.sovereign.ingest
    *
    * Creates a sovereign copy with witness mark and edge extraction.
-   *
-   * @param path - Virtual path for the content
-   * @param content - The content to ingest
-   * @param source - Optional source identifier (default: 'webapp')
    */
   ingest: async (data: {
     path: string;
@@ -1174,14 +1289,219 @@ export const sovereignApi = {
 
   /**
    * Query sovereign entity via AGENTESE: concept.sovereign.query
-   *
-   * @param path - Entity path to query
    */
   query: async (path: string): Promise<SovereignQueryResponse> => {
     const response = await apiClient.post<AgenteseResponse<SovereignQueryResponse>>(
       '/agentese/concept/sovereign/query',
       { path }
     );
+    return unwrapAgentese(response);
+  },
+
+  // REST-based entity operations
+  listEntities: async (prefix?: string, limit = 100): Promise<{ entities: SovereignEntity[]; total: number }> => {
+    const params = new URLSearchParams();
+    if (prefix) params.set('prefix', prefix);
+    params.set('limit', String(limit));
+    const response = await apiClient.get<{ entities: SovereignEntity[]; total: number }>(
+      `/api/sovereign/entities?${params}`
+    );
+    return response.data;
+  },
+
+  getEntity: async (path: string, version?: number): Promise<SovereignEntity> => {
+    const params = new URLSearchParams({ path });
+    if (version) params.set('version', String(version));
+    const response = await apiClient.get<SovereignEntity>(`/api/sovereign/entity?${params}`);
+    return response.data;
+  },
+
+  uploadEntity: async (
+    path: string,
+    content: string,
+    source = 'upload'
+  ): Promise<{ path: string; version: number; ingest_mark_id: string; edge_count: number }> => {
+    const response = await apiClient.post<{
+      path: string;
+      version: number;
+      ingest_mark_id: string;
+      edge_count: number;
+    }>('/api/sovereign/entity', { path, content, source });
+    return response.data;
+  },
+
+  renameEntity: async (
+    oldPath: string,
+    newPath: string
+  ): Promise<{ old_path: string; new_path: string; success: boolean; message: string }> => {
+    const response = await apiClient.put<{
+      old_path: string;
+      new_path: string;
+      success: boolean;
+      message: string;
+    }>('/api/sovereign/entity/rename', { old_path: oldPath, new_path: newPath });
+    return response.data;
+  },
+
+  deleteEntity: async (
+    path: string,
+    force = false
+  ): Promise<{ path: string; deleted: boolean; references: string[]; message: string }> => {
+    const response = await apiClient.delete<{
+      path: string;
+      deleted: boolean;
+      references: string[];
+      message: string;
+    }>('/api/sovereign/entity', { data: { path, force } });
+    return response.data;
+  },
+
+  getReferences: async (path: string): Promise<{ path: string; referenced_by: EntityReference[]; count: number }> => {
+    const response = await apiClient.get<{ path: string; referenced_by: EntityReference[]; count: number }>(
+      `/api/sovereign/entity/references?path=${encodeURIComponent(path)}`
+    );
+    return response.data;
+  },
+
+  exportEntities: async (paths: string[], format: 'json' | 'zip' = 'zip'): Promise<Blob> => {
+    const response = await apiClient.get(`/api/sovereign/export?paths=${paths.join(',')}&format=${format}`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Collection operations
+  listCollections: async (parentId?: string): Promise<{ collections: SovereignCollection[]; total: number }> => {
+    const params = parentId ? `?parent_id=${parentId}` : '';
+    const response = await apiClient.get<{ collections: SovereignCollection[]; total: number }>(
+      `/api/sovereign/collections${params}`
+    );
+    return response.data;
+  },
+
+  createCollection: async (
+    name: string,
+    description?: string,
+    paths?: string[],
+    parentId?: string
+  ): Promise<SovereignCollection> => {
+    const response = await apiClient.post<SovereignCollection>('/api/sovereign/collections', {
+      name,
+      description,
+      paths,
+      parent_id: parentId,
+    });
+    return response.data;
+  },
+
+  getCollection: async (collectionId: string): Promise<SovereignCollection> => {
+    const response = await apiClient.get<SovereignCollection>(`/api/sovereign/collections/${collectionId}`);
+    return response.data;
+  },
+
+  updateCollection: async (
+    collectionId: string,
+    update: { name?: string; description?: string }
+  ): Promise<SovereignCollection> => {
+    const response = await apiClient.put<SovereignCollection>(
+      `/api/sovereign/collections/${collectionId}`,
+      update
+    );
+    return response.data;
+  },
+
+  deleteCollection: async (collectionId: string): Promise<{ deleted: boolean; collection_id: string }> => {
+    const response = await apiClient.delete<{ deleted: boolean; collection_id: string }>(
+      `/api/sovereign/collections/${collectionId}`
+    );
+    return response.data;
+  },
+
+  addPathsToCollection: async (collectionId: string, paths: string[]): Promise<SovereignCollection> => {
+    const response = await apiClient.post<SovereignCollection>(
+      `/api/sovereign/collections/${collectionId}/paths`,
+      { paths }
+    );
+    return response.data;
+  },
+
+  removePathsFromCollection: async (collectionId: string, paths: string[]): Promise<SovereignCollection> => {
+    const response = await apiClient.delete<SovereignCollection>(
+      `/api/sovereign/collections/${collectionId}/paths`,
+      { data: { paths } }
+    );
+    return response.data;
+  },
+
+  exportCollection: async (collectionId: string, format: 'json' | 'zip' = 'zip'): Promise<Blob> => {
+    const response = await apiClient.get(
+      `/api/sovereign/collections/${collectionId}/export?format=${format}`,
+      { responseType: 'blob' }
+    );
+    return response.data;
+  },
+
+  // Analysis methods via AGENTESE concept.document.*
+  /**
+   * Trigger Claude analysis on a document via AGENTESE: concept.document.analyze
+   *
+   * @param path - Document path to analyze
+   * @param options - Analysis options
+   * @returns Analysis result with claims, references, placeholders
+   */
+  analyze: async (
+    path: string,
+    options?: { force?: boolean }
+  ): Promise<{
+    path: string;
+    status: string;
+    claim_count: number;
+    ref_count: number;
+    placeholder_count: number;
+    analysis_mark_id: string | null;
+    error?: string;
+  }> => {
+    const response = await apiClient.post<
+      AgenteseResponse<{
+        path: string;
+        status: string;
+        claim_count: number;
+        ref_count: number;
+        placeholder_count: number;
+        analysis_mark_id: string | null;
+        error?: string;
+      }>
+    >('/agentese/concept/document/analyze', {
+      path,
+      force: options?.force ?? false,
+    });
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Get document lifecycle status via AGENTESE: concept.document.status
+   *
+   * @param path - Document path to check
+   * @returns Document status including analysis state and available actions
+   */
+  getDocumentStatus: async (
+    path: string
+  ): Promise<{
+    path: string;
+    status: string;
+    version: number;
+    analysis: Record<string, unknown>;
+    actions_available: string[];
+  }> => {
+    const response = await apiClient.post<
+      AgenteseResponse<{
+        path: string;
+        status: string;
+        version: number;
+        analysis: Record<string, unknown>;
+        actions_available: string[];
+      }>
+    >('/agentese/concept/document/status', { path });
     return unwrapAgentese(response);
   },
 };
@@ -1241,6 +1561,11 @@ export interface KBlockCreateResponse {
   path: string;
   isolation: KBlockIsolation;
   content_preview?: string;
+  // Sovereignty integration (optional fields)
+  not_ingested?: boolean;
+  ingest_hint?: string;
+  analysis_status?: 'pending' | 'analyzing' | 'analyzed' | 'failed';
+  analysis_required?: boolean;
 }
 
 /**

@@ -2,19 +2,96 @@
 
 > *"Data enters. Data is witnessed. Data never leaves without explicit consent."*
 
-Heritage:
-  - spec/protocols/witness-primitives.md
-  - spec/protocols/k-block.md
-  - spec/principles/constitution.md (Article IV: Disgust Veto)
+**Why This Exists**: Traditional systems scan filesystems repeatedly—4000+ files every time, 30 seconds of waste, results evaporating. This protocol transforms batch analysis violence into witnessed accumulation. We don't reference external data; we possess sovereign copies with provenance. The specgraph becomes instant (10ms queries vs 30s scans) because it's a materialized view of witnessed events, not a runtime computation.
 
-Status: PROPOSED
-Confidence: 0.7
+**The Taste**: A single, tasteful abstraction—"data enters once, is witnessed, never leaves without consent"—replaces the chaos of polling, scanning, caching, invalidation, and eventual consistency. The sovereign copy IS the cache, the witness mark IS the invalidation signal, the overlay IS the annotation layer. Three concepts, infinite use cases.
+
+**Joy in Practice**:
+```python
+# Before: pray the file still exists, scan every time
+edges = scan_filesystem()  # 30s, fingers crossed
+
+# After: query your memory, instant
+edges = await sovereign.get_edges("spec/k-block.md")  # 10ms, guaranteed
+
+# Even better: your annotations persist
+await sovereign.annotate(
+    "spec/k-block.md",
+    Annotation(line=42, note="This is the key insight!")
+)
+# Tomorrow, it's still there. Next week, still there. The system remembers.
+```
+
+No more waiting for scans. No more "did I lose that analysis?" No more external changes breaking your flow. Just query your memory—it remembers everything you witnessed. **This is joy-inducing infrastructure.**
+
+Heritage (Curated Dependencies):
+  - **spec/protocols/witness-primitives.md** - witness marks as existence proofs, the foundation for "no entity without witness" (Law 1)
+  - **spec/protocols/k-block.md** - versioned content with edit trails, inspired our versioned sovereign copies (v1/, v2/, ...) and overlay pattern
+  - **spec/principles/constitution.md** - Article IV: Disgust Veto, enforced via Law 3 (export requires consent)
+  - **spec/agents/d-gent.md** - storage abstraction patterns (StorageProvider interface), influenced our integration with witness persistence
+  - **Evolved from**: Context Sovereignty v3.1 (plans/_archive/2025-12-pre-week50/), which attempted "context boundaries" but lacked witness integration—we learned that boundaries without provenance are brittle
+  - **Prior Art Influences**:
+    - Git's object store → content-addressable storage with hashing
+    - SQLite's WAL mode → write-ahead logging for crash safety
+    - ZFS snapshots → immutable versioning
+    - CRDT theory → conflict-free replicated data (future phase 4)
+
+Status: IMPLEMENTED (services/sovereign/)
+Confidence: 0.85
+Filed: 2024-12-22
+
+Evolution Strategy (Intentional Roadmap):
+  - **Phase 1 (DONE)**: File-based sovereign store with witness integration
+    - Deliverables: SovereignStore, ingest protocol, export with Law 3 compliance
+    - Decision: fuse-b84b63c7 (chose filesystem over DB for visibility + git compatibility)
+  - **Phase 2 (CURRENT)**: Graph materialization from witness marks
+    - services/sovereign/analyzer.py - edge extraction and trust computation
+    - services/sovereign/verification.py - law enforcement checks
+  - **Phase 3 (PLANNED Q1 2025)**: Conflict resolution for multi-writer scenarios
+    - When two ingests happen simultaneously, merge strategies
+  - **Phase 4 (RESEARCH)**: Distributed sovereignty (sovereign copies across machines)
+    - CRDT-based merge for multi-replica scenarios
+    - Cross-machine witness synchronization
+
+Related Specs:
+  - spec/protocols/sovereign-data-guarantees.md - formal proofs of the four laws
+  - services/sovereign/EXPORT_EXAMPLES.md - practical export patterns
 
 ---
 
-## The Problem
+## Ethical Foundations
 
-Current paradigm:
+**Privacy & Data Sovereignty**:
+- **Consent-Based Export**: Data never leaves without explicit witness mark (Law 3)
+- **Local-First**: Your sovereign copies stay in `.kgents/sovereign/` under your control
+- **Audit Trail**: Every ingest, sync, and export is witnessed—full transparency
+- **Right to Delete**: `SovereignStore.delete()` with reference checking prevents broken links
+- **Right to Rename**: `SovereignStore.rename()` updates metadata and witnesses the change
+
+**Data Minimization**: We only ingest what you explicitly request. No background scanning of your filesystem without permission.
+
+**Transparency**: The witness trail IS the audit log. Query `witness.query(action="entity.export")` to see every export.
+
+**Limitations**:
+- File system storage: not encrypted by default (use OS encryption if needed)
+- Git sync: assumes you trust the git repository source
+- Export bundle: contains full content + metadata (review before sharing)
+
+See: spec/principles/constitution.md (Article IV: Disgust Veto)
+
+---
+
+## The Problem (A Story)
+
+Picture this: You're working on a large codebase. 4000+ files. You run an analysis—"find all the references to this spec file." 30 seconds later, you get results. Great!
+
+Five minutes later, you want to check again. Another 30 seconds. Same files. Same results. But the system doesn't *know* they're the same—it scans everything again.
+
+Now imagine: You analyzed a spec yesterday, found 47 references, made some notes. Today, you want to continue. But the system forgot. The analysis evaporated. You start from scratch.
+
+Worse: A colleague deletes a file that 12 other specs reference. Your analysis breaks—it was pointing to external files, not to knowledge you possessed.
+
+**This is the violence of hot analysis:**
 ```
 Files exist → We scan them → We analyze them → Results evaporate
             ↑
@@ -23,11 +100,13 @@ Files exist → We scan them → We analyze them → Results evaporate
      External changes break us
 ```
 
-**Hot analysis is violence.** Every batch scan:
+Every batch scan:
 - Assumes files might have changed (distrust)
 - Recomputes what we already knew (waste)
 - Produces ephemeral results (amnesia)
 - Lets data "escape" without witnessing (leakage)
+
+It's like having a brilliant analyst who forgets everything they learned each night. Groundhog Day for your data infrastructure.
 
 ---
 
@@ -156,10 +235,17 @@ EXTERNAL                         SOVEREIGN MEMBRANE
 
 ### Phase 1: Entity Arrives
 
+**Composable Type Signatures**:
+
 ```python
 @dataclass
 class IngestEvent:
-    """A document crosses the membrane."""
+    """
+    A document crosses the membrane.
+
+    Composition: IngestEvent >> ingest >> IngestedEntity
+    Flow: External source → Witness boundary → Sovereign membrane
+    """
 
     source: str              # Where it came from
     content_hash: str        # SHA256 of content
@@ -169,6 +255,20 @@ class IngestEvent:
     # Metadata
     source_timestamp: datetime | None  # When source says it changed
     source_author: str | None          # Who source says wrote it
+
+
+# Composition operators
+IngestOp = Callable[[IngestEvent], Awaitable[IngestedEntity]]
+SyncOp = Callable[[ChangeNotification], Awaitable[SyncResult]]
+ExportOp = Callable[[str, str, str, str], Awaitable[ExportReceipt]]
+
+# Composable pipeline: watch >> ingest >> analyze >> materialize
+sovereign_pipeline: Pipeline = (
+    GitWatcher()
+    >> IngestWitness()
+    >> EdgeExtractor()
+    >> GraphMaterializer()
+)
 ```
 
 ### Phase 2: Witness the Arrival
@@ -810,6 +910,46 @@ The membrane is not a wall—it's a witness station.
 Everything that crosses is marked.
 Everything that enters is copied.
 Everything inside is ours.
+
+### Heterarchy & Flux
+
+**No Fixed Hierarchy**: Entities aren't organized in a tree—they exist in a graph of witnessed relationships. An entity can be referenced by many, reference many, exist in multiple "categories" simultaneously.
+
+**Dynamic Trust**: Trust scores flow from witness marks, not static declarations. As you annotate, correct, and derive, trust accumulates. An entity's trust is a function of its witness trail, not its position in a hierarchy.
+
+**Emergence**: The graph materializes from local witness events. No global coordinator dictates structure—it emerges from bottom-up witnessing. Each ingest is a local event; the graph is the global coherence (sheaf property).
+
+**Flux-Compatible**: Sovereign entities can be projected through Flux agents for streaming analysis. The discrete witness events become continuous data flows when needed:
+
+```python
+# Discrete: witness marks accumulate
+await sovereign.ingest(event)  # Point-in-time
+
+# Continuous: stream witness events through Flux
+sovereign_flux = Flux(
+    source=sovereign_store.watch_ingests(),
+    transform=edge_extractor,
+    sink=graph_materializer,
+)
+```
+
+The sovereign store is a fixed point in the data flow—a lens that both accumulates (ingest) and projects (query).
+
+### Generative Compression
+
+This spec compresses a complex pattern into executable laws:
+
+**The Pattern**: Every data system faces the same tension—how to remember without becoming ossified, how to sync without becoming enslaved to external sources, how to share without leaking.
+
+**The Compression**: Four laws capture it all:
+1. No entity without copy (possession)
+2. No entity without witness (provenance)
+3. No edge without witness (materialization)
+4. No export without witness (consent)
+
+From these four laws, the entire system unfolds. The `SovereignStore` API, the ingest protocol, the sync strategy, the export guarantees—all derivable from the laws.
+
+**Teaching Moment**: Notice how the spec gives you the laws first (compression), then expands them into protocols (decompression). You could rebuild the implementation from the laws alone. That's generative specification—the laws generate the system.
 
 ### The Three Layers of an Entity
 

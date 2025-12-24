@@ -4,13 +4,18 @@ Sovereign AGENTESE Node: @node("concept.sovereign")
 Exposes Inbound Sovereignty through the universal AGENTESE protocol.
 
 AGENTESE Paths:
-- concept.sovereign.manifest  - Store health, entity count, storage location
-- concept.sovereign.ingest    - Ingest a document (create birth certificate)
-- concept.sovereign.query     - Query sovereign copy with full provenance
-- concept.sovereign.list      - List all sovereign entities
-- concept.sovereign.diff      - Compare with external source
-- concept.sovereign.bootstrap - One-time migration from filesystem
-- concept.sovereign.sync      - Sync a single file (re-ingest if changed)
+- concept.sovereign.manifest   - Store health, entity count, storage location
+- concept.sovereign.ingest     - Ingest a document (create birth certificate)
+- concept.sovereign.query      - Query sovereign copy with full provenance
+- concept.sovereign.list       - List all sovereign entities
+- concept.sovereign.diff       - Compare with external source
+- concept.sovereign.bootstrap  - One-time migration from filesystem
+- concept.sovereign.sync       - Sync a single file (re-ingest if changed)
+- concept.sovereign.verify     - Verify integrity of entity/all
+- concept.sovereign.export     - Export with witness mark
+- concept.sovereign.rename     - Rename with witness
+- concept.sovereign.delete     - Safe delete with witness
+- concept.sovereign.references - Find what references a path
 
 The Metaphysical Fullstack Pattern (AD-009):
 - The protocol IS the API
@@ -45,17 +50,27 @@ from protocols.agentese.registry import node
 from .contracts import (
     BootstrapRequest,
     BootstrapResponse,
+    DeleteRequest,
+    DeleteResponse,
     DiffRequest,
     DiffResponse,
+    ExportRequest,
+    ExportResponse,
     IngestRequest,
     IngestResponse,
     ListRequest,
     ListResponse,
     QueryRequest,
     QueryResponse,
+    ReferencesRequest,
+    ReferencesResponse,
+    RenameRequest,
+    RenameResponse,
     SovereignManifestResponse,
     SyncRequest,
     SyncResponse,
+    VerifyRequest,
+    VerifyResponse,
 )
 from .ingest import Ingestor
 from .store import SovereignStore
@@ -118,10 +133,15 @@ class SovereignManifestRendering:
         "list": Contract(ListRequest, ListResponse),
         "query": Contract(QueryRequest, QueryResponse),
         "diff": Contract(DiffRequest, DiffResponse),
+        "verify": Contract(VerifyRequest, VerifyResponse),
+        "references": Contract(ReferencesRequest, ReferencesResponse),
         # Mutation aspects
         "ingest": Contract(IngestRequest, IngestResponse),
         "bootstrap": Contract(BootstrapRequest, BootstrapResponse),
         "sync": Contract(SyncRequest, SyncResponse),
+        "export": Contract(ExportRequest, ExportResponse),
+        "rename": Contract(RenameRequest, RenameResponse),
+        "delete": Contract(DeleteRequest, DeleteResponse),
     },
     examples=[
         ("manifest", {}, "Show sovereign store status"),
@@ -130,6 +150,11 @@ class SovereignManifestRendering:
         ("ingest", {"path": "spec/new.md", "content": "# New Spec"}, "Ingest document"),
         ("bootstrap", {"root": "spec/", "dry_run": True}, "Preview bootstrap"),
         ("sync", {"path": "spec/protocols/k-block.md"}, "Sync single file"),
+        ("verify", {"path": "spec/protocols/k-block.md"}, "Verify entity integrity"),
+        ("export", {"paths": ["spec/protocols/k-block.md"], "format": "json"}, "Export entity"),
+        ("rename", {"old_path": "spec/old.md", "new_path": "spec/new.md"}, "Rename entity"),
+        ("delete", {"path": "spec/deprecated.md"}, "Safe delete entity"),
+        ("references", {"path": "spec/protocols/k-block.md"}, "Find references"),
     ],
 )
 class SovereignNode(BaseLogosNode):
@@ -181,7 +206,7 @@ class SovereignNode(BaseLogosNode):
 
         Trust-gated access:
         - developer/operator/cli: Full access including bootstrap
-        - architect: Query, list, diff (no mutations)
+        - architect: Query, list, diff, verify, references (no mutations)
         - newcomer/guest: Manifest only
         """
         archetype_lower = archetype.lower() if archetype else "guest"
@@ -194,14 +219,19 @@ class SovereignNode(BaseLogosNode):
                 "list",
                 "query",
                 "diff",
+                "verify",
+                "references",
                 "ingest",
                 "bootstrap",
                 "sync",
+                "export",
+                "rename",
+                "delete",
             )
 
         # Read access: architects, researchers
         if archetype_lower in ("architect", "artist", "researcher", "technical"):
-            return ("manifest", "list", "query", "diff")
+            return ("manifest", "list", "query", "diff", "verify", "references")
 
         # Minimal: newcomers, guests
         return ("manifest",)
@@ -444,6 +474,210 @@ class SovereignNode(BaseLogosNode):
                 "old_version": current.version if current else None,
                 "new_version": sync_result.version,
                 "message": f"Synced to v{sync_result.version}",
+            }
+
+        elif aspect == "verify":
+            # Accept both "path" and "entity_path"
+            entity_path = kwargs.get("entity_path") or kwargs.get("path")
+
+            issues = []
+            entities_checked = 0
+
+            if entity_path:
+                # Verify single entity
+                entity = await self._store.get_current(entity_path)
+                if not entity:
+                    return {
+                        "path": entity_path,
+                        "verified": False,
+                        "entities_checked": 0,
+                        "message": f"Entity not found: {entity_path}",
+                    }
+
+                # Basic integrity check: can we read content and hash matches
+                import hashlib
+                actual_hash = hashlib.sha256(entity.content).hexdigest()
+                if actual_hash != entity.content_hash:
+                    issues.append({
+                        "path": entity_path,
+                        "issue": "hash_mismatch",
+                        "expected": entity.content_hash,
+                        "actual": actual_hash,
+                    })
+
+                entities_checked = 1
+
+                return {
+                    "path": entity_path,
+                    "verified": len(issues) == 0,
+                    "issues": issues,
+                    "entities_checked": entities_checked,
+                    "message": "Integrity verified" if not issues else "Integrity issues found",
+                }
+            else:
+                # Verify all entities
+                all_paths = await self._store.list_all()
+
+                for path in all_paths:
+                    entity = await self._store.get_current(path)
+                    if entity:
+                        import hashlib
+                        actual_hash = hashlib.sha256(entity.content).hexdigest()
+                        if actual_hash != entity.content_hash:
+                            issues.append({
+                                "path": path,
+                                "issue": "hash_mismatch",
+                                "expected": entity.content_hash,
+                                "actual": actual_hash,
+                            })
+                        entities_checked += 1
+
+                return {
+                    "path": None,
+                    "verified": len(issues) == 0,
+                    "issues": issues,
+                    "entities_checked": entities_checked,
+                    "message": f"Verified {entities_checked} entities" if not issues else f"Found {len(issues)} issues",
+                }
+
+        elif aspect == "export":
+            paths = kwargs.get("paths", [])
+            format_type = kwargs.get("format", "json")
+            witness = kwargs.get("witness", True)
+            reasoning = kwargs.get("reasoning", "Export via AGENTESE")
+
+            if not paths:
+                return {"error": "paths required"}
+
+            # Use witnessed_export if witness is available and requested
+            if witness and self._witness:
+                bundle = await self._store.witnessed_export(
+                    paths=paths,
+                    witness=self._witness,
+                    format=format_type,
+                    reasoning=reasoning,
+                )
+
+                return {
+                    "export_mark_id": bundle.export_mark_id,
+                    "entity_count": bundle.entity_count,
+                    "format": bundle.export_format,
+                    "exported_at": bundle.exported_at.isoformat(),
+                    "entities": [
+                        {
+                            "path": e.path,
+                            "content_hash": e.content_hash,
+                            "ingest_mark_id": e.ingest_mark_id,
+                            "version": e.version,
+                        }
+                        for e in bundle.entities
+                    ],
+                }
+            else:
+                # Fallback: export without witness (legacy)
+                bundle_data = await self._store.export_bundle(paths, format=format_type)
+
+                import json
+                if isinstance(bundle_data, bytes):
+                    # ZIP format returns bytes
+                    return {
+                        "entity_count": len(paths),
+                        "format": format_type,
+                        "bundle_size_bytes": len(bundle_data),
+                        "witness_mark_id": None,
+                    }
+                else:
+                    # JSON format returns dict via loads
+                    data = json.loads(bundle_data)
+                    return {
+                        "entity_count": len(data.get("entities", [])),
+                        "format": format_type,
+                        "entities": data.get("entities", []),
+                        "witness_mark_id": None,
+                    }
+
+        elif aspect == "rename":
+            old_path = kwargs.get("old_path", "")
+            new_path = kwargs.get("new_path", "")
+
+            if not old_path or not new_path:
+                return {"error": "old_path and new_path required"}
+
+            try:
+                success = await self._store.rename(old_path, new_path)
+
+                # Create witness mark
+                if success and self._witness:
+                    await self._witness.save_mark(
+                        action="rename",
+                        reasoning=f"Renamed {old_path} → {new_path}",
+                        tags=["rename", "file_management"],
+                    )
+
+                return {
+                    "old_path": old_path,
+                    "new_path": new_path,
+                    "success": success,
+                    "message": f"Renamed {old_path} → {new_path}" if success else "Rename failed",
+                }
+
+            except ValueError as e:
+                return {
+                    "old_path": old_path,
+                    "new_path": new_path,
+                    "success": False,
+                    "message": str(e),
+                }
+
+        elif aspect == "delete":
+            entity_path = kwargs.get("entity_path") or kwargs.get("path", "")
+            force = kwargs.get("force", False)
+
+            if not entity_path:
+                return {"error": "path required"}
+
+            # Check for references unless force
+            references: list[str] = []
+            if not force:
+                refs = await self._store.get_references_to(entity_path)
+                if refs:
+                    return {
+                        "path": entity_path,
+                        "deleted": False,
+                        "references": [r["from_path"] for r in refs],
+                        "message": f"Entity is referenced by {len(refs)} others. Use force=true to delete anyway.",
+                    }
+
+            # Delete
+            deleted = await self._store.delete(entity_path)
+
+            # Create witness mark
+            if deleted and self._witness:
+                await self._witness.save_mark(
+                    action="delete",
+                    reasoning=f"Deleted {entity_path}" + (" (forced)" if force else ""),
+                    tags=["delete", "file_management"] + (["forced"] if force else []),
+                )
+
+            return {
+                "path": entity_path,
+                "deleted": deleted,
+                "references": references,
+                "message": "Deleted successfully" if deleted else "Entity not found",
+            }
+
+        elif aspect == "references":
+            entity_path = kwargs.get("entity_path") or kwargs.get("path", "")
+
+            if not entity_path:
+                return {"error": "path required"}
+
+            refs = await self._store.get_references_to(entity_path)
+
+            return {
+                "path": entity_path,
+                "referenced_by": refs,
+                "count": len(refs),
             }
 
         else:

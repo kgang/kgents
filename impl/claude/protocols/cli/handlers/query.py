@@ -19,6 +19,8 @@ import fnmatch
 import logging
 from typing import TYPE_CHECKING
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
@@ -204,6 +206,7 @@ def _query_known_paths(
     return matches
 
 
+@handler("query", is_async=False, tier=1, description="Query AGENTESE registry")
 def cmd_query(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Query the AGENTESE registry.

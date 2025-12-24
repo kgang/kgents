@@ -299,6 +299,9 @@ class SceneNode:
     # Interactions
     interactions: tuple[Interaction, ...] = ()
 
+    # Section tracking (Document Proxy - AD-015)
+    section_index: int | None = None
+
     # Metadata
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -339,6 +342,23 @@ class SceneNode:
             min_width=self.min_width,
             min_height=self.min_height,
             interactions=self.interactions + (interaction,),
+            section_index=self.section_index,
+            metadata=self.metadata,
+        )
+
+    def with_section(self, section_index: int) -> SceneNode:
+        """Return new node with section index (for Document Proxy incremental updates)."""
+        return SceneNode(
+            id=self.id,
+            kind=self.kind,
+            content=self.content,
+            label=self.label,
+            style=self.style,
+            flex=self.flex,
+            min_width=self.min_width,
+            min_height=self.min_height,
+            interactions=self.interactions,
+            section_index=section_index,
             metadata=self.metadata,
         )
 
@@ -361,6 +381,7 @@ class SceneNode:
                 {"kind": i.kind, "action": i.action, "requires_trust": i.requires_trust}
                 for i in self.interactions
             ],
+            "section_index": self.section_index,
             "metadata": self.metadata,
         }
 
@@ -607,6 +628,61 @@ def compose_scenes(*scenes: SceneGraph) -> SceneGraph:
 
 
 # =============================================================================
+# Section Types (Document Proxy - AD-015)
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class SectionType:
+    """
+    Semantic section type for document parsing.
+
+    Used by Document Proxy for incremental re-parsing.
+    See: spec/protocols/document-proxy.md
+    """
+
+    kind: str  # 'heading', 'paragraph', 'code_block', 'list', 'table', 'blockquote', 'frontmatter', 'horizontal_rule'
+    level: int | None = None  # For headings (1-6)
+    language: str | None = None  # For code blocks
+
+
+@dataclass(frozen=True)
+class Section:
+    """
+    A semantic section of a document with content hash.
+
+    Sections are the atomic units for incremental re-parsing:
+    - Only changed sections need to be re-parsed
+    - Section hashes detect changes
+    - Section boundaries are semantic (headings, blank lines, code blocks)
+
+    See: spec/protocols/document-proxy.md
+    """
+
+    index: int
+    range_start: int
+    range_end: int
+    section_hash: str  # SHA-256[:16] of section content
+    section_type: SectionType
+    heading: str | None = None  # Heading text if section starts with heading
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for serialization."""
+        return {
+            "index": self.index,
+            "range_start": self.range_start,
+            "range_end": self.range_end,
+            "section_hash": self.section_hash,
+            "section_type": {
+                "kind": self.section_type.kind,
+                "level": self.section_type.level,
+                "language": self.section_type.language,
+            },
+            "heading": self.heading,
+        }
+
+
+# =============================================================================
 # Module Exports
 # =============================================================================
 
@@ -629,6 +705,9 @@ __all__ = [
     "SceneNode",
     "SceneEdge",
     "SceneGraph",
+    # Section types (Document Proxy)
+    "SectionType",
+    "Section",
     # Utilities
     "compose_scenes",
 ]

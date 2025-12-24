@@ -1,0 +1,19 @@
+# Pre-Commit Validation Composition
+# Run before any commit to ensure health and spec validity
+
+name: pre-commit
+description: Health check and system audit before committing
+author: kgents-core
+
+steps:
+  - command: kg probe health --all --json
+    description: Check Crown Jewel health status
+    fail_fast: true
+
+  - command: kg audit --system --json
+    description: Validate all specs against principles
+    fail_fast: false
+    continue_on_failure: true
+
+# Exit code 1 if any step fails
+# Creates unified witness trace linking all marks

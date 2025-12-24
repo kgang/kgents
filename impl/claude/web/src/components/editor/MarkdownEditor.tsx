@@ -2,12 +2,18 @@
  * MarkdownEditor Component
  *
  * A STARK BIOME-themed markdown editor using CodeMirror 6.
- * Supports vim bindings, syntax highlighting, and line wrapping.
+ * Supports vim-like mode switching: readonly (NORMAL) ↔ editable (INSERT).
+ *
+ * Key feature: Dynamic readonly switching via CodeMirror Compartments.
+ * When readonly prop changes, the editor reconfigures without remounting.
  */
 
-import React, { useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, forwardRef, useImperativeHandle, useState, useRef, useCallback } from 'react';
 import { useCodeMirror, UseCodeMirrorOptions } from './useCodeMirror';
 import './MarkdownEditor.css';
+
+/** Scroll cursor fade duration in ms (fast fade for smooth reading) */
+const SCROLL_CURSOR_FADE_MS = 650;
 
 export interface MarkdownEditorProps {
   /** Editor content */
@@ -16,13 +22,13 @@ export interface MarkdownEditorProps {
   onChange?: (value: string) => void;
   /** Called on blur */
   onBlur?: () => void;
-  /** Enable vim mode */
+  /** Enable vim mode (CodeMirror vim, not our custom handler) */
   vimMode?: boolean;
-  /** Read-only mode */
+  /** Read-only mode - can be changed dynamically */
   readonly?: boolean;
   /** Placeholder text when empty */
   placeholder?: string;
-  /** Auto-focus on mount */
+  /** Auto-focus on mount (if not readonly) */
   autoFocus?: boolean;
   /** Additional CSS class */
   className?: string;
@@ -43,10 +49,25 @@ export interface MarkdownEditorRef {
   focus: () => void;
   /** Check if focused */
   isFocused: () => boolean;
+  /** Set readonly state dynamically (vim-like mode switch) */
+  setReadonly: (readonly: boolean) => void;
+  // --- Scroll Navigation (for NORMAL mode reader view) ---
+  /** Scroll by N lines (positive = down, negative = up) */
+  scrollLines: (delta: number) => void;
+  /** Scroll to next/prev paragraph (blank line) */
+  scrollParagraph: (direction: 1 | -1) => void;
+  /** Scroll to top of document */
+  scrollToTop: () => void;
+  /** Scroll to bottom of document */
+  scrollToBottom: () => void;
 }
 
 /**
  * Markdown editor with STARK BIOME styling
+ *
+ * Supports dynamic readonly switching for vim-like modes:
+ * - NORMAL mode: readonly=true, keyboard scrolling (j/k/etc)
+ * - INSERT mode: readonly=false, full editing
  */
 export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
   function MarkdownEditor(props, ref) {
@@ -76,7 +97,74 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       lineWrapping: true,
     };
 
-    const { containerRef, getValue, setValue, focus, isFocused } = useCodeMirror(options);
+    const {
+      containerRef,
+      getValue,
+      setValue,
+      focus,
+      isFocused,
+      setReadonly,
+      scrollLines: rawScrollLines,
+      scrollParagraph: rawScrollParagraph,
+      scrollToTop: rawScrollToTop,
+      scrollToBottom: rawScrollToBottom,
+    } = useCodeMirror(options);
+
+    // --- Scroll Cursor State ---
+    const [scrollCursorVisible, setScrollCursorVisible] = useState(false);
+    const scrollCursorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    /** Show scroll cursor and set fade timer */
+    const showScrollCursor = useCallback(() => {
+      setScrollCursorVisible(true);
+
+      // Clear existing timer
+      if (scrollCursorTimerRef.current) {
+        clearTimeout(scrollCursorTimerRef.current);
+      }
+
+      // Set new fade timer
+      scrollCursorTimerRef.current = setTimeout(() => {
+        setScrollCursorVisible(false);
+        scrollCursorTimerRef.current = null;
+      }, SCROLL_CURSOR_FADE_MS);
+    }, []);
+
+    // Clean up timer on unmount
+    useEffect(() => {
+      return () => {
+        if (scrollCursorTimerRef.current) {
+          clearTimeout(scrollCursorTimerRef.current);
+        }
+      };
+    }, []);
+
+    // --- Wrapped Scroll Methods (show cursor on scroll) ---
+    const scrollLines = useCallback(
+      (delta: number) => {
+        rawScrollLines(delta);
+        showScrollCursor();
+      },
+      [rawScrollLines, showScrollCursor]
+    );
+
+    const scrollParagraph = useCallback(
+      (direction: 1 | -1) => {
+        rawScrollParagraph(direction);
+        showScrollCursor();
+      },
+      [rawScrollParagraph, showScrollCursor]
+    );
+
+    const scrollToTop = useCallback(() => {
+      rawScrollToTop();
+      showScrollCursor();
+    }, [rawScrollToTop, showScrollCursor]);
+
+    const scrollToBottom = useCallback(() => {
+      rawScrollToBottom();
+      showScrollCursor();
+    }, [rawScrollToBottom, showScrollCursor]);
 
     // Sync external value changes
     useEffect(() => {
@@ -92,6 +180,11 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       setValue,
       focus,
       isFocused,
+      setReadonly,
+      scrollLines,
+      scrollParagraph,
+      scrollToTop,
+      scrollToBottom,
     }));
 
     // Build style object
@@ -119,6 +212,11 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     return (
       <div className={containerClass} style={style}>
         <div ref={containerRef} className="markdown-editor__container" />
+        {/* Scroll cursor - horizontal line that appears during keyboard scroll */}
+        <div
+          className={`markdown-editor__scroll-cursor ${scrollCursorVisible ? 'markdown-editor__scroll-cursor--visible' : ''}`}
+          aria-hidden="true"
+        />
       </div>
     );
   }

@@ -98,9 +98,33 @@ async def _create_lifespan(
     if enable_saas and HAS_SAAS_CONFIG and init_saas_clients is not None:
         await init_saas_clients()
 
+    # === Initialize Analysis Reactor ===
+    # Wires the reactor to listen for SOVEREIGN_INGESTED events
+    # and auto-trigger LLM analysis on document uploads.
+    try:
+        from services.providers import get_sovereign_store, get_witness_persistence
+        from services.sovereign.analysis_reactor import init_analysis_reactor
+
+        store = await get_sovereign_store()
+        witness = await get_witness_persistence()
+        await init_analysis_reactor(store, witness)
+        logger.info("Analysis reactor initialized")
+    except ImportError as e:
+        logger.warning(f"Could not initialize analysis reactor: {e}")
+    except Exception as e:
+        logger.error(f"Error initializing analysis reactor: {e}")
+
     yield  # App runs here
 
     # === SHUTDOWN ===
+    # Shutdown analysis reactor
+    try:
+        from services.sovereign.analysis_reactor import reset_analysis_reactor
+        reset_analysis_reactor()
+        logger.info("Analysis reactor shutdown")
+    except Exception as e:
+        logger.warning(f"Error shutting down analysis reactor: {e}")
+
     # Shutdown SaaS clients
     if enable_saas and HAS_SAAS_CONFIG and shutdown_saas_clients is not None:
         await shutdown_saas_clients()
@@ -284,6 +308,14 @@ def create_app(
     if explorer_router is not None:
         app.include_router(explorer_router)
         logger.info("Explorer API mounted at /api/explorer")
+
+    # === Document Director API ===
+    from .director import create_director_router
+
+    director_router = create_director_router()
+    if director_router is not None:
+        app.include_router(director_router)
+        logger.info("Document Director API mounted at /api/director")
 
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
@@ -576,6 +608,18 @@ def create_app(
                     "agentese_search": "POST /agentese/self/explorer/search",
                     "agentese_detail": "POST /agentese/self/explorer/detail",
                     "agentese_surface": "POST /agentese/self/explorer/surface",
+                },
+                "director": {
+                    "note": "Document lifecycle management - spec to code to evidence",
+                    "upload": "POST /api/director/upload",
+                    "list": "GET /api/director/documents",
+                    "detail": "GET /api/director/documents/{path}",
+                    "preview": "GET /api/director/documents/{path}/preview",
+                    "analyze": "POST /api/director/documents/{path}/analyze",
+                    "prompt": "POST /api/director/documents/{path}/prompt",
+                    "capture": "POST /api/director/documents/{path}/capture",
+                    "evidence": "GET /api/director/documents/{path}/evidence",
+                    "evidence_add": "POST /api/director/documents/{path}/evidence",
                 },
                 "webhooks": {
                     "stripe": "/webhooks/stripe",

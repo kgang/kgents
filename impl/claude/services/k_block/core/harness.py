@@ -181,6 +181,9 @@ class FileOperadHarness:
         If content is not found in cosmos OR sovereign store, the K-Block
         is created with empty content and not_ingested=True. Frontend should
         show appropriate UI for uploading/ingesting content.
+
+        Enhanced: Checks analysis status from sovereign store.
+        If status != "analyzed", sets analysis_required=True.
         """
         # Read current content from cosmos (checks cosmos log, then sovereign store)
         raw_content = await self.cosmos.read(path)
@@ -188,6 +191,19 @@ class FileOperadHarness:
         # Detect "not ingested" state: content is None (not in cosmos or sovereign)
         not_ingested = raw_content is None
         content = raw_content or ""
+
+        # Check analysis status from sovereign store
+        analysis_required = False
+        if not not_ingested:
+            try:
+                from services.providers import get_sovereign_store
+
+                store = await get_sovereign_store()
+                is_analyzed = await store.is_analyzed(path)
+                analysis_required = not is_analyzed
+            except Exception:
+                # Graceful degradation: if store unavailable, don't gate
+                pass
 
         # Create K-Block
         block = KBlock(
@@ -197,6 +213,7 @@ class FileOperadHarness:
             base_content=content,
             isolation=IsolationState.PRISTINE,
             not_ingested=not_ingested,
+            analysis_required=analysis_required,
         )
 
         # Set cosmos reference

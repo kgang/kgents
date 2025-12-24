@@ -42,6 +42,8 @@ import json
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
@@ -751,6 +753,7 @@ def _handle_reset(args: list[str]) -> int:
 # =============================================================================
 
 
+@handler("explore", is_async=False, tier=1, description="Exploration harness")
 def cmd_explore(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Exploration harness CLI interface.

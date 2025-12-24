@@ -22,6 +22,7 @@ import {
   UnifiedEventCard,
   StreamFiltersBar,
   ConnectionStatus,
+  DetailPreview,
 } from '../brain';
 import type { UnifiedEvent, StreamFilters } from '../brain';
 
@@ -112,8 +113,9 @@ export function BrainPage() {
     (newFilters: StreamFilters) => {
       setFilters(newFilters);
       stream.setFilters(newFilters);
+      poll.setFilters(newFilters); // Also update poll hook for filtering to work
     },
-    [stream]
+    [stream, poll]
   );
 
   // Handle search
@@ -156,10 +158,8 @@ export function BrainPage() {
       <header className="brain-page__header">
         <div className="brain-page__header-main">
           <h1 className="brain-page__title">
-            <span className="brain-page__title-icon">🧠</span>
-            Brain
+            Brain <span className="brain-page__subtitle">— spatial cathedral of memory</span>
           </h1>
-          <p className="brain-page__subtitle">Spatial Cathedral of Memory</p>
         </div>
 
         <ConnectionStatus
@@ -172,8 +172,8 @@ export function BrainPage() {
         />
       </header>
 
-      {/* Search Bar */}
-      <section className="brain-page__search">
+      {/* Search + Filters */}
+      <section className="brain-page__controls">
         <form className="brain-page__search-form" onSubmit={handleSearchSubmit}>
           <input
             type="text"
@@ -194,10 +194,7 @@ export function BrainPage() {
             🎲
           </button>
         </form>
-      </section>
 
-      {/* Filters */}
-      <section className="brain-page__filters">
         <StreamFiltersBar filters={filters} onChange={handleFiltersChange} disabled={loading} />
       </section>
 
@@ -226,11 +223,13 @@ export function BrainPage() {
           ) : (
             <div className="brain-page__empty">
               <span className="brain-page__empty-icon">🌌</span>
-              <p className="brain-page__empty-title">The cathedral awaits</p>
-              <p className="brain-page__empty-hint">
+              <p className="brain-page__empty-title">
                 {state.searchQuery
-                  ? 'No entities match your search.'
-                  : 'No events yet. Create marks, crystals, trails...'}
+                  ? 'No entities match your search'
+                  : 'Memory crystallizes through action'}
+              </p>
+              <p className="brain-page__empty-hint">
+                {state.searchQuery ? 'Try different terms or clear filters' : 'Your first mark awaits'}
               </p>
             </div>
           )}
@@ -268,47 +267,5 @@ export function BrainPage() {
     </div>
   );
 }
-
-// =============================================================================
-// Detail Preview (Temporary — will be replaced by type-specific views)
-// =============================================================================
-
-interface DetailPreviewProps {
-  event: UnifiedEvent;
-}
-
-function DetailPreview({ event }: DetailPreviewProps) {
-  return (
-    <div className="brain-page__detail-preview">
-      <div className="brain-page__detail-section">
-        <h3 className="brain-page__detail-label">Type</h3>
-        <p className="brain-page__detail-value">{event.type}</p>
-      </div>
-
-      <div className="brain-page__detail-section">
-        <h3 className="brain-page__detail-label">Summary</h3>
-        <p className="brain-page__detail-value">{event.summary}</p>
-      </div>
-
-      <div className="brain-page__detail-section">
-        <h3 className="brain-page__detail-label">Timestamp</h3>
-        <p className="brain-page__detail-value">{new Date(event.timestamp).toLocaleString()}</p>
-      </div>
-
-      <div className="brain-page__detail-section">
-        <h3 className="brain-page__detail-label">Metadata</h3>
-        <pre className="brain-page__detail-json">{JSON.stringify(event.metadata, null, 2)}</pre>
-      </div>
-
-      <div className="brain-page__detail-actions">
-        <p className="brain-page__detail-hint">Full detail views coming in Phase 2</p>
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// Export
-// =============================================================================
 
 export default BrainPage;

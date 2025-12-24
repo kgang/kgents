@@ -4,9 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from './components/error/ErrorBoundary';
 import { PageTransition, PersonalityLoading } from './components/joy';
 import { AppShell } from './components/layout';
-import { WelcomeView } from './membrane/views/WelcomeView';
-
-import './membrane/Membrane.css'; // For CSS variables
+import { WelcomeView } from './pages/WelcomePage';
 
 /**
  * kgents Web — The Cathedral Navigation Experience
@@ -19,11 +17,6 @@ import './membrane/Membrane.css'; // For CSS variables
  *
  * AppShell provides navbar + WitnessFooter (always-on)
  */
-
-// Gallery pages
-const GalleryPage = lazy(() => import('./pages/GalleryPage'));
-const LayoutGallery = lazy(() => import('./pages/LayoutGallery'));
-const InteractiveTextGallery = lazy(() => import('./pages/InteractiveTextGallery'));
 
 // Main surfaces
 const SpecLedgerPage = lazy(() => import('./pages/SpecLedgerPage'));
@@ -55,11 +48,6 @@ function WelcomeScreen() {
 function App() {
   const location = useLocation();
 
-  // Galleries don't use AppShell (standalone dev tools)
-  const isGallery = location.pathname.startsWith('/_/');
-
-  // Welcome screen is special (no AppShell) - handled by the final else branch
-
   // Main app surfaces use AppShell
   const isAppSurface =
     location.pathname.startsWith('/editor') ||
@@ -69,27 +57,14 @@ function App() {
 
   return (
     <ErrorBoundary resetKeys={[location.pathname]}>
-      {isGallery ? (
-        // Galleries — standalone dev tools
-        <Suspense fallback={<LoadingFallback />}>
-          <AnimatePresence mode="wait" initial={false}>
-            <PageTransition key={location.pathname} variant="fade">
-              <Routes location={location}>
-                <Route path="/_/gallery" element={<GalleryPage />} />
-                <Route path="/_/gallery/layout" element={<LayoutGallery />} />
-                <Route path="/_/gallery/interactive-text" element={<InteractiveTextGallery />} />
-              </Routes>
-            </PageTransition>
-          </AnimatePresence>
-        </Suspense>
-      ) : isAppSurface ? (
+      {isAppSurface ? (
         // Main surfaces — wrapped in AppShell with navbar + witness footer
         <AppShell>
           <Suspense fallback={<LoadingFallback />}>
             <AnimatePresence mode="wait" initial={false}>
               <PageTransition key={location.pathname} variant="fade">
                 <Routes location={location}>
-                  <Route path="/editor" element={<HypergraphEditorPage />} />
+                  <Route path="/editor/*" element={<HypergraphEditorPage />} />
                   <Route path="/ledger" element={<SpecLedgerPage />} />
                   <Route path="/chart" element={<ChartPage />} />
                   <Route path="/brain" element={<BrainPage />} />

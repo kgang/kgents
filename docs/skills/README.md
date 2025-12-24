@@ -4,7 +4,7 @@ context: self
 
 # Agent Skills Directory
 
-> *"21 skills are necessary and sufficient to build any kgents component."*
+> *"23 skills are necessary and sufficient to build any kgents component."*
 
 **READ SKILLS FIRST.** Every task has a corresponding skill. Before writing code, find the right skill—it will save you hours.
 
@@ -12,10 +12,11 @@ context: self
 
 ## 🌟 Universal Skills (Start Here)
 
-These four skills apply to virtually ANY work you'll do:
+These five skills apply to virtually ANY work you'll do:
 
 | Skill | When to Use | Lines |
 |-------|-------------|-------|
+| **[cli-strategy-tools](cli-strategy-tools.md)** | Every session: audit, annotate, experiment, probe, compose | 650 |
 | **[metaphysical-fullstack](metaphysical-fullstack.md)** | Building any feature—the core architecture pattern | 320 |
 | **[crown-jewel-patterns](crown-jewel-patterns.md)** | Implementing service logic (14 battle-tested patterns) | 850 |
 | **[test-patterns](test-patterns.md)** | Writing any tests (T-gent Types I-V, property-based, React chaos) | 1250 |
@@ -27,6 +28,7 @@ These four skills apply to virtually ANY work you'll do:
 
 | Task | Skills to Read |
 |------|----------------|
+| **Running experiments** | `research-protocol.md`, `cli-strategy-tools.md` |
 | **Adding new agent** | `polynomial-agent.md`, `building-agent.md` |
 | **Exposing via AGENTESE** | `agentese-node-registration.md`, `agentese-path.md` |
 | **Service/Crown Jewel** | `crown-jewel-patterns.md`, `metaphysical-fullstack.md` |
@@ -71,10 +73,12 @@ These four skills apply to virtually ANY work you'll do:
 | [witness-for-agents](witness-for-agents.md) | Marks, decisions, context budgets for programmatic agents |
 | [derivation-edges](derivation-edges.md) | Edge evidence: how marks strengthen derivation relationships |
 
-### Process (N-Phase)
+### Process (N-Phase & Research)
 
 | Skill | Purpose |
 |-------|---------|
+| [research-protocol](research-protocol.md) | Four-phase experimentation: A (toy) → B (trace) → C (proof) → D (scale) |
+| [cli-strategy-tools](cli-strategy-tools.md) | Five native operations: audit, annotate, experiment, probe, compose |
 | [plan-file](plan-file.md) | Forest Protocol YAML headers, chunks, status lifecycle |
 | [spec-template](spec-template.md) | Writing generative specs (200-400 lines) |
 | [spec-hygiene](spec-hygiene.md) | 7 bloat patterns to avoid, 5 compression patterns |
@@ -98,7 +102,7 @@ Component = Foundation ∘ Protocol ∘ Architecture ∘ Witness ∘ Process ∘
           ∘ (agentese-path + agentese-node-registration)
           ∘ (crown-jewel-patterns + metaphysical-fullstack + data-bus-integration + hypergraph-editor)
           ∘ (witness-for-agents + derivation-edges)
-          ∘ (plan-file + spec-template + spec-hygiene)
+          ∘ (research-protocol + cli-strategy-tools + plan-file + spec-template + spec-hygiene)
           ∘ (projection-target + marimo-projection + test-patterns + elastic-ui-patterns)
 ```
 
@@ -113,4 +117,4 @@ Extended skills archived to `docs/_archive/2025-12-18-consolidation/`. Restore i
 
 ---
 
-*Consolidated: 2025-12-23 | Skills: 21 active | Docs Renaissance Edition*
+*Consolidated: 2025-12-24 | Skills: 23 active | Docs Renaissance Edition*

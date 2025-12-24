@@ -171,6 +171,183 @@ class SyncResponse:
 
 
 # =============================================================================
+# Rename (concept.sovereign.rename)
+# =============================================================================
+
+
+@dataclass
+class RenameRequest:
+    """Request to rename/move an entity."""
+
+    old_path: str
+    new_path: str
+
+
+@dataclass
+class RenameResponse:
+    """Response from rename operation."""
+
+    old_path: str
+    new_path: str
+    success: bool
+    message: str = ""
+
+
+# =============================================================================
+# Delete (concept.sovereign.delete)
+# =============================================================================
+
+
+@dataclass
+class DeleteRequest:
+    """Request to delete an entity."""
+
+    path: str
+    force: bool = False  # Force delete even with references
+
+
+@dataclass
+class DeleteResponse:
+    """Response from delete operation."""
+
+    path: str
+    deleted: bool
+    references: list[str] = field(default_factory=list)  # Entities that reference this
+    message: str = ""
+
+
+# =============================================================================
+# Export (concept.sovereign.export)
+# =============================================================================
+
+
+@dataclass
+class ExportRequest:
+    """Request to export entities with witness trail (Law 3).
+
+    AGENTESE: concept.sovereign.export
+    """
+
+    paths: list[str]
+    format: str = "json"  # "json" or "zip"
+    witness: bool = True  # Create witness mark for export (Law 3)
+    reasoning: str = "Export via AGENTESE"  # Reasoning for witness mark
+
+
+@dataclass
+class ExportResponse:
+    """Response from export operation with witness trail (Law 3).
+
+    When witness is available:
+    - export_mark_id: The witness mark for this export (Law 3 guarantee)
+    - entities: List of exported entity metadata
+
+    When no witness:
+    - witness_mark_id: None
+    - entities: Still populated, but no provenance guarantee
+    """
+
+    entity_count: int
+    format: str
+    export_mark_id: str | None = None  # Mark witnessing the export (Law 3)
+    exported_at: str | None = None  # ISO timestamp
+    entities: list[dict[str, str | int | None]] | None = None  # Entity metadata
+    bundle_size_bytes: int | None = None  # For ZIP format
+
+
+# =============================================================================
+# Collection (concept.sovereign.collection.*)
+# =============================================================================
+
+
+@dataclass
+class CollectionCreateRequest:
+    """Request to create a collection."""
+
+    name: str
+    description: str | None = None
+    paths: list[str] | None = None
+    parent_id: str | None = None
+
+
+@dataclass
+class CollectionResponse:
+    """Response with collection data."""
+
+    id: str
+    name: str
+    description: str | None
+    paths: list[str]
+    parent_id: str | None
+    analysis_status: str
+    analyzed_count: int
+    entity_count: int | None = None  # Resolved path count
+
+
+@dataclass
+class CollectionListResponse:
+    """Response with list of collections."""
+
+    collections: list[dict[str, Any]]
+    total: int
+
+
+@dataclass
+class CollectionUpdateRequest:
+    """Request to update a collection."""
+
+    collection_id: str
+    name: str | None = None
+    description: str | None = None
+    add_paths: list[str] | None = None
+    remove_paths: list[str] | None = None
+
+
+# =============================================================================
+# Verify (concept.sovereign.verify)
+# =============================================================================
+
+
+@dataclass
+class VerifyRequest:
+    """Request to verify entity integrity."""
+
+    path: str | None = None  # Specific entity (None = verify all)
+
+
+@dataclass
+class VerifyResponse:
+    """Response from integrity verification."""
+
+    path: str | None  # None if verifying all
+    verified: bool
+    issues: list[dict[str, Any]] = field(default_factory=list)
+    entities_checked: int = 0
+    message: str = ""
+
+
+# =============================================================================
+# References (concept.sovereign.references)
+# =============================================================================
+
+
+@dataclass
+class ReferencesRequest:
+    """Request to find references to an entity."""
+
+    path: str
+
+
+@dataclass
+class ReferencesResponse:
+    """Response with entities that reference the given path."""
+
+    path: str
+    referenced_by: list[dict[str, Any]]  # [{from_path, edge_type, line, context}]
+    count: int
+
+
+# =============================================================================
 # Module Exports
 # =============================================================================
 
@@ -195,4 +372,20 @@ __all__ = [
     # Sync
     "SyncRequest",
     "SyncResponse",
+    # File Management
+    "RenameRequest",
+    "RenameResponse",
+    "DeleteRequest",
+    "DeleteResponse",
+    "ExportRequest",
+    "ExportResponse",
+    "VerifyRequest",
+    "VerifyResponse",
+    "ReferencesRequest",
+    "ReferencesResponse",
+    # Collections
+    "CollectionCreateRequest",
+    "CollectionResponse",
+    "CollectionListResponse",
+    "CollectionUpdateRequest",
 ]

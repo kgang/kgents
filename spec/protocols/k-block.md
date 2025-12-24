@@ -5,8 +5,10 @@
 **Status**: Canonical Specification
 **Date**: 2025-12-22
 **Prerequisites**: `file-operad.md`, `interactive-text.md`, `operads.md`, AD-009
-**Implementation**: `services/k-block/` (planned)
+**Implementation**: `impl/claude/services/k_block/`
 **Layers Over**: FILE_OPERAD (K-Block wraps, does not replace)
+**Heritage**: Inspired by Git's staging area, but for specs. The monad pattern from category theory provides the mathematical rigor. The "cosmos as append-only log" comes from event sourcing and CRDTs.
+**Evolution**: Phase 1 (complete): Monad + Views. Phase 2 (complete): Witness integration. Phase 3 (active): Bidirectional view editing. Future: Entanglement for cross-file consistency.
 
 ---
 
@@ -36,6 +38,8 @@
 **K-Block = Monadic Isolation + Hyperdimensional Views + Witnessed Operations**
 
 The K-Block is NOT another file format or editing mode. It is a **transactional boundary** around FILE_OPERAD operations. Inside the boundary, you edit freely. Outside, the cosmos remains stable. The boundary is crossed only through explicit **harness operations**.
+
+**Example**: Imagine editing a spec that defines an API. You make bold changes—rename types, restructure sections, delete deprecated fields. In a traditional system, every keystroke propagates immediately. Dependencies break. Tests fail. Chaos ripples. But inside a K-Block? You're sovereign. Edit fearlessly. The graph view updates as you type. The code view shows what the implementation would look like. The diff view reminds you what changed. When you're ready—and only when you're ready—you `save()`. The cosmos receives your perfect, coherent vision. No intermediate chaos. No "oops, broke prod." Just intentional, witnessed commits.
 
 ```
                     THE COSMOS (shared reality)

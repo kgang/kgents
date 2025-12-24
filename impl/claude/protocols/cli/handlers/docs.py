@@ -30,10 +30,13 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
 
+@handler("docs", is_async=False, tier=1, description="Living documentation generator")
 def cmd_docs(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Living Docs: Generate and query documentation from source.

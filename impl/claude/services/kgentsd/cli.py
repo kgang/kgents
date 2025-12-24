@@ -42,15 +42,16 @@ from .workflows import WORKFLOW_REGISTRY
 # Version & Help
 # =============================================================================
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 HELP_TEXT = """\
 kgentsd - The Witness Daemon
 
 USAGE:
-  kgentsd summon [OPTIONS]    Awaken the Witness
-  kgentsd release             Release the Witness
-  kgentsd status [--trust]    Show Witness state + trust metrics
+  kgentsd summon [OPTIONS]    Awaken the Witness (start daemon)
+  kgentsd banish [OPTIONS]    Banish the Witness (stop daemon)
+  kgentsd release             Release the Witness (alias for banish)
+  kgentsd status [--trust]    Show Witness state + trust metrics + pool stats
   kgentsd thoughts [--limit N]  View thought stream
   kgentsd ask "..."           Direct query
 
@@ -58,6 +59,10 @@ SUMMON OPTIONS:
   --watchers TYPES    Comma-separated: git,filesystem,test,agentese,ci
   --all               Enable all watchers
   -b, --background    Run in background (no TUI)
+  -f, --foreground    Run in foreground (for debugging)
+
+BANISH OPTIONS:
+  --force, -f         Force kill (SIGKILL instead of SIGTERM)
 
 WATCHERS:
   git        Git operations (commits, pushes, checkouts)
@@ -70,11 +75,23 @@ EXAMPLES:
   $ kgentsd summon                          # Start with git watcher (default)
   $ kgentsd summon --watchers git,test      # Git + test watchers
   $ kgentsd summon --all -b                 # All watchers, background
+  $ kgentsd summon -f                       # Foreground mode (debug)
   $ kgentsd status                          # Check if running
+  $ kgentsd status --json                   # Machine-readable status
+  $ kgentsd banish                          # Graceful stop
+  $ kgentsd banish --force                  # Force kill
   $ kgentsd thoughts --limit 20             # Recent thoughts
   $ kgentsd ask "what should I work on?"    # Ask the Witness
 
-The Witness earns trust through observation:
+ARCHITECTURE:
+  The daemon provides:
+  • Multi-processing for CPU-bound tasks (LLM, crystallization)
+  • Multi-threading for I/O-bound tasks (database, file I/O)
+  • PTY support for interactive commands (soul reflect, etc.)
+  • Trust-gated operations via ActionGate
+  • Audit trail for all CLI activity
+
+TRUST LEVELS:
   L0 READ_ONLY   - Observe and project
   L1 BOUNDED     - Write to .kgents/ only
   L2 SUGGESTION  - Propose changes (requires confirmation)
@@ -349,21 +366,85 @@ def _run_simple_foreground(config: DaemonConfig) -> int:
         return 0
 
 
-def cmd_release(args: list[str]) -> int:
-    """Release the Witness daemon gracefully."""
+def cmd_banish(args: list[str]) -> int:
+    """
+    Banish the Witness daemon (stop).
+
+    Options:
+        --force, -f    Force kill (SIGKILL instead of SIGTERM)
+    """
     if "--help" in args or "-h" in args:
-        print("kgentsd release - Release the Witness")
+        print("kgentsd banish - Banish the Witness")
         print()
         print("Gracefully stops the running Witness daemon.")
+        print()
+        print("Options:")
+        print("  --force, -f    Force kill (SIGKILL instead of SIGTERM)")
         return 0
 
-    success = stop_daemon()
-    if success:
-        print("🌙 Witness released.")
+    force = "--force" in args or "-f" in args
+    config = DaemonConfig()
+
+    is_running, pid = check_daemon_status(config)
+    if not is_running or pid is None:
+        console = _get_console()
+        if console:
+            console.print("[yellow]Witness was not running.[/yellow]")
+        else:
+            print("Witness was not running.")
         return 0
-    else:
-        print("Witness was not running.")
+
+    import signal
+
+    try:
+        if force:
+            os.kill(pid, signal.SIGKILL)
+            action = "Force killed"
+        else:
+            os.kill(pid, signal.SIGTERM)
+            action = "Sent SIGTERM to"
+
+        # Wait for process to exit
+        import time
+        from .daemon import is_process_running, remove_pid_file
+
+        for _ in range(50):  # 5 seconds
+            if not is_process_running(pid):
+                break
+            time.sleep(0.1)
+
+        if is_process_running(pid):
+            if not force:
+                console = _get_console()
+                if console:
+                    console.print("[yellow]Process didn't exit gracefully, sending SIGKILL...[/yellow]")
+                else:
+                    print("Process didn't exit gracefully, sending SIGKILL...")
+                os.kill(pid, signal.SIGKILL)
+                time.sleep(0.5)
+
+        # Clean up PID file
+        remove_pid_file(config.pid_file)
+
+        console = _get_console()
+        if console:
+            console.print(f"[green]🌙 Witness banished. {action} PID {pid}.[/green]")
+        else:
+            print(f"🌙 Witness banished. {action} PID {pid}.")
         return 0
+
+    except OSError as e:
+        console = _get_console()
+        if console:
+            console.print(f"[red]Failed to stop daemon: {e}[/red]")
+        else:
+            print(f"Failed to stop daemon: {e}")
+        return 1
+
+
+def cmd_release(args: list[str]) -> int:
+    """Release the Witness daemon gracefully (alias for banish)."""
+    return cmd_banish(args)
 
 
 def cmd_status(args: list[str]) -> int:
@@ -375,12 +456,30 @@ def cmd_status(args: list[str]) -> int:
         print()
         print("Options:")
         print("  --trust  Show detailed trust escalation progress")
+        print("  --json   Machine-readable JSON output")
         return 0
 
     show_trust = "--trust" in args
+    json_output = "--json" in args
 
     # Get daemon status
     status = get_daemon_status()
+
+    # Add socket responsiveness check
+    if status["running"]:
+        try:
+            from .socket_client import is_daemon_available
+            status["socket_responsive"] = is_daemon_available()
+        except Exception:
+            status["socket_responsive"] = status["socket_active"]
+    else:
+        status["socket_responsive"] = False
+
+    if json_output:
+        import json as json_module
+        print(json_module.dumps(status, indent=2))
+        return 0
+
     _print_status(status)
 
     # Phase 4C: Always show trust metrics
@@ -624,13 +723,14 @@ def main(argv: list[str] | None = None) -> int:
     # Route to handlers
     handlers = {
         "summon": cmd_summon,
+        "banish": cmd_banish,
         "release": cmd_release,
         "status": cmd_status,
         "thoughts": cmd_thoughts,
         "ask": cmd_ask,
         # Aliases
         "start": cmd_summon,
-        "stop": cmd_release,
+        "stop": cmd_banish,
     }
 
     if command in ("--help", "-h"):

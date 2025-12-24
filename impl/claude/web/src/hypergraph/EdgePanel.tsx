@@ -9,8 +9,8 @@
  */
 
 import { memo } from 'react';
-import type { EdgePendingState, EdgeType } from './types';
-import { EDGE_TYPE_KEYS } from './types';
+import type { EdgePendingState, EdgeType } from './state/types';
+import { EDGE_TYPE_KEYS } from './state/types';
 
 import './EdgePanel.css';
 

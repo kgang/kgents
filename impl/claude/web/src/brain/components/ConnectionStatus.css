@@ -1,0 +1,163 @@
+/**
+ * ConnectionStatus Styles
+ *
+ * Real-time connection indicator for the Brain stream.
+ */
+
+/* =============================================================================
+   Indicator Dot
+   ============================================================================= */
+
+.connection-status__indicator {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.connection-status__indicator[data-status="connected"] {
+  background: #22c55e;
+  box-shadow: 0 0 4px #22c55e;
+  animation: pulse-green 2s infinite;
+}
+
+.connection-status__indicator[data-status="reconnecting"] {
+  background: #f59e0b;
+  animation: pulse-amber 1s infinite;
+}
+
+.connection-status__indicator[data-status="disconnected"] {
+  background: #6b7280;
+}
+
+.connection-status__indicator[data-status="error"] {
+  background: #ef4444;
+}
+
+.connection-status__indicator--standalone {
+  cursor: help;
+}
+
+/* Pulse animations */
+@keyframes pulse-green {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 4px #22c55e;
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 8px #22c55e;
+  }
+}
+
+@keyframes pulse-amber {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* =============================================================================
+   Inline Variant
+   ============================================================================= */
+
+.connection-status--inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #888);
+}
+
+.connection-status--inline .connection-status__label {
+  font-weight: 500;
+}
+
+.connection-status--inline .connection-status__reconnect--small {
+  padding: 0.125rem 0.25rem;
+  background: none;
+  border: 1px solid var(--border-subtle, #3a3a3a);
+  border-radius: 0.25rem;
+  color: var(--text-muted, #888);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.connection-status--inline .connection-status__reconnect--small:hover {
+  border-color: var(--border-hover, #4a4a4a);
+  color: var(--text-primary, #fff);
+}
+
+/* =============================================================================
+   Footer Variant
+   ============================================================================= */
+
+.connection-status--footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2rem;
+  background: var(--bg-secondary, #1a1a1a);
+  border-top: 1px solid var(--border-subtle, #2a2a2a);
+  z-index: 100;
+}
+
+.connection-status--footer .connection-status__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 0 1rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #888);
+}
+
+.connection-status--footer .connection-status__label {
+  font-weight: 500;
+}
+
+.connection-status--footer .connection-status__error {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-danger, #ef4444);
+}
+
+.connection-status--footer .connection-status__reconnect {
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-tertiary, #2a2a2a);
+  border: 1px solid var(--border-subtle, #3a3a3a);
+  border-radius: 0.25rem;
+  color: var(--text-primary, #fff);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.connection-status--footer .connection-status__reconnect:hover {
+  background: var(--bg-hover, #333);
+  border-color: var(--border-hover, #4a4a4a);
+}
+
+/* =============================================================================
+   Reduced Motion
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .connection-status__indicator {
+    animation: none;
+  }
+
+  .connection-status--inline .connection-status__reconnect--small,
+  .connection-status--footer .connection-status__reconnect {
+    transition: none;
+  }
+}

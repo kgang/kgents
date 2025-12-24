@@ -2,8 +2,8 @@
 
 > *"What's happening right now?"*
 
-**Last Updated**: 2025-12-23 (Evening)
-**Session**: Theory → Implementation → Hardening
+**Last Updated**: 2025-12-24 (Morning)
+**Session**: Archival + Fresh Start
 
 ---
 
@@ -146,45 +146,24 @@ Chapter 9: Open Problems — The frontier
 
 ---
 
-## Active Plans (30 total)
+## Active Plans (8 remain — 90% archived Dec 24)
 
-### Tier 1: In-Flight / Recently Completed
+| Plan | Status | Notes |
+|------|--------|-------|
+| `_focus.md` | 🔒 HUMAN | Kent's intent (never archive) |
+| `categorical-reinvention-phase1-foundations.md` | **EXECUTING** | Probes built ✅, study pending |
+| `categorical-reinvention-phase2-integration.md` | NEXT | CPRM training |
+| `categorical-reinvention-phase3-architecture.md` | FUTURE | SBM implementation |
+| `categorical-reinvention-phase4-synthesis.md` | FUTURE | Ship kgents 2.0 |
+| `ui-rebuild-from-first-principles.md` | ACTIVE | Fresh UI arc |
+| `meta.md` | REFERENCE | Plan guidelines |
+| `README.md` | INDEX | Plan navigation |
 
-| Plan | Status | Next |
-|------|--------|------|
-| `derivation-dag-integration.md` | **Phase 1-2 ✅** | Phase 3 (WitnessedDerivation) |
-| `validation-framework-implementation.md` | **Session 1-2 ✅** | Session 3 (CLI/AGENTESE) |
-| `_proxy-handle-implementation.md` | **Phase 2 ✅** | Phase 3 (spec ledger migration) |
-| `hypergraph-emacs.md` | Phase 1-4 ✅ | E2E testing, polish |
-| `_membrane.md` | Foundation ✅ | Polish, keyboard shortcuts |
-
-### Tier 2: Ready to Start
-
-| Plan | Sessions | Priority |
-|------|----------|----------|
-| `categorical-reinvention-phase1-foundations.md` | 3 weeks | **EXECUTING** — probes built ✅ |
-| `witness-fusion-ux-implementation.md` | 5-7 | HIGH |
-| `dawn-phase-4-kickoff.md` | 2-3 hrs | QUICK WIN |
-| `stark-biome-enforcement.md` | 1 hr | QUICK WIN |
-
-### Tier 3: Planning / Design
-
-| Plan | Notes |
-|------|-------|
-| `categorical-reinvention-phase2-integration.md` | CPRM training |
-| `categorical-reinvention-phase3-architecture.md` | SBM implementation |
-| `categorical-reinvention-phase4-synthesis.md` | Ship kgents 2.0 |
-| `_k-block-implementation.md` | K-Block commit protocol |
-| `SYNTHESIS-UI.md` | Vision doc |
-
-### Tier 4: Backlog
-
-| Plan | Notes |
-|------|-------|
-| `git-archaeology-backfill.md` | Proposed |
-| `memory-first-docs-execution.md` | Phase 2B pending |
-| `technical-debt-remediation.md` | Ongoing |
-| `visual-trail-graph-fullstack.md` | Session 2 done |
+**Archived Dec 24**: 19 plans + 9 root docs → `_archive/2025-12-24-*/`
+- All witness-* plans (completed)
+- All derivation/validation plans (captured in commits)
+- All SYNTHESIS/stark-biome/hypergraph-emacs (completed)
+- LAW3, PHASE_2_2, HANDOFF docs (superseded by NOW.md)
 
 ---
 

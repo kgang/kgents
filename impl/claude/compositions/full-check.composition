@@ -1,0 +1,23 @@
+# Full System Check Composition
+# Comprehensive validation after refactoring or before PR
+
+name: full-check
+description: System audit + health probes + law verification
+author: kgents-core
+
+steps:
+  - command: kg audit --system
+    description: Audit all Crown Jewel specs
+    fail_fast: false
+    continue_on_failure: true
+
+  - command: kg probe health --all --json
+    description: Health check all Crown Jewels
+    fail_fast: true
+
+  - command: kg probe identity --target services/ --json
+    description: Verify identity law for all services
+    fail_fast: false
+
+# Comprehensive validation for major milestones
+# Creates full system snapshot with witness trace

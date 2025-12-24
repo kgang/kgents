@@ -128,6 +128,72 @@ See: `docs/skills/witness-for-agents.md`
 
 ---
 
+## 🛠️ CLI STRATEGY TOOLS: Evidence-Driven Development
+
+> *"Evidence over intuition. Traces over reflexes. Composition over repetition."*
+
+Five native kgents operations for rigorous development. Full guide: `docs/skills/cli-strategy-tools.md`
+
+### The Five Tools
+
+| Tool | Purpose | When | Output |
+|------|---------|------|--------|
+| `kg audit` | Validate spec against principles/impl | Before modifying specs, pre-PR | Scores + drift + mark |
+| `kg annotate` | Link principles↔impl, capture gotchas | After impl, after bugs | Annotation + mark |
+| `kg experiment` | Gather evidence with Bayesian rigor | Uncertain generation, hypothesis | Evidence bundle + marks |
+| `kg probe` | Fast categorical law checks | Session start, after composition, CI | Pass/fail + mark on fail |
+| `kg compose` | Chain operations with unified trace | Pre-commit, PR, saved workflows | Unified trace |
+
+### Mandatory Usage
+
+**Session Start**:
+```bash
+kg probe health --all  # First command every session
+```
+
+**Before Modifying Spec**:
+```bash
+kg audit spec/protocols/witness.md --full
+```
+
+**After Implementation**:
+```bash
+kg annotate spec/protocols/witness.md --impl \
+  --section "MarkStore" \
+  --link "services/witness/store.py:MarkStore"
+```
+
+**After Bug Fix**:
+```bash
+kg annotate spec/relevant.md --gotcha \
+  --section "Problematic Section" \
+  --note "Don't do X, it causes Y"
+```
+
+**When Uncertain**:
+```bash
+kg experiment generate --spec "..." --adaptive --confidence 0.95
+```
+
+**Before Commit**:
+```bash
+kg compose --run "pre-commit"  # Runs: probe health + audit system
+```
+
+### Pre-Saved Compositions
+
+These compositions are ready to use:
+
+| Name | Commands | Use When |
+|------|----------|----------|
+| `pre-commit` | probe health + audit system | Before any commit |
+| `validate-spec` | audit + annotate --show | Before modifying spec |
+| `full-check` | audit system + probe all + probe identity | After refactor, pre-PR |
+
+**Philosophy**: Every operation witnesses. Every decision traces. Every composition tells a story.
+
+---
+
 ## 📚 SKILLS: Your First Stop
 
 > *"17 skills are necessary and sufficient to build any kgents component."*
@@ -138,6 +204,7 @@ See: `docs/skills/witness-for-agents.md`
 
 | Skill | When to Use | Key Insight |
 |-------|-------------|-------------|
+| **`cli-strategy-tools.md`** | Every session, every commit | Five tools for evidence-driven development: audit, annotate, experiment, probe, compose. |
 | **`metaphysical-fullstack.md`** | Building any feature | Every agent is a vertical slice from persistence → projection. No explicit backend routes—AGENTESE IS the API. |
 | **`crown-jewel-patterns.md`** | Implementing service logic | 14 battle-tested patterns: Container-Owns-Workflow, Signal Aggregation, Dual-Channel Output, Teaching Mode... |
 | **`test-patterns.md`** | Writing tests | T-gent Types I-V taxonomy, property-based tests, React chaos testing, performance baselines |
@@ -409,11 +476,16 @@ Context dumping: large payloads tax every turn
 ## Working Protocol
 
 1. **ANTI-SAUSAGE FIRST** — Ground in voice anchors before suggesting work
-2. **READ SKILLS** — `docs/skills/` has the answer
-3. **CHECK SYSTEMS** — `docs/systems-reference.md` before building new
-4. **TYPECHECK FRONTEND** — Run `npm run typecheck` after any `.tsx` changes
-5. **UPDATE NOW.md** — At session end, update the living document
-6. **USE AGENTESE** — The protocol IS the API
+2. **HEALTH CHECK** — Run `kg probe health --all` at session start
+3. **READ SKILLS** — `docs/skills/` has the answer (especially `cli-strategy-tools.md`)
+4. **CHECK SYSTEMS** — `docs/systems-reference.md` before building new
+5. **AUDIT SPECS** — Run `kg audit <spec> --full` before modifying any spec
+6. **ANNOTATE DISCOVERIES** — Capture gotchas with `kg annotate --gotcha`
+7. **EXPERIMENT WHEN UNCERTAIN** — Use `kg experiment` for evidence, not guesses
+8. **TYPECHECK FRONTEND** — Run `npm run typecheck` after any `.tsx` changes
+9. **PRE-COMMIT CHECK** — Run `kg compose --run "pre-commit"` before committing
+10. **UPDATE NOW.md** — At session end, update the living document
+11. **USE AGENTESE** — The protocol IS the API
 
 ---
 

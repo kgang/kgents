@@ -337,21 +337,13 @@ async def get_witness_persistence() -> "WitnessPersistence":
     """
     Get the WitnessPersistence service for Witness Crown Jewel.
 
-    Wires the dual-track storage:
-    - TableAdapter for fast queries (thoughts, actions, trust)
-    - D-gent for semantic search
+    Uses Universe for crystal-based storage.
 
     Used by WitnessNode for self.witness.* AGENTESE paths.
     """
     from services.witness import WitnessPersistence
 
-    session_factory = await get_session_factory()
-    dgent = await get_dgent_router()
-
-    return WitnessPersistence(
-        session_factory=session_factory,
-        dgent=dgent,
-    )
+    return WitnessPersistence()
 
 
 # =============================================================================
@@ -514,10 +506,9 @@ async def get_witnessed_graph_service() -> "witnessed_graph.WitnessedGraphServic
     """
     Get the WitnessedGraphService for unified graph queries.
 
-    Composes three edge sources:
+    Composes two edge sources:
     - Sovereign: Code structure edges (imports, calls, inherits)
     - Witness: Mark-based edges (evidence, decisions, gotchas)
-    - SpecLedger: Spec relation edges (harmony, contradiction, dependency)
 
     Usage:
         graph = await container.get("witnessed_graph_service")
@@ -525,7 +516,6 @@ async def get_witnessed_graph_service() -> "witnessed_graph.WitnessedGraphServic
     """
     from services.witnessed_graph import (
         SovereignSource,
-        SpecLedgerSource,
         WitnessedGraphService,
         WitnessSource,
     )
@@ -534,17 +524,14 @@ async def get_witnessed_graph_service() -> "witnessed_graph.WitnessedGraphServic
     sovereign_store = await get_sovereign_store()
     witness_persistence = await get_witness_persistence()
 
-    # Create sources
+    # Create sources (SpecLedgerSource removed - frontend support dropped)
     sovereign_source = SovereignSource(sovereign_store)
     witness_source = WitnessSource(witness_persistence)
-    # SpecLedgerSource loads report lazily
-    spec_source = SpecLedgerSource()
 
     # Compose into unified graph
     service = WitnessedGraphService(
         sovereign_source=sovereign_source,
         witness_source=witness_source,
-        spec_source=spec_source,
     )
 
     # Wire bus for live updates (closes the loop: save → witness → graph → UI)
@@ -614,10 +601,86 @@ async def get_unified_query_service() -> "UnifiedQueryService":
         service = await get_unified_query_service()
         response = await service.list_events(ListEventsRequest(limit=50))
     """
+    from agents.d.universe import get_universe
     from services.explorer import UnifiedQueryService
 
-    session_factory = await get_session_factory()
-    return UnifiedQueryService(session_factory)
+    # Use Universe for data access (new Crystal architecture)
+    universe = get_universe()
+    return UnifiedQueryService(universe)
+
+
+# =============================================================================
+# CLI Tool Use Services (Phases 1-5)
+# =============================================================================
+
+
+async def get_audit_store():
+    """
+    Get the AuditStore for spec audit result persistence.
+
+    Phase 1: Spec audit results with principle scores, drift detection,
+    and witness marking.
+
+    Used by audit service for database-backed audit history.
+    """
+    from services.audit.store import get_audit_store
+
+    return get_audit_store()
+
+
+async def get_annotation_store():
+    """
+    Get the AnnotationStore for spec ↔ impl annotations.
+
+    Phase 2: Bidirectional annotations linking spec to principles,
+    implementations, gotchas, and design decisions.
+
+    Used by annotate service for database-backed annotation storage.
+    """
+    from services.annotate.store import AnnotationStore
+
+    return AnnotationStore()
+
+
+async def get_probe_store():
+    """
+    Get the ProbeStore for categorical law probe results.
+
+    Phase 3: Probe results for identity, associativity, coherence,
+    trust, health, and budget checks. Stores failures by default.
+
+    Used by probe service for database-backed probe history.
+    """
+    from services.probe.store import get_probe_store
+
+    return get_probe_store()
+
+
+async def get_experiment_store():
+    """
+    Get the ExperimentStore for evidence-gathering experiments.
+
+    Phase 4: Experiment persistence for trials, evidence bundles,
+    and historical analysis.
+
+    Used by experiment service for database-backed experiment storage.
+    """
+    from services.experiment.store import get_experiment_store
+
+    return get_experiment_store()
+
+
+async def get_composition_store():
+    """
+    Get the CompositionStore for named command compositions.
+
+    Phase 5: Composition persistence for reusable kg command sequences.
+
+    Used by compose service for database-backed composition storage.
+    """
+    from services.compose.store import get_composition_store
+
+    return get_composition_store()
 
 
 # =============================================================================
@@ -746,8 +809,15 @@ async def setup_providers() -> None:
     # Explorer Crown Jewel (Unified Data Explorer)
     container.register("unified_query_service", get_unified_query_service, singleton=True)
 
+    # CLI Tool Use Services (Phases 1-5)
+    container.register("audit_store", get_audit_store, singleton=True)
+    container.register("annotation_store", get_annotation_store, singleton=True)
+    container.register("probe_store", get_probe_store, singleton=True)
+    container.register("experiment_store", get_experiment_store, singleton=True)
+    container.register("composition_store", get_composition_store, singleton=True)
+
     logger.info(
-        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion)"
+        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion + CLI Tool Use)"
     )
 
     # Import service nodes to trigger @node registration
@@ -959,4 +1029,10 @@ __all__ = [
     "get_editor_service",
     # Explorer Crown Jewel
     "get_unified_query_service",
+    # CLI Tool Use Services
+    "get_audit_store",
+    "get_annotation_store",
+    "get_probe_store",
+    "get_experiment_store",
+    "get_composition_store",
 ]

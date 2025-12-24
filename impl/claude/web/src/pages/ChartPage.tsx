@@ -1,32 +1,32 @@
 /**
- * ChartPage — Astronomical Chart visualization page
+ * ChartPage — Token Registry visualization page
  *
- * "The file is a lie. There is only the graph."
+ * Utilitarian flat grid for navigating:
+ * - 100s of specs
+ * - Dozens of principles
+ * - 1000s of implementations
+ *
+ * "The frame is humble. The content glows."
  */
 
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AstronomicalChart } from '../membrane/chart';
-
-import '../membrane/Membrane.css';
+import { TokenRegistry } from '../components/registry';
 
 export function ChartPage() {
   const navigate = useNavigate();
 
-  const handleNodeClick = useCallback(
+  const handleOpenEditor = useCallback(
     (path: string) => {
       // Navigate to Editor with this spec path
-      navigate(`/editor?path=${encodeURIComponent(path)}`);
+      navigate(`/editor/${encodeURIComponent(path)}`);
     },
     [navigate]
   );
 
   return (
-    <div className="membrane" style={{ background: 'var(--surface-0)', height: '100%' }}>
-      {/* Chart fills the space — navigation is in AppShell */}
-      <div style={{ height: '100%', minHeight: 0 }}>
-        <AstronomicalChart onNodeClick={handleNodeClick} limit={100} showControls showLegend />
-      </div>
+    <div style={{ height: '100%', background: 'var(--color-steel-950)' }}>
+      <TokenRegistry onOpenEditor={handleOpenEditor} />
     </div>
   );
 }

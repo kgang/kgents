@@ -25,10 +25,13 @@ import json
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
 
+@handler("archaeology", is_async=False, tier=1, description="Git history mining")
 def cmd_archaeology(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Git Archaeology: Mine git history for patterns, teachings, and priors.

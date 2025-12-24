@@ -10,6 +10,7 @@
  * - Enter in action field → Save
  * - Esc → Cancel
  * - Tab → Navigate fields
+ * - Quick marks: mE/mG/mT/mF/mJ/mV
  */
 
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
@@ -29,10 +30,23 @@ interface WitnessPanelProps {
 
   /** Loading state while saving */
   loading?: boolean;
+
+  /** Called when quick mark is triggered */
+  onQuickMark?: (tag: string) => void;
 }
 
 // Common tags for quick selection
 const COMMON_TAGS = ['eureka', 'gotcha', 'taste', 'friction', 'joy', 'veto'] as const;
+
+// Quick mark definitions (tag → action template)
+const QUICK_MARKS = {
+  E: { tag: 'eureka', action: 'Eureka moment', key: 'mE' },
+  G: { tag: 'gotcha', action: 'Gotcha', key: 'mG' },
+  T: { tag: 'taste', action: 'Taste decision', key: 'mT' },
+  F: { tag: 'friction', action: 'Friction point', key: 'mF' },
+  J: { tag: 'joy', action: 'Joy moment', key: 'mJ' },
+  V: { tag: 'veto', action: 'Veto', key: 'mV' },
+} as const;
 
 // =============================================================================
 // Component
@@ -42,10 +56,12 @@ export const WitnessPanel = memo(function WitnessPanel({
   onSave,
   onCancel,
   loading = false,
+  onQuickMark,
 }: WitnessPanelProps) {
   const [action, setAction] = useState('');
   const [reasoning, setReasoning] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [pendingQuickMark, setPendingQuickMark] = useState<string | null>(null);
 
   const actionInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,6 +71,38 @@ export const WitnessPanel = memo(function WitnessPanel({
       actionInputRef.current?.focus();
     });
   }, []);
+
+  // Handle quick mark key sequences (m + E/G/T/F/J/V)
+  useEffect(() => {
+    const handleQuickMarkKey = (e: KeyboardEvent) => {
+      if (loading) return;
+
+      // If 'm' is pressed, start quick mark sequence
+      if (e.key === 'm' && !pendingQuickMark) {
+        e.preventDefault();
+        setPendingQuickMark('m');
+        return;
+      }
+
+      // If we have pending 'm', check for quick mark completion
+      if (pendingQuickMark === 'm') {
+        const upperKey = e.key.toUpperCase();
+        const quickMark = QUICK_MARKS[upperKey as keyof typeof QUICK_MARKS];
+
+        if (quickMark) {
+          e.preventDefault();
+          setPendingQuickMark(null);
+          onQuickMark?.(quickMark.tag);
+        } else {
+          // Invalid sequence, reset
+          setPendingQuickMark(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleQuickMarkKey);
+    return () => window.removeEventListener('keydown', handleQuickMarkKey);
+  }, [pendingQuickMark, loading, onQuickMark]);
 
   // Toggle tag selection
   const toggleTag = useCallback((tag: string) => {
@@ -181,6 +229,21 @@ export const WitnessPanel = memo(function WitnessPanel({
           </div>
         </div>
 
+        {/* Quick marks section */}
+        <div className="witness-panel__field">
+          <label className="witness-panel__label">Quick marks:</label>
+          <div className="witness-panel__quick-marks">
+            {Object.entries(QUICK_MARKS).map(([key, { tag, action: actionTemplate, key: keyLabel }]) => (
+              <div key={key} className="witness-panel__quick-mark">
+                <kbd className="witness-panel__quick-mark-key">{keyLabel}</kbd>
+                <span className="witness-panel__quick-mark-label">
+                  {tag} ({actionTemplate})
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Footer hints */}
         <div className="witness-panel__footer">
           <span>
@@ -190,6 +253,14 @@ export const WitnessPanel = memo(function WitnessPanel({
           <span>
             <kbd>Esc</kbd> Cancel
           </span>
+          {pendingQuickMark && (
+            <>
+              <span className="witness-panel__separator">•</span>
+              <span className="witness-panel__pending">
+                Pending: <kbd>{pendingQuickMark}_</kbd>
+              </span>
+            </>
+          )}
           {loading && <span className="witness-panel__loading">Saving...</span>}
         </div>
       </div>

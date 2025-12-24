@@ -45,9 +45,12 @@ import os
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .types import Annotation, Diff, DiffType, SovereignEntity
+from .types import Annotation, Diff, DiffType, ExportBundle, ExportedEntity, SovereignEntity
+
+if TYPE_CHECKING:
+    from ..witness.persistence import WitnessPersistence
 
 logger = logging.getLogger(__name__)
 
@@ -310,6 +313,22 @@ class SovereignStore:
         entity_dir = self._entity_dir(path)
         return entity_dir.exists() and self._get_current_version(entity_dir) is not None
 
+    async def is_analyzed(self, path: str) -> bool:
+        """
+        Check if an entity has been analyzed.
+
+        An entity is considered analyzed if it has analysis metadata in its overlay
+        with status=ANALYZED.
+
+        Returns:
+            True if entity has been successfully analyzed
+            False if not analyzed or entity doesn't exist
+        """
+        from .analysis import AnalysisStatus
+
+        state = await self.get_analysis_state(path)
+        return state is not None and state.status == AnalysisStatus.ANALYZED
+
     async def list_versions(self, path: str) -> list[int]:
         """List all versions of an entity."""
         entity_dir = self._entity_dir(path)
@@ -367,12 +386,17 @@ class SovereignStore:
 
         logger.debug(f"Stored overlay {overlay_type} for {path}")
 
-    async def get_overlay(self, path: str) -> dict[str, Any]:
+    async def get_overlay(self, path: str, overlay_type: str | None = None) -> dict[str, Any]:
         """
-        Get all overlay data for an entity.
+        Get overlay data for an entity.
+
+        Args:
+            path: Entity path
+            overlay_type: Specific overlay type to get (e.g., "analysis", "edges")
+                         If None, returns all overlay data
 
         Returns:
-            Dict with all overlay data (annotations, edges, etc.)
+            Dict with overlay data (all or specific type)
         """
         entity_dir = self._entity_dir(path)
         overlay_dir = entity_dir / OVERLAY_DIR
@@ -380,6 +404,23 @@ class SovereignStore:
         if not overlay_dir.exists():
             return {}
 
+        # If specific type requested, read just that file
+        if overlay_type is not None:
+            # Check both direct overlay and derived directories
+            for search_dir in [overlay_dir, overlay_dir / DERIVED_DIR]:
+                overlay_file = search_dir / f"{overlay_type}.json"
+                if overlay_file.exists():
+                    try:
+                        data: dict[str, Any] = json.loads(overlay_file.read_text(encoding="utf-8"))
+                        return data
+                    except json.JSONDecodeError:
+                        logger.warning(f"Invalid JSON in {overlay_file}")
+                        empty: dict[str, Any] = {}
+                        return empty
+            empty_result: dict[str, Any] = {}
+            return empty_result
+
+        # Otherwise, return all overlay data
         result: dict[str, Any] = {}
 
         # Read all JSON files in overlay (including derived/)
@@ -414,6 +455,34 @@ class SovereignStore:
         annotations.append(annotation.to_dict())
 
         await self.store_overlay(path, "annotations", annotations)
+
+    # =========================================================================
+    # Analysis State Operations
+    # =========================================================================
+
+    async def get_analysis_state(self, path: str) -> Any:
+        """
+        Get analysis state from overlay.
+
+        Returns:
+            AnalysisState or None if not found
+        """
+        from .analysis import AnalysisState
+
+        overlay_data: dict[str, Any] = await self.get_overlay(path, "analysis")
+        if overlay_data:
+            return AnalysisState.from_dict(overlay_data)
+        return None
+
+    async def set_analysis_state(self, path: str, state: Any) -> None:
+        """
+        Set analysis state in overlay.
+
+        Args:
+            path: Entity path
+            state: AnalysisState to store
+        """
+        await self.store_overlay(path, "analysis", state.to_dict())
 
     # =========================================================================
     # Comparison
@@ -519,24 +588,102 @@ class SovereignStore:
     # Cleanup
     # =========================================================================
 
-    async def delete(self, path: str) -> bool:
+    async def delete(
+        self,
+        path: str,
+        check_references: bool = True,
+        force: bool = False,
+        convert_references_to_placeholders: bool = False,
+        witness: Any | None = None,
+        author: str = "kent",
+    ) -> Any:
         """
-        Delete an entity and all its versions.
+        Delete an entity with safety checks and witness mark (Theorem 11).
+
+        This operation:
+        1. Checks for incoming references (if check_references=True)
+        2. If references exist and not force: raises ValueError with reference list
+        3. Creates witness mark BEFORE deletion
+        4. Optionally converts references to placeholders
+        5. Deletes the entity and all its versions
 
         Args:
             path: Entity path
+            check_references: Check for references before deleting
+            force: Force delete even with references
+            convert_references_to_placeholders: Convert refs to placeholders (requires witness)
+            witness: Optional WitnessPersistence for creating mark
+            author: Who is performing the delete
 
         Returns:
-            True if deleted, False if not found
+            DeleteResult with success, path, mark_id, and references_converted list
+
+        Raises:
+            ValueError: If references exist and not force
         """
+        from .types import DeleteResult
+
         entity_dir = self._entity_dir(path)
 
         if not entity_dir.exists():
-            return False
+            return DeleteResult(success=False, path=path)
 
+        # Check for references (Theorem 11)
+        references = []
+        if check_references:
+            references = await self.get_references_to(path)
+            if references and not force:
+                ref_paths = [ref["from_path"] for ref in references]
+                raise ValueError(
+                    f"Cannot delete {path}: {len(references)} entities reference it: {ref_paths}"
+                )
+
+        # Create witness mark BEFORE deletion (Theorem 11)
+        mark_id: str | None = None
+        if witness is not None:
+            mark_result = await witness.save_mark(
+                action=f"sovereign.delete: {path}",
+                reasoning=f"Entity deleted with {len(references)} references"
+                + (" (converted to placeholders)" if convert_references_to_placeholders else ""),
+                principles=["ethical"],
+                tags=["sovereign", "delete", "destructive"],
+                author=author,
+            )
+            mark_id = mark_result.mark_id
+
+        # Convert references to placeholders if requested
+        references_converted = []
+        if convert_references_to_placeholders and witness is not None:
+            for ref in references:
+                ref_path = ref["from_path"]
+                # Update the overlay to mark edge as placeholder
+                overlay = await self.get_overlay(ref_path, "edges")
+                edges_data = overlay if overlay else {"edges": []}
+                edges = edges_data.get("edges", [])
+
+                for edge in edges:
+                    if edge.get("target") == path:
+                        edge["is_placeholder"] = True
+                        edge["placeholder_created_at"] = datetime.now(UTC).isoformat()
+                        edge["placeholder_mark_id"] = mark_id
+
+                await self.store_overlay(ref_path, "edges", edges_data)
+                references_converted.append(ref_path)
+
+        # Delete the entity
         shutil.rmtree(entity_dir)
-        logger.debug(f"Deleted {path}")
-        return True
+        logger.info(
+            f"Deleted {path}"
+            + (f" (mark: {mark_id})" if mark_id else "")
+            + (f", {len(references_converted)} refs → placeholders" if references_converted else "")
+        )
+
+        return DeleteResult(
+            success=True,
+            path=path,
+            mark_id=mark_id,
+            references_converted_to_placeholders=references_converted,
+        )
 
     async def delete_version(self, path: str, version: int) -> bool:
         """
@@ -606,6 +753,396 @@ class SovereignStore:
                 continue
 
         return deleted
+
+    # =========================================================================
+    # File Management
+    # =========================================================================
+
+    async def rename(
+        self,
+        old_path: str,
+        new_path: str,
+        update_references: bool = True,
+        witness: Any | None = None,
+        author: str = "kent",
+    ) -> str | None:
+        """
+        Rename/move an entity to a new path with witness mark (Theorem 10).
+
+        This operation:
+        1. Creates entity at new_path with all versions
+        2. Updates overlay data with new path references
+        3. Creates witness mark linking old → new path
+        4. Stores mark_id in metadata of new entity
+
+        Args:
+            old_path: Current entity path
+            new_path: Target entity path
+            update_references: Whether to update internal path references
+            witness: Optional WitnessPersistence for creating mark
+            author: Who is performing the rename
+
+        Returns:
+            The witness mark ID if witness provided, None otherwise
+
+        Raises:
+            ValueError: If old_path doesn't exist or new_path already exists
+        """
+        old_dir = self._entity_dir(old_path)
+        new_dir = self._entity_dir(new_path)
+
+        if not old_dir.exists():
+            raise ValueError(f"Entity not found: {old_path}")
+
+        if new_dir.exists():
+            raise ValueError(f"Entity already exists at: {new_path}")
+
+        # Create witness mark BEFORE rename (Theorem 10)
+        mark_id: str | None = None
+        if witness is not None:
+            mark_result = await witness.save_mark(
+                action=f"sovereign.rename: {old_path} → {new_path}",
+                reasoning=f"Entity renamed from {old_path} to {new_path}",
+                principles=["composable"],
+                tags=["sovereign", "rename"],
+                author=author,
+            )
+            mark_id = mark_result.mark_id
+
+        # Ensure parent directories exist
+        new_dir.parent.mkdir(parents=True, exist_ok=True)
+
+        # Move the entire entity directory
+        shutil.move(str(old_dir), str(new_dir))
+
+        # Update metadata in all versions with new path and mark
+        if update_references:
+            for version_dir in new_dir.iterdir():
+                if version_dir.is_dir() and version_dir.name.startswith("v"):
+                    meta_file = version_dir / META_FILENAME
+                    if meta_file.exists():
+                        meta = json.loads(meta_file.read_text(encoding="utf-8"))
+                        meta["path"] = new_path
+                        meta["renamed_from"] = old_path
+                        meta["renamed_at"] = datetime.now(UTC).isoformat()
+                        if mark_id:
+                            meta["rename_mark_id"] = mark_id
+                        meta_file.write_text(
+                            json.dumps(meta, indent=2, default=str),
+                            encoding="utf-8",
+                        )
+
+        logger.info(f"Renamed {old_path} → {new_path}" + (f" (mark: {mark_id})" if mark_id else ""))
+        return mark_id
+
+    async def export_entity(
+        self,
+        path: str,
+        include_overlay: bool = True,
+        include_history: bool = False,
+        witness: WitnessPersistence | None = None,
+        export_mark_id: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Export an entity with its metadata for external use.
+
+        Law 3: If witness is provided, export_mark_id must be provided too.
+        The mark should have been created BEFORE calling this method.
+
+        Returns a dictionary containing:
+        - path: The entity path
+        - content: Base64-encoded content (for binary safety)
+        - content_hash: SHA256 hash
+        - metadata: Ingest metadata
+        - overlay: Annotations, edges, analysis (if include_overlay)
+        - versions: List of version info (if include_history)
+        - export_mark_id: Witness mark for this export (if witness provided)
+
+        Args:
+            path: Entity path to export
+            include_overlay: Include overlay data
+            include_history: Include version history
+            witness: Optional WitnessPersistence for Law 3 compliance
+            export_mark_id: Mark ID if witness is provided
+
+        Returns:
+            Export bundle dictionary
+        """
+        import base64
+
+        # Law 3 enforcement: if witness provided, mark required
+        if witness is not None and export_mark_id is None:
+            raise ValueError("Law 3: witness provided but no export_mark_id. Create mark first!")
+
+        entity = await self.get_current(path)
+        if not entity:
+            raise ValueError(f"Entity not found: {path}")
+
+        export_data: dict[str, Any] = {
+            "path": path,
+            "content": base64.b64encode(entity.content).decode("ascii"),
+            "content_hash": entity.content_hash,
+            "metadata": entity.metadata,
+            "version": entity.version,
+            "exported_at": datetime.now(UTC).isoformat(),
+        }
+
+        # Law 3: Include mark ID if provided
+        if export_mark_id:
+            export_data["export_mark_id"] = export_mark_id
+
+        if include_overlay:
+            export_data["overlay"] = await self.get_overlay(path)
+
+        if include_history:
+            versions = await self.list_versions(path)
+            version_info = []
+            for v in versions:
+                v_entity = await self.get_version(path, v)
+                if v_entity:
+                    version_info.append({
+                        "version": v,
+                        "content_hash": v_entity.content_hash,
+                        "ingested_at": v_entity.metadata.get("ingested_at"),
+                        "source": v_entity.metadata.get("source"),
+                    })
+            export_data["versions"] = version_info
+
+        return export_data
+
+    async def export_bundle(
+        self,
+        paths: list[str],
+        format: str = "json",
+        witness: WitnessPersistence | None = None,
+        export_mark_id: str | None = None,
+    ) -> bytes:
+        """
+        Export multiple entities as a bundle.
+
+        Law 3: If witness is provided, export_mark_id must be provided too.
+        The mark should have been created BEFORE calling this method.
+
+        Args:
+            paths: List of entity paths to export
+            format: Export format ("json" or "zip")
+            witness: Optional WitnessPersistence for Law 3 compliance
+            export_mark_id: Mark ID if witness is provided
+
+        Returns:
+            Exported bundle as bytes
+        """
+        import io
+        import zipfile
+
+        # Law 3 enforcement: if witness provided, mark required
+        if witness is not None and export_mark_id is None:
+            raise ValueError("Law 3: witness provided but no export_mark_id. Create mark first!")
+
+        if format == "json":
+            bundle: dict[str, Any] = {
+                "type": "sovereign_export",
+                "exported_at": datetime.now(UTC).isoformat(),
+                "entity_count": len(paths),
+                "entities": [],
+            }
+            entities_list: list[dict[str, Any]] = bundle["entities"]
+
+            # Law 3: Include mark ID if provided
+            if export_mark_id:
+                bundle["export_mark_id"] = export_mark_id
+
+            for path in paths:
+                try:
+                    entity_data = await self.export_entity(
+                        path,
+                        include_overlay=True,
+                        include_history=True,
+                        witness=witness,
+                        export_mark_id=export_mark_id,
+                    )
+                    entities_list.append(entity_data)
+                except ValueError as e:
+                    logger.warning(f"Skipping {path}: {e}")
+                    entities_list.append({"path": path, "error": str(e)})
+
+            return json.dumps(bundle, indent=2).encode("utf-8")
+
+        elif format == "zip":
+            buffer = io.BytesIO()
+
+            with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+                manifest: dict[str, Any] = {
+                    "type": "sovereign_export",
+                    "exported_at": datetime.now(UTC).isoformat(),
+                    "entity_count": len(paths),
+                    "entities": [],
+                }
+                manifest_entities: list[dict[str, Any]] = manifest["entities"]
+
+                # Law 3: Include mark ID if provided
+                if export_mark_id:
+                    manifest["export_mark_id"] = export_mark_id
+
+                for path in paths:
+                    try:
+                        entity = await self.get_current(path)
+                        if entity:
+                            # Add content file
+                            zf.writestr(path, entity.content)
+
+                            # Add metadata
+                            meta_path = f".meta/{path}.json"
+                            entity_data = await self.export_entity(
+                                path,
+                                witness=witness,
+                                export_mark_id=export_mark_id,
+                            )
+                            del entity_data["content"]  # Already in file
+                            zf.writestr(meta_path, json.dumps(entity_data, indent=2))
+
+                            manifest_entities.append({"path": path, "status": "ok"})
+                    except ValueError as e:
+                        manifest_entities.append({"path": path, "error": str(e)})
+
+                # Add manifest
+                zf.writestr("manifest.json", json.dumps(manifest, indent=2))
+
+            buffer.seek(0)
+            return buffer.read()
+
+        else:
+            raise ValueError(f"Unknown format: {format}")
+
+    async def get_references_to(self, path: str) -> list[dict[str, Any]]:
+        """
+        Find all entities that reference the given path.
+
+        Useful for checking before delete/rename operations.
+
+        Args:
+            path: Entity path to find references to
+
+        Returns:
+            List of {path, edge_type, line} for each reference
+        """
+        references = []
+
+        for entity_path in await self.list_all():
+            overlay = await self.get_overlay(entity_path)
+            edges_data = overlay.get("edges", {})
+
+            # Handle both old format (list) and new format (dict with "edges" key)
+            if isinstance(edges_data, dict):
+                edges = edges_data.get("edges", [])
+            else:
+                edges = edges_data if isinstance(edges_data, list) else []
+
+            for edge in edges:
+                if edge.get("target") == path:
+                    references.append({
+                        "from_path": entity_path,
+                        "edge_type": edge.get("edge_type", "references"),
+                        "line": edge.get("line_number"),
+                        "context": edge.get("context"),
+                    })
+
+        return references
+
+    # =========================================================================
+    # Law 3: Witnessed Export (Complete Pattern)
+    # =========================================================================
+
+    async def witnessed_export(
+        self,
+        paths: list[str],
+        witness: WitnessPersistence,
+        author: str = "kent",
+        reasoning: str | None = None,
+        format: str = "json",
+    ) -> ExportBundle:
+        """
+        Export entities with full witness trail (Law 3 compliance).
+
+        This method implements the complete Law 3 pattern from the spec:
+        1. Create export mark BEFORE gathering content
+        2. Gather entities with provenance
+        3. Return ExportBundle with mark_id and entities
+
+        Law 3 Guarantee: ∀ export operation o on entity e:
+            ∃ mark m such that m.action = "sovereign.export" ∧ m.entity_path = e.path
+
+        Args:
+            paths: List of entity paths to export
+            witness: WitnessPersistence for creating the mark
+            author: Who is exporting (default: "kent")
+            reasoning: Why this export is happening
+            format: Export format ("json" or "zip")
+
+        Returns:
+            ExportBundle with export_mark_id and entities
+
+        Example:
+            >>> bundle = await store.witnessed_export(
+            ...     paths=["spec/protocols/k-block.md"],
+            ...     witness=witness_persistence,
+            ...     author="kent",
+            ...     reasoning="Archiving Crown Jewel specifications",
+            ... )
+            >>> print(f"Exported {bundle.entity_count} entities with mark {bundle.export_mark_id}")
+        """
+        # 1. Create export mark BEFORE export (Law 3)
+        if reasoning is None:
+            reasoning = f"Export requested by {author}"
+
+        mark_result = await witness.save_mark(
+            action=f"sovereign.export: {len(paths)} entities",
+            reasoning=reasoning,
+            principles=["ethical"],  # Data leaving our control
+            tags=["export", format, "law3"],
+            author=author,
+        )
+
+        export_mark_id = mark_result.mark_id
+        logger.info(f"Created export mark {export_mark_id} for {len(paths)} entities")
+
+        # 2. Gather entities with witness-enabled export
+        entities: list[ExportedEntity] = []
+
+        for path in paths:
+            try:
+                entity = await self.get_current(path)
+                if not entity:
+                    logger.warning(f"Skipping non-existent entity: {path}")
+                    continue
+
+                entities.append(
+                    ExportedEntity(
+                        path=path,
+                        content=entity.content,
+                        content_hash=entity.content_hash,
+                        ingest_mark_id=entity.ingest_mark_id,
+                        version=entity.version,
+                        metadata=entity.metadata,
+                        overlay=await self.get_overlay(path),
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Error exporting {path}: {e}")
+                # Continue with other entities
+
+        # 3. Package and return
+        bundle = ExportBundle(
+            export_mark_id=export_mark_id,
+            entities=entities,
+            exported_at=datetime.now(UTC),
+            export_format=format,
+        )
+
+        logger.info(
+            f"Exported {bundle.entity_count} entities with witness mark {export_mark_id}"
+        )
+        return bundle
 
 
 # =============================================================================

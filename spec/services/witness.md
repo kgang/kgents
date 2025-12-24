@@ -7,9 +7,31 @@
 
 ---
 
+## Heritage & Evolution
+
+**Conceptual Lineage**: The Witness draws from:
+- **Memex** (Vannevar Bush, 1945): Personal memory extension through trails
+- **Lifestreaming** (Gelernter, 1990s): Time-ordered experience capture
+- **Event Sourcing** (Domain-Driven Design): State as sequence of events
+- **Personal Information Management**: The "Keeping Found Things Found" problem (William Jones)
+
+**Divergence**: Unlike these, Witness crystallizes not just events but *experience*—fusing observation, narrative, and topology into retrievable wholes.
+
+**Evolution Strategy**:
+1. **Phase 1** (Current): Passive observation + manual markers + crystallization triggers
+2. **Phase 2**: Pattern detection in Dreaming mode; auto-suggest markers
+3. **Phase 3**: Cross-session learning; "You did this before" insights
+4. **Phase 4**: Multi-user witness (team shared memory)
+
+---
+
 ## Purpose
 
+**Why This Exists**: Development is lived experience, but modern tooling treats it as discrete transactions. Git commits capture *what* changed; logs capture *that* something happened. Neither captures *why* or *how it felt*. The Witness exists to close this gap—making experience itself a first-class, queryable artifact.
+
 The Witness is the **unified passive observer**—it captures, maps, and crystallizes experience without being asked. Unlike other Crown Jewels that must be invoked, The Witness runs passively once attuned, transforming ephemeral events into durable, navigable memory.
+
+**The Problem Solved**: "What was I doing three sessions ago?" / "Why did I make this decision?" / "Where was I when I discovered X?" Without Witness, answers require archaeology (git log, file history, memory). With Witness, answers are semantic queries: `kg witness crystal --topic "routing refactor"`.
 
 ## Core Insight
 
@@ -297,6 +319,52 @@ class WitnessFlux(FluxAgent[WitnessState, SystemEvent, ExperienceCrystal]):
 
 ---
 
+## Composition & Type Algebra
+
+### Type Signatures
+
+```python
+# Core morphisms
+observe: SystemEvent → Observation
+mark: (str, Label) → Marker
+narrate: List[Observation] → Narrative
+map: () → TopologySnapshot
+crystallize: (List[Observation], Narrative, TopologySnapshot) → ExperienceCrystal
+
+# Composition operators
+>>: (A → B) → (B → C) → (A → C)  # Sequential composition
+⊗: (A → B) → (C → D) → (A ⊗ C → B ⊗ D)  # Parallel composition
+```
+
+### Composition Laws
+
+```python
+# Witnessing is a functor
+witness.map(f >> g) == witness.map(f) >> witness.map(g)
+
+# Crystallization is a natural transformation
+crystallize(observe(e1) + observe(e2)) ==
+  crystallize(observe(e1)) ⊗ crystallize(observe(e2)) >> merge
+
+# Markers distribute over composition
+(observe >> mark(l)) + observe == observe >> (mark(l) + id)
+```
+
+### Inter-Service Composition
+
+```python
+# Witness → Brain pipeline
+witness_to_brain = crystallize >> Brain.engram.from_crystal
+
+# Witness → Muse pattern detection
+witness_to_muse = (observe >> buffer(100)) >> Muse.detect_patterns
+
+# Composable with arbitrary AGENTESE paths
+time.witness.timeline >> concept.forest.index  # Timeline becomes searchable
+```
+
+---
+
 ## Cross-Jewel Integration
 
 ### Consumers
@@ -359,6 +427,42 @@ WitnessStateChanged(from_state: WitnessState, to_state: WitnessState)
 
 ---
 
+## Privacy & Ethical Considerations
+
+### Data Boundaries
+
+The Witness captures **local workspace activity only**—never:
+- Network requests or external API calls
+- Private credentials or environment variables
+- Content outside the workspace directory
+- User input containing PII markers (e.g., SSN, credit cards)
+
+### Consent Model
+
+```python
+class ConsentLevel(Enum):
+    ESSENTIAL = "essential"      # Only user-initiated marks
+    STANDARD = "standard"        # + file edits, git events
+    COMPREHENSIVE = "comprehensive"  # + AGENTESE invocations, navigation
+
+# User controls per-session via `kg witness attune --level STANDARD`
+```
+
+### Retention Policy
+
+- **Crystals**: Retained indefinitely (user-controlled deletion via D-gent)
+- **Raw Events**: Purged after crystallization (not stored permanently)
+- **Markers**: Permanent (but can be annotated/contextualized)
+
+### Limitations
+
+- **No Guarantees**: Witness is best-effort; filesystem race conditions may drop events
+- **Local Only**: Multi-machine sessions not synchronized (by design)
+- **No Retroactive Capture**: Only captures events after attunement starts
+- **Narrative Privacy**: LLM synthesis may leak patterns; use local models for sensitive work
+
+---
+
 ## Laws
 
 | # | Law | Status | Description |
@@ -368,6 +472,73 @@ WitnessStateChanged(from_state: WitnessState, to_state: WitnessState)
 | 3 | passive_default | STRUCTURAL | WITNESSING state continues until explicitly changed |
 | 4 | timeline_consistency | VERIFIED | Events within a crystal are strictly ordered by timestamp |
 | 5 | marker_permanence | VERIFIED | Markers cannot be deleted, only annotated |
+
+---
+
+## Generative Grammar
+
+### Formal System
+
+The Witness is a **production system** where experience derives from rules:
+
+```bnf
+<session> ::= <attunement> <event>* <crystallization>
+<event> ::= <invocation> | <edit> | <commit> | <marker> | <navigation>
+<crystallization> ::= <observation>+ <narrative> <topology> → <crystal>
+
+# Recursive expansion (generative depth)
+<narrative> ::= describe(<event>+) | summarize(<narrative>+) | theme(<narrative>*)
+<topology> ::= snapshot() | delta(<topology>, <event>) | merge(<topology>+)
+<observation> ::= witness(<event>) | annotate(<observation>, <context>)
+
+# Crystal algebra
+<crystal> ::= fuse(<observation>+, <narrative>, <topology>)
+<crystal>* ::= <crystal> ⊗ <crystal> | filter(<crystal>*, <predicate>)
+```
+
+### Derivation Example
+
+```
+Session₁ = attune(ConsentLevel.STANDARD)
+         >> observe(edit("hollow.py", +45/-12))
+         >> observe(commit("feat(cli): Path-first routing"))
+         >> mark("Routing breakthrough", Label.INSIGHT)
+         >> crystallize()
+         → Crystal₁{topics: {routing, cli}, heat: {hollow.py: 0.8}}
+```
+
+### Witness Instance Generation
+
+Given a new domain, instantiate Witness by:
+1. Define `EventType` enum for domain-specific events
+2. Implement `observe: DomainEvent → Observation` adapter
+3. Specify crystallization triggers (when to synthesize)
+4. Map topology to domain structure (codebase → X)
+
+**Example**: `MeetingWitness` for conversations:
+```python
+class MeetingEvent(Enum):
+    UTTERANCE = "utterance"
+    TOPIC_SHIFT = "topic_shift"
+    DECISION = "decision"
+
+# Reuse: WITNESS_POLYNOMIAL, WITNESS_OPERAD, WitnessSheaf
+# Customize: observe(), topology → "conversational graph"
+```
+
+### Compositional Derivation
+
+New Witness capabilities emerge from composition:
+```python
+# Pattern mining = Witness + clustering
+PatternWitness = Witness >> cluster(by=topics)
+
+# Collaborative witness = Witness ⊗ Witness + merge
+TeamWitness = Witness ⊗ Witness >> reconcile_timelines
+
+# Predictive witness = Witness + forecast
+ForecastWitness = Witness >> train_predictor >> suggest_next_marker
+```
 
 ---
 

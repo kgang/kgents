@@ -1,0 +1,41 @@
+#!/bin/bash
+# kgents pre-commit hook
+# Enforces CLI strategy tools before commit
+
+set -e
+
+echo "🔍 Running pre-commit validation..."
+
+# Check if spec files changed
+SPEC_FILES_CHANGED=$(git diff --cached --name-only --diff-filter=ACM | grep -c '^spec/.*\.md$' || true)
+
+if [ "$SPEC_FILES_CHANGED" -gt 0 ]; then
+    echo "📋 Spec files changed, running system audit..."
+    kg audit --system --json || {
+        echo "❌ Spec audit failed. Fix issues before committing."
+        echo "   Run: kg audit --system"
+        echo "   Or skip with: git commit --no-verify"
+        exit 1
+    }
+fi
+
+# Always run health probe
+echo "🏥 Checking Crown Jewel health..."
+kg probe health --all --json || {
+    echo "❌ Health probe failed. System unhealthy."
+    echo "   Run: kg probe health --all"
+    echo "   Or skip with: git commit --no-verify"
+    exit 1
+}
+
+# Run saved composition
+echo "✨ Running pre-commit composition..."
+kg compose --run "pre-commit" || {
+    echo "❌ Pre-commit composition failed."
+    echo "   Run: kg compose --run pre-commit"
+    echo "   Or skip with: git commit --no-verify"
+    exit 1
+}
+
+echo "✅ Pre-commit validation passed!"
+exit 0

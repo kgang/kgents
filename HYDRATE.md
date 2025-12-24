@@ -115,6 +115,34 @@ kg witness context --budget 2000       # Budget-aware context
 
 ---
 
+## CLI Strategy Tools
+
+> *"Evidence over intuition. Traces over reflexes."*
+
+```bash
+# Session start
+kg probe health --all
+
+# Before modifying spec
+kg audit spec/protocols/witness.md --full
+
+# After implementation
+kg annotate <spec> --impl --section "X" --link "services/y/z.py"
+
+# After bug fix
+kg annotate <spec> --gotcha --section "X" --note "Don't do Y"
+
+# When uncertain
+kg experiment generate --spec "..." --adaptive
+
+# Before commit
+kg compose --run "pre-commit"
+```
+
+Full guide: `docs/skills/cli-strategy-tools.md`
+
+---
+
 ## Commands
 
 ```bash
@@ -127,4 +155,4 @@ cd impl/claude/web && npm run typecheck && npm run lint
 
 ---
 
-*Lines: 100. Ceiling: 120.*
+*Lines: 120. Ceiling: 120.*

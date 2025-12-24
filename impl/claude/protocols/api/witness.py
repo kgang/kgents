@@ -275,6 +275,8 @@ def create_witness_router() -> "APIRouter | None":
                             event_type = "thought"
                         elif "trail" in topic:
                             event_type = "trail"
+                        elif "sovereign" in topic:
+                            event_type = "sovereign"
                         elif "spec" in topic:
                             event_type = "spec"
 

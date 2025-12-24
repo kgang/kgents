@@ -245,13 +245,16 @@ class ServiceRegistry:
             from models.brain import Crystal
             from services.brain import BrainPersistence
 
+            # BrainPersistence now uses Universe for storage (not dgent directly)
+            # table_adapter is only needed for legacy teaching/extinction methods
             adapter = TableAdapter(
                 model=Crystal,
                 session_factory=self.session_factory,
             )
             return BrainPersistence(
                 table_adapter=adapter,
-                dgent=self.dgent,
+                # universe: None uses singleton from get_universe()
+                # embedder: None means no semantic search (future L-gent integration)
             )
 
         # Morpheus persistence (no database - wraps LLM gateway)

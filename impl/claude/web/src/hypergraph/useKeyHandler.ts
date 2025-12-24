@@ -1,181 +1,179 @@
 /**
- * useKeyHandler — Vim-like key handling for Hypergraph Emacs
+ * useKeyHandler — Vim-like modal key handling for Membrane Editor
  *
- * "Everything via keyboard, modes for context."
+ * "Tasteful > feature-complete. Take the modal concept, not the cruft."
  *
- * This hook handles all keyboard input, dispatching to the appropriate
- * action based on current mode and key sequences.
+ * Architecture:
+ * - Declarative binding registry (BINDINGS)
+ * - Mode-specific filtering
+ * - Sequence handling for multi-key (g-prefix, z-prefix)
+ * - Clean separation: NORMAL navigates graph, INSERT delegates to CodeMirror
+ *
+ * Key Philosophy:
+ * - NORMAL mode = Reader view (readonly CodeMirror)
+ *   → j/k scroll viewport (not cursor movement)
+ *   → {/} paragraph navigation
+ *   → Graph navigation (gh/gl/gj/gk), portal ops (zo/zc), mode switches
+ *   → ? shows help panel
+ * - INSERT mode = Editor view (editable CodeMirror)
+ *   → All keys pass through to CodeMirror EXCEPT Escape
+ * - EDGE/WITNESS = Special purpose modes with limited bindings
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { NavigationState, NavigationAction, KeySequence } from './types';
-import { EDGE_TYPE_KEYS } from './types';
+import type { NavigationState, NavigationAction, EdgeType } from './state/types';
+import { EDGE_TYPE_KEYS } from './state/types';
 
 // =============================================================================
-// Key Binding Definitions
+// Binding Registry — The Single Source of Truth
 // =============================================================================
 
-/**
- * Simple keybinding: key → action
- */
-type SimpleBinding = {
-  action: NavigationAction;
-  description: string;
-};
+type ActionType =
+  // Callbacks (resolved via actions map)
+  | 'GO_PARENT'
+  | 'GO_CHILD'
+  | 'GO_DEFINITION'
+  | 'GO_REFERENCES'
+  | 'GO_TESTS'
+  | 'GO_DERIVATION_PARENT'
+  | 'SHOW_CONFIDENCE'
+  | 'PORTAL_OPEN'
+  | 'PORTAL_CLOSE'
+  | 'PORTAL_TOGGLE'
+  | 'PORTAL_OPEN_ALL'
+  | 'PORTAL_CLOSE_ALL'
+  | 'ENTER_INSERT'
+  | 'ENTER_COMMAND'
+  | 'SHOW_HELP'
+  // Scroll navigation (reader mode)
+  | 'SCROLL_DOWN'
+  | 'SCROLL_UP'
+  | 'SCROLL_PARAGRAPH_DOWN'
+  | 'SCROLL_PARAGRAPH_UP'
+  | 'SCROLL_TO_TOP'
+  | 'SCROLL_TO_BOTTOM'
+  // Dispatch actions (sent directly to reducer)
+  | NavigationAction;
 
-/**
- * Key bindings per mode.
- */
-const NORMAL_MODE_BINDINGS: Record<string, SimpleBinding> = {
-  // Cursor movement (within node)
-  j: { action: { type: 'MOVE_LINE', delta: 1 }, description: 'Move down' },
-  k: { action: { type: 'MOVE_LINE', delta: -1 }, description: 'Move up' },
-  h: { action: { type: 'MOVE_COLUMN', delta: -1 }, description: 'Move left' },
-  l: { action: { type: 'MOVE_COLUMN', delta: 1 }, description: 'Move right' },
-
-  // Enter insert mode
-  i: { action: { type: 'ENTER_INSERT', position: 'before' }, description: 'Insert before cursor' },
-  a: { action: { type: 'ENTER_INSERT', position: 'after' }, description: 'Insert after cursor' },
-  I: {
-    action: { type: 'ENTER_INSERT', position: 'line_start' },
-    description: 'Insert at line start',
-  },
-  A: { action: { type: 'ENTER_INSERT', position: 'line_end' }, description: 'Insert at line end' },
-  o: { action: { type: 'ENTER_INSERT', position: 'below' }, description: 'Open line below' },
-  O: { action: { type: 'ENTER_INSERT', position: 'above' }, description: 'Open line above' },
-
-  // Mode switches
-  ':': { action: { type: 'ENTER_COMMAND' }, description: 'Enter command mode' },
-};
-
-/**
- * Multi-key sequences (g-prefixed graph navigation, z-prefixed portals, etc.)
- */
-interface SequenceBinding {
+interface Binding {
+  /** Keys to match (single key or sequence) */
   keys: string[];
-  action:
-    | NavigationAction
-    // Graph navigation
-    | 'GO_PARENT'
-    | 'GO_CHILD'
-    | 'GO_DEFINITION'
-    | 'GO_REFERENCES'
-    | 'GO_TESTS'
-    // Derivation navigation (Phase 2)
-    | 'GO_DERIVATION_PARENT'
-    | 'SHOW_CONFIDENCE'
-    // Mode switches
-    | 'ENTER_EDGE'
-    | 'ENTER_WITNESS'
-    // Portal operations (zo/zc — vim fold-style)
-    | 'PORTAL_OPEN'
-    | 'PORTAL_CLOSE'
-    | 'PORTAL_TOGGLE'
-    | 'PORTAL_OPEN_ALL'
-    | 'PORTAL_CLOSE_ALL';
+  /** Required modifiers */
+  modifiers?: { ctrl?: boolean; shift?: boolean; meta?: boolean };
+  /** What to do when matched */
+  action: ActionType;
+  /** Human-readable description */
   description: string;
 }
 
-const NORMAL_MODE_SEQUENCES: SequenceBinding[] = [
-  // Graph navigation (g-prefix)
-  { keys: ['g', 'h'], action: 'GO_PARENT', description: 'Go to parent (gh)' },
-  { keys: ['g', 'l'], action: 'GO_CHILD', description: 'Go to child (gl)' },
+/**
+ * NORMAL mode bindings.
+ *
+ * Philosophy: Navigate the graph, not the text.
+ * - j/k scroll the viewport (no cursor, just scroll)
+ * - {/} jump paragraphs
+ * - g-prefix for graph navigation
+ * - z-prefix for portal (fold) operations
+ */
+const NORMAL_BINDINGS: Binding[] = [
+  // --- Scroll Navigation (reader mode) ---
+  { keys: ['j'], action: 'SCROLL_DOWN', description: 'Scroll down one line' },
+  { keys: ['k'], action: 'SCROLL_UP', description: 'Scroll up one line' },
+  { keys: ['}'], action: 'SCROLL_PARAGRAPH_DOWN', description: 'Scroll to next paragraph' },
+  { keys: ['{'], action: 'SCROLL_PARAGRAPH_UP', description: 'Scroll to prev paragraph' },
+
+  // --- Mode Switches ---
+  { keys: ['i'], action: 'ENTER_INSERT', description: 'Enter insert mode' },
+  { keys: ['a'], action: 'ENTER_INSERT', description: 'Enter insert mode (append)' },
+  { keys: [':'], action: 'ENTER_COMMAND', description: 'Enter command mode' },
+  { keys: ['?'], action: 'SHOW_HELP', description: 'Show keyboard shortcuts' },
+
+  // --- Graph Navigation (g-prefix) ---
+  { keys: ['g', 'h'], action: 'GO_PARENT', description: 'Go to parent node' },
+  { keys: ['g', 'l'], action: 'GO_CHILD', description: 'Go to child node' },
   {
     keys: ['g', 'j'],
     action: { type: 'GO_SIBLING', direction: 1 },
-    description: 'Next sibling (gj)',
+    description: 'Go to next sibling',
   },
   {
     keys: ['g', 'k'],
     action: { type: 'GO_SIBLING', direction: -1 },
-    description: 'Prev sibling (gk)',
+    description: 'Go to prev sibling',
   },
-  { keys: ['g', 'd'], action: 'GO_DEFINITION', description: 'Go to definition (gd)' },
-  { keys: ['g', 'r'], action: 'GO_REFERENCES', description: 'Go to references (gr)' },
-  { keys: ['g', 't'], action: 'GO_TESTS', description: 'Go to tests (gt)' },
-  { keys: ['g', 'e'], action: 'ENTER_EDGE', description: 'Enter edge mode (ge)' },
-  { keys: ['g', 'w'], action: 'ENTER_WITNESS', description: 'Enter witness mode (gw)' },
+  { keys: ['g', 'd'], action: 'GO_DEFINITION', description: 'Go to definition' },
+  { keys: ['g', 'r'], action: 'GO_REFERENCES', description: 'Go to references' },
+  { keys: ['g', 't'], action: 'GO_TESTS', description: 'Go to tests' },
+  { keys: ['g', 'D'], action: 'GO_DERIVATION_PARENT', description: 'Go to derivation parent' },
+  { keys: ['g', 'c'], action: 'SHOW_CONFIDENCE', description: 'Show confidence panel' },
+  { keys: ['g', 'e'], action: { type: 'ENTER_EDGE' }, description: 'Enter edge mode' },
+  { keys: ['g', 'w'], action: { type: 'ENTER_WITNESS' }, description: 'Enter witness mode' },
+  { keys: ['g', 'g'], action: 'SCROLL_TO_TOP', description: 'Go to top of document' },
 
-  // Derivation navigation (gD/gc — Phase 2)
-  { keys: ['g', 'D'], action: 'GO_DERIVATION_PARENT', description: 'Go to derivation parent (gD)' },
-  { keys: ['g', 'c'], action: 'SHOW_CONFIDENCE', description: 'Show confidence breakdown (gc)' },
+  // --- Scroll & Position ---
+  { keys: ['G'], action: 'SCROLL_TO_BOTTOM', description: 'Go to bottom of document' },
+  {
+    keys: ['o'],
+    modifiers: { ctrl: true },
+    action: { type: 'GO_BACK' },
+    description: 'Go back in trail',
+  },
 
-  // gg - go to start
-  { keys: ['g', 'g'], action: { type: 'GOTO_START' }, description: 'Go to start (gg)' },
-
-  // Portal operations (z-prefix — vim fold-style)
-  { keys: ['z', 'o'], action: 'PORTAL_OPEN', description: 'Open portal (zo)' },
-  { keys: ['z', 'c'], action: 'PORTAL_CLOSE', description: 'Close portal (zc)' },
-  { keys: ['z', 'a'], action: 'PORTAL_TOGGLE', description: 'Toggle portal (za)' },
-  { keys: ['z', 'O'], action: 'PORTAL_OPEN_ALL', description: 'Open all portals (zO)' },
-  { keys: ['z', 'C'], action: 'PORTAL_CLOSE_ALL', description: 'Close all portals (zC)' },
+  // --- Portal Operations (z-prefix, vim fold-style) ---
+  { keys: ['z', 'o'], action: 'PORTAL_OPEN', description: 'Open portal' },
+  { keys: ['z', 'c'], action: 'PORTAL_CLOSE', description: 'Close portal' },
+  { keys: ['z', 'a'], action: 'PORTAL_TOGGLE', description: 'Toggle portal' },
+  { keys: ['z', 'O'], action: 'PORTAL_OPEN_ALL', description: 'Open all portals' },
+  { keys: ['z', 'C'], action: 'PORTAL_CLOSE_ALL', description: 'Close all portals' },
 ];
 
-// INSERT, EDGE, COMMAND, WITNESS mode bindings will be added in later phases
-// For now, these modes are handled specially (INSERT = textarea, COMMAND = CommandLine component)
-
 // =============================================================================
-// Hook Types
+// Hook Interface
 // =============================================================================
 
 export interface UseKeyHandlerOptions {
-  /** Current navigation state */
   state: NavigationState;
-
-  /** Dispatch action */
   dispatch: React.Dispatch<NavigationAction>;
 
-  /** Navigation helpers (for complex actions) */
+  // Graph navigation callbacks
   goParent: () => void;
   goChild: () => void;
   goDefinition: () => void;
   goReferences: () => void;
   goTests: () => void;
-
-  /**
-   * Derivation navigation (Phase 2)
-   * gD: Navigate to derivation parent (derives_from)
-   * gc: Show confidence breakdown panel
-   */
   goDerivationParent?: () => void;
   showConfidence?: () => void;
 
-  /** Portal operations (zo/zc — inline edge expansion) */
+  // Portal callbacks
   openPortal: () => void;
   closePortal: () => void;
   togglePortal: () => void;
   openAllPortals: () => void;
   closeAllPortals: () => void;
 
-  /** Called when entering command mode (to focus input) */
+  // Scroll callbacks (reader mode navigation)
+  scrollDown?: () => void;
+  scrollUp?: () => void;
+  scrollParagraphDown?: () => void;
+  scrollParagraphUp?: () => void;
+  scrollToTop?: () => void;
+  scrollToBottom?: () => void;
+
+  // Mode transition callbacks
   onEnterCommand?: () => void;
-
-  /**
-   * Called when entering INSERT mode.
-   * This is where K-Block creation happens (async).
-   * If not provided, dispatch(ENTER_INSERT) is called directly.
-   */
   onEnterInsert?: () => void | Promise<void>;
-
-  /**
-   * Called when edge is confirmed in EDGE mode.
-   * This is where witness mark is created (async).
-   */
   onEdgeConfirm?: () => Promise<void>;
+  onShowHelp?: () => void;
 
-  /** Called when command is submitted */
-  onCommand?: (command: string) => void;
-
-  /** Whether the editor is focused */
+  /** Whether key handling is enabled */
   enabled?: boolean;
 }
 
 export interface UseKeyHandlerResult {
-  /** Current key sequence (for display) */
+  /** Current pending key sequence (for display, e.g., "g" waiting for next key) */
   pendingSequence: string;
-
-  /** Reset pending sequence */
+  /** Reset the pending sequence */
   resetSequence: () => void;
 }
 
@@ -199,94 +197,67 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     togglePortal,
     openAllPortals,
     closeAllPortals,
+    scrollDown,
+    scrollUp,
+    scrollParagraphDown,
+    scrollParagraphUp,
+    scrollToTop,
+    scrollToBottom,
     onEnterCommand,
     onEnterInsert,
     onEdgeConfirm,
+    onShowHelp,
     enabled = true,
   } = options;
 
-  // Track key sequence for multi-key bindings
-  const sequenceRef = useRef<KeySequence>({
-    keys: [],
-    timeout: 1000, // 1 second to complete sequence
-    position: 0,
-    lastKeyTime: 0,
-  });
-
+  // --- Sequence State ---
   const [pendingKeys, setPendingKeys] = useState<string[]>([]);
+  const lastKeyTimeRef = useRef<number>(0);
+  const SEQUENCE_TIMEOUT = 1000; // 1 second to complete sequence
 
-  // Reset sequence on timeout
   const resetSequence = useCallback(() => {
-    sequenceRef.current = {
-      ...sequenceRef.current,
-      keys: [],
-      position: 0,
-    };
     setPendingKeys([]);
   }, []);
 
-  // =============================================================================
-  // Normal Mode Handlers - Split into Sub-Functions
-  // =============================================================================
-
-  /**
-   * Handle string actions (callbacks that don't dispatch)
-   */
-  const handleStringAction = useCallback(
-    (action: string) => {
-      switch (action) {
-        // Navigation
-        case 'GO_PARENT':
-          goParent();
-          break;
-        case 'GO_CHILD':
-          goChild();
-          break;
-        case 'GO_DEFINITION':
-          goDefinition();
-          break;
-        case 'GO_REFERENCES':
-          goReferences();
-          break;
-        case 'GO_TESTS':
-          goTests();
-          break;
-
-        // Derivation navigation (Phase 2)
-        case 'GO_DERIVATION_PARENT':
-          goDerivationParent?.();
-          break;
-        case 'SHOW_CONFIDENCE':
-          showConfidence?.();
-          break;
-
-        // Mode switches
-        case 'ENTER_EDGE':
-          dispatch({ type: 'ENTER_EDGE' });
-          break;
-        case 'ENTER_WITNESS':
-          dispatch({ type: 'ENTER_WITNESS' });
-          break;
-
-        // Portal operations (zo/zc — vim fold-style)
-        case 'PORTAL_OPEN':
-          openPortal();
-          break;
-        case 'PORTAL_CLOSE':
-          closePortal();
-          break;
-        case 'PORTAL_TOGGLE':
-          togglePortal();
-          break;
-        case 'PORTAL_OPEN_ALL':
-          openAllPortals();
-          break;
-        case 'PORTAL_CLOSE_ALL':
-          closeAllPortals();
-          break;
-      }
-    },
+  // --- Action Map ---
+  // String actions mapped to callbacks (avoids giant switch statement)
+  const actionMap = useCallback(
+    (): Record<string, () => void> => ({
+      GO_PARENT: goParent,
+      GO_CHILD: goChild,
+      GO_DEFINITION: goDefinition,
+      GO_REFERENCES: goReferences,
+      GO_TESTS: goTests,
+      GO_DERIVATION_PARENT: () => goDerivationParent?.(),
+      SHOW_CONFIDENCE: () => showConfidence?.(),
+      PORTAL_OPEN: openPortal,
+      PORTAL_CLOSE: closePortal,
+      PORTAL_TOGGLE: togglePortal,
+      PORTAL_OPEN_ALL: openAllPortals,
+      PORTAL_CLOSE_ALL: closeAllPortals,
+      // Scroll navigation
+      SCROLL_DOWN: () => scrollDown?.(),
+      SCROLL_UP: () => scrollUp?.(),
+      SCROLL_PARAGRAPH_DOWN: () => scrollParagraphDown?.(),
+      SCROLL_PARAGRAPH_UP: () => scrollParagraphUp?.(),
+      SCROLL_TO_TOP: () => scrollToTop?.(),
+      SCROLL_TO_BOTTOM: () => scrollToBottom?.(),
+      // Mode transitions
+      ENTER_INSERT: () => {
+        if (onEnterInsert) {
+          void onEnterInsert();
+        } else {
+          dispatch({ type: 'ENTER_INSERT' });
+        }
+      },
+      ENTER_COMMAND: () => {
+        dispatch({ type: 'ENTER_COMMAND' });
+        onEnterCommand?.();
+      },
+      SHOW_HELP: () => onShowHelp?.(),
+    }),
     [
+      dispatch,
       goParent,
       goChild,
       goDefinition,
@@ -294,187 +265,102 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       goTests,
       goDerivationParent,
       showConfidence,
-      dispatch,
       openPortal,
       closePortal,
       togglePortal,
       openAllPortals,
       closeAllPortals,
+      scrollDown,
+      scrollUp,
+      scrollParagraphDown,
+      scrollParagraphUp,
+      scrollToTop,
+      scrollToBottom,
+      onEnterCommand,
+      onEnterInsert,
+      onShowHelp,
     ]
   );
 
-  /**
-   * Try to match or advance a key sequence
-   * Returns true if handled (matched or prefix)
-   */
-  const trySequence = useCallback(
-    (e: KeyboardEvent, key: string, now: number): boolean => {
-      const pending = [...sequenceRef.current.keys, key];
+  // --- Action Executor ---
+  const executeAction = useCallback(
+    (action: ActionType) => {
+      if (typeof action === 'string') {
+        const map = actionMap();
+        map[action]?.();
+      } else {
+        dispatch(action);
+      }
+    },
+    [actionMap, dispatch]
+  );
 
-      // Check for complete sequence match
-      const matchingSequence = NORMAL_MODE_SEQUENCES.find(
-        (seq) => seq.keys.length === pending.length && seq.keys.every((k, i) => k === pending[i])
-      );
+  // --- NORMAL Mode Handler ---
+  const handleNormalMode = useCallback(
+    (e: KeyboardEvent): boolean => {
+      const key = e.key;
+      const now = Date.now();
 
-      if (matchingSequence) {
+      // Check for sequence timeout
+      if (pendingKeys.length > 0 && now - lastKeyTimeRef.current > SEQUENCE_TIMEOUT) {
+        resetSequence();
+      }
+
+      const candidateKeys = [...pendingKeys, key];
+
+      // Check modifiers for current key
+      const hasCtrl = e.ctrlKey;
+      const hasShift = e.shiftKey;
+      const hasMeta = e.metaKey;
+
+      // Find exact match
+      const exactMatch = NORMAL_BINDINGS.find((b) => {
+        if (b.keys.length !== candidateKeys.length) return false;
+        if (!b.keys.every((k, i) => k === candidateKeys[i])) return false;
+
+        // Check modifiers (only check on final key)
+        if (b.modifiers?.ctrl && !hasCtrl) return false;
+        if (b.modifiers?.shift && !hasShift) return false;
+        if (b.modifiers?.meta && !hasMeta) return false;
+
+        return true;
+      });
+
+      if (exactMatch) {
         e.preventDefault();
         resetSequence();
-        const action = matchingSequence.action;
-        if (typeof action === 'string') {
-          handleStringAction(action);
-        } else {
-          dispatch(action);
-        }
+        executeAction(exactMatch.action);
         return true;
       }
 
-      // Check for sequence prefix (waiting for more keys)
-      const isPrefix = NORMAL_MODE_SEQUENCES.some(
-        (seq) =>
-          seq.keys.length > pending.length &&
-          seq.keys.slice(0, pending.length).every((k, i) => k === pending[i])
+      // Check for prefix match (sequence in progress)
+      const isPrefix = NORMAL_BINDINGS.some(
+        (b) =>
+          b.keys.length > candidateKeys.length &&
+          b.keys.slice(0, candidateKeys.length).every((k, i) => k === candidateKeys[i])
       );
 
       if (isPrefix) {
         e.preventDefault();
-        sequenceRef.current = { ...sequenceRef.current, keys: pending, lastKeyTime: now };
-        setPendingKeys(pending);
+        setPendingKeys(candidateKeys);
+        lastKeyTimeRef.current = now;
         return true;
       }
 
-      // Reset sequence if not a prefix
-      if (sequenceRef.current.keys.length > 0) {
+      // No match — reset sequence if we had one
+      if (pendingKeys.length > 0) {
         resetSequence();
       }
 
       return false;
     },
-    [resetSequence, handleStringAction, dispatch]
+    [pendingKeys, resetSequence, executeAction]
   );
 
-  /**
-   * Try simple (single-key) bindings
-   */
-  const trySimpleBinding = useCallback(
-    (e: KeyboardEvent, key: string): boolean => {
-      // Skip if modifier keys are held (except for specific cases)
-      if (e.ctrlKey || e.metaKey || e.altKey) {
-        return false;
-      }
-
-      const binding = NORMAL_MODE_BINDINGS[key];
-      if (!binding) return false;
-
-      e.preventDefault();
-
-      // Special handling for command mode
-      if (binding.action.type === 'ENTER_COMMAND') {
-        dispatch(binding.action);
-        onEnterCommand?.();
-      } else if (binding.action.type === 'ENTER_INSERT') {
-        // K-Block creation happens via onEnterInsert callback
-        if (onEnterInsert) {
-          void onEnterInsert();
-        } else {
-          dispatch(binding.action);
-        }
-      } else {
-        dispatch(binding.action);
-      }
-
-      return true;
-    },
-    [dispatch, onEnterCommand, onEnterInsert]
-  );
-
-  /**
-   * Handle paragraph motion ({ and })
-   */
-  const handleParagraphMotion = useCallback(
-    (direction: 'forward' | 'backward') => {
-      const content = state.currentNode?.content || '';
-      const lines = content.split('\n');
-      const currentLine = Math.min(state.cursor.line, lines.length - 1);
-
-      if (direction === 'forward') {
-        // Skip current blank lines
-        let i = currentLine;
-        while (i < lines.length && lines[i].trim() === '') i++;
-        // Find next blank line
-        while (i < lines.length && lines[i].trim() !== '') i++;
-
-        if (i < lines.length) {
-          dispatch({ type: 'GOTO_LINE', line: i });
-        } else {
-          dispatch({ type: 'GOTO_END' });
-        }
-      } else {
-        // Skip current blank lines
-        let i = currentLine;
-        while (i > 0 && lines[i].trim() === '') i--;
-        // Find previous blank line
-        while (i > 0 && lines[i].trim() !== '') i--;
-        dispatch({ type: 'GOTO_LINE', line: i });
-      }
-    },
-    [state, dispatch]
-  );
-
-  /**
-   * Try special keys (G, {, }, Ctrl+o)
-   */
-  const trySpecialKey = useCallback(
-    (e: KeyboardEvent, key: string): boolean => {
-      // Ctrl+o - go back
-      if (e.ctrlKey && key === 'o') {
-        e.preventDefault();
-        dispatch({ type: 'GO_BACK' });
-        return true;
-      }
-
-      // G - go to end
-      if (key === 'G') {
-        e.preventDefault();
-        dispatch({ type: 'GOTO_END' });
-        return true;
-      }
-
-      // } - next paragraph
-      if (key === '}') {
-        e.preventDefault();
-        handleParagraphMotion('forward');
-        return true;
-      }
-
-      // { - previous paragraph
-      if (key === '{') {
-        e.preventDefault();
-        handleParagraphMotion('backward');
-        return true;
-      }
-
-      return false;
-    },
-    [dispatch, handleParagraphMotion]
-  );
-
-  const handleNormalMode = useCallback(
-    (e: KeyboardEvent, key: string, now: number) => {
-      // Try handlers in order
-      if (trySequence(e, key, now)) return;
-      if (trySimpleBinding(e, key)) return;
-      trySpecialKey(e, key);
-    },
-    [trySequence, trySimpleBinding, trySpecialKey]
-  );
-
-  // =============================================================================
-  // Edge Mode Handlers - Split by Phase
-  // =============================================================================
-
+  // --- EDGE Mode Handlers (split by phase to reduce complexity) ---
   const handleEdgeSelectType = useCallback(
-    (e: KeyboardEvent, key: string): boolean => {
-      const edgeType = EDGE_TYPE_KEYS[key.toLowerCase()];
+    (e: KeyboardEvent): boolean => {
+      const edgeType = EDGE_TYPE_KEYS[e.key.toLowerCase()] as EdgeType | undefined;
       if (edgeType) {
         e.preventDefault();
         dispatch({ type: 'EDGE_SELECT_TYPE', edgeType });
@@ -486,8 +372,8 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
   );
 
   const handleEdgeSelectTarget = useCallback(
-    (e: KeyboardEvent, key: string): boolean => {
-      // Navigate using j/k like normal mode
+    (e: KeyboardEvent): boolean => {
+      const key = e.key;
       if (key === 'j') {
         e.preventDefault();
         dispatch({ type: 'GO_SIBLING', direction: 1 });
@@ -498,8 +384,6 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
         dispatch({ type: 'GO_SIBLING', direction: -1 });
         return true;
       }
-
-      // Enter selects current node as target
       if (key === 'Enter' && state.currentNode) {
         e.preventDefault();
         dispatch({
@@ -509,21 +393,19 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
         });
         return true;
       }
-
       return false;
     },
-    [state, dispatch]
+    [state.currentNode, dispatch]
   );
 
-  const handleEdgeConfirm = useCallback(
-    (e: KeyboardEvent, key: string): boolean => {
+  const handleEdgeConfirmPhase = useCallback(
+    (e: KeyboardEvent): boolean => {
+      const key = e.key;
       if (key === 'y' || key === 'Enter') {
         e.preventDefault();
         if (onEdgeConfirm) {
-          // Call async handler instead of dispatching directly
           void onEdgeConfirm();
         } else {
-          // Fallback if no handler provided
           dispatch({ type: 'EDGE_CONFIRM' });
         }
         return true;
@@ -535,127 +417,96 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       }
       return false;
     },
-    [onEdgeConfirm, dispatch]
+    [dispatch, onEdgeConfirm]
   );
 
   const handleEdgeMode = useCallback(
-    (e: KeyboardEvent, key: string) => {
-      const { edgePending } = state;
-      if (!edgePending) return;
-
-      // Dispatch to phase-specific handlers
-      if (edgePending.phase === 'select-type') {
-        handleEdgeSelectType(e, key);
-      } else if (edgePending.phase === 'select-target') {
-        handleEdgeSelectTarget(e, key);
-      } else if (edgePending.phase === 'confirm') {
-        handleEdgeConfirm(e, key);
-      }
-    },
-    [state, handleEdgeSelectType, handleEdgeSelectTarget, handleEdgeConfirm]
-  );
-
-  const handleWitnessMode = useCallback((_e: KeyboardEvent, _key: string) => {
-    // Witness mode bindings will be added in Phase 5
-    // For now, Escape is the only binding (handled universally above)
-  }, []);
-
-  // =============================================================================
-  // Key Handler Entry Point
-  // =============================================================================
-
-  /**
-   * Check if we should skip key handling (in input fields, disabled, etc)
-   */
-  const shouldSkipKey = useCallback(
     (e: KeyboardEvent): boolean => {
-      if (!enabled) return true;
+      const { edgePending } = state;
+      if (!edgePending) return false;
 
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        // In INSERT mode, let textarea handle everything except Escape
-        if (state.mode === 'INSERT' && e.key !== 'Escape') {
-          return true;
-        }
-        // In COMMAND mode, only handle Escape and Enter
-        if (state.mode === 'COMMAND' && e.key !== 'Escape' && e.key !== 'Enter') {
-          return true;
-        }
-      }
-
-      return false;
-    },
-    [enabled, state.mode]
-  );
-
-  /**
-   * Dispatch to mode-specific handlers
-   */
-  const dispatchToModeHandler = useCallback(
-    (e: KeyboardEvent, key: string, now: number) => {
-      switch (state.mode) {
-        case 'NORMAL':
-          handleNormalMode(e, key, now);
-          break;
-        case 'INSERT':
-          // INSERT mode: only Escape is handled (in handleKey)
-          break;
-        case 'COMMAND':
-          // COMMAND mode: handled by CommandLine component
-          break;
-        case 'EDGE':
-          handleEdgeMode(e, key);
-          break;
-        case 'WITNESS':
-          handleWitnessMode(e, key);
-          break;
-        case 'VISUAL':
-          // VISUAL mode (Phase 6)
-          break;
+      switch (edgePending.phase) {
+        case 'select-type':
+          return handleEdgeSelectType(e);
+        case 'select-target':
+          return handleEdgeSelectTarget(e);
+        case 'confirm':
+          return handleEdgeConfirmPhase(e);
+        default:
+          return false;
       }
     },
-    [state.mode, handleNormalMode, handleEdgeMode, handleWitnessMode]
+    [state, handleEdgeSelectType, handleEdgeSelectTarget, handleEdgeConfirmPhase]
   );
 
-  // Handle a single keypress
-  const handleKey = useCallback(
+  // --- Main Key Handler ---
+  const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (shouldSkipKey(e)) return;
+      if (!enabled) return;
 
-      const key = e.key;
-      const now = Date.now();
-
-      // Check for timeout on pending sequence
-      if (
-        sequenceRef.current.keys.length > 0 &&
-        now - sequenceRef.current.lastKeyTime > sequenceRef.current.timeout
-      ) {
-        resetSequence();
-      }
+      // Skip if in input/textarea (except for mode escapes)
+      const target = e.target as HTMLElement;
+      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
 
       // Universal: Escape always exits to NORMAL
-      if (key === 'Escape') {
+      if (e.key === 'Escape') {
         e.preventDefault();
+        resetSequence();
         if (state.mode !== 'NORMAL') {
           dispatch({ type: 'SET_MODE', mode: 'NORMAL' });
-          resetSequence();
         }
         return;
       }
 
+      // In INSERT mode, only Escape is handled (above) — everything else goes to CodeMirror
+      if (state.mode === 'INSERT') {
+        return;
+      }
+
+      // In COMMAND mode, let CommandLine handle everything except Escape
+      if (state.mode === 'COMMAND') {
+        return;
+      }
+
+      // In WITNESS mode, let WitnessPanel handle everything except Escape
+      if (state.mode === 'WITNESS') {
+        return;
+      }
+
+      // Skip if in input field for other modes
+      if (isInputField && state.mode !== 'EDGE') {
+        return;
+      }
+
       // Dispatch to mode-specific handler
-      dispatchToModeHandler(e, key, now);
+      if (state.mode === 'NORMAL') {
+        handleNormalMode(e);
+      } else if (state.mode === 'EDGE') {
+        handleEdgeMode(e);
+      }
     },
-    [shouldSkipKey, state.mode, dispatch, resetSequence, dispatchToModeHandler]
+    [enabled, state.mode, resetSequence, dispatch, handleNormalMode, handleEdgeMode]
   );
 
-  // Attach global key handler
+  // --- Event Listener ---
   useEffect(() => {
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [handleKey]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   return {
     pendingSequence: pendingKeys.join(''),
     resetSequence,
   };
 }
+
+// =============================================================================
+// Exports for Testing/Documentation
+// =============================================================================
+
+/** Export bindings for help display */
+export const NORMAL_MODE_BINDINGS_DOC = NORMAL_BINDINGS.map((b) => ({
+  keys: b.keys.join(''),
+  description: b.description,
+  modifiers: b.modifiers,
+}));

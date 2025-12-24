@@ -487,6 +487,114 @@ class Annotation:
 
 
 # =============================================================================
+# Delete Result
+# =============================================================================
+
+
+@dataclass
+class DeleteResult:
+    """
+    Result of a delete operation.
+
+    Contains information about what was deleted and any reference handling.
+
+    Fields:
+        success: Whether the delete succeeded
+        path: The entity path that was deleted
+        mark_id: The witness mark for the deletion
+        references_converted_to_placeholders: List of entities whose references
+                                              were converted to placeholders
+    """
+
+    success: bool
+    path: str
+    mark_id: str | None = None
+    references_converted_to_placeholders: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "success": self.success,
+            "path": self.path,
+            "mark_id": self.mark_id,
+            "references_converted": self.references_converted_to_placeholders,
+            "reference_count": len(self.references_converted_to_placeholders),
+        }
+
+
+# =============================================================================
+# Export Bundle (Law 3: No Export Without Witness)
+# =============================================================================
+
+
+@dataclass
+class ExportedEntity:
+    """
+    An entity that has been exported.
+
+    Contains the entity data plus provenance information.
+    """
+
+    path: str
+    content: bytes
+    content_hash: str
+    ingest_mark_id: str | None
+    version: int
+    metadata: dict[str, Any] = field(default_factory=dict)
+    overlay: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class ExportBundle:
+    """
+    Bundle of exported entities with witness trail.
+
+    Law 3 guarantee: Every export has a witness mark created BEFORE export.
+
+    Fields:
+        export_mark_id: The witness mark for this export operation
+        entities: List of exported entities
+        exported_at: When the export happened
+        export_format: Format of export (json, zip)
+        entity_count: Number of entities in bundle
+    """
+
+    export_mark_id: str
+    entities: list[ExportedEntity]
+    exported_at: datetime
+    export_format: str = "json"
+
+    @property
+    def entity_count(self) -> int:
+        """Number of entities in bundle."""
+        return len(self.entities)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        import base64
+
+        return {
+            "type": "sovereign_export",
+            "export_mark_id": self.export_mark_id,
+            "exported_at": self.exported_at.isoformat(),
+            "export_format": self.export_format,
+            "entity_count": self.entity_count,
+            "entities": [
+                {
+                    "path": e.path,
+                    "content": base64.b64encode(e.content).decode("ascii"),
+                    "content_hash": e.content_hash,
+                    "ingest_mark_id": e.ingest_mark_id,
+                    "version": e.version,
+                    "metadata": e.metadata,
+                    "overlay": e.overlay,
+                }
+                for e in self.entities
+            ],
+        }
+
+
+# =============================================================================
 # Module Exports
 # =============================================================================
 
@@ -505,4 +613,9 @@ __all__ = [
     # Annotation
     "AnnotationType",
     "Annotation",
+    # Delete
+    "DeleteResult",
+    # Export
+    "ExportedEntity",
+    "ExportBundle",
 ]

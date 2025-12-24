@@ -14,9 +14,9 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { LedgerDashboard } from '../membrane/views/LedgerDashboard';
-import { SpecTable } from '../membrane/views/SpecTable';
-import { SpecLedgerDetail } from '../membrane/views/SpecLedgerDetail';
+import { LedgerDashboard } from '../components/LedgerDashboard';
+import { SpecTable } from '../components/SpecTable';
+import { SpecLedgerDetail } from '../components/SpecLedgerDetail';
 
 import './SpecLedgerPage.css';
 

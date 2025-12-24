@@ -362,6 +362,12 @@ class WitnessDaemon:
         # CLI Socket Server for command routing
         self._cli_server: Any = None
 
+        # Worker Pool Manager for multi-processing/threading
+        self._worker_pool: Any = None
+
+        # Lifecycle state (bootstrapped on start)
+        self._lifecycle_state: Any = None
+
         # Callback for TUI/CLI to receive suggestions
         self._suggestion_callback: Any = None  # Async callable
 
@@ -397,11 +403,17 @@ class WitnessDaemon:
         self._running = True
         self.started_at = datetime.now()
 
+        # Bootstrap lifecycle (storage, services)
+        await self._bootstrap_lifecycle()
+
         # Phase 4C: Initialize trust persistence and load state
         await self._init_trust_persistence()
 
         # Phase 4C: Initialize pipeline runner for workflow execution
         await self._init_pipeline_runner()
+
+        # Initialize worker pool for multi-processing/threading
+        await self._init_worker_pool()
 
         # Start CLI socket server for command routing
         await self._start_cli_server()
@@ -501,6 +513,85 @@ class WitnessDaemon:
             logger.warning(f"Could not initialize pipeline runner: {e}")
             logger.warning("Workflow execution will not be available")
 
+    async def _init_worker_pool(self) -> None:
+        """
+        Initialize the worker pool for multi-processing/threading.
+
+        Provides:
+        - Process pool for CPU-bound tasks (LLM, crystallization)
+        - Thread pool for I/O-bound tasks (database, file ops)
+        """
+        try:
+            from services.kgentsd.worker_pool import PoolConfig, start_worker_pools
+
+            # Use default config (scales with CPU count)
+            config = PoolConfig()
+            self._worker_pool = await start_worker_pools(config)
+
+            logger.info(
+                f"Worker pool initialized: processes={config.max_processes}, "
+                f"threads={config.max_threads}"
+            )
+
+        except Exception as e:
+            logger.warning(f"Could not initialize worker pool: {e}")
+            logger.warning("Commands will use default thread pool")
+
+    async def _bootstrap_lifecycle(self) -> None:
+        """
+        Bootstrap the lifecycle manager (storage, services).
+
+        This initializes the same LifecycleState that hollow.py uses,
+        enabling handlers to access storage providers without needing
+        to bootstrap again.
+
+        See: plans/rustling-bouncing-seal.md (Phase 5: Unified Bootstrap)
+        """
+        try:
+            from protocols.cli.instance_db.lifecycle import LifecycleManager
+
+            manager = LifecycleManager()
+            self._lifecycle_state = await manager.bootstrap(self.config.repo_path)
+
+            mode = self._lifecycle_state.mode.value if self._lifecycle_state.mode else "unknown"
+            instance_id = (
+                self._lifecycle_state.instance_id[:8]
+                if self._lifecycle_state.instance_id
+                else "none"
+            )
+
+            logger.info(f"Lifecycle bootstrapped: mode={mode}, instance={instance_id}")
+
+            # Wire Crown Jewel services for AGENTESE nodes
+            try:
+                from services.providers import setup_providers
+
+                await setup_providers()
+                logger.info("Service providers initialized")
+            except Exception as provider_err:
+                logger.debug(f"setup_providers skipped: {provider_err}")
+
+        except Exception as e:
+            logger.warning(f"Could not bootstrap lifecycle: {e}")
+            logger.warning("Handlers will bootstrap independently")
+
+    @property
+    def storage_provider(self) -> Any | None:
+        """
+        Get the storage provider from lifecycle state.
+
+        This is the shared storage provider that handlers can use
+        for persistence operations.
+        """
+        if self._lifecycle_state is not None:
+            return self._lifecycle_state.storage_provider
+        return None
+
+    @property
+    def lifecycle_state(self) -> Any | None:
+        """Get the full lifecycle state."""
+        return self._lifecycle_state
+
     async def _start_cli_server(self) -> None:
         """
         Start the CLI socket server for command routing.
@@ -516,6 +607,7 @@ class WitnessDaemon:
             self._cli_server = CLISocketServer(
                 socket_path=self.config.socket_path,
                 command_executor=executor,
+                worker_pool=self._worker_pool,  # Pass worker pool for concurrent execution
             )
             await self._cli_server.start()
             logger.info(f"CLI socket server listening on {self.config.socket_path}")
@@ -713,8 +805,23 @@ class WitnessDaemon:
             try:
                 await self._cli_server.stop()
                 logger.info("CLI socket server stopped")
+                # Log server stats
+                if hasattr(self._cli_server, 'stats'):
+                    logger.info(f"Server stats: {self._cli_server.stats}")
             except Exception as e:
                 logger.warning(f"Error stopping CLI socket server: {e}")
+
+        # Stop worker pool
+        if self._worker_pool:
+            try:
+                from services.kgentsd.worker_pool import stop_worker_pools
+
+                await stop_worker_pools()
+                logger.info("Worker pool stopped")
+                if hasattr(self._worker_pool, 'stats'):
+                    logger.info(f"Worker pool stats: {self._worker_pool.stats}")
+            except Exception as e:
+                logger.warning(f"Error stopping worker pool: {e}")
 
         # Stop all watchers
         stop_tasks = [watcher.stop() for watcher in self._watchers.values()]

@@ -1,27 +1,105 @@
 /**
- * Membrane — The single morphing co-thinking surface
+ * Membrane — Legacy exports (redirects to new locations)
  *
- * "Stop documenting agents. Become the agent."
+ * POST-PHASE-1.1 (2025-12-23): Membrane folder simplified.
+ * - useWitnessStream → hooks/useWitnessStream
+ * - tokens/ → components/tokens/
+ * - Container components → _archive/membrane/
+ *
+ * POST-PHASE-1.2 (2025-12-23): K-Block hooks unified.
+ * - useKBlock → hypergraph/useKBlock (unified dialogue + file)
+ *
+ * This file maintains backward compatibility by re-exporting from new locations.
  */
 
-// Main component
-export { Membrane } from './Membrane';
+// =============================================================================
+// Hooks (moved to hooks/)
+// =============================================================================
 
-// Hooks
-export { useMembrane } from './useMembrane';
+export { useWitnessStream } from '../hooks/useWitnessStream';
+export type { WitnessEvent, WitnessEventType, UseWitnessStream, SemanticDelta } from '../hooks/useWitnessStream';
+
+export { useKBlock, useFileKBlock, useDialogueKBlock } from '../hypergraph/useKBlock';
 export type {
-  MembraneMode,
-  FocusType,
-  Focus,
-  DialogueMessage,
-  MembraneState,
-  UseMembrane,
-} from './useMembrane';
+  IsolationState,
+  KBlockState,
+  KBlockCreateResult,
+  KBlockSaveResult,
+  ViewEditResult,
+  KBlockViewType,
+  KBlockReference,
+  UseKBlockResult,
+  UseKBlockOptions,
+} from '../hypergraph/useKBlock';
 
-export { useWitnessStream } from './useWitnessStream';
-export type { WitnessEvent, WitnessEventType, UseWitnessStream } from './useWitnessStream';
+// Legacy type aliases for backward compatibility
+export type {
+  KBlockState as ThoughtBlockState,
+  KBlockSaveResult as CrystallizeResult,
+  UseKBlockResult as UseKBlock,
+  UseKBlockResult as UseFileKBlock,
+} from '../hypergraph/useKBlock';
 
-export { useSpecGraph, useSpecQuery, useSpecEdges, useSpecNavigate } from './useSpecNavigation';
+// =============================================================================
+// Components (moved to components/)
+// =============================================================================
+
+export { WitnessEvent as WitnessEventComponent } from '../components/layout/WitnessEvent';
+
+// =============================================================================
+// Tokens (moved to components/tokens/)
+// =============================================================================
+
+export {
+  InteractiveDocument,
+  AGENTESEPathToken,
+  TaskCheckboxToken,
+  PortalToken,
+  CodeBlockToken,
+  ImageToken,
+  PrincipleToken,
+  LinkToken,
+  TextSpan,
+  BlockquoteToken,
+  HorizontalRuleToken,
+  MarkdownTableToken,
+} from '../components/tokens';
+
+export type {
+  SceneGraph,
+  SceneNode,
+  SceneEdge,
+  PortalDestination,
+  PrincipleCategory,
+  AGENTESEPathData,
+  TaskCheckboxData,
+  PortalData,
+  CodeBlockData,
+  ImageData,
+  PrincipleData,
+  LinkData,
+  BlockquoteData,
+  HorizontalRuleData,
+  MarkdownTableData,
+} from '../components/tokens';
+
+// =============================================================================
+// Archived Components (removed — no longer in use)
+// =============================================================================
+// Previously exported: Membrane, FocusPane, WitnessStream, DialoguePane,
+// DialogueMessage, useMembrane, WelcomeView, FileView, SpecView, ConceptView
+//
+// These components have been migrated or archived:
+// - WelcomeView → pages/WelcomePage.tsx
+// - Chart components → components/chart/
+// - Ledger components → components/
+// - Other components remain in _archive/ for reference only
+
+// =============================================================================
+// Spec Navigation (canonical location: hypergraph/)
+// =============================================================================
+
+export { useSpecGraph, useSpecQuery, useSpecEdges, useSpecNavigate } from '../hypergraph/useSpecNavigation';
 export type {
   EdgeType,
   TokenType,
@@ -30,14 +108,4 @@ export type {
   SpecToken,
   SpecQueryResult,
   SpecGraphStats,
-} from './useSpecNavigation';
-
-// Sub-components (for advanced use)
-export { FocusPane } from './FocusPane';
-export { WitnessStream } from './WitnessStream';
-export { WitnessEvent as WitnessEventComponent } from './WitnessEvent';
-export { DialoguePane } from './DialoguePane';
-export { DialogueMessage as DialogueMessageComponent } from './DialogueMessage';
-
-// Views
-export { WelcomeView, FileView, SpecView, ConceptView } from './views';
+} from '../hypergraph/useSpecNavigation';

@@ -33,6 +33,8 @@ import asyncio
 import json
 from typing import TYPE_CHECKING, Any
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
@@ -93,6 +95,7 @@ def _get_service() -> Any:
 # =============================================================================
 
 
+@handler("coffee", is_async=False, needs_pty=True, tier=3, description="Morning Coffee ritual")
 def cmd_coffee(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Morning Coffee: Liminal transition from rest to work.

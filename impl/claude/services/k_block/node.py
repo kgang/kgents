@@ -466,6 +466,11 @@ class KBlockNode(BaseLogosNode):
                 response["not_ingested"] = True
                 response["ingest_hint"] = "Upload content via File Picker"
 
+            # Add analysis_required flag for sovereign analysis flow gating
+            # Frontend should show analysis gate when this is True
+            if block.analysis_required:
+                response["analysis_required"] = True
+
             return response
 
         elif aspect_name == "get":
@@ -485,7 +490,7 @@ class KBlockNode(BaseLogosNode):
             if not get_block:
                 return {"error": f"K-Block not found: {block_id}"}
 
-            return {
+            get_response = {
                 "block_id": get_block.id,
                 "path": get_block.path,
                 "content": get_block.content,
@@ -503,6 +508,12 @@ class KBlockNode(BaseLogosNode):
                     for cp in get_block.checkpoints
                 ],
             }
+
+            # Include analysis_required if set
+            if hasattr(get_block, "analysis_required") and get_block.analysis_required:
+                get_response["analysis_required"] = True
+
+            return get_response
 
         elif aspect_name == "save":
             block_id = kwargs.get("block_id", "")

@@ -21,15 +21,19 @@
 
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
+import { sovereignApi } from '../api/client';
 import { useNavigation } from './useNavigation';
 import { useKeyHandler } from './useKeyHandler';
 import { useKBlock } from './useKBlock';
+import { useDirector } from '../hooks/useDirector';
 import { StatusLine } from './StatusLine';
 import { CommandLine } from './CommandLine';
 import { EdgePanel } from './EdgePanel';
 import { WitnessPanel } from './WitnessPanel';
-import { MarkdownEditor, MarkdownEditorRef } from '../components/editor';
-import type { GraphNode, Edge, EdgeType } from './types';
+import { HelpPanel } from './HelpPanel';
+import { MarkdownEditorRef } from '../components/editor';
+import { Header, TrailBar, EdgeGutter, ContentPane } from './panes';
+import type { GraphNode, Edge } from './state/types';
 
 import './HypergraphEditor.css';
 
@@ -53,316 +57,6 @@ interface HypergraphEditorProps {
   /** External function to load siblings */
   loadSiblings?: (node: GraphNode) => Promise<GraphNode[]>;
 }
-
-// =============================================================================
-// Gutter Components
-// =============================================================================
-
-interface GutterProps {
-  edges: Edge[];
-  side: 'left' | 'right';
-  onEdgeClick?: (edge: Edge) => void;
-}
-
-/**
- * Calculate average confidence for a group of edges.
- * Returns undefined if no edges have confidence values.
- */
-function getAverageConfidence(edges: Edge[]): number | undefined {
-  const withConfidence = edges.filter((e) => e.confidence !== undefined);
-  if (withConfidence.length === 0) return undefined;
-  return withConfidence.reduce((sum, e) => sum + e.confidence!, 0) / withConfidence.length;
-}
-
-/**
- * Get CSS class for confidence level.
- * Maps 0-1 confidence to visual indicator.
- */
-function getConfidenceClass(confidence: number | undefined): string {
-  if (confidence === undefined) return 'edge-gutter__badge--unknown';
-  if (confidence >= 0.8) return 'edge-gutter__badge--high';
-  if (confidence >= 0.5) return 'edge-gutter__badge--medium';
-  return 'edge-gutter__badge--low';
-}
-
-const EdgeGutter = memo(function EdgeGutter({ edges, side, onEdgeClick }: GutterProps) {
-  // Group edges by type
-  const grouped = edges.reduce(
-    (acc, edge) => {
-      if (!acc[edge.type]) acc[edge.type] = [];
-      acc[edge.type].push(edge);
-      return acc;
-    },
-    {} as Record<EdgeType, Edge[]>
-  );
-
-  const types = Object.keys(grouped) as EdgeType[];
-
-  if (types.length === 0) {
-    return <div className={`edge-gutter edge-gutter--${side} edge-gutter--empty`} />;
-  }
-
-  return (
-    <div className={`edge-gutter edge-gutter--${side}`}>
-      {types.map((type) => {
-        const typeEdges = grouped[type];
-        const count = typeEdges.length;
-        const abbrev = getEdgeAbbreviation(type);
-        const avgConfidence = getAverageConfidence(typeEdges);
-        const confidenceClass = getConfidenceClass(avgConfidence);
-
-        // Collect unique origins for tooltip
-        const origins = [...new Set(typeEdges.map((e) => e.origin).filter(Boolean))];
-        const hasWitness = typeEdges.some((e) => e.markId);
-
-        // Build rich tooltip
-        const tooltip = [
-          `${type}: ${count} edge${count > 1 ? 's' : ''}`,
-          avgConfidence !== undefined ? `Confidence: ${Math.round(avgConfidence * 100)}%` : null,
-          origins.length > 0 ? `Sources: ${origins.join(', ')}` : null,
-          hasWitness ? '📜 Has witness marks' : null,
-        ]
-          .filter(Boolean)
-          .join('\n');
-
-        return (
-          <button
-            key={type}
-            className={`edge-gutter__badge ${confidenceClass}`}
-            data-edge-type={type}
-            data-has-witness={hasWitness}
-            onClick={() => onEdgeClick?.(typeEdges[0])}
-            title={tooltip}
-          >
-            <span className="edge-gutter__abbrev">{abbrev}</span>
-            {count > 1 && <span className="edge-gutter__count">{count}</span>}
-            {hasWitness && <span className="edge-gutter__witness">📜</span>}
-          </button>
-        );
-      })}
-    </div>
-  );
-});
-
-function getEdgeAbbreviation(type: EdgeType): string {
-  const abbrevs: Record<EdgeType, string> = {
-    implements: 'imp',
-    tests: 'tst',
-    extends: 'ext',
-    derives_from: 'der',
-    references: 'ref',
-    contradicts: '!!!',
-    contains: 'con',
-    uses: 'use',
-    defines: 'def',
-  };
-  return abbrevs[type] || type.slice(0, 3);
-}
-
-// =============================================================================
-// Header Component
-// =============================================================================
-
-interface HeaderProps {
-  node: GraphNode | null;
-}
-
-const Header = memo(function Header({ node }: HeaderProps) {
-  if (!node) {
-    return (
-      <header className="hypergraph-header hypergraph-header--empty">
-        <div className="hypergraph-header__title">No node focused</div>
-        <div className="hypergraph-header__hint">
-          Use <kbd>:e</kbd> to open a node
-        </div>
-      </header>
-    );
-  }
-
-  const parentEdges = node.incomingEdges.filter(
-    (e) => e.type === 'derives_from' || e.type === 'extends'
-  );
-  const childCount = node.outgoingEdges.length;
-
-  return (
-    <header className="hypergraph-header">
-      {/* Parent indicator */}
-      <div className="hypergraph-header__parent">
-        {parentEdges.length > 0 ? (
-          <>
-            <span className="hypergraph-header__arrow">◀</span>
-            <span className="hypergraph-header__parent-label">
-              {parentEdges[0].type}: {parentEdges[0].source.split('/').pop()}
-            </span>
-          </>
-        ) : (
-          <span className="hypergraph-header__arrow hypergraph-header__arrow--dim">◀</span>
-        )}
-      </div>
-
-      {/* Title */}
-      <div className="hypergraph-header__title">
-        {node.title || node.path.split('/').pop()}
-        {node.tier && (
-          <span className="hypergraph-header__tier" data-tier={node.tier}>
-            {node.tier}
-          </span>
-        )}
-      </div>
-
-      {/* Child indicator */}
-      <div className="hypergraph-header__child">
-        {childCount > 0 ? (
-          <>
-            <span className="hypergraph-header__child-label">
-              ▶ {childCount} edge{childCount > 1 ? 's' : ''}
-            </span>
-          </>
-        ) : (
-          <span className="hypergraph-header__arrow hypergraph-header__arrow--dim">▶</span>
-        )}
-      </div>
-    </header>
-  );
-});
-
-// =============================================================================
-// Trail Bar Component
-// =============================================================================
-
-interface TrailBarProps {
-  trail: string;
-  mode: string;
-}
-
-const TrailBar = memo(function TrailBar({ trail, mode }: TrailBarProps) {
-  return (
-    <div className="hypergraph-trail">
-      <span className="hypergraph-trail__label">TRAIL:</span>
-      <span className="hypergraph-trail__path">{trail || '(root)'}</span>
-      <span className="hypergraph-trail__mode">[{mode.charAt(0)}]</span>
-    </div>
-  );
-});
-
-// =============================================================================
-// Content Pane Component
-// =============================================================================
-
-interface ContentPaneProps {
-  node: GraphNode | null;
-  mode: string;
-  cursor: { line: number; column: number };
-  /** Working content (reflects edits, may differ from node.content) */
-  workingContent?: string;
-  onContentChange?: (content: string) => void;
-}
-
-/**
- * ContentPane — The heart of the editor
- *
- * Mode philosophy:
- * - NORMAL: Show a *rendered* view (read-only CodeMirror with syntax highlighting)
- *           This is the "reader" mode - clean, parsed, beautiful
- * - INSERT: Show a *raw* editor (editable CodeMirror with monospace)
- *           This is the "writer" mode - monospace, line numbers, editing
- *
- * Content flow:
- * - workingContent (from K-Block) is the source of truth during edits
- * - Falls back to node.content when no working content exists
- */
-const ContentPane = memo(function ContentPane({
-  node,
-  mode,
-  cursor: _cursor, // Reserved for future cursor positioning in CodeMirror
-  workingContent,
-  onContentChange,
-  onCursorChange: _onCursorChange, // Reserved for future cursor sync
-}: ContentPaneProps & { onCursorChange?: (line: number, column: number) => void }) {
-  const editorRef = useRef<MarkdownEditorRef>(null);
-  const prevModeRef = useRef(mode);
-
-  // Use working content if available (edited content), otherwise use node content
-  const displayContent = workingContent ?? node?.content ?? '';
-
-  // Focus editor when entering INSERT mode
-  useEffect(() => {
-    if (mode === 'INSERT' && prevModeRef.current !== 'INSERT') {
-      // Small delay to ensure editor is mounted
-      requestAnimationFrame(() => {
-        editorRef.current?.focus();
-      });
-    }
-    prevModeRef.current = mode;
-  }, [mode]);
-
-  // Handle content changes from CodeMirror
-  const handleContentChange = useCallback(
-    (newContent: string) => {
-      onContentChange?.(newContent);
-    },
-    [onContentChange]
-  );
-
-  if (!node) {
-    return (
-      <div className="content-pane content-pane--empty">
-        <div className="content-pane__welcome">
-          <h2>Hypergraph Emacs</h2>
-          <p>&quot;The file is a lie. There is only the graph.&quot;</p>
-          <div className="content-pane__hints">
-            <p>
-              <kbd>:e &lt;path&gt;</kbd> Open a node
-            </p>
-            <p>
-              <kbd>gh/gl</kbd> Navigate parent/child
-            </p>
-            <p>
-              <kbd>gj/gk</kbd> Navigate siblings
-            </p>
-            <p>
-              <kbd>gd</kbd> Go to definition
-            </p>
-            <p>
-              <kbd>gr</kbd> Go to references
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // In INSERT mode, show raw CodeMirror editor (editable, monospace)
-  if (mode === 'INSERT') {
-    return (
-      <div className="content-pane content-pane--insert">
-        <MarkdownEditor
-          ref={editorRef}
-          value={displayContent}
-          onChange={handleContentChange}
-          vimMode={false} // Use our own modal editing, not vim's
-          placeholder="Enter content..."
-          fillHeight
-          autoFocus
-        />
-      </div>
-    );
-  }
-
-  // In NORMAL mode, show rendered view (readonly CodeMirror with syntax highlighting)
-  // This provides the "reader" experience with parsed/tokenized rendering
-  return (
-    <div className="content-pane content-pane--normal">
-      <MarkdownEditor
-        value={displayContent}
-        readonly={true}
-        vimMode={false}
-        fillHeight
-        className="content-pane__reader"
-      />
-    </div>
-  );
-});
 
 // =============================================================================
 // Main Component
@@ -396,10 +90,26 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   // K-Block integration
   const kblockHook = useKBlock();
 
+  // Director integration (fetch status for spec files)
+  const director = useDirector({
+    path: state.currentNode?.path,
+    autoFetch: state.currentNode?.kind === 'spec',
+  });
+
+  // Refs
   const commandLineRef = useRef<HTMLInputElement>(null);
+  const readerEditorRef = useRef<MarkdownEditorRef>(null);
+
+  // UI state
   const [commandLineVisible, setCommandLineVisible] = useState(false);
   const [witnessLoading, setWitnessLoading] = useState(false);
   const [confidenceVisible, setConfidenceVisible] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<{
+    type: 'success' | 'warning' | 'error';
+    text: string;
+  } | null>(null);
 
   // =============================================================================
   // Derivation Navigation (gD/gc)
@@ -447,21 +157,71 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     setConfidenceVisible((prev) => !prev);
   }, []);
 
+  /**
+   * Handle re-analyze action.
+   * Triggers fresh LLM analysis of the current document via concept.document.analyze.
+   */
+  const handleReanalyze = useCallback(async () => {
+    const currentPath = state.currentNode?.path;
+    if (!currentPath || isAnalyzing) return;
+
+    setIsAnalyzing(true);
+    try {
+      const result = await sovereignApi.analyze(currentPath, { force: true });
+
+      if (result.error) {
+        setFeedbackMessage({
+          type: 'error',
+          text: `Analysis failed: ${result.error}`,
+        });
+      } else {
+        const claims = result.claim_count ?? 0;
+        const refs = result.ref_count ?? 0;
+        const placeholders = result.placeholder_count ?? 0;
+        setFeedbackMessage({
+          type: 'success',
+          text: `Analysis complete: ${claims} claims, ${refs} refs, ${placeholders} placeholders`,
+        });
+      }
+      setTimeout(() => setFeedbackMessage(null), 4000);
+      console.info('[HypergraphEditor] Analysis complete:', result);
+    } catch (error) {
+      console.error('[HypergraphEditor] Analysis failed:', error);
+      setFeedbackMessage({
+        type: 'error',
+        text: 'Analysis failed. Check console for details.',
+      });
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [state.currentNode?.path, isAnalyzing]);
+
   // Handle INSERT mode entry - create K-Block
   const handleEnterInsert = useCallback(async () => {
     if (!state.currentNode) return;
 
     // Create K-Block for the current node's path
-    const kblock = await kblockHook.create(state.currentNode.path);
+    const kblockResult = await kblockHook.create(state.currentNode.path);
 
-    if (kblock) {
+    // Check for success and blockId - content can be empty string (valid for new/empty files)
+    if (kblockResult.success && kblockResult.blockId) {
+      // Use content from result, falling back to empty string for empty files
+      const content = kblockResult.content ?? '';
+
       // Update reducer state with K-Block info
-      dispatch({ type: 'KBLOCK_CREATED', blockId: kblock.blockId, content: kblock.content });
+      dispatch({ type: 'KBLOCK_CREATED', blockId: kblockResult.blockId, content });
       dispatch({ type: 'ENTER_INSERT' });
-      console.info('[HypergraphEditor] Entering INSERT with K-Block:', kblock.blockId);
+      console.info('[HypergraphEditor] Entering INSERT with K-Block:', kblockResult.blockId);
     } else {
-      // Still enter INSERT mode but log error
-      console.warn('[HypergraphEditor] K-Block creation failed, entering INSERT anyway');
+      // K-Block creation failed - use fallback content from node
+      const fallbackContent = state.currentNode.content ?? '';
+      const fallbackId = `local-${Date.now()}`;
+
+      console.warn('[HypergraphEditor] K-Block creation failed, using local fallback:', kblockResult.error);
+
+      // Still create K-Block state so content updates work
+      dispatch({ type: 'KBLOCK_CREATED', blockId: fallbackId, content: fallbackContent });
       dispatch({ type: 'ENTER_INSERT' });
     }
   }, [state.currentNode, kblockHook, dispatch]);
@@ -492,6 +252,45 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     [dispatch]
   );
 
+
+  // Handle quick mark (immediate save with tag)
+  const handleQuickMark = useCallback(
+    async (tag: string) => {
+      setWitnessLoading(true);
+      try {
+        // Quick marks use tag as action template
+        const actionTemplates: Record<string, string> = {
+          eureka: 'Eureka moment',
+          gotcha: 'Gotcha',
+          taste: 'Taste decision',
+          friction: 'Friction point',
+          joy: 'Joy moment',
+          veto: 'Veto',
+        };
+
+        const action = actionTemplates[tag] || tag;
+
+        await fetch('/api/witness/marks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action,
+            reasoning: null,
+            principles: [tag],
+            author: 'kent',
+          }),
+        });
+
+        dispatch({ type: 'EXIT_WITNESS' });
+        console.info('[HypergraphEditor] Quick mark saved:', tag);
+      } catch (error) {
+        console.error('[HypergraphEditor] Failed to save quick mark:', error);
+      } finally {
+        setWitnessLoading(false);
+      }
+    },
+    [dispatch]
+  );
   // Handle EDGE mode confirmation - create witness mark
   const handleEdgeConfirm = useCallback(async () => {
     if (!state.edgePending) return;
@@ -536,6 +335,14 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     togglePortal,
     openAllPortals,
     closeAllPortals,
+    // Scroll navigation (j/k/{/}/gg/G in NORMAL mode)
+    scrollDown: () => readerEditorRef.current?.scrollLines(1),
+    scrollUp: () => readerEditorRef.current?.scrollLines(-1),
+    scrollParagraphDown: () => readerEditorRef.current?.scrollParagraph(1),
+    scrollParagraphUp: () => readerEditorRef.current?.scrollParagraph(-1),
+    scrollToTop: () => readerEditorRef.current?.scrollToTop(),
+    scrollToBottom: () => readerEditorRef.current?.scrollToBottom(),
+    // Mode callbacks
     onEnterCommand: () => {
       setCommandLineVisible(true);
       // Focus command line after state updates
@@ -543,6 +350,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     },
     onEnterInsert: handleEnterInsert,
     onEdgeConfirm: handleEdgeConfirm,
+    onShowHelp: () => setHelpVisible(true),
     enabled: !commandLineVisible && state.mode !== 'WITNESS',
   });
 
@@ -568,6 +376,47 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     }
   }, [state.currentNode, loadSiblings, dispatch]);
 
+  // Load portal content when portals are opened (zo)
+  useEffect(() => {
+    if (!loadNode) return;
+
+    // Find portals that are loading (no targetNode yet)
+    const loadingPortals = Array.from(state.portals.values()).filter(
+      (portal) => portal.loading && !portal.targetNode
+    );
+
+    // Load each portal's target node
+    loadingPortals.forEach((portal) => {
+      // Extract target path from the edge
+      const edge = state.currentNode?.outgoingEdges.find((e) => e.id === portal.edgeId);
+      if (!edge) {
+        console.warn('[HypergraphEditor] Portal edge not found:', portal.edgeId);
+        return;
+      }
+
+      loadNode(edge.target).then((node) => {
+        if (node) {
+          dispatch({ type: 'PORTAL_LOADED', edgeId: portal.edgeId, node });
+        } else {
+          console.warn('[HypergraphEditor] Portal target not found:', edge.target);
+          // Still mark as loaded (with null) to stop infinite loading
+          dispatch({
+            type: 'PORTAL_LOADED',
+            edgeId: portal.edgeId,
+            node: {
+              path: edge.target,
+              title: 'Not Found',
+              kind: 'unknown',
+              outgoingEdges: [],
+              incomingEdges: [],
+              content: `Node not found: ${edge.target}`,
+            },
+          });
+        }
+      });
+    });
+  }, [state.portals, state.currentNode, loadNode, dispatch]);
+
   // Handle edge click (navigate to connected node)
   const handleEdgeClick = useCallback(
     (edge: Edge) => {
@@ -591,6 +440,8 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     async (reasoning?: string) => {
       if (!kblockHook.kblock) {
         console.warn('[HypergraphEditor] :w - No K-Block to save');
+        setFeedbackMessage({ type: 'warning', text: 'No K-Block to save' });
+        setTimeout(() => setFeedbackMessage(null), 3000);
         return false;
       }
 
@@ -599,9 +450,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         kblockHook.updateContent(state.kblock.workingContent);
       }
 
-      const success = await kblockHook.save(reasoning || undefined);
+      const result = await kblockHook.save(reasoning || undefined);
 
-      if (success) {
+      if (result.success) {
         // Clear reducer K-Block state
         dispatch({ type: 'KBLOCK_COMMITTED' });
         // Exit INSERT if we were in it
@@ -609,11 +460,26 @@ export const HypergraphEditor = memo(function HypergraphEditor({
           dispatch({ type: 'EXIT_INSERT' });
         }
         console.info('[HypergraphEditor] :w saved K-Block', reasoning ? `(${reasoning})` : '');
+
+        // Show success feedback
+        const path = state.currentNode?.path?.split('/').pop() || 'K-Block';
+        const message = reasoning
+          ? `Saved "${path}" (${reasoning})`
+          : `Saved "${path}"`;
+        setFeedbackMessage({ type: 'success', text: message });
+        setTimeout(() => setFeedbackMessage(null), 3000);
+      } else {
+        // Show error feedback
+        setFeedbackMessage({
+          type: 'error',
+          text: result.error || 'Failed to save K-Block',
+        });
+        setTimeout(() => setFeedbackMessage(null), 4000);
       }
 
-      return success;
+      return result.success;
     },
-    [kblockHook, state.kblock, state.mode, dispatch]
+    [kblockHook, state.kblock, state.mode, state.currentNode, dispatch]
   );
 
   // Handle :q! discard
@@ -622,6 +488,11 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       if (kblockHook.kblock) {
         if (kblockHook.kblock.isDirty && !force) {
           console.warn('[HypergraphEditor] :q - K-Block has unsaved changes. Use :q! to force.');
+          setFeedbackMessage({
+            type: 'warning',
+            text: 'No write since last change (use :q! to force quit)',
+          });
+          setTimeout(() => setFeedbackMessage(null), 4000);
           return false;
         }
 
@@ -629,6 +500,10 @@ export const HypergraphEditor = memo(function HypergraphEditor({
           await kblockHook.discard();
           dispatch({ type: 'KBLOCK_DISCARDED' });
           console.info('[HypergraphEditor] :q! - Discarded K-Block');
+
+          // Show discard confirmation
+          setFeedbackMessage({ type: 'success', text: 'K-Block discarded without saving' });
+          setTimeout(() => setFeedbackMessage(null), 3000);
         }
       }
 
@@ -696,6 +571,46 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         }
         await kblockHook.rewind(checkpointId);
         console.info('[HypergraphEditor] Rewound to checkpoint:', checkpointId);
+      } else if (cmd === 'ag') {
+        // :ag <agentese-path> [args...] - Invoke AGENTESE endpoint
+        const agentesePath = args[0];
+        const agentArgs = args.slice(1).join(' ');
+
+        if (!agentesePath) {
+          console.warn('[HypergraphEditor] :ag requires a path (e.g., :ag self.brain.capture "text")');
+          setFeedbackMessage({ type: 'warning', text: ':ag requires a path' });
+          setTimeout(() => setFeedbackMessage(null), 3000);
+          return;
+        }
+
+        try {
+          // Call AGENTESE invoke API
+          const response = await fetch('/api/agentese/invoke', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              path: agentesePath,
+              args: agentArgs || undefined,
+              observer: 'kent', // Default observer
+            }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.info('[HypergraphEditor] AGENTESE result:', result);
+            setFeedbackMessage({ type: 'success', text: `✓ ${agentesePath}` });
+            setTimeout(() => setFeedbackMessage(null), 3000);
+          } else {
+            const error = await response.text();
+            console.error('[HypergraphEditor] AGENTESE error:', error);
+            setFeedbackMessage({ type: 'error', text: `AGENTESE: ${error}` });
+            setTimeout(() => setFeedbackMessage(null), 4000);
+          }
+        } catch (err) {
+          console.error('[HypergraphEditor] AGENTESE invoke failed:', err);
+          setFeedbackMessage({ type: 'error', text: 'AGENTESE invoke failed' });
+          setTimeout(() => setFeedbackMessage(null), 4000);
+        }
       }
     },
     [dispatch, loadNode, focusNode, onNavigate, onNodeFocus, handleWrite, handleQuit, kblockHook]
@@ -707,6 +622,48 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     dispatch({ type: 'EXIT_COMMAND' });
   }, [dispatch]);
 
+  // Handle token navigation (from InteractiveDocument)
+  // Called when user clicks an AGENTESE path or link in NORMAL mode
+  const handleTokenNavigate = useCallback(
+    async (path: string) => {
+      console.info('[HypergraphEditor] Token navigate:', path);
+      onNavigate?.(path);
+
+      if (loadNode) {
+        const node = await loadNode(path);
+        if (node) {
+          focusNode(node);
+          onNodeFocus?.(node);
+        } else {
+          setFeedbackMessage({ type: 'warning', text: `Node not found: ${path}` });
+          setTimeout(() => setFeedbackMessage(null), 3000);
+        }
+      }
+    },
+    [loadNode, focusNode, onNavigate, onNodeFocus]
+  );
+
+  // Handle task toggle (from InteractiveDocument)
+  // Called when user clicks a checkbox in NORMAL mode
+  const handleTaskToggle = useCallback(
+    async (newState: boolean, taskId?: string) => {
+      console.info('[HypergraphEditor] Task toggle:', { newState, taskId });
+
+      // TODO: Integrate with K-Block to update content and persist
+      // For now, just log the toggle - full implementation would:
+      // 1. Parse the current content to find the task
+      // 2. Update the checkbox state in the markdown
+      // 3. Update K-Block working content
+      // 4. Create a witness mark for the toggle
+      setFeedbackMessage({
+        type: 'success',
+        text: `Task ${newState ? 'completed' : 'uncompleted'}`,
+      });
+      setTimeout(() => setFeedbackMessage(null), 2000);
+    },
+    []
+  );
+
   // Get breadcrumb
   const breadcrumb = navigation.getTrailBreadcrumb();
 
@@ -714,6 +671,20 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     <div className="hypergraph-editor" data-mode={state.mode}>
       {/* Header */}
       <Header node={state.currentNode} />
+
+      {/* Actions toolbar (visible when node focused) */}
+      {state.currentNode && (
+        <div className="hypergraph-editor__toolbar">
+          <button
+            className="hypergraph-editor__action"
+            onClick={handleReanalyze}
+            disabled={!state.currentNode || isAnalyzing}
+            title="Re-analyze document with Claude"
+          >
+            {isAnalyzing ? 'Analyzing...' : 'Re-analyze'}
+          </button>
+        </div>
+      )}
 
       {/* Trail bar */}
       <TrailBar trail={breadcrumb} mode={state.mode} />
@@ -733,6 +704,8 @@ export const HypergraphEditor = memo(function HypergraphEditor({
           mode={state.mode}
           cursor={state.cursor}
           workingContent={state.kblock?.workingContent}
+          readerRef={readerEditorRef}
+          portals={state.portals}
           onContentChange={(content) => {
             // Update both reducer state and K-Block hook
             dispatch({ type: 'KBLOCK_UPDATED', content });
@@ -741,6 +714,8 @@ export const HypergraphEditor = memo(function HypergraphEditor({
           onCursorChange={(line, column) => {
             dispatch({ type: 'MOVE_CURSOR', position: { line, column } });
           }}
+          onNavigate={handleTokenNavigate}
+          onToggle={handleTaskToggle}
         />
 
         {/* Right gutter (outgoing edges) */}
@@ -764,9 +739,22 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         <WitnessPanel
           onSave={handleWitnessSave}
           onCancel={() => dispatch({ type: 'EXIT_WITNESS' })}
+          onQuickMark={handleQuickMark}
           loading={witnessLoading}
         />
       )}
+
+      {/* Feedback message overlay */}
+      {feedbackMessage && (
+        <div
+          className={`hypergraph-editor__feedback hypergraph-editor__feedback--${feedbackMessage.type}`}
+        >
+          {feedbackMessage.text}
+        </div>
+      )}
+
+      {/* Help panel (? key) */}
+      {helpVisible && <HelpPanel onClose={() => setHelpVisible(false)} />}
 
       {/* Confidence breakdown panel (gc toggle) */}
       {confidenceVisible && state.currentNode && (
@@ -821,6 +809,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         nodePath={state.currentNode?.path}
         confidence={state.currentNode?.confidence}
         derivationTier={state.currentNode?.derivationTier}
+        directorStatus={director.status ?? undefined}
       />
     </div>
   );

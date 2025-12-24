@@ -1,0 +1,254 @@
+/**
+ * PlaceholderNode — STARK BIOME styling
+ *
+ * Visual treatment for referenced-but-not-uploaded entities:
+ * - Dashed border (distinct from real entities)
+ * - 70% opacity (not quite there yet)
+ * - Gold accent on hover (sovereign content)
+ */
+
+/* =============================================================================
+   Main Node
+   ============================================================================= */
+
+.placeholder-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  min-width: 140px;
+  max-width: 180px;
+  background: var(--steel-900, #1a1a1a);
+  border: 1px dashed var(--steel-700, #333);
+  border-radius: 2px;
+  opacity: 0.7;
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.placeholder-node:hover {
+  opacity: 0.9;
+  border-color: var(--steel-600, #555);
+  background: var(--steel-850, #1d1d1d);
+}
+
+.placeholder-node:focus {
+  outline: none;
+  border-color: var(--accent-gold, #c4a77d);
+  opacity: 1;
+}
+
+.placeholder-node--selected {
+  opacity: 1;
+  border-color: var(--accent-gold, #c4a77d);
+  box-shadow: 0 0 0 1px var(--accent-gold, #c4a77d);
+}
+
+/* Icon */
+.placeholder-node__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 2px;
+  background: var(--steel-800, #252525);
+  color: var(--steel-500, #666);
+  transition: color 0.2s ease;
+}
+
+.placeholder-node:hover .placeholder-node__icon {
+  color: var(--steel-400, #888);
+}
+
+/* Content */
+.placeholder-node__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.125rem;
+}
+
+.placeholder-node__filename {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--steel-300, #a0a0a0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+.placeholder-node__directory {
+  font-size: 0.625rem;
+  color: var(--steel-600, #555);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+/* Badge */
+.placeholder-node__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  background: var(--steel-800, #252525);
+  border-radius: 2px;
+  font-size: 0.625rem;
+  color: var(--steel-500, #666);
+}
+
+.placeholder-node__badge svg {
+  opacity: 0.6;
+}
+
+/* References List */
+.placeholder-node__refs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem;
+  padding-top: 0.25rem;
+}
+
+.placeholder-node__ref-link {
+  padding: 0.125rem 0.375rem;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: var(--steel-500, #666);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.placeholder-node__ref-link:hover {
+  color: var(--accent-gold, #c4a77d);
+  background: var(--steel-800, #252525);
+}
+
+.placeholder-node__ref-more {
+  font-size: 0.625rem;
+  color: var(--steel-600, #555);
+}
+
+/* Upload Button */
+.placeholder-node__upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  margin-top: 0.25rem;
+  background: transparent;
+  border: 1px solid var(--steel-700, #333);
+  border-radius: 2px;
+  font-size: 0.6875rem;
+  color: var(--steel-400, #888);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.placeholder-node__upload:hover {
+  color: var(--life-sage, #8ba98b);
+  border-color: var(--life-sage, #8ba98b);
+  background: rgba(139, 169, 139, 0.05);
+}
+
+/* Status */
+.placeholder-node__status {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.125rem;
+}
+
+.placeholder-node__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--steel-600, #555);
+}
+
+.placeholder-node__status-text {
+  font-size: 0.625rem;
+  color: var(--steel-600, #555);
+}
+
+/* =============================================================================
+   Compact Variant
+   ============================================================================= */
+
+.placeholder-node-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--steel-900, #1a1a1a);
+  border: 1px dashed var(--steel-700, #333);
+  border-radius: 2px;
+  opacity: 0.7;
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.placeholder-node-compact:hover {
+  opacity: 0.9;
+  border-color: var(--steel-600, #555);
+  background: var(--steel-850, #1d1d1d);
+}
+
+.placeholder-node-compact svg {
+  color: var(--steel-500, #666);
+  flex-shrink: 0;
+}
+
+.placeholder-node-compact__name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--steel-400, #888);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
+}
+
+.placeholder-node-compact__count {
+  font-size: 0.625rem;
+  padding: 0 0.25rem;
+  background: var(--steel-800, #252525);
+  border-radius: 2px;
+  color: var(--steel-500, #666);
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 600px) {
+  .placeholder-node {
+    min-width: 120px;
+    padding: 0.75rem;
+  }
+
+  .placeholder-node__refs {
+    display: none;
+  }
+}

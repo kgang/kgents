@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from protocols.cli.handler_meta import handler
 from protocols.cli.projection import project_command, route_to_path
 
 if TYPE_CHECKING:
@@ -154,6 +155,7 @@ def _build_kwargs(args: list[str], subcommand: str) -> dict[str, str | bool]:
 # === Main Entry Point ===
 
 
+@handler("derivation", is_async=False, tier=1, description="Query agent derivations")
 def cmd_derivation(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Derivation Framework: Route to concept.derivation.* paths.

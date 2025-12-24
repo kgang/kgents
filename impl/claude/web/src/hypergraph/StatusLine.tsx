@@ -8,7 +8,9 @@
 
 import React, { memo } from 'react';
 
-import type { EditorMode, Position } from './types';
+import type { EditorMode, Position } from './state/types';
+import type { DocumentStatus } from '../api/director';
+import { DocumentStatusBadge } from '../components/director';
 
 import './StatusLine.css';
 
@@ -50,19 +52,22 @@ interface StatusLineProps {
 
   /** Derivation tier (for hover tooltip) */
   derivationTier?: string;
+
+  /** Director document status (for spec files) */
+  directorStatus?: DocumentStatus;
 }
 
 // =============================================================================
-// Mode Badge Colors
+// Mode Badge Colors (STARK BIOME — muted, industrial palette)
 // =============================================================================
 
 const MODE_COLORS: Record<EditorMode, string> = {
-  NORMAL: 'var(--status-normal, #4a9eff)',
-  INSERT: 'var(--status-insert, #4caf50)',
-  EDGE: 'var(--status-edge, #ff9800)',
-  VISUAL: 'var(--status-visual, #9c27b0)',
-  COMMAND: 'var(--status-command, #795548)',
-  WITNESS: 'var(--status-witness, #e91e63)',
+  NORMAL: 'var(--status-normal, #6b8ba3)', // Muted steel-blue
+  INSERT: 'var(--status-insert, #4a6b4a)', // Life-sage
+  EDGE: 'var(--status-edge, #c4a77d)', // Glow-spore
+  VISUAL: 'var(--status-visual, #8b6b8b)', // Muted purple
+  COMMAND: 'var(--status-command, #5a4a42)', // Soil-tone
+  WITNESS: 'var(--status-witness, #a65d6a)', // Muted coral
 };
 
 const MODE_LABELS: Record<EditorMode, string> = {
@@ -92,12 +97,15 @@ function getConfidenceLevel(confidence: number): ConfidenceLevel {
 }
 
 /**
- * Format confidence as visual bar: ████░░░░ 75%
+ * Format confidence as visual indicator with colored dot
  */
-function formatConfidenceBar(confidence: number): string {
+function formatConfidenceIndicator(confidence: number): { bar: string; dot: string } {
   const filled = Math.round(confidence * 8);
   const empty = 8 - filled;
-  return '█'.repeat(filled) + '░'.repeat(empty);
+  return {
+    bar: '█'.repeat(filled) + '░'.repeat(empty),
+    dot: '●', // Colored dot indicator
+  };
 }
 
 // =============================================================================
@@ -113,13 +121,14 @@ export const StatusLine = memo(function StatusLine({
   nodePath,
   confidence,
   derivationTier,
+  directorStatus,
 }: StatusLineProps) {
   const modeColor = MODE_COLORS[mode];
   const modeLabel = MODE_LABELS[mode];
 
   // Confidence indicator props
   const confidenceLevel = confidence !== undefined ? getConfidenceLevel(confidence) : null;
-  const confidenceBar = confidence !== undefined ? formatConfidenceBar(confidence) : null;
+  const confidenceIndicator = confidence !== undefined ? formatConfidenceIndicator(confidence) : null;
   const confidencePercent = confidence !== undefined ? Math.round(confidence * 100) : null;
 
   return (
@@ -140,13 +149,14 @@ export const StatusLine = memo(function StatusLine({
       )}
 
       {/* Derivation confidence indicator */}
-      {confidence !== undefined && confidenceLevel && confidenceBar && (
+      {confidence !== undefined && confidenceLevel && confidenceIndicator && (
         <div
           className="status-line__confidence"
           data-level={confidenceLevel}
           title={`Derivation: ${confidencePercent}%${derivationTier ? ` (${derivationTier})` : ''} — gD: parent, gc: breakdown`}
         >
-          <span className="status-line__confidence-bar">{confidenceBar}</span>
+          <span className="status-line__confidence-dot">{confidenceIndicator.dot}</span>
+          <span className="status-line__confidence-bar">{confidenceIndicator.bar}</span>
           <span className="status-line__confidence-value">{confidencePercent}%</span>
         </div>
       )}
@@ -158,6 +168,30 @@ export const StatusLine = memo(function StatusLine({
 
       {/* Spacer */}
       <div className="status-line__spacer" />
+
+      {/* Mode-specific hints */}
+      {mode === 'NORMAL' && (
+        <div className="status-line__hints" title="Press ? for all shortcuts">
+          <kbd>j</kbd>/<kbd>k</kbd> scroll · <kbd>gh</kbd>/<kbd>gl</kbd> nav · <kbd>?</kbd> help
+        </div>
+      )}
+      {mode === 'INSERT' && (
+        <div className="status-line__hints">
+          <kbd>Esc</kbd> exit
+        </div>
+      )}
+      {mode === 'EDGE' && (
+        <div className="status-line__hints">
+          <kbd>d/e/i/r/c/t</kbd> type · <kbd>Esc</kbd> cancel
+        </div>
+      )}
+
+      {/* Director status (for spec files) */}
+      {directorStatus && (
+        <div className="status-line__director">
+          <DocumentStatusBadge status={directorStatus} size="sm" />
+        </div>
+      )}
 
       {/* Node path */}
       {nodePath && <div className="status-line__path">{nodePath}</div>}

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from protocols.cli.handler_meta import handler
+
 
 def _print_help() -> None:
     """Print help for init command."""
@@ -32,6 +34,7 @@ def _print_help() -> None:
     print("  kgents init ~/projects/myapp  # Initialize specific directory")
 
 
+@handler("init", is_async=False, tier=1, description="Initialize kgents workspace")
 def cmd_init(args: list[str]) -> int:
     """Handle init command: Initialize a kgents workspace."""
     # Parse args

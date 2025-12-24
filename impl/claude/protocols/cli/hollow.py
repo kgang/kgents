@@ -170,6 +170,16 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "archaeology": "protocols.cli.handlers.archaeology:cmd_archaeology",
     # ==========================================================================
+    # AUDIT: Spec validation against principles and implementation (Phase 1)
+    # Validates specs against 7 constitutional principles and detects drift
+    # ==========================================================================
+    "audit": "protocols.cli.commands.audit:cmd_audit",
+    # ==========================================================================
+    # PROBE: Fast categorical law checks and health probes (Phase 4)
+    # Quick identity/associativity law verification and Crown Jewel health checks
+    # ==========================================================================
+    "probe": "protocols.cli.handlers.probe_thin:cmd_probe",
+    # ==========================================================================
     # FILE_OPERAD: Navigate Operads as Documents (Session 2)
     # Portal tokens enable inline expansion of cross-operad links
     # ==========================================================================
@@ -200,6 +210,21 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Bootstrap, ingest, sync, diff - all data enters witnessed
     # ==========================================================================
     "sovereign": "protocols.cli.handlers.sovereign_thin:cmd_sovereign",
+    # ==========================================================================
+    # ANNOTATE: Spec ↔ Impl mapping (concept.annotate.*)
+    # Principles, impl links, gotchas, taste - bidirectional tracing
+    # ==========================================================================
+    "annotate": "protocols.cli.handlers.annotate:cmd_annotate",
+    # ==========================================================================
+    # COMPOSE: Chain kg operations with unified witnessing (Phase 5)
+    # Sequential execution, dependency resolution, trace linking
+    # ==========================================================================
+    "compose": "protocols.cli.commands.compose:cmd_compose",
+    # ==========================================================================
+    # EXPERIMENT: Bayesian evidence gathering experiments (Phase 3)
+    # VoidHarness execution, Bayesian stopping, parse experiments
+    # ==========================================================================
+    "experiment": "protocols.cli.commands.experiment:main",
 }
 
 
@@ -702,6 +727,72 @@ def _handle_agentese(args: list[str], flags: dict[str, Any]) -> int:
         _sync_shutdown(verbose=verbose)
 
 
+def _print_windows_error() -> None:
+    """Print a helpful error message for Windows users."""
+    try:
+        from rich.console import Console
+        from rich.panel import Panel
+
+        console = Console(stderr=True)
+        content = (
+            "[bold red]kgents requires Unix (macOS/Linux)[/bold red]\n\n"
+            "[dim]Windows users can use:[/dim]\n"
+            "  • [cyan]WSL2:[/cyan] wsl --install\n"
+            "  • [cyan]Docker:[/cyan] docker run -it kgents/kgents\n\n"
+            "[dim]See:[/dim] https://kgents.dev/docs/windows"
+        )
+        console.print(Panel(content, border_style="red", padding=(1, 2)))
+    except ImportError:
+        # Fallback without rich
+        print("", file=sys.stderr)
+        print("╭─────────────────────────────────────────────────────╮", file=sys.stderr)
+        print("│  kgents requires Unix (macOS/Linux)                 │", file=sys.stderr)
+        print("│                                                     │", file=sys.stderr)
+        print("│  Windows users can use:                             │", file=sys.stderr)
+        print("│    • WSL2: wsl --install                            │", file=sys.stderr)
+        print("│    • Docker: docker run -it kgents/kgents           │", file=sys.stderr)
+        print("│                                                     │", file=sys.stderr)
+        print("│  See: https://kgents.dev/docs/windows               │", file=sys.stderr)
+        print("╰─────────────────────────────────────────────────────╯", file=sys.stderr)
+        print("", file=sys.stderr)
+
+
+def _print_daemon_required_error() -> None:
+    """Print a helpful error message when the daemon is not running."""
+    try:
+        from rich.console import Console
+        from rich.panel import Panel
+
+        console = Console(stderr=True)
+        content = (
+            "[bold red]kgentsd daemon is not running[/bold red]\n\n"
+            "[dim]Start the daemon:[/dim]\n"
+            "  [cyan]kgentsd summon[/cyan]\n\n"
+            "[dim]The daemon provides:[/dim]\n"
+            "  • Persistent context across commands\n"
+            "  • Trust-gated execution\n"
+            "  • Audit logging\n"
+            "  • Interactive terminal support"
+        )
+        console.print(Panel(content, border_style="red", padding=(1, 2)))
+    except ImportError:
+        # Fallback without rich
+        print("", file=sys.stderr)
+        print("╭─────────────────────────────────────────────────────╮", file=sys.stderr)
+        print("│  kgentsd daemon is not running                      │", file=sys.stderr)
+        print("│                                                     │", file=sys.stderr)
+        print("│  Start the daemon:                                  │", file=sys.stderr)
+        print("│    kgentsd summon                                   │", file=sys.stderr)
+        print("│                                                     │", file=sys.stderr)
+        print("│  The daemon provides:                               │", file=sys.stderr)
+        print("│    • Persistent context across commands             │", file=sys.stderr)
+        print("│    • Trust-gated execution                          │", file=sys.stderr)
+        print("│    • Audit logging                                  │", file=sys.stderr)
+        print("│    • Interactive terminal support                   │", file=sys.stderr)
+        print("╰─────────────────────────────────────────────────────╯", file=sys.stderr)
+        print("", file=sys.stderr)
+
+
 def _show_global_help() -> int:
     """
     Show global help using the new help system.
@@ -766,6 +857,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
 
+    # Platform check: kgents requires Unix (PTY support)
+    if sys.platform == "win32":
+        _print_windows_error()
+        return 1
+
     args = list(argv)
 
     # Parse global flags (fast, no imports)
@@ -795,36 +891,41 @@ def main(argv: Sequence[str] | None = None) -> int:
     command_args = remaining[1:]
 
     # =========================================================================
-    # Local-Only Commands (Bypass Daemon)
+    # Command-Level Help (Fast Path - No Bootstrap/Daemon)
     # =========================================================================
-    # These commands run locally even when daemon infrastructure exists.
-    # They don't require daemon context, trust-gating, or audit logging.
-    LOCAL_ONLY_COMMANDS = {
-        "op",  # FILE_OPERAD: navigate operads as documents
-        "context",  # TYPED-HYPERGRAPH: navigate context as hypergraph
-        "init",
-        "wipe",
-        "migrate",
-        "completions",
-        "dawn",  # Dawn Cockpit TUI
-        "coffee",  # Morning Coffee (both local + daemon compatible)
-        "brain",  # Brain extinction queries (local + daemon compatible)
-        "docs",  # Living Docs (local + daemon compatible)
-        "witness",  # Witness dashboard needs stdin for interactive mode
-        "sovereign",  # Inbound Sovereignty (local file operations)
-        "graph",  # WitnessedGraph: unified edge composition (local + daemon compatible)
-    }
+    # Handle help BEFORE daemon routing. The --help flag is consumed by
+    # parse_global_flags and stored in flags["help"], so we need to check
+    # it here and handle help locally (no daemon round-trip needed).
+    # =========================================================================
+    if flags["help"] or "--help" in command_args or "-h" in command_args:
+        # Try projected help first
+        result = _show_command_help(command)
+        if result >= 0:
+            return result
+        # Fallback to handler's built-in help
+        handler = resolve_command(command)
+        if handler:
+            filtered_args = [a for a in command_args if a not in ("--help", "-h")]
+            return int(handler(["--help"] + filtered_args))
+        else:
+            print_suggestions(command)
+            return 1
 
-    if command not in LOCAL_ONLY_COMMANDS:
-        # =====================================================================
-        # Daemon Routing (Strict Mode)
-        # =====================================================================
-        # When kgentsd is running, ALL commands route through the daemon.
-        # This provides centralized execution with daemon context, trust-gating,
-        # and audit logging for all CLI activity.
-        #
-        # If daemon is not running, we fail with an error (strict mode).
-        # =====================================================================
+    # =========================================================================
+    # Daemon Routing (All Commands)
+    # =========================================================================
+    # ALL commands route through the kgentsd daemon. This provides:
+    # - Centralized execution with daemon context
+    # - Trust-gated operations via ActionGate
+    # - Audit logging for all CLI activity
+    # - PTY support for interactive commands
+    #
+    # If daemon is not running, we fail with a helpful error message.
+    #
+    # KGENTS_INSIDE_DAEMON: Set by daemon when spawning PTY subprocess.
+    # Prevents recursive routing (daemon -> PTY -> daemon -> PTY -> ...).
+    # =========================================================================
+    if not os.environ.get("KGENTS_INSIDE_DAEMON"):
         try:
             from services.kgentsd.socket_client import (
                 DaemonConnectionError,
@@ -836,7 +937,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
 
             if is_daemon_available():
-                # Route through daemon
+                # Route through daemon (PTY mode auto-selected if stdin/stdout are TTYs)
                 try:
                     response = route_command(command, command_args, flags)
                     if response.stdout:
@@ -854,9 +955,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                     print(f"Error: Invalid response from kgentsd: {e}", file=sys.stderr)
                     return 1
             else:
-                # Daemon not running - strict mode means we fail
-                print("Error: kgentsd daemon is not running.", file=sys.stderr)
-                print("Start with: kgentsd summon", file=sys.stderr)
+                # Daemon not running - show helpful message
+                _print_daemon_required_error()
                 return 1
 
         except ImportError:
@@ -891,20 +991,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Route through AGENTESE router
         return _handle_agentese(remaining, flags)
 
-    # Check for command-level help (no bootstrap needed)
-    if flags["help"] or "--help" in command_args or "-h" in command_args:
-        # Try projected help first
-        result = _show_command_help(command)
-        if result >= 0:
-            return result
-        # Fallback to handler's built-in help
-        handler = resolve_command(command)
-        if handler:
-            filtered_args = [a for a in command_args if a not in ("--help", "-h")]
-            return int(handler(["--help"] + filtered_args))
-        else:
-            print_suggestions(command)
-            return 1
+    # Note: Command-level help is handled BEFORE daemon routing (see above)
 
     # Resolve command
     handler = resolve_command(command)

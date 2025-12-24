@@ -15,10 +15,13 @@ import asyncio
 import signal
 from typing import TYPE_CHECKING, Any
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
 
+@handler("subscribe", is_async=False, needs_pty=True, tier=2, description="Subscribe to AGENTESE events")
 def cmd_subscribe(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Subscribe to AGENTESE events.

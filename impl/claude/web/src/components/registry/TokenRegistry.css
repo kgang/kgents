@@ -1,0 +1,203 @@
+/**
+ * TokenRegistry Styles
+ *
+ * Utilitarian flat grid with virtualization.
+ *
+ * STARK BIOME: "The frame is humble. The content glows."
+ */
+
+/* =============================================================================
+   Container
+   ========================================================================== */
+
+.token-registry {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-steel-950);
+}
+
+/* =============================================================================
+   Loading / Error States
+   ========================================================================== */
+
+.token-registry--loading,
+.token-registry--error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.token-registry__loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.token-registry__loader-icon {
+  font-size: 32px;
+  animation: token-registry-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes token-registry-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.token-registry__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  text-align: center;
+}
+
+.token-registry__error p {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 14px;
+}
+
+.token-registry__error button {
+  padding: 8px 16px;
+  background: var(--color-steel-800);
+  border: 1px solid var(--color-steel-700);
+  border-radius: 4px;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.token-registry__error button:hover {
+  background: var(--color-steel-700);
+  color: var(--color-text-primary);
+}
+
+/* =============================================================================
+   Grid
+   ========================================================================== */
+
+.token-registry__grid {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+}
+
+.token-registry__grid-inner {
+  width: 100%;
+}
+
+.token-registry__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+/* =============================================================================
+   Empty State
+   ========================================================================== */
+
+.token-registry__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 300px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.token-registry__empty-icon {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+.token-registry__empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.token-registry__empty button {
+  padding: 8px 16px;
+  background: var(--color-steel-800);
+  border: 1px solid var(--color-steel-700);
+  border-radius: 4px;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.token-registry__empty button:hover {
+  background: var(--color-steel-700);
+  color: var(--color-text-primary);
+}
+
+/* =============================================================================
+   Keyboard Hints
+   ========================================================================== */
+
+.token-registry__hints {
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  background: var(--color-steel-900);
+  border-top: 1px solid var(--color-steel-800);
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.token-registry__hints span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.token-registry__hints kbd {
+  display: inline-block;
+  padding: 2px 5px;
+  background: var(--color-steel-800);
+  border: 1px solid var(--color-steel-700);
+  border-radius: 3px;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+
+/* =============================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .token-registry__grid {
+    padding: 12px;
+  }
+
+  .token-registry__hints {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .token-registry__row {
+    flex-direction: column;
+  }
+
+  .token-registry__hints {
+    display: none;
+  }
+}

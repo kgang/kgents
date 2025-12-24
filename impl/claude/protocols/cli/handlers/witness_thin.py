@@ -33,6 +33,8 @@ import sys
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
@@ -266,27 +268,16 @@ async def _bootstrap_and_run(coro_func: Any, *args: Any, **kwargs: Any) -> Any:
     """
     Bootstrap services and run a coroutine in a fresh context.
 
-    This ensures:
-    1. Registry is reset to avoid stale connections from different event loops
-    2. AGENTESE container cache is cleared to avoid stale singleton references
-    3. Services are properly bootstrapped before use
-    4. The coroutine runs in a clean async context
+    This ensures services are properly initialized before use.
 
-    Why this is needed:
-    - CLI bootstrap runs in event loop A, creating session factory + engine
-    - Handler runs in event loop B via asyncio.run()
-    - Without reset, we'd try to use loop A's connections on loop B
-    - This causes "Future attached to a different loop" errors
+    Note: We DON'T call reset_registry() or reset_container() because:
+    - In daemon mode: Services are already bootstrapped, resetting breaks them
+    - In CLI mode: Each asyncio.run() creates a fresh event loop anyway
+    - Resetting while connections are in use causes "operation in progress" errors
     """
-    from protocols.agentese.container import reset_container
-    from services.bootstrap import bootstrap_services, reset_registry
+    from services.bootstrap import bootstrap_services
 
-    # Reset both registry (disposes engine) and container (clears cached singletons)
-    # This ensures fresh initialization on the new event loop
-    reset_registry()
-    reset_container()
-
-    # Bootstrap fresh on this event loop
+    # Bootstrap fresh on this event loop (idempotent if already done)
     await bootstrap_services()
 
     # Now run the actual coroutine
@@ -304,13 +295,41 @@ def _run_async_factory(coro_func: Any) -> Any:
 
     This avoids "Future attached to a different loop" and
     "another operation is in progress" errors from stale connections.
+
+    ALWAYS does full reset+bootstrap, whether in daemon or not, because:
+    - Each thread pool worker needs its own event loop
+    - Each event loop needs its own DB session/engine
+    - Reusing cross-loop connections causes "Event loop is closed" errors
     """
     import asyncio
+    import os
     from functools import wraps
 
     @wraps(coro_func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
-        return asyncio.run(_bootstrap_and_run(coro_func, *args, **kwargs))
+        # Create a fresh event loop explicitly
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            # Run with bootstrap
+            return loop.run_until_complete(_bootstrap_and_run(coro_func, *args, **kwargs))
+        finally:
+            # Clean up completely
+            try:
+                # Cancel all pending tasks
+                pending = asyncio.all_tasks(loop)
+                for task in pending:
+                    task.cancel()
+                # Run loop once more to process cancellations
+                if pending:
+                    loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                # Now close the loop
+                loop.close()
+            except Exception:
+                pass
+            finally:
+                # Clear thread-local reference
+                asyncio.set_event_loop(None)
 
     return wrapper
 
@@ -2059,6 +2078,7 @@ def cmd_graph(args: list[str]) -> int:
 # =============================================================================
 
 
+@handler("witness", is_async=False, tier=1, description="Everyday mark-making")
 def cmd_witness(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Witness Crown Jewel: Mark-making CLI.

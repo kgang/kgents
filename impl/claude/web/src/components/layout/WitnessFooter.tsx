@@ -10,7 +10,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { useWitnessStream, type WitnessEvent } from '../../membrane/useWitnessStream';
+import { useWitnessStream, type WitnessEvent } from '../../hooks/useWitnessStream';
 
 import './WitnessFooter.css';
 
@@ -100,6 +100,10 @@ interface ExpandedEventProps {
 }
 
 function ExpandedEvent({ event }: ExpandedEventProps) {
+  // Show first 2 principles + "+N more" badge
+  const visiblePrinciples = event.principles?.slice(0, 2) || [];
+  const remainingCount = (event.principles?.length || 0) - visiblePrinciples.length;
+
   return (
     <div className="witness-footer__expanded-event" data-type={event.type}>
       <div className="witness-footer__expanded-header">
@@ -113,11 +117,16 @@ function ExpandedEvent({ event }: ExpandedEventProps) {
         {event.reasoning && <p className="witness-footer__expanded-reasoning">{event.reasoning}</p>}
         {event.principles && event.principles.length > 0 && (
           <div className="witness-footer__expanded-principles">
-            {event.principles.map((p) => (
+            {visiblePrinciples.map((p) => (
               <span key={p} className="witness-footer__principle-tag">
                 {p}
               </span>
             ))}
+            {remainingCount > 0 && (
+              <span className="witness-footer__principle-tag witness-footer__principle-badge">
+                +{remainingCount}
+              </span>
+            )}
           </div>
         )}
         {event.insight && <p className="witness-footer__expanded-insight">{event.insight}</p>}
@@ -203,7 +212,7 @@ export function WitnessFooter() {
                 allEvents.map((event) => <ExpandedEvent key={event.id} event={event} />)
               ) : (
                 <p className="witness-footer__panel-empty">
-                  No witness events yet. Actions, edits, and decisions will appear here.
+                  Awaiting first mark. Actions witnessed here.
                 </p>
               )}
             </div>

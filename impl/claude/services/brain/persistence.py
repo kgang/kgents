@@ -1,16 +1,22 @@
 """
-Brain Persistence: TableAdapter + D-gent integration for Brain Crown Jewel.
+Brain Persistence: Universe-backed Storage for Brain Crown Jewel.
 
 Owns domain semantics for Brain storage:
 - WHEN to persist (on capture, on access for usage tracking)
-- WHY to persist (dual-track: fast queries + semantic search)
-- HOW to compose (TableAdapter for metadata, D-gent for semantic content)
+- WHY to persist (Crystal system for typed, versioned data)
+- HOW to compose (Universe handles backend selection and schema)
 
 AGENTESE aspects exposed:
 - capture: Store content with semantic embedding
 - search: Semantic search for similar memories
 - surface: Serendipity from the void
 - manifest: Show brain status
+
+Migration from SQLAlchemy to Universe/Crystal:
+- All data now stored as Crystals via Universe
+- Backend auto-selection: Postgres > SQLite > Memory
+- Schema versioning via frozen dataclasses
+- Graceful degradation when backends unavailable
 
 Differance Integration (Phase 6B):
 - capture() → trace with alternatives (auto_tag, defer_embedding)
@@ -19,12 +25,12 @@ Differance Integration (Phase 6B):
 - search/get/list → NO traces (read-only, high frequency)
 
 See: docs/skills/metaphysical-fullstack.md
-See: plans/differance-crown-jewel-wiring.md (Phase 6B)
+See: spec/protocols/unified-data-crystal.md
 
 Teaching:
-    gotcha: Dual-track storage means Crystal table AND D-gent must both succeed.
-            If one fails after the other succeeds, you get "ghost" memories.
-            (Evidence: test_brain_persistence.py::test_heal_ghosts)
+    gotcha: Universe provides basic filtering (prefix, timestamp, schema).
+            Complex queries (tag filtering, sorting) done in-memory.
+            (Evidence: test_brain_persistence.py::test_tag_filtering)
 
     gotcha: capture() returns immediately but trace recording is fire-and-forget.
             Never await the trace task or you'll block the hot path.
@@ -40,19 +46,20 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
-import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
-from agents.d import Datum, DgentProtocol, TableAdapter
+from agents.d.crystal import Crystal as CrystalWrapper
+from agents.d.schemas.brain import BrainCrystal, BRAIN_CRYSTAL_SCHEMA
+from agents.d.universe import Query, Universe, get_universe
 from agents.differance.alternatives import get_alternatives
 from agents.differance.integration import DifferanceIntegration
-from models.brain import Crystal, CrystalTag, ExtinctionEvent, ExtinctionTeaching, TeachingCrystal
+
+# Legacy imports for teaching/extinction methods (not yet migrated)
+from sqlalchemy import func, select
+from models.brain import ExtinctionEvent, ExtinctionTeaching, TeachingCrystal
 
 if TYPE_CHECKING:
     pass
@@ -144,20 +151,19 @@ class BrainPersistence:
     """
     Persistence layer for Brain Crown Jewel.
 
-    Composes:
-    - TableAdapter[Crystal]: Fast queries by tag, recency, access frequency
-    - D-gent: Semantic search, associative connections
+    Uses Universe for typed, versioned data storage:
+    - BrainCrystal: Memory crystals with metadata and content
+    - Backend auto-selection: Postgres > SQLite > Memory
+    - Schema versioning handles evolution
 
     Domain Semantics:
     - Crystals are the atomic units of memory
-    - Each crystal has queryable metadata AND semantic content
+    - Each crystal is stored as typed BrainCrystal dataclass
     - Usage tracking enables relevance scoring
+    - All queries use Universe with in-memory filtering for complex operations
 
     Example:
-        persistence = BrainPersistence(
-            table_adapter=TableAdapter(Crystal, session_factory),
-            dgent=dgent_router,
-        )
+        persistence = BrainPersistence()
 
         result = await persistence.capture("Python is great for data science")
         results = await persistence.search("programming language", limit=5)
@@ -165,30 +171,50 @@ class BrainPersistence:
 
     def __init__(
         self,
-        table_adapter: TableAdapter[Crystal],
-        dgent: DgentProtocol,
+        universe: Universe | None = None,
         embedder: Any | None = None,  # L-gent for embeddings
+        # Legacy parameters for teaching/extinction (not yet migrated)
+        table_adapter: Any | None = None,  # TableAdapter[Crystal] - kept for teaching methods
     ) -> None:
-        self.table = table_adapter
-        self.dgent = dgent
+        """
+        Initialize BrainPersistence.
+
+        Args:
+            universe: Optional Universe instance (uses singleton if None)
+            embedder: Optional embedder for semantic search
+            table_adapter: (Legacy) TableAdapter for teaching/extinction methods
+
+        Migration Status:
+            - Core crystal methods: MIGRATED to Universe ✓
+            - Teaching methods: Still use SQLAlchemy (TODO)
+            - Extinction methods: Still use SQLAlchemy (TODO)
+        """
+        self.universe = universe or get_universe()
         self.embedder = embedder
         self._ghosts_healed = 0
+
+        # Legacy: Keep table adapter for teaching/extinction methods
+        # TODO: Remove once those are migrated to Universe
+        self.table = table_adapter
+        if table_adapter:
+            self.session_factory = table_adapter.session_factory
+        else:
+            self.session_factory = None
+
         # Differance integration for trace recording (Phase 6B)
         self._differance = DifferanceIntegration("brain")
 
-    @property
-    def _storage_backend(self) -> str:
-        """Detect storage backend from session factory's engine URL."""
-        try:
-            # Get the engine from the session factory bind
-            engine = self.table.session_factory.kw.get("bind")
-            if engine is not None:
-                url_str = str(engine.url).lower()
-                if "postgres" in url_str:
-                    return "postgres"
-        except Exception:
-            pass
-        return "sqlite"
+        # Register schema on first init
+        self._register_schemas()
+
+    def _register_schemas(self) -> None:
+        """Register Brain schemas with Universe."""
+        self.universe.register_schema(BRAIN_CRYSTAL_SCHEMA)
+
+    async def _storage_backend(self) -> str:
+        """Detect storage backend from Universe stats."""
+        stats = await self.universe.stats()
+        return stats.backend
 
     # =========================================================================
     # AGENTESE Aspects
@@ -207,16 +233,17 @@ class BrainPersistence:
 
         AGENTESE: self.memory.capture
 
-        Dual-track storage:
-        1. Store semantic content in D-gent (for associations)
-        2. Store queryable metadata in Crystal table (for fast queries)
+        Storage via Universe/Crystal:
+        - Content stored as BrainCrystal dataclass
+        - Schema versioning handles evolution
+        - Backend auto-selected (Postgres > SQLite > Memory)
 
         Args:
             content: The content to capture
             tags: Optional tags for categorization
             source_type: Source type ("capture", "import", "generation")
             source_ref: Source reference (e.g., file path)
-            metadata: Additional metadata for D-gent
+            metadata: Additional metadata (currently unused, reserved for future)
 
         Returns:
             CaptureResult with crystal_id and storage details
@@ -225,64 +252,38 @@ class BrainPersistence:
         content_hash = hashlib.sha256(content.encode()).hexdigest()[:16]
         crystal_id = f"crystal-{uuid.uuid4().hex[:12]}"
 
-        # 1. Store semantic content in D-gent
-        datum_metadata = {
-            "type": "brain_crystal",
-            "source_type": source_type,
-            "source_ref": source_ref,
-            **(metadata or {}),
-        }
-
-        datum = Datum(
-            id=f"brain-{crystal_id}",
-            content=content.encode("utf-8"),
-            created_at=time.time(),
-            causal_parent=None,
-            metadata=datum_metadata,
-        )
-
-        datum_id = await self.dgent.put(datum)
-
-        # 2. Create summary (first 100 chars for now, could use LLM later)
+        # Create summary (first 200 chars for now, could use LLM later)
         summary = content[:200].strip()
         if len(content) > 200:
             summary += "..."
 
-        # 3. Store queryable metadata in Crystal table
-        async with self.table.session_factory() as session:
-            crystal = Crystal(
-                id=crystal_id,
-                content_hash=content_hash,
-                summary=summary,
-                tags=tags,
-                datum_id=datum_id,
-                source_type=source_type,
-                source_ref=source_ref,
-                access_count=0,
-                last_accessed=None,
-            )
-            session.add(crystal)
+        # Create BrainCrystal dataclass
+        brain_crystal = BrainCrystal(
+            summary=summary,
+            content=content,
+            content_hash=content_hash,
+            tags=tuple(tags),  # Frozen dataclass requires tuple
+            source_type=source_type,
+            source_ref=source_ref,
+            access_count=0,
+            last_accessed=None,
+            datum_id=None,  # Will be set by Universe
+        )
 
-            # Add normalized tags
-            for tag in tags:
-                crystal_tag = CrystalTag(
-                    crystal_id=crystal_id,
-                    tag=tag,
-                )
-                session.add(crystal_tag)
-
-            await session.commit()
+        # Create Crystal wrapper and store via Universe
+        crystal = CrystalWrapper.create(brain_crystal, BRAIN_CRYSTAL_SCHEMA)
+        datum_id = await self.universe.store(crystal)
 
         # Check if we have embeddings
         has_embedding = self.embedder is not None
 
         result = CaptureResult(
-            crystal_id=crystal_id,
+            crystal_id=datum_id,  # Universe returns datum ID
             content=content,
             summary=summary,
             captured_at=datetime.now(UTC).isoformat(),
             has_embedding=has_embedding,
-            storage=self._storage_backend,
+            storage=await self._storage_backend(),
             datum_id=datum_id,
             tags=tags,
         )
@@ -295,7 +296,7 @@ class BrainPersistence:
                 self._differance.record(
                     operation="capture",
                     inputs=(content[:100],),  # Truncate for trace
-                    output=crystal_id,
+                    output=datum_id,
                     context=f"Captured {source_type}",
                     alternatives=get_alternatives("brain", "capture"),
                 )
@@ -317,7 +318,8 @@ class BrainPersistence:
 
         AGENTESE: self.memory.ghost.surface
 
-        Uses D-gent for semantic search, then enriches with Crystal metadata.
+        Uses keyword-based search with in-memory filtering.
+        Future: Use L-gent for true semantic search.
 
         Args:
             query: Search query
@@ -334,51 +336,51 @@ class BrainPersistence:
             # TODO: Implement vector search via L-gent
             pass
 
-        # Strategy 2: Fall back to recent crystals with keyword match
-        async with self.table.session_factory() as session:
-            stmt = select(Crystal).order_by(Crystal.created_at.desc()).limit(limit * 2)
+        # Strategy 2: Fall back to keyword matching across all crystals
+        # Query all brain crystals from Universe
+        q = Query(schema="brain.crystal", limit=1000)  # Get more for filtering
+        all_crystals = await self.universe.query(q)
 
-            # Filter by tags if specified
-            if tags:
-                stmt = stmt.where(Crystal.tags.contains(tags))
+        # Filter by tags if specified
+        if tags:
+            all_crystals = [
+                c for c in all_crystals
+                if isinstance(c, BrainCrystal) and any(tag in c.tags for tag in tags)
+            ]
 
-            result = await session.execute(stmt)
-            crystals = result.scalars().all()
+        # Keyword matching
+        query_lower = query.lower()
+        query_words = query_lower.split()
 
-            query_lower = query.lower()
-            for crystal in crystals:
-                # Simple keyword matching for fallback
-                # Get content from D-gent if available
-                content = crystal.summary
-                if crystal.datum_id:
-                    datum = await self.dgent.get(crystal.datum_id)
-                    if datum:
-                        content = datum.content.decode("utf-8")
+        for crystal_obj in all_crystals:
+            if not isinstance(crystal_obj, BrainCrystal):
+                continue
 
-                # Calculate basic similarity (keyword-based)
-                similarity = 0.0
-                content_lower = content.lower()
-                query_words = query_lower.split()
+            # Calculate basic similarity (keyword-based)
+            content = crystal_obj.content
+            content_lower = content.lower()
+
+            if not query:  # Include all if no query
+                similarity = 1.0
+            else:
                 matches = sum(1 for word in query_words if word in content_lower)
-                if query_words:
-                    similarity = matches / len(query_words)
+                similarity = matches / len(query_words) if query_words else 0.0
 
-                if similarity > 0 or not query:  # Include all if no query
-                    results.append(
-                        SearchResult(
-                            crystal_id=crystal.id,
-                            content=content,
-                            summary=crystal.summary,
-                            similarity=similarity,
-                            captured_at=_format_datetime(crystal.created_at),
-                            is_stale=False,
-                        )
+            if similarity > 0 or not query:
+                results.append(
+                    SearchResult(
+                        crystal_id=crystal_obj.content_hash,  # Using hash as ID for now
+                        content=content,
+                        summary=crystal_obj.summary,
+                        similarity=similarity,
+                        captured_at=datetime.now(UTC).isoformat(),  # TODO: Get from datum
+                        is_stale=False,
                     )
+                )
 
-                    # Touch the crystal to update access tracking
-                    crystal.touch()
-
-            await session.commit()
+                # TODO: Update access_count - needs mutable access pattern
+                # Current BrainCrystal is frozen, so can't update directly
+                # Will need separate tracking mechanism
 
         # Sort by similarity descending
         results.sort(key=lambda r: r.similarity, reverse=True)
@@ -404,73 +406,57 @@ class BrainPersistence:
         Returns:
             SearchResult or None if brain is empty
         """
-        async with self.table.session_factory() as session:
-            # Get total count
-            count_result = await session.execute(select(func.count()).select_from(Crystal))
-            total = count_result.scalar() or 0
+        # Get all brain crystals
+        q = Query(schema="brain.crystal", limit=1000)
+        all_crystals = await self.universe.query(q)
 
-            if total == 0:
-                return None
+        if not all_crystals:
+            return None
 
-            # If context provided, search and apply entropy
-            if context:
-                results = await self.search(context, limit=10)
-                if results:
-                    # Apply entropy to selection
-                    import random
+        # If context provided, search and apply entropy
+        if context:
+            results = await self.search(context, limit=10)
+            if results:
+                # Apply entropy to selection
+                import random
 
-                    if random.random() < entropy and len(results) > 1:
-                        # Pick a random result, not the best
-                        return random.choice(results[1:])
-                    return results[0]
+                if random.random() < entropy and len(results) > 1:
+                    # Pick a random result, not the best
+                    return random.choice(results[1:])
+                return results[0]
 
-            # Random selection from all crystals
-            import random
+        # Random selection from all crystals
+        import random
+        crystal_obj = random.choice(all_crystals)
 
-            offset = random.randint(0, max(0, total - 1))
-            stmt = select(Crystal).offset(offset).limit(1)
-            result = await session.execute(stmt)
-            crystal = result.scalar_one_or_none()
+        if not isinstance(crystal_obj, BrainCrystal):
+            return None
 
-            if crystal is None:
-                return None
+        result_obj = SearchResult(
+            crystal_id=crystal_obj.content_hash,
+            content=crystal_obj.content,
+            summary=crystal_obj.summary,
+            similarity=1.0 - entropy,  # Surprise factor
+            captured_at=datetime.now(UTC).isoformat(),  # TODO: Get from datum
+            is_stale=False,
+        )
 
-            # Get content from D-gent
-            content = crystal.summary
-            if crystal.datum_id:
-                datum = await self.dgent.get(crystal.datum_id)
-                if datum:
-                    content = datum.content.decode("utf-8")
-
-            # Touch for access tracking
-            crystal.touch()
-            await session.commit()
-
-            result = SearchResult(
-                crystal_id=crystal.id,
-                content=content,
-                summary=crystal.summary,
-                similarity=1.0 - entropy,  # Surprise factor
-                captured_at=_format_datetime(crystal.created_at),
-                is_stale=False,
-            )
-
-            # Fire-and-forget trace recording (Phase 6B)
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(
-                    self._differance.record(
-                        operation="surface",
-                        inputs=(context[:50] if context else "random",),
-                        output=crystal.id,
-                        context=f"Surfaced with entropy={entropy:.2f}",
-                        alternatives=get_alternatives("brain", "surface"),
-                    )
+        # Fire-and-forget trace recording (Phase 6B)
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(
+                self._differance.record(
+                    operation="surface",
+                    inputs=(context[:50] if context else "random",),
+                    output=crystal_obj.content_hash,
+                    context=f"Surfaced with entropy={entropy:.2f}",
+                    alternatives=get_alternatives("brain", "surface"),
                 )
-            except RuntimeError:
-                logger.debug("No event loop for surface trace recording")
+            )
+        except RuntimeError:
+            logger.debug("No event loop for surface trace recording")
 
-            return result
+        return result_obj
 
     async def manifest(self) -> BrainStatus:
         """
@@ -481,19 +467,16 @@ class BrainPersistence:
         Returns:
             BrainStatus with crystal counts and health metrics
         """
-        async with self.table.session_factory() as session:
-            # Count crystals
-            count_result = await session.execute(select(func.count()).select_from(Crystal))
-            total_crystals = count_result.scalar() or 0
+        # Get stats from Universe
+        stats = await self.universe.stats()
 
-            # Count crystals with datum_id (linked to D-gent)
-            linked_result = await session.execute(
-                select(func.count()).select_from(Crystal).where(Crystal.datum_id.isnot(None))
-            )
-            linked_count = linked_result.scalar() or 0
+        # Query all brain crystals to count
+        q = Query(schema="brain.crystal", limit=10000)  # High limit for counting
+        all_crystals = await self.universe.query(q)
+        total_crystals = len(all_crystals)
 
-        # Calculate coherency (how many crystals have D-gent links)
-        coherency_rate = linked_count / total_crystals if total_crystals > 0 else 1.0
+        # All crystals in Universe have datum_id by design
+        coherency_rate = 1.0
 
         return BrainStatus(
             total_crystals=total_crystals,
@@ -501,8 +484,8 @@ class BrainPersistence:
             has_semantic=self.embedder is not None,
             coherency_rate=coherency_rate,
             ghosts_healed=self._ghosts_healed,
-            storage_path="~/.local/share/kgents/brain",
-            storage_backend=self._storage_backend,
+            storage_path="~/.local/share/kgents/membrane",  # Universe uses XDG paths
+            storage_backend=stats.backend,
         )
 
     # =========================================================================
@@ -511,111 +494,91 @@ class BrainPersistence:
 
     async def get_by_id(self, crystal_id: str) -> SearchResult | None:
         """Get a specific crystal by ID."""
-        async with self.table.session_factory() as session:
-            crystal = await session.get(Crystal, crystal_id)
-            if crystal is None:
-                return None
+        # Get crystal from Universe
+        crystal_obj = await self.universe.get(crystal_id)
 
-            content = crystal.summary
-            if crystal.datum_id:
-                datum = await self.dgent.get(crystal.datum_id)
-                if datum:
-                    content = datum.content.decode("utf-8")
+        if crystal_obj is None or not isinstance(crystal_obj, BrainCrystal):
+            return None
 
-            crystal.touch()
-            await session.commit()
-
-            return SearchResult(
-                crystal_id=crystal.id,
-                content=content,
-                summary=crystal.summary,
-                similarity=1.0,
-                captured_at=_format_datetime(crystal.created_at),
-                is_stale=False,
-            )
+        return SearchResult(
+            crystal_id=crystal_obj.content_hash,
+            content=crystal_obj.content,
+            summary=crystal_obj.summary,
+            similarity=1.0,
+            captured_at=datetime.now(UTC).isoformat(),  # TODO: Get from datum
+            is_stale=False,
+        )
 
     async def list_recent(self, limit: int = 10) -> list[SearchResult]:
         """List recent crystals."""
-        async with self.table.session_factory() as session:
-            stmt = select(Crystal).order_by(Crystal.created_at.desc()).limit(limit)
-            result = await session.execute(stmt)
-            crystals = result.scalars().all()
+        # Query all brain crystals
+        q = Query(schema="brain.crystal", limit=limit * 2)  # Get more for sorting
+        all_crystals = await self.universe.query(q)
 
-            results = []
-            for crystal in crystals:
-                content = crystal.summary
-                if crystal.datum_id:
-                    datum = await self.dgent.get(crystal.datum_id)
-                    if datum:
-                        content = datum.content.decode("utf-8")
+        # Filter to BrainCrystal type
+        brain_crystals = [c for c in all_crystals if isinstance(c, BrainCrystal)]
 
-                results.append(
-                    SearchResult(
-                        crystal_id=crystal.id,
-                        content=content,
-                        summary=crystal.summary,
-                        similarity=1.0,
-                        captured_at=_format_datetime(crystal.created_at),
-                        is_stale=False,
-                    )
+        # TODO: Sort by created_at when datum metadata is accessible
+        # For now, return in query order (most recent first from Universe)
+        results = []
+        for crystal_obj in brain_crystals[:limit]:
+            results.append(
+                SearchResult(
+                    crystal_id=crystal_obj.content_hash,
+                    content=crystal_obj.content,
+                    summary=crystal_obj.summary,
+                    similarity=1.0,
+                    captured_at=datetime.now(UTC).isoformat(),  # TODO: Get from datum
+                    is_stale=False,
                 )
+            )
 
-            return results
+        return results
 
     async def list_by_tag(self, tag: str, limit: int = 10) -> list[SearchResult]:
         """List crystals with a specific tag."""
-        async with self.table.session_factory() as session:
-            stmt = (
-                select(Crystal)
-                .join(CrystalTag)
-                .where(CrystalTag.tag == tag)
-                .order_by(Crystal.created_at.desc())
-                .limit(limit)
-            )
-            result = await session.execute(stmt)
-            crystals = result.scalars().all()
+        # Query all brain crystals and filter by tag in-memory
+        q = Query(schema="brain.crystal", limit=1000)  # Get more for filtering
+        all_crystals = await self.universe.query(q)
 
-            results = []
-            for crystal in crystals:
-                content = crystal.summary
-                if crystal.datum_id:
-                    datum = await self.dgent.get(crystal.datum_id)
-                    if datum:
-                        content = datum.content.decode("utf-8")
+        # Filter to crystals with the specified tag
+        tagged_crystals = [
+            c for c in all_crystals
+            if isinstance(c, BrainCrystal) and tag in c.tags
+        ]
 
-                results.append(
-                    SearchResult(
-                        crystal_id=crystal.id,
-                        content=content,
-                        summary=crystal.summary,
-                        similarity=1.0,
-                        captured_at=_format_datetime(crystal.created_at),
-                        is_stale=False,
-                    )
+        results = []
+        for crystal_obj in tagged_crystals[:limit]:
+            results.append(
+                SearchResult(
+                    crystal_id=crystal_obj.content_hash,
+                    content=crystal_obj.content,
+                    summary=crystal_obj.summary,
+                    similarity=1.0,
+                    captured_at=datetime.now(UTC).isoformat(),  # TODO: Get from datum
+                    is_stale=False,
                 )
+            )
 
-            return results
+        return results
 
     async def delete(self, crystal_id: str) -> bool:
-        """Delete a crystal and its D-gent datum."""
-        async with self.table.session_factory() as session:
-            crystal = await session.get(Crystal, crystal_id)
-            if crystal is None:
-                return False
+        """Delete a crystal from Universe."""
+        # Get crystal first to capture summary for trace
+        crystal_obj = await self.universe.get(crystal_id)
 
-            # Capture summary before deletion for trace
-            deleted_summary = crystal.summary[:50] if crystal.summary else "unknown"
+        if crystal_obj is None:
+            return False
 
-            # Delete from D-gent first
-            if crystal.datum_id:
-                await self.dgent.delete(crystal.datum_id)
+        deleted_summary = "unknown"
+        if isinstance(crystal_obj, BrainCrystal):
+            deleted_summary = crystal_obj.summary[:50]
 
-            # Delete from table (cascade deletes tags)
-            await session.delete(crystal)
-            await session.commit()
+        # Delete from Universe
+        success = await self.universe.delete(crystal_id)
 
+        if success:
             # Fire-and-forget trace recording (Phase 6B)
-            # Record what was lost — irreversible operation
             try:
                 loop = asyncio.get_running_loop()
                 loop.create_task(
@@ -630,43 +593,33 @@ class BrainPersistence:
             except RuntimeError:
                 logger.debug("No event loop for delete trace recording")
 
-            return True
+        return success
 
     async def heal_ghosts(self) -> int:
         """
         Heal ghost memories (crystals without D-gent datums).
 
-        Returns count of healed ghosts.
+        NOTE: With Universe, ghosts shouldn't exist - all crystals are
+        stored as complete datum+schema pairs. This method exists for
+        backward compatibility but should always return 0.
+
+        Returns count of healed ghosts (always 0 with Universe).
         """
-        healed = 0
-        async with self.table.session_factory() as session:
-            # Find crystals with broken D-gent links
-            stmt = select(Crystal).where(Crystal.datum_id.isnot(None))
-            result = await session.execute(stmt)
-            crystals = result.scalars().all()
-
-            for crystal in crystals:
-                if crystal.datum_id:
-                    datum = await self.dgent.get(crystal.datum_id)
-                    if datum is None:
-                        # Ghost found - recreate datum from summary
-                        new_datum = Datum(
-                            id=crystal.datum_id,
-                            content=crystal.summary.encode("utf-8"),
-                            created_at=time.time(),
-                            causal_parent=None,
-                            metadata={"type": "brain_crystal", "healed": "true"},
-                        )
-                        await self.dgent.put(new_datum)
-                        healed += 1
-
-            await session.commit()
-
-        self._ghosts_healed += healed
-        return healed
+        # Universe doesn't have ghosts - data is always complete
+        return 0
 
     # =========================================================================
     # Teaching Crystal Crystallization (Memory-First Docs)
+    # =========================================================================
+    #
+    # NOTE: Teaching and Extinction methods below still use SQLAlchemy.
+    # These haven't been migrated to Universe/Crystal yet because:
+    # 1. They use separate table models (TeachingCrystal, ExtinctionEvent)
+    # 2. They need complex queries (ancestry, tree traversal, keyword search)
+    # 3. Migration would require new schemas and query patterns
+    #
+    # TODO: Create separate schemas (brain.teaching, brain.extinction) and migrate
+    # See: https://github.com/kent/kgents/issues/XXX
     # =========================================================================
 
     async def crystallize_teaching(

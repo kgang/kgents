@@ -1,23 +1,22 @@
 """
-SQLAlchemy ORM Models for kgents Application State.
+SQLAlchemy Models + Crystal Schema Re-exports
 
-Part of the Dual-Track Architecture:
-- D-gent Track: Agent memory (schema-free, append-only, lenses)
-- Alembic Track: Application state (typed models, migrations, foreign keys)
-
-The TableAdapter bridges these tracks via DgentProtocol interface.
-
-AGENTESE: self.data.table.*
+This module provides two data layers:
+1. SQLAlchemy ORM models (for traditional DB operations)
+2. D-gent Crystal schemas (for versioned data contracts)
 
 Crown Jewel Tables:
-- brain.py: Crystal, Tag, BrainSettings
-- town.py: Citizen, Conversation, ConversationTurn
+- brain.py: Crystal, BrainSettings, TeachingCrystal, ExtinctionEvent
+- witness.py: WitnessMark, WitnessTrust, WitnessThought, WitnessAction, WitnessEscalation
+- trail.py: TrailRow, TrailStepRow, TrailAnnotationRow, TrailCommitmentRow
+- annotation.py: SpecAnnotationRow
+- ashc.py: VerifiedLemmaModel
+- sovereign.py: SovereignCollectionRow, SovereignPlaceholderRow
 
-Note: gestalt.py, coalition.py, park.py removed 2025-12-21.
+Note: town.py removed 2025-12-21 (extinct).
 """
 
-# ASHC Crown Jewel
-from .ashc import VerifiedLemmaModel
+# Base infrastructure
 from .base import (
     Base,
     CausalMixin,
@@ -38,14 +37,14 @@ from .brain import (
     TeachingCrystal,
 )
 
-# Sovereign Crown Jewel
-from .sovereign import (
-    SovereignCollectionRow,
-    SovereignPlaceholderRow,
+# Witness Crown Jewel
+from .witness import (
+    WitnessAction,
+    WitnessEscalation,
+    WitnessMark,
+    WitnessThought,
+    WitnessTrust,
 )
-
-# Town Crown Jewel
-from .town import Citizen, CitizenRelationship, Conversation, ConversationTurn
 
 # Trail Protocol
 from .trail import (
@@ -56,6 +55,15 @@ from .trail import (
     TrailRow,
     TrailStepRow,
 )
+
+# Annotation Service
+from .annotation import SpecAnnotationRow
+
+# ASHC Crown Jewel
+from .ashc import VerifiedLemmaModel
+
+# Sovereign Crown Jewel
+from .sovereign import SovereignCollectionRow, SovereignPlaceholderRow
 
 __all__ = [
     # Base infrastructure
@@ -73,13 +81,12 @@ __all__ = [
     "TeachingCrystal",
     "ExtinctionEvent",
     "ExtinctionTeaching",
-    # Town
-    "Citizen",
-    "Conversation",
-    "ConversationTurn",
-    "CitizenRelationship",
-    # ASHC
-    "VerifiedLemmaModel",
+    # Witness
+    "WitnessMark",
+    "WitnessTrust",
+    "WitnessThought",
+    "WitnessAction",
+    "WitnessEscalation",
     # Trail
     "TrailRow",
     "TrailStepRow",
@@ -87,6 +94,10 @@ __all__ = [
     "TrailForkRow",
     "TrailEvidenceRow",
     "TrailCommitmentRow",
+    # Annotation
+    "SpecAnnotationRow",
+    # ASHC
+    "VerifiedLemmaModel",
     # Sovereign
     "SovereignCollectionRow",
     "SovereignPlaceholderRow",

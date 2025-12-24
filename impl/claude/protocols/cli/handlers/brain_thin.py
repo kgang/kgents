@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from protocols.cli.handler_meta import handler
 from protocols.cli.projection import project_command, route_to_path
 
 if TYPE_CHECKING:
@@ -55,6 +56,7 @@ DEFAULT_PATH = "self.memory.manifest"
 # === Main Entry Point ===
 
 
+@handler("brain", is_async=False, tier=1, description="Holographic memory operations")
 def cmd_brain(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Holographic Brain: Route to AGENTESE self.memory.* paths.

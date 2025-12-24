@@ -101,12 +101,16 @@ class CLIAgent:
     - Single responsibility: Just execute, don't retry/parse
     """
 
+    # Default to Sonnet for cost efficiency
+    DEFAULT_MODEL = "claude-sonnet-4-20250514"
+
     def __init__(
         self,
         claude_path: str | None = None,
         timeout: float = 120.0,
         verbose: bool = False,
         progress_callback: Callable[[str], None] | None = None,
+        model: str | None = None,
     ):
         """
         Initialize CLI agent.
@@ -116,11 +120,13 @@ class CLIAgent:
             timeout: Timeout in seconds for CLI execution.
             verbose: Print progress messages during execution.
             progress_callback: Optional callback for progress updates.
+            model: Model to use (default: claude-sonnet-4-20250514 for cost efficiency).
         """
         self._claude_path = claude_path or shutil.which("claude")
         self._timeout = timeout
         self._verbose = verbose
         self._progress_callback = progress_callback
+        self._model = model or self.DEFAULT_MODEL
 
         if not self._claude_path:
             raise RuntimeError(
@@ -152,9 +158,9 @@ class CLIAgent:
 
         full_prompt = "\n\n".join(prompt_parts)
         prompt_len = len(full_prompt)
-        self._log(f"Sending {prompt_len:,} chars to Claude CLI...")
+        self._log(f"Sending {prompt_len:,} chars to Claude CLI ({self._model})...")
 
-        # Execute claude -p
+        # Execute claude -p with model
         assert self._claude_path is not None  # Already validated in __init__
         proc = await asyncio.create_subprocess_exec(
             self._claude_path,
@@ -162,6 +168,8 @@ class CLIAgent:
             full_prompt,
             "--output-format",
             "text",
+            "--model",
+            self._model,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -220,6 +228,7 @@ class ClaudeCLIRuntime(Runtime):
         progress_callback: Callable[[str], None] | None = None,
         enable_coercion: bool = True,
         coercion_confidence: float = 0.9,
+        model: str | None = None,
     ):
         """
         Initialize Claude CLI runtime.
@@ -232,6 +241,7 @@ class ClaudeCLIRuntime(Runtime):
             progress_callback: Optional callback for progress updates.
             enable_coercion: Use AI to coerce malformed responses as last resort.
             coercion_confidence: Minimum confidence (0-1) to accept coerced response.
+            model: Model to use (default: claude-sonnet-4-20250514 for cost efficiency).
         """
         # Compose with CLIAgent morphism
         self._cli_agent = CLIAgent(
@@ -239,6 +249,7 @@ class ClaudeCLIRuntime(Runtime):
             timeout=timeout,
             verbose=verbose,
             progress_callback=progress_callback,
+            model=model,
         )
         self._max_retries = max_retries
         self._enable_coercion = enable_coercion

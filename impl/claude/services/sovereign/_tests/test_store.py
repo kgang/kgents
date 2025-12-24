@@ -421,16 +421,16 @@ class TestDeletion:
         await store.store_version("spec/a.md", b"v1", "mark-1")
         await store.store_version("spec/a.md", b"v2", "mark-2")
 
-        deleted = await store.delete("spec/a.md")
-        assert deleted
+        result = await store.delete("spec/a.md")
+        assert result.success
 
         assert not await store.exists("spec/a.md")
 
     @pytest.mark.asyncio
     async def test_delete_nonexistent(self, store: SovereignStore) -> None:
-        """Should return False for nonexistent entity."""
-        deleted = await store.delete("spec/nope.md")
-        assert not deleted
+        """Should return DeleteResult with success=False for nonexistent entity."""
+        result = await store.delete("spec/nope.md")
+        assert not result.success
 
     @pytest.mark.asyncio
     async def test_delete_version(self, store: SovereignStore) -> None:

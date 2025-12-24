@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from protocols.cli.handler_meta import handler
 from protocols.cli.projection import project_command, route_to_path
 
 if TYPE_CHECKING:
@@ -42,6 +43,7 @@ DEFAULT_PATH = "concept.graph.manifest"
 # === Main Entry Point ===
 
 
+@handler("graph", is_async=False, tier=1, description="Query the WitnessedGraph")
 def cmd_graph(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     WitnessedGraph: Query the unified edge composition graph.

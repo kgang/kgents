@@ -3,6 +3,7 @@
  */
 
 .command-line {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 0.25rem 0.5rem;
@@ -30,4 +31,45 @@
 
 .command-line__input::placeholder {
   color: var(--steel-600, #444);
+}
+
+/* Completion popup */
+.command-line__completions {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  background: var(--steel-800, #2a2a2a);
+  border: 1px solid var(--steel-700, #333);
+  border-bottom: none;
+  max-height: 10rem;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.command-line__completion-item {
+  padding: 0.25rem 0.5rem;
+  color: var(--steel-200, #c0c0c0);
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.command-line__completion-item:hover {
+  background: var(--steel-700, #333);
+}
+
+.command-line__completion-item.active {
+  background: var(--accent-gold, #ffd700);
+  color: var(--steel-900, #1a1a1a);
+  font-weight: 500;
+}
+
+.command-line__completion-item.muted {
+  color: var(--steel-500, #666);
+  font-style: italic;
+  cursor: default;
+}
+
+.command-line__completion-item.muted:hover {
+  background: transparent;
 }

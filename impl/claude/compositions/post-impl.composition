@@ -1,0 +1,39 @@
+# Post-Implementation Composition
+# Run after implementing a spec section to link and validate
+
+name: post-impl
+description: Annotate implementation link and validate health
+author: kgents-core
+parameters:
+  - name: spec_path
+    type: string
+    required: true
+    description: Spec file path
+  - name: section
+    type: string
+    required: true
+    description: Spec section/heading
+  - name: impl_path
+    type: string
+    required: true
+    description: Implementation file path
+  - name: jewel
+    type: string
+    required: true
+    description: Crown Jewel name (brain, witness, etc)
+
+steps:
+  - command: kg annotate $spec_path --impl --section "$section" --link "$impl_path"
+    description: Link spec section to implementation
+    fail_fast: false
+
+  - command: kg probe health --jewel $jewel --json
+    description: Verify jewel health after implementation
+    fail_fast: true
+
+  - command: kg audit $spec_path --impl
+    description: Check for remaining spec/impl drift
+    fail_fast: false
+
+# Standard post-implementation workflow
+# Ensures traceability and correctness

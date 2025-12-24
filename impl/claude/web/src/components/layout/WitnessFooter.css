@@ -172,6 +172,15 @@
   padding: 0.5rem;
 }
 
+/* 2-column layout for large screens */
+@media (min-width: 1024px) {
+  .witness-footer__panel-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+}
+
 .witness-footer__panel-empty {
   padding: 2rem;
   text-align: center;
@@ -251,6 +260,18 @@
   background: var(--surface-2, #1a1a2e);
   border-radius: 2px;
   color: var(--accent-primary, #8b5cf6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+/* "+N more" badge styling */
+.witness-footer__principle-badge {
+  background: var(--surface-3, #252540);
+  color: var(--text-muted, #666);
+  font-weight: 600;
+  max-width: none;
 }
 
 .witness-footer__expanded-insight {

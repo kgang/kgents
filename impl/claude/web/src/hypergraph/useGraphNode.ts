@@ -16,7 +16,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { graphApi } from '../api/client';
 import type { ConceptGraphNeighborsResponse } from '../api/types/_generated/concept-graph';
-import type { GraphNode, Edge, EdgeType } from './types';
+import type { GraphNode, Edge, EdgeType } from './state/types';
 
 // =============================================================================
 // Path Utilities

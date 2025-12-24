@@ -193,32 +193,113 @@ class MonadProbe:
         self.temperature = temperature
         self._extract_answer = extract_answer or self._default_extract_answer
 
+    def _normalize_answer(self, answer: str) -> str:
+        """
+        Normalize an answer for comparison.
+
+        - Strip whitespace and punctuation
+        - Remove currency symbols ($)
+        - Remove markdown formatting (**bold**)
+        - Normalize "yes/no" variations
+        - Handle numeric formats (18 = 18.0 = 18.00)
+        """
+        import re
+
+        # Remove markdown bold
+        answer = re.sub(r"\*\*([^*]+)\*\*", r"\1", answer)
+
+        # Strip and lowercase
+        answer = answer.strip().lower()
+
+        # Remove trailing punctuation
+        answer = answer.rstrip(".,!?")
+
+        # Remove currency symbols
+        answer = answer.replace("$", "").replace("€", "").replace("£", "")
+
+        # Normalize yes/no
+        if answer in ("yes", "yep", "correct", "true", "affirmative"):
+            return "yes"
+        if answer in ("no", "nope", "incorrect", "false", "negative"):
+            return "no"
+
+        # Try to normalize numbers (remove trailing .0, .00)
+        try:
+            num = float(answer)
+            if num == int(num):
+                return str(int(num))
+            return str(num)
+        except ValueError:
+            pass
+
+        return answer
+
+    def _extract_number(self, text: str) -> str | None:
+        """Extract the last number from text."""
+        import re
+
+        # Find all numbers (including decimals and negatives)
+        # Pattern matches: 18, $18, 18.5, -3.14, etc.
+        numbers = re.findall(r"-?\$?[\d,]+\.?\d*", text)
+
+        if numbers:
+            # Take the last number, clean it
+            num = numbers[-1].replace("$", "").replace(",", "")
+            try:
+                val = float(num)
+                if val == int(val):
+                    return str(int(val))
+                return str(val)
+            except ValueError:
+                return num
+
+        return None
+
     def _default_extract_answer(self, response: str) -> str:
         """
         Extract the canonical answer from a response.
 
-        Default: Extract the last line or number found.
+        Strategy:
+        1. Look for explicit "Answer: X" or "The answer is X" patterns
+        2. Extract just the value/number after the pattern
+        3. Normalize the extracted answer
+
         Override for domain-specific extraction.
         """
-        # Look for common answer patterns
+        import re
+
         lines = response.strip().split("\n")
 
-        # Try to find "Answer: X" or "The answer is X"
+        # Strategy 1: Look for explicit answer patterns
+        answer_patterns = [
+            r"(?:the\s+)?answer\s*(?:is)?:?\s*(.+)",
+            r"(?:she|he|they|it)\s+makes?\s*:?\s*(.+)",
+            r"=\s*(.+?)(?:\s|$)",
+        ]
+
         for line in reversed(lines):
             line_lower = line.lower().strip()
-            if line_lower.startswith("answer:") or "the answer is" in line_lower:
-                # Extract after the pattern
-                for pattern in ["answer:", "the answer is"]:
-                    if pattern in line_lower:
-                        idx = line_lower.index(pattern) + len(pattern)
-                        return line[idx:].strip().rstrip(".")
+            for pattern in answer_patterns:
+                match = re.search(pattern, line_lower, re.IGNORECASE)
+                if match:
+                    extracted = match.group(1).strip()
+                    # Try to get just the number
+                    num = self._extract_number(extracted)
+                    if num:
+                        return self._normalize_answer(num)
+                    return self._normalize_answer(extracted)
 
-        # Fall back to last non-empty line
+        # Strategy 2: Find the last number in the response
+        num = self._extract_number(response)
+        if num:
+            return self._normalize_answer(num)
+
+        # Strategy 3: Fall back to last non-empty line (normalized)
         for line in reversed(lines):
             if line.strip():
-                return line.strip()
+                return self._normalize_answer(line.strip())
 
-        return response.strip()
+        return self._normalize_answer(response.strip())
 
     async def _solve(self, problem: str) -> str:
         """Generate solution and extract answer."""

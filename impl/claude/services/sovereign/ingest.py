@@ -30,6 +30,7 @@ See: spec/protocols/inbound-sovereignty.md
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -45,6 +46,43 @@ if TYPE_CHECKING:
     from services.witness.persistence import MarkResult, WitnessPersistence
 
 logger = logging.getLogger(__name__)
+
+
+def _emit_ingest_event(path: str, version: int, edge_count: int, mark_id: str) -> None:
+    """
+    Fire-and-forget: Emit SOVEREIGN_INGESTED event to WitnessSynergyBus.
+
+    This enables:
+    - ProxyReactor to invalidate spec corpus cache
+    - UI components to refresh their views
+    - Any other listeners that care about new documents
+
+    Uses asyncio.create_task for non-blocking emission.
+    """
+    from services.witness.bus import WitnessTopics, get_synergy_bus
+
+    async def _emit() -> None:
+        try:
+            bus = get_synergy_bus()
+            await bus.publish(
+                WitnessTopics.SOVEREIGN_INGESTED,
+                {
+                    "path": path,
+                    "version": version,
+                    "edge_count": edge_count,
+                    "ingest_mark_id": mark_id,
+                },
+            )
+            logger.debug(f"Emitted SOVEREIGN_INGESTED for {path}")
+        except Exception as e:
+            logger.warning(f"Failed to emit SOVEREIGN_INGESTED: {e}")
+
+    try:
+        # Fire and forget
+        asyncio.create_task(_emit())
+    except RuntimeError:
+        # No event loop running (e.g., in sync context) — skip emission
+        logger.debug("No event loop for SOVEREIGN_INGESTED emission")
 
 
 # =============================================================================
@@ -278,8 +316,22 @@ class Ingestor:
             },
         )
 
+        # Initialize analysis state as PENDING
+        from .analysis import AnalysisState, AnalysisStatus
+
+        pending_state = AnalysisState(status=AnalysisStatus.PENDING)
+        await self.store.set_analysis_state(event.claimed_path, pending_state)
+
         # Get the full entity
         entity = await self.store.get_current(event.claimed_path)
+
+        # Emit event for cache invalidation and UI refresh
+        _emit_ingest_event(
+            path=event.claimed_path,
+            version=version,
+            edge_count=len(edges),
+            mark_id=birth_mark_id,
+        )
 
         return IngestedEntity(
             path=event.claimed_path,

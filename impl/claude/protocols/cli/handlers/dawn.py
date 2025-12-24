@@ -32,6 +32,8 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
@@ -93,6 +95,7 @@ def _get_managers() -> tuple[Any, Any]:
 # =============================================================================
 
 
+@handler("dawn", is_async=False, needs_pty=True, tier=3, description="Dawn Cockpit TUI")
 def cmd_dawn(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Dawn Cockpit: Your daily operating surface.

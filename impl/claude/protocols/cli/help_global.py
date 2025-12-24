@@ -61,6 +61,7 @@ COMMAND_FAMILIES = [
         [
             ("witness", "", "Everyday mark-making"),
             ("decide", "", "Dialectical decision capture"),
+            ("audit", "", "Validate specs against principles"),
         ],
     ),
     (

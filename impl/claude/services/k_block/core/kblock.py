@@ -237,6 +237,10 @@ class KBlock:
     # Frontend should show "not ingested" UI when this is True
     not_ingested: bool = False
 
+    # Analysis gating: True if entity exists but hasn't been analyzed
+    # K-Block should be read-only until analysis_required is False
+    analysis_required: bool = False
+
     # ---------------------------------------------------------------------
     # Content Operations
     # ---------------------------------------------------------------------

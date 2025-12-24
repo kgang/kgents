@@ -217,10 +217,10 @@ class EvidenceMark(BaseModel):
 
     mark_id: str
     action: str
-    reasoning: str | None
+    reasoning: str | None = None
     author: str
-    timestamp: str | None
-    tags: list[str]
+    timestamp: str | None = None
+    tags: list[str] = []
 
 
 class EvidenceByType(BaseModel):

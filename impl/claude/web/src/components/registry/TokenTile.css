@@ -1,0 +1,187 @@
+/**
+ * TokenTile Styles
+ *
+ * Minimal tile: icon + name in ~32px height.
+ * Tier color as accent, status as suffix indicator.
+ *
+ * STARK BIOME: "The frame is humble. The content glows."
+ */
+
+/* =============================================================================
+   Token Tile
+   ========================================================================== */
+
+.token-tile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  height: 28px;
+  min-width: 100px;
+  max-width: 160px;
+
+  background: var(--color-steel-850);
+  border: 1px solid var(--color-steel-700);
+  border-radius: 4px;
+
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: left;
+
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.token-tile:hover {
+  background: var(--color-steel-800);
+  border-color: var(--tile-color, var(--color-steel-600));
+  color: var(--color-text-primary);
+}
+
+.token-tile:focus {
+  outline: none;
+  border-color: var(--tile-color, var(--color-accent));
+  box-shadow: 0 0 0 1px var(--tile-color, var(--color-accent));
+}
+
+/* Selected state */
+.token-tile[data-selected='true'] {
+  background: var(--color-steel-800);
+  border-color: var(--tile-color, var(--color-accent));
+  color: var(--color-text-primary);
+}
+
+.token-tile[data-selected='true']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--tile-color, var(--color-accent));
+  border-radius: 4px 0 0 4px;
+}
+
+/* Status variants */
+.token-tile[data-status='orphan'] {
+  opacity: 0.75;
+}
+
+.token-tile[data-status='deprecated'] {
+  opacity: 0.5;
+}
+
+.token-tile[data-status='deprecated'] .token-tile__name {
+  text-decoration: line-through;
+}
+
+.token-tile[data-status='conflicting'] {
+  border-color: var(--color-error);
+}
+
+/* Evidence indicator */
+.token-tile[data-has-evidence='true']::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-life-sage);
+}
+
+/* =============================================================================
+   Icon
+   ========================================================================== */
+
+.token-tile__icon {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--tile-color, var(--color-text-muted));
+  opacity: 0.8;
+}
+
+.token-tile:hover .token-tile__icon,
+.token-tile[data-selected='true'] .token-tile__icon {
+  opacity: 1;
+  color: var(--tile-color, var(--color-text-secondary));
+}
+
+/* =============================================================================
+   Name
+   ========================================================================== */
+
+.token-tile__name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.token-tile__status-indicator {
+  margin-left: 4px;
+  font-weight: 600;
+  color: var(--color-warning);
+}
+
+.token-tile[data-status='conflicting'] .token-tile__status-indicator {
+  color: var(--color-error);
+}
+
+/* =============================================================================
+   Placeholder
+   ========================================================================== */
+
+.token-tile--placeholder {
+  pointer-events: none;
+  animation: token-tile-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes token-tile-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* =============================================================================
+   Tooltip
+   ========================================================================== */
+
+.token-tile-tooltip__container {
+  z-index: 1000;
+  padding: 8px 12px;
+  background: var(--color-steel-900);
+  border: 1px solid var(--color-steel-700);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+}
+
+.token-tile-tooltip__path {
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.token-tile-tooltip__stats {
+  color: var(--color-text-secondary);
+  margin-bottom: 2px;
+}
+
+.token-tile-tooltip__tier {
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.token-tile-tooltip__arrow {
+  fill: var(--color-steel-900);
+}

@@ -95,3 +95,40 @@
   color: var(--text-muted, #5a5a64);
   font-style: italic;
 }
+
+/* ============================================================================
+ * Scroll Cursor — Visual reading position indicator
+ *
+ * A horizontal line that appears during keyboard scrolling (j/k/{/}/gg/G)
+ * to show the current reading position. Fades out after 2 seconds.
+ * ============================================================================ */
+
+.markdown-editor {
+  position: relative; /* For scroll cursor positioning */
+}
+
+.markdown-editor__scroll-cursor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%; /* Middle of viewport */
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--life-sage, #4a6b4a) 10%,
+    var(--life-sage, #4a6b4a) 90%,
+    transparent 100%
+  );
+  box-shadow: 0 0 8px var(--life-sage, #4a6b4a);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-50%) scaleX(0.9);
+  transition: opacity 0.3s ease-out, transform 0.2s ease-out;
+  z-index: 10;
+}
+
+.markdown-editor__scroll-cursor--visible {
+  opacity: 0.8;
+  transform: translateY(-50%) scaleX(1);
+}

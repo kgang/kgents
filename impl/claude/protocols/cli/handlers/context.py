@@ -41,6 +41,8 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
@@ -97,6 +99,7 @@ HELP_TEXT = """\
 """
 
 
+@handler("context", is_async=False, tier=1, description="Typed-hypergraph navigation")
 def cmd_context(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Navigate context as a typed-hypergraph.

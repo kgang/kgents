@@ -58,21 +58,13 @@ LEGACY_COMMANDS: dict[str, str] = {
     "brain chat": "self.jewel.brain.flow.chat.query",
     "brain import": "self.memory.import",
     "brain heal": "self.memory.heal",
-    # Witness / Mark-making (thin handler mappings)
-    "witness": "self.witness.manifest",
-    "witness mark": "self.witness.mark",
-    "witness show": "self.witness.show",
-    "witness recent": "self.witness.show",
-    "witness list": "self.witness.show",
-    "witness session": "self.witness.session",
-    "witness tree": "self.witness.tree",
-    "witness crystallize": "self.witness.crystallize",
-    "witness crystals": "self.witness.crystals",
-    "witness crystal": "self.witness.crystal",
-    "witness expand": "self.witness.expand",
-    "witness dashboard": "self.witness.dashboard",
-    "witness stream": "self.witness.stream",
-    "witness context": "self.witness.context",
+    # Witness / Mark-making: REMOVED from legacy (2025-12-23)
+    # Now uses thin handler in COMMAND_REGISTRY (witness_thin.py)
+    # The cmd_witness handler properly routes subcommands (mark, show, crystallize, etc.)
+    # to the witness service layer without going through AGENTESE aspects.
+    # Old entries routed through _handle_agentese which expected aspects that don't exist:
+    #   self.witness.mark → ERROR: Aspect 'mark' not available
+    # The witness thin handler calls cmd_mark() directly which uses WitnessPersistence
     # Graph / WitnessedGraph: REMOVED from legacy (2025-12-23)
     # Now uses thin handler in COMMAND_REGISTRY (graph_thin.py)
     # which properly calls setup_providers_sync() before AGENTESE invocation

@@ -41,6 +41,8 @@ from .scene import (
     SceneNode,
     SceneNodeId,
     SceneNodeKind,
+    Section,
+    SectionType,
     generate_node_id,
 )
 
@@ -241,6 +243,7 @@ def _affordances_to_interactions(affordances: list[dict[str, Any]]) -> tuple[Int
 async def text_span_to_scene_node(
     span: "TextSpan",
     observer: "Observer | None" = None,
+    section_index: int | None = None,
 ) -> SceneNode:
     """
     Convert a TextSpan (from parser) to a SceneNode.
@@ -248,6 +251,7 @@ async def text_span_to_scene_node(
     Args:
         span: The TextSpan to convert (may be token or plain text)
         observer: Optional observer for affordance filtering
+        section_index: Optional section index for incremental parsing (Document Proxy)
 
     Returns:
         SceneNode representing the span
@@ -259,6 +263,7 @@ async def text_span_to_scene_node(
             kind=SceneNodeKind.TEXT,
             content=span.text,
             label="",
+            section_index=section_index,
             metadata={
                 "meaning_token_kind": MeaningTokenKind.PLAIN_TEXT.value,
                 "source_position": [span.position.start, span.position.end],
@@ -329,6 +334,7 @@ async def text_span_to_scene_node(
         label=_get_token_label(token_type, token_data),
         style=_token_style(token_type),
         interactions=_affordances_to_interactions(affordances_data),
+        section_index=section_index,
         metadata={
             "meaning_token_kind": _token_type_to_kind(token_type),
             "token_type": token_type,
@@ -376,10 +382,22 @@ def _get_token_label(token_type: str, token_data: dict[str, Any]) -> str:
 # =============================================================================
 
 
+def _find_section_for_position(
+    position: int,
+    sections: list[Section],
+) -> int | None:
+    """Find section index containing the given byte position."""
+    for section in sections:
+        if section.range_start <= position < section.range_end:
+            return section.index
+    return None
+
+
 async def tokens_to_scene_graph(
     document: "ParsedDocument",
     observer: "Observer | None" = None,
     layout_mode: LayoutMode = LayoutMode.COMFORTABLE,
+    sections: list[Section] | None = None,
 ) -> SceneGraph:
     """
     Convert a ParsedDocument to a SceneGraph.
@@ -391,6 +409,7 @@ async def tokens_to_scene_graph(
         document: ParsedDocument with extracted tokens
         observer: Optional observer for affordance filtering
         layout_mode: Layout density mode
+        sections: Optional pre-computed sections for section_index assignment
 
     Returns:
         SceneGraph containing all document tokens as nodes
@@ -403,7 +422,12 @@ async def tokens_to_scene_graph(
     nodes: list[SceneNode] = []
 
     for span in document.spans:
-        node = await text_span_to_scene_node(span, observer)
+        # Determine section index from span position
+        section_index: int | None = None
+        if sections:
+            section_index = _find_section_for_position(span.position.start, sections)
+
+        node = await text_span_to_scene_node(span, observer, section_index)
         nodes.append(node)
 
     # Create layout directive based on document structure
@@ -420,6 +444,7 @@ async def markdown_to_scene_graph(
     text: str,
     observer: "Observer | None" = None,
     layout_mode: LayoutMode = LayoutMode.COMFORTABLE,
+    include_sections: bool = True,
 ) -> SceneGraph:
     """
     Convenience function: parse markdown and convert to SceneGraph.
@@ -428,6 +453,7 @@ async def markdown_to_scene_graph(
         text: Markdown text to parse
         observer: Optional observer for affordance filtering
         layout_mode: Layout density mode
+        include_sections: Whether to detect sections for section_index assignment
 
     Returns:
         SceneGraph ready for Servo rendering
@@ -435,7 +461,273 @@ async def markdown_to_scene_graph(
     from services.interactive_text.parser import parse_markdown
 
     document = parse_markdown(text)
-    return await tokens_to_scene_graph(document, observer, layout_mode)
+
+    # Detect sections if requested
+    sections: list[Section] | None = None
+    if include_sections:
+        sections = detect_sections(text)
+
+    return await tokens_to_scene_graph(document, observer, layout_mode, sections)
+
+
+# =============================================================================
+# Section Detection (Document Proxy - AD-015)
+# =============================================================================
+
+
+def detect_sections(content: str) -> list[Section]:
+    """
+    Detect semantic sections in markdown content.
+
+    Algorithm (from spec/protocols/document-proxy.md):
+    1. Headings (# to ######) always start a new section
+    2. Code blocks (``` or ~~~) are atomic sections
+    3. Frontmatter (---) is its own section
+    4. Blank lines after paragraphs mark section boundaries
+    5. Lists continue until blank line + non-list content
+    6. Tables are atomic sections
+
+    Args:
+        content: Raw markdown content
+
+    Returns:
+        List of Section objects with byte ranges and hashes
+    """
+    import hashlib
+    import re
+
+    if not content:
+        return []
+
+    lines = content.split("\n")
+    sections: list[Section] = []
+    current_start = 0
+    current_lines: list[str] = []
+    section_index = 0
+
+    # Track state
+    in_code_block = False
+    code_fence = None
+    in_frontmatter = False
+    in_table = False
+    in_list = False
+    prev_blank = False
+
+    def _finalize_section(end_line_idx: int, section_kind: str, **kwargs: Any) -> None:
+        """Finalize current section and add to list."""
+        nonlocal section_index, current_start, current_lines
+
+        if not current_lines:
+            return
+
+        # Calculate byte offsets
+        section_text = "\n".join(current_lines)
+        section_bytes = section_text.encode("utf-8")
+
+        # Skip empty sections
+        if len(section_bytes) == 0:
+            current_lines = []
+            return
+
+        range_start = current_start
+        range_end = current_start + len(section_bytes)
+
+        # Compute hash (SHA-256[:16] like K-Block)
+        section_hash = hashlib.sha256(section_bytes).hexdigest()[:16]
+
+        # Extract section-specific fields vs section-type fields
+        heading_text = kwargs.pop("heading", None)
+        level = kwargs.get("level")
+        language = kwargs.get("language")
+
+        # Create section type with only its fields
+        section_type = SectionType(kind=section_kind, level=level, language=language)
+
+        sections.append(
+            Section(
+                index=section_index,
+                range_start=range_start,
+                range_end=range_end,
+                section_hash=section_hash,
+                section_type=section_type,
+                heading=heading_text,
+            )
+        )
+
+        section_index += 1
+        current_start = range_end + 1  # +1 for the newline
+        current_lines = []
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+
+        # === FRONTMATTER ===
+        if i == 0 and stripped == "---":
+            # Start of frontmatter
+            in_frontmatter = True
+            current_lines.append(line)
+            i += 1
+            continue
+
+        if in_frontmatter:
+            current_lines.append(line)
+            if stripped == "---":
+                # End of frontmatter
+                _finalize_section(i, "frontmatter")
+                in_frontmatter = False
+            i += 1
+            continue
+
+        # === CODE BLOCKS ===
+        if stripped.startswith("```") or stripped.startswith("~~~"):
+            if not in_code_block:
+                # Start code block
+                if current_lines:
+                    # Finalize previous section
+                    _finalize_section(i - 1, "paragraph")
+
+                in_code_block = True
+                code_fence = stripped[:3]
+                # Extract language
+                language = stripped[3:].strip() or None
+                current_lines.append(line)
+            else:
+                # End code block
+                current_lines.append(line)
+                if code_fence and stripped.startswith(code_fence):
+                    # Extract language from first line
+                    first_line = current_lines[0] if current_lines else ""
+                    language = first_line[3:].strip() or None
+                    _finalize_section(i, "code_block", language=language)
+                    in_code_block = False
+                    code_fence = None
+            i += 1
+            continue
+
+        if in_code_block:
+            current_lines.append(line)
+            i += 1
+            continue
+
+        # === HEADINGS ===
+        heading_match = re.match(r"^(#{1,6})\s+(.+)$", stripped)
+        if heading_match and not in_table:
+            # Finalize previous section
+            if current_lines:
+                _finalize_section(i - 1, "paragraph")
+
+            # Start new heading section
+            level = len(heading_match.group(1))
+            heading_text = heading_match.group(2)
+            current_lines.append(line)
+            _finalize_section(i, "heading", level=level, heading=heading_text)
+            i += 1
+            continue
+
+        # === HORIZONTAL RULE ===
+        if re.match(r"^(-{3,}|\*{3,}|_{3,})$", stripped):
+            # Finalize previous section
+            if current_lines:
+                _finalize_section(i - 1, "paragraph")
+
+            # Horizontal rule is its own section
+            current_lines.append(line)
+            _finalize_section(i, "horizontal_rule")
+            i += 1
+            continue
+
+        # === TABLES ===
+        # Table row: starts with |
+        if stripped.startswith("|"):
+            if not in_table:
+                # Start of table
+                if current_lines:
+                    _finalize_section(i - 1, "paragraph")
+                in_table = True
+            current_lines.append(line)
+            i += 1
+            continue
+
+        if in_table and not stripped.startswith("|"):
+            # End of table
+            _finalize_section(i - 1, "table")
+            in_table = False
+            # Continue processing this line
+
+        # === LISTS ===
+        # List items: start with -, *, +, or digit.
+        list_match = re.match(r"^(\s*)[-*+]\s+", line) or re.match(r"^(\s*)\d+\.\s+", line)
+        if list_match:
+            if not in_list:
+                # Start of list
+                if current_lines and not prev_blank:
+                    _finalize_section(i - 1, "paragraph")
+                in_list = True
+            current_lines.append(line)
+            prev_blank = False
+            i += 1
+            continue
+
+        # === BLANK LINES ===
+        if not stripped:
+            if in_list:
+                # Blank line in list - check if list continues
+                current_lines.append(line)
+                prev_blank = True
+                i += 1
+                continue
+            elif current_lines:
+                # Blank line after content - potential section boundary
+                current_lines.append(line)
+                # Check next non-blank line to decide
+                next_i = i + 1
+                while next_i < len(lines) and not lines[next_i].strip():
+                    current_lines.append(lines[next_i])
+                    next_i += 1
+
+                if next_i < len(lines):
+                    next_line = lines[next_i]
+                    next_stripped = next_line.strip()
+
+                    # Finalize if next is heading, code block, or different content type
+                    if (
+                        next_stripped.startswith("#")
+                        or next_stripped.startswith("```")
+                        or next_stripped.startswith("~~~")
+                        or re.match(r"^(-{3,}|\*{3,}|_{3,})$", next_stripped)
+                    ):
+                        kind = "list" if in_list else "paragraph"
+                        _finalize_section(next_i - 1, kind)
+                        in_list = False
+
+                i = next_i
+                prev_blank = False
+                continue
+            else:
+                # Leading blank line - skip
+                current_start += len(line.encode("utf-8")) + 1
+                i += 1
+                continue
+
+        # === PARAGRAPH TEXT ===
+        if in_list:
+            # Non-list item after blank line in list = end of list
+            if prev_blank:
+                _finalize_section(i - 1, "list")
+                in_list = False
+
+        current_lines.append(line)
+        prev_blank = False
+        i += 1
+
+    # Finalize last section
+    if current_lines:
+        kind = "list" if in_list else "code_block" if in_code_block else "paragraph"
+        _finalize_section(len(lines) - 1, kind)
+
+    return sections
 
 
 # =============================================================================
@@ -450,4 +742,6 @@ __all__ = [
     "text_span_to_scene_node",
     "tokens_to_scene_graph",
     "markdown_to_scene_graph",
+    # Section detection
+    "detect_sections",
 ]

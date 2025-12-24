@@ -128,6 +128,42 @@
 }
 
 /* =============================================================================
+   Actions Toolbar
+   ============================================================================= */
+
+.hypergraph-editor__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 1rem;
+  background: var(--steel-900, #1a1a1a);
+  border-bottom: 1px solid var(--steel-800, #252525);
+}
+
+.hypergraph-editor__action {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--steel-700, #333);
+  background: var(--steel-800, #252525);
+  color: var(--steel-200, #ccc);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+}
+
+.hypergraph-editor__action:hover:not(:disabled) {
+  background: var(--steel-700, #333);
+  border-color: var(--steel-600, #444);
+  color: var(--steel-100, #e0e0e0);
+}
+
+.hypergraph-editor__action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
    Trail Bar
    ============================================================================= */
 
@@ -257,31 +293,51 @@
    Confidence-based Edge Styling (WitnessedGraph Evidence)
    ============================================================================= */
 
-/* High confidence (80%+): bright, solid */
+/* CSS Variables for confidence colors */
+.edge-gutter {
+  --color-edge-high: #4caf50;    /* Green - high confidence */
+  --color-edge-medium: #ff9800;  /* Orange - medium confidence */
+  --color-edge-low: #f44336;     /* Red - low confidence */
+  --color-edge-unknown: #9e9e9e; /* Gray - unknown confidence */
+}
+
+/* High confidence (80%+): green border */
 .edge-gutter__badge--high {
-  border-color: var(--steel-600, #444);
-  background: var(--steel-800, #252525);
+  border-left: 3px solid var(--color-edge-high);
 }
 
 .edge-gutter__badge--high:hover {
   background: var(--steel-700, #333);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
 }
 
-/* Medium confidence (50-80%): slightly faded */
+/* Medium confidence (50-80%): orange border */
 .edge-gutter__badge--medium {
-  opacity: 0.85;
-  border-style: dashed;
+  border-left: 3px solid var(--color-edge-medium);
 }
 
-/* Low confidence (<50%): faded, dotted */
+.edge-gutter__badge--medium:hover {
+  background: var(--steel-700, #333);
+  box-shadow: 0 0 8px rgba(255, 152, 0, 0.3);
+}
+
+/* Low confidence (<50%): red border */
 .edge-gutter__badge--low {
-  opacity: 0.6;
-  border-style: dotted;
+  border-left: 3px solid var(--color-edge-low);
 }
 
-/* Unknown confidence: no special styling */
+.edge-gutter__badge--low:hover {
+  background: var(--steel-700, #333);
+  box-shadow: 0 0 8px rgba(244, 67, 54, 0.3);
+}
+
+/* Unknown confidence: gray border */
 .edge-gutter__badge--unknown {
-  /* Default styling */
+  border-left: 3px solid var(--color-edge-unknown);
+}
+
+.edge-gutter__badge--unknown:hover {
+  background: var(--steel-700, #333);
 }
 
 /* Witnessed edges (have audit trail) get subtle glow */
@@ -393,6 +449,28 @@
   transition: opacity 0.2s ease;
 }
 
+/* Interactive document container - renders parsed tokens in NORMAL mode */
+.content-pane__interactive-container {
+  height: 100%;
+  overflow: auto;
+  padding: 1rem;
+  background: var(--steel-950, #0d0d0d);
+}
+
+.content-pane__interactive {
+  /* Token rendering styles are in components/tokens/tokens.css */
+  /* This container just provides layout context */
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--steel-200, #e0e0e0);
+}
+
+/* Interactive document should fill the container */
+.content-pane--normal .content-pane__interactive-container {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Insert mode: full editor with line numbers and editing cues */
 .content-pane--insert {
   padding: 0;
@@ -438,6 +516,56 @@
 /* Highlight the caret more prominently in edit mode */
 .content-pane--insert .cm-cursor {
   border-left: 2px solid var(--status-insert, #4caf50) !important;
+}
+
+/* =============================================================================
+   Feedback Message Overlay
+   ============================================================================= */
+
+.hypergraph-editor__feedback {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0.75rem 1.5rem;
+  background: var(--steel-900, #1a1a1a);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  animation: feedback-appear 0.2s ease;
+}
+
+@keyframes feedback-appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.hypergraph-editor__feedback--success {
+  color: var(--status-insert, #4caf50);
+  border-color: var(--status-insert, #4caf50);
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.hypergraph-editor__feedback--warning {
+  color: var(--status-edge, #ff9800);
+  border-color: var(--status-edge, #ff9800);
+  background: rgba(255, 152, 0, 0.1);
+}
+
+.hypergraph-editor__feedback--error {
+  color: var(--status-error, #f44336);
+  border-color: var(--status-error, #f44336);
+  background: rgba(244, 67, 54, 0.1);
 }
 
 /* =============================================================================
@@ -539,6 +667,118 @@
 }
 
 /* =============================================================================
+   Portal Styles (zo/zc — inline edge expansion)
+   ============================================================================= */
+
+.portal {
+  margin: 0.75rem 0;
+  background: var(--steel-900, #1a1a1a);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.portal__border {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--status-normal, #4a9eff) 0%,
+    transparent 100%
+  );
+}
+
+.portal__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--steel-850, #1f1f1f);
+  border-bottom: 1px solid var(--steel-800, #252525);
+  font-size: 0.75rem;
+}
+
+.portal__title {
+  font-weight: 600;
+  color: var(--steel-200, #ccc);
+}
+
+.portal__path {
+  color: var(--steel-500, #666);
+  font-size: 0.625rem;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portal__tier {
+  padding: 0.125rem 0.25rem;
+  font-size: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 2px;
+  background: var(--steel-800, #252525);
+  color: var(--steel-400, #888);
+}
+
+.portal__tier[data-tier='CANONICAL'] {
+  background: var(--accent-gold, #ffd700);
+  color: var(--steel-900, #1a1a1a);
+}
+
+.portal__tier[data-tier='RICH'] {
+  background: var(--status-insert, #4caf50);
+  color: var(--steel-900, #1a1a1a);
+}
+
+.portal__body {
+  margin: 0;
+  padding: 0.75rem;
+  background: var(--steel-950, #0d0d0d);
+  color: var(--steel-300, #a0a0a0);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-x: auto;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.portal__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  color: var(--steel-500, #666);
+  font-size: 0.75rem;
+}
+
+.portal__spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--steel-700, #333);
+  border-top-color: var(--status-normal, #4a9eff);
+  border-radius: 50%;
+  animation: portal-spin 0.6s linear infinite;
+}
+
+@keyframes portal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.portal__error {
+  padding: 1rem;
+  text-align: center;
+  color: var(--status-error, #f44336);
+  font-size: 0.75rem;
+}
+
+/* =============================================================================
    Responsive
    ============================================================================= */
 
@@ -561,5 +801,10 @@
   .hypergraph-header__parent-label,
   .hypergraph-header__child-label {
     display: none;
+  }
+
+  .portal__body {
+    max-height: 15rem;
+    font-size: 0.75rem;
   }
 }

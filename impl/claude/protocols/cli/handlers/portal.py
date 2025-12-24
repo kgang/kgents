@@ -20,6 +20,8 @@ import asyncio
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
@@ -371,6 +373,7 @@ def cmd_list_edges(args: list[str]) -> int:
 # =============================================================================
 
 
+@handler("portal", is_async=False, tier=1, description="Source file portal navigation")
 def cmd_portal(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Portal navigation for source files.

@@ -16,6 +16,17 @@
     --color-steel-slate: #1c1c22;
     --color-steel-gunmetal: #28282f;
     --color-steel-zinc: #3a3a44;
+    --color-steel-900: #1a1a1a;
+    --color-steel-850: #1f1f1f;
+    --color-steel-800: #252525;
+    --color-steel-700: #333;
+    --color-steel-600: #444;
+    --color-steel-500: #666;
+    --color-steel-400: #888;
+    --color-steel-300: #a0a0a0;
+    --color-steel-200: #ccc;
+    --color-steel-100: #e0e0e0;
+    --color-steel-950: #0d0d0d;
 
     /* Soil Undertones (warm secondary) */
     --color-soil-loam: #1a1512;
@@ -25,6 +36,7 @@
     --color-life-moss: #1a2e1a;
     --color-life-sage: #4a6b4a;
     --color-life-mint: #6b8b6b;
+    --color-life-sprout: #8bab8b;
 
     /* Bioluminescent (earned glow) */
     --color-glow-spore: #c4a77d;
@@ -38,6 +50,101 @@
     --foreground-strong: 180 180 190; /* emphasized text */
     --muted: 58 58 68; /* steel-zinc */
     --accent: 196 167 125; /* glow-spore */
+
+    /* Semantic Surface Mappings (used across components) */
+    --surface-0: #0a0a0c; /* steel-obsidian — deepest background */
+    --surface-1: #141418; /* steel-carbon — card backgrounds */
+    --surface-2: #1c1c22; /* steel-slate — elevated surfaces */
+    --surface-3: #28282f; /* steel-gunmetal — borders, dividers */
+    --surface-4: #353550; /* elevated hover states */
+
+    /* Text Hierarchy */
+    --text-primary: #e5e7eb; /* bright text */
+    --text-secondary: #8a8a94; /* muted body text */
+    --text-muted: #5a5a64; /* whisper — hints, timestamps */
+
+    /* Borders */
+    --border-subtle: #28282f; /* steel-gunmetal */
+
+    /* Semantic Accents */
+    --accent-primary: #c4a77d; /* glow-spore — main accent */
+    --accent-primary-bright: #d4b88c; /* glow-amber — hover state */
+    --accent-secondary: #8ba98b; /* glow-lichen — secondary accent */
+    --accent-gold: #d4b88c; /* glow-amber — crystallize */
+    --accent-success: #4a6b4a; /* life-sage — healthy states */
+    --accent-error: #a65d4a; /* muted rust — alerts */
+
+    /* =================================================================
+     * MODE COLORS (Hypergraph Editor States)
+     * ================================================================= */
+    --status-insert: #4caf50; /* green — edit mode */
+    --status-edge: #ff9800; /* orange — edge mode */
+    --status-visual: #9c27b0; /* purple — visual mode */
+    --status-witness: #e91e63; /* pink — witness mode */
+    --status-normal: #4a9eff; /* blue — normal mode */
+    --status-error: #f44336; /* red — error state */
+
+    /* =================================================================
+     * HEALTH/CONFIDENCE INDICATORS
+     * ================================================================= */
+    --health-healthy: #22c55e; /* green-500 */
+    --health-degraded: #facc15; /* yellow-400 */
+    --health-warning: #f97316; /* orange-500 */
+    --health-critical: #ef4444; /* red-500 */
+
+    /* =================================================================
+     * EDGE CONFIDENCE COLORS (WitnessedGraph Evidence)
+     * ================================================================= */
+    --color-edge-high: #4caf50; /* green — high confidence 80%+ */
+    --color-edge-medium: #ff9800; /* orange — medium confidence 50-80% */
+    --color-edge-low: #f44336; /* red — low confidence <50% */
+    --color-edge-unknown: #9e9e9e; /* gray — unknown confidence */
+
+    /* =================================================================
+     * WITNESS EVENT TYPES (WitnessEvent Component)
+     * ================================================================= */
+    --witness-mark: #f59e0b; /* amber-500 — witness marks */
+    --brain-crystal: #8b5cf6; /* violet-500 — brain crystals */
+    --trail-path: #10b981; /* emerald-500 — trail paths */
+    --evidence-pass: #22c55e; /* green-500 — evidence passes */
+    --teaching-wisdom: #f97316; /* orange-500 — teaching moments */
+    --lemma-proof: #06b6d4; /* cyan-500 — lemma proofs */
+
+    /* =================================================================
+     * SEVERITY LEVELS
+     * ================================================================= */
+    --severity-info: #3b82f6; /* blue-500 */
+    --severity-warning: #f59e0b; /* amber-500 */
+    --severity-critical: #ef4444; /* red-500 */
+
+    /* =================================================================
+     * STRENGTH INDICATORS
+     * ================================================================= */
+    --strength-weak: #6b7280; /* gray-500 */
+    --strength-moderate: #f59e0b; /* amber-500 */
+    --strength-strong: #3b82f6; /* blue-500 */
+    --strength-definitive: #22c55e; /* green-500 */
+
+    /* =================================================================
+     * STATUS STATES
+     * ================================================================= */
+    --status-pending: #6b7280; /* gray-500 */
+    --status-in-progress: #3b82f6; /* blue-500 */
+    --status-success: #22c55e; /* green-500 */
+    --status-failure: #ef4444; /* red-500 */
+    --status-needs-review: #f59e0b; /* amber-500 */
+
+    /* =================================================================
+     * COMPONENT-SPECIFIC COLORS
+     * ================================================================= */
+    --color-surface: #1a1a1a; /* generic surface */
+    --color-border: #333; /* generic border */
+    --color-text: #fff; /* generic text */
+    --color-text-muted: #888; /* generic muted text */
+    --color-hover: #333; /* generic hover */
+    --color-accent: #6cf; /* generic accent */
+    --color-kbd-bg: #2a2a2a; /* keyboard shortcut background */
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
     /* =================================================================
      * "Bare Edge" Corner System
@@ -93,6 +200,12 @@
     --elastic-z-dropdown: 200;
     --elastic-z-modal: 300;
     --elastic-z-toast: 400;
+
+    /* =================================================================
+     * TYPOGRAPHY SYSTEM
+     * ================================================================= */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
   }
 
   body {

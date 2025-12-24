@@ -1,0 +1,23 @@
+# Validate Spec Composition
+# Run before modifying a spec to understand current state
+
+name: validate-spec
+description: Full audit and annotation review for a spec
+author: kgents-core
+parameters:
+  - name: spec_path
+    type: string
+    required: true
+    description: Path to spec file (e.g., spec/protocols/witness.md)
+
+steps:
+  - command: kg audit $spec_path --full
+    description: Full audit (principles + drift + coverage)
+    fail_fast: false
+
+  - command: kg annotate $spec_path --show
+    description: Display all annotations for context
+    fail_fast: false
+
+# Provides comprehensive view before modification
+# Non-blocking: shows full picture even if audit fails

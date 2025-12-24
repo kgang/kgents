@@ -10,8 +10,10 @@ Architecture (data-architecture-rewrite):
 - DgentRouter: Automatic backend selection with graceful degradation
 - DataBus: Reactive event propagation
 - AutoUpgrader: Data promotion across tiers
+- Universe: Higher-level schema-aware data management
 
-Use DgentRouter for all persistence needs - it auto-selects the best backend.
+Use DgentRouter for low-level Datum storage.
+Use Universe for typed objects (Crystal, Mark, etc.) with schema awareness.
 """
 
 # Adapters (Dual-Track Architecture)
@@ -82,6 +84,18 @@ from .upgrader import (
     verify_migration,
 )
 
+# Universe (schema-aware data management)
+from .universe import (
+    Backend as UniverseBackend,
+    DataclassSchema,
+    Query,
+    Schema,
+    Universe,
+    UniverseStats,
+    get_universe,
+    init_universe,
+)
+
 # Core stateful agents (NOT deprecated - actively used)
 from .volatile import VolatileAgent
 
@@ -106,6 +120,15 @@ __all__ = [
     "Backend",
     "BackendStatus",
     "DgentRouter",
+    # Universe (schema-aware)
+    "Universe",
+    "UniverseBackend",
+    "Schema",
+    "DataclassSchema",
+    "Query",
+    "UniverseStats",
+    "get_universe",
+    "init_universe",
     # Bus
     "DataBus",
     "DataEvent",

@@ -36,6 +36,22 @@ export {
 // Connectivity
 export { useOnlineStatus } from './useOnlineStatus';
 
+// Witness streaming (SSE connection for witness events)
+export {
+  useWitnessStream,
+  type WitnessEvent,
+  type WitnessEventType,
+  type SemanticDelta,
+  type UseWitnessStream,
+} from './useWitnessStream';
+
+// Document Director hook
+export {
+  useDirector,
+  type UseDirectorOptions,
+  type UseDirectorResult,
+} from './useDirector';
+
 // Input handling
 export {
   useKeyboardShortcuts,

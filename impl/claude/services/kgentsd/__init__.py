@@ -6,12 +6,24 @@ This module provides the background daemon that:
 - Routes events through workflows
 - Manages trust escalation
 - Provides CLI and TUI interfaces
+- Multi-processing for CPU-bound tasks (LLM, crystallization)
+- Multi-threading for I/O-bound tasks (database, file ops)
 
 The daemon is infrastructure. The witness is semantics.
 Witness primitives (Mark, Grant, Scope, Playbook) remain in services/witness/.
+
+Usage:
+    # Start daemon
+    kgentsd summon
+
+    # Stop daemon
+    kgentsd banish
+
+    # Check status
+    kgentsd status
 """
 
-from .cli import main
+from .cli import cmd_banish, cmd_status, cmd_summon, main
 from .daemon import (
     DEFAULT_WATCHERS,
     WATCHER_TYPES,
@@ -29,11 +41,24 @@ from .pipeline import Pipeline, PipelineRunner, Step
 from .reactor import Event, Reaction, WitnessReactor
 from .schedule import WitnessScheduler, create_scheduler
 from .trust_persistence import TrustPersistence
+from .worker_pool import (
+    PoolConfig,
+    ProcessPoolManager,
+    TaskType,
+    ThreadPoolManager,
+    WorkerPoolManager,
+    get_worker_pool,
+    start_worker_pools,
+    stop_worker_pools,
+)
 from .workflows import WORKFLOW_REGISTRY, WorkflowTemplate
 
 __all__ = [
     # CLI
     "main",
+    "cmd_summon",
+    "cmd_banish",
+    "cmd_status",
     # Daemon
     "DaemonConfig",
     "WitnessDaemon",
@@ -45,6 +70,15 @@ __all__ = [
     "stop_daemon",
     "create_watcher",
     "event_to_thought",
+    # Worker Pool
+    "WorkerPoolManager",
+    "ProcessPoolManager",
+    "ThreadPoolManager",
+    "PoolConfig",
+    "TaskType",
+    "get_worker_pool",
+    "start_worker_pools",
+    "stop_worker_pools",
     # Pipeline
     "Pipeline",
     "PipelineRunner",

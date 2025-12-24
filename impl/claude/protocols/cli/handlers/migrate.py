@@ -16,10 +16,13 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING
 
+from protocols.cli.handler_meta import handler
+
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
 
+@handler("migrate", is_async=False, tier=1, description="Database migrations")
 def cmd_migrate(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Database migrations for kgents.

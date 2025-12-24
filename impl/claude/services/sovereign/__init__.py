@@ -41,12 +41,26 @@ from .ingest import (
     ingest_content,
     ingest_file,
 )
+from .kblock_integration import (
+    KBlockIsolationCheck,
+    detect_conflicting_editors,
+    verify_all_kblocks,
+    verify_kblock_isolation,
+)
 from .listeners import on_kblock_saved, wire_sovereign_listeners
 from .node import SovereignNode
+from .provenance import (
+    ProvenanceChain,
+    ProvenanceStep,
+    get_provenance_chain,
+    get_provenance_summary,
+    verify_provenance_integrity,
+)
 from .store import SovereignStore
 from .types import (
     Annotation,
     AnnotationType,
+    DeleteResult,
     Diff,
     DiffType,
     IngestedEntity,
@@ -54,6 +68,22 @@ from .types import (
     SovereignEntity,
     SyncResult,
     SyncStatus,
+)
+from .verification import (
+    Check,
+    VerificationResult,
+    verify_all,
+    verify_integrity,
+)
+from .analysis_reactor import (
+    AnalysisCrystal,
+    AnalysisReactor,
+    analyze_structural,
+    analyze_with_claude,
+    create_analysis_reactor,
+    get_analysis_reactor,
+    init_analysis_reactor,
+    reset_analysis_reactor,
 )
 
 __all__ = [
@@ -67,6 +97,7 @@ __all__ = [
     "DiffType",
     "Annotation",
     "AnnotationType",
+    "DeleteResult",
     # Store
     "SovereignStore",
     # Ingest
@@ -80,4 +111,29 @@ __all__ = [
     "wire_sovereign_listeners",
     # AGENTESE Node
     "SovereignNode",
+    # Verification
+    "Check",
+    "VerificationResult",
+    "verify_integrity",
+    "verify_all",
+    # K-Block Isolation Verification (Theorem 3)
+    "KBlockIsolationCheck",
+    "verify_kblock_isolation",
+    "verify_all_kblocks",
+    "detect_conflicting_editors",
+    # Provenance Chain Retrieval (Theorem 2)
+    "ProvenanceStep",
+    "ProvenanceChain",
+    "get_provenance_chain",
+    "get_provenance_summary",
+    "verify_provenance_integrity",
+    # Analysis Reactor (Phase 2)
+    "AnalysisCrystal",
+    "AnalysisReactor",
+    "analyze_structural",
+    "analyze_with_claude",
+    "create_analysis_reactor",
+    "get_analysis_reactor",
+    "init_analysis_reactor",
+    "reset_analysis_reactor",
 ]
