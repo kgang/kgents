@@ -107,6 +107,7 @@ class NodeMetadata:
         lazy: Whether to defer instantiation until first use
         contracts: Contract declarations for type-safe BE/FE sync (Phase 7)
         examples: Pre-seeded example invocations (Habitat 2.0)
+        constitutional: Whether to evaluate against Constitution and emit principle scores
 
     Teaching:
         gotcha: Dependencies are resolved by ServiceContainer at instantiation.
@@ -122,6 +123,7 @@ class NodeMetadata:
     lazy: bool = True  # Default: defer instantiation
     contracts: "ContractsDict | None" = None  # Phase 7: Contract declarations
     examples: tuple[NodeExample, ...] = ()  # Habitat 2.0: Example invocations
+    constitutional: bool = False  # DP Bridge: Evaluate against Constitution
 
 
 # Marker attribute name for registered nodes
@@ -141,6 +143,7 @@ def node(
     contracts: "ContractsDict | None" = None,
     examples: list[tuple[str, dict[str, Any]] | tuple[str, dict[str, Any], str] | NodeExample]
     | None = None,
+    constitutional: bool = False,
 ) -> Callable[[type[T]], type[T]]:
     """
     Decorator to register a LogosNode class with the AGENTESE registry.
@@ -160,6 +163,8 @@ def node(
             Can be NodeExample objects or tuples:
             - (aspect, kwargs) - aspect name and arguments
             - (aspect, kwargs, label) - with custom label
+        constitutional: Evaluate invocations against Constitution (default: False)
+            When True, every invocation emits principle scores via DP Bridge
 
     Returns:
         Decorated class with node metadata
@@ -257,6 +262,7 @@ def node(
             lazy=lazy,
             contracts=contracts,
             examples=parsed_examples,
+            constitutional=constitutional,
         )
 
         # Attach metadata to class

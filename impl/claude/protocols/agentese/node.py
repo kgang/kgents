@@ -441,7 +441,26 @@ class BaseLogosNode(ABC):
         Execute an aspect on this node.
 
         Default implementation routes to _invoke_aspect().
+        If constitutional=True in @node metadata, wraps with DP evaluation.
         """
+        # Check if this node is constitutional
+        from .registry import get_node_metadata
+
+        meta = get_node_metadata(self.__class__)
+        if meta and meta.constitutional:
+            # Wrap invocation with constitutional evaluation
+            return await self._invoke_constitutional(aspect, observer, **kwargs)
+
+        # Standard invocation path
+        return await self._invoke_standard(aspect, observer, **kwargs)
+
+    async def _invoke_standard(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Standard invocation without constitutional evaluation."""
         if aspect == "manifest":
             return await self.manifest(observer, **kwargs)
         if aspect == "affordances":
@@ -461,6 +480,80 @@ class BaseLogosNode(ABC):
             # v3.3: Polynomial functor structure (Mini Polynomial)
             return await self.polynomial(observer)
         return await self._invoke_aspect(aspect, observer, **kwargs)
+
+    async def _invoke_constitutional(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Invoke aspect with constitutional evaluation.
+
+        Captures state before/after, evaluates against Constitution,
+        emits TraceEntry with principle scores.
+        """
+        from services.categorical import PolicyTrace, TraceEntry, ValueFunction, Principle
+
+        # Capture state before (use hashable representation)
+        state_before_str = f"{self.handle}:{aspect}:{sorted(kwargs.items())}"
+        state_before = {
+            "path": self.handle,
+            "aspect": aspect,
+            "kwargs": kwargs,
+        }
+
+        # Execute the aspect
+        result = await self._invoke_standard(aspect, observer, **kwargs)
+
+        # Capture state after
+        state_after = {
+            "path": self.handle,
+            "aspect": aspect,
+            "result": str(result)[:200],  # Truncate for brevity
+        }
+
+        # Evaluate against Constitution
+        # Use hashable state representation for caching
+        value_fn = self._get_value_function()
+        score = value_fn.evaluate(
+            agent_name=f"{self.handle}.{aspect}",
+            state=state_before_str,  # Use string instead of dict for hashability
+            action=aspect,
+        )
+
+        # Emit trace entry
+        entry = TraceEntry(
+            state_before=state_before,
+            action=f"{self.handle}.{aspect}",
+            state_after=state_after,
+            value=score.total_score,
+            rationale=f"Constitutional evaluation: {score.min_score:.2f} min, {score.total_score:.2f} avg",
+        )
+
+        # Log the trace entry (integrate with Witness in future)
+        import logging
+        logger = logging.getLogger("kgents.agentese.constitutional")
+        logger.info(
+            f"Constitutional invocation: {entry.action} -> "
+            f"value={entry.value:.3f} (min={score.min_score:.3f})"
+        )
+
+        # For now, just return the result
+        # TODO: Store trace in PolicyTrace and integrate with Witness
+        return result
+
+    def _get_value_function(self) -> "Any":
+        """
+        Get the ValueFunction for constitutional evaluation.
+
+        Override in subclasses to provide custom principle evaluators.
+        Default implementation uses neutral scoring.
+        """
+        from services.categorical import ValueFunction, Principle
+
+        # Default: neutral scoring (0.5 for all principles)
+        return ValueFunction()
 
     def _generate_help(self, observer: AgentMeta) -> str:
         """

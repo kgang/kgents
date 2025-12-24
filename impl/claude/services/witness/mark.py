@@ -33,13 +33,14 @@ Teaching:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, NewType
 from uuid import uuid4
 
 if TYPE_CHECKING:
     from protocols.nphase.schema import PhaseStatus
+    from services.categorical.dp_bridge import TraceEntry
 
 # =============================================================================
 # Type Aliases
@@ -803,6 +804,127 @@ class Mark:
             proof=proof,
             tags=tuple(data.get("tags", [])),
             metadata=data.get("metadata", {}),
+        )
+
+    def to_trace_entry(self) -> TraceEntry:
+        """
+        Convert Mark to TraceEntry for DP-native integration.
+
+        Mapping:
+        - action: response.content (what was done)
+        - state_before: stimulus.content (what triggered it)
+        - state_after: response.metadata["state"] or response.content
+        - value: derived from proof.qualifier (if proof exists)
+        - rationale: proof.warrant (if proof exists)
+        - timestamp: mark timestamp
+        """
+        from services.categorical.dp_bridge import TraceEntry
+
+        # Extract state_after from response metadata or fallback to content
+        state_after = self.response.metadata.get("state", self.response.content)
+
+        # Convert proof qualifier to value (0.0 to 1.0 scale)
+        value = 0.5  # default neutral value
+        rationale = ""
+
+        if self.proof:
+            # Map qualifiers to confidence values
+            qualifier_to_value = {
+                "definitely": 1.0,
+                "almost certainly": 0.9,
+                "probably": 0.7,
+                "arguably": 0.5,
+                "possibly": 0.3,
+                "personally": 0.8,  # somatic proofs are high confidence
+            }
+            value = qualifier_to_value.get(self.proof.qualifier.lower(), 0.5)
+            rationale = self.proof.warrant
+
+        return TraceEntry(
+            state_before=self.stimulus.content,
+            action=self.response.content,
+            state_after=state_after,
+            value=value,
+            rationale=rationale,
+            timestamp=self.timestamp if self.timestamp.tzinfo else self.timestamp.replace(tzinfo=timezone.utc),
+        )
+
+    @classmethod
+    def from_trace_entry(
+        cls,
+        entry: TraceEntry,
+        origin: str = "dp_bridge",
+        umwelt: UmweltSnapshot | None = None,
+    ) -> Mark:
+        """
+        Create Mark from TraceEntry for DP-native integration.
+
+        Reverse mapping from TraceEntry to Mark:
+        - stimulus.content: entry.state_before
+        - response.content: entry.action
+        - response.metadata["state"]: entry.state_after
+        - proof.qualifier: derived from entry.value
+        - proof.warrant: entry.rationale
+        - timestamp: entry.timestamp
+        """
+        # Convert value to qualifier
+        value_to_qualifier = {
+            (0.95, 1.01): "definitely",
+            (0.85, 0.95): "almost certainly",
+            (0.6, 0.85): "probably",
+            (0.4, 0.6): "arguably",
+            (0.0, 0.4): "possibly",
+        }
+
+        qualifier = "probably"  # default
+        for (low, high), qual in value_to_qualifier.items():
+            if low <= entry.value < high:
+                qualifier = qual
+                break
+
+        # Determine evidence tier based on value confidence
+        tier = EvidenceTier.EMPIRICAL  # default
+        if entry.value >= 0.95:
+            tier = EvidenceTier.CATEGORICAL
+        elif entry.value >= 0.7:
+            tier = EvidenceTier.EMPIRICAL
+        else:
+            tier = EvidenceTier.AESTHETIC
+
+        # Create proof if rationale exists
+        proof = None
+        if entry.rationale:
+            proof = Proof(
+                data=f"DP trace: {entry.state_before} -> {entry.state_after}",
+                warrant=entry.rationale,
+                claim=entry.action,
+                qualifier=qualifier,
+                tier=tier,
+            )
+
+        # Create stimulus and response
+        stimulus = Stimulus(
+            kind="dp_trace",
+            content=str(entry.state_before),
+            source=origin,
+            metadata={"trace_entry": True},
+        )
+
+        response = Response(
+            kind="dp_action",
+            content=entry.action,
+            success=True,
+            metadata={"state": entry.state_after, "value": entry.value},
+        )
+
+        return cls(
+            origin=origin,
+            stimulus=stimulus,
+            response=response,
+            umwelt=umwelt or UmweltSnapshot.system(),
+            timestamp=entry.timestamp,
+            proof=proof,
+            tags=("dp_trace",),
         )
 
     def __repr__(self) -> str:
