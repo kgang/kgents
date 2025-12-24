@@ -4,7 +4,10 @@ Categorical Reasoning Crown Jewel: Probing LLM Categorical Laws.
 The Categorical service provides:
 - MonadProbe: Test monad law satisfaction in LLM reasoning
 - SheafDetector: Detect coherence violations (hallucinations)
+- MiddleInvarianceProbe: Test middle-invariance hypothesis (Phase 1)
+- MonadVariatorProbe: Test semantic-preserving transformations (Phase 1)
 - CorrelationRunner: Run statistical studies on law-accuracy correlation
+- DP Bridge: Formal isomorphism between Dynamic Programming and Agent composition
 
 Philosophy:
     "LLM reasoning failures are not random. They follow patterns
@@ -12,16 +15,51 @@ Philosophy:
 
     - Monad law violations → Chain-of-thought breakdowns
     - Sheaf incoherence → Hallucinations
+    - Middle-invariance violations → Prompt brittleness
+    - Variator failures → Non-monadic behavior
 
 The Bet:
     If categorical laws correlate with reasoning correctness (r > 0.3),
     we have a new paradigm for LLM verification.
+
+The DP-Agent Isomorphism:
+    Dynamic Programming and Agent Composition are isomorphic:
+    - DP states ↔ Agent positions
+    - Bellman equations ↔ Composition laws
+    - Value functions ↔ Principle satisfaction
+    - Policy traces ↔ Witness marks
 
 See: docs/theory/03-monadic-reasoning.md
 See: docs/theory/05-sheaf-coherence.md
 See: plans/categorical-reinvention-phase1-foundations.md
 """
 
+from .dp_bridge import (
+    # Core types
+    Principle,
+    TraceEntry,
+    # Writer monad
+    PolicyTrace,
+    # Value function
+    PrincipleScore,
+    ValueScore,
+    ValueFunction,
+    ValueFunctionProtocol,
+    # Bellman morphism (functor)
+    DPState,
+    DPAction,
+    BellmanMorphism,
+    # Optimal substructure (sheaf)
+    SubproblemSolution,
+    OptimalSubstructure,
+    # Meta DP
+    ProblemFormulation,
+    MetaDP,
+    # Solver
+    DPSolver,
+)
+from .middle_invariance import MiddleInvarianceProbe, MiddleInvarianceResult
+from .monad_variators import MonadVariatorProbe, MonadVariatorResult
 from .probes import (
     AssociativityTestResult,
     # Unified probe runner
@@ -64,6 +102,11 @@ __all__ = [
     "Claim",
     "ClaimPair",
     "Violation",
+    # Phase 1 new probes
+    "MiddleInvarianceProbe",
+    "MiddleInvarianceResult",
+    "MonadVariatorProbe",
+    "MonadVariatorResult",
     # Unified runner
     "CategoricalProbeRunner",
     "ProbeResults",
@@ -79,4 +122,26 @@ __all__ = [
     "ProblemResult",
     "StudyConfig",
     "StudyResult",
+    # DP Bridge - Core types
+    "Principle",
+    "TraceEntry",
+    # DP Bridge - Writer monad
+    "PolicyTrace",
+    # DP Bridge - Value function
+    "PrincipleScore",
+    "ValueScore",
+    "ValueFunction",
+    "ValueFunctionProtocol",
+    # DP Bridge - Bellman morphism (functor)
+    "DPState",
+    "DPAction",
+    "BellmanMorphism",
+    # DP Bridge - Optimal substructure (sheaf)
+    "SubproblemSolution",
+    "OptimalSubstructure",
+    # DP Bridge - Meta DP
+    "ProblemFormulation",
+    "MetaDP",
+    # DP Bridge - Solver
+    "DPSolver",
 ]
