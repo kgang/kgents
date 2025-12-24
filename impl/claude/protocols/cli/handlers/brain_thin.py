@@ -56,13 +56,19 @@ DEFAULT_PATH = "self.memory.manifest"
 # === Main Entry Point ===
 
 
-@handler("brain", is_async=False, tier=1, description="Holographic memory operations")
-def cmd_brain(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+@handler("brain", is_async=True, tier=1, description="Holographic memory operations")
+async def cmd_brain(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Holographic Brain: Route to AGENTESE self.memory.* paths.
 
     Pattern: Delegate to AGENTESE router, with custom handlers for complex UX.
+
+    This handler is async to properly integrate with the daemon's event loop.
+    When running in daemon mode, async operations can use the daemon's
+    database sessions directly without creating conflicting connections.
     """
+    import os
+
     # Parse help flag (special case - not routed)
     if "--help" in args or "-h" in args:
         _print_help()
@@ -74,10 +80,20 @@ def cmd_brain(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     # Special case: extinct has complex sub-subcommands (list/show/wisdom)
     # This needs custom logic for UX - can't be simplified to pure AGENTESE delegation
     if subcommand == "extinct":
+        # Check if running in daemon context
+        in_daemon = os.environ.get("KGENTS_DAEMON_WORKER") is not None
+        if in_daemon:
+            return await _handle_extinct_async(args, ctx)
         return _handle_extinct(args, ctx)
 
     # Default: Delegate to AGENTESE via projection system
     path = route_to_path(subcommand, BRAIN_SUBCOMMAND_TO_PATH, DEFAULT_PATH)
+
+    # Check if running in daemon context
+    in_daemon = os.environ.get("KGENTS_DAEMON_WORKER") is not None
+    if in_daemon:
+        from protocols.cli.projection import project_command_async
+        return await project_command_async(path, args, ctx)
     return project_command(path, args, ctx)
 
 
@@ -276,6 +292,169 @@ def _handle_extinct(args: list[str], ctx: "InvocationContext | None" = None) -> 
             return 1
 
     return asyncio.run(run_extinct())
+
+
+async def _handle_extinct_async(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+    """
+    Async version of _handle_extinct for daemon mode.
+
+    Runs directly on the daemon's event loop without creating a new one.
+    """
+    import json
+
+    # Parse sub-subcommand (skip "extinct")
+    sub_sub = "list"  # default
+    event_id = None
+    module_prefix = None
+    found_extinct = False
+
+    for arg in args:
+        if arg.startswith("-"):
+            continue
+        if not found_extinct:
+            if arg.lower() == "extinct":
+                found_extinct = True
+            continue
+        if sub_sub == "list":
+            if arg.lower() in ("list", "show", "wisdom"):
+                sub_sub = arg.lower()
+            else:
+                event_id = arg
+                sub_sub = "show"
+        else:
+            if sub_sub == "show":
+                event_id = arg
+            elif sub_sub == "wisdom":
+                module_prefix = arg
+
+    try:
+        from services.bootstrap import get_service
+
+        brain = await get_service("brain_persistence")
+        as_json = "--json" in args
+
+        if sub_sub == "list":
+            events = await brain.get_extinction_events()
+            if as_json:
+                print(
+                    json.dumps(
+                        [
+                            {
+                                "id": e.id,
+                                "reason": e.reason,
+                                "commit": e.commit,
+                                "preserved_count": e.preserved_count,
+                                "deleted_paths": e.deleted_paths,
+                            }
+                            for e in events
+                        ],
+                        indent=2,
+                    )
+                )
+            else:
+                if not events:
+                    print("No extinction events recorded.")
+                    return 0
+                print("Extinction Events")
+                print("=" * 50)
+                for e in events:
+                    print(f"\n{e.id}")
+                    print(f"  Reason: {e.reason}")
+                    print(f"  Commit: {e.commit}")
+                    print(f"  Preserved: {e.preserved_count} teaching crystals")
+            return 0
+
+        elif sub_sub == "show":
+            if not event_id:
+                print("Usage: kg brain extinct show <event_id>")
+                return 1
+            event = await brain.get_extinction_event(event_id)
+            if not event:
+                events = await brain.get_extinction_events()
+                for e in events:
+                    if e.id.startswith(event_id):
+                        event = e
+                        break
+            if not event:
+                print(f"Extinction event not found: {event_id}")
+                return 1
+            if as_json:
+                print(
+                    json.dumps(
+                        {
+                            "id": event.id,
+                            "reason": event.reason,
+                            "commit": event.commit,
+                            "decision_doc": event.decision_doc,
+                            "deleted_paths": event.deleted_paths,
+                            "successor_map": event.successor_map,
+                            "preserved_count": event.preserved_count,
+                        },
+                        indent=2,
+                    )
+                )
+            else:
+                print(f"Extinction Event: {event.id}")
+                print("=" * 50)
+                print(f"Reason: {event.reason}")
+                print(f"Commit: {event.commit}")
+                if event.decision_doc:
+                    print(f"Decision Doc: {event.decision_doc}")
+                print("\nDeleted Paths:")
+                for p in event.deleted_paths:
+                    successor = event.successor_map.get(p.rstrip("/"), "(removed)")
+                    print(f"  - {p} -> {successor}")
+                print(f"\nPreserved: {event.preserved_count} teaching crystals")
+            return 0
+
+        elif sub_sub == "wisdom":
+            ghosts = await brain.get_extinct_wisdom(module_prefix=module_prefix)
+            if as_json:
+                print(
+                    json.dumps(
+                        [
+                            {
+                                "insight": g.teaching.insight,
+                                "severity": g.teaching.severity,
+                                "source_module": g.teaching.source_module,
+                                "source_symbol": g.teaching.source_symbol,
+                                "successor": g.successor,
+                            }
+                            for g in ghosts
+                        ],
+                        indent=2,
+                    )
+                )
+            else:
+                if not ghosts:
+                    mod_msg = f" for '{module_prefix}'" if module_prefix else ""
+                    print(f"No ancestral wisdom found{mod_msg}.")
+                    return 0
+                print("Ancestral Wisdom (From Deleted Code)")
+                print("=" * 50)
+                for g in ghosts[:20]:
+                    icon = {
+                        "critical": "\U0001f6a8",
+                        "warning": "\u26a0\ufe0f",
+                        "info": "\u2139\ufe0f",
+                    }.get(g.teaching.severity, "\u2022")
+                    print(f"\n{icon} {g.teaching.source_module}::{g.teaching.source_symbol}")
+                    print(f"   {g.teaching.insight}")
+                    if g.successor:
+                        print(f"   -> Migrated to: {g.successor}")
+                if len(ghosts) > 20:
+                    print(f"\n... and {len(ghosts) - 20} more")
+            return 0
+
+        else:
+            print(f"Unknown extinct subcommand: {sub_sub}")
+            return 1
+
+    except Exception as e:
+        print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
 
 
 def _print_help() -> None:

@@ -445,6 +445,121 @@ async def _invoke_via_registry(
     return await node.invoke(aspect, observer, **kwargs)
 
 
+async def project_command_async(
+    path: str,
+    args: list[str],
+    ctx: Any = None,
+    *,
+    json_output: bool = False,
+    trace_mode: bool = False,
+    kwargs: dict[str, Any] | None = None,
+    entity_name: str | None = None,
+) -> int:
+    """
+    Async version of project_command for daemon mode.
+
+    This is called directly from async handlers running on the daemon's event loop.
+    It avoids creating a new event loop, which would conflict with the daemon's
+    database sessions.
+
+    Args:
+        path: The AGENTESE path (e.g., "self.memory.capture")
+        args: CLI arguments (for extracting kwargs)
+        ctx: InvocationContext (optional)
+        json_output: Whether to output JSON
+        trace_mode: Whether to show trace information
+        kwargs: Pre-parsed kwargs (optional, extracted from args if not provided)
+        entity_name: Display name for chat entities (optional)
+
+    Returns:
+        Exit code (0 for success, non-zero for failure)
+    """
+    # Bootstrap providers - in daemon mode these are already initialized
+    from services.providers import setup_providers_sync
+
+    setup_providers_sync()
+
+    # Parse flags from args if not provided
+    if json_output is False:
+        json_output = "--json" in args
+    if trace_mode is False:
+        trace_mode = "--trace" in args
+
+    if trace_mode:
+        print(f"[TRACE] Path: {path}")
+
+    # Create observer
+    from protocols.agentese.node import Observer
+
+    observer = Observer.guest()
+
+    # Parse kwargs from args if not provided
+    if kwargs is None:
+        kwargs = _parse_kwargs_from_args(args, path)
+
+    # Validate path has aspect
+    parts = path.split(".")
+    if len(parts) < 3:
+        print(f"Error: Path must include aspect: '{path}'")
+        return 1
+
+    node_path = ".".join(parts[:-1])
+    aspect = parts[-1]
+
+    # Try registry first (with DI container) for nodes that need dependencies
+    from protocols.agentese.container import get_container
+    from protocols.agentese.registry import get_registry
+
+    registry = get_registry()
+    container = get_container()
+
+    if registry.has(node_path):
+        try:
+            # Directly await the invocation - we're already on the daemon's event loop
+            result = await _invoke_via_registry(
+                registry, container, node_path, aspect, observer, **kwargs
+            )
+
+            # Render output
+            if json_output:
+                import json as json_mod
+
+                # Handle BasicRendering and similar types with metadata
+                if hasattr(result, "metadata") and result.metadata:
+                    json_data = result.metadata
+                elif hasattr(result, "__dataclass_fields__"):
+                    from dataclasses import asdict
+
+                    json_data = asdict(result)
+                elif isinstance(result, dict):
+                    json_data = result
+                else:
+                    json_data = {"result": str(result)}
+                print(json_mod.dumps(json_data, indent=2, default=str))
+            else:
+                _render_result(result)
+
+            return 0
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return 1
+
+    # AD-016: Fail-fast on unregistered paths (no JIT fallback)
+    from protocols.agentese.exceptions import node_not_registered
+
+    all_paths = registry.list_paths()
+    context_prefix = node_path.split(".")[0] if "." in node_path else ""
+    similar = [p for p in all_paths if context_prefix and p.startswith(context_prefix)][:5]
+
+    if not similar:
+        similar = all_paths[:5]
+
+    error = node_not_registered(node_path, similar=similar)
+    print(f"Error: {error}")
+    return 1
+
+
 def _render_result(result: Any) -> None:
     """Render a result to terminal."""
     if result is None:

@@ -307,8 +307,14 @@ class CommandExecutor:
             with OutputCapture() as capture:
                 try:
                     if meta.is_async or asyncio.iscoroutinefunction(handler):
-                        # Async handler - await directly
-                        exit_code = await handler(request.args, ctx=ctx)
+                        # Async handler - await directly on daemon's event loop
+                        # Set KGENTS_DAEMON_WORKER so handlers know they're in daemon context
+                        os.environ["KGENTS_DAEMON_WORKER"] = "1"
+                        try:
+                            exit_code = await handler(request.args, ctx=ctx)
+                        finally:
+                            if "KGENTS_DAEMON_WORKER" in os.environ:
+                                del os.environ["KGENTS_DAEMON_WORKER"]
                     elif worker_pool and worker_pool.is_running:
                         # Sync handler - run in worker pool
                         exit_code = await worker_pool.io_bound(

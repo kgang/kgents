@@ -289,17 +289,14 @@ def _run_async_factory(coro_func: Any) -> Any:
     Create a sync wrapper that properly bootstraps before running async code.
 
     Returns a function that, when called with args, will:
-    1. Reset the registry
-    2. Bootstrap services fresh on the new event loop
-    3. Run the coroutine
+    1. Check if running inside daemon (KGENTS_DAEMON_WORKER env var)
+    2. In daemon mode: Create fresh event loop WITHOUT re-bootstrapping
+    3. In standalone mode: Create fresh event loop WITH bootstrapping
 
-    This avoids "Future attached to a different loop" and
-    "another operation is in progress" errors from stale connections.
-
-    ALWAYS does full reset+bootstrap, whether in daemon or not, because:
-    - Each thread pool worker needs its own event loop
-    - Each event loop needs its own DB session/engine
-    - Reusing cross-loop connections causes "Event loop is closed" errors
+    The key insight is that in daemon mode, services are already bootstrapped
+    on the daemon's main event loop. We just need a fresh event loop for
+    this synchronous call, but we should NOT re-bootstrap (which would
+    create conflicting database connections).
     """
     import asyncio
     import os
@@ -307,12 +304,20 @@ def _run_async_factory(coro_func: Any) -> Any:
 
     @wraps(coro_func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
+        # Check if we're running inside daemon worker context
+        in_daemon = os.environ.get("KGENTS_DAEMON_WORKER") is not None
+
         # Create a fresh event loop explicitly
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            # Run with bootstrap
-            return loop.run_until_complete(_bootstrap_and_run(coro_func, *args, **kwargs))
+            if in_daemon:
+                # In daemon mode: run directly without re-bootstrapping
+                # Services are already available, just run the coroutine
+                return loop.run_until_complete(coro_func(*args, **kwargs))
+            else:
+                # Standalone CLI mode: bootstrap before running
+                return loop.run_until_complete(_bootstrap_and_run(coro_func, *args, **kwargs))
         finally:
             # Clean up completely
             try:
@@ -2078,13 +2083,19 @@ def cmd_graph(args: list[str]) -> int:
 # =============================================================================
 
 
-@handler("witness", is_async=False, tier=1, description="Everyday mark-making")
-def cmd_witness(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+@handler("witness", is_async=True, tier=1, description="Everyday mark-making")
+async def cmd_witness(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Witness Crown Jewel: Mark-making CLI.
 
     "Every action leaves a mark. The mark IS the witness."
+
+    This handler is async to properly integrate with the daemon's event loop.
+    When running in daemon mode, async operations can use the daemon's
+    database sessions directly without creating conflicting connections.
     """
+    import os
+
     if not args or "--help" in args or "-h" in args:
         _print_help()
         return 0
@@ -2092,45 +2103,217 @@ def cmd_witness(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     subcommand = args[0].lower()
     sub_args = args[1:]
 
-    handlers = {
-        "mark": cmd_mark,
-        "m": cmd_mark,  # alias
-        "show": cmd_show,
-        "recent": cmd_show,  # alias
-        "list": cmd_show,  # alias
+    # Check if running in daemon context
+    in_daemon = os.environ.get("KGENTS_DAEMON_WORKER") is not None
+
+    # Async subcommand handlers for daemon mode
+    async_handlers = {
+        "mark": _cmd_mark_async,
+        "m": _cmd_mark_async,
+        "show": _cmd_show_async,
+        "recent": _cmd_show_async,
+        "list": _cmd_show_async,
+    }
+
+    # Sync subcommand handlers (don't need daemon DB access)
+    sync_handlers = {
         "session": cmd_session,
-        # Tree commands (lineage)
         "tree": cmd_tree,
-        # Crystal commands
         "crystallize": cmd_crystallize,
         "crystals": cmd_crystals,
         "crystal": cmd_crystal,
         "expand": cmd_expand,
-        # Context budget commands
         "context": cmd_context,
-        "ctx": cmd_context,  # alias
-        # Phase 4: Integration & Streaming
+        "ctx": cmd_context,
         "stream": cmd_stream,
         "propose-now": cmd_propose_now,
-        "propose": cmd_propose_now,  # alias
+        "propose": cmd_propose_now,
         "promote": cmd_promote,
-        # Phase 5: Visual Projection
         "dashboard": cmd_dashboard,
-        "dash": cmd_dashboard,  # alias
+        "dash": cmd_dashboard,
         "graph": cmd_graph,
     }
 
-    handler = handlers.get(subcommand)
-    if handler:
-        return handler(sub_args)
+    # Try async handler first (for daemon mode with DB access)
+    if in_daemon and subcommand in async_handlers:
+        return await async_handlers[subcommand](sub_args)
+
+    # Use sync handler if available
+    if subcommand in sync_handlers:
+        return sync_handlers[subcommand](sub_args)
+
+    # Fallback to sync handlers for mark/show when not in daemon
+    sync_fallback = {
+        "mark": cmd_mark,
+        "m": cmd_mark,
+        "show": cmd_show,
+        "recent": cmd_show,
+        "list": cmd_show,
+    }
+
+    if subcommand in sync_fallback:
+        return sync_fallback[subcommand](sub_args)
 
     # If first arg doesn't look like a subcommand, treat as mark action
     if not subcommand.startswith("-"):
+        if in_daemon:
+            return await _cmd_mark_async(args)
         return cmd_mark(args)
 
     print(f"Unknown subcommand: {subcommand}")
     _print_help()
     return 1
+
+
+async def _cmd_mark_async(args: list[str]) -> int:
+    """
+    Async version of cmd_mark for daemon mode.
+
+    Runs directly on daemon's event loop, avoiding event loop conflicts.
+    """
+    if not args:
+        print(
+            'Usage: kg witness mark "action" [-w reason] [-p principles] [--tag tag] [--parent mark-id] [--json]'
+        )
+        return 1
+
+    # Parse arguments
+    action = None
+    reasoning = None
+    principles: list[str] = []
+    tags: list[str] = []
+    parent_mark_id: str | None = None
+    json_output = "--json" in args
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--json":
+            i += 1
+        elif arg in ("-w", "--why", "--reasoning") and i + 1 < len(args):
+            reasoning = args[i + 1]
+            i += 2
+        elif arg in ("-p", "--principles") and i + 1 < len(args):
+            principles = [p.strip() for p in args[i + 1].split(",")]
+            i += 2
+        elif arg in ("-t", "--tag") and i + 1 < len(args):
+            tags.append(args[i + 1].strip())
+            i += 2
+        elif arg == "--parent" and i + 1 < len(args):
+            parent_mark_id = args[i + 1]
+            i += 2
+        elif not arg.startswith("-") and action is None:
+            action = arg
+            i += 1
+        else:
+            i += 1
+
+    if not action:
+        if json_output:
+            print(json.dumps({"error": "Action text required"}))
+        else:
+            print("Error: Action text required")
+        return 1
+
+    try:
+        result = await _create_mark_async(action, reasoning, principles, tags, parent_mark_id=parent_mark_id)
+
+        if json_output:
+            print(json.dumps(result))
+        else:
+            console = _get_console()
+            if console:
+                mark_id = result["mark_id"][:8]
+                console.print(f"[green]\u2713[/green] {mark_id}")
+                if parent_mark_id:
+                    console.print(f"  [dim]\u2514\u2500 child of {parent_mark_id[:12]}[/dim]")
+                if reasoning:
+                    console.print(f"  [dim]\u21b3 {reasoning}[/dim]")
+            else:
+                print(f"\u2713 {result['mark_id'][:8]}")
+
+        return 0
+    except Exception as e:
+        if json_output:
+            print(json.dumps({"error": str(e)}))
+        else:
+            print(f"Error creating mark: {e}")
+        return 1
+
+
+async def _cmd_show_async(args: list[str]) -> int:
+    """
+    Async version of cmd_show for daemon mode.
+
+    Runs directly on daemon's event loop, avoiding event loop conflicts.
+    """
+    limit = 20
+    verbose = False
+    json_output = "--json" in args
+    today_only = "--today" in args
+    grep_pattern: str | None = None
+    tag_filter: str | None = None
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--json":
+            i += 1
+        elif arg == "--today":
+            i += 1
+        elif arg in ("--limit", "-l") and i + 1 < len(args):
+            try:
+                limit = int(args[i + 1])
+            except ValueError:
+                pass
+            i += 2
+        elif arg in ("--verbose", "-v"):
+            verbose = True
+            i += 1
+        elif arg == "--grep" and i + 1 < len(args):
+            grep_pattern = args[i + 1].lower()
+            i += 2
+        elif arg == "--tag" and i + 1 < len(args):
+            tag_filter = args[i + 1].lower()
+            i += 2
+        else:
+            i += 1
+
+    try:
+        marks = await _get_recent_marks_async(limit * 5 if grep_pattern or tag_filter else limit)
+
+        # Apply --today filter
+        if today_only:
+            today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            marks = [m for m in marks if _parse_timestamp(m.get("timestamp", "")) >= today_start]
+
+        # Apply --grep filter
+        if grep_pattern:
+            marks = [
+                m
+                for m in marks
+                if grep_pattern in m.get("action", "").lower()
+                or grep_pattern in (m.get("reasoning") or "").lower()
+            ]
+
+        # Apply --tag filter
+        if tag_filter:
+            marks = [m for m in marks if tag_filter in [p.lower() for p in m.get("principles", [])]]
+
+        # Re-apply limit after filtering
+        marks = marks[:limit]
+
+        if json_output:
+            print(json.dumps(marks))
+        else:
+            _print_marks(marks, title=f"Recent Marks ({len(marks)})", verbose=verbose)
+        return 0
+    except Exception as e:
+        if json_output:
+            print(json.dumps({"error": str(e)}))
+        else:
+            print(f"Error fetching marks: {e}")
+        return 1
 
 
 def _print_help() -> None:

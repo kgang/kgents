@@ -250,7 +250,16 @@ def encode_message(data: dict[str, Any]) -> bytes:
 
     Format: [4 bytes: uint32 BE length] + [N bytes: JSON payload]
     """
-    payload = json.dumps(data).encode("utf-8")
+    try:
+        payload = json.dumps(data).encode("utf-8")
+    except TypeError as e:
+        # Debug: find which key has the non-serializable value
+        for key, value in data.items():
+            try:
+                json.dumps({key: value})
+            except TypeError:
+                logger.error(f"Non-serializable value in key '{key}': {type(value).__name__} = {repr(value)[:200]}")
+        raise
     length = struct.pack(">I", len(payload))
     return length + payload
 

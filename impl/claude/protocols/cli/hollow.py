@@ -905,8 +905,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Fallback to handler's built-in help
         handler = resolve_command(command)
         if handler:
+            import asyncio
+            import inspect
+
             filtered_args = [a for a in command_args if a not in ("--help", "-h")]
-            return int(handler(["--help"] + filtered_args))
+            result = handler(["--help"] + filtered_args)
+            # Handle async handlers
+            if inspect.iscoroutine(result):
+                return int(asyncio.run(result))
+            return int(result)
         else:
             print_suggestions(command)
             return 1
