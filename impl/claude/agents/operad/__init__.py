@@ -7,11 +7,13 @@ that constrains and enables valid compositions.
 
 This module provides:
 - AGENT_OPERAD: Universal agent composition grammar
-- Domain operads: Soul, Parse, Reality (specialized grammars)
+- Domain operads: Parse, Reality (specialized grammars)
 - CLIAlgebra: Functor from Operad to CLI commands
 - TestAlgebra: Functor from Operad laws to test cases
 
 The key insight: Operad + Primitives → ∞ valid compositions
+
+Archived (2024-12-24): Soul, Memory, Evolution, Narrative operads (no callers)
 
 See: plans/ideas/impl/meta-construction.md
 """
@@ -38,16 +40,41 @@ from .core import (
 
 # Domain operads
 from .domains import (
+    # Analysis Operad
+    ANALYSIS_OPERAD,
+    BootstrapAnalysis,
+    CategoricalReport,
+    ContradictionType,
+    DialecticalReport,
+    EpistemicReport,
+    EvidenceTier,
+    FixedPointAnalysis,
+    FullAnalysisReport,
+    GenerativeReport,
+    GroundingChain,
+    OperadGrammar,
+    RegenerationTest,
+    Tension,
+    ToulminStructure,
+    create_analysis_operad,
+    self_analyze,
+    # Analysis DP integration
+    AnalysisAction,
+    AnalysisState,
+    analyze_as_dp,
+    analyze_with_witness,
+    create_analysis_formulation,
+    self_analyze_with_dp,
+    # Parse Operad
     PARSE_OPERAD,
-    REALITY_OPERAD,
-    SOUL_OPERAD,
     ConfidentParse,
     ParseResult,
+    create_parse_operad,
+    # Reality Operad
+    REALITY_OPERAD,
     RealityClassification,
     RealityType,
-    create_parse_operad,
     create_reality_operad,
-    create_soul_operad,
 )
 
 __all__ = [
@@ -60,15 +87,39 @@ __all__ = [
     # Universal operad
     "AGENT_OPERAD",
     "create_agent_operad",
-    # Domain operads
-    "SOUL_OPERAD",
+    # Analysis Operad (four modes of inquiry)
+    "ANALYSIS_OPERAD",
+    "create_analysis_operad",
+    "self_analyze",
+    "CategoricalReport",
+    "EpistemicReport",
+    "DialecticalReport",
+    "GenerativeReport",
+    "FullAnalysisReport",
+    "ContradictionType",
+    "EvidenceTier",
+    "FixedPointAnalysis",
+    "ToulminStructure",
+    "GroundingChain",
+    "BootstrapAnalysis",
+    "Tension",
+    "OperadGrammar",
+    "RegenerationTest",
+    # Analysis DP integration
+    "AnalysisState",
+    "AnalysisAction",
+    "create_analysis_formulation",
+    "analyze_as_dp",
+    "analyze_with_witness",
+    "self_analyze_with_dp",
+    # Parse Operad
     "PARSE_OPERAD",
-    "REALITY_OPERAD",
-    "create_soul_operad",
     "create_parse_operad",
-    "create_reality_operad",
     "ParseResult",
     "ConfidentParse",
+    # Reality Operad
+    "REALITY_OPERAD",
+    "create_reality_operad",
     "RealityType",
     "RealityClassification",
     # Registry

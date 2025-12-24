@@ -2,25 +2,39 @@
 Domain-Specific Operads.
 
 Each domain operad extends AGENT_OPERAD with specialized operations:
-- SOUL_OPERAD: K-gent introspection, shadow, dialectic
 - PARSE_OPERAD: P-gent confidence, repair
 - REALITY_OPERAD: J-gent classification, collapse
-- MEMORY_OPERAD: D-gent persistence, recall, forget
-- EVOLUTION_OPERAD: Generic evolution (mutation, selection, convergence)
-- NARRATIVE_OPERAD: N-gent chronicle, branch, merge
+- ANALYSIS_OPERAD: Four modes of rigorous inquiry (categorical, epistemic, dialectical, generative)
+
+Archived (2024-12-24): SOUL_OPERAD, MEMORY_OPERAD, EVOLUTION_OPERAD, NARRATIVE_OPERAD (no callers)
 """
 
-from .evolution import (
-    EVOLUTION_OPERAD,
-    create_evolution_operad,
+from .analysis import (
+    ANALYSIS_OPERAD,
+    BootstrapAnalysis,
+    CategoricalReport,
+    ContradictionType,
+    DialecticalReport,
+    EpistemicReport,
+    EvidenceTier,
+    FixedPointAnalysis,
+    FullAnalysisReport,
+    GenerativeReport,
+    GroundingChain,
+    OperadGrammar,
+    RegenerationTest,
+    Tension,
+    ToulminStructure,
+    create_analysis_operad,
+    self_analyze,
 )
-from .memory import (
-    MEMORY_OPERAD,
-    create_memory_operad,
-)
-from .narrative import (
-    NARRATIVE_OPERAD,
-    create_narrative_operad,
+from .analysis_dp import (
+    AnalysisAction,
+    AnalysisState,
+    analyze_as_dp,
+    analyze_with_witness,
+    create_analysis_formulation,
+    self_analyze_with_dp,
 )
 from .parse import (
     PARSE_OPERAD,
@@ -34,15 +48,35 @@ from .reality import (
     RealityType,
     create_reality_operad,
 )
-from .soul import (
-    SOUL_OPERAD,
-    create_soul_operad,
-)
 
 __all__ = [
-    # Soul (K-gent)
-    "SOUL_OPERAD",
-    "create_soul_operad",
+    # Analysis Operad (four modes of inquiry)
+    "ANALYSIS_OPERAD",
+    "create_analysis_operad",
+    "self_analyze",
+    # Analysis report types
+    "CategoricalReport",
+    "EpistemicReport",
+    "DialecticalReport",
+    "GenerativeReport",
+    "FullAnalysisReport",
+    # Analysis supporting types
+    "ContradictionType",
+    "EvidenceTier",
+    "FixedPointAnalysis",
+    "ToulminStructure",
+    "GroundingChain",
+    "BootstrapAnalysis",
+    "Tension",
+    "OperadGrammar",
+    "RegenerationTest",
+    # Analysis DP integration
+    "AnalysisState",
+    "AnalysisAction",
+    "create_analysis_formulation",
+    "analyze_as_dp",
+    "analyze_with_witness",
+    "self_analyze_with_dp",
     # Parse (P-gent)
     "PARSE_OPERAD",
     "ParseResult",
@@ -53,13 +87,4 @@ __all__ = [
     "RealityType",
     "RealityClassification",
     "create_reality_operad",
-    # Memory (D-gent)
-    "MEMORY_OPERAD",
-    "create_memory_operad",
-    # Evolution (generic, E-gent archived)
-    "EVOLUTION_OPERAD",
-    "create_evolution_operad",
-    # Narrative (N-gent)
-    "NARRATIVE_OPERAD",
-    "create_narrative_operad",
 ]
