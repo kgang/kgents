@@ -1006,3 +1006,194 @@
   font-style: italic;
   text-align: center;
 }
+
+/* =============================================================================
+   Rich Highlighter — Heuristic-based Inline Highlighting
+
+   Philosophy: Subtle semantic coloring for data types. Inspired by Rich's
+   ReprHighlighter but adapted to STARK BIOME palette.
+
+   Colors chosen for:
+   - Readability on dark steel backgrounds
+   - Semantic meaning (green=truth, red=false, cyan=numbers, etc.)
+   - Non-intrusive feel (muted tones, no harsh contrast)
+   ============================================================================= */
+
+.rich-highlighter {
+  /* Inherits parent styling */
+}
+
+/* Base highlight span — inline, preserves flow */
+.rich-hl {
+  /* Subtle text coloring, no background by default */
+  border-radius: 2px;
+  transition: background-color 150ms ease;
+}
+
+/* -----------------------------------------------------------------------------
+   String Literals — Sage green (life accent, meaning: "data")
+   ----------------------------------------------------------------------------- */
+.rich-hl--string {
+  /* STARK: life-sage for strings (green = data/values) */
+  color: #8ba98b; /* glow-lichen */
+}
+
+/* -----------------------------------------------------------------------------
+   Numbers — Cyan (cool, precise, mathematical)
+   Rich uses: cyan, bold
+   ----------------------------------------------------------------------------- */
+.rich-hl--number {
+  /* STARK: cool cyan for numbers (precision, calculation) */
+  color: #7faaaa; /* muted cyan */
+  font-variant-numeric: tabular-nums;
+}
+
+/* -----------------------------------------------------------------------------
+   Booleans — Green for True, Coral for False
+   Rich uses: bright green italic (true), bright red italic (false)
+   ----------------------------------------------------------------------------- */
+.rich-hl--boolean-true {
+  /* STARK: life-mint for true (affirmative, positive) */
+  color: #8bc48b; /* bright life-mint */
+  font-style: italic;
+}
+
+.rich-hl--boolean-false {
+  /* STARK: muted coral for false (negative, but not alarming) */
+  color: #c48b8b; /* muted coral */
+  font-style: italic;
+}
+
+/* -----------------------------------------------------------------------------
+   None/null/undefined — Magenta (void, absence)
+   Rich uses: magenta, italic
+   ----------------------------------------------------------------------------- */
+.rich-hl--none {
+  /* STARK: muted magenta for null/void values */
+  color: #a08ba0; /* muted magenta */
+  font-style: italic;
+}
+
+/* -----------------------------------------------------------------------------
+   URLs — Blue underlined (standard link convention)
+   Rich uses: bright blue, underlined
+   ----------------------------------------------------------------------------- */
+.rich-hl--url {
+  /* STARK: blue link style (but muted) */
+  color: #7a9fba; /* muted blue */
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.rich-hl--url:hover {
+  color: #9fbad4;
+  text-decoration-style: solid;
+}
+
+/* -----------------------------------------------------------------------------
+   UUIDs — Yellow/Gold (unique identifiers deserve attention)
+   Rich uses: bright yellow
+   ----------------------------------------------------------------------------- */
+.rich-hl--uuid {
+  /* STARK: glow-spore for unique identifiers */
+  color: #c4a77d; /* glow-spore */
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+}
+
+/* -----------------------------------------------------------------------------
+   IP Addresses — Bold green (network, connectivity)
+   Rich uses: bright green, bold
+   ----------------------------------------------------------------------------- */
+.rich-hl--ipv4,
+.rich-hl--ipv6 {
+  /* STARK: life-sage bold for network addresses */
+  color: #8bc48b; /* bright life-mint */
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+}
+
+/* -----------------------------------------------------------------------------
+   MAC Addresses (EUI-48) — Similar to IP addresses
+   ----------------------------------------------------------------------------- */
+.rich-hl--eui48 {
+  color: #8ba98b; /* life-mint */
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+}
+
+/* -----------------------------------------------------------------------------
+   File Paths — Magenta (location, navigation)
+   Rich uses: magenta
+   ----------------------------------------------------------------------------- */
+.rich-hl--path {
+  /* STARK: muted magenta for paths (location in space) */
+  color: #a08ba0; /* muted magenta */
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95em;
+}
+
+/* -----------------------------------------------------------------------------
+   Function Calls — Magenta bold (action, invocation)
+   Rich uses: magenta, bold
+   ----------------------------------------------------------------------------- */
+.rich-hl--call {
+  /* STARK: glow-spore for function names (action) */
+  color: #c4a77d; /* glow-spore */
+  font-weight: 600;
+}
+
+/* -----------------------------------------------------------------------------
+   Braces/Brackets — Subtle steel accent
+   ----------------------------------------------------------------------------- */
+.rich-hl--brace {
+  /* STARK: steel-zinc for structural characters */
+  color: #6a6a74; /* steel-zinc lighter */
+  font-weight: 600;
+}
+
+/* -----------------------------------------------------------------------------
+   Interactive Hover States — Subtle visual feedback
+
+   Not all highlights are clickable, but hover feedback indicates
+   "this is recognized" which helps users understand the highlighting.
+   ----------------------------------------------------------------------------- */
+
+.rich-hl--uuid:hover,
+.rich-hl--path:hover,
+.rich-hl--ipv4:hover,
+.rich-hl--ipv6:hover,
+.rich-hl--eui48:hover {
+  background-color: rgba(60, 60, 70, 0.3);
+  border-radius: 2px;
+  cursor: default;
+}
+
+.rich-hl--call:hover {
+  background-color: rgba(196, 167, 125, 0.15);
+  border-radius: 2px;
+}
+
+/* -----------------------------------------------------------------------------
+   Selection Styling — Preserve meaning through selection
+
+   When users select highlighted text, maintain subtle color hints.
+   ----------------------------------------------------------------------------- */
+
+.rich-highlighter ::selection {
+  background-color: rgba(107, 139, 107, 0.3); /* life-sage selection */
+}
+
+.rich-hl--string::selection {
+  background-color: rgba(139, 169, 139, 0.35);
+}
+
+.rich-hl--number::selection {
+  background-color: rgba(127, 170, 170, 0.35);
+}
+
+.rich-hl--url::selection {
+  background-color: rgba(122, 159, 186, 0.35);
+}

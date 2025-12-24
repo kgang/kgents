@@ -41,6 +41,17 @@ export { HorizontalRuleToken } from './HorizontalRuleToken';
 export { MarkdownTableToken } from './MarkdownTableToken';
 
 // =============================================================================
+// Rich Highlighting (inspired by Rich's ReprHighlighter)
+// =============================================================================
+
+export {
+  RichHighlighter,
+  useRichHighlight,
+  hasHighlightableContent,
+  type HighlightType,
+} from './RichHighlighter';
+
+// =============================================================================
 // Container Component
 // =============================================================================
 
