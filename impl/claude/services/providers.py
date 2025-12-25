@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
     from agents.d import DgentProtocol, TableAdapter
+    from agents.d.universe import Universe
     from agents.k.soul import KgentSoul
     from agents.l.embedders import SentenceTransformerEmbedder
     from models.brain import Crystal
@@ -60,9 +61,11 @@ if TYPE_CHECKING:
     from services import witnessed_graph
     from services.ashc.persistence import PostgresLemmaDatabase
     from services.brain import BrainPersistence
+    from services.chat.persistence import ChatPersistence
     from services.conductor import Summarizer, WindowPersistence
     from services.conductor.file_guard import FileEditGuard
     from services.conductor.swarm import SwarmSpawner
+    from services.director.director import DocumentDirector
     from services.explorer import UnifiedQueryService
     from services.foundry import AgentFoundry
     from services.fusion import FusionService
@@ -78,6 +81,7 @@ if TYPE_CHECKING:
     from services.tooling import ToolExecutor, ToolRegistry
     from services.verification import VerificationPersistence
     from services.witness import WitnessPersistence
+    from services.witness.bus import WitnessSynergyBus
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +129,21 @@ async def get_dgent_router() -> "DgentProtocol":
     return registry.dgent
 
 
+async def get_universe() -> "Universe":
+    """
+    Get the Universe for D-gent Crystal storage.
+
+    Universe is D-gent's domain - unified data management.
+    Auto-selects best available backend (Postgres > SQLite > Memory).
+
+    Used by ChatPersistence, WitnessPersistence, and other services
+    that work with typed data (Crystal, Mark, etc.).
+    """
+    from agents.d.universe import get_universe as _get_universe
+
+    return _get_universe()
+
+
 async def get_brain_table_adapter() -> "TableAdapter[Crystal]":
     """
     Get the TableAdapter for Crystal table.
@@ -145,6 +164,19 @@ async def get_brain_table_adapter() -> "TableAdapter[Crystal]":
 async def get_brain_persistence() -> "BrainPersistence":
     """Get the BrainPersistence service."""
     return await get_service("brain_persistence")
+
+
+async def get_chat_persistence() -> "ChatPersistence":
+    """
+    Get the ChatPersistence service for Chat Crown Jewel.
+
+    Uses Universe for crystal-based storage.
+
+    Used by Chat API for session persistence.
+    """
+    from services.chat.persistence import ChatPersistence
+
+    return ChatPersistence()
 
 
 async def get_kgent_soul() -> "KgentSoul":
@@ -344,6 +376,43 @@ async def get_witness_persistence() -> "WitnessPersistence":
     from services.witness import WitnessPersistence
 
     return WitnessPersistence()
+
+
+# Alias for nodes that declare dependency as "witness" instead of "witness_persistence"
+async def get_witness() -> "WitnessPersistence":
+    """Alias for get_witness_persistence (for nodes declaring 'witness' dependency)."""
+    return await get_witness_persistence()
+
+
+async def get_bus() -> "WitnessSynergyBus":
+    """
+    Get the WitnessSynergyBus for cross-jewel event publishing.
+
+    Used by DocumentDirectorNode and other nodes requiring event emission.
+    """
+    from services.witness.bus import get_synergy_bus
+
+    return get_synergy_bus()
+
+
+async def get_director() -> "DocumentDirector":
+    """
+    Get the DocumentDirector service for document lifecycle orchestration.
+
+    The director composes:
+    - SovereignStore: Entity storage
+    - WitnessPersistence: Witness marks
+    - WitnessSynergyBus: Event publishing
+
+    Used by DocumentDirectorNode for concept.document.* AGENTESE paths.
+    """
+    from services.director.director import DocumentDirector
+
+    store = await get_sovereign_store()
+    witness = await get_witness_persistence()
+    bus = await get_bus()
+
+    return DocumentDirector(store=store, witness=witness, bus=bus)
 
 
 # =============================================================================
@@ -738,7 +807,9 @@ async def setup_providers() -> None:
     # Register core infrastructure services
     container.register("session_factory", get_session_factory, singleton=True)
     container.register("dgent", get_dgent_router, singleton=True)
+    container.register("universe", get_universe, singleton=True)  # D-gent Universe (Crystal persistence)
     container.register("brain_persistence", get_brain_persistence, singleton=True)
+    container.register("chat_persistence", get_chat_persistence, singleton=True)
     # Note: trace_store removed in Crown Jewel Cleanup 2025-12-21
 
     # K-gent Soul (Middleware of Consciousness)
@@ -768,6 +839,11 @@ async def setup_providers() -> None:
 
     # Witness Crown Jewel (8th Jewel - The Ghost That Watches)
     container.register("witness_persistence", get_witness_persistence, singleton=True)
+    container.register("witness", get_witness, singleton=True)  # Alias for nodes declaring "witness"
+    container.register("bus", get_bus, singleton=True)  # WitnessSynergyBus
+
+    # Document Director Crown Jewel (Spec-to-Code Lifecycle)
+    container.register("director", get_director, singleton=True)
 
     # Liminal Protocols (Morning Coffee, etc.)
     container.register("coffee_service", get_coffee_service, singleton=True)
@@ -987,9 +1063,12 @@ __all__ = [
     # Infrastructure
     "get_session_factory",
     "get_dgent_router",
+    "get_universe",
     # Brain Crown Jewel
     "get_brain_table_adapter",
     "get_brain_persistence",
+    # Chat Crown Jewel
+    "get_chat_persistence",
     # Principles
     "get_principle_loader",
     # Conductor (CLI v7 Phase 1, 2 & 6)
@@ -1025,6 +1104,10 @@ __all__ = [
     "get_embedder",
     # Sovereign Crown Jewel
     "get_sovereign_store",
+    # Document Director Crown Jewel
+    "get_director",
+    "get_witness",
+    "get_bus",
     # Hypergraph Editor Crown Jewel
     "get_editor_service",
     # Explorer Crown Jewel

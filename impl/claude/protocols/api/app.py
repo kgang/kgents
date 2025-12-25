@@ -317,6 +317,14 @@ def create_app(
         app.include_router(zero_seed_router)
         logger.info("Zero Seed API mounted at /api/zero-seed")
 
+    # === Chat API ===
+    from .chat import create_chat_router
+
+    chat_router = create_chat_router()
+    if chat_router is not None:
+        app.include_router(chat_router)
+        logger.info("Chat API mounted at /api/chat")
+
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
     # - GET/POST /agentese/world/codebase/{aspect}
@@ -630,6 +638,15 @@ def create_app(
                     "navigate": "POST /api/zero-seed/navigate",
                     "node_detail": "GET /api/zero-seed/nodes/{node_id}",
                     "layer_nodes": "GET /api/zero-seed/layers/{layer}",
+                },
+                "chat": {
+                    "note": "Chat session management with streaming and branching",
+                    "create_session": "POST /api/chat/session",
+                    "get_session": "GET /api/chat/session/{session_id}",
+                    "send_message": "POST /api/chat/{session_id}/send (SSE stream)",
+                    "fork": "POST /api/chat/{session_id}/fork",
+                    "rewind": "POST /api/chat/{session_id}/rewind",
+                    "evidence": "GET /api/chat/{session_id}/evidence",
                 },
                 "webhooks": {
                     "stripe": "/webhooks/stripe",

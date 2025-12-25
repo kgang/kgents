@@ -295,6 +295,12 @@ class ServiceRegistry:
                 dgent=self.dgent,
             )
 
+        # Chat persistence (Chat Crown Jewel)
+        if name == "chat_persistence":
+            from services.chat.persistence import ChatPersistence
+
+            return ChatPersistence()
+
         return None
 
     def register_factory(self, name: str, factory: Callable[[], Any]) -> None:
@@ -345,6 +351,7 @@ class ServiceRegistry:
         """List all available service names."""
         return [
             "brain_persistence",
+            "chat_persistence",
             "witness_persistence",
             "morpheus_persistence",
             "kgent_soul",

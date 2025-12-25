@@ -103,6 +103,11 @@ class ZeroEdge(BaseModel):
     context: str = Field(..., description="Edge context/reasoning")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score")
     created_at: str = Field(..., description="Creation timestamp (ISO)")
+    mark_id: str | None = Field(None, description="Associated Witness mark ID")
+    proof: ToulminProof | None = Field(None, description="Toulmin proof from decision")
+    evidence_tier: str | None = Field(
+        None, description="Evidence tier: categorical, empirical, aesthetic, somatic"
+    )
 
 
 class ToulminProof(BaseModel):
@@ -309,6 +314,36 @@ class NavigateRequest(BaseModel):
     )
 
 
+class CreateWitnessedEdgeRequest(BaseModel):
+    """Request to create a witnessed edge from a Mark."""
+
+    mark_id: str = Field(..., description="Witness mark ID")
+    source_node_id: str = Field(..., description="Source node ID")
+    target_node_id: str = Field(..., description="Target node ID")
+    context: str | None = Field(None, description="Optional edge context")
+
+
+class CreateNodeRequest(BaseModel):
+    """Request to create a new Zero Seed node."""
+
+    layer: int = Field(..., ge=1, le=7, description="Layer (1-7)")
+    title: str = Field(..., description="Display title")
+    content: str = Field(..., description="Markdown content")
+    lineage: list[str] = Field(default_factory=list, description="Parent node IDs")
+    confidence: float | None = Field(None, ge=0.0, le=1.0, description="Confidence score")
+    tags: list[str] = Field(default_factory=list, description="Tags")
+    created_by: str = Field(default="user", description="Creator identifier")
+
+
+class UpdateNodeRequest(BaseModel):
+    """Request to update a Zero Seed node."""
+
+    title: str | None = Field(None, description="Updated title")
+    content: str | None = Field(None, description="Updated content")
+    confidence: float | None = Field(None, ge=0.0, le=1.0, description="Updated confidence")
+    tags: list[str] | None = Field(None, description="Updated tags")
+
+
 class NavigateResponse(BaseModel):
     """Response from navigation action."""
 
@@ -328,6 +363,9 @@ class NodeDetailResponse(BaseModel):
     proof: ToulminProof | None = Field(None, description="Toulmin proof (if L3+)")
     incoming_edges: list[ZeroEdge] = Field(..., description="Incoming edges")
     outgoing_edges: list[ZeroEdge] = Field(..., description="Outgoing edges")
+    witnessed_edges: list[ZeroEdge] = Field(
+        default_factory=list, description="Edges from Witness marks"
+    )
 
 
 class LayerNodesResponse(BaseModel):
@@ -366,7 +404,7 @@ class AnalysisQuadrant(BaseModel):
 class NodeAnalysisResponse(BaseModel):
     """Four-mode analysis response for a Zero Seed node."""
 
-    node_id: str = Field(..., description="Node ID")
+    node_id: str = Field(..., alias="nodeId", description="Node ID")
     categorical: AnalysisQuadrant = Field(
         ..., description="Categorical analysis (laws, fixed points)"
     )
@@ -379,6 +417,8 @@ class NodeAnalysisResponse(BaseModel):
     generative: AnalysisQuadrant = Field(
         ..., description="Generative analysis (compression, regeneration)"
     )
+
+    model_config = {"populate_by_name": True}
 
 
 # =============================================================================
@@ -908,25 +948,148 @@ def create_zero_seed_router() -> APIRouter | None:
             preferred_layer=4,
         )
 
-        gradients = {
-            "zn-axiom-001": GradientVector(
-                x=0.0, y=0.0, magnitude=0.0, target_node="zn-axiom-001"
-            ),  # Fixed point
-            "zn-value-001": GradientVector(
-                x=-0.3, y=0.1, magnitude=0.32, target_node="zn-axiom-001"
-            ),
-        }
+        # Generate comprehensive mock data for all visible nodes
+        # Create nodes across all layers for realistic visualization
+        #
+        # Mock Implementation Strategy:
+        # 1. Create 23 total nodes across all 7 layers (3 axioms + 5 values + 15 higher layer)
+        # 2. Compute loss for each node using layer-based estimation (L1=0.01, L7=0.7)
+        # 3. For each node, find lowest-loss neighbor in adjacent layers
+        # 4. Compute gradient vector pointing toward lowest-loss neighbor
+        # 5. Gradient magnitude = loss difference, direction = normalized vector to neighbor
+        #
+        # Real Implementation (Future):
+        # - Query actual Zero Seed graph nodes from D-gent
+        # - Use LLM to compute Galois loss for each node
+        # - Build graph topology from stored edges
+        # - Compute policy arrows using Value Function (DP)
+        visible_nodes: list[ZeroNode] = []
 
-        suggestions = [
-            NavigationSuggestion(
-                target="zn-axiom-001",
-                action="focus",
-                value_score=0.95,
-                reasoning="Axiom 1 is a fixed point with zero loss - stable foundation",
+        # Layer 1: Axioms (3 nodes, low loss ~0.01)
+        visible_nodes.extend([_create_mock_axiom(i) for i in range(1, 4)])
+
+        # Layer 2: Values (5 nodes, low loss ~0.07)
+        visible_nodes.extend([_create_mock_value(i) for i in range(1, 6)])
+
+        # Layer 3-7: Goals/Specs/etc (mock with varying loss)
+        for layer in range(3, 8):
+            for i in range(1, 4):  # 3 nodes per layer
+                node = ZeroNode(
+                    id=f"zn-L{layer}-{i:03d}",
+                    path=f"concept.layer{layer}.node{i}",
+                    layer=layer,
+                    kind=f"L{layer}_node",
+                    title=f"Layer {layer} Node {i}",
+                    content=f"Mock content for layer {layer} node {i}",
+                    confidence=max(0.5, 1.0 - (layer * 0.1)),
+                    created_at=datetime.now(UTC).isoformat(),
+                    created_by="system",
+                    tags=[f"layer{layer}"],
+                    lineage=[f"zn-axiom-{((i - 1) % 3) + 1:03d}"],
+                    has_proof=(layer >= 3),
+                )
+                visible_nodes.append(node)
+
+        # Compute gradients for all nodes
+        # Loss estimation: layer 1 = 0.01, layer 7 = 0.7 (linear)
+        gradients: dict[str, GradientVector] = {}
+
+        # Build node lookup and compute losses
+        node_losses: dict[str, float] = {}
+        for node in visible_nodes:
+            # Loss increases with layer (axioms stable, higher layers more drift)
+            base_loss = 0.01 + (node.layer - 1) * 0.1
+            # Add slight variation based on node index
+            variation = (hash(node.id) % 100) / 1000.0  # ±0.05 variation
+            node_losses[node.id] = max(0.0, min(1.0, base_loss + variation))
+
+        # For each node, find lowest-loss neighbor and compute gradient
+        for node in visible_nodes:
+            current_loss = node_losses[node.id]
+
+            # Find potential neighbors (nodes in adjacent layers or same layer)
+            neighbors = [
+                n for n in visible_nodes
+                if n.id != node.id and abs(n.layer - node.layer) <= 1
+            ]
+
+            if not neighbors:
+                # No neighbors = fixed point (gradient = 0)
+                gradients[node.id] = GradientVector(
+                    x=0.0,
+                    y=0.0,
+                    magnitude=0.0,
+                    target_node=node.id,
+                )
+                continue
+
+            # Find lowest-loss neighbor
+            lowest_neighbor = min(neighbors, key=lambda n: node_losses[n.id])
+            lowest_loss = node_losses[lowest_neighbor.id]
+
+            # Compute gradient magnitude (loss difference)
+            loss_diff = current_loss - lowest_loss
+
+            if loss_diff <= 0:
+                # Already at local minimum
+                gradients[node.id] = GradientVector(
+                    x=0.0,
+                    y=0.0,
+                    magnitude=0.0,
+                    target_node=node.id,
+                )
+            else:
+                # Compute direction to lowest-loss neighbor
+                # Use layer difference for y-axis, hash for x-axis spread
+                layer_diff = lowest_neighbor.layer - node.layer
+
+                # X component: horizontal spread based on node position
+                # Use hash to create consistent but varied horizontal positions
+                node_x = (hash(node.id) % 200 - 100) / 100.0  # -1 to 1
+                neighbor_x = (hash(lowest_neighbor.id) % 200 - 100) / 100.0
+                x_diff = neighbor_x - node_x
+
+                # Normalize direction and scale by loss difference
+                distance = (x_diff**2 + layer_diff**2)**0.5
+                if distance > 0:
+                    x_component = (x_diff / distance) * loss_diff
+                    y_component = (layer_diff / distance) * loss_diff
+                else:
+                    x_component = 0.0
+                    y_component = 0.0
+
+                gradients[node.id] = GradientVector(
+                    x=x_component,
+                    y=y_component,
+                    magnitude=loss_diff,
+                    target_node=lowest_neighbor.id,
+                )
+
+        # Generate navigation suggestions (top 3 low-loss targets)
+        sorted_nodes = sorted(visible_nodes, key=lambda n: node_losses[n.id])
+        suggestions = []
+
+        for node in sorted_nodes[:3]:
+            loss = node_losses[node.id]
+
+            if loss < 0.1:
+                action = "focus"
+                reasoning = f"{node.title} is nearly stable (loss={loss:.3f}) - strong foundation"
+            elif loss < 0.3:
+                action = "follow_gradient"
+                reasoning = f"{node.title} has moderate loss (loss={loss:.3f}) - navigate here to improve"
+            else:
+                action = "investigate"
+                reasoning = f"{node.title} has high loss (loss={loss:.3f}) - needs attention"
+
+            suggestions.append(
+                NavigationSuggestion(
+                    target=node.id,
+                    action=action,
+                    value_score=1.0 - loss,
+                    reasoning=reasoning,
+                )
             )
-        ]
-
-        visible_nodes = [_create_mock_axiom(i) for i in range(1, 4)]
 
         return TelescopeResponse(
             state=state,
@@ -962,6 +1125,213 @@ def create_zero_seed_router() -> APIRouter | None:
         )
 
     # =========================================================================
+    # Witnessed Edges
+    # =========================================================================
+
+    @router.post("/edges/from-mark", response_model=ZeroEdge)
+    async def create_witnessed_edge(request: CreateWitnessedEdgeRequest) -> ZeroEdge:
+        """
+        Create a witnessed edge from a Witness mark.
+
+        This endpoint extracts the decision reasoning from a Witness mark
+        and creates a Zero Seed edge with kind="witnessed".
+
+        Args:
+            request: Witnessed edge creation request
+
+        Returns:
+            ZeroEdge with kind="witnessed" and attached proof
+
+        Note:
+            Currently uses mock implementation. Real implementation will:
+            1. Load Mark from Witness crystal store by mark_id
+            2. Extract Toulmin proof from Mark.data (if dialectic mark)
+            3. Parse qualifier → confidence mapping
+            4. Create edge with proof and evidence tier
+        """
+        # Mock implementation - real version will load from Witness
+        # For now, create a witnessed edge with mock proof
+
+        # Map qualifier to confidence (mock)
+        # Real version: extract from Mark.data.qualifier
+        mock_qualifier = "probably"
+        confidence_map = {
+            "definitely": 0.95,
+            "probably": 0.75,
+            "possibly": 0.50,
+        }
+        confidence = confidence_map.get(mock_qualifier, 0.75)
+
+        # Mock Toulmin proof (real version: from Mark.data)
+        mock_proof = ToulminProof(
+            data="Session decision recorded",
+            warrant="Decision emerged from dialectic synthesis",
+            claim=f"Edge from {request.source_node_id} to {request.target_node_id}",
+            backing="Witness protocol ensures decision traceability",
+            qualifier=mock_qualifier,
+            rebuttals=[],
+            tier="empirical",
+            principles=["tasteful", "composable"],
+        )
+
+        # Create witnessed edge
+        edge = ZeroEdge(
+            id=f"ze-witnessed-{request.mark_id[:8]}",
+            source=request.source_node_id,
+            target=request.target_node_id,
+            kind="witnessed",
+            context=request.context or "Decision from Witness mark",
+            confidence=confidence,
+            created_at=datetime.now(UTC).isoformat(),
+            mark_id=request.mark_id,
+            proof=mock_proof,
+            evidence_tier=mock_proof.tier,
+        )
+
+        return edge
+
+    # =========================================================================
+    # Node CRUD Operations
+    # =========================================================================
+
+    @router.post("/nodes", response_model=ZeroNode)
+    async def create_node(request: CreateNodeRequest) -> ZeroNode:
+        """
+        Create a new Zero Seed node.
+
+        Args:
+            request: Node creation request
+
+        Returns:
+            Created ZeroNode
+
+        Raises:
+            HTTPException: If validation fails
+        """
+        try:
+            from services.k_block.zero_seed_storage import get_zero_seed_storage
+
+            storage = get_zero_seed_storage()
+
+            # Create node using K-Block storage
+            kblock, node_id = storage.create_node(
+                layer=request.layer,
+                title=request.title,
+                content=request.content,
+                lineage=request.lineage,
+                confidence=request.confidence,
+                tags=request.tags,
+                created_by=request.created_by,
+            )
+
+            # Convert K-Block to ZeroNode
+            return ZeroNode(
+                id=node_id,
+                path=kblock.path,
+                layer=getattr(kblock, "_layer", request.layer),
+                kind=getattr(kblock, "_kind", "unknown"),
+                title=getattr(kblock, "_title", request.title),
+                content=kblock.content,
+                confidence=getattr(kblock, "_confidence", 0.5),
+                created_at=kblock.created_at.isoformat(),
+                created_by=getattr(kblock, "_created_by", request.created_by),
+                tags=getattr(kblock, "_tags", []),
+                lineage=getattr(kblock, "_lineage", []),
+                has_proof=(request.layer >= 3),
+            )
+
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            logger.error(f"Failed to create node: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to create node: {str(e)}")
+
+    @router.put("/nodes/{node_id}", response_model=ZeroNode)
+    async def update_node(node_id: str, request: UpdateNodeRequest) -> ZeroNode:
+        """
+        Update a Zero Seed node.
+
+        Args:
+            node_id: Node ID to update
+            request: Update request
+
+        Returns:
+            Updated ZeroNode
+
+        Raises:
+            HTTPException: If node not found
+        """
+        try:
+            from services.k_block.zero_seed_storage import get_zero_seed_storage
+
+            storage = get_zero_seed_storage()
+
+            # Update node
+            kblock = storage.update_node(
+                node_id=node_id,
+                title=request.title,
+                content=request.content,
+                confidence=request.confidence,
+                tags=request.tags,
+            )
+
+            if not kblock:
+                raise HTTPException(status_code=404, detail=f"Node not found: {node_id}")
+
+            # Convert K-Block to ZeroNode
+            return ZeroNode(
+                id=node_id,
+                path=kblock.path,
+                layer=getattr(kblock, "_layer", 1),
+                kind=getattr(kblock, "_kind", "unknown"),
+                title=getattr(kblock, "_title", "Untitled"),
+                content=kblock.content,
+                confidence=getattr(kblock, "_confidence", 0.5),
+                created_at=kblock.created_at.isoformat(),
+                created_by=getattr(kblock, "_created_by", "system"),
+                tags=getattr(kblock, "_tags", []),
+                lineage=getattr(kblock, "_lineage", []),
+                has_proof=(getattr(kblock, "_layer", 1) >= 3),
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to update node {node_id}: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to update node: {str(e)}")
+
+    @router.delete("/nodes/{node_id}")
+    async def delete_node(node_id: str) -> dict[str, str]:
+        """
+        Delete a Zero Seed node.
+
+        Args:
+            node_id: Node ID to delete
+
+        Returns:
+            Deletion confirmation
+
+        Raises:
+            HTTPException: If node not found
+        """
+        try:
+            from services.k_block.zero_seed_storage import get_zero_seed_storage
+
+            storage = get_zero_seed_storage()
+
+            success = storage.delete_node(node_id)
+            if not success:
+                raise HTTPException(status_code=404, detail=f"Node not found: {node_id}")
+
+            return {"status": "deleted", "node_id": node_id}
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to delete node {node_id}: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to delete node: {str(e)}")
+
+    # =========================================================================
     # Node Detail
     # =========================================================================
 
@@ -976,9 +1346,39 @@ def create_zero_seed_router() -> APIRouter | None:
         Returns:
             Node detail with loss, proof, and edges
         """
-        # Mock node - real implementation would query Zero Seed graph
-        node = _create_mock_axiom(1)
-        node = node.copy(update={"id": node_id})
+        try:
+            from services.k_block.zero_seed_storage import get_zero_seed_storage
+
+            storage = get_zero_seed_storage()
+
+            # Get node from K-Block storage
+            kblock = storage.get_node(node_id)
+            if not kblock:
+                # Fall back to mock for now if not in storage
+                node = _create_mock_axiom(1)
+                node = node.copy(update={"id": node_id})
+            else:
+                # Convert K-Block to ZeroNode
+                node = ZeroNode(
+                    id=node_id,
+                    path=kblock.path,
+                    layer=getattr(kblock, "_layer", 1),
+                    kind=getattr(kblock, "_kind", "unknown"),
+                    title=getattr(kblock, "_title", "Untitled"),
+                    content=kblock.content,
+                    confidence=getattr(kblock, "_confidence", 0.5),
+                    created_at=kblock.created_at.isoformat(),
+                    created_by=getattr(kblock, "_created_by", "system"),
+                    tags=getattr(kblock, "_tags", []),
+                    lineage=getattr(kblock, "_lineage", []),
+                    has_proof=(getattr(kblock, "_layer", 1) >= 3),
+                )
+
+        except Exception as e:
+            logger.warning(f"Failed to load node from storage: {e}")
+            # Fall back to mock
+            node = _create_mock_axiom(1)
+            node = node.copy(update={"id": node_id})
 
         loss = _create_mock_loss(node_id, 0.12)
 
@@ -996,6 +1396,34 @@ def create_zero_seed_router() -> APIRouter | None:
                 context="Axiom grounds value",
                 confidence=1.0,
                 created_at=datetime.now(UTC).isoformat(),
+                mark_id=None,
+                proof=None,
+                evidence_tier=None,
+            )
+        ]
+
+        # Mock witnessed edges - real implementation will query by node_id
+        witnessed: list[ZeroEdge] = [
+            ZeroEdge(
+                id="ze-witnessed-001",
+                source=node_id,
+                target="zn-value-002",
+                kind="witnessed",
+                context="Decision to adopt this approach after dialectic",
+                confidence=0.75,
+                created_at=datetime.now(UTC).isoformat(),
+                mark_id="mark-dialectic-abc123",
+                proof=ToulminProof(
+                    data="Session explored alternatives A and B",
+                    warrant="Alternative A provides better composition properties",
+                    claim="We should use approach A",
+                    backing="Category theory supports this pattern",
+                    qualifier="probably",
+                    rebuttals=["Unless performance becomes critical"],
+                    tier="categorical",
+                    principles=["composable", "tasteful"],
+                ),
+                evidence_tier="categorical",
             )
         ]
 
@@ -1005,6 +1433,7 @@ def create_zero_seed_router() -> APIRouter | None:
             proof=proof,
             incoming_edges=incoming,
             outgoing_edges=outgoing,
+            witnessed_edges=witnessed,
         )
 
     # =========================================================================
@@ -1223,4 +1652,9 @@ __all__ = [
     "NodeAnalysisResponse",
     "AnalysisQuadrant",
     "AnalysisItem",
+    # Request models
+    "CreateWitnessedEdgeRequest",
+    # Data models
+    "ZeroEdge",
+    "ToulminProof",
 ]

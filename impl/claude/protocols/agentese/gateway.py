@@ -190,6 +190,24 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (analysis): {e}")
 
+        # === Document Director Crown Jewel (concept.document.*) ===
+        try:
+            from services.director import node as director_node  # noqa: F401  # concept.document.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (director): {e}")
+
+        # === Sovereign Store Crown Jewel (concept.sovereign.*) ===
+        try:
+            from services.sovereign import node as sovereign_node  # noqa: F401  # concept.sovereign.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (sovereign): {e}")
+
+        # === D-gent Universe (Layer 0 persistence) ===
+        try:
+            from agents.d import node as data_node  # noqa: F401  # self.data.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (d-gent): {e}")
+
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:
         logger.warning(f"Could not import some node modules: {e}")

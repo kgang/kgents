@@ -59,13 +59,23 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
-def map_analysis_to_document_status(analysis_status: str | None) -> str:
+def map_analysis_to_document_status(
+    analysis_status: str | None,
+    metadata: dict[str, Any] | None = None,
+) -> str:
     """
     Map AnalysisStatus values to DocumentStatus values.
 
     AnalysisStatus: pending, analyzing, analyzed, failed, stale
-    DocumentStatus: uploaded, processing, ready, executed, stale, failed
+    DocumentStatus: uploaded, processing, ready, executed, stale, failed, ghost
+
+    Special case: If metadata contains is_placeholder=True, return "ghost"
+    regardless of analysis status.
     """
+    # Check for ghost/placeholder documents first
+    if metadata and metadata.get("is_placeholder", False):
+        return "ghost"
+
     if not analysis_status:
         return "uploaded"
 
@@ -93,6 +103,7 @@ class DocumentStatus(str):
     EXECUTED = "executed"  # Code generation captured
     STALE = "stale"  # Content changed, re-analysis needed
     FAILED = "failed"  # Analysis failed
+    GHOST = "ghost"  # Placeholder created from reference, awaiting real content
 
 
 class UploadRequest(BaseModel):
@@ -635,6 +646,7 @@ def create_director_router() -> APIRouter | None:
             "executed": 0,
             "stale": 0,
             "failed": 0,
+            "ghost": 0,
         }
 
         # Track recent uploads for later sorting
@@ -644,9 +656,10 @@ def create_director_router() -> APIRouter | None:
             state = await store.get_analysis_state(path)
             entity = await store.get_current(path)
 
-            # Map AnalysisStatus to DocumentStatus
+            # Map AnalysisStatus to DocumentStatus (check is_placeholder metadata)
             analysis_status = state.status.value if state else None
-            doc_status = map_analysis_to_document_status(analysis_status)
+            metadata = entity.metadata if entity else None
+            doc_status = map_analysis_to_document_status(analysis_status, metadata)
 
             if doc_status in by_status:
                 by_status[doc_status] += 1
@@ -670,7 +683,10 @@ def create_director_router() -> APIRouter | None:
             state = await store.get_analysis_state(path)
             overlay = await store.get_overlay(path, "analysis")
 
-            doc_status = map_analysis_to_document_status(state.status.value if state else None)
+            doc_status = map_analysis_to_document_status(
+                state.status.value if state else None,
+                entity.metadata,
+            )
 
             recent_uploads.append(
                 DocumentListEntry(
@@ -725,11 +741,13 @@ def create_director_router() -> APIRouter | None:
         for path in all_paths:
             state = await store.get_analysis_state(path)
             overlay = await store.get_overlay(path, "analysis")
+            entity = await store.get_current(path)
 
             # Filter by status (map DocumentStatus to AnalysisStatus for comparison)
             if status:
                 analysis_status = state.status.value if state else None
-                doc_status = map_analysis_to_document_status(analysis_status)
+                metadata = entity.metadata if entity else None
+                doc_status = map_analysis_to_document_status(analysis_status, metadata)
                 if doc_status != status:
                     continue
 
@@ -770,7 +788,10 @@ def create_director_router() -> APIRouter | None:
             state = await store.get_analysis_state(path)
             overlay = await store.get_overlay(path, "analysis")
 
-            doc_status = map_analysis_to_document_status(state.status.value if state else None)
+            doc_status = map_analysis_to_document_status(
+                state.status.value if state else None,
+                entity.metadata,
+            )
 
             documents.append(
                 DocumentListEntry(
@@ -821,7 +842,10 @@ def create_director_router() -> APIRouter | None:
 
         # Get analysis state
         state = await store.get_analysis_state(path)
-        doc_status = map_analysis_to_document_status(state.status.value if state else None)
+        doc_status = map_analysis_to_document_status(
+            state.status.value if state else None,
+            entity.metadata,
+        )
 
         # Get analysis overlay
         overlay = await store.get_overlay(path, "analysis")
@@ -885,7 +909,10 @@ def create_director_router() -> APIRouter | None:
         rendered_html = f"<pre>{entity.content_text}</pre>"
 
         state = await store.get_analysis_state(path)
-        doc_status = map_analysis_to_document_status(state.status.value if state else None)
+        doc_status = map_analysis_to_document_status(
+            state.status.value if state else None,
+            entity.metadata,
+        )
 
         overlay = await store.get_overlay(path, "analysis")
         title = overlay.get("title", path) if overlay else path

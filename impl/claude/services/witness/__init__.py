@@ -17,6 +17,14 @@ See: docs/skills/metaphysical-fullstack.md
 See: spec/services/witness.md
 """
 
+import os
+
+# =============================================================================
+# Feature Flags
+# =============================================================================
+
+USE_CRYSTAL_STORAGE = os.getenv("USE_CRYSTAL_STORAGE", "").lower() in ("1", "true", "yes")
+
 from .contracts import (
     ActionRecordRequest,
     ActionRecordResponse,
@@ -57,6 +65,11 @@ from .crystal_store import (
     get_crystal_store,
     reset_crystal_store,
     set_crystal_store,
+)
+
+# Phase 3: Crystal Adapter (WitnessMark → D-gent Crystal)
+from .crystal_adapter import (
+    WitnessCrystalAdapter,
 )
 
 # Phase 5: Crystal Trail Visualization
@@ -394,6 +407,8 @@ __all__ = [
     "get_crystal_store",
     "reset_crystal_store",
     "set_crystal_store",
+    # Crystal Adapter (Phase 3: WitnessMark → D-gent Crystal)
+    "WitnessCrystalAdapter",
     # Crystallizer
     "CrystallizationResult",
     "Crystallizer",
@@ -637,4 +652,6 @@ __all__ = [
     "SpecPath",
     "SpecPlant",
     "get_garden_service",
+    # Feature Flags
+    "USE_CRYSTAL_STORAGE",
 ]

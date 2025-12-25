@@ -51,6 +51,17 @@ class DocumentStatus(Enum):
     - EXECUTED: Code generated and captured
     - STALE: Content changed, re-analysis needed
     - FAILED: Analysis failed
+    - GHOST: Placeholder created from reference in another doc, awaiting real content
+
+    Ghost Philosophy:
+        "The file is a lie. There is only the graph."
+
+        Ghosts are the negative space of the document graph — entities that
+        SHOULD exist based on references but DON'T yet. They are:
+        - Created automatically when parsing finds dangling references
+        - Visible in the Director as a de-prioritized section
+        - Awaiting either: (a) user fills in content, or (b) user uploads the "real" doc
+        - On reconciliation, Zero-Seed mediates the merge if both versions have content
     """
 
     UPLOADED = "uploaded"  # Ingested, awaiting analysis
@@ -59,6 +70,7 @@ class DocumentStatus(Enum):
     EXECUTED = "executed"  # Code generation captured
     STALE = "stale"  # Content changed, re-analysis needed
     FAILED = "failed"  # Analysis failed
+    GHOST = "ghost"  # Placeholder awaiting real content
 
 
 # =============================================================================
@@ -572,6 +584,173 @@ class DirectorEvent:
 
 
 # =============================================================================
+# Ghost Document Types (Zero-Seed Integration)
+# =============================================================================
+
+
+class GhostOrigin(Enum):
+    """
+    How a ghost document came into existence.
+
+    Tracking origin is essential for the reconciliation UI:
+    - PARSED_REFERENCE: A spec mentioned this path but it doesn't exist
+    - ANTICIPATED: @anticipated marker created an expectation
+    - USER_CREATED: User explicitly created a placeholder
+    """
+
+    PARSED_REFERENCE = "parsed_reference"
+    ANTICIPATED = "anticipated"
+    USER_CREATED = "user_created"
+
+
+@dataclass(frozen=True)
+class GhostMetadata:
+    """
+    Metadata for a ghost document.
+
+    Ghosts are the negative space of the graph — they represent
+    what SHOULD exist but doesn't yet. This metadata tracks:
+    - Who summoned this ghost (which spec referenced it)
+    - Why (the context that demanded its existence)
+    - When it was created
+    - User-contributed content (if any)
+
+    The is_empty flag distinguishes:
+    - Pure ghosts: only the path exists (created by reference)
+    - Nascent docs: user has started filling content but hasn't "resolved"
+    """
+
+    origin: GhostOrigin
+    created_by_path: str  # Which spec created this ghost
+    created_at: str  # ISO timestamp
+    context: str = ""  # Why this ghost exists (from anticipated marker or reference)
+    user_content: str = ""  # User-contributed content (if any)
+
+    @property
+    def is_empty(self) -> bool:
+        """True if ghost has no user content yet."""
+        return len(self.user_content.strip()) == 0
+
+    @property
+    def has_draft_content(self) -> bool:
+        """True if user has started adding content."""
+        return len(self.user_content.strip()) > 0
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for JSON storage."""
+        return {
+            "origin": self.origin.value,
+            "created_by_path": self.created_by_path,
+            "created_at": self.created_at,
+            "context": self.context,
+            "user_content": self.user_content,
+            "is_empty": self.is_empty,
+            "has_draft_content": self.has_draft_content,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "GhostMetadata":
+        """Create from dictionary (from JSON storage)."""
+        return cls(
+            origin=GhostOrigin(data.get("origin", "parsed_reference")),
+            created_by_path=data.get("created_by_path", ""),
+            created_at=data.get("created_at", datetime.now(UTC).isoformat()),
+            context=data.get("context", ""),
+            user_content=data.get("user_content", ""),
+        )
+
+
+class ReconciliationStrategy(Enum):
+    """
+    Strategy for reconciling ghost content with uploaded "real" document.
+
+    When a user uploads a document that matches a ghost path, we need
+    to decide what to do with any content that was in the ghost:
+
+    - REPLACE: Use uploaded content, discard ghost content
+    - MERGE_UPLOADED_WINS: Zero-Seed merge, conflicts resolved by uploaded
+    - MERGE_GHOST_WINS: Zero-Seed merge, conflicts resolved by ghost content
+    - INTERACTIVE: Present both to user for manual merge
+    """
+
+    REPLACE = "replace"
+    MERGE_UPLOADED_WINS = "merge_uploaded_wins"
+    MERGE_GHOST_WINS = "merge_ghost_wins"
+    INTERACTIVE = "interactive"
+
+
+@dataclass
+class ReconciliationRequest:
+    """
+    Request to reconcile a ghost with an uploaded document.
+
+    This is the input to Zero-Seed reconciliation.
+
+    Teaching:
+        gotcha: Both ghost and uploaded can have content. The strategy
+                determines how conflicts are resolved.
+
+        gotcha: Zero-Seed integration means we don't just pick one — we can
+                actually merge the documents using semantic understanding.
+    """
+
+    ghost_path: str
+    ghost_content: str  # Current ghost content (may be empty)
+    uploaded_content: str  # Newly uploaded content
+    ghost_metadata: GhostMetadata
+    strategy: ReconciliationStrategy = ReconciliationStrategy.REPLACE
+
+    def needs_merge(self) -> bool:
+        """Check if actual merge is needed (both have content)."""
+        return (
+            len(self.ghost_content.strip()) > 0
+            and len(self.uploaded_content.strip()) > 0
+            and self.strategy != ReconciliationStrategy.REPLACE
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "ghost_path": self.ghost_path,
+            "ghost_content": self.ghost_content,
+            "uploaded_content": self.uploaded_content,
+            "ghost_metadata": self.ghost_metadata.to_dict(),
+            "strategy": self.strategy.value,
+            "needs_merge": self.needs_merge(),
+        }
+
+
+@dataclass
+class ReconciliationResult:
+    """
+    Result of ghost reconciliation.
+
+    After Zero-Seed processes the reconciliation request, this captures:
+    - The final merged content
+    - Any conflicts that required resolution
+    - The witness mark documenting the reconciliation
+    """
+
+    path: str
+    final_content: str
+    strategy_used: ReconciliationStrategy
+    had_conflicts: bool = False
+    conflict_summary: str = ""
+    mark_id: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "path": self.path,
+            "final_content": self.final_content,
+            "strategy_used": self.strategy_used.value,
+            "had_conflicts": self.had_conflicts,
+            "conflict_summary": self.conflict_summary,
+            "mark_id": self.mark_id,
+        }
+
+
+# =============================================================================
 # Module Exports
 # =============================================================================
 
@@ -590,4 +769,10 @@ __all__ = [
     # Events
     "DocumentTopics",
     "DirectorEvent",
+    # Ghost types
+    "GhostOrigin",
+    "GhostMetadata",
+    "ReconciliationStrategy",
+    "ReconciliationRequest",
+    "ReconciliationResult",
 ]

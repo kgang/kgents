@@ -1,18 +1,18 @@
 """
-O-gent Phase 4: W-gent Integration for Visualization.
+O-gent Phase 4: Witness Integration for Observability.
 
-This module bridges O-gent's Panopticon with W-gent's wire protocol,
-enabling real-time visualization of observability data.
+This module bridges O-gent's Panopticon with the Witness protocol,
+enabling structured observability via Witness marks.
 
 Key Components:
-1. **ObservablePanopticon**: Panopticon with WireObservable mixin
-2. **WireObserver**: Observer that emits observations via wire protocol
-3. **PanopticonDashboard**: Async dashboard that streams to wire
+1. **ObservablePanopticon**: Panopticon that emits Witness marks
+2. **WitnessObserver**: Observer that emits observations via Witness protocol
+3. **PanopticonDashboard**: Async dashboard that streams to Witness
 
 Integration Pattern:
-    O-gent observes → emits via wire protocol → W-gent renders
+    O-gent observes → emits Witness marks → queryable via MarkStore
 
-Spec Reference: spec/o-gents/README.md - Integration Points / W-gent
+Spec Reference: spec/o-gents/README.md - Integration Points / Witness
 """
 
 from __future__ import annotations
@@ -21,11 +21,11 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, AsyncIterator, Callable, Optional
+from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Optional
 
-# Import W-gent wire protocol
-from ..w.protocol import WireObservable
+if TYPE_CHECKING:
+    from services.witness import Mark, MarkStore
+
 from .observer import (
     BaseObserver,
     EntropyEvent,
@@ -44,12 +44,12 @@ from .panopticon import (
 )
 
 # =============================================================================
-# Wire Protocol Emission Modes
+# Witness Mark Emission Modes
 # =============================================================================
 
 
 class EmissionMode(str, Enum):
-    """How often to emit wire protocol updates."""
+    """How often to emit Witness marks."""
 
     CONTINUOUS = "continuous"  # Emit on every observation
     BATCHED = "batched"  # Batch observations, emit periodically
@@ -63,11 +63,11 @@ class EmissionMode(str, Enum):
 
 
 @dataclass
-class WireStatusSnapshot:
+class WitnessStatusSnapshot:
     """
-    Snapshot of Panopticon status for wire protocol emission.
+    Snapshot of Panopticon status for Witness mark emission.
 
-    Optimized for serialization and wire transfer.
+    Optimized for serialization and storage as Witness mark metadata.
     """
 
     timestamp: datetime
@@ -96,7 +96,7 @@ class WireStatusSnapshot:
     recent_alert: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert to dict for wire protocol."""
+        """Convert to dict for Witness mark metadata."""
         return {
             "timestamp": self.timestamp.isoformat() + "Z",
             "system_status": self.system_status,
@@ -128,7 +128,7 @@ class WireStatusSnapshot:
         }
 
     @classmethod
-    def from_panopticon_status(cls, status: UnifiedPanopticonStatus) -> "WireStatusSnapshot":
+    def from_panopticon_status(cls, status: UnifiedPanopticonStatus) -> "WitnessStatusSnapshot":
         """Create snapshot from full Panopticon status."""
         recent_alert = None
         if status.alerts:
@@ -160,26 +160,23 @@ class WireStatusSnapshot:
 # =============================================================================
 
 
-class ObservablePanopticon(WireObservable):
+class ObservablePanopticon:
     """
-    Panopticon with W-gent wire protocol integration.
+    Panopticon with Witness protocol integration.
 
-    Wraps IntegratedPanopticon and emits status updates via wire protocol,
-    enabling real-time visualization by W-gent fidelity adapters.
+    Wraps IntegratedPanopticon and emits status updates via Witness marks,
+    enabling structured observability and traceability.
 
     Usage:
         >>> panopticon = ObservablePanopticon()
         >>> await panopticon.start_streaming()
-        >>> # Wire files at .wire/o-gent-panopticon/
-        >>> # - state.json: Current status snapshot
-        >>> # - stream.log: Alert log
-        >>> # - metrics.json: Performance metrics
+        >>> # Witness marks emitted to MarkStore
+        >>> # Query via: get_mark_store().query(origins=("o-gent-panopticon",))
     """
 
     def __init__(
         self,
         agent_name: str = "o-gent-panopticon",
-        wire_base: Optional[Path] = None,
         panopticon: Optional[IntegratedPanopticon] = None,
         emission_mode: EmissionMode = EmissionMode.BATCHED,
         emission_interval: float = 1.0,
@@ -189,22 +186,20 @@ class ObservablePanopticon(WireObservable):
         Initialize ObservablePanopticon.
 
         Args:
-            agent_name: Wire protocol agent name
-            wire_base: Base directory for wire files
+            agent_name: Agent identifier for Witness marks
             panopticon: Existing IntegratedPanopticon (creates one if None)
             emission_mode: How often to emit updates
             emission_interval: Seconds between batched emissions
             history_limit: Max history snapshots to retain
         """
-        super().__init__(agent_name, wire_base)
-
+        self.agent_name = agent_name
         self.panopticon = panopticon or create_integrated_panopticon()
         self.emission_mode = emission_mode
         self.emission_interval = emission_interval
         self.history_limit = history_limit
 
         # History of status snapshots
-        self._history: list[WireStatusSnapshot] = []
+        self._history: list[WitnessStatusSnapshot] = []
 
         # Last emitted status (for on_change mode)
         self._last_status: str | None = None
@@ -215,24 +210,17 @@ class ObservablePanopticon(WireObservable):
         self._stream_task: Optional[asyncio.Task[None]] = None
 
         # Callbacks
-        self._on_status_change: list[Callable[[WireStatusSnapshot], None]] = []
+        self._on_status_change: list[Callable[[WitnessStatusSnapshot], None]] = []
         self._on_alert: list[Callable[[PanopticonAlert], None]] = []
-
-        # Initialize wire state
-        self.update_state(
-            phase="dormant",
-            current_task="Initializing O-gent Panopticon",
-            mode=emission_mode.value,
-        )
 
     # -------------------------------------------------------------------------
     # Status Collection and Emission
     # -------------------------------------------------------------------------
 
-    def collect_snapshot(self) -> WireStatusSnapshot:
+    def collect_snapshot(self) -> WitnessStatusSnapshot:
         """Collect current status snapshot."""
         status = self.panopticon.get_status()
-        snapshot = WireStatusSnapshot.from_panopticon_status(status)
+        snapshot = WitnessStatusSnapshot.from_panopticon_status(status)
 
         # Add to history
         self._history.append(snapshot)
@@ -241,48 +229,72 @@ class ObservablePanopticon(WireObservable):
 
         return snapshot
 
-    def emit_snapshot(self, snapshot: WireStatusSnapshot) -> None:
-        """Emit snapshot via wire protocol."""
-        # Update wire state - don't spread to_dict() to avoid duplicate keys
-        self.update_state(
-            phase="observing" if snapshot.system_status == "HOMEOSTATIC" else "alert",
-            current_task=f"System: {snapshot.system_status}",
-            progress=1.0 if snapshot.bootstrap_intact else 0.5,
-            stage="monitoring",
-            snapshot=snapshot.to_dict(),
-        )
+    def emit_snapshot(self, snapshot: WitnessStatusSnapshot) -> None:
+        """Emit snapshot via Witness mark."""
+        from services.witness import Mark, Stimulus, Response, UmweltSnapshot, get_mark_store
 
-        # Update metrics
-        self.update_metrics(
-            api_calls=len(self._history),
-            custom={
+        # Create Witness mark for this observation
+        mark = Mark(
+            origin=self.agent_name,
+            stimulus=Stimulus(
+                kind="observation",
+                content=f"Panopticon status check: {snapshot.system_status}",
+                source="o-gent",
+            ),
+            response=Response(
+                kind="observation",
+                content=f"System: {snapshot.system_status}, Alerts: {snapshot.alert_count}",
+                success=snapshot.system_status in ("HOMEOSTATIC", "DEGRADED"),
+                metadata=snapshot.to_dict(),
+            ),
+            umwelt=UmweltSnapshot.system(),
+            tags=("panopticon", "observability", "o-gent"),
+            metadata={
+                "emission_mode": self.emission_mode.value,
                 "alert_count": snapshot.alert_count,
                 "critical_alerts": snapshot.critical_alerts,
-                "roc": snapshot.economic_roc,
-                "drift": snapshot.semantic_drift,
             },
         )
 
-    def emit_alert(self, alert: PanopticonAlert) -> None:
-        """Emit alert via wire protocol."""
-        level = {
-            AlertSeverity.INFO: "INFO",
-            AlertSeverity.WARN: "WARN",
-            AlertSeverity.ERROR: "ERROR",
-            AlertSeverity.CRITICAL: "ERROR",
-        }.get(alert.severity, "INFO")
+        # Store mark
+        store = get_mark_store()
+        store.append(mark)
 
-        self.log_event(
-            level=level,
-            stage=alert.source,
-            message=str(alert),
+    def emit_alert(self, alert: PanopticonAlert) -> None:
+        """Emit alert via Witness mark."""
+        from services.witness import Mark, Stimulus, Response, UmweltSnapshot, get_mark_store
+
+        # Create Witness mark for this alert
+        mark = Mark(
+            origin=self.agent_name,
+            stimulus=Stimulus(
+                kind="alert",
+                content=f"Alert from {alert.source}",
+                source="o-gent",
+                metadata={"severity": alert.severity.value},
+            ),
+            response=Response(
+                kind="alert",
+                content=str(alert),
+                success=False,
+                metadata={
+                    "severity": alert.severity.value,
+                    "source": alert.source,
+                },
+            ),
+            umwelt=UmweltSnapshot.system(),
+            tags=("panopticon", "alert", alert.severity.value),
         )
+
+        # Store mark
+        store = get_mark_store()
+        store.append(mark)
 
         # Trigger callbacks
         for callback in self._on_alert:
             callback(alert)
 
-    def should_emit(self, snapshot: WireStatusSnapshot) -> bool:
+    def should_emit(self, snapshot: WitnessStatusSnapshot) -> bool:
         """Determine if snapshot should be emitted based on mode."""
         if self.emission_mode == EmissionMode.CONTINUOUS:
             return True
@@ -309,15 +321,12 @@ class ObservablePanopticon(WireObservable):
     # -------------------------------------------------------------------------
 
     async def start_streaming(self) -> None:
-        """Start streaming status updates to wire protocol."""
+        """Start streaming status updates to Witness marks."""
         if self._streaming:
             return
 
         self._streaming = True
         self._stream_task = asyncio.create_task(self._stream_loop())
-
-        self.log_event("INFO", "stream", "Started status streaming")
-        self.update_state(phase="waking", current_task="Starting stream")
 
     async def stop_streaming(self) -> None:
         """Stop streaming status updates."""
@@ -328,9 +337,6 @@ class ObservablePanopticon(WireObservable):
                 await self._stream_task
             except asyncio.CancelledError:
                 pass
-
-        self.log_event("INFO", "stream", "Stopped status streaming")
-        self.update_state(phase="waning", current_task="Stream stopped")
 
     async def _stream_loop(self) -> None:
         """Main streaming loop."""
@@ -356,18 +362,18 @@ class ObservablePanopticon(WireObservable):
 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
-                self.log_event("ERROR", "stream", f"Stream error: {e}")
+            except Exception:
+                # Silently continue on error
                 await asyncio.sleep(self.emission_interval)
 
     async def stream_snapshots(
         self,
         interval: float | None = None,
-    ) -> AsyncIterator[WireStatusSnapshot]:
+    ) -> AsyncIterator[WitnessStatusSnapshot]:
         """
         Async generator yielding status snapshots.
 
-        Useful for programmatic consumption without wire files.
+        Useful for programmatic consumption.
         """
         interval = interval or self.emission_interval
 
@@ -381,7 +387,7 @@ class ObservablePanopticon(WireObservable):
     # -------------------------------------------------------------------------
 
     def on_status_change(
-        self, callback: Callable[[WireStatusSnapshot], None]
+        self, callback: Callable[[WitnessStatusSnapshot], None]
     ) -> Callable[[], None]:
         """
         Register callback for status changes.
@@ -404,14 +410,14 @@ class ObservablePanopticon(WireObservable):
     # Query Methods
     # -------------------------------------------------------------------------
 
-    def get_history(self, limit: int = 50) -> list[WireStatusSnapshot]:
+    def get_history(self, limit: int = 50) -> list[WitnessStatusSnapshot]:
         """Get status history."""
         return self._history[-limit:]
 
-    def get_current_snapshot(self) -> WireStatusSnapshot:
+    def get_current_snapshot(self) -> WitnessStatusSnapshot:
         """Get current status snapshot without storing."""
         status = self.panopticon.get_status()
-        return WireStatusSnapshot.from_panopticon_status(status)
+        return WitnessStatusSnapshot.from_panopticon_status(status)
 
     def get_summary(self) -> str:
         """Get human-readable summary."""
@@ -441,39 +447,36 @@ Alerts: {snapshot.alert_count} ({snapshot.critical_alerts} critical)
 
 
 # =============================================================================
-# Wire Observer
+# Witness Observer
 # =============================================================================
 
 
-class WireObserver(BaseObserver):
+class WitnessObserver(BaseObserver):
     """
-    Observer that emits observations via wire protocol.
+    Observer that emits observations via Witness protocol.
 
-    Bridges the Observer pattern with W-gent's wire protocol,
-    allowing any observation to be captured and visualized.
+    Bridges the Observer pattern with Witness marks,
+    allowing any observation to be captured and traced.
     """
 
     def __init__(
         self,
-        observer_id: str = "wire-observer",
-        wire_base: Optional[Path] = None,
+        observer_id: str = "witness-observer",
         emit_context: bool = True,
         emit_results: bool = True,
         emit_entropy: bool = True,
     ):
         """
-        Initialize WireObserver.
+        Initialize WitnessObserver.
 
         Args:
             observer_id: Observer identifier
-            wire_base: Base directory for wire files
             emit_context: Whether to emit observation context
             emit_results: Whether to emit observation results
             emit_entropy: Whether to emit entropy (error) events
         """
         super().__init__(observer_id=observer_id)
 
-        self._wire = WireObservable(observer_id, wire_base)
         self._emit_context = emit_context
         self._emit_results = emit_results
         self._emit_entropy = emit_entropy
@@ -495,16 +498,24 @@ class WireObserver(BaseObserver):
         )
 
         if self._emit_context:
-            self._wire.log_event(
-                level="INFO",
-                stage="pre_invoke",
-                message=f"Observing {context.agent_name}",
+            from services.witness import Mark, Stimulus, Response, UmweltSnapshot, get_mark_store
+
+            mark = Mark(
+                origin=self.observer_id,
+                stimulus=Stimulus(
+                    kind="observation",
+                    content=f"Observing {context.agent_name}",
+                    source="o-gent",
+                ),
+                response=Response(
+                    kind="context",
+                    content=f"Pre-invoke: {context.agent_name}",
+                    metadata={"agent_id": agent_id, "observation_id": context.observation_id},
+                ),
+                umwelt=UmweltSnapshot.system(),
+                tags=("observation", "pre-invoke"),
             )
-            self._wire.update_state(
-                phase="active",
-                current_task=f"Observing: {context.agent_name}",
-                progress=0.0,
-            )
+            get_mark_store().append(mark)
 
         self._observation_count += 1
         return context
@@ -524,17 +535,25 @@ class WireObserver(BaseObserver):
         )
 
         if self._emit_results:
-            self._wire.log_event(
-                level="INFO",
-                stage="post_invoke",
-                message=f"Completed {context.agent_name} in {duration_ms:.1f}ms",
+            from services.witness import Mark, Stimulus, Response, UmweltSnapshot, get_mark_store
+
+            mark = Mark(
+                origin=self.observer_id,
+                stimulus=Stimulus(
+                    kind="observation",
+                    content=f"Completed {context.agent_name}",
+                    source="o-gent",
+                ),
+                response=Response(
+                    kind="result",
+                    content=f"Completed in {duration_ms:.1f}ms",
+                    success=True,
+                    metadata={"duration_ms": duration_ms, "observation_id": context.observation_id},
+                ),
+                umwelt=UmweltSnapshot.system(),
+                tags=("observation", "post-invoke"),
             )
-            self._wire.update_state(
-                phase="active",
-                current_task=f"Completed: {context.agent_name}",
-                progress=1.0,
-                latency_ms=duration_ms,
-            )
+            get_mark_store().append(mark)
 
         return obs_result
 
@@ -551,22 +570,27 @@ class WireObserver(BaseObserver):
         )
 
         if self._emit_entropy:
-            self._wire.log_event(
-                level="ERROR",
-                stage="entropy",
-                message=f"Error in {context.agent_name}: {type(error).__name__}: {error}",
+            from services.witness import Mark, Stimulus, Response, UmweltSnapshot, get_mark_store
+
+            mark = Mark(
+                origin=self.observer_id,
+                stimulus=Stimulus(
+                    kind="error",
+                    content=f"Error in {context.agent_name}",
+                    source="o-gent",
+                ),
+                response=Response(
+                    kind="error",
+                    content=f"{type(error).__name__}: {error}",
+                    success=False,
+                    metadata={"error_type": type(error).__name__},
+                ),
+                umwelt=UmweltSnapshot.system(),
+                tags=("observation", "entropy", "error"),
             )
-            self._wire.update_state(
-                phase="empty",
-                error=f"{type(error).__name__}: {error}",
-            )
+            get_mark_store().append(mark)
 
         return entropy_event
-
-    @property
-    def wire(self) -> WireObservable:
-        """Access underlying WireObservable."""
-        return self._wire
 
     def get_stats(self) -> dict[str, int]:
         """Get observation statistics."""
@@ -759,21 +783,21 @@ def create_observable_panopticon(
     )
 
 
-def create_wire_observer(
-    observer_id: str = "wire-observer",
+def create_witness_observer(
+    observer_id: str = "witness-observer",
     emit_all: bool = True,
-) -> WireObserver:
+) -> WitnessObserver:
     """
-    Create a WireObserver instance.
+    Create a WitnessObserver instance.
 
     Args:
         observer_id: Observer identifier
         emit_all: Whether to emit all event types
 
     Returns:
-        Configured WireObserver
+        Configured WitnessObserver
     """
-    return WireObserver(
+    return WitnessObserver(
         observer_id=observer_id,
         emit_context=emit_all,
         emit_results=emit_all,

@@ -457,6 +457,83 @@ class SovereignStore:
         await self.store_overlay(path, "annotations", annotations)
 
     # =========================================================================
+    # Zero Seed Integration (Phase 1: K-Block/Document Unification)
+    # =========================================================================
+
+    async def store_zero_seed_block(
+        self,
+        layer: int,
+        kind: str,
+        content: bytes,
+        title: str,
+        lineage: list[str],
+        proof: dict[str, Any] | None = None,
+        **metadata: Any,
+    ) -> str:
+        """
+        Store a Zero Seed node as a sovereign entity.
+
+        Zero Seed nodes are K-Blocks representing derivation DAG nodes.
+        They follow the same versioning/overlay pattern as files, but
+        use a special zeroseed:// path scheme.
+
+        Args:
+            layer: Zero Seed layer (1-7)
+                   1=axiom, 2=value, 3=goal, 4=spec, 5=action, 6=reflection, 7=representation
+            kind: Human-readable kind ("axiom", "value", "goal", etc.)
+            content: Node content (Markdown, JSON, etc.)
+            title: Human-readable title for this node
+            lineage: List of parent node IDs (derivation chain)
+            proof: Optional Toulmin proof structure
+            **metadata: Additional metadata to store
+
+        Returns:
+            The zeroseed:// path for this node
+
+        Example:
+            >>> path = await store.store_zero_seed_block(
+            ...     layer=1,
+            ...     kind="axiom",
+            ...     content=b"# Core Axiom\\nTruth is relative to observer.",
+            ...     title="Relativity Axiom",
+            ...     lineage=[],
+            ...     proof={"claim": "Truth is observer-dependent", ...},
+            ... )
+            >>> print(path)
+            zeroseed://axiom/a1b2c3d4
+        """
+        import uuid
+
+        # Generate unique ID for this Zero Seed node
+        node_id = uuid.uuid4().hex[:8]
+
+        # Generate path based on layer/kind
+        path = f"zeroseed://{kind}/{node_id}"
+
+        # Store version with Zero Seed metadata
+        version = await self.store_version(
+            path=path,
+            content=content,
+            ingest_mark=f"zero-seed-{node_id}",
+            metadata={
+                "zero_seed_layer": layer,
+                "zero_seed_kind": kind,
+                "title": title,
+                "lineage": lineage,
+                "has_proof": proof is not None,
+                "toulmin_proof": proof,
+                **metadata,
+            },
+        )
+
+        logger.info(
+            f"Stored Zero Seed {kind} at {path} (v{version}, "
+            f"{len(lineage)} parents, proof={proof is not None})"
+        )
+
+        return path
+
+    # =========================================================================
     # Analysis State Operations
     # =========================================================================
 
@@ -1048,6 +1125,117 @@ class SovereignStore:
                     })
 
         return references
+
+    # =========================================================================
+    # Edge Management (Phase 4: K-Block/Document Unification)
+    # =========================================================================
+
+    async def add_edge(
+        self,
+        from_path: str,
+        to_path: str,
+        edge_type: str,
+        mark_id: str | None = None,
+        context: str | None = None,
+    ) -> str:
+        """
+        Add an edge from one K-Block to another.
+
+        Stores in both:
+        - from_path's overlay/derived/edges.json (outgoing)
+        - to_path's overlay/derived/edges.json (incoming)
+
+        Args:
+            from_path: Source entity path
+            to_path: Target entity path
+            edge_type: Type of edge (e.g., "derives_from", "references")
+            mark_id: Optional witness mark ID linking this edge creation
+            context: Optional context or reasoning for this edge
+
+        Returns:
+            The edge ID
+        """
+        from uuid import uuid4
+
+        edge_id = f"edge-{uuid4().hex[:8]}"
+
+        # Store outgoing edge
+        outgoing = await self.get_overlay(from_path, "edges") or {"edges": []}
+        outgoing_edges: list[dict[str, Any]] = outgoing.get("edges", [])
+        outgoing_edges.append({
+            "id": edge_id,
+            "target": to_path,
+            "type": edge_type,
+            "mark_id": mark_id,
+            "context": context,
+            "created_at": datetime.now(UTC).isoformat(),
+            "direction": "outgoing",
+        })
+        outgoing["edges"] = outgoing_edges
+        await self.store_overlay(from_path, "edges", outgoing)
+
+        # Store incoming edge
+        incoming = await self.get_overlay(to_path, "edges") or {"edges": []}
+        incoming_edges: list[dict[str, Any]] = incoming.get("edges", [])
+        incoming_edges.append({
+            "id": edge_id,
+            "source": from_path,
+            "type": edge_type,
+            "mark_id": mark_id,
+            "context": context,
+            "created_at": datetime.now(UTC).isoformat(),
+            "direction": "incoming",
+        })
+        incoming["edges"] = incoming_edges
+        await self.store_overlay(to_path, "edges", incoming)
+
+        logger.debug(f"Added edge {edge_id}: {from_path} --[{edge_type}]--> {to_path}")
+        return edge_id
+
+    async def get_edges(self, path: str, direction: str = "both") -> list[dict[str, Any]]:
+        """
+        Get edges for a K-Block.
+
+        Args:
+            path: Entity path
+            direction: "outgoing", "incoming", or "both"
+
+        Returns:
+            List of edge dictionaries
+        """
+        overlay = await self.get_overlay(path, "edges") or {"edges": []}
+        edges: list[dict[str, Any]] = overlay.get("edges", [])
+
+        if direction == "both":
+            return edges
+        return [e for e in edges if e.get("direction") == direction]
+
+    async def remove_edge(self, edge_id: str, from_path: str, to_path: str) -> bool:
+        """
+        Remove an edge between two K-Blocks.
+
+        Args:
+            edge_id: The edge ID to remove
+            from_path: Source entity path
+            to_path: Target entity path
+
+        Returns:
+            True if edge was removed, False if not found
+        """
+        # Remove from source
+        outgoing = await self.get_overlay(from_path, "edges") or {"edges": []}
+        outgoing_edges: list[dict[str, Any]] = outgoing.get("edges", [])
+        outgoing["edges"] = [e for e in outgoing_edges if e.get("id") != edge_id]
+        await self.store_overlay(from_path, "edges", outgoing)
+
+        # Remove from target
+        incoming = await self.get_overlay(to_path, "edges") or {"edges": []}
+        incoming_edges: list[dict[str, Any]] = incoming.get("edges", [])
+        incoming["edges"] = [e for e in incoming_edges if e.get("id") != edge_id]
+        await self.store_overlay(to_path, "edges", incoming)
+
+        logger.debug(f"Removed edge {edge_id}: {from_path} --> {to_path}")
+        return True
 
     # =========================================================================
     # Law 3: Witnessed Export (Complete Pattern)

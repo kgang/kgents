@@ -861,16 +861,25 @@ class WitnessPersistence:
             if tag_prefix and not any(t.startswith(tag_prefix) for t in mark_tags):
                 continue
 
+            # Extract datum ID and timestamp from context (injected by Universe.query)
+            datum_id = wm.context.get("id", f"mark-{id(wm)}")  # Fallback to object id
+            created_at = wm.context.get("created_at")
+            timestamp = (
+                datetime.fromtimestamp(created_at, tz=UTC)
+                if created_at
+                else datetime.now(UTC)
+            )
+
             marks.append(
                 MarkResult(
-                    mark_id="unknown",  # TODO: need datum ID
+                    mark_id=datum_id,
                     action=wm.action,
                     reasoning=wm.reasoning,
                     principles=list(wm.principles),
                     tags=mark_tags,
                     author=wm.author,
-                    timestamp=datetime.now(UTC),  # TODO: extract from datum
-                    datum_id=None,
+                    timestamp=timestamp,
+                    datum_id=datum_id,
                     parent_mark_id=wm.parent_mark_id,
                 )
             )
