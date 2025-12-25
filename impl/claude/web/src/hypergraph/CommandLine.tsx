@@ -29,19 +29,16 @@ interface CommandLineProps {
 
 /**
  * Parse command and extract prefix for completion
- * Returns { cmdPrefix: 'e' | 'edit' | 'ag', partial: 'world.h' }
+ * Returns { cmdPrefix: 'ag', partial: 'world.h' }
+ *
+ * NOTE: :e/:edit removed — navigation is via URL or CommandPalette (Cmd+K)
+ * "The file is a lie. There is only the graph."
  */
 function parseCommandForCompletion(value: string): {
   cmdPrefix: string;
   partial: string;
 } | null {
   const trimmed = value.trim();
-
-  // Match ":e " or ":edit " followed by partial path
-  const editMatch = trimmed.match(/^(e|edit)\s+(.*)$/);
-  if (editMatch) {
-    return { cmdPrefix: editMatch[1], partial: editMatch[2] };
-  }
 
   // Match ":ag " followed by partial AGENTESE path
   const agMatch = trimmed.match(/^ag\s+(.*)$/);
@@ -60,12 +57,7 @@ async function fetchCompletions(
   partial: string
 ): Promise<string[]> {
   try {
-    if (cmdPrefix === 'e' || cmdPrefix === 'edit') {
-      const res = await fetch(
-        `/api/files/complete?prefix=${encodeURIComponent(partial)}`
-      );
-      return res.ok ? await res.json() : [];
-    } else if (cmdPrefix === 'ag') {
+    if (cmdPrefix === 'ag') {
       const res = await fetch(
         `/api/agentese/complete?prefix=${encodeURIComponent(partial)}`
       );

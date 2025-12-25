@@ -1,0 +1,270 @@
+/**
+ * Trail — Derivation breadcrumb styling
+ *
+ * STARK BIOME: 90% Steel, 10% Glow
+ * The frame is humble. The content breathes.
+ */
+
+/* =============================================================================
+ * Container
+ * ============================================================================= */
+
+.trail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--color-steel-carbon, #141418);
+  border-bottom: 1px solid var(--color-steel-gunmetal, #28282f);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary, #8a8a94);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-steel-zinc, #3a3a44) transparent;
+}
+
+.trail--compact {
+  padding: 4px 12px;
+  font-size: 12px;
+  gap: 8px;
+}
+
+/* =============================================================================
+ * Compression Indicator
+ * ============================================================================= */
+
+.trail__compression {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--color-steel-slate, #1c1c22);
+  border: 1px solid var(--color-steel-gunmetal, #28282f);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--color-glow-spore, #c4a77d);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.trail__compression-icon {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.trail__compression-value {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =============================================================================
+ * Steps Container
+ * ============================================================================= */
+
+.trail__steps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 0; /* Allow flex item to shrink */
+}
+
+.trail--compact .trail__steps {
+  gap: 6px;
+}
+
+/* =============================================================================
+ * Individual Step
+ * ============================================================================= */
+
+.trail__step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.trail__step--ellipsis {
+  flex-shrink: 0;
+}
+
+.trail__ellipsis {
+  color: var(--text-muted, #5a5a64);
+  font-size: 16px;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Step Link (clickable) */
+.trail__link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-secondary, #8a8a94);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  font-size: inherit;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.trail__link:hover {
+  background: var(--color-steel-slate, #1c1c22);
+  border-color: var(--color-steel-gunmetal, #28282f);
+  color: var(--text-primary, #e5e7eb);
+}
+
+.trail__link:focus-visible {
+  outline: 2px solid var(--accent-primary, #c4a77d);
+  outline-offset: 2px;
+}
+
+/* Current Step (non-clickable) */
+.trail__step--current .trail__current-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--color-steel-slate, #1c1c22);
+  border: 1px solid var(--accent-primary, #c4a77d);
+  border-radius: 4px;
+  color: var(--text-primary, #e5e7eb);
+  font-weight: 500;
+  white-space: nowrap;
+  position: relative;
+}
+
+/* Subtle glow on current step */
+.trail__step--current .trail__current-label::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 6px;
+  background: radial-gradient(
+    circle at center,
+    var(--accent-primary, #c4a77d) 0%,
+    transparent 70%
+  );
+  opacity: 0.1;
+  pointer-events: none;
+  animation: trail-breathe 3s ease-in-out infinite;
+}
+
+@keyframes trail-breathe {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.15;
+    transform: scale(1.05);
+  }
+}
+
+/* Step Label Text */
+.trail__step-label {
+  font-size: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =============================================================================
+ * Separator
+ * ============================================================================= */
+
+.trail__separator {
+  color: var(--text-muted, #5a5a64);
+  font-size: 14px;
+  user-select: none;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.trail--compact .trail__separator {
+  font-size: 12px;
+}
+
+/* =============================================================================
+ * Principle Indicators
+ * ============================================================================= */
+
+.trail__principles {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.trail__principle-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-glow-spore, #c4a77d);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  cursor: help;
+}
+
+.trail__principle-dot:hover {
+  transform: scale(1.4);
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* =============================================================================
+ * Responsive & Scrolling
+ * ============================================================================= */
+
+.trail::-webkit-scrollbar {
+  height: 6px;
+}
+
+.trail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.trail::-webkit-scrollbar-thumb {
+  background: var(--color-steel-zinc, #3a3a44);
+  border-radius: 3px;
+}
+
+.trail::-webkit-scrollbar-thumb:hover {
+  background: var(--color-steel-600, #444);
+}
+
+/* Fade gradient at edges when scrolling */
+.trail::before,
+.trail::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.trail::before {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    var(--color-steel-carbon, #141418),
+    transparent
+  );
+}
+
+.trail::after {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    var(--color-steel-carbon, #141418),
+    transparent
+  );
+}

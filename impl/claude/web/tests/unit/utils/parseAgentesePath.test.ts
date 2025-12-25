@@ -1,7 +1,7 @@
 /**
  * Tests for AGENTESE path parsing utilities
  *
- * @see spec/protocols/agentese-as-route.md
+ * @see spec/protocols/projection-web.md
  */
 
 import { describe, it, expect } from 'vitest';

@@ -21,13 +21,25 @@
  * - Falls back to node.content when no working content exists
  */
 
-import { memo, useCallback, useEffect, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { MarkdownEditor, MarkdownEditorRef } from '../../components/editor';
 import { InteractiveDocument } from '../../components/tokens';
 import { Portal } from './Portal';
+import { Minimap } from '../Minimap';
 import { useDocumentParser, createFallbackSceneGraph } from '../useDocumentParser';
 import type { GraphNode, PortalState } from '../state/types';
+
+/**
+ * ContentPaneRef — Imperative handle for scroll operations.
+ * Works in both NORMAL and INSERT modes.
+ */
+export interface ContentPaneRef {
+  scrollLines: (delta: number) => void;
+  scrollParagraph: (delta: number) => void;
+  scrollToTop: () => void;
+  scrollToBottom: () => void;
+}
 
 interface ContentPaneProps {
   node: GraphNode | null;
@@ -42,7 +54,7 @@ interface ContentPaneProps {
   onCursorChange?: (line: number, column: number) => void;
 }
 
-export const ContentPane = memo(function ContentPane({
+export const ContentPane = memo(forwardRef<ContentPaneRef, ContentPaneProps>(function ContentPane({
   node,
   mode,
   cursor: _cursor,
@@ -53,10 +65,17 @@ export const ContentPane = memo(function ContentPane({
   onCursorChange: _onCursorChange,
   readerRef,
   portals,
-}: ContentPaneProps) {
+}, ref) {
   // Editor ref for INSERT mode
   const editorRef = useRef<MarkdownEditorRef>(null);
   const prevModeRef = useRef(mode);
+
+  // Scroll container ref for tracking scroll position
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll state for minimap
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportRatio, setViewportRatio] = useState(0.2);
 
   // Use working content if available (edited content), otherwise use node content
   const displayContent = workingContent ?? node?.content ?? '';
@@ -130,6 +149,107 @@ export const ContentPane = memo(function ContentPane({
     [onToggle]
   );
 
+  // Track scroll position for minimap
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const maxScroll = scrollHeight - clientHeight;
+
+    if (maxScroll > 0) {
+      const normalizedScrollTop = scrollTop / maxScroll;
+      const normalizedViewportRatio = clientHeight / scrollHeight;
+
+      setScrollTop(normalizedScrollTop);
+      setViewportRatio(normalizedViewportRatio);
+    } else {
+      setScrollTop(0);
+      setViewportRatio(1);
+    }
+  }, []);
+
+  // Handle jump to position from minimap
+  const handleJumpToPosition = useCallback((position: number) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const { scrollHeight, clientHeight } = container;
+    const maxScroll = scrollHeight - clientHeight;
+    const targetScroll = position * maxScroll;
+
+    container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+  }, []);
+
+  // Update scroll position when container is mounted or resized
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Initial scroll position - use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      handleScroll();
+    });
+
+    // Add scroll listener with passive flag for better performance
+    container.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Add resize observer to update viewport ratio
+    const resizeObserver = new ResizeObserver(() => {
+      // Debounce resize updates slightly
+      requestAnimationFrame(() => {
+        handleScroll();
+      });
+    });
+
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [handleScroll]);
+
+  // Recalculate scroll position when content changes
+  // This ensures the minimap viewport indicator updates correctly
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      handleScroll();
+    });
+  }, [displayContent, handleScroll]);
+
+  // Expose scroll methods via imperative handle
+  useImperativeHandle(ref, () => ({
+    scrollLines: (delta: number) => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      // Scroll by line height (approximately 1.5em = 24px at 16px base)
+      const lineHeight = 24;
+      container.scrollBy({ top: delta * lineHeight, behavior: 'smooth' });
+    },
+    scrollParagraph: (delta: number) => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      // Scroll by paragraph (5 lines ≈ 120px)
+      const paragraphHeight = 120;
+      container.scrollBy({ top: delta * paragraphHeight, behavior: 'smooth' });
+    },
+    scrollToTop: () => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      container.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    scrollToBottom: () => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    },
+  }), []);
+
   // Empty state
   if (!node) {
     return (
@@ -139,7 +259,7 @@ export const ContentPane = memo(function ContentPane({
           <p>&quot;The file is a lie. There is only the graph.&quot;</p>
           <div className="content-pane__hints">
             <p>
-              <kbd>:e &lt;path&gt;</kbd> Open a node
+              <kbd>⌘K</kbd> Open CommandPalette
             </p>
             <p>
               <kbd>gh/gl</kbd> Navigate parent/child
@@ -198,7 +318,10 @@ export const ContentPane = memo(function ContentPane({
 
   return (
     <div className="content-pane content-pane--normal">
-      <div className="content-pane__interactive-container">
+      <div
+        ref={scrollContainerRef}
+        className="content-pane__interactive-container"
+      >
         <InteractiveDocument
           sceneGraph={renderGraph}
           onNavigate={handleNavigate}
@@ -206,6 +329,13 @@ export const ContentPane = memo(function ContentPane({
           className="content-pane__interactive"
         />
       </div>
+      <Minimap
+        sceneGraph={renderGraph}
+        content={displayContent}
+        scrollTop={scrollTop}
+        viewportRatio={viewportRatio}
+        onJumpToPosition={handleJumpToPosition}
+      />
       <AnimatePresence>
         {portalArray.map((portal) => (
           <Portal key={portal.edgeId} portal={portal} />
@@ -213,4 +343,4 @@ export const ContentPane = memo(function ContentPane({
       </AnimatePresence>
     </div>
   );
-});
+}));

@@ -37,18 +37,19 @@ export type { UseKeyHandlerOptions, UseKeyHandlerResult } from './useKeyHandler'
 export { HypergraphEditor } from './HypergraphEditor';
 export { StatusLine } from './StatusLine';
 export { CommandLine } from './CommandLine';
-export { GraphSidebar } from './GraphSidebar';
 export { FileExplorer } from './FileExplorer';
 export type { UploadedFile } from './FileExplorer';
 export { PlaceholderNode, PlaceholderNodeCompact } from './PlaceholderNode';
 export type { PlaceholderData } from './PlaceholderNode';
 
-// Living Canvas (graph sidebar)
-export { useLivingCanvas } from './useLivingCanvas';
-export type { LiveCanvasState, LiveCanvasActions, UseLivingCanvasOptions } from './useLivingCanvas';
+// Proof Engine Components
+export { ProofPanel } from './ProofPanel';
+export type { ProofPanelProps } from './ProofPanel';
+export { ProofStatusBadge } from './ProofStatusBadge';
+export type { ProofStatusBadgeProps } from './ProofStatusBadge';
 
 // API Bridge
-export { useGraphNode, normalizePath } from './useGraphNode';
+export { useGraphNode, normalizePath, isValidFilePath } from './useGraphNode';
 export type { UseGraphNodeResult } from './useGraphNode';
 
 export { useFileUpload } from './useFileUpload';

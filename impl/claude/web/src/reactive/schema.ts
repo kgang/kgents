@@ -110,18 +110,18 @@ export interface ErrorInfo {
 }
 
 /**
- * Get emoji for error category.
+ * Get glyph for error category.
  */
 export function getErrorEmoji(category: ErrorCategory): string {
-  const emojis: Record<ErrorCategory, string> = {
-    network: '📡',
-    notFound: '🗺️',
-    permission: '🔐',
-    timeout: '⏰',
-    validation: '⚠️',
-    unknown: '🌀',
+  const glyphs: Record<ErrorCategory, string> = {
+    network: '◇',
+    notFound: '◎',
+    permission: '◆',
+    timeout: '◐',
+    validation: '◇',
+    unknown: '○',
   };
-  return emojis[category];
+  return glyphs[category];
 }
 
 /**

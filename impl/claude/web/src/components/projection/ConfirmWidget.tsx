@@ -110,7 +110,7 @@ export function ConfirmWidget({
               fontSize: '24px',
             }}
           >
-            ⚠️
+            ◇
           </div>
         </div>
       )}

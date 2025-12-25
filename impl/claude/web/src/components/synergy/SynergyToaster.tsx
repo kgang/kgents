@@ -26,22 +26,22 @@ const TYPE_STYLES: Record<
   success: {
     bg: 'bg-emerald-500/10',
     border: 'border-emerald-500/30',
-    icon: '✓',
+    icon: '●',
   },
   info: {
     bg: 'bg-blue-500/10',
     border: 'border-blue-500/30',
-    icon: '→',
+    icon: '◎',
   },
   warning: {
     bg: 'bg-amber-500/10',
     border: 'border-amber-500/30',
-    icon: '⚠',
+    icon: '◇',
   },
   error: {
     bg: 'bg-red-500/10',
     border: 'border-red-500/30',
-    icon: '✕',
+    icon: '◆',
   },
 };
 

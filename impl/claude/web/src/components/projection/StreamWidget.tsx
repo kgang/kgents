@@ -96,7 +96,7 @@ export function StreamWidget({
           }}
           aria-label="Stream complete"
         >
-          ✓
+          ●
         </span>
       )}
 

@@ -11,7 +11,7 @@
 
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { sovereignApi } from '../api/client';
-import { useGraphNode } from './useGraphNode';
+import { useGraphNode, isValidFilePath } from './useGraphNode';
 import { useWitnessStream } from '../hooks/useWitnessStream';
 import type { GraphNode } from './state/types';
 import type { UploadedFile } from './FileExplorer';
@@ -72,6 +72,12 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
   // Custom loadNode that checks local cache first, then sovereign store
   const loadNode = useCallback(
     async (path: string): Promise<GraphNode | null> => {
+      // Validate path BEFORE any processing to prevent infinite loops
+      if (!isValidFilePath(path)) {
+        console.warn('[useFileUpload] Invalid path (edge label or malformed), skipping:', path);
+        return null;
+      }
+
       // Check local cache first (for uploaded files)
       const localNode = localFilesRef.current.get(path);
       console.info('[useFileUpload] loadNode called:', {

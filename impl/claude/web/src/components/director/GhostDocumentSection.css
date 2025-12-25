@@ -1,0 +1,337 @@
+/**
+ * GhostDocumentSection Styles — The Negative Space
+ *
+ * Philosophy:
+ *   "90% steel, 10% earned glow"
+ *   Ghosts are real but de-prioritized. They exist in the margins.
+ *
+ * Visual Language:
+ *   - 60% opacity (they are fading into existence)
+ *   - Dashed borders (incomplete, awaiting resolution)
+ *   - Muted colors with subtle purple accent (connection to the graph)
+ *   - Collapsible by default (out of the way until needed)
+ */
+
+/* =============================================================================
+   Section Container
+   ============================================================================= */
+
+.ghost-section {
+  margin-top: 1rem;
+  padding: 0;
+  border: 1px dashed var(--steel-700, #2a2a3a);
+  border-radius: 6px;
+  background: var(--steel-900, #111118);
+  opacity: 0.7;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.ghost-section:hover {
+  opacity: 0.9;
+  border-color: var(--steel-600, #3a3a4a);
+}
+
+.ghost-section[data-collapsed='true'] {
+  background: transparent;
+  border-style: dashed;
+}
+
+/* =============================================================================
+   Header (Toggle)
+   ============================================================================= */
+
+.ghost-section__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--steel-400, #5a5a6a);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.ghost-section__header:hover {
+  background: var(--steel-850, #16161f);
+  color: var(--steel-300, #7a7a8a);
+}
+
+.ghost-section__icon {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.ghost-section__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ghost-section__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.25rem;
+  background: var(--steel-800, #1a1a24);
+  border-radius: 10px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--steel-400, #5a5a6a);
+}
+
+.ghost-section__hint {
+  flex: 1;
+  font-size: 0.625rem;
+  font-weight: 400;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--steel-500, #4a4a5a);
+}
+
+.ghost-section__toggle {
+  font-size: 0.625rem;
+  color: var(--steel-500, #4a4a5a);
+}
+
+/* =============================================================================
+   Content (Expanded)
+   ============================================================================= */
+
+.ghost-section__content {
+  padding: 0 1rem 1rem;
+}
+
+.ghost-section__explainer {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--steel-850, #16161f);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--steel-400, #5a5a6a);
+}
+
+.ghost-section__explainer strong {
+  color: var(--steel-300, #7a7a8a);
+}
+
+/* =============================================================================
+   Ghost Groups (by origin)
+   ============================================================================= */
+
+.ghost-group {
+  margin-bottom: 1rem;
+}
+
+.ghost-group:last-child {
+  margin-bottom: 0;
+}
+
+.ghost-group__origin {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.625rem;
+}
+
+.ghost-group__origin-label {
+  color: var(--steel-500, #4a4a5a);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ghost-group__origin-path {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--purple-400, #a78bfa);
+}
+
+.ghost-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* =============================================================================
+   Ghost Row
+   ============================================================================= */
+
+.ghost-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.25rem;
+  background: var(--steel-850, #16161f);
+  border: 1px dashed var(--steel-700, #2a2a3a);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ghost-row:last-child {
+  margin-bottom: 0;
+}
+
+.ghost-row:hover {
+  background: var(--steel-800, #1a1a24);
+  border-color: var(--steel-600, #3a3a4a);
+  border-style: solid;
+}
+
+.ghost-row[data-has-draft='true'] {
+  border-color: var(--purple-700, #6d28d9);
+  border-style: solid;
+  opacity: 0.9;
+}
+
+.ghost-row__main {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ghost-row__path {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--steel-200, #d5d5da);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ghost-row__context {
+  display: block;
+  font-size: 0.625rem;
+  color: var(--steel-500, #4a4a5a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.125rem;
+}
+
+.ghost-row__status {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.ghost-row__badge {
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ghost-row__badge--empty {
+  background: var(--steel-800, #1a1a24);
+  color: var(--steel-500, #4a4a5a);
+}
+
+.ghost-row__badge--draft {
+  background: var(--purple-900, #4c1d95);
+  color: var(--purple-300, #c4b5fd);
+}
+
+/* =============================================================================
+   Origin Badge
+   ============================================================================= */
+
+.ghost-origin-badge {
+  padding: 0.125rem 0.375rem;
+  background: var(--steel-800, #1a1a24);
+  border-radius: 4px;
+  font-size: 0.5rem;
+  font-weight: 500;
+  color: var(--steel-500, #4a4a5a);
+}
+
+.ghost-origin-badge[data-origin='anticipated'] {
+  background: var(--amber-900, #78350f);
+  color: var(--amber-300, #fcd34d);
+}
+
+.ghost-origin-badge[data-origin='user_created'] {
+  background: var(--blue-900, #1e3a8a);
+  color: var(--blue-300, #93c5fd);
+}
+
+/* =============================================================================
+   Actions
+   ============================================================================= */
+
+.ghost-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.ghost-row:hover .ghost-row__actions {
+  opacity: 1;
+}
+
+.ghost-row__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  background: var(--steel-700, #2a2a3a);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+}
+
+.ghost-row__action:hover {
+  background: var(--steel-600, #3a3a4a);
+}
+
+.ghost-row__action--edit:hover {
+  background: var(--purple-700, #6d28d9);
+}
+
+.ghost-row__action--upload:hover {
+  background: var(--green-700, #15803d);
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .ghost-section {
+    margin-top: 0.5rem;
+  }
+
+  .ghost-section__hint {
+    display: none;
+  }
+
+  .ghost-row__context {
+    display: none;
+  }
+
+  .ghost-row__actions {
+    opacity: 1;
+  }
+}

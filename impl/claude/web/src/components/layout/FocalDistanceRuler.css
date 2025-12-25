@@ -12,21 +12,30 @@
 .focal-distance-ruler {
   position: fixed;
   left: 0;
-  top: var(--navbar-height);
+  top: var(--navbar-height); /* Start BELOW the header */
   bottom: var(--footer-height);
-  width: 64px;
+  width: var(--ruler-width, 140px); /* Wider to accommodate human-readable terms */
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--elastic-gap-md) 0;
+  padding: 0;
   background: var(--surface-1);
   border-right: 1px solid var(--surface-3);
   z-index: var(--elastic-z-sticky);
   transition: width var(--elastic-transition-fast);
 }
 
+/* Header section removed - no more square intersection */
+.focal-distance-ruler__header {
+  display: none; /* Hide - header span full width now */
+}
+
+.focal-distance-ruler__header-icon {
+  display: none;
+}
+
 .focal-distance-ruler--compact {
-  width: 48px;
+  width: var(--ruler-width-compact, 48px);
 }
 
 /* =============================================================================
@@ -40,8 +49,9 @@
   justify-content: space-evenly;
   gap: var(--elastic-gap-sm);
   width: 100%;
-  padding: var(--elastic-gap-md) var(--elastic-gap-sm);
+  padding: var(--elastic-gap-sm) var(--elastic-gap-sm);
   position: relative;
+  overflow-y: auto;
 }
 
 .focal-distance-ruler__layer {
@@ -117,11 +127,13 @@
 }
 
 .focal-distance-ruler__label {
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
   font-weight: 500;
-  opacity: 0.6;
+  opacity: 0.7;
   transition: opacity var(--elastic-transition-fast);
+  white-space: nowrap;
+  text-align: center;
 }
 
 .focal-distance-ruler__layer:hover .focal-distance-ruler__label,
@@ -189,7 +201,7 @@
 
 @media (max-width: 768px) {
   .focal-distance-ruler {
-    width: 48px;
+    width: var(--ruler-width-compact, 48px);
   }
 
   .focal-distance-ruler__label {
@@ -209,6 +221,123 @@
   outline: 2px solid var(--layer-color);
   outline-offset: 2px;
   background: var(--surface-2);
+}
+
+/* =============================================================================
+   Controls Section (Loss Threshold + Gradients)
+   ============================================================================= */
+
+.focal-distance-ruler__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--elastic-gap-sm);
+  width: 100%;
+  padding: var(--elastic-gap-sm);
+  border-top: 1px solid var(--surface-3);
+  margin-top: auto;
+}
+
+.focal-distance-ruler__control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.focal-distance-ruler__control-label {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.focal-distance-ruler__slider {
+  width: 100%;
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.focal-distance-ruler__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all var(--elastic-transition-fast);
+}
+
+.focal-distance-ruler__slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all var(--elastic-transition-fast);
+}
+
+.focal-distance-ruler__slider:hover::-webkit-slider-thumb {
+  transform: scale(1.2);
+  background: var(--text-secondary);
+}
+
+.focal-distance-ruler__slider:hover::-moz-range-thumb {
+  transform: scale(1.2);
+  background: var(--text-secondary);
+}
+
+.focal-distance-ruler__control-value {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.focal-distance-ruler__gradient-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: var(--elastic-gap-xs);
+  background: none;
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-bare);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--elastic-transition-fast);
+}
+
+.focal-distance-ruler__gradient-toggle:hover {
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  border-color: var(--surface-4);
+}
+
+.focal-distance-ruler__gradient-toggle--active {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border-color: var(--viridis-50);
+}
+
+.focal-distance-ruler__gradient-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.focal-distance-ruler__gradient-label {
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* =============================================================================

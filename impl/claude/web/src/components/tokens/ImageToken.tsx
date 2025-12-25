@@ -107,7 +107,7 @@ export const ImageToken = memo(function ImageToken({
       <div className="image-token__container">
         {loadError ? (
           <div className="image-token__error">
-            <span className="image-token__error-icon">⚠</span>
+            <span className="image-token__error-icon">◇</span>
             <span className="image-token__error-text">Image not found</span>
             <span className="image-token__error-path">{src}</span>
           </div>

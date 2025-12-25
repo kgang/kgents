@@ -11,7 +11,7 @@
  */
 
 import { memo, useCallback, useRef, useState } from 'react';
-import { Upload, FileText, FolderOpen, ArrowRight } from 'lucide-react';
+import { Upload, FileText, FolderOpen, ArrowRight, X } from 'lucide-react';
 
 import './FileExplorer.css';
 
@@ -35,6 +35,8 @@ interface FileExplorerProps {
   recentFiles?: string[];
   /** Whether file upload is enabled */
   uploadEnabled?: boolean;
+  /** Called when user wants to clear recent files */
+  onClearRecent?: () => void;
 }
 
 // =============================================================================
@@ -46,6 +48,7 @@ export const FileExplorer = memo(function FileExplorer({
   onUploadFile,
   recentFiles = [],
   uploadEnabled = true,
+  onClearRecent,
 }: FileExplorerProps) {
   const [pathInput, setPathInput] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -161,7 +164,7 @@ export const FileExplorer = memo(function FileExplorer({
           </button>
         </div>
         <p className="file-explorer__hint">
-          <kbd>:e</kbd> path or paste a file path above
+          <kbd>⌘K</kbd> or paste a file path above
         </p>
       </form>
 
@@ -190,7 +193,19 @@ export const FileExplorer = memo(function FileExplorer({
       {/* Recent Files */}
       {recentFiles.length > 0 && (
         <div className="file-explorer__recent">
-          <h3 className="file-explorer__recent-title">Recent</h3>
+          <div className="file-explorer__recent-header">
+            <h3 className="file-explorer__recent-title">Recent</h3>
+            {onClearRecent && (
+              <button
+                className="file-explorer__clear-recent"
+                onClick={onClearRecent}
+                title="Clear recent files"
+              >
+                <X size={14} strokeWidth={1.5} />
+                <span>Clear</span>
+              </button>
+            )}
+          </div>
           <ul className="file-explorer__recent-list">
             {recentFiles.slice(0, 5).map((path) => (
               <li key={path}>
@@ -219,7 +234,7 @@ export const FileExplorer = memo(function FileExplorer({
       <footer className="file-explorer__footer">
         <div className="file-explorer__shortcuts">
           <span>
-            <kbd>:e</kbd> open
+            <kbd>⌘K</kbd> palette
           </span>
           <span>
             <kbd>Esc</kbd> cancel

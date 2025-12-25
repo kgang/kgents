@@ -175,3 +175,5 @@ export {
   type TelescopeAction,
   type TelescopeContextValue,
 } from './useTelescopeState';
+
+export { useTelescopeUrlSync } from './useTelescopeUrlSync';

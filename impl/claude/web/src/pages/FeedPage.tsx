@@ -157,7 +157,7 @@ export function FeedPage() {
           setInputValue('');
         } else if (e.key === 'Enter') {
           e.preventDefault();
-          // Apply filter
+          // Apply filter and un-clear to show results
           if (inputMode === 'search') {
             setFilters((prev) => ({ ...prev, searchQuery: inputValue }));
           } else if (inputMode === 'tag') {
@@ -183,12 +183,8 @@ export function FeedPage() {
           e.preventDefault();
           reconnect();
           break;
-        case 'c':
-          e.preventDefault();
-          clearSSE();
-          setHistoricalMarks([]);
-          break;
         case 'x':
+          // Reset: Clear all filters
           e.preventDefault();
           setFilters({ searchQuery: '', tagFilter: '', authorFilter: 'all' });
           break;
@@ -238,8 +234,7 @@ export function FeedPage() {
         {inputMode === null ? (
           <>
             <span className="feed-page__command-hint">
-              / search · t tag · a author · r refresh · c clear · x reset · j/k nav · Enter
-              detail
+              / search · t tag · a author · r refresh · x reset · j/k nav · Enter detail
             </span>
             {filters.searchQuery && (
               <span className="feed-page__active-filter">search: {filters.searchQuery}</span>
@@ -273,12 +268,12 @@ export function FeedPage() {
       <div className="feed-page__stream">
         {isLoadingHistory ? (
           <div className="feed-page__empty">
-            <div className="feed-page__empty-icon">⏳</div>
+            <div className="feed-page__empty-icon">⌛</div>
             <div className="feed-page__empty-text">Loading marks...</div>
           </div>
         ) : historyError ? (
           <div className="feed-page__empty">
-            <div className="feed-page__empty-icon">⚠</div>
+            <div className="feed-page__empty-icon">△</div>
             <div className="feed-page__empty-text">Error: {historyError}</div>
           </div>
         ) : filteredEvents.length === 0 ? (

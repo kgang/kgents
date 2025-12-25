@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =============================================================================
+ * DESIGN SYSTEM INTEGRATION
+ *
+ * This file defines the global design tokens for the entire kgents web app.
+ * Component-specific tokens (Hypergraph Editor) are defined in:
+ *   - src/hypergraph/design-system.css
+ *
+ * Both files share the STARK BIOME philosophy: 90% steel, 10% earned glow.
+ * Overlapping variables (--steel-*, --status-*, --health-*) are intentionally
+ * duplicated to allow component-specific overrides while maintaining consistency.
+ * ============================================================================= */
+
 @layer base {
   :root {
     /* =================================================================
@@ -166,11 +178,11 @@
      * ================================================================= */
 
     /* Spacing scale (tightened for Bare Edge aesthetic) */
-    --elastic-gap-xs: 3px; /* was 4px — micro gaps, inline */
-    --elastic-gap-sm: 6px; /* was 8px — tight groupings */
-    --elastic-gap-md: 10px; /* was 16px — standard gaps */
-    --elastic-gap-lg: 16px; /* was 24px — comfortable sections */
-    --elastic-gap-xl: 24px; /* was 32px — spacious areas */
+    --elastic-gap-xs: 2px; /* was 3px — micro gaps, inline */
+    --elastic-gap-sm: 5px; /* was 6px — tight groupings */
+    --elastic-gap-md: 8px; /* was 10px — standard gaps */
+    --elastic-gap-lg: 14px; /* was 16px — comfortable sections */
+    --elastic-gap-xl: 20px; /* was 24px — spacious areas */
 
     /* Transitions - timing functions */
     --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
@@ -179,9 +191,9 @@
 
     /* Transitions - durations */
     --duration-instant: 100ms;
-    --duration-fast: 150ms;
-    --duration-normal: 250ms;
-    --duration-slow: 400ms;
+    --duration-fast: 120ms;
+    --duration-normal: 200ms;
+    --duration-slow: 320ms;
 
     /* Composite transitions */
     --elastic-transition-fast: var(--duration-fast) var(--ease-out-expo);
@@ -1066,4 +1078,46 @@ button:focus-visible,
   font-size: 0.8125rem;
   color: rgba(100, 100, 120, 0.8);
   max-width: 18rem;
+}
+
+/* =============================================================================
+ * Layout Architecture — Height Propagation
+ * See: LAYOUT_ARCHITECTURE.md
+ * ============================================================================= */
+
+.full-height {
+  height: 100%;
+  min-height: 0;
+}
+
+.page {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+}
+
+.page__header {
+  /* Auto-sized by content */
+}
+
+.page__content {
+  overflow-y: auto;
+  padding: var(--space-md);
+}
+
+.page__footer {
+  border-top: 1px solid var(--steel-800);
+}
+
+.page--three-column {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 220px 1fr 320px;
+  overflow: hidden;
+}
+
+.page--three-column > * {
+  min-height: 0;
+  overflow-y: auto;
 }

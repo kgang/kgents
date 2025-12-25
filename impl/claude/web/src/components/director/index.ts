@@ -5,6 +5,7 @@
  *
  * Philosophy:
  *   "Upload → Analyze → Generate → Execute → Capture → Verify"
+ *   "The file is a lie. There is only the graph."
  */
 
 export { DocumentDirector } from './DocumentDirector';
@@ -22,3 +23,7 @@ export { AnalysisSummary } from './AnalysisSummary';
 export type { AnalysisSummaryProps } from './AnalysisSummary';
 
 export { CaptureDialog } from './CaptureDialog';
+
+// Ghost document components (negative space of the graph)
+export { GhostDocumentSection } from './GhostDocumentSection';
+export { GhostDetailPanel } from './GhostDetailPanel';

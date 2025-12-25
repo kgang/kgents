@@ -10,7 +10,7 @@
  *   /self.memory.crystal.abc123:heritage   → { path: "self.memory.crystal.abc123", aspect: "heritage" }
  *   /time.differance.recent?limit=20       → { path: "time.differance.recent", params: { limit: "20" } }
  *
- * @see spec/protocols/agentese-as-route.md
+ * @see spec/protocols/projection-web.md
  */
 
 /**

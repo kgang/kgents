@@ -70,7 +70,7 @@ export function PageTransition({
   // No animation if user prefers reduced motion
   if (!shouldAnimate) {
     return (
-      <div className={className} style={style}>
+      <div className={`full-height ${className}`} style={style}>
         {children}
       </div>
     );
@@ -80,7 +80,7 @@ export function PageTransition({
 
   return (
     <motion.div
-      className={className}
+      className={`full-height ${className}`}
       style={style}
       initial={transitionVariant.initial}
       animate={transitionVariant.animate}

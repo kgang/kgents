@@ -484,7 +484,7 @@ export function AstronomicalChart({
     return (
       <div className="astronomical-chart astronomical-chart--empty">
         <div className="astronomical-chart__empty">
-          <div className="astronomical-chart__empty-icon">✨</div>
+          <div className="astronomical-chart__empty-icon">✧</div>
           <h3 className="astronomical-chart__empty-title">No specs to display</h3>
           <p className="astronomical-chart__empty-message">
             Try adjusting your filters, or add some spec files.

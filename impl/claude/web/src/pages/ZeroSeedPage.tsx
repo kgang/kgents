@@ -1,18 +1,22 @@
 /**
- * ZeroSeedPage — Epistemic Graph Navigation
+ * ZeroSeedPage — Content-Only Zero Seed View
  *
  * "Navigate toward stability. The gradient IS the guide. The loss IS the landscape."
  *
  * Philosophy:
  *   "The proof IS the decision. The mark IS the witness."
- *   Layer by layer, axiom to representation, ground to telescope.
+ *   Content determined by telescope state (visible layers → content mode).
+ *   Navigation handled by FocalDistanceRuler in TelescopeShell.
  *
- * Layout: Tabbed interface for exploring L1-L7 layers
- *   [L1-L2: Axioms & Values] | [L3-L4: Proofs & Quality] | [L5-L6: Health] | [L7: Telescope]
+ * The Four Content Modes:
+ *   1. Axioms (L1-L2)       - Axioms & Values, ground layer
+ *   2. Proofs (L3-L4)       - Goals & Specs, Toulmin proofs
+ *   3. Health (L5-L6)       - Actions & Reflections, graph health
+ *   4. Telescope (L7)       - Representation, loss gradients & policy arrows
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   getAxiomExplorer,
   getProofDashboard,
@@ -36,52 +40,42 @@ import { AxiomExplorer } from '../components/zero-seed/AxiomExplorer';
 import { ProofQualityDashboard } from '../components/zero-seed/ProofQualityDashboard';
 import { GraphHealthMonitor } from '../components/zero-seed/GraphHealthMonitor';
 import { TelescopeNavigator } from '../components/zero-seed/TelescopeNavigator';
+import { useTelescope } from '../hooks/useTelescopeState';
 import '../components/zero-seed/ZeroSeed.css';
 
 // =============================================================================
-// Types
+// Types - Content Modes
 // =============================================================================
 
-type TabKey = 'axioms' | 'proofs' | 'health' | 'telescope';
+/**
+ * The four content modes of the Zero Seed proof engine.
+ * Each mode provides a complete, coherent view.
+ */
+type ZeroSeedMode =
+  | 'axioms'      // L1-L2 Axioms & Values
+  | 'proofs'      // L3-L4 Goals & Specs (Toulmin proofs)
+  | 'health'      // L5-L6 Actions & Reflections (graph health)
+  | 'telescope';  // L7 Representation (telescope navigation)
 
-interface TabConfig {
-  key: TabKey;
-  label: string;
-  shortcut: string;
-  layers: string;
-  description: string;
+// =============================================================================
+// Helpers
+// =============================================================================
+
+/**
+ * Map visible layers to content mode.
+ *
+ * Layer visibility follows this mapping:
+ * - L1-L2: axioms
+ * - L3-L4: proofs
+ * - L5-L6: health
+ * - L7: telescope
+ */
+function layersToMode(layers: number[]): ZeroSeedMode {
+  if (layers.includes(1) || layers.includes(2)) return 'axioms';
+  if (layers.includes(3) || layers.includes(4)) return 'proofs';
+  if (layers.includes(5) || layers.includes(6)) return 'health';
+  return 'telescope'; // L7 or default
 }
-
-const TABS: TabConfig[] = [
-  {
-    key: 'axioms',
-    label: 'Axioms & Values',
-    shortcut: '1',
-    layers: 'L1-L2',
-    description: 'Ground layer - irreducible truth taken on faith',
-  },
-  {
-    key: 'proofs',
-    label: 'Proof Quality',
-    shortcut: '2',
-    layers: 'L3-L4',
-    description: 'Justification layer - goals and specs with Toulmin proofs',
-  },
-  {
-    key: 'health',
-    label: 'Graph Health',
-    shortcut: '3',
-    layers: 'L5-L6',
-    description: 'Stability layer - actions and reflections, contradictions',
-  },
-  {
-    key: 'telescope',
-    label: 'Telescope',
-    shortcut: '4',
-    layers: 'L7',
-    description: 'Navigation layer - loss gradients and Galois telescope',
-  },
-];
 
 // =============================================================================
 // Mock Data (until backend is fully implemented)
@@ -394,13 +388,10 @@ function generateMockData() {
 
 export function ZeroSeedPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { state: telescopeState } = useTelescope();
 
-  // Get initial tab from query params
-  const initialTab = (searchParams.get('tab') as TabKey) || 'axioms';
-
-  // Tab state
-  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
+  // Derive active mode from telescope state
+  const activeMode = layersToMode(telescopeState.visibleLayers);
   const [selectedNode, setSelectedNode] = useState<NodeId | null>(null);
 
   // Data state (try API first, fall back to mock)
@@ -410,7 +401,7 @@ export function ZeroSeedPage() {
   const [telescopeData, setTelescopeData] = useState<TelescopeResponse | null>(null);
 
   // Loading & error state
-  const [loading, setLoading] = useState<Record<TabKey, boolean>>({
+  const [loading, setLoading] = useState<Record<ZeroSeedMode, boolean>>({
     axioms: false,
     proofs: false,
     health: false,
@@ -498,9 +489,9 @@ export function ZeroSeedPage() {
     }
   }, [mockData]);
 
-  // Load data when tab changes
+  // Load data when mode changes
   useEffect(() => {
-    switch (activeTab) {
+    switch (activeMode) {
       case 'axioms':
         if (!axiomData && !useMock) loadAxioms();
         break;
@@ -514,27 +505,23 @@ export function ZeroSeedPage() {
         if (!telescopeData && !useMock) loadTelescope();
         break;
     }
-  }, [activeTab, axiomData, proofData, healthData, telescopeData, useMock, loadAxioms, loadProofs, loadHealth, loadTelescope]);
+  }, [activeMode, axiomData, proofData, healthData, telescopeData, useMock, loadAxioms, loadProofs, loadHealth, loadTelescope]);
 
   // ==========================================================================
-  // Keyboard Navigation
+  // Keyboard Navigation - Refresh only (navigation via sidebar)
   // ==========================================================================
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Tab shortcuts: 1-4
-      if (e.key >= '1' && e.key <= '4') {
-        const idx = parseInt(e.key, 10) - 1;
-        if (idx >= 0 && idx < TABS.length) {
-          e.preventDefault();
-          setActiveTab(TABS[idx].key);
-        }
+      // Don't intercept if typing in input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
       }
 
       // Refresh: r
       if (e.key === 'r' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
-        switch (activeTab) {
+        switch (activeMode) {
           case 'axioms':
             loadAxioms();
             break;
@@ -553,7 +540,7 @@ export function ZeroSeedPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, loadAxioms, loadProofs, loadHealth, loadTelescope]);
+  }, [activeMode, loadAxioms, loadProofs, loadHealth, loadTelescope]);
 
   // ==========================================================================
   // Helpers
@@ -565,7 +552,7 @@ export function ZeroSeedPage() {
 
   const handleOpenInEditor = useCallback((node: ZeroNode) => {
     // Navigate to hypergraph editor with the node's path
-    navigate(`/editor/${node.path}`);
+    navigate(`/world.document/${node.path}`);
   }, [navigate]);
 
   // Convert axiom data to Maps/Sets for component props
@@ -639,7 +626,7 @@ export function ZeroSeedPage() {
           <button
             className="px-4 py-2 bg-steel-800 border border-steel-700 rounded text-steel-100 text-sm font-mono hover:bg-steel-700 hover:border-steel-600 transition-colors"
             onClick={() => {
-              switch (activeTab) {
+              switch (activeMode) {
                 case 'axioms':
                   loadAxioms();
                   break;
@@ -663,108 +650,48 @@ export function ZeroSeedPage() {
   }
 
   return (
-    <div className="zero-seed-page flex flex-col h-full bg-steel-950">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 bg-steel-900 border-b border-steel-800">
-        <div className="flex flex-col gap-1">
-          <h1 className="m-0 text-xl font-semibold text-steel-100">
-            Zero Seed
-            {useMock && (
-              <span className="ml-2 px-2 py-0.5 bg-yellow-600/20 border border-yellow-600/50 rounded text-xs text-yellow-400 font-normal">
-                Mock Data
-              </span>
-            )}
-          </h1>
-          <p className="m-0 text-xs text-steel-500 leading-tight">
-            Navigate toward stability. The gradient IS the guide. The loss IS the landscape.
-          </p>
-        </div>
+    <main className="zero-seed-page flex flex-col h-full bg-steel-950 overflow-hidden">
+      {activeMode === 'axioms' && axiomProps && (
+        <AxiomExplorer {...axiomProps} />
+      )}
 
-        <div className="flex items-center gap-4">
-          <div className="text-xs text-steel-500">
-            <kbd className="px-1.5 py-0.5 bg-steel-800 border border-steel-700 rounded font-mono text-steel-400">
-              1-4
-            </kbd>{' '}
-            switch tabs
-            <span className="mx-2 text-steel-700">|</span>
-            <kbd className="px-1.5 py-0.5 bg-steel-800 border border-steel-700 rounded font-mono text-steel-400">
-              r
-            </kbd>{' '}
-            refresh
+      {activeMode === 'proofs' && proofProps && (
+        <ProofQualityDashboard {...proofProps} />
+      )}
+
+      {activeMode === 'health' && (useMock && mockData ? mockData.health : healthData?.health) && (
+        <GraphHealthMonitor
+          health={useMock && mockData ? mockData.health : healthData!.health}
+          timestamp={healthData?.timestamp || new Date().toISOString()}
+          trend={healthData?.trend || 'stable'}
+          onSelectNode={handleSelectNode}
+          loading={loading.health}
+        />
+      )}
+
+      {activeMode === 'telescope' && (useMock && mockData || telescopeData) && (
+        <TelescopeNavigator
+          state={useMock && mockData ? mockData.telescopeState : telescopeData!.state}
+          gradients={useMock && mockData ? mockData.gradients : new Map(Object.entries(telescopeData!.gradients))}
+          suggestions={useMock && mockData ? mockData.suggestions : telescopeData!.suggestions}
+          nodes={useMock && mockData ? [...mockData.axioms, ...mockData.values] : telescopeData!.visible_nodes}
+          policyArrows={useMock && mockData ? mockData.policyArrows : telescopeData!.policy_arrows}
+          loading={loading.telescope}
+        />
+      )}
+
+      {/* Loading state */}
+      {!axiomProps && !proofProps && activeMode === 'axioms' && loading.axioms && (
+        <div className="flex items-center justify-center h-full">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-2 border-steel-700 border-t-purple-500 rounded-full animate-spin" />
+            <span className="text-sm text-steel-500 tracking-wider">
+              Loading...
+            </span>
           </div>
         </div>
-      </header>
-
-      {/* Tab navigation */}
-      <nav className="flex items-stretch bg-steel-900 border-b border-steel-800">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            className={`flex-1 px-4 py-3 border-b-2 transition-colors text-left ${
-              activeTab === tab.key
-                ? 'bg-steel-850 border-purple-500 text-steel-100'
-                : 'border-transparent text-steel-400 hover:bg-steel-850 hover:text-steel-200'
-            }`}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            <div className="flex items-baseline gap-2">
-              <span className="text-sm font-semibold">{tab.label}</span>
-              <span className="text-xs text-steel-500 font-mono">{tab.layers}</span>
-              <kbd className="ml-auto px-1.5 py-0.5 bg-steel-800 border border-steel-700 rounded text-xs font-mono text-steel-500">
-                {tab.shortcut}
-              </kbd>
-            </div>
-            <div className="text-xs text-steel-500 mt-0.5 leading-tight">
-              {tab.description}
-            </div>
-          </button>
-        ))}
-      </nav>
-
-      {/* Tab content */}
-      <main className="flex-1 overflow-hidden">
-        {activeTab === 'axioms' && axiomProps && (
-          <AxiomExplorer {...axiomProps} />
-        )}
-
-        {activeTab === 'proofs' && proofProps && (
-          <ProofQualityDashboard {...proofProps} />
-        )}
-
-        {activeTab === 'health' && (useMock && mockData ? mockData.health : healthData?.health) && (
-          <GraphHealthMonitor
-            health={useMock && mockData ? mockData.health : healthData!.health}
-            timestamp={healthData?.timestamp || new Date().toISOString()}
-            trend={healthData?.trend || 'stable'}
-            onSelectNode={handleSelectNode}
-            loading={loading.health}
-          />
-        )}
-
-        {activeTab === 'telescope' && (useMock && mockData || telescopeData) && (
-          <TelescopeNavigator
-            state={useMock && mockData ? mockData.telescopeState : telescopeData!.state}
-            gradients={useMock && mockData ? mockData.gradients : new Map(Object.entries(telescopeData!.gradients))}
-            suggestions={useMock && mockData ? mockData.suggestions : telescopeData!.suggestions}
-            nodes={useMock && mockData ? [...mockData.axioms, ...mockData.values] : telescopeData!.visible_nodes}
-            policyArrows={useMock && mockData ? mockData.policyArrows : telescopeData!.policy_arrows}
-            loading={loading.telescope}
-          />
-        )}
-
-        {/* Loading state */}
-        {!axiomProps && !proofProps && activeTab === 'axioms' && loading.axioms && (
-          <div className="flex items-center justify-center h-full">
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-8 h-8 border-2 border-steel-700 border-t-purple-500 rounded-full animate-spin" />
-              <span className="text-sm text-steel-500 tracking-wider">
-                Loading {TABS.find((t) => t.key === activeTab)?.label.toLowerCase()}...
-              </span>
-            </div>
-          </div>
-        )}
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
 

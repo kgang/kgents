@@ -132,7 +132,7 @@ export interface JewelInfo {
 export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
   brain: {
     name: 'Brain',
-    icon: '🧠',
+    icon: '◎',
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/10',
     borderColor: 'border-purple-500/30',
@@ -140,7 +140,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
   },
   gestalt: {
     name: 'Gestalt',
-    icon: '🔮',
+    icon: '◉',
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/30',
@@ -148,7 +148,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
   },
   gardener: {
     name: 'Gardener',
-    icon: '🌱',
+    icon: '●',
     color: 'text-green-400',
     bgColor: 'bg-green-500/10',
     borderColor: 'border-green-500/30',
@@ -156,7 +156,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
   },
   forge: {
     name: 'Forge',
-    icon: '🎨',
+    icon: '◆',
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/30',
@@ -165,7 +165,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
   coalition: {
     // DEPRECATED 2025-12-21: Coalition feature removed
     name: 'Coalition',
-    icon: '🤝',
+    icon: '○',
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/10',
     borderColor: 'border-cyan-500/30',
@@ -173,7 +173,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
   },
   park: {
     name: 'Park',
-    icon: '🎭',
+    icon: '◇',
     color: 'text-pink-400',
     bgColor: 'bg-pink-500/10',
     borderColor: 'border-pink-500/30',
@@ -181,7 +181,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
   },
   domain: {
     name: 'Domain',
-    icon: '🏛️',
+    icon: '▣',
     color: 'text-orange-400',
     bgColor: 'bg-orange-500/10',
     borderColor: 'border-orange-500/30',
@@ -189,7 +189,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
   },
   dgent: {
     name: 'D-gent',
-    icon: '💾',
+    icon: '▤',
     color: 'text-slate-400',
     bgColor: 'bg-slate-500/10',
     borderColor: 'border-slate-500/30',

@@ -45,7 +45,7 @@ export function RefusalPanel({
         }}
       >
         <span style={{ fontSize: '24px' }} role="img" aria-label="Refused">
-          🛑
+          ◆
         </span>
         <span style={{ fontWeight: 600, color: '#6b21a8' }}>
           Action Refused

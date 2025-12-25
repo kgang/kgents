@@ -259,31 +259,31 @@ export const TOWN_THEME_3D = {
 export const ARCHETYPE_CONFIG = {
   builder: {
     color: '#3B82F6',
-    emoji: '🔨',
+    emoji: '◆',
     label: 'Builder',
     tier: 'vivid',
   },
   trader: {
     color: '#F59E0B',
-    emoji: '🪙',
+    emoji: '○',
     label: 'Trader',
     tier: 'familiar',
   },
   healer: {
     color: '#22C55E',
-    emoji: '💚',
+    emoji: '◎',
     label: 'Healer',
     tier: 'crystal',
   },
   scholar: {
     color: '#8B5CF6',
-    emoji: '📚',
+    emoji: '◉',
     label: 'Scholar',
     tier: 'hot',
   },
   watcher: {
     color: '#6B7280',
-    emoji: '👁️',
+    emoji: '◇',
     label: 'Watcher',
     tier: 'dormant',
   },

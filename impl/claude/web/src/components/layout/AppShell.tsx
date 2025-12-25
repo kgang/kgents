@@ -35,9 +35,10 @@ interface NavItem {
 // =============================================================================
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/editor', label: 'Editor', shortcut: 'E', icon: '⌨' },
-  { path: '/director', label: 'Docs', shortcut: 'D', icon: '📋' },
-  { path: '/brain', label: 'Feed', shortcut: 'B', icon: '📡' },
+  { path: '/self.chat', label: 'Chat', shortcut: 'C', icon: '◉' },
+  { path: '/world.document', label: 'Editor', shortcut: 'E', icon: '⎔' },
+  { path: '/self.director', label: 'Docs', shortcut: 'D', icon: '◈' },
+  { path: '/self.memory', label: 'Memory', shortcut: 'M', icon: '⊛' },
 ];
 
 // =============================================================================
@@ -123,7 +124,7 @@ export function AppShell({ children }: AppShellProps) {
             title="Keyboard shortcuts"
             onClick={() => {
               console.info(
-                'Shortcuts: Shift+E: Editor | Shift+D: Docs | Shift+B: Feed'
+                'Shortcuts: Shift+C: Chat | Shift+E: Editor | Shift+D: Docs | Shift+M: Memory'
               );
             }}
           >

@@ -65,6 +65,10 @@ export interface ZeroEdge {
   context: string;
   confidence: number;
   created_at: string;
+  // Witness integration fields
+  mark_id?: string | null;
+  proof?: ToulminProof | null;
+  evidence_tier?: 'categorical' | 'empirical' | 'aesthetic' | 'somatic' | null;
 }
 
 // Toulmin proof structure
@@ -333,4 +337,29 @@ export interface NodeAnalysisResponse {
  */
 export async function getNodeAnalysis(nodeId: NodeId): Promise<NodeAnalysisResponse> {
   return fetchJson(`${API_BASE}/nodes/${encodeURIComponent(nodeId)}/analysis`);
+}
+
+// =============================================================================
+// Witnessed Edge Operations
+// =============================================================================
+
+export interface CreateWitnessedEdgeRequest {
+  mark_id: string;
+  source_node_id: string;
+  target_node_id: string;
+  context?: string | null;
+}
+
+/**
+ * Create a Zero Seed edge from a Witness mark.
+ *
+ * The edge inherits proof and confidence from the mark.
+ */
+export async function createWitnessedEdge(
+  request: CreateWitnessedEdgeRequest
+): Promise<ZeroEdge> {
+  return fetchJson<ZeroEdge>(`${API_BASE}/edges/from-mark`, {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
 }

@@ -76,7 +76,7 @@ export function CachedBadge({ cache, position = 'inline' }: CachedBadgeProps) {
       title={tooltip}
       aria-label={`Cached response: ${age}`}
     >
-      <span style={{ fontSize: '10px' }}>⚡</span>
+      <span style={{ fontSize: '10px' }}>◐</span>
       [CACHED {age}]
     </span>
   );

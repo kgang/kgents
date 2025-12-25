@@ -1,91 +1,65 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import { ErrorBoundary } from './components/error/ErrorBoundary';
-import { PageTransition, PersonalityLoading } from './components/joy';
+import { useLocation } from 'react-router-dom';
 import { TelescopeShell } from './components/layout/TelescopeShell';
-import { WelcomeView } from './pages/WelcomePage';
+import { AppShell } from './components/layout/AppShell';
+import { AgenteseRouter } from './router';
+import { parseAgentesePath } from './router';
 
 /**
- * kgents Web — The Cathedral Navigation Experience
+ * kgents Web — Pure AGENTESE Navigation (Phase 3)
  *
- * Five surfaces, one coherent experience:
- * - Editor: Hypergraph Emacs for spec navigation/editing
- * - Docs: Living document canvas (Document Director)
- * - Chart: Astronomical visualization
- * - Feed: Memory exploration (crystals, teaching, wisdom)
- * - Zero Seed: Epistemic graph navigation (axioms, proofs, health, telescope)
+ * AGENTESE-ONLY ROUTING:
+ * URLs are AGENTESE paths directly:
+ * - /self.chat → Chat page
+ * - /self.memory → Memory feed
+ * - /self.director → Director canvas
+ * - /world.document → Hypergraph Editor
+ * - /world.chart → Astronomical chart
+ * - /void.telescope → Proof Engine with telescope
  *
- * TelescopeShell wraps AppShell, providing:
- * - Focal distance ruler (vertical navigation)
- * - Loss threshold filtering
- * - Derivation trail (proof breadcrumbs)
- * - Telescope context for all children
+ * Legacy routes (/chat, /editor, /brain, etc.) redirect with deprecation warnings.
+ *
+ * Shell Selection:
+ * - void.telescope → TelescopeShell (7-layer epistemic navigation)
+ * - All other AGENTESE → AppShell (standard app chrome)
+ * - Root path → Welcome screen
  */
-
-// Main surfaces
-const DirectorPage = lazy(() => import('./pages/DirectorPage'));
-const HypergraphEditorPage = lazy(() =>
-  import('./pages/HypergraphEditorPage').then((m) => ({ default: m.HypergraphEditorPage }))
-);
-const ChartPage = lazy(() => import('./pages/ChartPage'));
-const FeedPage = lazy(() => import('./pages/FeedPage'));
-const ZeroSeedPage = lazy(() => import('./pages/ZeroSeedPage'));
-
-function LoadingFallback() {
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-surface-canvas">
-      <PersonalityLoading jewel="brain" size="lg" action="connect" />
-    </div>
-  );
-}
-
-/**
- * Welcome screen — the landing page
- */
-function WelcomeScreen() {
-  return (
-    <div className="membrane membrane--comfortable">
-      <WelcomeView />
-    </div>
-  );
-}
 
 function App() {
   const location = useLocation();
 
-  // Main app surfaces use TelescopeShell (which wraps AppShell)
-  const isAppSurface =
-    location.pathname.startsWith('/editor') ||
-    location.pathname.startsWith('/director') ||
-    location.pathname.startsWith('/chart') ||
-    location.pathname.startsWith('/brain') ||
-    location.pathname.startsWith('/zero-seed');
+  // Determine shell based on AGENTESE context
+  let shell: 'telescope' | 'app' | 'none' = 'none';
+
+  try {
+    const path = parseAgentesePath(location.pathname);
+
+    // void.telescope gets TelescopeShell
+    if (path.fullPath.startsWith('void.telescope')) {
+      shell = 'telescope';
+    }
+    // All other AGENTESE paths get AppShell
+    else if (path.context) {
+      shell = 'app';
+    }
+  } catch {
+    // Root path or invalid AGENTESE path
+    shell = 'none';
+  }
 
   return (
-    <ErrorBoundary resetKeys={[location.pathname]}>
-      {isAppSurface ? (
-        // Main surfaces — wrapped in TelescopeShell (which contains AppShell)
+    <>
+      {shell === 'telescope' ? (
         <TelescopeShell>
-          <Suspense fallback={<LoadingFallback />}>
-            <AnimatePresence mode="wait" initial={false}>
-              <PageTransition key={location.pathname} variant="fade">
-                <Routes location={location}>
-                  <Route path="/editor/*" element={<HypergraphEditorPage />} />
-                  <Route path="/director" element={<DirectorPage />} />
-                  <Route path="/chart" element={<ChartPage />} />
-                  <Route path="/brain" element={<FeedPage />} />
-                  <Route path="/zero-seed" element={<ZeroSeedPage />} />
-                </Routes>
-              </PageTransition>
-            </AnimatePresence>
-          </Suspense>
+          <AgenteseRouter />
         </TelescopeShell>
+      ) : shell === 'app' ? (
+        <AppShell>
+          <AgenteseRouter />
+        </AppShell>
       ) : (
-        // Welcome screen — no shell
-        <WelcomeScreen />
+        <AgenteseRouter />
       )}
-    </ErrorBoundary>
+    </>
   );
 }
 

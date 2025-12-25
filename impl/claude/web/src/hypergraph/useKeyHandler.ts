@@ -54,8 +54,6 @@ type ActionType =
   | 'SCROLL_PARAGRAPH_UP'
   | 'SCROLL_TO_TOP'
   | 'SCROLL_TO_BOTTOM'
-  // Graph sidebar
-  | 'TOGGLE_GRAPH_SIDEBAR'
   // Decision stream (witness history)
   | 'TOGGLE_DECISION_STREAM'
   // Analysis quadrant
@@ -65,6 +63,10 @@ type ActionType =
   | 'GO_HIGHEST_LOSS'
   | 'ZOOM_OUT'
   | 'ZOOM_IN'
+  // Witness navigation
+  | 'GO_TO_MARKS'
+  | 'GO_TO_WARRANT'
+  | 'GO_TO_DECISION'
   // Dispatch actions (sent directly to reducer)
   | NavigationAction;
 
@@ -125,9 +127,11 @@ const NORMAL_BINDINGS: Binding[] = [
   { keys: ['g', 'c'], action: 'SHOW_CONFIDENCE', description: 'Show confidence panel' },
   { keys: ['g', 'e'], action: { type: 'ENTER_EDGE' }, description: 'Enter edge mode' },
   { keys: ['g', 'w'], action: { type: 'ENTER_WITNESS' }, description: 'Enter witness mode' },
+  { keys: ['g', 'W'], action: 'GO_TO_WARRANT', description: 'Go to warrant (justification for current node)' },
+  { keys: ['g', 'f'], action: 'GO_TO_DECISION', description: 'Go to fusion (dialectical synthesis for current node)' },
   { keys: ['g', 'g'], action: 'SCROLL_TO_TOP', description: 'Go to top of document' },
-  { keys: ['g', 's'], action: 'TOGGLE_GRAPH_SIDEBAR', description: 'Toggle graph sidebar (Living Canvas)' },
-  { keys: ['g', 'm'], action: 'TOGGLE_DECISION_STREAM', description: 'Toggle decision stream (witness marks)' },
+  { keys: ['g', 'm'], action: 'GO_TO_MARKS', description: 'Go to marks (witness trail for current node)' },
+  { keys: ['g', 'M'], action: 'TOGGLE_DECISION_STREAM', description: 'Toggle decision stream (all witness marks)' },
   { keys: ['g', 'a'], action: 'TOGGLE_ANALYSIS_QUADRANT', description: 'Toggle analysis quadrant (four-mode analysis)' },
 
   // --- Loss-Gradient Navigation (vim-style) ---
@@ -190,9 +194,6 @@ export interface UseKeyHandlerOptions {
   onShowHelp?: () => void;
   onOpenCommandPalette?: () => void;
 
-  // Graph sidebar
-  onToggleGraphSidebar?: () => void;
-
   // Decision stream (witness history)
   onToggleDecisionStream?: () => void;
 
@@ -204,6 +205,11 @@ export interface UseKeyHandlerOptions {
   goHighestLoss?: () => void | Promise<void>;
   zoomOut?: () => void;
   zoomIn?: () => void;
+
+  // Witness navigation
+  goToMarks?: () => void | Promise<void>;
+  goToWarrant?: () => void | Promise<void>;
+  goToDecision?: () => void | Promise<void>;
 
   /** Whether key handling is enabled */
   enabled?: boolean;
@@ -245,13 +251,15 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     onEdgeConfirm,
     onShowHelp,
     onOpenCommandPalette,
-    onToggleGraphSidebar,
     onToggleDecisionStream,
     onToggleAnalysisQuadrant,
     goLowestLoss,
     goHighestLoss,
     zoomOut,
     zoomIn,
+    goToMarks,
+    goToWarrant,
+    goToDecision,
     enabled = true,
   } = options;
 
@@ -299,7 +307,6 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       },
       SHOW_HELP: () => onShowHelp?.(),
       OPEN_COMMAND_PALETTE: () => onOpenCommandPalette?.(),
-      TOGGLE_GRAPH_SIDEBAR: () => onToggleGraphSidebar?.(),
       TOGGLE_DECISION_STREAM: () => onToggleDecisionStream?.(),
       TOGGLE_ANALYSIS_QUADRANT: () => onToggleAnalysisQuadrant?.(),
       // Loss-gradient navigation
@@ -315,6 +322,22 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       },
       ZOOM_OUT: () => zoomOut?.(),
       ZOOM_IN: () => zoomIn?.(),
+      // Witness navigation
+      GO_TO_MARKS: () => {
+        if (goToMarks) {
+          void goToMarks();
+        }
+      },
+      GO_TO_WARRANT: () => {
+        if (goToWarrant) {
+          void goToWarrant();
+        }
+      },
+      GO_TO_DECISION: () => {
+        if (goToDecision) {
+          void goToDecision();
+        }
+      },
     }),
     [
       dispatch,
@@ -338,13 +361,15 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       onEnterInsert,
       onShowHelp,
       onOpenCommandPalette,
-      onToggleGraphSidebar,
       onToggleDecisionStream,
       onToggleAnalysisQuadrant,
       goLowestLoss,
       goHighestLoss,
       zoomOut,
       zoomIn,
+      goToMarks,
+      goToWarrant,
+      goToDecision,
     ]
   );
 

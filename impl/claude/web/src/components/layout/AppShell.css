@@ -15,26 +15,32 @@
 :root {
   --navbar-height: 40px;
   --footer-height: 32px;
-  --content-height: calc(100vh - var(--navbar-height) - var(--footer-height));
+  --ruler-width: 64px; /* FocalDistanceRuler width - single source of truth */
+  --ruler-width-compact: 48px; /* Compact mode for mobile */
 }
 
 .app-shell {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: var(--navbar-height) 1fr var(--footer-height);
   height: 100vh;
+  overflow: hidden;
   background: var(--surface-0, #0f0f1a);
   color: var(--text-primary, #e5e7eb);
 }
 
-/* Top Navbar */
+/* Top Navbar — fixed position, spans full width from left edge */
 .app-shell__navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   height: var(--navbar-height);
   padding: 0 1rem;
   background: var(--surface-1, #12121f);
   border-bottom: 1px solid var(--surface-2, #1a1a2e);
-  flex-shrink: 0;
+  z-index: calc(var(--elastic-z-sticky, 100) + 2); /* Above ruler (100) and expanded footer (101) */
 }
 
 /* Logo */
@@ -155,13 +161,17 @@
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Main content */
+/* Main content — explicitly placed in row 2 (navbar is fixed, out of flow) */
 .app-shell__content {
-  /* Fixed height accounting for navbar + footer */
-  height: var(--content-height);
-  min-height: 0;
+  grid-row: 2; /* Explicit placement since navbar is position: fixed */
   overflow: hidden; /* Children manage their own overflow */
+  min-height: 0; /* Prevents grid blowout */
   position: relative;
+}
+
+/* Footer — explicitly placed in row 3 */
+.app-shell > .witness-footer {
+  grid-row: 3;
 }
 
 /* Responsive adjustments */

@@ -36,7 +36,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
  * AGENTESE Gateway response wrapper.
  * All AGENTESE routes wrap the actual result in this envelope.
  */
-interface AgenteseResponse<T> {
+export interface AgenteseResponse<T> {
   path: string;
   aspect: string;
   result: T;
@@ -64,7 +64,7 @@ export class AgenteseError extends Error {
  *
  * @throws {AgenteseError} If response envelope is malformed or contains an error
  */
-function unwrapAgentese<T>(response: { data: AgenteseResponse<T> }): T {
+export function unwrapAgentese<T>(response: { data: AgenteseResponse<T> }): T {
   // Check for missing data envelope
   if (!response.data) {
     throw new AgenteseError(
@@ -1808,6 +1808,98 @@ export const kblockApi = {
       '/agentese/self/kblock/references',
       { block_id: blockId }
     );
+    return unwrapAgentese(response);
+  },
+
+  // =============================================================================
+  // Zero Seed K-Block Operations (Phase 3 Unification)
+  // =============================================================================
+
+  /**
+   * Create a Zero Seed K-Block (epistemic graph node).
+   *
+   * @param layer - Zero Seed layer (1-7)
+   * @param kind - Node kind (axiom, value, goal, spec, action, reflection, representation)
+   * @param content - Node content
+   * @param lineage - Parent K-Block IDs this derives from
+   * @returns Created K-Block info
+   */
+  createZeroSeed: async (
+    layer: 1 | 2 | 3 | 4 | 5 | 6 | 7,
+    kind: string,
+    content: string,
+    lineage: string[]
+  ): Promise<{
+    block_id: string;
+    path: string | null;
+    parent_blocks: string[];
+    child_blocks: string[];
+  }> => {
+    const response = await apiClient.post<
+      AgenteseResponse<{
+        block_id: string;
+        path: string | null;
+        parent_blocks: string[];
+        child_blocks: string[];
+      }>
+    >('/api/kblock/zero-seed', {
+      layer,
+      kind,
+      content,
+      lineage,
+    });
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Add a derivation link between K-Blocks.
+   *
+   * @param blockId - Child K-Block ID
+   * @param parentId - Parent K-Block ID
+   */
+  addDerivation: async (blockId: string, parentId: string): Promise<{ success: boolean }> => {
+    const response = await apiClient.post<AgenteseResponse<{ success: boolean }>>(
+      `/api/kblock/${blockId}/derivations`,
+      { parent_id: parentId }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Remove a derivation link between K-Blocks.
+   *
+   * @param blockId - Child K-Block ID
+   * @param parentId - Parent K-Block ID to unlink
+   */
+  removeDerivation: async (blockId: string, parentId: string): Promise<{ success: boolean }> => {
+    const response = await apiClient.delete<AgenteseResponse<{ success: boolean }>>(
+      `/api/kblock/${blockId}/derivations/${parentId}`
+    );
+    return unwrapAgentese(response);
+  },
+
+  /**
+   * Set or update Toulmin proof for a K-Block.
+   *
+   * @param blockId - K-Block ID
+   * @param proof - Toulmin proof structure
+   */
+  setProof: async (
+    blockId: string,
+    proof: {
+      data: string;
+      warrant: string;
+      claim: string;
+      backing: string;
+      qualifier: string;
+      rebuttals: string[];
+      tier: 'categorical' | 'empirical' | 'aesthetic' | 'somatic';
+      principles: string[];
+    }
+  ): Promise<{ success: boolean; confidence: number }> => {
+    const response = await apiClient.put<
+      AgenteseResponse<{ success: boolean; confidence: number }>
+    >(`/api/kblock/${blockId}/proof`, proof);
     return unwrapAgentese(response);
   },
 };

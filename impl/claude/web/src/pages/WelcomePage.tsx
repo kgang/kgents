@@ -98,7 +98,7 @@ function PrincipleCard({ principle, index, onRipple }: PrincipleCardProps) {
   useEffect(() => {
     const timer = setTimeout(
       () => setIsVisible(true),
-      200 + index * 80 // Stagger by 80ms for faster cascade
+      200 + index * 60 // Stagger by 60ms for snappier cascade
     );
     return () => clearTimeout(timer);
   }, [index]);
@@ -122,7 +122,7 @@ function PrincipleCard({ principle, index, onRipple }: PrincipleCardProps) {
       className={`welcome-view__principle ${isVisible ? 'welcome-view__principle--visible' : ''}`}
       style={{
         ...style,
-        animationDelay: `${index * 80}ms`,
+        animationDelay: `${index * 60}ms`,
       }}
       onClick={handleClick}
       {...handlers}
@@ -242,8 +242,8 @@ export function WelcomeView() {
         setShowEasterEgg(true);
         // Auto-hide after 3 seconds
         setTimeout(() => setShowEasterEgg(false), 3000);
-        // Navigate to zero-seed after a delay
-        setTimeout(() => navigate('/zero-seed'), 1500);
+        // Navigate to void.telescope (AGENTESE path) after a delay
+        setTimeout(() => navigate('/void.telescope'), 1500);
         konamiRef.current = [];
       }
     };
@@ -337,39 +337,44 @@ export function WelcomeView() {
           Press <kbd>1</kbd>-<kbd>7</kbd> to feel each principle
         </p>
 
-        {/* Zero Seed Interactive Components */}
+        {/* Proof Engine Interactive Components */}
         <AxiomGarden />
         <WitnessStream />
 
-        {/* CTA Buttons — Navigation */}
+        {/* CTA Buttons — AGENTESE Navigation
+            Three tiers: Primary (Document), Secondary (Chat/Director/Memory), Signature (Telescope)
+            "Every element earns its place" — no Chart, it's not a core surface */}
         <div className="welcome-view__cta">
           <button
             className="welcome-view__cta-button welcome-view__cta-button--primary"
-            onClick={() => navigate('/editor')}
+            onClick={() => navigate('/world.document')}
           >
-            Open Editor
+            Enter the Hypergraph
+          </button>
+        </div>
+        <div className="welcome-view__cta welcome-view__cta--secondary">
+          <button
+            className="welcome-view__cta-button welcome-view__cta-button--chat"
+            onClick={() => navigate('/self.chat')}
+          >
+            Chat
           </button>
           <button
             className="welcome-view__cta-button"
-            onClick={() => navigate('/director')}
+            onClick={() => navigate('/self.director')}
           >
-            Docs
+            Director
           </button>
           <button
             className="welcome-view__cta-button"
-            onClick={() => navigate('/brain')}
+            onClick={() => navigate('/self.memory')}
           >
-            Feed
+            Memory
           </button>
           <button
-            className="welcome-view__cta-button"
-            onClick={() => navigate('/chart')}
-          >
-            Chart
-          </button>
-          <button
-            className="welcome-view__cta-button welcome-view__cta-button--zero-seed"
+            className="welcome-view__cta-button welcome-view__cta-button--proof-engine"
             onClick={() => navigate('/zero-seed')}
+            title="Five-level epistemic architecture"
           >
             Zero Seed
           </button>
@@ -378,3 +383,5 @@ export function WelcomeView() {
     </div>
   );
 }
+
+export default WelcomeView;

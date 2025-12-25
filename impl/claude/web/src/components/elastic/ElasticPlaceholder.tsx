@@ -48,27 +48,27 @@ export interface ElasticPlaceholderProps {
  */
 const EMPTY_DEFAULTS: Record<PlaceholderFor, { icon: string; title: string; message: string }> = {
   agent: {
-    icon: '🤖',
+    icon: '◎',
     title: 'No agents yet',
     message: 'Create an agent to get started',
   },
   metric: {
-    icon: '📊',
+    icon: '◉',
     title: 'No data',
     message: 'Metrics will appear once activity begins',
   },
   chart: {
-    icon: '📈',
+    icon: '◆',
     title: 'Nothing to visualize',
     message: 'Data will populate as events occur',
   },
   list: {
-    icon: '📋',
+    icon: '○',
     title: 'Empty list',
     message: 'Items will appear here',
   },
   custom: {
-    icon: '✨',
+    icon: '◇',
     title: 'Nothing here',
     message: 'Content will appear when available',
   },
@@ -185,7 +185,7 @@ export function ElasticPlaceholder({
         role="alert"
       >
         <div className="flex flex-col items-center text-center gap-3">
-          <span className="text-2xl">😵</span>
+          <span className="text-2xl">◆</span>
           <div>
             <p className="font-medium text-red-400">Something went wrong</p>
             {error && <p className="text-sm text-red-300/80 mt-1">{error}</p>}

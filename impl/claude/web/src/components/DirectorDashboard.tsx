@@ -22,12 +22,15 @@ import {
   getRefCount,
   deleteDocument,
   renameDocument,
+  isGhostDocument,
   type DocumentEntry,
   type DocumentStatus,
   type MetricsSummary,
 } from '../api/director';
 import { useWitnessStream } from '../hooks/useWitnessStream';
 import { DirectorSidebar, type StatusFilter } from './DirectorSidebar';
+import { GhostDocumentSection } from './director/GhostDocumentSection';
+import { GhostDetailPanel } from './director/GhostDetailPanel';
 
 import './DirectorDashboard.css';
 
@@ -56,6 +59,7 @@ const STATUS_CONFIG: Record<
   executed: { label: 'Executed', key: 'x', accent: 'var(--status-visual)' },
   stale: { label: 'Stale', key: 's', accent: 'var(--steel-500)' },
   failed: { label: 'Failed', key: 'f', accent: 'var(--status-error)' },
+  ghost: { label: 'Ghost', key: 'g', accent: 'var(--steel-400)' },
 };
 
 // =============================================================================
@@ -75,6 +79,7 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [lastEventTime, setLastEventTime] = useState<Date | null>(null);
   // Future: enable pane focus switching with Tab
   // const [focusedPane, setFocusedPane] = useState<'list' | 'detail'>('list');
 
@@ -90,7 +95,7 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
   const lastEventRef = useRef<string | null>(null);
 
   // Real-time stream
-  const { events: witnessEvents, connected: streamConnected } = useWitnessStream();
+  const { events: witnessEvents, connected: streamConnected, reconnect } = useWitnessStream();
 
   // ==========================================================================
   // Data Loading
@@ -137,6 +142,7 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
     const eventKey = `${latest.id}-${latest.timestamp}`;
     if (eventKey !== lastEventRef.current && !loading) {
       lastEventRef.current = eventKey;
+      setLastEventTime(new Date());
       loadData();
     }
   }, [witnessEvents, loading, loadData]);
@@ -145,8 +151,70 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
   // Filtering & Sorting
   // ==========================================================================
 
+  // Separate ghost documents from real documents
+  // Ghosts are shown in a de-prioritized section at the bottom
+  const { realDocuments, ghostDocuments } = useMemo(() => {
+    const real: DocumentEntry[] = [];
+    const ghosts: DocumentEntry[] = [];
+
+    for (const doc of documents) {
+      if (isGhostDocument(doc)) {
+        ghosts.push(doc);
+      } else {
+        real.push(doc);
+      }
+    }
+
+    return { realDocuments: real, ghostDocuments: ghosts };
+  }, [documents]);
+
   const filteredDocuments = useMemo(() => {
-    let result = [...documents];
+    // If filtering specifically for ghosts, show ghosts in main list
+    if (statusFilter === 'ghost') {
+      let result = [...ghostDocuments];
+
+      // Search filter
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter(
+          (doc) =>
+            doc.path.toLowerCase().includes(q) || doc.title.toLowerCase().includes(q)
+        );
+      }
+
+      // Sort
+      result.sort((a, b) => {
+        let cmp = 0;
+        switch (sortField) {
+          case 'path':
+            cmp = a.path.localeCompare(b.path);
+            break;
+          case 'status':
+            cmp = a.status.localeCompare(b.status);
+            break;
+          case 'claims':
+            cmp = (a.claim_count ?? 0) - (b.claim_count ?? 0);
+            break;
+          case 'analyzed_at': {
+            const at = a.analyzed_at ? new Date(a.analyzed_at).getTime() : 0;
+            const bt = b.analyzed_at ? new Date(b.analyzed_at).getTime() : 0;
+            cmp = at - bt;
+            break;
+          }
+        }
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+
+      return result;
+    }
+
+    // Otherwise, only show real documents in main list
+    let result = [...realDocuments];
+
+    // Status filter (exclude 'all' which shows all non-ghost)
+    if (statusFilter !== 'all') {
+      result = result.filter((doc) => doc.status === statusFilter);
+    }
 
     // Search filter
     if (searchQuery) {
@@ -181,9 +249,12 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
     });
 
     return result;
-  }, [documents, searchQuery, sortField, sortDir]);
+  }, [realDocuments, ghostDocuments, searchQuery, sortField, sortDir, statusFilter]);
 
   const selectedDoc = filteredDocuments[selectedIndex] || null;
+
+  // State for ghost section collapse
+  const [ghostSectionCollapsed, setGhostSectionCollapsed] = useState(false);
 
   // ==========================================================================
   // Document Actions
@@ -191,13 +262,33 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
 
   const handleDelete = useCallback(async (path: string) => {
     try {
+      // Find the index of the document being deleted in the filtered list
+      const deletedIndex = filteredDocuments.findIndex((doc) => doc.path === path);
+
       await deleteDocument(path);
       setDeleteConfirm(null);
+
+      // Calculate new selection index before reloading data
+      if (deletedIndex >= 0) {
+        const newLength = filteredDocuments.length - 1; // After deletion
+
+        if (newLength === 0) {
+          // No documents remain - clear selection
+          setSelectedIndex(0);
+        } else if (deletedIndex < newLength) {
+          // Select next document (same index, which is the "next" doc after deletion)
+          setSelectedIndex(deletedIndex);
+        } else {
+          // Was last document - select previous (new last)
+          setSelectedIndex(deletedIndex - 1);
+        }
+      }
+
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete document');
     }
-  }, [loadData]);
+  }, [loadData, filteredDocuments]);
 
   const handleRename = useCallback(async (oldPath: string, newPath: string) => {
     try {
@@ -272,10 +363,6 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
         case '/':
           e.preventDefault();
           searchRef.current?.focus();
-          break;
-        case 'r':
-          e.preventDefault();
-          loadData();
           break;
         case 'u':
           if (onUpload && !e.metaKey && !e.ctrlKey) {
@@ -356,6 +443,49 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
     return STATUS_CONFIG[status]?.accent || 'var(--steel-600)';
   };
 
+  // Proof Engine layer colors (aligned with Zero Seed palette)
+  const LAYER_COLORS: Record<number, string> = {
+    1: '#8b5cf6', // Purple - Axiom
+    2: '#6366f1', // Indigo - Value
+    3: '#3b82f6', // Blue - Goal
+    4: '#0891b2', // Cyan - Spec
+    5: '#10b981', // Emerald - Action
+    6: '#f59e0b', // Amber - Reflection
+    7: '#ec4899', // Pink - Representation
+  };
+
+  const LAYER_NAMES: Record<number, string> = {
+    1: 'Axiom',
+    2: 'Value',
+    3: 'Goal',
+    4: 'Spec',
+    5: 'Action',
+    6: 'Reflection',
+    7: 'Repr',
+  };
+
+  const getLayerColor = (layer: number, alpha?: number): string => {
+    const color = LAYER_COLORS[layer] || '#64748b';
+    if (alpha !== undefined) {
+      // Convert hex to rgba with alpha
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    return color;
+  };
+
+  const getLayerName = (layer: number): string => {
+    return LAYER_NAMES[layer] || 'Unknown';
+  };
+
+  const getConfidenceColor = (confidence: number): string => {
+    if (confidence >= 0.8) return '#10b981'; // Green
+    if (confidence >= 0.5) return '#f59e0b'; // Amber
+    return '#ef4444'; // Red
+  };
+
   // ==========================================================================
   // Render
   // ==========================================================================
@@ -395,7 +525,8 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
         onStatusFilterChange={setStatusFilter}
         streamConnected={streamConnected}
         onUpload={onUpload}
-        onRefresh={loadData}
+        lastEventTime={lastEventTime}
+        onReconnect={reconnect}
       />
 
       {/* === MAIN: Document List === */}
@@ -420,7 +551,7 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
         </div>
 
         {/* Column headers */}
-        <div className="grid grid-cols-[1fr_100px_80px_100px] gap-2 px-4 py-1 bg-steel-850 border-b border-steel-800">
+        <div className="grid grid-cols-[1fr_100px_50px_80px_100px] gap-2 px-4 py-1 bg-steel-850 border-b border-steel-800">
           <button
             className={`p-1 bg-transparent border-none font-mono text-xs font-semibold uppercase tracking-wider text-left select-none transition-colors hover:text-steel-300 ${
               sortField === 'path' ? 'text-steel-100' : 'text-steel-500'
@@ -449,6 +580,9 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
           >
             Status {sortField === 'status' && (sortDir === 'asc' ? '▲' : '▼')}
           </button>
+          <span className="p-1 font-mono text-xs font-semibold uppercase tracking-wider text-center text-steel-500">
+            Proof
+          </span>
           <button
             className={`p-1 bg-transparent border-none font-mono text-xs font-semibold uppercase tracking-wider text-right select-none transition-colors hover:text-steel-300 ${
               sortField === 'claims' ? 'text-steel-100' : 'text-steel-500'
@@ -508,10 +642,14 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
           ) : (
             filteredDocuments.map((doc, idx) => {
               const accentColor = getStatusAccent(doc.status);
+              // Derive proof layer from document analysis (placeholder - API integration needed)
+              // When API returns layer/confidence, replace these with doc.layer, doc.confidence
+              const proofLayer = doc.status === 'ready' && (doc.claim_count ?? 0) > 0 ? 4 : null;
+              const proofConfidence = doc.status === 'ready' ? 0.85 : null;
               return (
                 <div
                   key={doc.path}
-                  className={`grid grid-cols-[1fr_100px_80px_100px] gap-2 px-4 py-2 border-b border-steel-900 border-l-2 transition-colors cursor-pointer hover:bg-steel-900 ${
+                  className={`grid grid-cols-[1fr_100px_50px_80px_100px] gap-2 px-4 py-2 border-b border-steel-900 border-l-2 transition-colors cursor-pointer hover:bg-steel-900 ${
                     idx === selectedIndex ? 'bg-steel-850' : 'border-l-transparent'
                   }`}
                   style={idx === selectedIndex ? { borderLeftColor: accentColor } : undefined}
@@ -537,6 +675,32 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
                       {doc.status}
                     </span>
                   </div>
+                  {/* Proof indicator: Layer badge + confidence dot */}
+                  <div className="flex items-center justify-center gap-1">
+                    {proofLayer ? (
+                      <>
+                        <span
+                          className="px-1 py-0.5 rounded text-xs font-mono font-semibold"
+                          style={{
+                            backgroundColor: getLayerColor(proofLayer, 0.15),
+                            color: getLayerColor(proofLayer),
+                          }}
+                          title={`Layer ${proofLayer}: ${getLayerName(proofLayer)}`}
+                        >
+                          L{proofLayer}
+                        </span>
+                        <span
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{
+                            backgroundColor: getConfidenceColor(proofConfidence ?? 0),
+                          }}
+                          title={`Confidence: ${Math.round((proofConfidence ?? 0) * 100)}%`}
+                        />
+                      </>
+                    ) : (
+                      <span className="text-steel-600 text-xs">—</span>
+                    )}
+                  </div>
                   <div className="flex items-center justify-end gap-1">
                     <span className="text-sm font-semibold text-steel-200 tabular-nums">
                       {doc.claim_count ?? 0}
@@ -554,12 +718,45 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
               );
             })
           )}
+
+          {/* Ghost Document Section - de-prioritized at the bottom */}
+          {statusFilter !== 'ghost' && ghostDocuments.length > 0 && (
+            <GhostDocumentSection
+              documents={ghostDocuments}
+              onSelectDocument={(path) => {
+                // Find the ghost in all documents and select it
+                const idx = filteredDocuments.findIndex((d) => d.path === path);
+                if (idx >= 0) {
+                  setSelectedIndex(idx);
+                } else {
+                  // Switch to ghost filter to see it
+                  setStatusFilter('ghost');
+                  onSelectDocument?.(path);
+                }
+              }}
+              onUploadToReconcile={() => {
+                // Trigger upload for reconciliation
+                onUpload?.();
+              }}
+              collapsed={ghostSectionCollapsed}
+              onToggleCollapse={() => setGhostSectionCollapsed((c) => !c)}
+            />
+          )}
         </div>
       </main>
 
       {/* === DETAIL: Selected Document === */}
       <aside className="flex flex-col p-4 bg-steel-900 border-l border-steel-800 overflow-y-auto min-h-0">
         {selectedDoc ? (
+          // Ghost documents get a specialized detail panel
+          isGhostDocument(selectedDoc) ? (
+            <GhostDetailPanel
+              document={selectedDoc}
+              onRefresh={loadData}
+              onUploadToReconcile={(_path) => onUpload?.()}
+              onNavigateToEditor={(path) => onSelectDocument?.(path)}
+            />
+          ) : (
           <>
             <div className="flex items-start justify-between gap-2 mb-4">
               <h2 className="m-0 text-base font-semibold text-steel-100 leading-tight break-words">
@@ -709,6 +906,7 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
               )}
             </div>
           </>
+          )
         ) : (
           <div className="flex items-center justify-center h-full text-steel-500 text-sm text-center">
             <p>Select a document to view details</p>
@@ -718,13 +916,24 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
 
       {/* Global delete confirmation overlay (keyboard-only) */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-steel-950/80 flex items-center justify-center z-50" onClick={() => setDeleteConfirm(null)}>
-          <div className="bg-steel-900 border border-steel-700 rounded-lg p-6 max-w-md" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold text-steel-100 mb-2">Delete document?</h3>
-            <p className="text-sm text-steel-300 mb-4">
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{ background: 'rgba(13, 13, 13, 0.85)' }}
+          onClick={() => setDeleteConfirm(null)}
+        >
+          <div
+            className="border rounded-lg p-6 max-w-md"
+            style={{
+              background: 'var(--color-steel-900, #1a1a1a)',
+              borderColor: 'var(--color-steel-700, #333)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-steel-100, #e0e0e0)' }}>Delete document?</h3>
+            <p className="text-sm mb-4" style={{ color: 'var(--color-steel-300, #a0a0a0)' }}>
               Permanently delete <span className="font-mono text-purple-400">{deleteConfirm}</span>?
             </p>
-            <p className="text-xs text-steel-500 mb-4">This action cannot be undone.</p>
+            <p className="text-xs mb-4" style={{ color: 'var(--color-steel-500, #666)' }}>This action cannot be undone.</p>
             <div className="flex gap-2">
               <button
                 className="flex-1 px-4 py-2 bg-red-600 border-none rounded text-white text-sm font-medium transition-all hover:brightness-110"
@@ -733,7 +942,12 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
                 Yes, Delete (y)
               </button>
               <button
-                className="flex-1 px-4 py-2 bg-steel-800 border border-steel-700 rounded text-steel-300 text-sm font-medium transition-all hover:bg-steel-700"
+                className="flex-1 px-4 py-2 border rounded text-sm font-medium transition-all"
+                style={{
+                  background: 'var(--color-steel-800, #252525)',
+                  borderColor: 'var(--color-steel-700, #333)',
+                  color: 'var(--color-steel-300, #a0a0a0)'
+                }}
                 onClick={() => setDeleteConfirm(null)}
               >
                 Cancel (n)

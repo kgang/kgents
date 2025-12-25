@@ -63,7 +63,7 @@ const LAYER_FOCAL_DISTANCES: Record<number, number> = {
   1: Infinity, // L1 - Axioms (cosmic)
   2: 1000, // L2 - Values
   3: 100, // L3 - Goals
-  4: 10, // L4 - Specifications
+  4: 10, // L4 - Specs
   5: 1, // L5 - Actions
   6: 1, // L6 - Reflections (shares L5 distance)
   7: 0, // L7 - Documents (ground)
@@ -337,7 +337,7 @@ export function getLayerName(layer: number): string {
     1: 'Axioms',
     2: 'Values',
     3: 'Goals',
-    4: 'Specifications',
+    4: 'Specs',
     5: 'Actions',
     6: 'Reflections',
     7: 'Documents',

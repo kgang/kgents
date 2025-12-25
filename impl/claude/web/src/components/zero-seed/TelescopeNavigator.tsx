@@ -19,7 +19,8 @@ import type {
   PolicyArrow,
   ZeroLayer,
 } from '../../api/zeroSeed';
-import { LAYER_NAMES } from '../../api/zeroSeed';
+import { GaloisTelescope } from './GaloisTelescope';
+import type { NodeProjection, GradientArrow, GaloisTelescopeState } from './types';
 import './ZeroSeed.css';
 
 // =============================================================================
@@ -56,6 +57,13 @@ function getLossColor(loss: number): string {
   return 'var(--viridis-high)';
 }
 
+function getLossColorHex(loss: number): string {
+  // Viridis colors as hex
+  if (loss < 0.3) return '#440154'; // Deep purple (low loss - stable)
+  if (loss < 0.6) return '#31688e'; // Blue-green (mid loss)
+  return '#fde724'; // Yellow (high loss - drift)
+}
+
 function getNodePosition(
   node: ZeroNode,
   allNodes: ZeroNode[],
@@ -80,6 +88,91 @@ function getNodePosition(
     x: centerX + (baseX - centerX) * scale,
     y: centerY + (baseY - centerY) * scale,
   };
+}
+
+/**
+ * Transform ZeroNode to NodeProjection for GaloisTelescope
+ */
+function transformToProjection(
+  node: ZeroNode,
+  position: { x: number; y: number },
+  gradient: GradientVector | undefined,
+  isFocal: boolean,
+  state: TelescopeState
+): NodeProjection {
+  // Estimate loss from gradient magnitude (higher gradient = higher loss)
+  const loss = gradient ? gradient.magnitude : 0.5;
+
+  return {
+    node_id: node.id,
+    layer: node.layer,
+    position: { x: position.x, y: position.y },
+    scale: isFocal ? 1.5 : 0.65,
+    opacity: 1.0,
+    is_focal: isFocal,
+    color: getLossColor(loss),
+    color_hex: getLossColorHex(loss),
+    glow: state.show_loss && loss > 0.7,
+    glow_intensity: loss > 0.7 ? (loss - 0.7) / 0.3 : 0,
+    gradient,
+    annotation: gradient ? {
+      loss,
+      components: {
+        content_loss: loss * 0.4,
+        proof_loss: loss * 0.2,
+        edge_loss: loss * 0.3,
+        metadata_loss: loss * 0.1,
+        total: loss,
+      },
+      threshold_status: loss <= state.loss_threshold ? 'visible' : 'hidden',
+      tooltip: `Loss: ${loss.toFixed(3)} | Gradient: ${gradient.magnitude.toFixed(3)}`,
+    } : undefined,
+  };
+}
+
+/**
+ * Transform API gradients to GradientArrow format for GradientField
+ */
+function transformGradientsToArrows(
+  gradients: Map<string, GradientVector>,
+  nodePositions: Map<string, { x: number; y: number }>
+): GradientArrow[] {
+  const arrows: GradientArrow[] = [];
+
+  for (const [nodeId, gradient] of gradients.entries()) {
+    const pos = nodePositions.get(nodeId);
+    if (!pos || gradient.magnitude < 0.01) continue;
+
+    // Scale arrow length based on magnitude
+    const arrowLength = 0.05 * gradient.magnitude; // 5% of viewport per unit magnitude
+
+    // Start position is the node
+    const start = { x: pos.x, y: pos.y };
+
+    // End position is start + gradient direction * length
+    const end = {
+      x: pos.x + gradient.x * arrowLength,
+      y: pos.y + gradient.y * arrowLength,
+    };
+
+    // Color based on magnitude (green = low, yellow = medium, red = high)
+    let color = '#22c55e'; // green (low gradient - stable)
+    if (gradient.magnitude > 0.7) {
+      color = '#ef4444'; // red (high gradient - unstable)
+    } else if (gradient.magnitude > 0.4) {
+      color = '#f59e0b'; // orange (medium gradient)
+    }
+
+    arrows.push({
+      start,
+      end,
+      magnitude: gradient.magnitude,
+      color,
+      width: 2,
+    });
+  }
+
+  return arrows;
 }
 
 // =============================================================================
@@ -217,19 +310,18 @@ export const TelescopeNavigator = memo(function TelescopeNavigator({
   nodes,
   gradients,
   suggestions,
-  policyArrows,
+  policyArrows: _policyArrows, // Not used - GaloisTelescope handles gradient visualization
   onStateChange,
   onNavigate,
   loading = false,
 }: TelescopeNavigatorProps) {
-  const canvasRef = useRef<SVGSVGElement>(null);
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
   // Update dimensions on resize
   useEffect(() => {
     const updateDimensions = () => {
-      const container = canvasRef.current?.parentElement;
+      const container = containerRef.current;
       if (container) {
         setDimensions({
           width: container.clientWidth,
@@ -260,6 +352,36 @@ export const TelescopeNavigator = memo(function TelescopeNavigator({
     return positions;
   }, [visibleNodes, state.focal_point, state.focal_distance]);
 
+  // Transform nodes to projections for GaloisTelescope
+  const projections = useMemo(() => {
+    return visibleNodes.map(node => {
+      const position = nodePositions.get(node.id);
+      if (!position) return null;
+
+      const gradient = gradients.get(node.id);
+      const isFocal = state.focal_point === node.id;
+
+      return transformToProjection(node, position, gradient, isFocal, state);
+    }).filter((p): p is NodeProjection => p !== null);
+  }, [visibleNodes, nodePositions, gradients, state]);
+
+  // Transform gradients to arrows for GradientField
+  const gradientArrows = useMemo(() => {
+    return transformGradientsToArrows(gradients, nodePositions);
+  }, [gradients, nodePositions]);
+
+  // Transform high-loss nodes
+  const highLossNodes = useMemo(() => {
+    return projections
+      .filter(p => p.annotation && p.annotation.loss > 0.7)
+      .map(p => ({
+        node_id: p.node_id,
+        loss: p.annotation?.loss ?? 0,
+        reason: 'High gradient detected - potential semantic drift',
+      }))
+      .slice(0, 5);
+  }, [projections]);
+
   // Handle node click
   const handleNodeClick = useCallback(
     (nodeId: string) => {
@@ -269,62 +391,8 @@ export const TelescopeNavigator = memo(function TelescopeNavigator({
     [onStateChange, onNavigate]
   );
 
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return;
-
-      switch (e.key) {
-        case 'g':
-          if (e.shiftKey) {
-            // Follow gradient
-            if (state.focal_point) {
-              onNavigate?.(state.focal_point, 'follow_gradient');
-            }
-          }
-          break;
-        case 'L':
-          onStateChange?.({ show_loss: !state.show_loss });
-          break;
-        case 'G':
-          onStateChange?.({ show_gradient: !state.show_gradient });
-          break;
-        case '[':
-          onStateChange?.({
-            loss_threshold: Math.max(0, state.loss_threshold - 0.1),
-          });
-          break;
-        case ']':
-          onStateChange?.({
-            loss_threshold: Math.min(1, state.loss_threshold + 0.1),
-          });
-          break;
-        case '+':
-        case '=':
-          onStateChange?.({
-            focal_distance: Math.max(0, state.focal_distance - 0.1),
-          });
-          break;
-        case '-':
-          onStateChange?.({
-            focal_distance: Math.min(1, state.focal_distance + 0.1),
-          });
-          break;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-          onStateChange?.({ preferred_layer: parseInt(e.key) as ZeroLayer });
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state, onStateChange, onNavigate]);
+  // Note: Keyboard navigation is handled by GaloisTelescope component
+  // This component only provides UI controls for mouse interaction
 
   if (loading) {
     return (
@@ -336,7 +404,7 @@ export const TelescopeNavigator = memo(function TelescopeNavigator({
   }
 
   return (
-    <div className="zero-seed-panel telescope-navigator">
+    <div ref={containerRef} className="zero-seed-panel telescope-navigator">
       {/* Header */}
       <header className="zero-seed-panel__header">
         <h2 className="zero-seed-panel__title">
@@ -366,193 +434,62 @@ export const TelescopeNavigator = memo(function TelescopeNavigator({
         <span className="hint"><kbd>Shift+G</kbd> follow gradient</span>
         <span className="hint"><kbd>L</kbd> toggle loss</span>
         <span className="hint"><kbd>G</kbd> toggle gradient</span>
+        <span className="hint"><kbd>[</kbd>/<kbd>]</kbd> threshold</span>
         <span className="hint"><kbd>+/-</kbd> zoom</span>
         <span className="hint"><kbd>1-7</kbd> layer</span>
+        <span className="hint"><kbd>Tab</kbd> cycle layers</span>
       </div>
 
-      {/* Canvas */}
+      {/* Canvas - GaloisTelescope */}
       <div className="telescope-canvas-container">
-        <svg
-          ref={canvasRef}
-          className="telescope-canvas"
+        <GaloisTelescope
+          initialState={{
+            focal_distance: state.focal_distance,
+            focal_point: state.focal_point,
+            show_loss: state.show_loss,
+            show_gradient: state.show_gradient,
+            loss_threshold: state.loss_threshold,
+            loss_colormap: 'viridis',
+            visible_layers: state.visible_layers,
+            node_scale: 0.65,
+            preferred_layer: state.preferred_layer,
+          }}
+          projections={projections}
+          gradientArrows={gradientArrows}
+          onNodeClick={handleNodeClick}
+          onNavigate={(action, nodeId) => {
+            if (!nodeId) return;
+
+            // Map NavigationAction to the expected callback format
+            switch (action) {
+              case 'focus':
+              case 'go_lowest_loss':
+              case 'go_highest_loss':
+                onStateChange?.({ focal_point: nodeId });
+                onNavigate?.(nodeId, 'focus');
+                break;
+              case 'follow_gradient':
+                onNavigate?.(nodeId, 'follow_gradient');
+                break;
+            }
+          }}
+          onStateChange={(newState: GaloisTelescopeState) => {
+            // Convert GaloisTelescopeState to TelescopeState
+            onStateChange?.({
+              focal_distance: newState.focal_distance,
+              focal_point: newState.focal_point,
+              show_loss: newState.show_loss,
+              show_gradient: newState.show_gradient,
+              loss_threshold: newState.loss_threshold,
+              visible_layers: newState.visible_layers as ZeroLayer[],
+              preferred_layer: newState.preferred_layer as ZeroLayer,
+            });
+          }}
+          highLossNodes={highLossNodes}
+          keyboardEnabled={true}
           width={dimensions.width}
           height={dimensions.height}
-          viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
-        >
-          {/* Policy arrows (optimal paths) */}
-          {policyArrows.map((arrow, i) => {
-            const fromPos = nodePositions.get(arrow.from);
-            const toPos = nodePositions.get(arrow.to);
-            if (!fromPos || !toPos) return null;
-
-            const x1 = fromPos.x * dimensions.width;
-            const y1 = fromPos.y * dimensions.height;
-            const x2 = toPos.x * dimensions.width;
-            const y2 = toPos.y * dimensions.height;
-
-            return (
-              <line
-                key={`policy-${i}`}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                className={`policy-arrow ${arrow.is_optimal ? 'policy-arrow--optimal' : ''}`}
-                strokeWidth={arrow.is_optimal ? 3 : 1}
-                markerEnd="url(#arrowhead)"
-              />
-            );
-          })}
-
-          {/* Gradient arrows */}
-          {state.show_gradient &&
-            Array.from(gradients.entries()).map(([nodeId, gradient]) => {
-              const pos = nodePositions.get(nodeId);
-              if (!pos || gradient.magnitude < 0.01) return null;
-
-              const x1 = pos.x * dimensions.width;
-              const y1 = pos.y * dimensions.height;
-              const scale = 50 * gradient.magnitude;
-              const x2 = x1 + gradient.x * scale;
-              const y2 = y1 + gradient.y * scale;
-
-              return (
-                <line
-                  key={`gradient-${nodeId}`}
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  className="gradient-arrow"
-                  strokeWidth={2}
-                  markerEnd="url(#gradient-arrowhead)"
-                />
-              );
-            })}
-
-          {/* Nodes */}
-          {visibleNodes.map((node) => {
-            const pos = nodePositions.get(node.id);
-            if (!pos) return null;
-
-            const x = pos.x * dimensions.width;
-            const y = pos.y * dimensions.height;
-            const isFocal = state.focal_point === node.id;
-            const isHovered = hoveredNode === node.id;
-            const nodeScale = isFocal ? 1.5 : 1;
-            const baseRadius = 20;
-            const radius = baseRadius * nodeScale;
-
-            // Get gradient for loss color if showing loss
-            const gradient = gradients.get(node.id);
-            const loss = gradient ? 1 - gradient.magnitude : 0.5;
-
-            return (
-              <g
-                key={node.id}
-                className={`telescope-node ${isFocal ? 'telescope-node--focal' : ''} ${isHovered ? 'telescope-node--hovered' : ''}`}
-                transform={`translate(${x}, ${y})`}
-                onClick={() => handleNodeClick(node.id)}
-                onMouseEnter={() => setHoveredNode(node.id)}
-                onMouseLeave={() => setHoveredNode(null)}
-              >
-                {/* Glow for high loss */}
-                {state.show_loss && loss > 0.7 && (
-                  <circle
-                    r={radius + 8}
-                    className="node-glow"
-                    fill="none"
-                    stroke="var(--status-error)"
-                    strokeWidth={2}
-                    opacity={0.5}
-                  />
-                )}
-
-                {/* Main node circle */}
-                <circle
-                  r={radius}
-                  className="node-circle"
-                  data-layer={node.layer}
-                  fill={state.show_loss ? getLossColor(loss) : undefined}
-                />
-
-                {/* Layer badge */}
-                <text
-                  y={-radius - 8}
-                  className="node-layer-badge"
-                  textAnchor="middle"
-                >
-                  L{node.layer}
-                </text>
-
-                {/* Title (only on hover or focus) */}
-                {(isHovered || isFocal) && (
-                  <text y={radius + 16} className="node-title" textAnchor="middle">
-                    {node.title.length > 20
-                      ? node.title.slice(0, 20) + '...'
-                      : node.title}
-                  </text>
-                )}
-
-                {/* Focal indicator */}
-                {isFocal && (
-                  <circle
-                    r={radius + 4}
-                    fill="none"
-                    stroke="var(--accent-primary)"
-                    strokeWidth={2}
-                    className="focal-ring"
-                  />
-                )}
-              </g>
-            );
-          })}
-
-          {/* Arrow markers */}
-          <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
-              orient="auto"
-            >
-              <polygon
-                points="0 0, 10 3.5, 0 7"
-                fill="var(--steel-500)"
-              />
-            </marker>
-            <marker
-              id="gradient-arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
-              orient="auto"
-            >
-              <polygon
-                points="0 0, 10 3.5, 0 7"
-                fill="var(--status-insert)"
-              />
-            </marker>
-          </defs>
-        </svg>
-
-        {/* Layer labels */}
-        <div className="telescope-layer-labels">
-          {([1, 2, 3, 4, 5, 6, 7] as ZeroLayer[]).map((layer) => (
-            <div
-              key={layer}
-              className={`layer-label ${state.visible_layers.includes(layer) ? '' : 'layer-label--hidden'}`}
-              style={{
-                top: `${((layer - 1) / 6) * 80 + 10}%`,
-              }}
-            >
-              L{layer}: {LAYER_NAMES[layer]}
-            </div>
-          ))}
-        </div>
+        />
       </div>
 
       {/* Suggestions sidebar */}

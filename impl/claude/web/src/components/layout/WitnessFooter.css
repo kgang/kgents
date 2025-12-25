@@ -6,13 +6,22 @@
  */
 
 .witness-footer {
+  z-index: 100;
+  background: var(--surface-0, #0f0f1a);
+  border-top: 1px solid var(--surface-2, #1a1a2e);
+}
+
+/* When expanded, break free from grid constraints.
+ * The footer becomes position: fixed at bottom, allowing the panel
+ * to expand upward without being clipped by the grid row.
+ * z-index above sidebar (100), below navbar (102).
+ */
+.witness-footer[data-expanded='true'] {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 100;
-  background: var(--surface-0, #0f0f1a);
-  border-top: 1px solid var(--surface-2, #1a1a2e);
+  z-index: calc(var(--elastic-z-sticky, 100) + 1); /* 101: Above sidebar, below navbar */
 }
 
 /* Compact bar — always visible */

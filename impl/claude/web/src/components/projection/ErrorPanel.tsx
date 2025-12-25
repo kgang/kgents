@@ -109,7 +109,7 @@ export function ErrorPanel({ error, onRetry, showRetry = true }: ErrorPanelProps
             color: colors.text,
           }}
         >
-          💡 {error.fallbackAction}
+          ◎ {error.fallbackAction}
         </p>
       )}
     </div>

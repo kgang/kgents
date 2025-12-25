@@ -17,7 +17,7 @@ export const Header = memo(function Header({ node }: HeaderProps) {
       <header className="hypergraph-header hypergraph-header--empty">
         <div className="hypergraph-header__title">No node focused</div>
         <div className="hypergraph-header__hint">
-          Use <kbd>:e</kbd> to open a node
+          Use <kbd>⌘K</kbd> to open a node
         </div>
       </header>
     );

@@ -1,0 +1,191 @@
+/**
+ * GLYPH SHOWCASE STYLES — STARK BIOME
+ *
+ * Visual demonstration component for the glyph system.
+ */
+
+.glyph-showcase {
+  padding: var(--elastic-gap-xl, 20px);
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--steel-950, #0d0d0d);
+  color: var(--steel-200, #ccc);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+/* Header */
+.glyph-showcase__header {
+  margin-bottom: var(--elastic-gap-xl, 20px);
+  padding-bottom: var(--elastic-gap-lg, 14px);
+  border-bottom: 1px solid var(--steel-700, #333);
+}
+
+.glyph-showcase__title {
+  display: flex;
+  align-items: center;
+  gap: var(--elastic-gap-sm, 5px);
+  font-size: 1.6em;
+  font-weight: 700;
+  color: var(--steel-100, #e0e0e0);
+  margin: 0 0 var(--elastic-gap-sm, 5px) 0;
+}
+
+.glyph-showcase__subtitle {
+  font-size: 0.9em;
+  color: var(--steel-400, #888);
+  margin: 0;
+}
+
+/* Sections */
+.glyph-showcase__section {
+  margin-bottom: var(--elastic-gap-xl, 20px);
+}
+
+.glyph-showcase__category-title {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--steel-200, #ccc);
+  margin: 0 0 var(--elastic-gap-md, 8px) 0;
+  padding-left: var(--elastic-gap-sm, 5px);
+  border-left: 2px solid var(--life-sage, #4a6b4a);
+  text-transform: lowercase;
+}
+
+/* Glyph Grid */
+.glyph-showcase__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--elastic-gap-md, 8px);
+}
+
+.glyph-showcase__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--elastic-gap-sm, 5px);
+  padding: var(--elastic-gap-md, 8px);
+  background: var(--steel-900, #1a1a1a);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: var(--radius-bare, 2px);
+  transition: all 0.2s ease;
+}
+
+.glyph-showcase__item:hover {
+  background: var(--steel-850, #1f1f1f);
+  border-color: var(--steel-600, #444);
+  transform: translateY(-1px);
+}
+
+.glyph-showcase__glyph-display {
+  font-size: 1.5em;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glyph-showcase__glyph-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.glyph-showcase__glyph-name {
+  font-size: 0.75em;
+  color: var(--steel-300, #a0a0a0);
+  background: var(--steel-850, #1f1f1f);
+  padding: 2px 4px;
+  border-radius: var(--radius-bare, 2px);
+}
+
+.glyph-showcase__glyph-char {
+  font-size: 0.7em;
+  color: var(--steel-500, #666);
+}
+
+/* Size Demo */
+.glyph-showcase__size-demo {
+  display: flex;
+  align-items: center;
+  gap: var(--elastic-gap-lg, 14px);
+  padding: var(--elastic-gap-md, 8px);
+  background: var(--steel-900, #1a1a1a);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: var(--radius-bare, 2px);
+}
+
+.glyph-showcase__size-item {
+  display: flex;
+  align-items: center;
+  gap: var(--elastic-gap-sm, 5px);
+  font-size: 0.85em;
+  color: var(--steel-400, #888);
+}
+
+/* Breathing Demo */
+.glyph-showcase__breathing-demo {
+  display: flex;
+  align-items: center;
+  gap: var(--elastic-gap-lg, 14px);
+  padding: var(--elastic-gap-md, 8px);
+  background: var(--steel-900, #1a1a1a);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: var(--radius-bare, 2px);
+  margin-bottom: var(--elastic-gap-sm, 5px);
+}
+
+.glyph-showcase__breathing-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--elastic-gap-sm, 5px);
+  font-size: 0.85em;
+  color: var(--steel-400, #888);
+}
+
+.glyph-showcase__breathing-note {
+  font-size: 0.8em;
+  color: var(--steel-500, #666);
+  margin: 0;
+  font-style: italic;
+}
+
+/* Color Demo */
+.glyph-showcase__color-demo {
+  display: flex;
+  align-items: center;
+  gap: var(--elastic-gap-lg, 14px);
+  padding: var(--elastic-gap-md, 8px);
+  background: var(--steel-900, #1a1a1a);
+  border: 1px solid var(--steel-700, #333);
+  border-radius: var(--radius-bare, 2px);
+  flex-wrap: wrap;
+}
+
+.glyph-showcase__color-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--elastic-gap-xs, 2px);
+  font-size: 0.75em;
+  color: var(--steel-400, #888);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .glyph-showcase {
+    padding: var(--elastic-gap-md, 8px);
+  }
+
+  .glyph-showcase__grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .glyph-showcase__size-demo,
+  .glyph-showcase__breathing-demo,
+  .glyph-showcase__color-demo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

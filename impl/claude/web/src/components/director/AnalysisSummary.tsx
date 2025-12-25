@@ -36,23 +36,23 @@ interface MetricConfig {
 
 const METRICS: MetricConfig[] = [
   {
-    icon: '📋',
+    icon: '◈',
     label: 'Claims',
     getValue: (a) => a.claims?.length || 0,
   },
   {
-    icon: '🔗',
+    icon: '∘',
     label: 'References',
     getValue: (a) => a.discovered_refs?.length || 0,
   },
   {
-    icon: '⏳',
+    icon: '⌛',
     label: 'Pending',
     getValue: (a) => a.placeholder_paths?.length || 0,
     color: 'pending',
   },
   {
-    icon: '🎯',
+    icon: '◉',
     label: 'Anticipated',
     getValue: (a) => a.anticipated?.length || 0,
     color: 'anticipated',

@@ -91,7 +91,7 @@ export const DecisionFooterWidget = memo(function DecisionFooterWidget({
       }}
     >
       {/* Icon */}
-      <div className="decision-footer__icon">⚖️</div>
+      <div className="decision-footer__icon">⊢</div>
 
       {/* Content */}
       <div className="decision-footer__content">

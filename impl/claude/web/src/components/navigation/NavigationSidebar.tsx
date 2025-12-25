@@ -20,7 +20,7 @@ import './NavigationSidebar.css';
 // Types
 // =============================================================================
 
-export type Surface = 'editor' | 'director' | 'chart' | 'brain' | 'zero-seed';
+export type Surface = 'world.document' | 'self.director' | 'world.chart' | 'self.memory' | 'void.zero-seed';
 
 interface NavigationSidebarProps {
   /** Current surface/page */
@@ -46,19 +46,19 @@ interface NavigationSidebarProps {
 // =============================================================================
 
 const SURFACE_ICONS: Record<Surface, typeof FileText> = {
-  editor: FileText,
-  director: Layers,
-  chart: BarChart3,
-  brain: Brain,
-  'zero-seed': Compass,
+  'world.document': FileText,
+  'self.director': Layers,
+  'world.chart': BarChart3,
+  'self.memory': Brain,
+  'void.zero-seed': Compass,
 };
 
 const SURFACE_LABELS: Record<Surface, string> = {
-  editor: 'Editor',
-  director: 'Docs',
-  chart: 'Chart',
-  brain: 'Feed',
-  'zero-seed': 'Zero Seed',
+  'world.document': 'Document',
+  'self.director': 'Director',
+  'world.chart': 'Chart',
+  'self.memory': 'Memory',
+  'void.zero-seed': 'Zero Seed',
 };
 
 // =============================================================================
@@ -139,7 +139,7 @@ const SurfaceContent = memo(function SurfaceContent({
   );
 
   switch (surface) {
-    case 'editor':
+    case 'world.document':
       return (
         <div className="nav-sidebar__surface-content">
           {/* Trail (breadcrumbs) */}
@@ -175,7 +175,7 @@ const SurfaceContent = memo(function SurfaceContent({
         </div>
       );
 
-    case 'director':
+    case 'self.director':
       return (
         <div className="nav-sidebar__surface-content">
           <section className="nav-sidebar__section">
@@ -189,7 +189,7 @@ const SurfaceContent = memo(function SurfaceContent({
         </div>
       );
 
-    case 'chart':
+    case 'world.chart':
       return (
         <div className="nav-sidebar__surface-content">
           <section className="nav-sidebar__section">
@@ -199,7 +199,7 @@ const SurfaceContent = memo(function SurfaceContent({
         </div>
       );
 
-    case 'brain':
+    case 'self.memory':
       return (
         <div className="nav-sidebar__surface-content">
           <section className="nav-sidebar__section">
@@ -214,16 +214,17 @@ const SurfaceContent = memo(function SurfaceContent({
         </div>
       );
 
-    case 'zero-seed':
+    case 'void.zero-seed':
       return (
         <div className="nav-sidebar__surface-content">
           <section className="nav-sidebar__section">
-            <h3 className="nav-sidebar__section-title">Epistemic Graph</h3>
+            <h3 className="nav-sidebar__section-title">Five Levels</h3>
             <div className="nav-sidebar__empty">
-              <kbd>1</kbd> L1-L2 Axioms<br />
-              <kbd>2</kbd> L3-L4 Proofs<br />
-              <kbd>3</kbd> L5-L6 Health<br />
-              <kbd>4</kbd> L7 Telescope
+              <kbd>1</kbd> L1-L2 Axioms & Values<br />
+              <kbd>2</kbd> L3-L4 Goals & Specs<br />
+              <kbd>3</kbd> L5-L6 Actions & Reflections<br />
+              <kbd>4</kbd> L7 Representation<br />
+              <kbd>5</kbd> Visual Overview
             </div>
           </section>
         </div>
@@ -250,14 +251,20 @@ export const NavigationSidebar = memo(function NavigationSidebar({
 }: NavigationSidebarProps) {
   const location = useLocation();
 
-  // Determine active surface from route
+  // Determine active surface from AGENTESE route
   const getActiveRoute = (path: string): Surface => {
-    if (path.startsWith('/editor')) return 'editor';
-    if (path.startsWith('/director')) return 'director';
-    if (path.startsWith('/chart')) return 'chart';
-    if (path.startsWith('/brain')) return 'brain';
-    if (path.startsWith('/zero-seed')) return 'zero-seed';
-    return 'editor';
+    if (path.startsWith('/world.document')) return 'world.document';
+    if (path.startsWith('/self.director')) return 'self.director';
+    if (path.startsWith('/world.chart')) return 'world.chart';
+    if (path.startsWith('/self.memory')) return 'self.memory';
+    if (path.startsWith('/void.zero-seed')) return 'void.zero-seed';
+    // Legacy fallback (will be redirected)
+    if (path.startsWith('/editor')) return 'world.document';
+    if (path.startsWith('/director')) return 'self.director';
+    if (path.startsWith('/chart')) return 'world.chart';
+    if (path.startsWith('/brain') || path.startsWith('/feed')) return 'self.memory';
+    if (path.startsWith('/proof-engine') || path.startsWith('/zero-seed')) return 'void.zero-seed';
+    return 'world.document';
   };
 
   const activeSurface = getActiveRoute(location.pathname);
@@ -279,13 +286,13 @@ export const NavigationSidebar = memo(function NavigationSidebar({
       showCloseButton
     >
       <div className="nav-sidebar">
-        {/* Surface navigation */}
+        {/* Surface navigation - AGENTESE paths only */}
         <nav className="nav-sidebar__nav">
-          <NavItem icon={SURFACE_ICONS.editor} label={SURFACE_LABELS.editor} href="/editor" isActive={activeSurface === 'editor'} shortcut="⇧E" />
-          <NavItem icon={SURFACE_ICONS.director} label={SURFACE_LABELS.director} href="/director" isActive={activeSurface === 'director'} shortcut="⇧D" />
-          <NavItem icon={SURFACE_ICONS.chart} label={SURFACE_LABELS.chart} href="/chart" isActive={activeSurface === 'chart'} shortcut="⇧C" />
-          <NavItem icon={SURFACE_ICONS.brain} label={SURFACE_LABELS.brain} href="/brain" isActive={activeSurface === 'brain'} shortcut="⇧B" />
-          <NavItem icon={SURFACE_ICONS['zero-seed']} label={SURFACE_LABELS['zero-seed']} href="/zero-seed" isActive={activeSurface === 'zero-seed'} shortcut="⇧Z" />
+          <NavItem icon={SURFACE_ICONS['world.document']} label={SURFACE_LABELS['world.document']} href="/world.document" isActive={activeSurface === 'world.document'} shortcut="⇧E" />
+          <NavItem icon={SURFACE_ICONS['self.director']} label={SURFACE_LABELS['self.director']} href="/self.director" isActive={activeSurface === 'self.director'} shortcut="⇧D" />
+          <NavItem icon={SURFACE_ICONS['world.chart']} label={SURFACE_LABELS['world.chart']} href="/world.chart" isActive={activeSurface === 'world.chart'} shortcut="⇧C" />
+          <NavItem icon={SURFACE_ICONS['self.memory']} label={SURFACE_LABELS['self.memory']} href="/self.memory" isActive={activeSurface === 'self.memory'} shortcut="⇧M" />
+          <NavItem icon={SURFACE_ICONS['void.zero-seed']} label={SURFACE_LABELS['void.zero-seed']} href="/zero-seed" isActive={activeSurface === 'void.zero-seed'} shortcut="⇧Z" />
         </nav>
 
         <div className="nav-sidebar__divider" />

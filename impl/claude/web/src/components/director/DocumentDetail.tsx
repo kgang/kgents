@@ -357,7 +357,7 @@ export function DocumentDetail({ path, onClose, onEdit }: DocumentDetailProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="document-detail__first-view-header">
-              <span className="document-detail__first-view-icon">✨</span>
+              <span className="document-detail__first-view-icon">✧</span>
               <h3 className="document-detail__modal-title">Analysis Complete</h3>
             </div>
 

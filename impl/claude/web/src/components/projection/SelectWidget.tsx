@@ -159,7 +159,7 @@ export function SelectWidget({
               }}
               aria-label="Clear selection"
             >
-              ✕
+              ×
             </button>
           )}
           <span style={{ fontSize: '10px', color: '#6b7280' }}>{isOpen ? '▲' : '▼'}</span>
@@ -255,7 +255,7 @@ export function SelectWidget({
                     )}
                     <span>{opt.label}</span>
                     {!multiple && isSelected && (
-                      <span style={{ marginLeft: 'auto', color: '#3b82f6' }}>✓</span>
+                      <span style={{ marginLeft: 'auto', color: '#3b82f6' }}>●</span>
                     )}
                   </div>
                 );

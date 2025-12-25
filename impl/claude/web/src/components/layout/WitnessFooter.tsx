@@ -7,7 +7,7 @@
  * "The proof IS the decision. The mark IS the witness."
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, forwardRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { useWitnessStream, type WitnessEvent } from '../../hooks/useWitnessStream';
@@ -21,19 +21,19 @@ import './WitnessFooter.css';
 function getEventIcon(type: WitnessEvent['type']): string {
   switch (type) {
     case 'mark':
-      return '📜';
+      return '⊢';
     case 'kblock':
-      return '✏️';
+      return '⎔';
     case 'crystal':
-      return '💎';
+      return '◇';
     case 'thought':
-      return '💭';
+      return '⟨⟩';
     case 'trail':
-      return '🔗';
+      return '∘';
     case 'spec':
-      return '📋';
+      return '◈';
     case 'connected':
-      return '🟢';
+      return '●';
     default:
       return '•';
   }
@@ -75,9 +75,19 @@ interface CompactEventProps {
   event: WitnessEvent;
 }
 
-function CompactEvent({ event }: CompactEventProps) {
+/**
+ * CompactEvent — Single event in the footer bar
+ *
+ * Uses forwardRef because AnimatePresence with mode="popLayout"
+ * needs to attach refs for layout measurements.
+ */
+const CompactEvent = forwardRef<HTMLDivElement, CompactEventProps>(function CompactEvent(
+  { event },
+  ref
+) {
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 10 }}
@@ -89,7 +99,7 @@ function CompactEvent({ event }: CompactEventProps) {
       <span className="witness-footer__event-time">{formatTime(event.timestamp)}</span>
     </motion.div>
   );
-}
+});
 
 // =============================================================================
 // Log Entry (tail -f style)

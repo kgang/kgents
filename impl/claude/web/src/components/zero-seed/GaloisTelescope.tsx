@@ -101,6 +101,13 @@ export const GaloisTelescope = memo(function GaloisTelescope({
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredNode, setHoveredNode] = useState<NodeId | null>(null);
 
+  // Auto-focus container when component mounts
+  useEffect(() => {
+    if (containerRef.current && keyboardEnabled) {
+      containerRef.current.focus();
+    }
+  }, [keyboardEnabled]);
+
   // Navigation hook
   const navigation = useTelescopeNavigation({
     state,

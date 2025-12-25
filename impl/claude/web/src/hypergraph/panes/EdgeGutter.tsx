@@ -92,7 +92,7 @@ export const EdgeGutter = memo(function EdgeGutter({ edges, side, onEdgeClick }:
           `${type}: ${count} edge${count > 1 ? 's' : ''}`,
           avgConfidence !== undefined ? `Confidence: ${Math.round(avgConfidence * 100)}%` : null,
           origins.length > 0 ? `Sources: ${origins.join(', ')}` : null,
-          hasWitness ? '📜 Has witness marks' : null,
+          hasWitness ? '⊢ Has witness marks' : null,
         ]
           .filter(Boolean)
           .join('\n');
@@ -108,7 +108,7 @@ export const EdgeGutter = memo(function EdgeGutter({ edges, side, onEdgeClick }:
           >
             <span className="edge-gutter__abbrev">{abbrev}</span>
             {count > 1 && <span className="edge-gutter__count">{count}</span>}
-            {hasWitness && <span className="edge-gutter__witness">📜</span>}
+            {hasWitness && <span className="edge-gutter__witness">⊢</span>}
           </button>
         );
       })}

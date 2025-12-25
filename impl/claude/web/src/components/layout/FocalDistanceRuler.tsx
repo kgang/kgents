@@ -25,6 +25,18 @@ interface FocalDistanceRulerProps {
 
   /** Compact mode (icons only) */
   compact?: boolean;
+
+  /** Loss threshold value (0-1) */
+  lossThreshold?: number;
+
+  /** Callback when loss threshold changes */
+  onLossThresholdChange?: (value: number) => void;
+
+  /** Whether gradient field is visible */
+  showGradients?: boolean;
+
+  /** Callback when gradient toggle is clicked */
+  onGradientsToggle?: () => void;
 }
 
 // =============================================================================
@@ -52,6 +64,10 @@ export const FocalDistanceRuler = memo(function FocalDistanceRuler({
   visibleLayers,
   onLayerClick,
   compact = false,
+  lossThreshold,
+  onLossThresholdChange,
+  showGradients,
+  onGradientsToggle,
 }: FocalDistanceRulerProps) {
   const handleLayerClick = useCallback(
     (layer: number) => {
@@ -60,17 +76,31 @@ export const FocalDistanceRuler = memo(function FocalDistanceRuler({
     [onLayerClick]
   );
 
+  const handleLossChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onLossThresholdChange?.(parseFloat(e.target.value));
+    },
+    [onLossThresholdChange]
+  );
+
+  const hasControls =
+    lossThreshold !== undefined &&
+    onLossThresholdChange !== undefined &&
+    showGradients !== undefined &&
+    onGradientsToggle !== undefined;
+
   return (
     <div
       className={`focal-distance-ruler ${compact ? 'focal-distance-ruler--compact' : ''}`}
       aria-label="Focal distance layer navigation"
     >
-      {/* Layer markers */}
+      {/* Layer markers - ruler starts below navbar, no header needed */}
       <div className="focal-distance-ruler__layers">
         {LAYERS.map((layer) => {
           const isVisible = visibleLayers.includes(layer);
           const isCurrent =
             visibleLayers.length === 1 && visibleLayers[0] === layer;
+          const layerName = getLayerName(layer);
 
           return (
             <button
@@ -80,13 +110,13 @@ export const FocalDistanceRuler = memo(function FocalDistanceRuler({
               } ${isCurrent ? 'focal-distance-ruler__layer--current' : ''}`}
               style={{ '--layer-color': LAYER_COLORS[layer] } as React.CSSProperties}
               onClick={() => handleLayerClick(layer)}
-              title={`${getLayerName(layer)} (L${layer})`}
-              aria-label={`Jump to ${getLayerName(layer)}`}
+              title={`${layerName} (L${layer})`}
+              aria-label={`Jump to ${layerName}`}
               aria-current={isCurrent ? 'location' : undefined}
             >
               <span className="focal-distance-ruler__icon">{getLayerIcon(layer)}</span>
               {!compact && (
-                <span className="focal-distance-ruler__label">L{layer}</span>
+                <span className="focal-distance-ruler__label">{layerName}</span>
               )}
             </button>
           );
@@ -107,8 +137,52 @@ export const FocalDistanceRuler = memo(function FocalDistanceRuler({
         />
       )}
 
+      {/* Controls section - only shown when props are provided */}
+      {hasControls && !compact && (
+        <div className="focal-distance-ruler__controls">
+          {/* Loss threshold slider */}
+          <div className="focal-distance-ruler__control">
+            <label
+              htmlFor="ruler-loss-threshold"
+              className="focal-distance-ruler__control-label"
+              title="Filter nodes by loss value (0 = axioms only, 1 = show all)"
+            >
+              Loss
+            </label>
+            <input
+              id="ruler-loss-threshold"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={lossThreshold}
+              onChange={handleLossChange}
+              className="focal-distance-ruler__slider"
+              aria-label={`Loss threshold: ${(lossThreshold * 100).toFixed(0)}%`}
+            />
+            <span className="focal-distance-ruler__control-value">
+              {(lossThreshold * 100).toFixed(0)}%
+            </span>
+          </div>
+
+          {/* Gradient toggle */}
+          <button
+            className={`focal-distance-ruler__gradient-toggle ${
+              showGradients ? 'focal-distance-ruler__gradient-toggle--active' : ''
+            }`}
+            onClick={onGradientsToggle}
+            title={`${showGradients ? 'Hide' : 'Show'} gradient field`}
+            aria-label={`${showGradients ? 'Hide' : 'Show'} gradient field`}
+            aria-pressed={showGradients}
+          >
+            <span className="focal-distance-ruler__gradient-icon">∇</span>
+            <span className="focal-distance-ruler__gradient-label">Gradients</span>
+          </button>
+        </div>
+      )}
+
       {/* Zoom shortcuts hint */}
-      {!compact && (
+      {!compact && !hasControls && (
         <div className="focal-distance-ruler__hint">
           <kbd>gL</kbd> out
           <br />

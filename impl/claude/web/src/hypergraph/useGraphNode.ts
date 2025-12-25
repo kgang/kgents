@@ -36,6 +36,55 @@ export function normalizePath(path: string): string {
   return path;
 }
 
+/**
+ * Check if a path is a valid file path vs an edge label or other non-file path.
+ *
+ * Edge labels look like: "edge.discovered: extends → spec/j-gents/integration.md"
+ * File paths look like: "spec/agents/polynomial-agent.md" or "uploads/doc.pdf"
+ *
+ * This prevents infinite loops when edge labels are mistakenly passed to loadNode.
+ */
+export function isValidFilePath(path: string): boolean {
+  // Edge labels contain arrows (→ or ->)
+  if (path.includes('→') || path.includes('->')) {
+    return false;
+  }
+
+  // Edge labels often start with "edge."
+  if (path.startsWith('edge.')) {
+    return false;
+  }
+
+  // AGENTESE paths are not file paths (they start with context prefixes)
+  // This prevents infinite loops when /editor redirects to /world.document
+  const agenteseContexts = ['world.', 'self.', 'concept.', 'void.', 'time.'];
+  if (agenteseContexts.some((ctx) => path.startsWith(ctx))) {
+    return false;
+  }
+
+  // Must not contain control characters or obvious edge label markers
+  if (path.includes(': ') && (
+    path.includes('extends') ||
+    path.includes('implements') ||
+    path.includes('references') ||
+    path.includes('derives_from') ||
+    path.includes('contradicts') ||
+    path.includes('contains') ||
+    path.includes('uses') ||
+    path.includes('defines') ||
+    path.includes('tests')
+  )) {
+    return false;
+  }
+
+  // Empty or whitespace-only paths are invalid
+  if (!path.trim()) {
+    return false;
+  }
+
+  return true;
+}
+
 // =============================================================================
 // Conversion Functions
 // =============================================================================
@@ -231,6 +280,13 @@ export function useGraphNode(): UseGraphNodeResult {
   }, [updateCount]);
 
   const loadNode = useCallback(async (path: string): Promise<GraphNode | null> => {
+    // Validate path BEFORE any API calls to prevent infinite loops
+    if (!isValidFilePath(path)) {
+      console.warn('[useGraphNode] Invalid path (edge label or malformed):', path);
+      setError(`Invalid path: "${path}" appears to be an edge label, not a file path`);
+      return null;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -264,7 +320,7 @@ export function useGraphNode(): UseGraphNodeResult {
         confidence: 0,
         outgoingEdges: [],
         incomingEdges: [],
-        content: `# Node: ${normalizedPath}\n\n*Error loading from WitnessedGraph: ${errorMsg}*\n\nTry :e <path> to navigate to another node.`,
+        content: `# Node: ${normalizedPath}\n\n*Error loading from WitnessedGraph: ${errorMsg}*\n\nUse ⌘K (CommandPalette) to navigate to another node.`,
       };
     } finally {
       setLoading(false);

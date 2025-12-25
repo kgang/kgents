@@ -61,7 +61,7 @@ interface CommandPaletteProps {
   /** Callback to invoke AGENTESE path */
   onAgentese?: (path: string) => void;
 
-  /** Callback to navigate to Zero Seed */
+  /** Callback to navigate to Proof Engine */
   onZeroSeed?: (tab?: string) => void;
 }
 
@@ -122,14 +122,14 @@ export const CommandPalette = memo(function CommandPalette({
     {} as Record<string, CommandType[]>
   );
 
-  // Category display order and labels
+  // Category display order and labels (using mathematical glyphs)
   const categories = [
-    { key: 'actions', label: 'Actions', icon: '⚡' },
-    { key: 'files', label: 'Files', icon: '📁' },
-    { key: 'agentese', label: 'AGENTESE', icon: '🔮' },
-    { key: 'navigation', label: 'Navigation', icon: '🧭' },
-    { key: 'witness', label: 'Witness', icon: '👁️' },
-    { key: 'graph', label: 'Graph', icon: '🕸️' },
+    { key: 'actions', label: 'Actions', icon: '⊛' },
+    { key: 'files', label: 'Files', icon: '▪' },
+    { key: 'agentese', label: 'AGENTESE', icon: '∴' },
+    { key: 'navigation', label: 'Navigation', icon: '→' },
+    { key: 'witness', label: 'Witness', icon: '⊢' },
+    { key: 'graph', label: 'Graph', icon: '⟡' },
   ] as const;
 
   if (!open) return null;

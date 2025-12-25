@@ -164,7 +164,7 @@ export const DecisionStream = memo(function DecisionStream({
             <div className="decision-stream__empty">
               {decisions.length === 0 ? (
                 <div className="decision-stream__welcome">
-                  <div className="decision-stream__welcome-icon">⚖️</div>
+                  <div className="decision-stream__welcome-icon">⊢</div>
                   <h3>No dialectic decisions yet</h3>
                   <p>
                     Dialectic decisions capture the fusion of Kent's thesis and Claude's antithesis

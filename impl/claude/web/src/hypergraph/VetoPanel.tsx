@@ -80,7 +80,7 @@ export const VetoPanel = memo(function VetoPanel({
     <div className="veto-panel__overlay" onClick={onCancel}>
       <div className="veto-panel" onClick={(e) => e.stopPropagation()}>
         {/* Icon */}
-        <div className="veto-panel__icon">⛔</div>
+        <div className="veto-panel__icon">⊗</div>
 
         {/* Header */}
         <div className="veto-panel__header">

@@ -208,13 +208,43 @@
   margin-bottom: 2rem;
 }
 
+.file-explorer__recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
 .file-explorer__recent-title {
-  margin: 0 0 0.75rem;
+  margin: 0;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--steel-500, #666);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.file-explorer__clear-recent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: 1px solid var(--steel-700, #333);
+  border-radius: 2px;
+  color: var(--steel-500, #666);
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.file-explorer__clear-recent:hover {
+  border-color: var(--steel-600, #555);
+  color: var(--steel-300, #a0a0a0);
+  background: var(--steel-900, #1a1a1a);
 }
 
 .file-explorer__recent-list {

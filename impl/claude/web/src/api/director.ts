@@ -17,7 +17,58 @@ export type DocumentStatus =
   | 'ready'
   | 'executed'
   | 'stale'
-  | 'failed';
+  | 'failed'
+  | 'ghost';
+
+/**
+ * How a ghost document came into existence.
+ *
+ * Ghosts are the negative space of the document graph — entities that
+ * SHOULD exist based on references but DON'T yet.
+ */
+export type GhostOrigin = 'parsed_reference' | 'anticipated' | 'user_created';
+
+/**
+ * Metadata for a ghost document.
+ *
+ * Philosophy: "The file is a lie. There is only the graph."
+ */
+export interface GhostMetadata {
+  origin: GhostOrigin;
+  created_by_path: string; // Which spec created this ghost
+  created_at: string; // ISO timestamp
+  context: string; // Why this ghost exists
+  user_content: string; // User-contributed content (if any)
+  is_empty: boolean; // True if ghost has no user content yet
+  has_draft_content: boolean; // True if user has started adding content
+}
+
+/**
+ * Strategy for reconciling ghost content with uploaded "real" document.
+ *
+ * When a user uploads a document that matches a ghost path, we decide
+ * what to do with any content that was in the ghost:
+ */
+export type ReconciliationStrategy =
+  | 'replace' // Use uploaded content, discard ghost
+  | 'merge_uploaded_wins' // Zero-Seed merge, conflicts resolved by uploaded
+  | 'merge_ghost_wins' // Zero-Seed merge, conflicts resolved by ghost
+  | 'interactive'; // Present both for manual merge
+
+export interface ReconciliationRequest {
+  ghost_path: string;
+  uploaded_content: string;
+  strategy: ReconciliationStrategy;
+}
+
+export interface ReconciliationResult {
+  path: string;
+  final_content: string;
+  strategy_used: ReconciliationStrategy;
+  had_conflicts: boolean;
+  conflict_summary: string;
+  mark_id: string | null;
+}
 
 export interface DocumentEntry {
   path: string;
@@ -31,6 +82,23 @@ export interface DocumentEntry {
   placeholder_count: number | null;
   analyzed_at: string | null;
   uploaded_at: string | null;
+  // Ghost-specific fields (only present if status === 'ghost')
+  ghost_metadata?: GhostMetadata;
+  is_ghost?: boolean;
+}
+
+/**
+ * Check if a document is a ghost (empty placeholder).
+ */
+export function isGhostDocument(doc: DocumentEntry): boolean {
+  return doc.status === 'ghost' || doc.is_ghost === true;
+}
+
+/**
+ * Check if a ghost has user-contributed content.
+ */
+export function ghostHasDraft(doc: DocumentEntry): boolean {
+  return doc.ghost_metadata?.has_draft_content === true;
 }
 
 // Helper to compute ref_count for backwards compatibility
@@ -224,6 +292,7 @@ export async function getMetrics(): Promise<MetricsSummary> {
     executed: 0,
     stale: 0,
     failed: 0,
+    ghost: 0,
   };
 
   let offset = 0;
@@ -364,4 +433,83 @@ export async function renameDocument(
       body: JSON.stringify({ new_path: newPath }),
     }
   );
+}
+
+// =============================================================================
+// Ghost Document API
+// =============================================================================
+
+/**
+ * List all ghost documents.
+ *
+ * Ghosts are the negative space of the document graph — entities that
+ * SHOULD exist based on references but DON'T yet.
+ */
+export async function listGhosts(): Promise<DocumentListResponse> {
+  return listDocuments({ status: 'ghost' });
+}
+
+/**
+ * Update ghost content (user filling in the placeholder).
+ * Backend: PUT /api/director/documents/{path}/ghost-content
+ */
+export async function updateGhostContent(
+  path: string,
+  content: string
+): Promise<{ success: boolean; path: string; word_count: number }> {
+  const encodedPath = encodeURIComponent(path);
+  return fetchJson<{ success: boolean; path: string; word_count: number }>(
+    `${API_BASE}/${encodedPath}/ghost-content`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    }
+  );
+}
+
+/**
+ * Reconcile a ghost with an uploaded document.
+ *
+ * When a user uploads a document that matches a ghost path, this endpoint
+ * mediates the merge using Zero-Seed if both have content.
+ *
+ * Backend: POST /api/director/documents/{path}/reconcile
+ */
+export async function reconcileGhost(
+  request: ReconciliationRequest
+): Promise<ReconciliationResult> {
+  const encodedPath = encodeURIComponent(request.ghost_path);
+  return fetchJson<ReconciliationResult>(`${API_BASE}/${encodedPath}/reconcile`, {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
+/**
+ * Promote a ghost to a real document (when user finishes filling content).
+ * Backend: POST /api/director/documents/{path}/promote-ghost
+ */
+export async function promoteGhost(
+  path: string
+): Promise<{ success: boolean; path: string; new_status: DocumentStatus; mark_id: string }> {
+  const encodedPath = encodeURIComponent(path);
+  return fetchJson<{ success: boolean; path: string; new_status: DocumentStatus; mark_id: string }>(
+    `${API_BASE}/${encodedPath}/promote-ghost`,
+    {
+      method: 'POST',
+    }
+  );
+}
+
+/**
+ * Get ghost metadata for a document.
+ * Backend: GET /api/director/documents/{path}/ghost-metadata
+ */
+export async function getGhostMetadata(path: string): Promise<GhostMetadata | null> {
+  const encodedPath = encodeURIComponent(path);
+  try {
+    return await fetchJson<GhostMetadata>(`${API_BASE}/${encodedPath}/ghost-metadata`);
+  } catch {
+    return null;
+  }
 }

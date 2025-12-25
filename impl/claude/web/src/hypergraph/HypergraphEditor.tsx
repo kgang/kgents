@@ -26,7 +26,6 @@ import { useNavigation } from './useNavigation';
 import { useKeyHandler } from './useKeyHandler';
 import { useKBlock } from './useKBlock';
 import { useDirector } from '../hooks/useDirector';
-import { useLivingCanvas } from './useLivingCanvas';
 import { useLossNavigation } from './useLossNavigation';
 import { StatusLine } from './StatusLine';
 import { CommandLine } from './CommandLine';
@@ -34,7 +33,6 @@ import { CommandPalette } from './CommandPalette';
 import { EdgePanel } from './EdgePanel';
 import { WitnessPanel } from './WitnessPanel';
 import { HelpPanel } from './HelpPanel';
-import { GraphSidebar } from './GraphSidebar';
 import { DialogueView } from './DialogueView';
 import { DialecticModal } from './DialecticModal';
 import { DecisionFooterWidget } from './DecisionFooterWidget';
@@ -42,10 +40,12 @@ import { DecisionStream } from './DecisionStream';
 import { VetoPanel } from './VetoPanel';
 import { useDialecticDecisions } from './useDialecticDecisions';
 import type { DialecticDecision, QuickDecisionInput, FullDialecticInput } from './types/dialectic';
-import { MarkdownEditorRef } from '../components/editor';
 import { Header, TrailBar, EdgeGutter, ContentPane } from './panes';
+import type { ContentPaneRef } from './panes';
 import type { GraphNode, Edge } from './state/types';
 import { AnalysisQuadrant } from '../components/analysis/AnalysisQuadrant';
+import { ProofPanel } from './ProofPanel';
+import { ProofStatusBadge } from './ProofStatusBadge';
 
 import './HypergraphEditor.css';
 
@@ -110,33 +110,12 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     autoFetch: state.currentNode?.kind === 'spec',
   });
 
-  // Living Canvas (graph sidebar)
-  const handleGraphNodeClick = useCallback(
-    (path: string) => {
-      onNavigate?.(path);
-      if (loadNode) {
-        loadNode(path).then((node) => {
-          if (node) {
-            focusNode(node);
-            onNodeFocus?.(node);
-          }
-        });
-      }
-    },
-    [onNavigate, loadNode, focusNode, onNodeFocus]
-  );
-
-  const livingCanvas = useLivingCanvas({
-    onNodeClick: handleGraphNodeClick,
-    editorFocusedPath: state.currentNode?.path,
-  });
-
   // Loss navigation
   const lossNav = useLossNavigation();
 
   // Refs
   const commandLineRef = useRef<HTMLInputElement>(null);
-  const readerEditorRef = useRef<MarkdownEditorRef>(null);
+  const contentPaneRef = useRef<ContentPaneRef>(null);
 
   // UI state
   const [commandLineVisible, setCommandLineVisible] = useState(false);
@@ -161,8 +140,14 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   // Analysis UI state
   const [analysisQuadrantOpen, setAnalysisQuadrantOpen] = useState(false);
 
-  // Loss navigation state
+  // Proof panel state
+  const [proofPanelOpen, setProofPanelOpen] = useState(false);
+
+  // Loss navigation state (focal distance for future telescope integration)
   const [focalDistance, setFocalDistance] = useState(1.0);
+  // Note: focalDistance is updated by gL/gH but not yet consumed by telescope
+  // This is intentional - state is tracked for future telescope feature integration
+  void focalDistance; // Suppress unused warning
 
   // Dialectic decisions hook
   const dialectic = useDialecticDecisions({
@@ -512,15 +497,35 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   const handleGoLowestLoss = useCallback(async () => {
     if (!state.currentNode) return;
 
-    const targetId = await lossNav.findLowestLossNeighbor(state.currentNode);
-    if (!targetId || !loadNode) return;
+    const neighbors = await lossNav.getNeighborLosses(state.currentNode);
+    if (neighbors.length === 0) {
+      setFeedbackMessage({
+        type: 'warning',
+        text: 'No neighbors found',
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+      return;
+    }
+
+    const lowest = neighbors[0]; // Already sorted ascending
+    const targetId = lowest.nodeId;
+
+    if (!loadNode) return;
 
     onNavigate?.(targetId);
     loadNode(targetId).then((node) => {
       if (node) {
         focusNode(node);
         onNodeFocus?.(node);
-        console.info('[LossNav] Navigated to lowest-loss neighbor:', targetId);
+
+        // Show feedback with loss value
+        const lossValue = (lowest.loss * 100).toFixed(1);
+        setFeedbackMessage({
+          type: 'success',
+          text: `Navigated to lowest-loss neighbor (loss: ${lossValue}%)`,
+        });
+        setTimeout(() => setFeedbackMessage(null), 3000);
+        console.info('[LossNav] Navigated to lowest-loss neighbor:', targetId, lowest.loss);
       }
     });
   }, [state.currentNode, lossNav, loadNode, focusNode, onNavigate, onNodeFocus]);
@@ -532,15 +537,35 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   const handleGoHighestLoss = useCallback(async () => {
     if (!state.currentNode) return;
 
-    const targetId = await lossNav.findHighestLossNeighbor(state.currentNode);
-    if (!targetId || !loadNode) return;
+    const neighbors = await lossNav.getNeighborLosses(state.currentNode);
+    if (neighbors.length === 0) {
+      setFeedbackMessage({
+        type: 'warning',
+        text: 'No neighbors found',
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+      return;
+    }
+
+    const highest = neighbors[neighbors.length - 1]; // Already sorted ascending, so last is highest
+    const targetId = highest.nodeId;
+
+    if (!loadNode) return;
 
     onNavigate?.(targetId);
     loadNode(targetId).then((node) => {
       if (node) {
         focusNode(node);
         onNodeFocus?.(node);
-        console.info('[LossNav] Navigated to highest-loss neighbor:', targetId);
+
+        // Show feedback with loss value
+        const lossValue = (highest.loss * 100).toFixed(1);
+        setFeedbackMessage({
+          type: 'warning',
+          text: `Navigated to highest-loss neighbor (loss: ${lossValue}%)`,
+        });
+        setTimeout(() => setFeedbackMessage(null), 3000);
+        console.info('[LossNav] Navigated to highest-loss neighbor:', targetId, highest.loss);
       }
     });
   }, [state.currentNode, lossNav, loadNode, focusNode, onNavigate, onNodeFocus]);
@@ -549,17 +574,144 @@ export const HypergraphEditor = memo(function HypergraphEditor({
    * gL - Zoom out (increase focal distance).
    */
   const handleZoomOut = useCallback(() => {
-    setFocalDistance((prev) => prev * 10);
-    console.info('[LossNav] Zoomed out, focal distance:', focalDistance * 10);
-  }, [focalDistance]);
+    setFocalDistance((prev) => {
+      const newDistance = prev * 10;
+      setFeedbackMessage({
+        type: 'success',
+        text: `Zoomed out (focal distance: ${newDistance.toFixed(2)})`,
+      });
+      setTimeout(() => setFeedbackMessage(null), 2000);
+      console.info('[LossNav] Zoomed out, focal distance:', newDistance);
+      return newDistance;
+    });
+  }, []);
 
   /**
    * gH - Zoom in (decrease focal distance).
    */
   const handleZoomIn = useCallback(() => {
-    setFocalDistance((prev) => Math.max(0.01, prev / 10));
-    console.info('[LossNav] Zoomed in, focal distance:', Math.max(0.01, focalDistance / 10));
-  }, [focalDistance]);
+    setFocalDistance((prev) => {
+      const newDistance = Math.max(0.01, prev / 10);
+      setFeedbackMessage({
+        type: 'success',
+        text: `Zoomed in (focal distance: ${newDistance.toFixed(2)})`,
+      });
+      setTimeout(() => setFeedbackMessage(null), 2000);
+      console.info('[LossNav] Zoomed in, focal distance:', newDistance);
+      return newDistance;
+    });
+  }, []);
+
+  // =============================================================================
+  // Witness Navigation (gm/gW/gf)
+  // =============================================================================
+
+  /**
+   * gm - Navigate to witness marks for current node.
+   * Opens a panel showing the witness trail (marks related to this node).
+   */
+  const handleGoToMarks = useCallback(async () => {
+    if (!state.currentNode) return;
+
+    try {
+      // Fetch marks related to the current node
+      const response = await fetch(`/api/witness/marks?path=${encodeURIComponent(state.currentNode.path)}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch marks: ${response.statusText}`);
+      }
+
+      const marks = await response.json();
+      console.info('[WitnessNav] Marks for node:', state.currentNode.path, marks);
+
+      // TODO: Open a panel to display marks (could reuse WitnessPanel or create new MarkPanel)
+      // For now, just open the decision stream and filter by current node
+      setDecisionStreamOpen(true);
+      setFeedbackMessage({
+        type: 'success',
+        text: `Found ${marks.length || 0} marks for this node`,
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (error) {
+      console.error('[WitnessNav] Failed to fetch marks:', error);
+      setFeedbackMessage({
+        type: 'error',
+        text: 'Failed to fetch witness marks',
+      });
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    }
+  }, [state.currentNode]);
+
+  /**
+   * gW - Navigate to warrant for current node.
+   * Shows the justification/reasoning for the current node's existence.
+   */
+  const handleGoToWarrant = useCallback(async () => {
+    if (!state.currentNode) return;
+
+    try {
+      // Fetch warrant/justification for the current node
+      const response = await fetch(`/api/witness/warrant?path=${encodeURIComponent(state.currentNode.path)}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch warrant: ${response.statusText}`);
+      }
+
+      const warrant = await response.json();
+      console.info('[WitnessNav] Warrant for node:', state.currentNode.path, warrant);
+
+      // TODO: Open a panel to display warrant
+      // For now, show a feedback message
+      setFeedbackMessage({
+        type: 'success',
+        text: warrant.reasoning || 'Warrant found',
+      });
+      setTimeout(() => setFeedbackMessage(null), 5000);
+    } catch (error) {
+      console.error('[WitnessNav] Failed to fetch warrant:', error);
+      setFeedbackMessage({
+        type: 'error',
+        text: 'Failed to fetch warrant',
+      });
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    }
+  }, [state.currentNode]);
+
+  /**
+   * gf - Navigate to decision (fusion) for current node.
+   * Shows the dialectical synthesis related to this node.
+   */
+  const handleGoToDecision = useCallback(async () => {
+    if (!state.currentNode) return;
+
+    try {
+      // Fetch decision/fusion related to the current node
+      const response = await fetch(`/api/witness/fusion?path=${encodeURIComponent(state.currentNode.path)}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch decision: ${response.statusText}`);
+      }
+
+      const decisions = await response.json();
+      console.info('[WitnessNav] Decisions for node:', state.currentNode.path, decisions);
+
+      if (decisions.length > 0) {
+        // Show the most recent decision
+        setSelectedDecision(decisions[0]);
+        setDialogueViewOpen(true);
+      } else {
+        setFeedbackMessage({
+          type: 'warning',
+          text: 'No decisions found for this node',
+        });
+        setTimeout(() => setFeedbackMessage(null), 3000);
+      }
+    } catch (error) {
+      console.error('[WitnessNav] Failed to fetch decision:', error);
+      setFeedbackMessage({
+        type: 'error',
+        text: 'Failed to fetch decision',
+      });
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    }
+  }, [state.currentNode]);
 
   // Key handler
   const { pendingSequence } = useKeyHandler({
@@ -578,12 +730,12 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     openAllPortals,
     closeAllPortals,
     // Scroll navigation (j/k/{/}/gg/G in NORMAL mode)
-    scrollDown: () => readerEditorRef.current?.scrollLines(1),
-    scrollUp: () => readerEditorRef.current?.scrollLines(-1),
-    scrollParagraphDown: () => readerEditorRef.current?.scrollParagraph(1),
-    scrollParagraphUp: () => readerEditorRef.current?.scrollParagraph(-1),
-    scrollToTop: () => readerEditorRef.current?.scrollToTop(),
-    scrollToBottom: () => readerEditorRef.current?.scrollToBottom(),
+    scrollDown: () => contentPaneRef.current?.scrollLines(1),
+    scrollUp: () => contentPaneRef.current?.scrollLines(-1),
+    scrollParagraphDown: () => contentPaneRef.current?.scrollParagraph(1),
+    scrollParagraphUp: () => contentPaneRef.current?.scrollParagraph(-1),
+    scrollToTop: () => contentPaneRef.current?.scrollToTop(),
+    scrollToBottom: () => contentPaneRef.current?.scrollToBottom(),
     // Mode callbacks
     onEnterCommand: () => {
       setCommandLineVisible(true);
@@ -594,8 +746,6 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     onEdgeConfirm: handleEdgeConfirm,
     onShowHelp: () => setHelpVisible(true),
     onOpenCommandPalette: () => setCommandPaletteOpen(true),
-    // Graph sidebar (Living Canvas)
-    onToggleGraphSidebar: () => livingCanvas.actions.toggle(),
     // Decision stream (witness history)
     onToggleDecisionStream: () => setDecisionStreamOpen((prev) => !prev),
     // Analysis quadrant
@@ -605,7 +755,17 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     goHighestLoss: handleGoHighestLoss,
     zoomOut: handleZoomOut,
     zoomIn: handleZoomIn,
-    enabled: !commandLineVisible && !commandPaletteOpen && state.mode !== 'WITNESS',
+    // Witness navigation (gm/gW/gf)
+    goToMarks: handleGoToMarks,
+    goToWarrant: handleGoToWarrant,
+    goToDecision: handleGoToDecision,
+    enabled:
+      !commandLineVisible &&
+      !commandPaletteOpen &&
+      !helpVisible &&
+      !dialecticModalOpen &&
+      !dialogueViewOpen &&
+      state.mode !== 'WITNESS',
   });
 
   // Load initial node
@@ -781,18 +941,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       const rawCmd = command.trim();
       const [cmd, ...args] = rawCmd.split(/\s+/);
 
-      if (cmd === 'e' || cmd === 'edit') {
-        const path = args.join(' ');
-        if (path && loadNode) {
-          onNavigate?.(path);
-          loadNode(path).then((node) => {
-            if (node) {
-              focusNode(node);
-              onNodeFocus?.(node);
-            }
-          });
-        }
-      } else if (cmd === 'w' || cmd === 'write') {
+      // NOTE: :e/:edit command removed — navigation is via URL or CommandPalette (Cmd+K)
+      // "The file is a lie. There is only the graph." Navigate by path, not by command.
+      if (cmd === 'w' || cmd === 'write') {
         // :w [message] - Save with optional witness message
         const message = args.join(' ') || undefined;
         await handleWrite(message);
@@ -929,6 +1080,16 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       {/* Actions toolbar (visible when node focused) */}
       {state.currentNode && (
         <div className="hypergraph-editor__toolbar">
+          {/* Proof Engine status badge */}
+          <ProofStatusBadge
+            layer={kblockHook.state?.zeroSeedLayer}
+            kind={kblockHook.state?.zeroSeedKind}
+            confidence={kblockHook.state?.confidence ?? 1.0}
+            hasProof={kblockHook.state?.hasProof ?? false}
+            isPanelOpen={proofPanelOpen}
+            onTogglePanel={() => setProofPanelOpen((prev) => !prev)}
+          />
+
           <button
             className="hypergraph-editor__action"
             onClick={handleReanalyze}
@@ -954,11 +1115,11 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
         {/* Content pane */}
         <ContentPane
+          ref={contentPaneRef}
           node={state.currentNode}
           mode={state.mode}
           cursor={state.cursor}
           workingContent={state.kblock?.workingContent}
-          readerRef={readerEditorRef}
           portals={state.portals}
           onContentChange={(content) => {
             // Update both reducer state and K-Block hook
@@ -977,6 +1138,32 @@ export const HypergraphEditor = memo(function HypergraphEditor({
           edges={state.currentNode?.outgoingEdges || []}
           side="right"
           onEdgeClick={handleEdgeClick}
+        />
+
+        {/* Proof Panel (collapsible side panel) */}
+        <ProofPanel
+          layer={kblockHook.state?.zeroSeedLayer}
+          kind={kblockHook.state?.zeroSeedKind}
+          confidence={kblockHook.state?.confidence ?? 1.0}
+          hasProof={kblockHook.state?.hasProof ?? false}
+          proof={kblockHook.state?.toulminProof}
+          lineage={kblockHook.state?.lineage ?? []}
+          parentBlocks={kblockHook.state?.parentBlocks ?? []}
+          childBlocks={kblockHook.state?.childBlocks ?? []}
+          onNavigate={(blockId) => {
+            // Navigate to the block
+            if (loadNode) {
+              loadNode(blockId).then((node) => {
+                if (node) {
+                  focusNode(node);
+                  onNodeFocus?.(node);
+                  onNavigate?.(blockId);
+                }
+              });
+            }
+          }}
+          isOpen={proofPanelOpen}
+          onToggle={() => setProofPanelOpen((prev) => !prev)}
         />
       </div>
 
@@ -1035,16 +1222,6 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
       {/* Help panel (? key) */}
       {helpVisible && <HelpPanel onClose={() => setHelpVisible(false)} />}
-
-      {/* Graph Sidebar (Living Canvas) - 'gs' keybinding */}
-      <GraphSidebar
-        isOpen={livingCanvas.state.isOpen}
-        width={livingCanvas.state.width}
-        focusedPath={livingCanvas.state.focusedPath}
-        onClose={livingCanvas.actions.close}
-        onNodeClick={livingCanvas.actions.focusNode}
-        onWidthChange={livingCanvas.actions.setWidth}
-      />
 
       {/* Confidence breakdown panel (gc toggle) */}
       {confidenceVisible && state.currentNode && (

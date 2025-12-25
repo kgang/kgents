@@ -1,0 +1,494 @@
+/**
+ * KGENTS UNIFIED DESIGN TOKENS
+ * Single source of truth for the entire design system
+ *
+ * Philosophy: "Daring, bold, creative, opinionated but not gaudy"
+ * Aesthetic: STARK BIOME — 90% steel, 10% earned glow
+ *
+ * This file consolidates tokens from:
+ * - src/styles/globals.css (global tokens)
+ * - src/hypergraph/design-system.css (hypergraph-specific tokens)
+ * - src/styles/brutalist.css (brutalist variant)
+ *
+ * MIGRATION NOTES:
+ * - Spacing: Use --space-* (canonical), deprecate --elastic-gap-*
+ * - Radius: Use --radius-* from "Bare Edge" system (canonical), deprecate hypergraph t-shirt sizes
+ * - Colors: Steel palette is canonical, brutalist is a variant layer
+ * - Typography: --font-* is canonical, use across all components
+ * - Z-index: Use --z-* (canonical), deprecate --elastic-z-*
+ *
+ * @see docs/skills/elastic-ui-patterns.md
+ */
+
+/* =============================================================================
+ * COLOR SYSTEM — STARK BIOME
+ * "The frame is humble. The content glows."
+ * 90% Steel (cool industrial) / 10% Life (organic accents)
+ * ============================================================================= */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────────────
+   * STEEL FOUNDATION (backgrounds, frames — the 90%)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  /* Named steel tones (semantic names for context) */
+  --color-steel-obsidian: #0a0a0c;  /* Deepest background */
+  --color-steel-carbon: #141418;    /* Card backgrounds */
+  --color-steel-slate: #1c1c22;     /* Elevated surfaces */
+  --color-steel-gunmetal: #28282f;  /* Borders, dividers */
+  --color-steel-zinc: #3a3a44;      /* Hover borders */
+
+  /* Numbered steel scale (granular control) */
+  --color-steel-950: #0d0d0d;
+  --color-steel-900: #1a1a1a;
+  --color-steel-850: #1f1f1f;
+  --color-steel-800: #252525;
+  --color-steel-700: #333;
+  --color-steel-600: #444;
+  --color-steel-500: #666;
+  --color-steel-400: #888;
+  --color-steel-300: #a0a0a0;
+  --color-steel-200: #ccc;
+  --color-steel-100: #e0e0e0;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * SOIL UNDERTONES (warm secondary)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --color-soil-loam: #1a1512;
+  --color-soil-humus: #2d221a;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * LIVING ACCENT (the 10% — earned glow)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --color-life-moss: #1a2e1a;
+  --color-life-sage: #4a6b4a;      /* Success, healthy states */
+  --color-life-mint: #6b8b6b;
+  --color-life-sprout: #8bab8b;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * BIOLUMINESCENT (earned glow — special moments)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --color-glow-spore: #c4a77d;     /* Main accent — muted gold */
+  --color-glow-amber: #d4b88c;     /* Hover state — brighter gold */
+  --color-glow-light: #e5c99d;
+  --color-glow-lichen: #8ba98b;    /* Secondary accent */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * SEMANTIC SURFACE MAPPINGS (use these for consistent surfaces)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --surface-0: var(--color-steel-obsidian);  /* Deepest background */
+  --surface-1: var(--color-steel-carbon);    /* Card backgrounds */
+  --surface-2: var(--color-steel-slate);     /* Elevated surfaces */
+  --surface-3: var(--color-steel-gunmetal);  /* Borders, dividers */
+  --surface-4: #353550;                      /* Elevated hover states */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * TEXT HIERARCHY
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --text-primary: #e5e7eb;          /* Bright text */
+  --text-secondary: #8a8a94;        /* Muted body text */
+  --text-muted: #5a5a64;            /* Whisper — hints, timestamps */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * BORDERS
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --border-subtle: var(--color-steel-gunmetal);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * SEMANTIC ACCENTS
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --accent-primary: var(--color-glow-spore);        /* Main accent */
+  --accent-primary-bright: var(--color-glow-amber); /* Hover state */
+  --accent-secondary: var(--color-glow-lichen);     /* Secondary accent */
+  --accent-gold: var(--color-glow-amber);           /* Crystallize, special moments */
+  --accent-gold-bright: #ffd700;                    /* Bright gold for high visibility (selection, focus) */
+  --accent-success: var(--color-life-sage);         /* Healthy states */
+  --accent-error: #a65d4a;                          /* Muted rust — alerts */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * MODE COLORS (Hypergraph Editor States)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --status-normal: #4a9eff;    /* Blue — normal mode */
+  --status-insert: #4caf50;    /* Green — edit mode, life-sage */
+  --status-edge: #ff9800;      /* Orange — edge mode */
+  --status-visual: #9c27b0;    /* Purple — visual mode */
+  --status-witness: #e91e63;   /* Pink — witness mode */
+  --status-error: #f44336;     /* Red — error state */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * HEALTH/CONFIDENCE INDICATORS
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --health-healthy: #22c55e;    /* >= 80% — green-500 */
+  --health-degraded: #facc15;   /* 60-80% — yellow-400 */
+  --health-warning: #f97316;    /* 40-60% — orange-500 */
+  --health-critical: #ef4444;   /* < 40% — red-500 */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * EDGE CONFIDENCE COLORS (WitnessedGraph Evidence)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --color-edge-high: #4caf50;     /* High confidence 80%+ */
+  --color-edge-medium: #ff9800;   /* Medium confidence 50-80% */
+  --color-edge-low: #f44336;      /* Low confidence <50% */
+  --color-edge-unknown: #9e9e9e;  /* Unknown confidence */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * WITNESS EVENT TYPES (WitnessEvent Component)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --witness-mark: #f59e0b;        /* Amber-500 — witness marks */
+  --brain-crystal: #8b5cf6;       /* Violet-500 — brain crystals */
+  --trail-path: #10b981;          /* Emerald-500 — trail paths */
+  --evidence-pass: #22c55e;       /* Green-500 — evidence passes */
+  --teaching-wisdom: #f97316;     /* Orange-500 — teaching moments */
+  --lemma-proof: #06b6d4;         /* Cyan-500 — lemma proofs */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * SEVERITY LEVELS
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --severity-info: #3b82f6;       /* Blue-500 */
+  --severity-warning: #f59e0b;    /* Amber-500 */
+  --severity-critical: #ef4444;   /* Red-500 */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * STRENGTH INDICATORS
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --strength-weak: #6b7280;       /* Gray-500 */
+  --strength-moderate: #f59e0b;   /* Amber-500 */
+  --strength-strong: #3b82f6;     /* Blue-500 */
+  --strength-definitive: #22c55e; /* Green-500 */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * STATUS STATES
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --status-pending: #6b7280;       /* Gray-500 */
+  --status-in-progress: #3b82f6;   /* Blue-500 */
+  --status-success: #22c55e;       /* Green-500 */
+  --status-failure: #ef4444;       /* Red-500 */
+  --status-needs-review: #f59e0b;  /* Amber-500 */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * LEGACY TAILWIND MAPPINGS (for compatibility)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --background: 10 10 12;          /* steel-obsidian as RGB */
+  --foreground: 138 138 148;       /* muted body text */
+  --foreground-strong: 180 180 190; /* emphasized text */
+  --muted: 58 58 68;               /* steel-zinc */
+  --accent: 196 167 125;           /* glow-spore */
+}
+
+/* =============================================================================
+ * SPACING SCALE
+ * "Tight Frame, Breathing Content"
+ *
+ * CANONICAL: --space-*
+ * DEPRECATED: --elastic-gap-* (use --space-* instead)
+ * ============================================================================= */
+
+:root {
+  --space-xs: 0.2rem;    /* 3.2px — micro gaps, inline */
+  --space-sm: 0.4rem;    /* 6.4px — tight groupings */
+  --space-md: 0.85rem;   /* 13.6px — standard gaps */
+  --space-lg: 1.25rem;   /* 20px — comfortable sections */
+  --space-xl: 1.75rem;   /* 28px — spacious areas */
+  --space-2xl: 2.5rem;   /* 40px — major sections */
+
+  /* DEPRECATED: Use --space-* instead */
+  --elastic-gap-xs: var(--space-xs);
+  --elastic-gap-sm: var(--space-sm);
+  --elastic-gap-md: var(--space-md);
+  --elastic-gap-lg: var(--space-lg);
+  --elastic-gap-xl: var(--space-xl);
+}
+
+/* =============================================================================
+ * BORDER RADIUS SCALE — "Bare Edge" System
+ * "The container is humble; the content glows."
+ *
+ * Philosophy: Sharp frames make warm elements pop against austerity.
+ *
+ * CANONICAL: --radius-* (Bare Edge naming)
+ * DEPRECATED: Hypergraph t-shirt sizes (--radius-sm/md/lg/xl as numbers)
+ * ============================================================================= */
+
+:root {
+  --radius-none: 0px;      /* Panels, canvas — invisible frame */
+  --radius-bare: 2px;      /* Cards, containers — just enough to not cut */
+  --radius-subtle: 3px;    /* Interactive surfaces — softened for touch */
+  --radius-soft: 4px;      /* Accent elements — use sparingly */
+  --radius-pill: 9999px;   /* Badges, tags — finite, precious */
+
+  /* DEPRECATED: Old hypergraph sizes (kept for backward compatibility) */
+  --radius-sm: var(--radius-bare);    /* 2px */
+  --radius-md: var(--radius-soft);    /* 4px */
+  --radius-lg: 6px;                   /* Still available for cards/panels */
+  --radius-xl: 8px;                   /* Still available for modals */
+}
+
+/* =============================================================================
+ * TYPOGRAPHY SYSTEM
+ * ============================================================================= */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────────────
+   * FONT FAMILIES
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * FONT SIZES
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --font-size-xs: 0.625rem;   /* 10px */
+  --font-size-sm: 0.75rem;    /* 12px */
+  --font-size-md: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.25rem;    /* 20px */
+  --font-size-xl: 1.5rem;     /* 24px */
+  --font-size-2xl: 2rem;      /* 32px */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * LINE HEIGHTS
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --line-height-tight: 1.3;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * FONT WEIGHTS
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
+/* =============================================================================
+ * Z-INDEX SCALE
+ * "Everything has its place in the stack"
+ *
+ * CANONICAL: --z-*
+ * DEPRECATED: --elastic-z-* (use --z-* instead)
+ * ============================================================================= */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────────────
+   * GLOBAL UI LAYERS
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-dropdown: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+  --z-tooltip: 500;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * HYPERGRAPH-SPECIFIC LAYERS (component-scoped)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --z-sidebar: 100;        /* GraphSidebar, permanent UI */
+  --z-panel: 150;          /* EdgePanel, DialecticModal, temporary overlays */
+  --z-overlay: 200;        /* DialogueView, DecisionStream, full-screen modals */
+
+  /* DEPRECATED: Use --z-* instead */
+  --elastic-z-base: var(--z-base);
+  --elastic-z-sticky: var(--z-sticky);
+  --elastic-z-dropdown: var(--z-dropdown);
+  --elastic-z-modal: var(--z-modal);
+  --elastic-z-toast: var(--z-toast);
+}
+
+/* =============================================================================
+ * TRANSITION & ANIMATION TIMING
+ * "Everything Breathes" — subtle, organic motion
+ * ============================================================================= */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────────────
+   * DURATIONS
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --duration-instant: 100ms;
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 320ms;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * EASING FUNCTIONS
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-gentle: cubic-bezier(0.34, 1.2, 0.64, 1);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * COMPOSITE TRANSITIONS (duration + easing)
+   * ───────────────────────────────────────────────────────────────────────── */
+
+  --transition-instant: var(--duration-instant) var(--ease-out);
+  --transition-fast: var(--duration-fast) var(--ease-out-expo);
+  --transition-normal: var(--duration-normal) var(--ease-in-out-cubic);
+  --transition-slow: var(--duration-slow) var(--ease-spring);
+
+  /* DEPRECATED: Old naming (kept for backward compatibility) */
+  --elastic-transition-fast: var(--transition-fast);
+  --elastic-transition-smooth: var(--transition-normal);
+  --elastic-transition-spring: var(--transition-slow);
+  --easing-spring: var(--ease-spring);
+  --easing-out-expo: var(--ease-out-expo);
+  --easing-spring-gentle: var(--ease-spring-gentle);
+  --easing-spring-bouncy: var(--ease-spring);
+}
+
+/* =============================================================================
+ * SHADOW SCALE
+ * ============================================================================= */
+
+:root {
+  --shadow-none: none;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.6);
+  --shadow-2xl: 0 16px 64px rgba(0, 0, 0, 0.8);
+}
+
+/* =============================================================================
+ * BACKDROP EFFECTS
+ * ============================================================================= */
+
+:root {
+  --backdrop-blur-light: blur(4px);
+  --backdrop-blur-heavy: blur(8px);
+  --backdrop-overlay-light: rgba(0, 0, 0, 0.6);
+  --backdrop-overlay-medium: rgba(0, 0, 0, 0.75);
+  --backdrop-overlay-heavy: rgba(0, 0, 0, 0.85);
+}
+
+/* =============================================================================
+ * BREAKPOINTS (for reference in JavaScript)
+ * ============================================================================= */
+
+:root {
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* DEPRECATED: Old naming */
+  --elastic-bp-sm: var(--breakpoint-sm);
+  --elastic-bp-md: var(--breakpoint-md);
+  --elastic-bp-lg: var(--breakpoint-lg);
+  --elastic-bp-xl: var(--breakpoint-xl);
+}
+
+/* =============================================================================
+ * BRUTALIST VARIANT LAYER
+ * "Every element serves a purpose"
+ *
+ * These tokens override the STARK BIOME when .brutalist class is applied.
+ * Brutalist aesthetic: Pure black/white, no decoration, high contrast.
+ * ============================================================================= */
+
+.brutalist {
+  /* Override color tokens */
+  --surface-0: #0a0a0a;           /* Pure black */
+  --surface-1: #141414;           /* Slightly elevated */
+  --surface-2: #1c1c1c;
+  --surface-3: #333;              /* Border */
+  --text-primary: #e0e0e0;
+  --text-secondary: #888;
+  --text-muted: #666;
+  --border-subtle: #333;
+  --accent-primary: #fff;         /* White for emphasis */
+  --accent-gold: #fff;            /* No gold, just white */
+  --accent-error: #ff4444;        /* Only color: danger */
+
+  /* Override radius (brutalist = no curves) */
+  --radius-none: 0;
+  --radius-bare: 0;
+  --radius-subtle: 0;
+  --radius-soft: 0;
+  --radius-pill: 0;
+
+  /* Override transitions (brutalist = instant) */
+  --transition-instant: 0ms;
+  --transition-fast: 0ms;
+  --transition-normal: 0ms;
+  --transition-slow: 0ms;
+
+  /* Override shadows (brutalist = no shadows) */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+
+  /* Typography overrides */
+  font-family: 'Berkeley Mono', var(--font-mono);
+  font-size: 13px;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+/* =============================================================================
+ * SCROLLBAR CONTEXTUAL COLORS
+ * (overridable per jewel/section)
+ * ============================================================================= */
+
+:root {
+  --scrollbar-track-color: rgba(22, 33, 62, 0.6);
+  --scrollbar-thumb-color: rgba(15, 52, 96, 0.8);
+  --scrollbar-thumb-hover: rgba(233, 69, 96, 0.9);
+  --scrollbar-thumb-active: rgba(233, 69, 96, 1);
+  --scrollbar-width: 8px;
+  --scrollbar-radius: var(--radius-bare);
+  --scrollbar-transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =============================================================================
+ * DEPRECATION WARNINGS
+ *
+ * The following tokens are DEPRECATED and will be removed in a future version.
+ * Update your code to use the canonical tokens listed above.
+ *
+ * DEPRECATED TOKENS:
+ * - --elastic-gap-* → Use --space-* instead
+ * - --elastic-z-* → Use --z-* instead
+ * - --elastic-transition-* → Use --transition-* instead
+ * - --elastic-bp-* → Use --breakpoint-* instead
+ * - Hypergraph numeric radius (--radius-sm: 2px) → Use --radius-bare instead
+ * - Hypergraph --accent-gold: #ffd700 → Use --accent-gold-bright for high visibility
+ *
+ * MIGRATION GUIDE:
+ * 1. Search for "--elastic-gap-" and replace with "--space-"
+ * 2. Search for "--elastic-z-" and replace with "--z-"
+ * 3. Search for "--elastic-transition-" and replace with "--transition-"
+ * 4. Search for "--elastic-bp-" and replace with "--breakpoint-"
+ * 5. For bright gold selection/focus, use --accent-gold-bright instead of --accent-gold
+ * 6. For muted gold accents, use --accent-gold
+ * ============================================================================= */

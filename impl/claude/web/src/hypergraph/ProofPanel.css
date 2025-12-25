@@ -1,0 +1,372 @@
+/**
+ * ProofPanel — Proof structure side panel styles
+ *
+ * Design philosophy: Stark but informative. Not intrusive.
+ * Uses the Zero Seed layer color palette for semantic meaning.
+ */
+
+/* =============================================================================
+   CSS Variables
+   ============================================================================= */
+
+.proof-panel {
+  /* Layer colors (aligned with Zero Seed palette) */
+  --color-axiom: #8b5cf6;         /* Purple - foundational */
+  --color-value: #6366f1;         /* Indigo - principled */
+  --color-goal: #3b82f6;          /* Blue - directional */
+  --color-spec: #0891b2;          /* Cyan - precise */
+  --color-action: #10b981;        /* Emerald - executable */
+  --color-reflection: #f59e0b;    /* Amber - meta */
+  --color-representation: #ec4899; /* Pink - projected */
+
+  /* Confidence colors */
+  --color-confidence-high: #10b981;
+  --color-confidence-medium: #f59e0b;
+  --color-confidence-low: #ef4444;
+
+  /* Surface colors */
+  --panel-bg: var(--color-bg-overlay, #1a1a2e);
+  --panel-border: var(--color-border-subtle, #2d2d44);
+  --text-primary: var(--color-text-primary, #e2e8f0);
+  --text-secondary: var(--color-text-secondary, #94a3b8);
+  --text-tertiary: var(--color-text-tertiary, #64748b);
+}
+
+/* =============================================================================
+   Panel Container
+   ============================================================================= */
+
+.proof-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg);
+  border-left: 1px solid var(--panel-border);
+  font-size: 0.875rem;
+  transition: width 0.2s ease;
+  z-index: 10;
+}
+
+.proof-panel--open {
+  width: 280px;
+  min-width: 280px;
+}
+
+.proof-panel--closed {
+  width: 32px;
+  min-width: 32px;
+}
+
+/* =============================================================================
+   Toggle Button
+   ============================================================================= */
+
+.proof-panel__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.15s;
+}
+
+.proof-panel__toggle:hover {
+  color: var(--text-primary);
+}
+
+.proof-panel--closed .proof-panel__toggle {
+  flex-direction: column;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: 0.75rem 0.25rem;
+}
+
+.proof-panel__toggle-icon {
+  font-size: 0.625rem;
+}
+
+.proof-panel__toggle-label {
+  font-weight: 500;
+}
+
+/* =============================================================================
+   Panel Content
+   ============================================================================= */
+
+.proof-panel__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.75rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* =============================================================================
+   Header (Layer + Status)
+   ============================================================================= */
+
+.proof-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.proof-panel__layer-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  background: color-mix(in srgb, var(--layer-color) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--layer-color) 40%, transparent);
+  border-radius: 4px;
+}
+
+.proof-panel__layer-number {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 600;
+  color: var(--layer-color);
+}
+
+.proof-panel__layer-name {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.proof-panel__status-badge {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border-radius: 3px;
+}
+
+.proof-panel__status-badge--proven {
+  background: color-mix(in srgb, var(--color-confidence-high) 15%, transparent);
+  color: var(--color-confidence-high);
+}
+
+.proof-panel__status-badge--unproven {
+  background: color-mix(in srgb, var(--text-tertiary) 15%, transparent);
+  color: var(--text-tertiary);
+}
+
+/* =============================================================================
+   Confidence Bar
+   ============================================================================= */
+
+.proof-panel__confidence {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.proof-panel__confidence-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.proof-panel__confidence-label strong {
+  color: var(--text-primary);
+}
+
+.proof-panel__confidence-bar {
+  height: 4px;
+  background: var(--panel-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.proof-panel__confidence-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* =============================================================================
+   Layer Description
+   ============================================================================= */
+
+.proof-panel__layer-description {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 0.375rem 0.5rem;
+  background: color-mix(in srgb, var(--panel-border) 50%, transparent);
+  border-radius: 4px;
+}
+
+/* =============================================================================
+   Toulmin Section
+   ============================================================================= */
+
+.proof-panel__toulmin {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.proof-panel__section-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin: 0 0 0.375rem 0;
+}
+
+.proof-panel__toulmin-item {
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.proof-panel__toulmin-item--claim {
+  border-color: var(--color-spec);
+}
+
+.proof-panel__toulmin-item--rebuttals {
+  border-color: var(--color-confidence-low);
+}
+
+.proof-panel__toulmin-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.proof-panel__toulmin-header:hover {
+  background: color-mix(in srgb, var(--panel-border) 50%, transparent);
+}
+
+.proof-panel__toulmin-icon {
+  font-size: 0.625rem;
+  opacity: 0.6;
+}
+
+.proof-panel__toulmin-label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.proof-panel__toulmin-toggle {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+
+.proof-panel__toulmin-content {
+  padding: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--panel-border) 30%, transparent);
+  border-top: 1px solid var(--panel-border);
+  line-height: 1.4;
+}
+
+.proof-panel__toulmin-rebuttals {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+  background: color-mix(in srgb, var(--color-confidence-low) 10%, transparent);
+  border-top: 1px solid var(--panel-border);
+}
+
+.proof-panel__toulmin-rebuttal {
+  padding: 0.25rem 0;
+  padding-left: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  border-left: 2px solid var(--color-confidence-low);
+}
+
+.proof-panel__toulmin-rebuttal + .proof-panel__toulmin-rebuttal {
+  margin-top: 0.25rem;
+}
+
+/* =============================================================================
+   Lineage Navigation
+   ============================================================================= */
+
+.proof-panel__lineage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.proof-panel__lineage-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.proof-panel__lineage-section--ancestors {
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--panel-border);
+}
+
+.proof-panel__lineage-label {
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.proof-panel__lineage-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.proof-panel__lineage-list--compact {
+  gap: 0.125rem;
+}
+
+.proof-panel__lineage-link {
+  padding: 0.125rem 0.375rem;
+  background: var(--panel-border);
+  border: none;
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.proof-panel__lineage-link:hover {
+  background: var(--color-spec);
+  color: white;
+}
+
+.proof-panel__lineage-link--small {
+  font-size: 0.625rem;
+  padding: 0.0625rem 0.25rem;
+}
+
+.proof-panel__lineage-more {
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  padding: 0.125rem;
+}
+
+.proof-panel__lineage-empty {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+}

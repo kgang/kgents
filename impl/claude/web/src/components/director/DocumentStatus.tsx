@@ -34,9 +34,11 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   uploaded: { label: 'Uploaded', color: 'blue', icon: '↑' },
   processing: { label: 'Analyzing', color: 'yellow', icon: '⟳', spin: true },
   ready: { label: 'Ready', color: 'green', icon: '✓' },
-  executed: { label: 'Executed', color: 'purple', icon: '⚡' },
+  executed: { label: 'Executed', color: 'purple', icon: '⊛' },
   stale: { label: 'Stale', color: 'orange', icon: '!' },
   failed: { label: 'Failed', color: 'red', icon: '✗' },
+  // Ghost: the negative space of the graph
+  ghost: { label: 'Ghost', color: 'ghost', icon: '◭' },
 
   // Backend statuses (AnalysisStatus from services/sovereign/analysis.py)
   pending: { label: 'Pending', color: 'gray', icon: '○' },

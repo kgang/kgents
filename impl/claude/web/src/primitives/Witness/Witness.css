@@ -1,0 +1,354 @@
+/**
+ * Witness Primitive Styles - STARK Biome
+ *
+ * Design principles:
+ * - Steel background surfaces
+ * - Tier-specific border colors (green/yellow/red)
+ * - Subtle glow on hover
+ * - Breathing animation for high-influence edges
+ * - Brutalist foundation: no decoration, just data
+ */
+
+/* =============================================================================
+ * Base Container
+ * ============================================================================= */
+
+.witness {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface-1, #1a1a1a);
+  border: 2px solid var(--border, #333);
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-1, #e0e0e0);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Size variants */
+.witness--sm {
+  padding: 8px;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.witness--lg {
+  padding: 20px;
+  gap: 16px;
+  font-size: 13px;
+}
+
+/* Compact mode */
+.witness--compact {
+  padding: 6px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+}
+
+.witness--compact:hover {
+  border-color: var(--accent, #fff);
+}
+
+/* =============================================================================
+ * Tier-Specific Border Colors
+ * ============================================================================= */
+
+.witness--confident {
+  border-color: var(--success-border, #00ff00);
+}
+
+.witness--confident:hover {
+  border-color: var(--success-glow, #00ff00);
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+}
+
+.witness--uncertain {
+  border-color: var(--warning-border, #ffa500);
+}
+
+.witness--uncertain:hover {
+  border-color: var(--warning-glow, #ffa500);
+  box-shadow: 0 0 8px rgba(255, 165, 0, 0.3);
+}
+
+.witness--speculative {
+  border-color: var(--error-border, #ff0000);
+}
+
+.witness--speculative:hover {
+  border-color: var(--error-glow, #ff0000);
+  box-shadow: 0 0 8px rgba(255, 0, 0, 0.3);
+}
+
+/* =============================================================================
+ * Header
+ * ============================================================================= */
+
+.witness__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border, #333);
+}
+
+.witness__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.witness__icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.witness__label {
+  font-size: 12px;
+}
+
+.witness__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--text-2, #999);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.witness__threshold {
+  font-weight: 400;
+}
+
+.witness__count {
+  font-weight: 700;
+}
+
+/* =============================================================================
+ * Badge (Compact Mode)
+ * ============================================================================= */
+
+.witness__badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* =============================================================================
+ * Evidence Items
+ * ============================================================================= */
+
+.witness__items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.witness__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: var(--surface-2, #0f0f0f);
+  border-left: 2px solid var(--border, #333);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.witness__item--compact {
+  padding: 6px;
+  gap: 2px;
+}
+
+.witness__item--clickable {
+  cursor: pointer;
+}
+
+.witness__item--clickable:hover {
+  background: var(--surface-3, #252525);
+  border-left-color: var(--accent, #fff);
+}
+
+.witness__item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.witness__item-confidence {
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--accent, #fff);
+}
+
+.witness__item-source {
+  font-size: 10px;
+  color: var(--text-2, #999);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.witness__item-content {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-1, #e0e0e0);
+}
+
+/* =============================================================================
+ * Causal Graph
+ * ============================================================================= */
+
+.witness__causal-graph {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border, #333);
+}
+
+.witness__causal-header {
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-2, #999);
+}
+
+.witness__causal-edges {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.witness__causal-edge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  background: var(--surface-2, #0f0f0f);
+  border-left: 2px solid var(--border, #333);
+  font-size: 10px;
+  transition: border-color 0.2s ease;
+}
+
+.witness__causal-edge--high {
+  border-left-color: var(--accent, #fff);
+  animation: breathe 2s ease-in-out infinite;
+}
+
+.witness__causal-from,
+.witness__causal-to {
+  flex: 1;
+  color: var(--text-1, #e0e0e0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.witness__causal-arrow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-2, #999);
+  font-weight: 700;
+}
+
+.witness__causal-influence {
+  font-size: 9px;
+  color: var(--accent, #fff);
+}
+
+/* =============================================================================
+ * Toggle
+ * ============================================================================= */
+
+.witness__toggle {
+  padding: 4px 8px;
+  background: var(--surface-2, #0f0f0f);
+  border: 1px solid var(--border, #333);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-2, #999);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.witness__toggle:hover {
+  background: var(--surface-3, #252525);
+  color: var(--text-1, #e0e0e0);
+}
+
+/* =============================================================================
+ * Animations
+ * ============================================================================= */
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+    border-left-width: 2px;
+  }
+  50% {
+    opacity: 0.7;
+    border-left-width: 3px;
+  }
+}
+
+/* =============================================================================
+ * Responsive
+ * ============================================================================= */
+
+@media (max-width: 640px) {
+  .witness {
+    padding: 12px;
+    gap: 10px;
+    font-size: 11px;
+  }
+
+  .witness--sm {
+    padding: 6px;
+    gap: 6px;
+    font-size: 10px;
+  }
+
+  .witness__item {
+    padding: 6px;
+  }
+
+  .witness__causal-edge {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .witness__causal-from,
+  .witness__causal-to {
+    flex: none;
+    width: 100%;
+  }
+}
+
+/* =============================================================================
+ * Color Variables (fallback if not in theme)
+ * ============================================================================= */
+
+:root {
+  --success-border: #00ff00;
+  --success-glow: #00ff00;
+  --warning-border: #ffa500;
+  --warning-glow: #ffa500;
+  --error-border: #ff0000;
+  --error-glow: #ff0000;
+}

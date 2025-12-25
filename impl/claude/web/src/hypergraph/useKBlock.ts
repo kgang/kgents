@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { kblockApi } from '../api/client';
 import type { KBlockIsolation, KBlockViewType, KBlockReference } from '../api/client';
+import type { ToulminProof } from '../api/zeroSeed';
 
 // =============================================================================
 // Types
@@ -40,13 +41,18 @@ export type { KBlockViewType };
 export type { KBlockReference };
 
 /**
- * Unified K-Block state (superset of dialogue + file state).
+ * Toulmin proof structure (for Zero Seed / Proof Engine).
+ */
+export type { ToulminProof };
+
+/**
+ * Unified K-Block state (superset of dialogue + file + Zero Seed state).
  */
 export interface KBlockState {
   /** K-Block ID from backend */
   blockId: string;
 
-  /** File path (null for dialogue K-Blocks) */
+  /** File path (null for dialogue K-Blocks and Zero Seed nodes) */
   path: string | null;
 
   /** Session ID (for dialogue K-Blocks) */
@@ -82,6 +88,34 @@ export interface KBlockState {
   analysisStatus?: 'pending' | 'analyzing' | 'analyzed' | 'failed';
   analysisRequired?: boolean;
   isReadOnly?: boolean;
+
+  // =============================================================================
+  // Zero Seed Fields (for epistemic graph nodes)
+  // =============================================================================
+
+  /** Zero Seed layer (1-7) */
+  zeroSeedLayer?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+  /** Zero Seed node kind (axiom, value, goal, spec, action, reflection, representation) */
+  zeroSeedKind?: string;
+
+  /** Lineage: parent K-Block IDs that this node derives from */
+  lineage: string[];
+
+  /** Whether this node has a Toulmin proof attached */
+  hasProof: boolean;
+
+  /** The Toulmin proof structure (if hasProof is true) */
+  toulminProof?: ToulminProof;
+
+  /** Confidence score (0-1) from proof quality */
+  confidence: number;
+
+  /** Parent K-Block IDs (for derivation navigation) */
+  parentBlocks: string[];
+
+  /** Child K-Block IDs (for derivation navigation) */
+  childBlocks: string[];
 }
 
 /**
@@ -231,6 +265,63 @@ export interface UseKBlockResult {
    * Called when component unmounts or mode exits.
    */
   reset: () => void;
+
+  // =============================================================================
+  // Zero Seed Methods (for epistemic graph nodes)
+  // =============================================================================
+
+  /**
+   * Create a Zero Seed K-Block.
+   * Used when creating nodes in the epistemic graph.
+   *
+   * @param layer - Zero Seed layer (1-7)
+   * @param kind - Node kind (axiom, value, goal, etc.)
+   * @param content - Node content
+   * @param lineage - Parent K-Block IDs this derives from
+   */
+  createZeroSeed: (
+    layer: 1 | 2 | 3 | 4 | 5 | 6 | 7,
+    kind: string,
+    content: string,
+    lineage: string[]
+  ) => Promise<KBlockCreateResult>;
+
+  /**
+   * Add a derivation link to a parent K-Block.
+   * Used when connecting nodes in the derivation graph.
+   *
+   * @param parentId - Parent K-Block ID
+   */
+  addDerivation: (parentId: string) => Promise<void>;
+
+  /**
+   * Remove a derivation link from a parent K-Block.
+   *
+   * @param parentId - Parent K-Block ID
+   */
+  removeDerivation: (parentId: string) => Promise<void>;
+
+  /**
+   * Set/update the Toulmin proof for this K-Block.
+   * Used when attaching proof structure to a node.
+   *
+   * @param proof - Toulmin proof structure
+   */
+  setProof: (proof: ToulminProof) => Promise<void>;
+
+  /**
+   * Navigate to a parent K-Block.
+   *
+   * @param index - Index in parentBlocks array
+   */
+  goToParent: (index: number) => void;
+
+  /**
+   * Navigate to a child K-Block.
+   *
+   * @param index - Index in childBlocks array
+   */
+  goToChild: (index: number) => void;
 }
 
 // =============================================================================
@@ -366,6 +457,11 @@ export function useKBlock(options: UseKBlockOptions = {}): UseKBlockResult {
             activeViews: [],
             checkpoints: [],
             contentLength: 0,
+            lineage: [],
+            hasProof: false,
+            confidence: 1.0,
+            parentBlocks: [],
+            childBlocks: [],
           };
 
           setState(initialState);
@@ -435,6 +531,12 @@ export function useKBlock(options: UseKBlockOptions = {}): UseKBlockResult {
           analysisStatus,
           analysisRequired: (response as any).analysis_required,
           isReadOnly: analysisStatus !== 'analyzed',
+          // Zero Seed fields (initialize as empty for file K-Blocks)
+          lineage: [],
+          hasProof: false,
+          confidence: 1.0,
+          parentBlocks: [],
+          childBlocks: [],
         };
 
         setState(newState);
@@ -518,6 +620,11 @@ export function useKBlock(options: UseKBlockOptions = {}): UseKBlockResult {
           isDirty: result.data!.is_dirty as boolean,
           activeViews: [],
           checkpoints: [],
+          lineage: prev?.lineage || [],
+          hasProof: prev?.hasProof || false,
+          confidence: prev?.confidence || 1.0,
+          parentBlocks: prev?.parentBlocks || [],
+          childBlocks: prev?.childBlocks || [],
         }));
         setLoading(false);
       } else {
@@ -905,6 +1012,202 @@ export function useKBlock(options: UseKBlockOptions = {}): UseKBlockResult {
     pendingRef.current?.abort();
   }, []);
 
+  // =========================================================================
+  // Zero Seed Methods
+  // =========================================================================
+
+  const createZeroSeed = useCallback(
+    async (
+      layer: 1 | 2 | 3 | 4 | 5 | 6 | 7,
+      kind: string,
+      content: string,
+      lineage: string[]
+    ): Promise<KBlockCreateResult> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Call backend API to create Zero Seed K-Block
+        const data = await kblockApi.createZeroSeed(layer, kind, content, lineage);
+
+        const newState: KBlockState = {
+          blockId: data.block_id,
+          path: data.path || null,
+          content,
+          baseContent: content,
+          isolation: 'PRISTINE',
+          isDirty: false,
+          activeViews: [],
+          checkpoints: [],
+          contentLength: content.length,
+          zeroSeedLayer: layer,
+          zeroSeedKind: kind,
+          lineage,
+          hasProof: false,
+          confidence: 1.0,
+          parentBlocks: data.parent_blocks || [],
+          childBlocks: data.child_blocks || [],
+        };
+
+        setState(newState);
+        setLoading(false);
+
+        console.info('[useKBlock] Created Zero Seed K-Block:', newState.blockId, `L${layer}`, kind);
+
+        return {
+          success: true,
+          blockId: newState.blockId,
+          path: newState.path || undefined,
+          content: newState.content,
+          baseContent: newState.baseContent,
+          isolation: newState.isolation,
+          isDirty: newState.isDirty,
+        };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to create Zero Seed K-Block';
+        setError(message);
+        setLoading(false);
+        console.error('[useKBlock] Zero Seed create failed:', message);
+        return { success: false, error: message };
+      }
+    },
+    []
+  );
+
+  const addDerivation = useCallback(
+    async (parentId: string) => {
+      if (!state) {
+        console.warn('[useKBlock] addDerivation called with no active K-Block');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        await kblockApi.addDerivation(state.blockId, parentId);
+
+        setState((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            lineage: [...prev.lineage, parentId],
+            parentBlocks: [...prev.parentBlocks, parentId],
+          };
+        });
+
+        setLoading(false);
+        console.info('[useKBlock] Added derivation:', parentId);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to add derivation';
+        setError(message);
+        setLoading(false);
+        console.error('[useKBlock] Add derivation failed:', message);
+      }
+    },
+    [state]
+  );
+
+  const removeDerivation = useCallback(
+    async (parentId: string) => {
+      if (!state) {
+        console.warn('[useKBlock] removeDerivation called with no active K-Block');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        await kblockApi.removeDerivation(state.blockId, parentId);
+
+        setState((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            lineage: prev.lineage.filter((id) => id !== parentId),
+            parentBlocks: prev.parentBlocks.filter((id) => id !== parentId),
+          };
+        });
+
+        setLoading(false);
+        console.info('[useKBlock] Removed derivation:', parentId);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to remove derivation';
+        setError(message);
+        setLoading(false);
+        console.error('[useKBlock] Remove derivation failed:', message);
+      }
+    },
+    [state]
+  );
+
+  const setProof = useCallback(
+    async (proof: ToulminProof) => {
+      if (!state) {
+        console.warn('[useKBlock] setProof called with no active K-Block');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await kblockApi.setProof(state.blockId, proof);
+
+        setState((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            hasProof: true,
+            toulminProof: proof,
+            // Update confidence from backend response
+            confidence: result.confidence,
+          };
+        });
+
+        setLoading(false);
+        console.info('[useKBlock] Set proof:', proof.tier);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to set proof';
+        setError(message);
+        setLoading(false);
+        console.error('[useKBlock] Set proof failed:', message);
+      }
+    },
+    [state]
+  );
+
+  const goToParent = useCallback(
+    (index: number) => {
+      if (!state) return;
+      const parentId = state.parentBlocks[index];
+      if (!parentId) {
+        console.warn('[useKBlock] No parent at index:', index);
+        return;
+      }
+      // Navigation is handled by the component using this hook
+      // We just provide the callback interface
+      console.info('[useKBlock] Navigate to parent:', parentId);
+      // Component should call create(parentId) or similar
+    },
+    [state]
+  );
+
+  const goToChild = useCallback(
+    (index: number) => {
+      if (!state) return;
+      const childId = state.childBlocks[index];
+      if (!childId) {
+        console.warn('[useKBlock] No child at index:', index);
+        return;
+      }
+      console.info('[useKBlock] Navigate to child:', childId);
+      // Component should call create(childId) or similar
+    },
+    [state]
+  );
+
   return {
     state,
     kblock: state, // Backward compatibility alias
@@ -921,6 +1224,13 @@ export function useKBlock(options: UseKBlockOptions = {}): UseKBlockResult {
     rewind,
     getReferences,
     reset,
+    // Zero Seed methods
+    createZeroSeed,
+    addDerivation,
+    removeDerivation,
+    setProof,
+    goToParent,
+    goToChild,
   };
 }
 

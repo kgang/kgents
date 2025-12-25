@@ -29,7 +29,7 @@ export interface Command {
   /** Optional keyboard shortcut hint */
   shortcut?: string;
 
-  /** Icon or emoji */
+  /** Icon glyph (mathematical notation) */
   icon?: string;
 
   /** Execute the command */
@@ -146,7 +146,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       label: 'Save current document',
       category: 'actions',
       shortcut: ':w',
-      icon: '💾',
+      icon: '⊕',
       keywords: ['write', 'persist', 'commit'],
       execute: () => {
         trackCommand('action:save');
@@ -157,7 +157,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: 'action:reanalyze',
       label: 'Re-analyze document',
       category: 'actions',
-      icon: '🔍',
+      icon: '⊛',
       keywords: ['analyze', 'llm', 'claude', 'parse'],
       execute: () => {
         trackCommand('action:reanalyze');
@@ -169,7 +169,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       label: 'Add witness mark',
       category: 'actions',
       shortcut: 'gw',
-      icon: '👁️',
+      icon: '⊢',
       keywords: ['mark', 'trace', 'decision'],
       execute: () => {
         trackCommand('action:witness');
@@ -181,7 +181,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       label: 'Show analysis quadrant',
       category: 'actions',
       shortcut: 'ga',
-      icon: '🔬',
+      icon: '⊛',
       keywords: ['analysis', 'categorical', 'epistemic', 'dialectical', 'generative', 'operad'],
       execute: () => {
         trackCommand('action:analysis');
@@ -197,7 +197,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       label: 'Toggle graph view',
       category: 'graph',
       shortcut: 'future',
-      icon: '🕸️',
+      icon: '⟡',
       keywords: ['hypergraph', 'visualization', 'network'],
       execute: () => {
         trackCommand('graph:toggle');
@@ -212,7 +212,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: 'zeroseed:health',
       label: 'Zero Seed: View Graph Health',
       category: 'navigation',
-      icon: '❤️',
+      icon: '●',
       keywords: ['zero', 'seed', 'health', 'stability', 'contradictions'],
       execute: () => {
         trackCommand('zeroseed:health');
@@ -223,7 +223,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: 'zeroseed:telescope',
       label: 'Zero Seed: Show Telescope',
       category: 'navigation',
-      icon: '🔭',
+      icon: '⌕',
       keywords: ['zero', 'seed', 'telescope', 'gradient', 'navigation'],
       execute: () => {
         trackCommand('zeroseed:telescope');
@@ -234,7 +234,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: 'zeroseed:axioms',
       label: 'Zero Seed: Explore Axioms',
       category: 'navigation',
-      icon: '⚛️',
+      icon: '◇',
       keywords: ['zero', 'seed', 'axioms', 'values', 'ground'],
       execute: () => {
         trackCommand('zeroseed:axioms');
@@ -245,7 +245,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: 'zeroseed:proofs',
       label: 'Zero Seed: View Proofs',
       category: 'navigation',
-      icon: '📐',
+      icon: '⊨',
       keywords: ['zero', 'seed', 'proofs', 'quality', 'toulmin'],
       execute: () => {
         trackCommand('zeroseed:proofs');
@@ -260,7 +260,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: 'agentese:world',
       label: 'world.* — The External',
       category: 'agentese',
-      icon: '🌍',
+      icon: '∴',
       keywords: ['entities', 'environment', 'tools', 'external'],
       execute: () => {
         trackCommand('agentese:world');
@@ -271,7 +271,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: 'agentese:self',
       label: 'self.* — The Internal',
       category: 'agentese',
-      icon: '🧠',
+      icon: '∵',
       keywords: ['memory', 'capability', 'state', 'internal'],
       execute: () => {
         trackCommand('agentese:self');
@@ -282,7 +282,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: 'agentese:concept',
       label: 'concept.* — The Abstract',
       category: 'agentese',
-      icon: '💡',
+      icon: '⟨⟩',
       keywords: ['platonics', 'definitions', 'logic', 'abstract'],
       execute: () => {
         trackCommand('agentese:concept');
@@ -293,7 +293,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: 'agentese:void',
       label: 'void.* — The Accursed Share',
       category: 'agentese',
-      icon: '🌀',
+      icon: '∅',
       keywords: ['entropy', 'serendipity', 'gratitude', 'accursed'],
       execute: () => {
         trackCommand('agentese:void');
@@ -304,7 +304,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: 'agentese:time',
       label: 'time.* — The Temporal',
       category: 'agentese',
-      icon: '⏰',
+      icon: '⟳',
       keywords: ['traces', 'forecasts', 'schedules', 'temporal'],
       execute: () => {
         trackCommand('agentese:time');
@@ -319,7 +319,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       id: `file:${path}`,
       label: path,
       category: 'files' as const,
-      icon: path.startsWith('spec/') ? '📜' : '📄',
+      icon: path.startsWith('spec/') ? '◈' : '▫',
       keywords: path.split('/'),
       execute: () => {
         trackCommand(`file:${path}`);

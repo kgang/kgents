@@ -20,7 +20,7 @@ function getTensionIcon(type: ContradictionType): string {
     case 'PRODUCTIVE':
       return '⇌';
     case 'PROBLEMATIC':
-      return '⚠';
+      return '△';
     case 'PARACONSISTENT':
       return '∥';
     default:
@@ -128,7 +128,7 @@ export const DialecticalPanel = memo(function DialecticalPanel({
           )}
           {problematicCount > 0 && (
             <div className="tension-stat tension-stat--problematic">
-              <span className="tension-stat__icon">⚠</span>
+              <span className="tension-stat__icon">△</span>
               <span className="tension-stat__count">{problematicCount}</span>
               <span className="tension-stat__label">Problematic</span>
             </div>

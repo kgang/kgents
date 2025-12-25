@@ -126,7 +126,7 @@ function ProgressSteps({ steps }: { steps: ProgressStep[] }) {
               }}
               aria-current={step.current ? 'step' : undefined}
             >
-              {step.completed ? '✓' : i + 1}
+              {step.completed ? '●' : i + 1}
             </div>
             <span
               style={{

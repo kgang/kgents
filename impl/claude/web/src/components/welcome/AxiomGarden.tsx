@@ -1,5 +1,5 @@
 /**
- * AxiomGarden — Procedural visualization of Zero Seed axioms
+ * AxiomGarden — Procedural visualization of Proof Engine axioms
  *
  * "The seed is not the garden. The seed is the capacity for gardening."
  *

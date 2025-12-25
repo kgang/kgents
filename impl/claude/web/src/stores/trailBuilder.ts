@@ -26,20 +26,20 @@ import { nanoid } from 'nanoid';
  */
 export const EDGE_TYPES = [
   // Structural edges
-  { value: 'contains', label: 'Contains', icon: '📦', semantic: false },
-  { value: 'implements', label: 'Implements', icon: '⚙️', semantic: false },
-  { value: 'imports', label: 'Imports', icon: '📥', semantic: false },
-  { value: 'uses', label: 'Uses', icon: '🔗', semantic: false },
-  { value: 'tests', label: 'Tests', icon: '🧪', semantic: false },
-  { value: 'extends', label: 'Extends', icon: '📐', semantic: false },
-  { value: 'specifies', label: 'Specifies', icon: '📝', semantic: false },
-  { value: 'projects', label: 'Projects', icon: '📽️', semantic: false },
+  { value: 'contains', label: 'Contains', icon: '▣', semantic: false },
+  { value: 'implements', label: 'Implements', icon: '◎', semantic: false },
+  { value: 'imports', label: 'Imports', icon: '→', semantic: false },
+  { value: 'uses', label: 'Uses', icon: '◇', semantic: false },
+  { value: 'tests', label: 'Tests', icon: '✓', semantic: false },
+  { value: 'extends', label: 'Extends', icon: '◆', semantic: false },
+  { value: 'specifies', label: 'Specifies', icon: '▤', semantic: false },
+  { value: 'projects', label: 'Projects', icon: '◉', semantic: false },
   // Semantic edges (dashed, animated)
   { value: 'semantic:similar_to', label: 'Similar To', icon: '≈', semantic: true },
-  { value: 'semantic:grounds', label: 'Grounds', icon: '🌱', semantic: true },
-  { value: 'semantic:contradicts', label: 'Contradicts', icon: '⚡', semantic: true },
-  { value: 'semantic:evolves', label: 'Evolves Into', icon: '🦋', semantic: true },
-  { value: 'semantic:encodes', label: 'Encodes', icon: '🔮', semantic: true },
+  { value: 'semantic:grounds', label: 'Grounds', icon: '●', semantic: true },
+  { value: 'semantic:contradicts', label: 'Contradicts', icon: '×', semantic: true },
+  { value: 'semantic:evolves', label: 'Evolves Into', icon: '→', semantic: true },
+  { value: 'semantic:encodes', label: 'Encodes', icon: '◎', semantic: true },
 ] as const;
 
 export type EdgeType = (typeof EDGE_TYPES)[number]['value'];

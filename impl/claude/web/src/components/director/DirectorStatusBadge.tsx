@@ -42,8 +42,9 @@ const STATUS_CONFIG: Record<DocumentStatus, StatusConfig> = {
   processing: { label: 'Processing', icon: '⟳', pulse: true },
   ready: { label: 'Ready', icon: '✓' },
   executed: { label: 'Executed', icon: '⚡' },
-  stale: { label: 'Stale', icon: '⚠' },
+  stale: { label: 'Stale', icon: '!' },
   failed: { label: 'Failed', icon: '✗' },
+  ghost: { label: 'Ghost', icon: '◭' },
 };
 
 // =============================================================================

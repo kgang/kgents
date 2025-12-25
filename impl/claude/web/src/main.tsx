@@ -5,6 +5,7 @@ import { enableMapSet } from 'immer';
 import App from './App';
 import './styles/globals.css';
 import './styles/animations.css';
+import './styles/brutalist.css';
 import { reportWebVitalsToConsole } from './lib/reportWebVitals';
 
 // Enable Immer's MapSet plugin for stores that use Map/Set

@@ -72,7 +72,7 @@ export const AnalysisQuadrant = memo(function AnalysisQuadrant({
           )}
         </div>
         <div className="analysis-quadrant__error">
-          <span className="analysis-quadrant__error-icon">⚠</span>
+          <span className="analysis-quadrant__error-icon">△</span>
           <span className="analysis-quadrant__error-message">
             Failed to load analysis: {error.message}
           </span>

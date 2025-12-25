@@ -7,7 +7,7 @@
  * Triggered by '?' in NORMAL mode.
  */
 
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { NORMAL_MODE_BINDINGS_DOC } from './useKeyHandler';
 import './HelpPanel.css';
 
@@ -44,6 +44,20 @@ function groupBindings() {
 
 export const HelpPanel = memo(function HelpPanel({ onClose }: HelpPanelProps) {
   const { scrollNav, graphNav, portalOps, modeSwitches } = groupBindings();
+
+  // Handle keyboard events: Escape and ? to close
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === '?') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   return (
     <div className="help-panel" role="dialog" aria-label="Keyboard shortcuts">
@@ -138,6 +152,27 @@ export const HelpPanel = memo(function HelpPanel({ onClose }: HelpPanelProps) {
                     <kbd>Esc</kbd>
                   </td>
                   <td>Return to NORMAL mode</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          {/* Navigation */}
+          <section className="help-panel__section">
+            <h3>Navigation</h3>
+            <table className="help-panel__table">
+              <tbody>
+                <tr>
+                  <td>
+                    <kbd>⌘K</kbd>
+                  </td>
+                  <td>Open CommandPalette (navigate nodes)</td>
+                </tr>
+                <tr>
+                  <td>
+                    <kbd>:</kbd>
+                  </td>
+                  <td>Enter command mode (ex commands)</td>
                 </tr>
               </tbody>
             </table>

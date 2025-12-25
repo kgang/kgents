@@ -76,3 +76,11 @@
   background: rgba(var(--accent-error-rgb, 166, 93, 74), 0.15);
   color: var(--accent-error, #a65d4a);
 }
+
+/* Ghost status - the negative space */
+.document-status[data-status='ghost'] {
+  background: rgba(139, 92, 246, 0.1);
+  color: rgba(167, 139, 250, 0.7);
+  border: 1px dashed rgba(139, 92, 246, 0.3);
+  opacity: 0.8;
+}
