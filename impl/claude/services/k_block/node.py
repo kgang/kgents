@@ -29,7 +29,7 @@ See: spec/protocols/k-block.md
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
@@ -182,6 +182,28 @@ class ReferencesResponse:
     """Response with discovered references."""
 
     references: list[dict[str, Any]]
+
+
+@dataclass(frozen=True)
+class CreateZeroSeedRequest:
+    """Request to create a Zero Seed K-Block."""
+
+    layer: int  # 1-7
+    kind: str  # "axiom", "value", "goal", "spec", "action", "reflection", "representation"
+    content: str  # Markdown content for the node
+    title: str  # Human-readable title
+    lineage: list[str] = field(default_factory=list)  # Parent node IDs
+    proof: dict[str, Any] | None = None  # Optional Toulmin proof
+
+
+@dataclass(frozen=True)
+class CreateZeroSeedResponse:
+    """Response from Zero Seed K-Block creation."""
+
+    success: bool
+    block_id: str | None = None
+    path: str | None = None  # zeroseed://kind/id path
+    error: str | None = None
 
 
 # === Rendering ===
@@ -342,6 +364,8 @@ def discard_thoughts(session_id: str) -> bool:
         "references": Contract(ReferencesRequest, ReferencesResponse),
         # Mutations - thought K-Blocks (Membrane)
         "thought": Contract(ThoughtRequest, ThoughtResponse),
+        # Phase 1: Zero Seed K-Blocks
+        "create_zero_seed": Contract(CreateZeroSeedRequest, CreateZeroSeedResponse),
     },
     examples=[
         ("manifest", {}, "Show active K-Blocks"),
@@ -353,6 +377,11 @@ def discard_thoughts(session_id: str) -> bool:
             "Edit via graph view",
         ),
         ("thought", {"content": "What if we...", "session_id": "membrane-1"}, "Append thought"),
+        (
+            "create_zero_seed",
+            {"layer": 1, "kind": "axiom", "content": "# Core Axiom", "title": "Test Axiom"},
+            "Create Zero Seed axiom",
+        ),
     ],
 )
 class KBlockNode(BaseLogosNode):
@@ -798,6 +827,93 @@ class KBlockNode(BaseLogosNode):
             success = discard_thoughts(session_id)
             return {"success": success, "session_id": session_id}
 
+        # === Phase 1: Zero Seed K-Block Creation ===
+
+        elif aspect_name == "create_zero_seed":
+            # Create a Zero Seed K-Block (derivation DAG node)
+            layer = kwargs.get("layer")
+            kind = kwargs.get("kind")
+            content = kwargs.get("content", "")
+            title = kwargs.get("title", "")
+            lineage = kwargs.get("lineage", [])
+            proof = kwargs.get("proof")
+
+            # Validate required fields
+            if layer is None:
+                return CreateZeroSeedResponse(
+                    success=False,
+                    error="layer required (1-7)",
+                )
+            if not kind:
+                return CreateZeroSeedResponse(
+                    success=False,
+                    error="kind required (axiom, value, goal, spec, action, reflection, representation)",
+                )
+            if not title:
+                return CreateZeroSeedResponse(
+                    success=False,
+                    error="title required",
+                )
+
+            # Validate layer range
+            if not 1 <= layer <= 7:
+                return CreateZeroSeedResponse(
+                    success=False,
+                    error=f"layer must be 1-7, got {layer}",
+                )
+
+            # Validate kind
+            valid_kinds = {
+                "axiom",
+                "value",
+                "goal",
+                "spec",
+                "action",
+                "reflection",
+                "representation",
+            }
+            if kind not in valid_kinds:
+                return CreateZeroSeedResponse(
+                    success=False,
+                    error=f"Invalid kind '{kind}'. Must be one of: {valid_kinds}",
+                )
+
+            try:
+                # Create K-Block with Zero Seed metadata
+                from uuid import uuid4
+
+                block_id = generate_kblock_id()
+                path = f"zeroseed://{kind}/{uuid4().hex[:8]}"
+
+                zero_seed_block = KBlock(
+                    id=block_id,
+                    path=path,
+                    content=content,
+                    base_content=content,
+                    isolation=IsolationState.PRISTINE,
+                    # Zero Seed fields
+                    zero_seed_layer=layer,
+                    zero_seed_kind=kind,
+                    lineage=lineage,
+                    has_proof=proof is not None,
+                    toulmin_proof=proof,
+                )
+
+                # Register with harness (so it appears in manifest)
+                self._harness._blocks[block_id] = zero_seed_block
+
+                return CreateZeroSeedResponse(
+                    success=True,
+                    block_id=block_id,
+                    path=path,
+                )
+
+            except Exception as e:
+                return CreateZeroSeedResponse(
+                    success=False,
+                    error=str(e),
+                )
+
         else:
             return {"error": f"Unknown aspect: {aspect_name}"}
 
@@ -810,6 +926,8 @@ __all__ = [
     # Contracts
     "ViewEditRequest",
     "ViewEditResponse",
+    "CreateZeroSeedRequest",
+    "CreateZeroSeedResponse",
     # Thought K-Block helpers
     "get_thought_block",
     "create_thought_block",

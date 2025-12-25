@@ -22,11 +22,14 @@ See: spec/protocols/k-block.md
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from .cosmos import Cosmos, VersionId, get_cosmos
+
+logger = logging.getLogger(__name__)
 from .kblock import (
     ContentDelta,
     IsolationState,
@@ -319,6 +322,10 @@ class FileOperadHarness:
         block.checkpoints.clear()
         block.modified_at = datetime.now(timezone.utc)
 
+        # For Zero Seed nodes, create derivation edges in sovereign store
+        if block.is_zero_seed_node() and block.lineage:
+            await self._create_derivation_edges(block, mark_id)
+
         # Emit KBLOCK_SAVED event to bus (closes the loop: save → witness → graph)
         await self._emit_kblock_saved_event(block, version_id, mark_id, reasoning)
 
@@ -328,6 +335,47 @@ class FileOperadHarness:
             dependents_marked=dependents_marked,
             mark_id=mark_id,
         )
+
+    async def _create_derivation_edges(
+        self,
+        block: KBlock,
+        mark_id: str | None,
+    ) -> None:
+        """
+        Create derivation edges in sovereign store for Zero Seed nodes.
+
+        For each parent in block.lineage, creates a "derives_from" edge
+        from parent to this block.
+
+        Args:
+            block: The K-Block being saved (must be a Zero Seed node)
+            mark_id: Witness mark ID linking this save operation
+        """
+        try:
+            from services.providers import get_sovereign_store
+
+            store = await get_sovereign_store()
+
+            # Create edges for each parent in lineage
+            for parent_id in block.lineage:
+                await store.add_edge(
+                    from_path=parent_id,
+                    to_path=block.path,
+                    edge_type="derives_from",
+                    mark_id=mark_id,
+                    context=f"L{block.zero_seed_layer} {block.zero_seed_kind} derives from parent",
+                )
+
+            logger.debug(
+                f"Created {len(block.lineage)} derivation edges for {block.path} "
+                f"(L{block.zero_seed_layer} {block.zero_seed_kind})"
+            )
+        except ImportError:
+            # Sovereign store not available (testing environment)
+            pass
+        except Exception as e:
+            # Non-critical - log but don't fail save
+            logger.warning(f"Failed to create derivation edges for {block.path}: {e}")
 
     async def _emit_kblock_saved_event(
         self,

@@ -24,6 +24,7 @@ from .cosmos import (
     reset_cosmos,
     set_cosmos,
 )
+from .edge import KBlockEdge
 from .errors import (
     GluingError,
     PropagationError,
@@ -81,6 +82,7 @@ __all__ = [
     "EditDelta",
     "IsolationState",
     "KBlock",
+    "KBlockEdge",
     "KBlockId",
     "generate_kblock_id",
     # Cosmos

@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any, NewType, cast
 if TYPE_CHECKING:
     from ..views.base import View
     from .cosmos import Cosmos
+    from .edge import KBlockEdge
     from .sheaf import KBlockSheaf
     from .verification import SheafVerification
 
@@ -241,6 +242,31 @@ class KBlock:
     # K-Block should be read-only until analysis_required is False
     analysis_required: bool = False
 
+    # -------------------------------------------------------------------------
+    # Zero Seed Integration (Phase 1: K-Block/Document Unification)
+    # -------------------------------------------------------------------------
+
+    # Zero Seed layer (1-7) if this K-Block represents a Zero Seed node
+    zero_seed_layer: int | None = None  # 1=axiom, 2=value, 3=goal, 4=spec, 5=action, 6=reflection, 7=representation
+
+    # Zero Seed kind (human-readable category)
+    zero_seed_kind: str | None = None  # "axiom", "value", "goal", "spec", "action", "reflection", "representation"
+
+    # Lineage: parent node IDs (forms the derivation DAG)
+    # For a node N, lineage contains IDs of nodes that N derives from
+    lineage: list[str] = field(default_factory=list)
+
+    # Proof tracking
+    has_proof: bool = False
+    toulmin_proof: dict[str, Any] | None = None  # Toulmin proof structure (claim, warrant, backing, etc.)
+
+    # Confidence in this Zero Seed node [0.0, 1.0]
+    confidence: float = 1.0
+
+    # Edge tracking (bidirectional for efficient traversal)
+    incoming_edges: list["KBlockEdge"] = field(default_factory=list)
+    outgoing_edges: list["KBlockEdge"] = field(default_factory=list)
+
     # ---------------------------------------------------------------------
     # Content Operations
     # ---------------------------------------------------------------------
@@ -348,6 +374,18 @@ class KBlock:
     # ---------------------------------------------------------------------
     # State Queries
     # ---------------------------------------------------------------------
+
+    def is_zero_seed_node(self) -> bool:
+        """
+        Check if this K-Block represents a Zero Seed node.
+
+        Zero Seed nodes have a layer (1-7) and kind (axiom, value, etc.).
+        Regular file K-Blocks have zero_seed_layer=None.
+
+        Returns:
+            True if this is a Zero Seed node, False for regular files
+        """
+        return self.zero_seed_layer is not None
 
     def can_save(self) -> bool:
         """Whether save operation is valid."""
@@ -461,7 +499,7 @@ class KBlock:
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize K-Block state for persistence."""
-        return {
+        result: dict[str, Any] = {
             "id": self.id,
             "path": self.path,
             "content": self.content,
@@ -483,9 +521,25 @@ class KBlock:
             "entangled_with": self.entangled_with,
         }
 
+        # Zero Seed fields (only if this is a Zero Seed node)
+        if self.is_zero_seed_node():
+            result["zero_seed_layer"] = self.zero_seed_layer
+            result["zero_seed_kind"] = self.zero_seed_kind
+            result["lineage"] = self.lineage
+            result["has_proof"] = self.has_proof
+            result["toulmin_proof"] = self.toulmin_proof
+            result["confidence"] = self.confidence
+            # Serialize edges
+            result["incoming_edges"] = [edge.to_dict() for edge in self.incoming_edges]
+            result["outgoing_edges"] = [edge.to_dict() for edge in self.outgoing_edges]
+
+        return result
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "KBlock":
         """Deserialize K-Block from persisted state."""
+        from .edge import KBlockEdge
+
         checkpoints = [
             Checkpoint(
                 id=cp["id"],
@@ -495,6 +549,16 @@ class KBlock:
                 created_at=datetime.fromisoformat(cp["created_at"]),
             )
             for cp in data.get("checkpoints", [])
+        ]
+
+        # Deserialize edges if present
+        incoming_edges = [
+            KBlockEdge.from_dict(edge_data)
+            for edge_data in data.get("incoming_edges", [])
+        ]
+        outgoing_edges = [
+            KBlockEdge.from_dict(edge_data)
+            for edge_data in data.get("outgoing_edges", [])
         ]
 
         return cls(
@@ -509,6 +573,15 @@ class KBlock:
             # Note: active_views is stored as list of strings, but we don't
             # restore View instances on deserialize - they're recreated on demand
             entangled_with=KBlockId(data["entangled_with"]) if data.get("entangled_with") else None,
+            # Zero Seed fields
+            zero_seed_layer=data.get("zero_seed_layer"),
+            zero_seed_kind=data.get("zero_seed_kind"),
+            lineage=data.get("lineage", []),
+            has_proof=data.get("has_proof", False),
+            toulmin_proof=data.get("toulmin_proof"),
+            confidence=data.get("confidence", 1.0),
+            incoming_edges=incoming_edges,
+            outgoing_edges=outgoing_edges,
         )
 
     # ---------------------------------------------------------------------
