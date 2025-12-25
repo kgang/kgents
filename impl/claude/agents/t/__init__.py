@@ -9,11 +9,27 @@ Philosophy:
 - All T-gents marked with __is_test__ = True
 - Composable with other agents via >> operator
 
-Note: Tool-related code has moved to agents.u (U-gents: Utility Agents).
-Importing Tool, ToolRegistry, MCPClient, etc. from agents.t still works
-but emits deprecation warnings. Use `from agents.u import ...` instead.
+TruthFunctor Protocol (NEW):
+All T-gents are being migrated to the TruthFunctor protocol, which provides:
+- DP-native semantics: (states, actions, transition, reward, gamma)
+- Automatic PolicyTrace emission
+- Constitutional reward scoring (7 principles)
+- AnalysisMode mapping (CATEGORICAL, EPISTEMIC, DIALECTICAL, GENERATIVE)
 
-Implemented T-gents:
+Core Types:
+- TruthFunctor[S, A, B]: Base class for all verification probes
+- PolicyTrace[B]: Writer monad for accumulated verification trace
+- ConstitutionalScore: Reward based on 7 principles (ethical, composable, etc.)
+- TruthVerdict[B]: Final verdict with confidence and reasoning
+
+Five Probe Types (replacing old T-gent types):
+- NullProbe (was MockAgent, FixtureAgent) - EPISTEMIC mode
+- ChaosProbe (was FailingAgent, NoiseAgent, etc.) - DIALECTICAL mode
+- WitnessProbe (was SpyAgent, CounterAgent, etc.) - CATEGORICAL mode
+- JudgeProbe (was JudgeAgent, OracleAgent) - EPISTEMIC mode
+- TrustProbe (was TrustGate) - GENERATIVE mode
+
+Legacy T-gent Types (still supported):
 
 Type I - Nullifiers (Constants & Fixtures):
 - MockAgent: Constant morphism c_b: A -> b
@@ -42,6 +58,11 @@ Type V - Trust Gate (Capital Integration):
 - TrustDecision: Result with approval status and capital changes
 
 Usage:
+    # New TruthFunctor protocol
+    from agents.t import TruthFunctor, PolicyTrace, ConstitutionalScore
+    from agents.t.probes import NullProbe, ChaosProbe, WitnessProbe
+
+    # Legacy T-gents (still supported)
     from agents.t import MockAgent, FailingAgent, SpyAgent
 
     # Mock expensive operations
@@ -64,6 +85,60 @@ Usage:
 
 import warnings
 from typing import Any
+
+# TruthFunctor protocol (new DP-native verification)
+from .truth_functor import (
+    AnalysisMode,
+    ConstitutionalScore,
+    TruthVerdict,
+    ProbeState,
+    ProbeAction,
+    TraceEntry,
+    PolicyTrace,
+    TruthFunctor,
+    ComposedProbe,
+)
+
+# New probe implementations
+from .probes import (
+    NullProbe,
+    NullConfig,
+)
+# TODO: Import remaining probes when dataclass errors are fixed
+# from .probes import (
+#     ChaosType,
+#     ChaosProbe,
+#     WitnessProbe,
+#     JudgeProbe,
+#     TrustProbe,
+#     ChaosConfig,
+#     WitnessConfig,
+#     JudgeConfig,
+#     TrustConfig,
+# )
+
+# Backwards compatibility (legacy types that emit deprecation warnings)
+from .compat import (
+    MockAgent as MockAgentCompat,
+    FixtureAgent as FixtureAgentCompat,
+    FailingAgent as FailingAgentCompat,
+    NoiseAgent as NoiseAgentCompat,
+    LatencyAgent as LatencyAgentCompat,
+    FlakyAgent as FlakyAgentCompat,
+    SpyAgent as SpyAgentCompat,
+    PredicateAgent as PredicateAgentCompat,
+    CounterAgent as CounterAgentCompat,
+    MetricsAgent as MetricsAgentCompat,
+    JudgeAgent as JudgeAgentCompat,
+    OracleAgent as OracleAgentCompat,
+    TrustGate as TrustGateCompat,
+)
+
+# Operad for probe composition
+try:
+    from agents.operad.domains.probe import PROBE_OPERAD
+except ImportError:
+    PROBE_OPERAD = None  # Fallback if operad not available
 
 from .counter import (
     CounterAgent,
@@ -180,6 +255,32 @@ from .trustgate import (
 )
 
 __all__ = [
+    # TruthFunctor Protocol (DP-Native Verification)
+    "AnalysisMode",
+    "ConstitutionalScore",
+    "TruthVerdict",
+    "ProbeState",
+    "ProbeAction",
+    "TraceEntry",
+    "PolicyTrace",
+    "TruthFunctor",
+    "ComposedProbe",
+    # New Probe Types
+    "NullProbe",
+    # TODO: Export remaining probes when implemented
+    # "ChaosType",
+    # "ChaosProbe",
+    # "WitnessProbe",
+    # "JudgeProbe",
+    # "TrustProbe",
+    # Probe Configs
+    "NullConfig",
+    # "ChaosConfig",
+    # "WitnessConfig",
+    # "JudgeConfig",
+    # "TrustConfig",
+    # Operad
+    "PROBE_OPERAD",
     # Type I - Nullifiers
     "MockAgent",
     "MockConfig",

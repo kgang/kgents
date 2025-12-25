@@ -5,6 +5,7 @@ Each domain operad extends AGENT_OPERAD with specialized operations:
 - PARSE_OPERAD: P-gent confidence, repair
 - REALITY_OPERAD: J-gent classification, collapse
 - ANALYSIS_OPERAD: Four modes of rigorous inquiry (categorical, epistemic, dialectical, generative)
+- PROBE_OPERAD: Verification probe composition with DP semantics
 
 Archived (2024-12-24): SOUL_OPERAD, MEMORY_OPERAD, EVOLUTION_OPERAD, NARRATIVE_OPERAD (no callers)
 """
@@ -41,6 +42,25 @@ from .parse import (
     ConfidentParse,
     ParseResult,
     create_parse_operad,
+)
+from .probe import (
+    ASSOCIATIVITY_LAW,
+    BRANCH_OP,
+    BranchProbe,
+    FIX_OP,
+    FixedPointProbe,
+    IDENTITY_LAW,
+    NullProbe,
+    PAR_OP,
+    PROBE_OPERAD,
+    ParallelProbe,
+    ProbeProtocol,
+    SEQ_OP,
+    SequentialProbe,
+    TRACE_PRESERVATION_LAW,
+    WITNESS_OP,
+    WitnessedProbe,
+    create_probe_operad,
 )
 from .reality import (
     REALITY_OPERAD,
@@ -82,6 +102,24 @@ __all__ = [
     "ParseResult",
     "ConfidentParse",
     "create_parse_operad",
+    # Probe (verification composition)
+    "PROBE_OPERAD",
+    "create_probe_operad",
+    "ProbeProtocol",
+    "SequentialProbe",
+    "ParallelProbe",
+    "BranchProbe",
+    "FixedPointProbe",
+    "WitnessedProbe",
+    "NullProbe",
+    "SEQ_OP",
+    "PAR_OP",
+    "BRANCH_OP",
+    "FIX_OP",
+    "WITNESS_OP",
+    "ASSOCIATIVITY_LAW",
+    "IDENTITY_LAW",
+    "TRACE_PRESERVATION_LAW",
     # Reality (J-gent)
     "REALITY_OPERAD",
     "RealityType",
