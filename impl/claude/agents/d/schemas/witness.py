@@ -65,6 +65,31 @@ class WitnessMark:
     context: dict[str, Any] = field(default_factory=dict)
     """Additional context metadata."""
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to JSON-compatible dict (tuple → list)."""
+        return {
+            "action": self.action,
+            "reasoning": self.reasoning,
+            "author": self.author,
+            "tags": list(self.tags),
+            "principles": list(self.principles),
+            "parent_mark_id": self.parent_mark_id,
+            "context": self.context,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "WitnessMark":
+        """Deserialize from dict (list → tuple)."""
+        return cls(
+            action=data["action"],
+            reasoning=data["reasoning"],
+            author=data.get("author", "system"),
+            tags=tuple(data.get("tags", [])),
+            principles=tuple(data.get("principles", [])),
+            parent_mark_id=data.get("parent_mark_id"),
+            context=data.get("context", {}),
+        )
+
 
 WITNESS_MARK_SCHEMA = Schema(
     name="witness.mark",

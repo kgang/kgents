@@ -96,6 +96,9 @@ from .universe import (
     init_universe,
 )
 
+# AGENTESE Node (self.data.*)
+from . import node  # noqa: F401 - imported for @node registration side-effect
+
 # Core stateful agents (NOT deprecated - actively used)
 from .volatile import VolatileAgent
 

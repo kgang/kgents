@@ -51,8 +51,16 @@ class MemoryBackend(BaseDgent):
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
+        schema: str | None = None,
     ) -> List[Datum]:
-        """List data with filters, sorted by created_at descending."""
+        """List data with filters, sorted by created_at descending.
+
+        Args:
+            prefix: Filter by ID prefix
+            after: Filter by created_at timestamp
+            limit: Maximum results
+            schema: Filter by schema in metadata
+        """
         results: List[Datum] = []
 
         for datum in self._store.values():
@@ -62,6 +70,10 @@ class MemoryBackend(BaseDgent):
 
             # Apply timestamp filter
             if after is not None and datum.created_at <= after:
+                continue
+
+            # Apply schema filter
+            if schema is not None and datum.metadata.get("schema") != schema:
                 continue
 
             results.append(datum)

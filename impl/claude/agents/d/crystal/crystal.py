@@ -29,6 +29,9 @@ class CrystalMeta:
         schema_version: Version number of schema applied
         created_at: When this crystal was formed (not datum creation time)
         crystallized_from: Source datum ID if this was an upgrade
+        layer: Zero Seed epistemic layer (1-7), None if unclassified
+        galois_loss: Cached Galois loss value, None if not computed
+        proof_id: Reference to proof Crystal ID, None if no proof
     """
 
     schema_name: str
@@ -42,6 +45,28 @@ class CrystalMeta:
 
     crystallized_from: str | None = None
     """If upgraded from older schema, the source datum ID."""
+
+    layer: int | None = None
+    """Zero Seed epistemic layer (1-7). None if unclassified."""
+
+    galois_loss: float | None = None
+    """Cached Galois loss value. None if not computed yet."""
+
+    proof_id: str | None = None
+    """Reference to proof Crystal ID. None if no proof attached."""
+
+    @property
+    def requires_proof(self) -> bool:
+        """
+        Check if this Crystal requires a Toulmin proof.
+
+        Zero Seed layers L3+ (Goals, Specs, Actions, Reflections)
+        require formal proofs to validate their derivation.
+
+        Returns:
+            True if layer >= 3, False otherwise
+        """
+        return self.layer is not None and self.layer >= 3
 
 
 @dataclass(frozen=True)

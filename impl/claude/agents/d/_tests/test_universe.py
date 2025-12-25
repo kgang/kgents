@@ -323,3 +323,79 @@ async def test_store_with_invalid_schema_raises(universe: Universe):
 
     with pytest.raises(ValueError, match="Schema not found"):
         await universe.store(obj, schema_name="nonexistent")
+
+
+# =============================================================================
+# Galois Integration
+# =============================================================================
+
+
+class MockGaloisLossComputer:
+    """Mock Galois loss computer for testing."""
+
+    async def compute(self, content: str) -> float:
+        """Return mock loss based on content length."""
+        return len(content) * 0.01
+
+
+@pytest.mark.asyncio
+async def test_galois_integration():
+    """Test Universe with Galois loss computation."""
+    galois = MockGaloisLossComputer()
+    universe = Universe(
+        namespace="test-galois", preferred_backend="memory", galois=galois
+    )
+    await universe._ensure_initialized()
+
+    # Register schema
+    universe.register_type("test", TestObject)
+
+    # Store an object
+    obj = TestObject(id="obj-1", name="Test", value=42)
+    obj_id = await universe.store(obj)
+
+    # Compute loss
+    loss = await universe.compute_loss(obj_id)
+    assert loss is not None
+    assert isinstance(loss, float)
+    assert loss > 0
+
+    # Stats should show galois enabled
+    stats = await universe.stats()
+    assert stats.galois_enabled is True
+
+
+@pytest.mark.asyncio
+async def test_galois_not_configured():
+    """Test Universe without Galois returns None for loss."""
+    universe = Universe(namespace="test-no-galois", preferred_backend="memory")
+    await universe._ensure_initialized()
+
+    # Register schema
+    universe.register_type("test", TestObject)
+
+    # Store an object
+    obj = TestObject(id="obj-1", name="Test", value=42)
+    obj_id = await universe.store(obj)
+
+    # Compute loss should return None
+    loss = await universe.compute_loss(obj_id)
+    assert loss is None
+
+    # Stats should show galois not enabled
+    stats = await universe.stats()
+    assert stats.galois_enabled is False
+
+
+@pytest.mark.asyncio
+async def test_compute_loss_nonexistent_object():
+    """Test compute_loss on nonexistent object returns None."""
+    galois = MockGaloisLossComputer()
+    universe = Universe(
+        namespace="test-galois-missing", preferred_backend="memory", galois=galois
+    )
+    await universe._ensure_initialized()
+
+    # Compute loss for nonexistent object
+    loss = await universe.compute_loss("nonexistent-id")
+    assert loss is None

@@ -42,11 +42,14 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass
-from typing import Any, Callable, Generic, Protocol, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, Generic, Protocol, TypeVar, cast
 
 from ..backends import MemoryBackend, SQLiteBackend
 from ..datum import Datum
 from ..protocol import DgentProtocol
+
+if TYPE_CHECKING:
+    from ..galois import GaloisLossComputer
 
 # PostgresBackend is optional - use new wrapper with URL normalization
 try:
@@ -167,6 +170,8 @@ class UniverseStats:
     total_data: int  # Total datum count
     schemas_registered: int  # Number of schemas
     namespace: str  # Current namespace
+    galois_enabled: bool = False  # Whether Galois loss computation is available
+    average_loss: float | None = None  # Average loss (computed lazily)
 
 
 # =============================================================================
@@ -196,6 +201,7 @@ class Universe:
         self,
         namespace: str = "default",
         preferred_backend: str = Backend.AUTO,
+        galois: GaloisLossComputer | None = None,
     ):
         """
         Create Universe instance.
@@ -203,9 +209,11 @@ class Universe:
         Args:
             namespace: Namespace for data isolation
             preferred_backend: Preferred backend tier (auto-selects if unavailable)
+            galois: Optional Galois loss computer for loss computation
         """
         self._namespace = namespace
         self._preferred = preferred_backend
+        self._galois = galois
         self._active_backend: DgentProtocol | None = None
         self._schemas: dict[str, Schema[Any]] = {}
         self._type_to_schema: dict[type, str] = {}
@@ -427,14 +435,23 @@ class Universe:
         assert self._active_backend is not None
 
         # Map Query to list() parameters
-        data = await self._active_backend.list(
-            prefix=q.prefix,
-            after=q.after,
-            limit=q.limit,
-        )
+        # Pass schema to backend if supported (SQLite/Postgres can filter at SQL level)
+        list_kwargs: dict[str, Any] = {
+            "prefix": q.prefix,
+            "after": q.after,
+            "limit": q.limit,
+        }
 
-        # Filter by schema if specified
-        if q.schema:
+        # Check if backend supports schema filtering at SQL level
+        import inspect
+        list_sig = inspect.signature(self._active_backend.list)
+        if "schema" in list_sig.parameters:
+            list_kwargs["schema"] = q.schema
+
+        data = await self._active_backend.list(**list_kwargs)
+
+        # Only post-filter if backend doesn't support schema filtering
+        if q.schema and "schema" not in list_sig.parameters:
             data = [d for d in data if d.metadata.get("schema") == q.schema]
 
         # Deserialize each datum
@@ -476,6 +493,35 @@ class Universe:
         await self._ensure_initialized()
         assert self._active_backend is not None
         return await self._active_backend.delete(id)
+
+    async def compute_loss(self, id: str) -> float | None:
+        """
+        Compute Galois loss for stored data.
+
+        Args:
+            id: The datum ID
+
+        Returns:
+            Loss value if galois configured and data found, None otherwise
+        """
+        if self._galois is None:
+            return None
+
+        obj = await self.get(id)
+        if obj is None:
+            return None
+
+        # Serialize object to string for loss computation
+        if hasattr(obj, "content"):
+            # If it's a Datum, use content
+            content = obj.content
+            if isinstance(content, bytes):
+                content = content.decode("utf-8")
+        else:
+            # Otherwise stringify
+            content = str(obj)
+
+        return await self._galois.compute(content)
 
     # -------------------------------------------------------------------------
     # Convenience Methods
@@ -531,6 +577,7 @@ class Universe:
             total_data=total,
             schemas_registered=len(self._schemas),
             namespace=self._namespace,
+            galois_enabled=self._galois is not None,
         )
 
 
@@ -562,6 +609,7 @@ def get_universe() -> Universe:
 async def init_universe(
     backend: str = Backend.AUTO,
     namespace: str = "default",
+    galois: GaloisLossComputer | None = None,
 ) -> Universe:
     """
     Initialize Universe with explicit backend selection.
@@ -569,6 +617,7 @@ async def init_universe(
     Args:
         backend: Backend tier (auto, postgres, sqlite, memory)
         namespace: Namespace for data isolation
+        galois: Optional Galois loss computer for loss computation
 
     Returns:
         Initialized Universe instance
@@ -580,7 +629,9 @@ async def init_universe(
     global _universe
     async with _lock:
         if _universe is None:
-            _universe = Universe(namespace=namespace, preferred_backend=backend)
+            _universe = Universe(
+                namespace=namespace, preferred_backend=backend, galois=galois
+            )
         await _universe._ensure_initialized()
         return _universe
 

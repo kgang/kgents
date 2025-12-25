@@ -178,8 +178,16 @@ class SQLiteBackend(BaseDgent):
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
+        schema: str | None = None,
     ) -> List[Datum]:
-        """List data with filters, sorted by created_at descending."""
+        """List data with filters, sorted by created_at descending.
+
+        Args:
+            prefix: Filter by ID prefix
+            after: Filter by created_at timestamp
+            limit: Maximum results
+            schema: Filter by schema in metadata (uses JSON extract)
+        """
         async with self._lock:
 
             def do_list() -> List[Datum]:
@@ -194,6 +202,11 @@ class SQLiteBackend(BaseDgent):
                     if after is not None:
                         query += " AND created_at > ?"
                         params.append(after)
+
+                    # Filter by schema in metadata JSON
+                    if schema is not None:
+                        query += " AND json_extract(metadata, '$.schema') = ?"
+                        params.append(schema)
 
                     query += " ORDER BY created_at DESC LIMIT ?"
                     params.append(limit)

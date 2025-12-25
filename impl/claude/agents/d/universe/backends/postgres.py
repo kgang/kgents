@@ -193,9 +193,28 @@ class PostgresBackend:
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
+        schema: str | None = None,
     ) -> list[Datum]:
-        """List datums with optional filters."""
-        return await self._backend.list(prefix=prefix, after=after, limit=limit)
+        """List datums with optional filters.
+
+        Args:
+            prefix: Filter by ID prefix
+            after: Filter by created_at timestamp
+            limit: Maximum results
+            schema: Filter by schema in metadata (uses JSONB query)
+        """
+        # If no schema filter, delegate directly
+        if schema is None:
+            return await self._backend.list(prefix=prefix, after=after, limit=limit)
+
+        # With schema filter, use our query method with 'where' for efficient JSONB filtering
+        q = Query(
+            prefix=prefix,
+            after=after,
+            limit=limit,
+            where={"schema": schema},
+        )
+        return await self.query(q)
 
     async def is_available(self) -> bool:
         """
