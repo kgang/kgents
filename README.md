@@ -120,6 +120,8 @@ Monadic isolation for spec editing. Changes don't escape to the cosmos until exp
 |-------|---------|
 | **Brain** | Spatial cathedral of memory, TeachingCrystal crystallization |
 | **Witness** | Marks, decisions, crystals, streaming, promotion |
+| **Chat** | Witnessed conversations with trust escalation and branching |
+| **Categorical** | Constitution as axiomatic root, TruthFunctor probes |
 | **Atelier** | Design forge, creative workshop |
 | **Liminal** | Transition protocols |
 
@@ -179,11 +181,11 @@ spec/              # THE LAW — conceptual specification
 
 impl/claude/       # Reference implementation
   agents/          # PolyAgent, Operad, Sheaf, Flux, K-gent, M-gent
-  services/        # Crown Jewels: Brain, Witness, Atelier, Liminal
+  services/        # Crown Jewels: Brain, Witness, Chat, Categorical, Atelier, Liminal
   protocols/       # AGENTESE runtime, CLI, API gateway
   web/             # React + Three.js frontend
 
-docs/skills/       # 21 skills — READ BEFORE BUILDING
+docs/skills/       # 29 skills — READ BEFORE BUILDING
 plans/             # Active work + _focus.md (human intent)
 ```
 
@@ -208,7 +210,7 @@ Full treatment: [spec/principles.md](spec/principles.md)
 Read [CLAUDE.md](CLAUDE.md) first.
 
 - **Anti-Sausage Protocol**: Kent's voice gets diluted through LLM processing. Quote directly; don't paraphrase.
-- **Skills-First**: 21 skills in `docs/skills/`. Read them before building.
+- **Skills-First**: 29 skills in `docs/skills/`. Read them before building.
 - **Fail-Fast DI**: Required deps error immediately with actionable messages. Optional deps (`= None`) degrade gracefully.
 - **The Mirror Test**: *"Does this feel like Kent on his best day?"*
 
@@ -229,7 +231,7 @@ Read [CLAUDE.md](CLAUDE.md) first.
 | What | Where |
 |------|-------|
 | Interactive demos | `impl/claude/demos/` |
-| The 21 skills | `docs/skills/` |
+| The 29 skills | `docs/skills/` |
 | The seven principles | `spec/principles.md` |
 | What's happening now | `NOW.md` |
 | Categorical foundations | `docs/categorical-foundations.md` |
