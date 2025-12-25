@@ -55,6 +55,9 @@ interface CommandPaletteProps {
   /** Callback to enter graph mode */
   onGraphMode?: () => void;
 
+  /** Callback to open analysis quadrant */
+  onAnalysisQuadrant?: () => void;
+
   /** Callback to invoke AGENTESE path */
   onAgentese?: (path: string) => void;
 
@@ -74,6 +77,7 @@ export const CommandPalette = memo(function CommandPalette({
   onSave,
   onReanalyze,
   onGraphMode,
+  onAnalysisQuadrant,
   onAgentese,
   onZeroSeed,
 }: CommandPaletteProps) {
@@ -85,6 +89,7 @@ export const CommandPalette = memo(function CommandPalette({
     onSave,
     onReanalyze,
     onGraphMode,
+    onAnalysisQuadrant,
     onAgentese,
     onZeroSeed,
   });

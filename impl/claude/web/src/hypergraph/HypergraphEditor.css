@@ -810,3 +810,46 @@
     font-size: 0.75rem;
   }
 }
+
+/* =============================================================================
+   Modal Overlay (for AnalysisQuadrant and other modals without built-in overlay)
+   ============================================================================= */
+
+.hypergraph-editor__modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  animation: hypergraph-modal-fade-in 0.15s ease-out;
+}
+
+@keyframes hypergraph-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hypergraph-editor__modal-content {
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  animation: hypergraph-modal-slide-in 0.2s ease-out;
+}
+
+@keyframes hypergraph-modal-slide-in {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

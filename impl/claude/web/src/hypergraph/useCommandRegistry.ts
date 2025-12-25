@@ -62,6 +62,9 @@ interface UseCommandRegistryOptions {
   /** Callback to enter graph mode */
   onGraphMode?: () => void;
 
+  /** Callback to open analysis quadrant */
+  onAnalysisQuadrant?: () => void;
+
   /** Callback to invoke AGENTESE path */
   onAgentese?: (path: string) => void;
 
@@ -76,6 +79,7 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
     onSave,
     onReanalyze,
     onGraphMode,
+    onAnalysisQuadrant,
     onAgentese,
     onZeroSeed,
   } = options;
@@ -170,6 +174,18 @@ export function useCommandRegistry(options: UseCommandRegistryOptions) {
       execute: () => {
         trackCommand('action:witness');
         onWitnessMode?.();
+      },
+    },
+    {
+      id: 'action:analysis',
+      label: 'Show analysis quadrant',
+      category: 'actions',
+      shortcut: 'ga',
+      icon: '🔬',
+      keywords: ['analysis', 'categorical', 'epistemic', 'dialectical', 'generative', 'operad'],
+      execute: () => {
+        trackCommand('action:analysis');
+        onAnalysisQuadrant?.();
       },
     },
 

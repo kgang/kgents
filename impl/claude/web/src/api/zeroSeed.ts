@@ -303,3 +303,34 @@ export async function getLayerNodes(layer: ZeroLayer): Promise<{
 }> {
   return fetchJson(`${API_BASE}/layers/${layer}`);
 }
+
+// =============================================================================
+// Four-Mode Analysis
+// =============================================================================
+
+export interface AnalysisItem {
+  label: string;
+  value: string;
+  status: 'pass' | 'warning' | 'fail' | 'info';
+}
+
+export interface AnalysisQuadrant {
+  status: 'pass' | 'issues' | 'unknown';
+  summary: string;
+  items: AnalysisItem[];
+}
+
+export interface NodeAnalysisResponse {
+  nodeId: string;
+  categorical: AnalysisQuadrant;
+  epistemic: AnalysisQuadrant;
+  dialectical: AnalysisQuadrant;
+  generative: AnalysisQuadrant;
+}
+
+/**
+ * Get four-mode analysis for a Zero Seed node.
+ */
+export async function getNodeAnalysis(nodeId: NodeId): Promise<NodeAnalysisResponse> {
+  return fetchJson(`${API_BASE}/nodes/${encodeURIComponent(nodeId)}/analysis`);
+}

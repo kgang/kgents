@@ -58,6 +58,8 @@ type ActionType =
   | 'TOGGLE_GRAPH_SIDEBAR'
   // Decision stream (witness history)
   | 'TOGGLE_DECISION_STREAM'
+  // Analysis quadrant
+  | 'TOGGLE_ANALYSIS_QUADRANT'
   // Loss-gradient navigation
   | 'GO_LOWEST_LOSS'
   | 'GO_HIGHEST_LOSS'
@@ -126,6 +128,7 @@ const NORMAL_BINDINGS: Binding[] = [
   { keys: ['g', 'g'], action: 'SCROLL_TO_TOP', description: 'Go to top of document' },
   { keys: ['g', 's'], action: 'TOGGLE_GRAPH_SIDEBAR', description: 'Toggle graph sidebar (Living Canvas)' },
   { keys: ['g', 'm'], action: 'TOGGLE_DECISION_STREAM', description: 'Toggle decision stream (witness marks)' },
+  { keys: ['g', 'a'], action: 'TOGGLE_ANALYSIS_QUADRANT', description: 'Toggle analysis quadrant (four-mode analysis)' },
 
   // --- Loss-Gradient Navigation (vim-style) ---
   { keys: ['g', 'l'], action: 'GO_LOWEST_LOSS', description: 'Go to lowest-loss neighbor (follow gradient)' },
@@ -193,6 +196,9 @@ export interface UseKeyHandlerOptions {
   // Decision stream (witness history)
   onToggleDecisionStream?: () => void;
 
+  // Analysis quadrant
+  onToggleAnalysisQuadrant?: () => void;
+
   // Loss-gradient navigation
   goLowestLoss?: () => void | Promise<void>;
   goHighestLoss?: () => void | Promise<void>;
@@ -241,6 +247,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     onOpenCommandPalette,
     onToggleGraphSidebar,
     onToggleDecisionStream,
+    onToggleAnalysisQuadrant,
     goLowestLoss,
     goHighestLoss,
     zoomOut,
@@ -294,6 +301,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       OPEN_COMMAND_PALETTE: () => onOpenCommandPalette?.(),
       TOGGLE_GRAPH_SIDEBAR: () => onToggleGraphSidebar?.(),
       TOGGLE_DECISION_STREAM: () => onToggleDecisionStream?.(),
+      TOGGLE_ANALYSIS_QUADRANT: () => onToggleAnalysisQuadrant?.(),
       // Loss-gradient navigation
       GO_LOWEST_LOSS: () => {
         if (goLowestLoss) {
@@ -332,6 +340,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       onOpenCommandPalette,
       onToggleGraphSidebar,
       onToggleDecisionStream,
+      onToggleAnalysisQuadrant,
       goLowestLoss,
       goHighestLoss,
       zoomOut,

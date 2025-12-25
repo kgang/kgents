@@ -3,7 +3,7 @@ import { Suspense, lazy } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from './components/error/ErrorBoundary';
 import { PageTransition, PersonalityLoading } from './components/joy';
-import { AppShell } from './components/layout';
+import { TelescopeShell } from './components/layout/TelescopeShell';
 import { WelcomeView } from './pages/WelcomePage';
 
 /**
@@ -16,7 +16,11 @@ import { WelcomeView } from './pages/WelcomePage';
  * - Feed: Memory exploration (crystals, teaching, wisdom)
  * - Zero Seed: Epistemic graph navigation (axioms, proofs, health, telescope)
  *
- * AppShell provides navbar + WitnessFooter (always-on)
+ * TelescopeShell wraps AppShell, providing:
+ * - Focal distance ruler (vertical navigation)
+ * - Loss threshold filtering
+ * - Derivation trail (proof breadcrumbs)
+ * - Telescope context for all children
  */
 
 // Main surfaces
@@ -50,7 +54,7 @@ function WelcomeScreen() {
 function App() {
   const location = useLocation();
 
-  // Main app surfaces use AppShell
+  // Main app surfaces use TelescopeShell (which wraps AppShell)
   const isAppSurface =
     location.pathname.startsWith('/editor') ||
     location.pathname.startsWith('/director') ||
@@ -61,8 +65,8 @@ function App() {
   return (
     <ErrorBoundary resetKeys={[location.pathname]}>
       {isAppSurface ? (
-        // Main surfaces — wrapped in AppShell with navbar + witness footer
-        <AppShell>
+        // Main surfaces — wrapped in TelescopeShell (which contains AppShell)
+        <TelescopeShell>
           <Suspense fallback={<LoadingFallback />}>
             <AnimatePresence mode="wait" initial={false}>
               <PageTransition key={location.pathname} variant="fade">
@@ -76,7 +80,7 @@ function App() {
               </PageTransition>
             </AnimatePresence>
           </Suspense>
-        </AppShell>
+        </TelescopeShell>
       ) : (
         // Welcome screen — no shell
         <WelcomeScreen />

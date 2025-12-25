@@ -45,6 +45,7 @@ import type { DialecticDecision, QuickDecisionInput, FullDialecticInput } from '
 import { MarkdownEditorRef } from '../components/editor';
 import { Header, TrailBar, EdgeGutter, ContentPane } from './panes';
 import type { GraphNode, Edge } from './state/types';
+import { AnalysisQuadrant } from '../components/analysis/AnalysisQuadrant';
 
 import './HypergraphEditor.css';
 
@@ -156,6 +157,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   const [vetoPanelOpen, setVetoPanelOpen] = useState(false);
   const [selectedDecision, setSelectedDecision] = useState<DialecticDecision | null>(null);
   const [dialecticLoading, setDialecticLoading] = useState(false);
+
+  // Analysis UI state
+  const [analysisQuadrantOpen, setAnalysisQuadrantOpen] = useState(false);
 
   // Loss navigation state
   const [focalDistance, setFocalDistance] = useState(1.0);
@@ -594,6 +598,8 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     onToggleGraphSidebar: () => livingCanvas.actions.toggle(),
     // Decision stream (witness history)
     onToggleDecisionStream: () => setDecisionStreamOpen((prev) => !prev),
+    // Analysis quadrant
+    onToggleAnalysisQuadrant: () => setAnalysisQuadrantOpen((prev) => !prev),
     // Loss-gradient navigation (gl/gh/gL/gH)
     goLowestLoss: handleGoLowestLoss,
     goHighestLoss: handleGoHighestLoss,
@@ -997,6 +1003,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         onWitnessMode={() => dispatch({ type: 'ENTER_WITNESS' })}
         onSave={handleWrite}
         onReanalyze={handleReanalyze}
+        onAnalysisQuadrant={() => setAnalysisQuadrantOpen(true)}
         onAgentese={(path) => {
           console.info('[HypergraphEditor] AGENTESE invoked:', path);
           // TODO: Implement AGENTESE navigation/invocation
@@ -1134,6 +1141,18 @@ export const HypergraphEditor = memo(function HypergraphEditor({
             // Hide footer by clearing decision (or add a flag)
           }}
         />
+      )}
+
+      {/* AnalysisQuadrant Modal (<leader>a) */}
+      {analysisQuadrantOpen && state.currentNode && (
+        <div className="hypergraph-editor__modal-overlay" onClick={() => setAnalysisQuadrantOpen(false)}>
+          <div className="hypergraph-editor__modal-content" onClick={(e) => e.stopPropagation()}>
+            <AnalysisQuadrant
+              nodeId={state.currentNode.path}
+              onClose={() => setAnalysisQuadrantOpen(false)}
+            />
+          </div>
+        </div>
       )}
 
       {/* Status line */}

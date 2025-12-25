@@ -16,6 +16,7 @@ import { ReactNode, useCallback, useState } from 'react';
 import { TelescopeProvider, useTelescope } from '../../hooks/useTelescopeState';
 import { AppShell } from './AppShell';
 import { FocalDistanceRuler } from './FocalDistanceRuler';
+import { DerivationTrail } from './DerivationTrail';
 import './TelescopeShell.css';
 
 // =============================================================================
@@ -148,6 +149,9 @@ function TelescopeShellInner({ children }: { children: ReactNode }) {
           onToggle={handleGradientToggle}
         />
       </div>
+
+      {/* Derivation trail - bottom breadcrumb */}
+      <DerivationTrail />
 
       {/* Main content (wrapped in AppShell) */}
       <div className="telescope-shell__content">

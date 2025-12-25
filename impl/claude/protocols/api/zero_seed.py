@@ -339,6 +339,49 @@ class LayerNodesResponse(BaseModel):
 
 
 # =============================================================================
+# Analysis Response Models (Four-Mode Analysis)
+# =============================================================================
+
+
+class AnalysisItem(BaseModel):
+    """A single analysis item in a quadrant."""
+
+    label: str = Field(..., description="Item label")
+    value: str = Field(..., description="Item value")
+    status: str = Field(..., description="Status: pass, warning, fail, info")
+
+
+class AnalysisQuadrant(BaseModel):
+    """Analysis data for one quadrant."""
+
+    status: str = Field(
+        ..., description="Overall status: pass, issues, unknown"
+    )
+    summary: str = Field(..., description="Summary text")
+    items: list[AnalysisItem] = Field(
+        default_factory=list, description="Analysis items"
+    )
+
+
+class NodeAnalysisResponse(BaseModel):
+    """Four-mode analysis response for a Zero Seed node."""
+
+    node_id: str = Field(..., description="Node ID")
+    categorical: AnalysisQuadrant = Field(
+        ..., description="Categorical analysis (laws, fixed points)"
+    )
+    epistemic: AnalysisQuadrant = Field(
+        ..., description="Epistemic analysis (grounding, justification)"
+    )
+    dialectical: AnalysisQuadrant = Field(
+        ..., description="Dialectical analysis (tensions, synthesis)"
+    )
+    generative: AnalysisQuadrant = Field(
+        ..., description="Generative analysis (compression, regeneration)"
+    )
+
+
+# =============================================================================
 # Mock Data Generators (Placeholder for LLM Implementation)
 # =============================================================================
 
@@ -736,6 +779,156 @@ def create_zero_seed_router() -> APIRouter | None:
             count=len(nodes),
         )
 
+    # =========================================================================
+    # Node Analysis (Four-Mode)
+    # =========================================================================
+
+    @router.get("/nodes/{node_id}/analysis", response_model=NodeAnalysisResponse)
+    async def get_node_analysis(node_id: str) -> NodeAnalysisResponse:
+        """
+        Get four-mode analysis for a Zero Seed node.
+
+        Returns categorical, epistemic, dialectical, and generative analysis
+        in a format suitable for the AnalysisQuadrant UI component.
+
+        Args:
+            node_id: Node ID to analyze
+
+        Returns:
+            Four-mode analysis report
+
+        Note:
+            Currently returns meaningful mock data. Real implementation will:
+            1. Load node content from Zero Seed graph (D-gent)
+            2. Run AnalysisService.analyze_full(node_content)
+            3. Transform reports to AnalysisQuadrant format
+        """
+        # For now, generate rich mock data based on node ID
+        # This provides a working UI while the full pipeline is built
+
+        # Categorical: Verify composition laws and fixed points
+        categorical_items = [
+            AnalysisItem(
+                label="Identity Law",
+                value="Id >> f = f = f >> Id",
+                status="pass"
+            ),
+            AnalysisItem(
+                label="Associativity",
+                value="(f >> g) >> h = f >> (g >> h)",
+                status="pass"
+            ),
+            AnalysisItem(
+                label="Fixed Point",
+                value="None detected" if "axiom" in node_id else "Self-referential",
+                status="info" if "axiom" in node_id else "warning"
+            ),
+        ]
+
+        categorical = AnalysisQuadrant(
+            status="pass",
+            summary="All composition laws hold. No violations detected.",
+            items=categorical_items,
+        )
+
+        # Epistemic: Analyze justification and grounding
+        epistemic_items = [
+            AnalysisItem(
+                label="Layer",
+                value="L4 (Specification)",
+                status="info"
+            ),
+            AnalysisItem(
+                label="Grounding",
+                value="Terminates at axiom A1",
+                status="pass"
+            ),
+            AnalysisItem(
+                label="Evidence Tier",
+                value="Empirical",
+                status="info"
+            ),
+            AnalysisItem(
+                label="Confidence",
+                value="Definitely (0.95)",
+                status="pass"
+            ),
+        ]
+
+        epistemic = AnalysisQuadrant(
+            status="pass",
+            summary="Properly grounded through axiom chain. High confidence.",
+            items=epistemic_items,
+        )
+
+        # Dialectical: Identify tensions and synthesize
+        dialectical_items = [
+            AnalysisItem(
+                label="Tension 1",
+                value="Expressiveness vs Complexity",
+                status="pass"
+            ),
+            AnalysisItem(
+                label="Resolution",
+                value="Use compositional primitives",
+                status="pass"
+            ),
+            AnalysisItem(
+                label="Tension 2",
+                value="Coverage vs Minimalism",
+                status="pass"
+            ),
+            AnalysisItem(
+                label="Classification",
+                value="Productive (design-driving)",
+                status="info"
+            ),
+        ]
+
+        dialectical = AnalysisQuadrant(
+            status="pass",
+            summary="2 productive tensions identified. Both resolved via composition.",
+            items=dialectical_items,
+        )
+
+        # Generative: Test compression and regeneration
+        generative_items = [
+            AnalysisItem(
+                label="Compression Ratio",
+                value="0.67 (good)",
+                status="pass"
+            ),
+            AnalysisItem(
+                label="Minimal Kernel",
+                value="3 axioms",
+                status="info"
+            ),
+            AnalysisItem(
+                label="Regeneration Test",
+                value="Passed",
+                status="pass"
+            ),
+            AnalysisItem(
+                label="Missing Elements",
+                value="None",
+                status="pass"
+            ),
+        ]
+
+        generative = AnalysisQuadrant(
+            status="pass",
+            summary="Regenerable from 3 axioms. Good compression.",
+            items=generative_items,
+        )
+
+        return NodeAnalysisResponse(
+            node_id=node_id,
+            categorical=categorical,
+            epistemic=epistemic,
+            dialectical=dialectical,
+            generative=generative,
+        )
+
     return router
 
 
@@ -753,4 +946,7 @@ __all__ = [
     "NavigateResponse",
     "NodeDetailResponse",
     "LayerNodesResponse",
+    "NodeAnalysisResponse",
+    "AnalysisQuadrant",
+    "AnalysisItem",
 ]

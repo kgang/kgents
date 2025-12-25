@@ -129,7 +129,7 @@ const {
 } = useAnalysis(nodeId);
 ```
 
-**Mock Data**: Currently uses mock data. Replace `generateMockAnalysis()` in `useAnalysis.ts` with actual API call when backend is ready.
+**Data Source**: Fetches from `/api/zero-seed/nodes/{nodeId}/analysis` endpoint. The backend currently returns meaningful mock data; full AnalysisService integration is in progress.
 
 ## Styling
 
@@ -153,25 +153,33 @@ All panels use the viridis palette:
 
 ## Backend Integration
 
-### Expected API Endpoint
+### API Endpoint
 
 ```
-GET /api/analyze/{nodeId}
+GET /api/zero-seed/nodes/{nodeId}/analysis
 ```
 
 **Response**:
 ```json
 {
-  "target": "spec/protocols/witness.md",
-  "categorical": { ... },
+  "nodeId": "zn-axiom-001",
+  "categorical": {
+    "status": "pass",
+    "summary": "All composition laws hold...",
+    "items": [
+      { "label": "Identity Law", "value": "Id >> f = f", "status": "pass" },
+      ...
+    ]
+  },
   "epistemic": { ... },
   "dialectical": { ... },
-  "generative": { ... },
-  "synthesis": "Overall analysis summary"
+  "generative": { ... }
 }
 ```
 
-See type definitions in `useAnalysis.ts` for complete schema.
+The hook transforms this simplified backend format into the richer report types expected by the UI panels.
+
+See type definitions in `useAnalysis.ts` and `api/zeroSeed.ts` for complete schema.
 
 ## Related
 
