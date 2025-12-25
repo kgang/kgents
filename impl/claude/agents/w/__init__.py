@@ -31,12 +31,10 @@ Usage:
 
 from .bridge import bridge_to_witness
 from .observer import ProcessObserver, WireEvent, observe_subprocess
-from .protocol import WireObservable  # Compatibility shim for O-gent
 
 __all__ = [
     "ProcessObserver",
     "WireEvent",
     "observe_subprocess",
     "bridge_to_witness",
-    "WireObservable",  # Deprecated - for O-gent compatibility only
 ]

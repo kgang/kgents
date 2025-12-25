@@ -56,15 +56,10 @@ from agents.o import (
 from agents.o.observable_panopticon import (
     EmissionMode,
     ObservablePanopticon,
-    WireStatusSnapshot,
+    WitnessStatusSnapshot,
     create_observable_panopticon,
     create_panopticon_dashboard,
-    create_wire_observer,
-)
-
-# W-gent imports
-from agents.w import (
-    WireObservable,
+    create_witness_observer,
 )
 
 # =============================================================================
@@ -113,10 +108,6 @@ def mock_agent() -> MagicMock:
     return agent
 
 
-@pytest.fixture
-def wire_observable() -> WireObservable:
-    """Create a WireObservable for tests."""
-    return WireObservable("test-observable")
 
 
 @pytest.fixture
@@ -156,14 +147,13 @@ class TestObservationWirePipeline:
         panopticon = create_observable_panopticon()
         assert panopticon is not None
         assert isinstance(panopticon, ObservablePanopticon)
-        assert isinstance(panopticon, WireObservable)
 
     def test_observable_panopticon_collects_snapshot(self, panopticon: Any) -> None:
         """Test ObservablePanopticon collects status snapshots."""
         obs_panopticon = ObservablePanopticon(panopticon=panopticon)
         snapshot = obs_panopticon.collect_snapshot()
 
-        assert isinstance(snapshot, WireStatusSnapshot)
+        assert isinstance(snapshot, WitnessStatusSnapshot)
         assert snapshot.system_status in (
             "HOMEOSTATIC",
             "DEGRADED",
@@ -176,27 +166,27 @@ class TestObservationWirePipeline:
         assert isinstance(snapshot.economic_healthy, bool)
 
     def test_snapshot_converts_to_dict(self, panopticon: Any) -> None:
-        """Test WireStatusSnapshot serializes for wire protocol."""
+        """Test WitnessStatusSnapshot serializes for Witness marks."""
         obs_panopticon = ObservablePanopticon(panopticon=panopticon)
         snapshot = obs_panopticon.collect_snapshot()
 
-        wire_dict = snapshot.to_dict()
+        witness_dict = snapshot.to_dict()
 
-        assert "timestamp" in wire_dict
-        assert "system_status" in wire_dict
-        assert "telemetry" in wire_dict
-        assert "semantic" in wire_dict
-        assert "economic" in wire_dict
-        assert "bootstrap" in wire_dict
-        assert "alerts" in wire_dict
+        assert "timestamp" in witness_dict
+        assert "system_status" in witness_dict
+        assert "telemetry" in witness_dict
+        assert "semantic" in witness_dict
+        assert "economic" in witness_dict
+        assert "bootstrap" in witness_dict
+        assert "alerts" in witness_dict
 
         # Check nested structure
-        assert "healthy" in wire_dict["telemetry"]
-        assert "latency_p95" in wire_dict["telemetry"]
+        assert "healthy" in witness_dict["telemetry"]
+        assert "latency_p95" in witness_dict["telemetry"]
 
-    def test_wire_observer_creates_context(self, mock_agent: MagicMock) -> None:
-        """Test WireObserver creates observation context."""
-        observer = create_wire_observer()
+    def test_witness_observer_creates_context(self, mock_agent: MagicMock) -> None:
+        """Test WitnessObserver creates observation context."""
+        observer = create_witness_observer()
         context = observer.pre_invoke(mock_agent, {"input": "test"})
 
         assert isinstance(context, ObservationContext)
@@ -205,9 +195,9 @@ class TestObservationWirePipeline:
         assert "input_preview" in context.metadata
 
     @pytest.mark.asyncio
-    async def test_wire_observer_records_completion(self, mock_agent: MagicMock) -> None:
-        """Test WireObserver records observation completion."""
-        observer = create_wire_observer()
+    async def test_witness_observer_records_completion(self, mock_agent: MagicMock) -> None:
+        """Test WitnessObserver records observation completion."""
+        observer = create_witness_observer()
         context = observer.pre_invoke(mock_agent, {"input": "test"})
 
         result = await observer.post_invoke(context, {"output": "done"}, 42.5)
@@ -217,9 +207,9 @@ class TestObservationWirePipeline:
         assert result.duration_ms == 42.5
         assert result.output_data == {"output": "done"}
 
-    def test_wire_observer_records_entropy(self, mock_agent: MagicMock) -> None:
-        """Test WireObserver records error events."""
-        observer = create_wire_observer()
+    def test_witness_observer_records_entropy(self, mock_agent: MagicMock) -> None:
+        """Test WitnessObserver records error events."""
+        observer = create_witness_observer()
         context = observer.pre_invoke(mock_agent, {"input": "test"})
 
         error = ValueError("Test error")
@@ -256,8 +246,13 @@ class TestObservationWirePipeline:
         # Same status, should not emit
         assert obs_panopticon.should_emit(snapshot2) is False
 
-    def test_wire_metrics_update(self) -> None:
-        """Test wire metrics are tracked."""
+    def test_witness_marks_emitted(self) -> None:
+        """Test Witness marks are emitted."""
+        from services.witness import get_mark_store, reset_mark_store
+
+        # Reset mark store for clean test
+        reset_mark_store()
+
         obs_panopticon = create_observable_panopticon()
 
         for _ in range(5):
@@ -266,6 +261,11 @@ class TestObservationWirePipeline:
 
         # History should be populated
         assert len(obs_panopticon.get_history()) == 5
+
+        # Witness marks should be created
+        store = get_mark_store()
+        marks = list(store.query(origins=("o-gent-panopticon",)))
+        assert len(marks) == 5
 
 
 # =============================================================================
@@ -550,26 +550,31 @@ class TestObservationStackFullIntegration:
     async def test_observe_emit_display_record_flow(
         self, historian: Historian, mock_agent: MagicMock
     ) -> None:
-        """Test O-gent observe → W-gent emit → I-gent display → N-gent record."""
+        """Test O-gent observe → Witness emit → I-gent display → N-gent record."""
+        from services.witness import reset_mark_store
+
+        # Reset mark store for clean test
+        reset_mark_store()
+
         # 1. Create observation infrastructure
         obs_panopticon = create_observable_panopticon()
-        wire_observer = create_wire_observer()
+        witness_observer = create_witness_observer()
 
         # 2. O-gent: Observe agent
-        context = wire_observer.pre_invoke(mock_agent, {"task": "compute"})
+        context = witness_observer.pre_invoke(mock_agent, {"task": "compute"})
 
         # 3. Simulate agent execution
         await asyncio.sleep(0.01)  # Simulate work
 
         # 4. O-gent: Complete observation
-        result = await wire_observer.post_invoke(context, {"result": "done"}, 10.0)
+        result = await witness_observer.post_invoke(context, {"result": "done"}, 10.0)
 
-        # 5. W-gent: Emit to wire
+        # 5. Witness: Emit to MarkStore
         snapshot = obs_panopticon.collect_snapshot()
         obs_panopticon.emit_snapshot(snapshot)
-        wire_dict = snapshot.to_dict()
+        witness_dict = snapshot.to_dict()
 
-        assert "timestamp" in wire_dict
+        assert "timestamp" in witness_dict
 
         # 6. I-gent: Format for display
         dashboard = create_panopticon_dashboard(obs_panopticon)
@@ -602,14 +607,14 @@ class TestObservationStackFullIntegration:
     ) -> None:
         """Test observation flow with VoI budget constraints."""
         # 1. Create VoI-constrained observation
-        wire_observer = create_wire_observer()
+        witness_observer = create_witness_observer()
 
         # 2. Observe with budget tracking
-        context = wire_observer.pre_invoke(mock_agent, {"task": "expensive"})
+        context = witness_observer.pre_invoke(mock_agent, {"task": "expensive"})
 
         await asyncio.sleep(0.01)
 
-        result = await wire_observer.post_invoke(context, {"value": 100}, 50.0)
+        result = await witness_observer.post_invoke(context, {"value": 100}, 50.0)
         assert result is not None  # Observation completed
 
         # 3. Record in VoI ledger

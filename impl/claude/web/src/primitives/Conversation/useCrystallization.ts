@@ -8,7 +8,23 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { SessionCrystal, Turn } from './store';
+import type { Turn } from './types';
+
+// SessionCrystal type (duplicated from store for now)
+export interface SessionCrystal {
+  session_id: string;
+  title: string;
+  summary: string;
+  key_decisions: string[];
+  artifacts: string[];
+  final_evidence: {
+    confidence: number;
+    tools_succeeded: number;
+    tools_failed: number;
+  };
+  created_at: string;
+  turn_count: number;
+}
 
 // =============================================================================
 // Types

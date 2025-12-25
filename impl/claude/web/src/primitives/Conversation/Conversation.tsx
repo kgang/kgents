@@ -13,7 +13,7 @@
  * @see spec/protocols/chat-web.md
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import type { ConversationProps } from './types';
 import { InputArea } from './InputArea';
 import { BranchTree } from './BranchTree';
@@ -39,7 +39,6 @@ export function Conversation({
   turns,
   onMessage,
   onBranch,
-  onCrystallize,
   onRewind,
   safetyMode,
   isStreaming = false,
@@ -53,7 +52,6 @@ export function Conversation({
   className = '',
 }: ConversationProps) {
   const messageListRef = useRef<HTMLDivElement>(null);
-  const [message, setMessage] = useState('');
 
   // Branching system (optional - only if onBranch provided)
   const sessionId = 'current'; // TODO: Pass from props or context
@@ -68,7 +66,6 @@ export function Conversation({
   const handleSend = useCallback(
     async (content: string) => {
       if (!content.trim() || isStreaming) return;
-      setMessage('');
       onMessage(content);
     },
     [onMessage, isStreaming]
@@ -76,7 +73,7 @@ export function Conversation({
 
   // Rewind handler
   const handleRewindClick = useCallback(
-    (turns: number) => {
+    async (turns: number) => {
       if (onRewind) {
         onRewind(turns.toString());
       }
