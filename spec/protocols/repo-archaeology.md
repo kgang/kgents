@@ -212,8 +212,6 @@ KNOWN_FEATURES = {
 
     # Question marks (to be classified)
     "K8-gents": ["spec/k8-gents/*", "impl/claude/k8/*"],
-    "Psi-gents": ["spec/psi-gents/*"],
-    "Omega-gents": ["spec/omega-gents/*"],
     "Evergreen": ["spec/protocols/evergreen*.md", "impl/claude/protocols/evergreen/*"],
 }
 
@@ -367,17 +365,11 @@ async def generate_history_crystals(trajectories: list[FeatureTrajectory]) -> li
 | Feature | Commits | Velocity | Last Active |
 |---------|---------|----------|-------------|
 | K8-gents | 45 | 0.02 | 2025-11-20 |
-| Psi-gents | 12 | 0.00 | 2025-10-15 |
 
 ## OVER-ENGINEERED (High complexity, low usage)
 | Feature | Commits | Test Coverage | Diagnosis |
 |---------|---------|---------------|-----------|
 | Evergreen | 89 | 92% | 216 tests for problem that doesn't exist |
-
-## ABANDONED (No recent activity, broken/missing tests)
-| Feature | Commits | Last Active | Fate Recommendation |
-|---------|---------|-------------|---------------------|
-| Omega-gents | 8 | 2025-09-01 | Archive or revive? |
 ```
 
 ### 2. ASHC Prior Summary

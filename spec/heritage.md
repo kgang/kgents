@@ -159,7 +159,7 @@ These papers form the conceptual DNA of kgents. Every design decision, every arc
 | Skill library | L-gent registry |
 | Code generation | J-gent JIT reification |
 | Curriculum | B-gent hypothesis evolution |
-| Environment feedback | Omega-gent proprioception |
+| Environment feedback | O-gent proprioception |
 | Skill transfer | Generative principle (spec → impl) |
 
 ---

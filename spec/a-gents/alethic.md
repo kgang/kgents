@@ -282,7 +282,7 @@ Each concern is independent and composable.
 - [core/skeleton.md](core/skeleton.md) — Minimal agent contract
 - [../architecture/polyfunctor.md](../architecture/polyfunctor.md) — Polynomial theory
 - [../agents/primitives.md](../agents/primitives.md) — 17 atomic agents
-- [../protocols/agentese-as-route.md](../protocols/agentese-as-route.md) — AGENTESE integration
+- [../protocols/projection-web.md](../protocols/projection-web.md) — Web projection (URLs + Forms)
 
 ---
 

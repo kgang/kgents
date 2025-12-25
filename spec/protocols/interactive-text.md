@@ -4,7 +4,7 @@
 
 **Status:** Canonical Specification
 **Date:** 2025-12-20
-**Prerequisites:** `projection.md`, `agentese.md`, `metatheory.md`, AD-009 (Metaphysical Fullstack)
+**Prerequisites:** `projection.md`, `agentese.md`, `formal-verification.md`, AD-009 (Metaphysical Fullstack)
 **Implementation:** `services/interactive-text/` (planned)
 
 ---

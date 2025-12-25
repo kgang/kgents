@@ -27,7 +27,7 @@ A protocol is not a single agent—it is the **grammar of interaction** between 
 | [projection.md](projection.md) | Multi-target rendering (CLI/TUI/Web/marimo) | I, Reactive | Spec v1.0 |
 | [interactive-text.md](interactive-text.md) | Living documents with semantic tokens | I, D, Verification | Spec v1.0 |
 | [umwelt.md](umwelt.md) | Agent-specific world projection | D, F, G | Spec v1.0 |
-| [aspect-form-projection.md](aspect-form-projection.md) | Observer-dependent form rendering | Contract, Observer | Spec v1.0 |
+| [projection-web.md](projection-web.md) | Web projection: URLs + Forms | Contract, Observer | **Canonical** |
 | [turn.md](turn.md) | Fixed-point event primitive, causal history | F, N, Ω | Spec v1.0 |
 | [cli.md](cli.md) | Human-agent interface membrane | P, K, O | Spec v1.0 |
 | [cross-pollination.md](cross-pollination.md) | Agent coordination without coupling | W, L, M, K | Spec v1.0 |

@@ -40,11 +40,9 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
    - [k-gent/](k-gent/) - Personalization Functor (system's fix)
    - [l-gents/](l-gents/) - Library (knowledge curation, semantic discovery)
    - [m-gents/](m-gents/) - Memory (holographic associative memory, memory as morphism)
-   - [omega-gents/](omega-gents/) - Somatic (morphemes, proprioception, infrastructure as body)
    - [n-gents/](n-gents/) - Narrator (story-telling, time-travel debugging)
    - [o-gents/](o-gents/) - Observability (system-wide telemetry, bootstrap witness)
    - [p-gents/](p-gents/) - Parser (multi-strategy parsing, structured output)
-   - [psi-gents/](psi-gents/) - Psychopomp (holonic projection, MHC, Jung, Lacan, metaethics)
    - [r-gents/](r-gents/) - Refinery (prompt optimization, DSPy/TextGrad/OPRO integration)
    - [t-gents/](t-gents/) - Testing (algebraic reliability, Types I-V)
    - [u-gents/](u-gents/) - Utility (tool use, MCP integration)
@@ -83,15 +81,6 @@ Agents don't exist in isolation. Key integration points:
 | R+T | T-gent provides loss signals for R-gent optimization |
 | R+B | B-gent gates R-gent budget (ROI check) |
 | R+L | L-gent indexes R-gent optimization metadata |
-| Ψ+H | Ψ-gent uses H-gent dialectics for ego/shadow synthesis |
-| Ψ+O | O-gent observes Ψ-gent Borromean register transitions |
-| Ψ+N | N-gent narrates Ψ-gent's integration journeys |
-| Ω+Turn | Turn Protocol chrysalis uses Ω-gent to manifest bodies |
-| Ω+B | B-gent meters Ω-gent morphology costs (ATP, not Approval) |
-| Ω+D | D-gent sidecar provides state persistence via `with_sidecar()` |
-| Ω+N | N-gent chronicles Ω-gent pod lifecycle events |
-| Ω+O | O-gent observes Ω-gent proprioception metrics |
-| Ω+Ψ | Ψ-gent metaphors can recommend Ω-gent morphology changes |
 
 See `impl/claude/agents/*/` `__init__.py` files for explicit cross-pollination labels.
 
