@@ -8,8 +8,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { SessionCrystalData } from './SessionCrystal';
-import type { Turn } from './TrailingSession';
+import type { SessionCrystal, Turn } from './store';
 
 // =============================================================================
 // Types
@@ -41,7 +40,7 @@ export interface UseCrystallizationOptions {
   evidenceThresholdTurns?: number;
 
   /** Callback when session crystallizes */
-  onCrystallize?: (crystal: SessionCrystalData) => void;
+  onCrystallize?: (crystal: SessionCrystal) => void;
 
   /** Backend API base URL */
   apiUrl?: string;
@@ -49,7 +48,7 @@ export interface UseCrystallizationOptions {
 
 export interface UseCrystallizationResult {
   /** The crystallized session (null if not crystallized) */
-  crystallizedSession: SessionCrystalData | null;
+  crystallizedSession: SessionCrystal | null;
 
   /** Trailing turns (not in active context) */
   trailingTurns: Turn[];
@@ -126,7 +125,7 @@ export function useCrystallization(
     apiUrl = '/api/chat',
   } = options;
 
-  const [crystallizedSession, setCrystallizedSession] = useState<SessionCrystalData | null>(null);
+  const [crystallizedSession, setCrystallizedSession] = useState<SessionCrystal | null>(null);
   const [trailingTurns, setTrailingTurns] = useState<Turn[]>([]);
   const [isTrailing, setIsTrailing] = useState(false);
   const [currentTrigger, setCurrentTrigger] = useState<CrystallizationTrigger | null>(null);
@@ -152,11 +151,11 @@ export function useCrystallization(
         throw new Error('Failed to crystallize session');
       }
 
-      const crystal: SessionCrystalData = await response.json();
+      const crystal: SessionCrystal = await response.json();
 
       // Transition to trailing state
       setCrystallizedSession(crystal);
-      setTrailingTurns(turns.map(t => ({ ...t, in_context: false, trailing: true })));
+      setTrailingTurns(turns);
       setIsTrailing(true);
       setCurrentTrigger(null);
 

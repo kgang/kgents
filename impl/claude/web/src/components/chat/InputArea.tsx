@@ -13,6 +13,7 @@
  */
 
 import { memo, useCallback, useRef, useState, KeyboardEvent } from 'react';
+import { ForkModal } from './ForkModal';
 import './InputArea.css';
 
 // =============================================================================
@@ -22,8 +23,11 @@ import './InputArea.css';
 export interface InputAreaProps {
   onSend: (message: string) => Promise<void>;
   onRewind: (turns: number) => Promise<void>;
+  onFork?: (branchName: string, forkPoint?: number) => Promise<void>;
   disabled?: boolean;
   compact?: boolean;
+  currentTurn?: number;
+  existingBranches?: string[];
 }
 
 // =============================================================================
@@ -36,11 +40,15 @@ export interface InputAreaProps {
 export const InputArea = memo(function InputArea({
   onSend,
   onRewind,
+  onFork,
   disabled = false,
   compact = false,
+  currentTurn = 0,
+  existingBranches = [],
 }: InputAreaProps) {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [forkModalOpen, setForkModalOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -101,6 +109,24 @@ export const InputArea = memo(function InputArea({
     }
   }, [onRewind]);
 
+  // Fork handlers
+  const handleForkClick = useCallback(() => {
+    setForkModalOpen(true);
+  }, []);
+
+  const handleForkConfirm = useCallback(
+    async (branchName: string, forkPoint?: number) => {
+      if (onFork) {
+        await onFork(branchName, forkPoint);
+      }
+    },
+    [onFork]
+  );
+
+  const handleForkClose = useCallback(() => {
+    setForkModalOpen(false);
+  }, []);
+
   return (
     <div className={`input-area ${compact ? 'input-area--compact' : ''}`}>
       {/* Controls row (fork/rewind) */}
@@ -114,10 +140,11 @@ export const InputArea = memo(function InputArea({
           >
             ↶ Rewind
           </button>
-          {/* Fork button placeholder - would open branch dialog */}
+          {/* Fork button */}
           <button
             className="input-area__control-button"
-            disabled={disabled}
+            onClick={handleForkClick}
+            disabled={disabled || !onFork}
             title="Fork conversation"
           >
             ⑂ Fork
@@ -156,6 +183,16 @@ export const InputArea = memo(function InputArea({
           </span>
         </div>
       )}
+
+      {/* Fork Modal */}
+      <ForkModal
+        isOpen={forkModalOpen}
+        onClose={handleForkClose}
+        onConfirm={handleForkConfirm}
+        currentTurn={currentTurn}
+        existingBranches={existingBranches}
+        canFork={existingBranches.length < 3}
+      />
     </div>
   );
 });

@@ -1,0 +1,101 @@
+/**
+ * UserMessage — User message bubble styles
+ *
+ * BRUTALIST: Sharp rectangles, left border accent, no rounding
+ */
+
+/* =============================================================================
+   Container
+   ============================================================================= */
+
+.user-message {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* =============================================================================
+   Bubble
+   ============================================================================= */
+
+.user-message__bubble {
+  max-width: 70%;
+  padding: 8px 12px;
+  background: var(--brutalist-bg, #0a0a0a);
+  border: 1px solid var(--brutalist-border, #333);
+  border-left: 3px solid var(--brutalist-accent, #fff);
+  border-radius: 0;
+  color: var(--brutalist-text, #e0e0e0);
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* =============================================================================
+   Mentions
+   ============================================================================= */
+
+.user-message__mentions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--brutalist-border, #333);
+}
+
+.user-message__mention {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: var(--brutalist-surface, #141414);
+  border: 1px solid var(--brutalist-border, #333);
+  border-radius: 0;
+  font-size: 11px;
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.user-message__mention-type {
+  color: var(--brutalist-accent, #fff);
+  font-weight: 700;
+}
+
+.user-message__mention-query {
+  color: var(--brutalist-text-dim, #888);
+}
+
+/* =============================================================================
+   Content
+   ============================================================================= */
+
+.user-message__content {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* =============================================================================
+   Pin Indicator
+   ============================================================================= */
+
+.user-message__pin {
+  flex-shrink: 0;
+  font-size: 12px;
+  opacity: 0.5;
+  cursor: help;
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .user-message__bubble {
+    max-width: 85%;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}

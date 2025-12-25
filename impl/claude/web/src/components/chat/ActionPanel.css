@@ -1,0 +1,205 @@
+/**
+ * ActionPanel Styles — BRUTALIST VERSION
+ *
+ * Sharp edges, high contrast, text-only status
+ */
+
+.action-panel {
+  border: 1px solid var(--brutalist-border, #333);
+  border-radius: 0;
+  background: var(--brutalist-surface, #141414);
+  overflow: hidden;
+  transition: none;
+}
+
+.action-panel--expanded {
+  background: var(--brutalist-surface, #141414);
+}
+
+/* Header */
+.action-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: none;
+}
+
+.action-panel__header:hover {
+  background: var(--brutalist-bg, #0a0a0a);
+}
+
+.action-panel__header:focus {
+  outline: none;
+  background: var(--brutalist-bg, #0a0a0a);
+  box-shadow: inset 0 0 0 2px var(--brutalist-accent, #fff);
+}
+
+.action-panel__toggle-icon {
+  color: var(--brutalist-text-dim, #888);
+  font-size: 10px;
+  transition: none;
+  flex-shrink: 0;
+}
+
+.action-panel--expanded .action-panel__toggle-icon {
+  transform: none;
+}
+
+.action-panel__title {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+  color: var(--brutalist-text, #e0e0e0);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex: 1;
+}
+
+.action-panel__summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+}
+
+.action-panel__summary-item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Action List */
+.action-panel__actions {
+  padding: 4px 8px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--brutalist-border, #333);
+}
+
+/* Action Detail */
+.action-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action-detail__header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 0;
+  transition: none;
+}
+
+.action-detail__header--clickable {
+  cursor: pointer;
+}
+
+.action-detail__header--clickable:hover {
+  background: var(--brutalist-bg, #0a0a0a);
+  border: 1px solid var(--brutalist-border, #333);
+}
+
+.action-detail__header:focus {
+  outline: none;
+  background: var(--brutalist-bg, #0a0a0a);
+  box-shadow: 0 0 0 2px var(--brutalist-accent, #fff);
+}
+
+.action-detail__status {
+  font-size: 12px;
+  flex-shrink: 0;
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+}
+
+.action-detail__name {
+  font-size: 12px;
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+  color: var(--brutalist-text, #e0e0e0);
+  flex: 1;
+}
+
+.action-detail__duration {
+  font-size: 10px;
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+  color: var(--brutalist-text-dim, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.action-detail__expand-icon {
+  font-size: 9px;
+  color: var(--brutalist-text-dim, #888);
+  margin-left: 2px;
+}
+
+/* Action Output */
+.action-detail__output {
+  margin-left: 16px;
+  padding: 6px;
+  background: var(--brutalist-bg, #0a0a0a);
+  border: 1px solid var(--brutalist-border, #333);
+  border-radius: 0;
+}
+
+.action-detail__output-label {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+  color: var(--brutalist-text-dim, #888);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.action-detail__output-text {
+  margin: 0;
+  padding: 4px;
+  background: var(--brutalist-surface, #141414);
+  border-radius: 0;
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--brutalist-text, #e0e0e0);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.action-detail__error .action-detail__output-text {
+  color: var(--brutalist-danger, #ff4444);
+}
+
+/* Action Preview */
+.action-detail__preview {
+  margin-left: 16px;
+  font-size: 11px;
+  color: var(--brutalist-text-dim, #888);
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+  padding-left: 6px;
+}
+
+/* Scrollbar for output */
+.action-detail__output-text::-webkit-scrollbar {
+  height: 8px;
+}
+
+.action-detail__output-text::-webkit-scrollbar-track {
+  background: var(--brutalist-bg, #0a0a0a);
+  border-top: 1px solid var(--brutalist-border, #333);
+}
+
+.action-detail__output-text::-webkit-scrollbar-thumb {
+  background: var(--brutalist-border, #333);
+  border: 1px solid var(--brutalist-bg, #0a0a0a);
+}
+
+.action-detail__output-text::-webkit-scrollbar-thumb:hover {
+  background: var(--brutalist-accent, #fff);
+}

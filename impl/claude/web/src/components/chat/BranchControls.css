@@ -1,0 +1,419 @@
+/**
+ * BranchControls Styles
+ *
+ * Fork/merge/rewind UI controls for chat sessions.
+ */
+
+/* =============================================================================
+   Container
+   ============================================================================= */
+
+.branch-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-1, #12121f);
+  border-top: 1px solid var(--surface-2, #1a1a2e);
+}
+
+/* =============================================================================
+   Buttons
+   ============================================================================= */
+
+.branch-controls__button {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: var(--surface-2, #1a1a2e);
+  border: 1px solid var(--surface-3, #252540);
+  border-radius: 4px;
+  color: var(--text-primary, #e5e7eb);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+
+.branch-controls__button:hover:not(:disabled) {
+  background: var(--surface-3, #252540);
+  border-color: var(--surface-4, #333350);
+}
+
+.branch-controls__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.branch-controls__button:focus-visible {
+  outline: 2px solid var(--accent-primary, #8b5cf6);
+  outline-offset: 2px;
+}
+
+/* =============================================================================
+   Fork Button
+   ============================================================================= */
+
+.branch-controls__fork {
+  border-color: var(--accent-primary, #8b5cf6);
+  color: var(--accent-primary, #8b5cf6);
+}
+
+.branch-controls__fork:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--accent-primary, #8b5cf6);
+}
+
+.branch-controls__badge {
+  font-size: 0.7rem;
+  padding: 0.125rem 0.375rem;
+  background: var(--surface-3, #252540);
+  border-radius: 2px;
+  color: var(--text-muted, #666);
+}
+
+/* =============================================================================
+   Icons & Labels
+   ============================================================================= */
+
+.branch-controls__icon {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.branch-controls__label {
+  font-weight: 500;
+}
+
+/* =============================================================================
+   Merge Dropdown
+   ============================================================================= */
+
+.branch-controls__merge {
+  position: relative;
+}
+
+.branch-controls__select {
+  padding: 0.5rem 2rem 0.5rem 0.875rem;
+  background: var(--surface-2, #1a1a2e);
+  border: 1px solid var(--surface-3, #252540);
+  border-radius: 4px;
+  color: var(--text-primary, #e5e7eb);
+  font-size: 0.8rem;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  transition: all 0.15s ease;
+}
+
+.branch-controls__select:hover:not(:disabled) {
+  background-color: var(--surface-3, #252540);
+  border-color: var(--surface-4, #333350);
+}
+
+.branch-controls__select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.branch-controls__select optgroup {
+  background: var(--surface-2, #1a1a2e);
+  color: var(--text-primary, #e5e7eb);
+  font-weight: 600;
+}
+
+.branch-controls__select option {
+  background: var(--surface-1, #12121f);
+  color: var(--text-secondary, #9ca3af);
+  padding: 0.5rem;
+}
+
+/* =============================================================================
+   Rewind Controls
+   ============================================================================= */
+
+.branch-controls__rewind {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 300px;
+}
+
+.branch-controls__rewind-btn {
+  flex-shrink: 0;
+}
+
+.branch-controls__slider {
+  flex: 1;
+  height: 4px;
+  background: var(--surface-3, #252540);
+  border-radius: 2px;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.branch-controls__slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent-primary, #8b5cf6);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.branch-controls__slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--accent-primary, #8b5cf6);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.branch-controls__slider:hover:not(:disabled)::-webkit-slider-thumb {
+  background: var(--accent-secondary, #a78bfa);
+  transform: scale(1.2);
+}
+
+.branch-controls__slider:hover:not(:disabled)::-moz-range-thumb {
+  background: var(--accent-secondary, #a78bfa);
+  transform: scale(1.2);
+}
+
+.branch-controls__slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.branch-controls__rewind-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary, #9ca3af);
+  min-width: 2ch;
+  text-align: right;
+}
+
+/* =============================================================================
+   Modal Overlay
+   ============================================================================= */
+
+.branch-modal__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+/* =============================================================================
+   Modal
+   ============================================================================= */
+
+.branch-modal {
+  background: var(--surface-1, #12121f);
+  border: 1px solid var(--surface-3, #252540);
+  border-radius: 8px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.branch-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--surface-2, #1a1a2e);
+}
+
+.branch-modal__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #e5e7eb);
+  margin: 0;
+}
+
+.branch-modal__close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-muted, #666);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.branch-modal__close:hover {
+  background: var(--surface-2, #1a1a2e);
+  color: var(--text-primary, #e5e7eb);
+}
+
+.branch-modal__body {
+  padding: 1.25rem;
+}
+
+.branch-modal__label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary, #9ca3af);
+  margin-bottom: 0.5rem;
+}
+
+.branch-modal__input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: var(--surface-2, #1a1a2e);
+  border: 1px solid var(--surface-3, #252540);
+  border-radius: 4px;
+  color: var(--text-primary, #e5e7eb);
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.branch-modal__input:focus {
+  outline: none;
+  border-color: var(--accent-primary, #8b5cf6);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.branch-modal__input::placeholder {
+  color: var(--text-muted, #666);
+}
+
+.branch-modal__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.branch-modal__hint {
+  font-size: 0.75rem;
+  color: var(--text-muted, #666);
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+.branch-modal__footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--surface-2, #1a1a2e);
+}
+
+.branch-modal__button {
+  padding: 0.625rem 1.25rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.branch-modal__button--secondary {
+  background: none;
+  border: 1px solid var(--surface-3, #252540);
+  color: var(--text-secondary, #9ca3af);
+}
+
+.branch-modal__button--secondary:hover:not(:disabled) {
+  background: var(--surface-2, #1a1a2e);
+  border-color: var(--surface-4, #333350);
+}
+
+.branch-modal__button--primary {
+  background: var(--accent-primary, #8b5cf6);
+  border: 1px solid var(--accent-primary, #8b5cf6);
+  color: white;
+}
+
+.branch-modal__button--primary:hover:not(:disabled) {
+  background: var(--accent-secondary, #a78bfa);
+}
+
+.branch-modal__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.branch-modal__button:focus-visible {
+  outline: 2px solid var(--accent-primary, #8b5cf6);
+  outline-offset: 2px;
+}
+
+/* =============================================================================
+   Responsive Adjustments
+   ============================================================================= */
+
+@media (max-width: 640px) {
+  .branch-controls {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .branch-controls__button {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  .branch-controls__label {
+    display: none;
+  }
+
+  .branch-controls__rewind {
+    width: 100%;
+    max-width: none;
+  }
+
+  .branch-modal {
+    width: 95%;
+    margin: 1rem;
+  }
+
+  .branch-modal__header {
+    padding: 0.875rem 1rem;
+  }
+
+  .branch-modal__body {
+    padding: 1rem;
+  }
+
+  .branch-modal__footer {
+    padding: 0.875rem 1rem;
+  }
+}
+
+/* =============================================================================
+   Accessibility
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .branch-controls__button,
+  .branch-controls__select,
+  .branch-controls__slider::-webkit-slider-thumb,
+  .branch-controls__slider::-moz-range-thumb,
+  .branch-modal__input,
+  .branch-modal__close,
+  .branch-modal__button {
+    transition: none;
+  }
+}

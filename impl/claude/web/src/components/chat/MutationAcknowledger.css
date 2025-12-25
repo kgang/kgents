@@ -1,0 +1,188 @@
+/**
+ * MutationAcknowledger Styles
+ *
+ * Stark Biome with emphasis:
+ * - Mutations are IMPORTANT, use glow-spore accent
+ * - Clear visual distinction from regular toasts
+ * - Destructive mutations get warning treatment
+ */
+
+.mutation-acknowledger {
+  position: relative;
+  min-width: 400px;
+  max-width: 600px;
+  background: rgba(20, 20, 24, 0.98); /* steel-carbon */
+  border: 2px solid rgba(196, 167, 125, 0.6); /* glow-spore - mutations are important */
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(196, 167, 125, 0.2);
+  overflow: hidden;
+  animation: mutationSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes mutationSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mutation-acknowledger--closing {
+  animation: mutationSlideOut 0.2s ease forwards;
+}
+
+@keyframes mutationSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+}
+
+.mutation-acknowledger:focus {
+  outline: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(196, 167, 125, 0.4);
+}
+
+/* Progress Bar */
+.mutation-acknowledger__progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(100, 100, 120, 0.2);
+  overflow: hidden;
+}
+
+.mutation-acknowledger__progress-bar {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(196, 167, 125, 0.8),
+    rgba(196, 167, 125, 1)
+  ); /* glow-spore gradient */
+  transition: width 1s linear;
+}
+
+/* Content */
+.mutation-acknowledger__content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-top: 3px; /* Account for progress bar */
+}
+
+.mutation-acknowledger__icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.mutation-acknowledger__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mutation-acknowledger__description {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: rgba(229, 221, 213, 1); /* glow-light */
+  line-height: 1.4;
+}
+
+.mutation-acknowledger__target {
+  font-size: 0.8125rem;
+  color: rgba(160, 160, 172, 1); /* steel-zinc */
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+}
+
+/* Button */
+.mutation-acknowledger__button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(196, 167, 125, 0.15); /* glow-spore */
+  border: 1px solid rgba(196, 167, 125, 0.4);
+  border-radius: 4px;
+  color: rgba(196, 167, 125, 1); /* glow-spore */
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.mutation-acknowledger__button:hover {
+  background: rgba(196, 167, 125, 0.25);
+  border-color: rgba(196, 167, 125, 0.6);
+  transform: translateY(-1px);
+}
+
+.mutation-acknowledger__button:active {
+  transform: translateY(0);
+}
+
+.mutation-acknowledger__button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(196, 167, 125, 0.4);
+}
+
+.mutation-acknowledger__kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.25rem;
+  background: rgba(196, 167, 125, 0.2);
+  border: 1px solid rgba(196, 167, 125, 0.3);
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Timeout Indicator */
+.mutation-acknowledger__timeout {
+  padding: 0.5rem 1.25rem;
+  padding-top: 0;
+  font-size: 0.75rem;
+  color: rgba(160, 160, 172, 1); /* steel-zinc */
+  text-align: right;
+}
+
+/* Destructive variant */
+.mutation-acknowledger[data-destructive='true'] {
+  border-color: rgba(239, 68, 68, 0.6); /* red-500 */
+}
+
+.mutation-acknowledger[data-destructive='true'] .mutation-acknowledger__progress-bar {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.8), rgba(239, 68, 68, 1));
+}
+
+.mutation-acknowledger[data-destructive='true'] .mutation-acknowledger__button {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: rgba(239, 68, 68, 1);
+}
+
+.mutation-acknowledger[data-destructive='true'] .mutation-acknowledger__button:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
+.mutation-acknowledger[data-destructive='true'] .mutation-acknowledger__kbd {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+}
