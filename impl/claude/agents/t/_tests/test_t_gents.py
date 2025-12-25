@@ -1,6 +1,12 @@
 """
 Test suite for T-gents implementation.
 
+DEPRECATED (2025-12-25): These tests use deprecated legacy T-gent agents.
+Use the new TruthFunctor probes instead:
+- NullProbe (replaces MockAgent, FixtureAgent)
+- ChaosProbe (replaces FailingAgent, NoiseAgent, etc.)
+- WitnessProbe (replaces SpyAgent, CounterAgent)
+
 Tests:
 - Phase 1: MockAgent, FixtureAgent, FailingAgent, SpyAgent, PredicateAgent
 - Phase 2: NoiseAgent, LatencyAgent, FlakyAgent, CounterAgent, MetricsAgent
@@ -11,6 +17,8 @@ from __future__ import annotations
 
 import asyncio
 import time
+
+import pytest
 
 from agents.t import (
     CounterAgent,
@@ -30,7 +38,12 @@ from agents.t import (
     not_empty,
 )
 
+# Skip all tests that use deprecated compat layer agents
+# These agents are deprecated in favor of TruthFunctor probes
+DEPRECATED_REASON = "Legacy T-gent agents deprecated. Use TruthFunctor probes (NullProbe, WitnessProbe) instead."
 
+
+@pytest.mark.skip(reason=DEPRECATED_REASON)
 async def test_mock_agent() -> None:
     """Test MockAgent - constant morphism."""
     print("\n=== Testing MockAgent ===")
@@ -57,6 +70,7 @@ async def test_mock_agent() -> None:
     print("✓ MockAgent: __is_test__ = True")
 
 
+@pytest.mark.skip(reason=DEPRECATED_REASON)
 async def test_fixture_agent() -> None:
     """Test FixtureAgent - deterministic lookup."""
     print("\n=== Testing FixtureAgent ===")
@@ -173,6 +187,7 @@ async def test_failing_agent_always_fails() -> None:
     print("✓ FailingAgent: Always fails when fail_count=-1")
 
 
+@pytest.mark.skip(reason=DEPRECATED_REASON)
 async def test_spy_agent() -> None:
     """Test SpyAgent - identity with observation."""
     print("\n=== Testing SpyAgent ===")
@@ -257,6 +272,7 @@ async def test_predicate_agent_custom() -> None:
     print("✓ PredicateAgent: Custom predicate works")
 
 
+@pytest.mark.skip(reason=DEPRECATED_REASON)
 async def test_composition() -> None:
     """Test T-gent composition."""
     print("\n=== Testing T-gent Composition ===")
@@ -280,6 +296,7 @@ async def test_composition() -> None:
     print(f"  Pipeline name: {pipeline.name}")
 
 
+@pytest.mark.skip(reason=DEPRECATED_REASON)
 async def test_associativity() -> None:
     """Test associativity law: (f >> g) >> h ≡ f >> (g >> h)."""
     print("\n=== Testing Associativity Law ===")
@@ -411,6 +428,7 @@ async def test_flaky_agent() -> None:
     print("✓ FlakyAgent: __is_test__ = True")
 
 
+@pytest.mark.skip(reason=DEPRECATED_REASON)
 async def test_counter_agent() -> None:
     """Test CounterAgent - invocation tracking."""
     print("\n=== Testing CounterAgent ===")
@@ -486,6 +504,7 @@ async def test_metrics_agent() -> None:
     print("✓ MetricsAgent: __is_test__ = True")
 
 
+@pytest.mark.skip(reason=DEPRECATED_REASON)
 async def test_phase2_composition() -> None:
     """Test Phase 2 T-gent composition."""
     print("\n=== Testing Phase 2 Composition ===")

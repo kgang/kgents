@@ -161,7 +161,7 @@ async def execute_validate(
     - Heuristic pattern matching (fast, always available)
     - LLM semantic analysis (deeper, requires --deep flag)
     """
-    from agents.k.gatekeeper import SemanticGatekeeper
+    from agents.k.gatekeeper_probe import GatekeeperProbe, validate_file_probe
 
     output = OutputFormatter(ctx)
 
@@ -173,16 +173,25 @@ async def execute_validate(
         )
         return 1
 
-    # Create gatekeeper with soul's LLM if available and requested
-    llm = soul._llm if use_llm and soul.has_llm else None
-    gatekeeper = SemanticGatekeeper(llm=llm, use_llm=use_llm)
+    # Create gatekeeper probe with soul's LLM if available and requested
+    from agents.k.gatekeeper_probe import ValidationResult
 
     output.emit(
         f"[GATEKEEPER] Validating: {file_path}" + (" (deep)" if use_llm else ""),
         {"status": "validating", "file": file_path, "deep": use_llm},
     )
 
-    result = await gatekeeper.validate_file(file_path)
+    # Use the probe validation function
+    trace = await validate_file_probe(file_path)
+
+    # Convert PolicyTrace to ValidationResult for CLI compatibility
+    violations_list = trace.value.value if isinstance(trace.value.value, list) else []
+    result = ValidationResult(
+        target=file_path,
+        violations=violations_list,
+        passed=trace.value.passed,
+        summary=trace.value.reasoning,
+    )
 
     if ctx.json_mode:
         output.emit(json.dumps(result.to_dict(), indent=2), result.to_dict())

@@ -29,17 +29,13 @@ Example:
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path
 from typing import Any, FrozenSet, Optional
 
-from agents.k.gatekeeper import (
-    Principle,
-    Severity,
-    Violation,
-    VIOLATION_PATTERNS,
-)
 from agents.t.truth_functor import (
     AnalysisMode,
     ConstitutionalScore,
@@ -52,7 +48,283 @@ from agents.t.truth_functor import (
 )
 
 # =============================================================================
-# Types
+# Base Types (formerly from gatekeeper.py)
+# =============================================================================
+
+
+class Principle(str, Enum):
+    """The seven kgents principles."""
+
+    TASTEFUL = "tasteful"
+    CURATED = "curated"
+    ETHICAL = "ethical"
+    JOY_INDUCING = "joy-inducing"
+    COMPOSABLE = "composable"
+    HETERARCHICAL = "heterarchical"
+    GENERATIVE = "generative"
+
+
+class Severity(str, Enum):
+    """Severity of a violation."""
+
+    INFO = "info"  # Observation, not necessarily a problem
+    WARNING = "warning"  # Potential issue, worth reviewing
+    ERROR = "error"  # Clear violation of principles
+    CRITICAL = "critical"  # Severe violation, blocks merge
+
+
+@dataclass
+class Violation:
+    """A potential principle violation."""
+
+    principle: Principle
+    severity: Severity
+    message: str
+    location: Optional[str] = None  # file:line or section
+    evidence: Optional[str] = None  # The code/text that triggered this
+    suggestion: Optional[str] = None  # How to fix
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return {
+            "principle": self.principle.value,
+            "severity": self.severity.value,
+            "message": self.message,
+            "location": self.location,
+            "evidence": self.evidence,
+            "suggestion": self.suggestion,
+        }
+
+    def format(self) -> str:
+        """Format for display."""
+        severity_icons = {
+            Severity.INFO: "i",
+            Severity.WARNING: "!",
+            Severity.ERROR: "X",
+            Severity.CRITICAL: "XX",
+        }
+        icon = severity_icons.get(self.severity, "*")
+        loc = f" ({self.location})" if self.location else ""
+
+        lines = [f"[{icon}] [{self.principle.value}]{loc}: {self.message}"]
+
+        if self.evidence:
+            # Truncate long evidence
+            evidence = self.evidence[:100] + "..." if len(self.evidence) > 100 else self.evidence
+            lines.append(f"    Evidence: {evidence}")
+
+        if self.suggestion:
+            lines.append(f"    Suggestion: {self.suggestion}")
+
+        return "\n".join(lines)
+
+
+@dataclass
+class ValidationResult:
+    """Result of validating against principles."""
+
+    target: str  # What was validated
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    violations: list[Violation] = field(default_factory=list)
+    passed: bool = True
+    summary: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return {
+            "target": self.target,
+            "timestamp": self.timestamp.isoformat(),
+            "violations": [v.to_dict() for v in self.violations],
+            "passed": self.passed,
+            "summary": self.summary,
+            "by_severity": self.by_severity,
+            "by_principle": self.by_principle,
+        }
+
+    @property
+    def by_severity(self) -> dict[str, int]:
+        """Count violations by severity."""
+        counts: dict[str, int] = {}
+        for v in self.violations:
+            counts[v.severity.value] = counts.get(v.severity.value, 0) + 1
+        return counts
+
+    @property
+    def by_principle(self) -> dict[str, int]:
+        """Count violations by principle."""
+        counts: dict[str, int] = {}
+        for v in self.violations:
+            counts[v.principle.value] = counts.get(v.principle.value, 0) + 1
+        return counts
+
+    def format(self) -> str:
+        """Format for display."""
+        lines = [
+            f"[GATEKEEPER] Validation: {self.target}",
+            "",
+        ]
+
+        if self.passed:
+            lines.append("  Result: PASSED (no critical/error violations)")
+        else:
+            lines.append("  Result: FAILED")
+
+        if self.violations:
+            lines.append("")
+            lines.append(f"  Violations: {len(self.violations)}")
+
+            # Group by severity
+            for severity in [
+                Severity.CRITICAL,
+                Severity.ERROR,
+                Severity.WARNING,
+                Severity.INFO,
+            ]:
+                count = self.by_severity.get(severity.value, 0)
+                if count > 0:
+                    lines.append(f"    {severity.value}: {count}")
+
+            lines.append("")
+            lines.append("  Details:")
+            for violation in self.violations:
+                lines.append("")
+                lines.append("  " + violation.format().replace("\n", "\n  "))
+        else:
+            lines.append("")
+            lines.append("  No violations detected.")
+
+        if self.summary:
+            lines.append("")
+            lines.append(f"  Summary: {self.summary}")
+
+        return "\n".join(lines)
+
+
+# Patterns that may indicate principle violations
+VIOLATION_PATTERNS: list[tuple[str, Principle, Severity, str, str | None]] = [
+    # Tasteful
+    (
+        r"class\s+\w+Manager\b",
+        Principle.TASTEFUL,
+        Severity.WARNING,
+        "Manager classes often indicate unclear responsibility",
+        "Consider if this class has a single, clear purpose",
+    ),
+    (
+        r"def\s+do_everything\b",
+        Principle.TASTEFUL,
+        Severity.ERROR,
+        "Function name suggests unclear scope",
+        "Break into focused functions",
+    ),
+    (
+        r"#\s*TODO.*later|#\s*FIXME.*eventually",
+        Principle.TASTEFUL,
+        Severity.INFO,
+        "Deferred work may indicate design uncertainty",
+        "Consider if this belongs in the backlog instead",
+    ),
+    # Curated
+    (
+        r"class\s+\w+(V2|V3|Version\d)\b",
+        Principle.CURATED,
+        Severity.WARNING,
+        "Versioned classes may indicate accumulation rather than evolution",
+        "Consider replacing the original instead of adding versions",
+    ),
+    (
+        r"#\s*deprecated|@deprecated",
+        Principle.CURATED,
+        Severity.INFO,
+        "Deprecated code should be removed, not kept",
+        "Remove deprecated code or set a removal date",
+    ),
+    # Ethical
+    (
+        r"password\s*=\s*['\"]",
+        Principle.ETHICAL,
+        Severity.CRITICAL,
+        "Hardcoded password detected",
+        "Use environment variables or secret management",
+    ),
+    (
+        r"api_key\s*=\s*['\"]",
+        Principle.ETHICAL,
+        Severity.CRITICAL,
+        "Hardcoded API key detected",
+        "Use environment variables or secret management",
+    ),
+    (
+        r"secret\s*=\s*['\"]",
+        Principle.ETHICAL,
+        Severity.CRITICAL,
+        "Hardcoded secret detected",
+        "Use environment variables or secret management",
+    ),
+    (
+        r"trust_remote_code\s*=\s*True",
+        Principle.ETHICAL,
+        Severity.WARNING,
+        "Trusting remote code is a security risk",
+        "Consider alternatives or add explicit review",
+    ),
+    # Composable
+    (
+        r"global\s+\w+",
+        Principle.COMPOSABLE,
+        Severity.WARNING,
+        "Global state prevents composition",
+        "Use dependency injection or context objects",
+    ),
+    (
+        r"class\s+\w*Singleton\b",
+        Principle.COMPOSABLE,
+        Severity.ERROR,
+        "Singleton pattern prevents composition",
+        "Use dependency injection instead",
+    ),
+    (
+        r"\.instance\(\s*\)|getInstance\(\)",
+        Principle.COMPOSABLE,
+        Severity.WARNING,
+        "Singleton access pattern detected",
+        "Pass dependencies explicitly",
+    ),
+    # Heterarchical
+    (
+        r"class\s+\w*Orchestrator\b",
+        Principle.HETERARCHICAL,
+        Severity.WARNING,
+        "Orchestrator suggests fixed hierarchy",
+        "Consider heterarchical composition instead",
+    ),
+    (
+        r"class\s+\w*Master\b|class\s+\w*Slave\b",
+        Principle.HETERARCHICAL,
+        Severity.ERROR,
+        "Master/slave terminology indicates fixed hierarchy (and is outdated)",
+        "Use leader/follower or heterarchical patterns",
+    ),
+    # Generative
+    (
+        r"#\s*AUTO-GENERATED.*DO NOT EDIT",
+        Principle.GENERATIVE,
+        Severity.INFO,
+        "Generated code detected (good!)",
+        None,  # This is actually positive
+    ),
+    (
+        r"(def|class)\s+\w+.*#\s*hand-?written",
+        Principle.GENERATIVE,
+        Severity.INFO,
+        "Hand-written code marked - consider if it could be generated",
+        "Could this be derived from a spec?",
+    ),
+]
+
+
+# =============================================================================
+# Probe Types
 # =============================================================================
 
 

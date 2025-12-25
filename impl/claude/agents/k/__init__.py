@@ -119,22 +119,19 @@ from .garden import (
     set_garden,
 )
 
-# Phase 5: Semantic Gatekeeper
-from .gatekeeper import (
-    AnalyzerResult,
-    ComposabilityAnalyzer,
-    DeepAnalysisResult,
-    GratitudeAnalyzer,
+# Phase 5: Semantic Gatekeeper (DP-Native Probe)
+from .gatekeeper_probe import (
+    GatekeeperProbe,
     Principle,
-    SemanticGatekeeper,
     Severity,
-    TastefullnessAnalyzer,
-    ValidationHistory,
-    ValidationHistoryEntry,
+    ValidationInput,
     ValidationResult,
+    ValidationState,
     Violation,
-    validate_content,
-    validate_file,
+    VIOLATION_PATTERNS,
+    validate_content_probe,
+    validate_file_probe,
+    violation_to_score,
 )
 
 # Phase 4: Hypnagogia (Dream Cycle)
@@ -452,14 +449,18 @@ __all__ = [
     "EntryType",
     "get_garden",
     "set_garden",
-    # Phase 5: Semantic Gatekeeper
-    "SemanticGatekeeper",
+    # Phase 5: Semantic Gatekeeper (DP-Native Probe)
+    "GatekeeperProbe",
     "Principle",
     "Severity",
     "Violation",
     "ValidationResult",
-    "validate_file",
-    "validate_content",
+    "ValidationInput",
+    "ValidationState",
+    "VIOLATION_PATTERNS",
+    "validate_file_probe",
+    "validate_content_probe",
+    "violation_to_score",
     # Phase 6: Soul Session (Cross-Session Identity)
     "SoulSession",
     "SoulChange",
