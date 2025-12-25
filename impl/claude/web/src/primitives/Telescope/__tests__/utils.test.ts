@@ -36,9 +36,9 @@ describe('focalDistanceToLayers', () => {
 
 describe('calculateNodePosition', () => {
   const nodes = [
-    { layer: 1, id: 'a' },
-    { layer: 4, id: 'b' },
-    { layer: 7, id: 'c' },
+    { layer: 1, node_id: 'a' },
+    { layer: 4, node_id: 'b' },
+    { layer: 7, node_id: 'c' },
   ];
 
   it('positions L1 near top', () => {
@@ -52,7 +52,7 @@ describe('calculateNodePosition', () => {
   });
 
   it('centers single nodes horizontally', () => {
-    const singleNode = [{ layer: 4, id: 'single' }];
+    const singleNode = [{ layer: 4, node_id: 'single' }];
     const pos = calculateNodePosition(singleNode[0], singleNode, 0.5, 800, 600);
     expect(pos.x).toBeCloseTo(400, 0); // Centered at width/2
   });
