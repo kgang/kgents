@@ -41,7 +41,7 @@ export function focalDistanceToLayers(distance: number): number[] {
 
 interface NodeLike {
   layer: number;
-  id: string;
+  node_id: string;
 }
 
 /**
@@ -64,7 +64,7 @@ export function calculateNodePosition(
 
   // Horizontal position based on index within layer
   const layerNodes = allNodes.filter((n) => n.layer === node.layer);
-  const index = layerNodes.findIndex((n) => n.id === node.id);
+  const index = layerNodes.findIndex((n) => n.node_id === node.node_id);
   const count = layerNodes.length;
   const baseX = count > 1 ? (index / (count - 1)) * 0.8 + 0.1 : 0.5;
 
