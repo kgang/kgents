@@ -7,7 +7,7 @@ touched_by: claude-opus-4
 blocking: []
 enables: [umwelt-v2, dynamic-forms]
 session_notes: |
-  Companion skill for spec/protocols/aspect-form-projection.md.
+  Companion skill for spec/protocols/projection-web.md (Part IV: Form Projection).
   Provides implementation patterns for the Form Bifunctor.
 phase_ledger:
   PLAN: complete
@@ -20,7 +20,7 @@ phase_ledger:
 
 **Difficulty**: Intermediate
 **Prerequisites**: `agentese-node-registration.md`, `projection-target.md`
-**Spec**: `spec/protocols/aspect-form-projection.md`
+**Spec**: `spec/protocols/projection-web.md` (Part IV: Form Projection)
 
 ---
 

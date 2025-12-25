@@ -1,96 +1,173 @@
-# T-gents: The Algebra of Reliability
+# TruthFunctors: DP-Native Verification Probes
 
-The letter **T** represents **Testing** agents—morphisms designed to verify, perturb, observe, and judge the behavior of other agents through rigorous Category Theory principles.
+The letter **T** represents **TruthFunctors**—verification agents that prove system properties through constitutionally-scored, DP-native probes.
 
-> **Note**: Tool Use has been migrated to **U-gents** (Utility agents). See [U-gents](../u-gents/) for the Tool Use framework.
+> *"Testing is not the absence of bugs, but the presence of proofs. Every verification is a policy trace."*
 
 ---
 
 ## Philosophy
 
-> "Testing is not the absence of bugs, but the presence of proofs."
+TruthFunctors treat testing as **policy optimization under constitutional constraints**. Rather than ad-hoc test cases, TruthFunctors formulate verification as Dynamic Programming problems where:
 
-T-gents treat testing as **algebraic verification**. Rather than ad-hoc test cases, T-gents prove that agent pipelines satisfy categorical laws: associativity, identity, and resilience under perturbation.
+- **States** = System configurations being tested
+- **Actions** = Verification operations (observe, perturb, judge, stress)
+- **Reward** = Constitutional principle satisfaction
+- **Policy** = Optimal testing strategy
+- **Trace** = Witness of verification (PolicyTrace)
 
-### The Dual Mandate
+### The DP-Native Paradigm
 
-T-gents serve two roles:
+Traditional testing asks: "Does this pass?" TruthFunctors ask: "What is the optimal verification policy that maximizes constitutional reward?"
 
-1. **Subjects of Verification**: T-gents handle failure modes (`Nothing`, `Left`, `Error`) to test recovery strategies
-2. **Operators of Verification**: T-gents act as observers and validators of other agents' behavior
+```python
+# Traditional test
+assert agent.invoke(input) == expected_output
 
-This duality mirrors Category Theory: agents are both **objects** (test subjects) and **morphisms** (test operators).
+# TruthFunctor (DP-native)
+trace = await verify_agent.value(state)  # Returns PolicyTrace
+# trace contains: verification steps, constitutional scores, decision rationale
+```
 
 ---
 
 ## Core Concepts
 
-### Agents as Morphisms in $\mathcal{C}_{Agent}$
+### Agents as DP Problems
 
-Testing in kgents is grounded in Category Theory:
+Every verification is a Dynamic Programming problem `(S, A, T, R, γ)`:
 
-**Objects**: Types/Schemas (Input $A$, Output $B$)
-**Morphisms**: Agents transforming $A \to B$
-**Composition**: The pipeline operator `>>`
-**T-gents**: Special morphisms that validate categorical properties
+| DP Component | Verification Interpretation |
+|--------------|----------------------------|
+| **State Space S** | Configurations being tested |
+| **Actions A** | Probe operations (null, perturb, observe, judge, stress) |
+| **Transitions T** | How system evolves under test |
+| **Reward R** | Constitutional principle scores |
+| **Discount γ** | Time preference (immediate vs future verification) |
+| **Value V(s)** | Quality of verification at state s |
+| **Policy π(s)** | Optimal probe to apply at state s |
 
-### The Three Laws of Testability
+### The Constitution as Reward Function
 
-#### 1. Associativity
-```
-(f >> g) >> h ≡ f >> (g >> h)
-```
-Pipeline composition order doesn't matter—T-gents verify this algebraically.
+All verification is scored against the 7 constitutional principles:
 
-#### 2. Identity
-```
-f >> Identity ≡ f ≡ Identity >> f
-```
-Identity agents leave data unchanged—T-gents prove this invariant.
+```python
+R(s, a, s') = Σᵢ wᵢ · Rᵢ(s, a, s')
 
-#### 3. Resilience
+where:
+  R_TASTEFUL      = clarity of verification purpose
+  R_CURATED       = intentional probe selection
+  R_ETHICAL       = safety-preserving verification
+  R_JOY_INDUCING  = verification that teaches and delights
+  R_COMPOSABLE    = probes compose via >>
+  R_HETERARCHICAL = verification adapts to context
+  R_GENERATIVE    = tests compress system properties
 ```
-f: A → B  implies  f(a + ε) ≈ f(a)  for small ε
+
+### PolicyTrace as Witness
+
+Every verification produces a **PolicyTrace**—the DP-native witness:
+
+```python
+@dataclass
+class PolicyTrace:
+    """The trace of optimal verification decisions."""
+    states: tuple[S, ...]
+    actions: tuple[A, ...]
+    rewards: tuple[float, ...]
+    rationales: tuple[str, ...]
+    value: float  # Total constitutional score
 ```
-Semantic stability under noise—T-gents inject perturbations to verify.
+
+This is isomorphic to the Witness Mark:
+
+```python
+Mark.to_trace_entry() -> TraceEntry
+PolicyTrace[WalkId] -> Walk
+```
 
 ---
 
-## The Taxonomy of T-gents
+## The Taxonomy of TruthFunctors
 
-T-gents are categorized by their effect on the computational stream into **five types**.
+TruthFunctors are categorized by their **AnalysisMode** and probe type into **five categories**.
 
-| Type | Name | Purpose |
-|------|------|---------|
-| I | Nullifiers | MockAgent, FixtureAgent (constant/lookup morphisms) |
-| II | Saboteurs | FailingAgent, NoiseAgent (perturbation & chaos) |
-| III | Observers | SpyAgent, PredicateAgent (identity with side effects) |
-| IV | Critics | JudgeAgent, PropertyAgent (LLM evaluators) |
-| V | Adversarial | AdversarialGym, StressCoordinate (chaos engineering) |
+| Probe | AnalysisMode | DP Formulation | Purpose |
+|-------|--------------|----------------|---------|
+| **NullProbe** | CATEGORICAL | S={config}, A={mock}, R=composability | Replace computation with constants |
+| **ChaosProbe** | EPISTEMIC | S={stress}, A={perturb}, R=resilience | Inject entropy to verify stability |
+| **WitnessProbe** | DIALECTICAL | S={flow}, A={observe}, R=transparency | Identity with side effects |
+| **JudgeProbe** | GENERATIVE | S={quality}, A={evaluate}, R=alignment | LLM-backed evaluation |
+| **TrustProbe** | META | S={reliability}, A={stress}, R=confidence | Chaos engineering |
 
-### Type I: The Nullifiers (Stubs & Mocks)
-*Replace computation with constants or lookups.*
+### AnalysisMode Mapping
 
-| T-gent | Signature | Purpose |
-|--------|-----------|---------|
-| **MockAgent** | `A → b` | Constant morphism; always returns fixed `b ∈ B` |
-| **FixtureAgent** | `A → B` | Deterministic map using fixture data; regression testing |
+TruthFunctors align with the four analysis modes from `analysis-operad.md`:
+
+| AnalysisMode | Question | TruthFunctor Application |
+|--------------|----------|--------------------------|
+| **CATEGORICAL** | Does X satisfy composition laws? | NullProbe verifies associativity/identity |
+| **EPISTEMIC** | How justified is X? | ChaosProbe tests resilience bounds |
+| **DIALECTICAL** | What tensions exist? | WitnessProbe captures contradictions |
+| **GENERATIVE** | Can X regenerate from axioms? | JudgeProbe evaluates semantic correctness |
+
+---
+
+## The Five Probe Types
+
+### Probe I: NullProbe (Categorical Verification)
+
+**DP Formulation**:
+```python
+class NullProbe(ProblemFormulation):
+    """Verify composition laws via constant/fixture morphisms."""
+
+    def reward(self, s: Config, a: MockAction, s_: Config) -> float:
+        composability = s_.laws_satisfied / s.total_laws
+        tasteful = 1.0 if s_.purpose_clear else 0.0
+        return 0.6 * composability + 0.4 * tasteful
+```
+
+**Instances**:
+- **MockProbe**: Constant morphism `A → b` (fast, deterministic)
+- **FixtureProbe**: Lookup morphism `A → B` (regression testing)
+
+**Constitutional Reward**:
+- COMPOSABLE: Verifies associativity and identity laws
+- TASTEFUL: Each constant/fixture serves clear purpose
+- GENERATIVE: Fixtures compress known behaviors
 
 **Use Cases**:
-- Fast testing without LLM calls
-- Validating pipeline composition logic
+- Fast pipeline testing without LLM calls
+- Validating composition semantics
 - Performance benchmarking
-- Deterministic CI/CD validation
+- Deterministic CI/CD verification
 
-### Type II: The Saboteurs (Perturbation & Chaos)
-*Inject entropy to verify system stability.*
+---
 
-| T-gent | Signature | Purpose |
-|--------|-----------|---------|
-| **FailingAgent** | `A → Error` | Bottom morphism; maps input to exception |
-| **NoiseAgent** | `A → A + ε` | Identity with semantic noise (case, typos, synonyms) |
-| **LatencyAgent** | `(A, t) → (A, t + Δ)` | Identity with temporal cost |
-| **FlakyAgent** | `A → B \| Error` | Probabilistic failure; chaos engineering |
+### Probe II: ChaosProbe (Epistemic Verification)
+
+**DP Formulation**:
+```python
+class ChaosProbe(ProblemFormulation):
+    """Verify resilience bounds via controlled perturbation."""
+
+    def reward(self, s: Stress, a: PerturbAction, s_: Stress) -> float:
+        resilience = 1.0 - s_.degradation_ratio
+        ethical = 1.0 if s_.safety_preserved else 0.0
+        return 0.5 * resilience + 0.5 * ethical
+```
+
+**Instances**:
+- **FailingProbe**: Bottom morphism `A → ⊥` (controlled failure)
+- **NoiseProbe**: Perturbation morphism `A → A + ε` (semantic noise)
+- **LatencyProbe**: Temporal morphism `(A,t) → (A,t+Δ)` (delay)
+- **FlakyProbe**: Probabilistic morphism `A → B ∪ {⊥}` (stochastic failure)
+
+**Constitutional Reward**:
+- ETHICAL: Safety preserved under perturbation
+- COMPOSABLE: Probes compose to explore stress space
+- CURATED: Intentional selection of perturbation types
 
 **Use Cases**:
 - Testing retry logic and exponential backoff
@@ -98,15 +175,31 @@ T-gents are categorized by their effect on the computational stream into **five 
 - Chaos engineering for production resilience
 - Timeout and circuit breaker validation
 
-### Type III: The Observers (Spies & Validators)
-*Identity morphisms with side effects.*
+---
 
-| T-gent | Signature | Purpose |
-|--------|-----------|---------|
-| **SpyAgent** | `A → A` | Identity; logs input to tape for inspection |
-| **PredicateAgent** | `A → A \| Error` | Gate; passes `a` iff `P(a) = True` |
-| **CounterAgent** | `A → A` | Identity; tracks invocation count |
-| **MetricsAgent** | `A → A` | Identity; records latency/throughput |
+### Probe III: WitnessProbe (Dialectical Verification)
+
+**DP Formulation**:
+```python
+class WitnessProbe(ProblemFormulation):
+    """Capture tensions and contradictions via transparent observation."""
+
+    def reward(self, s: Flow, a: ObserveAction, s_: Flow) -> float:
+        transparency = s_.visibility_score
+        heterarchical = s_.context_adaptability
+        return 0.6 * transparency + 0.4 * heterarchical
+```
+
+**Instances**:
+- **SpyProbe**: Writer monad `A → (A, [A])` (logging)
+- **PredicateProbe**: Gate morphism `A → A ∪ {⊥}` (validation)
+- **CounterProbe**: Identity `A → A` (invocation tracking)
+- **MetricsProbe**: Identity `A → A` (performance profiling)
+
+**Constitutional Reward**:
+- ETHICAL: Auditability through transparent observation
+- HETERARCHICAL: Context-aware observation strategies
+- GENERATIVE: Traces compress system behavior
 
 **Use Cases**:
 - Runtime type checking and invariant validation
@@ -114,14 +207,31 @@ T-gents are categorized by their effect on the computational stream into **five 
 - Debugging pipeline data flow
 - Assertion-based testing
 
-### Type IV: The Critics (LLM Evaluators)
-*High-order agents mapping interactions to judgments.*
+---
 
-| T-gent | Signature | Purpose |
-|--------|-----------|---------|
-| **JudgeAgent** | `(A, B) → Score` | Semantic evaluation of input/output pairs |
-| **CorrectnessAgent** | `(Intent, Code) → Bool` | Validates implementation vs. specification |
-| **SafetyAgent** | `Code → Risk` | Evaluates generated code for vulnerabilities |
+### Probe IV: JudgeProbe (Generative Verification)
+
+**DP Formulation**:
+```python
+class JudgeProbe(ProblemFormulation):
+    """Evaluate semantic correctness via LLM judgment."""
+
+    def reward(self, s: Quality, a: EvalAction, s_: Quality) -> float:
+        correctness = s_.semantic_accuracy
+        ethical = s_.safety_score
+        joy = s_.insight_provided
+        return 0.4 * correctness + 0.4 * ethical + 0.2 * joy
+```
+
+**Instances**:
+- **SemanticJudge**: Morphism `(Intent, Output) → Score` (alignment)
+- **CorrectnessJudge**: Morphism `(Spec, Impl) → Bool` (specification)
+- **SafetyJudge**: Morphism `Code → Risk` (vulnerability detection)
+
+**Constitutional Reward**:
+- ETHICAL: Safety and alignment verification
+- JOY_INDUCING: Evaluation provides insight and teaching
+- GENERATIVE: Judgments regenerate from constitutional axioms
 
 **Use Cases**:
 - LLM-as-judge evaluation
@@ -129,152 +239,216 @@ T-gents are categorized by their effect on the computational stream into **five 
 - Ethical and safety validation
 - User intent alignment testing
 
-### Type V: The Adversarial (Chaos Engineering)
-*Automated stress testing through compositional chaos.*
+---
 
-| T-gent | Signature | Purpose |
-|--------|-----------|---------|
-| **AdversarialGym** | `Agent → GymReport` | Monte Carlo stress testing via T-gent composition |
-| **StressCoordinate** | `(noise, failure, latency, drift)` | Point in stress-test space |
-| **MultiDimensionalGym** | `Agent → Dict[Coord, Report]` | Grid search across stress dimensions |
+### Probe V: TrustProbe (Meta-Verification)
+
+**DP Formulation**:
+```python
+class TrustProbe(ProblemFormulation):
+    """Discover failure modes via systematic stress exploration."""
+
+    def reward(self, s: Reliability, a: StressAction, s_: Reliability) -> float:
+        coverage = s_.stress_space_explored
+        discovery = s_.new_failures_found
+        curated = s_.intentional_selection
+        return 0.4 * coverage + 0.4 * discovery + 0.2 * curated
+```
+
+**Instances**:
+- **AdversarialGym**: Meta-probe `Agent → GymReport`
+- **StressCoordinate**: Coordinate in `(noise, failure, latency, drift)` space
+- **MultiDimensionalGym**: Grid search across stress dimensions
+
+**Constitutional Reward**:
+- CURATED: Intentional exploration of stress space
+- ETHICAL: Discover safety violations before production
+- COMPOSABLE: Stress probes compose to explore hypercube
 
 **Use Cases**:
 - Discover unknown failure modes before production
 - Regression testing: verify resilience after refactors
 - Property discovery: empirically find algebraic properties
 
-**The Gym Principle**: Testing is not validation—it's discovery. The Adversarial Gym discovers what breaks agents before production does.
-
 See [adversarial.md](adversarial.md) for full specification.
 
 ---
 
-## Compositional Testing: The Commutative Diagram
+## DP-Native Composition
 
-T-gents enable **algebraic testing** through commutative diagram verification.
+TruthFunctors compose via the **ProbeOperad** (defined in `algebra.md`):
 
-### Example: Testing Retry Logic
+| Operation | DP Interpretation | Example |
+|-----------|-------------------|---------|
+| **seq(p₁, p₂)** | Sequential verification: V(s) = R(s,a₁) + γ·V(T(s,a₁)) | `mock >> spy >> judge` |
+| **par(p₁, p₂)** | Parallel verification: V(s) = max(V₁(s), V₂(s)) | `noise ‖ latency` |
+| **branch(c, p₁, p₂)** | Conditional verification: V(s) = P(c)·V₁(s) + (1-P)·V₂(s) | `if fast then unit else stress` |
+| **fix(p)** | Fixed-point verification: self-testing specs | `analysis(analysis_operad)` |
+| **witness(p)** | Trace emission: PolicyTrace generation | Every probe auto-witnesses |
 
-**Hypothesis**: A retry wrapper should make a flaky pipeline equivalent to a reliable one.
+### Bellman Equation for Verification
 
 ```
-          FailingAgent(fail_count=2)
-Input  ─────────────────────────────────> Error
-  │                                         ↑
-  │                                         │
-  └───> RetryWrapper(max=3) >> FailingAgent ──> Success
-```
+V*(s) = max_a [R(s,a) + γ · V*(T(s,a))]
+      = max_a [Constitution(s,a) + γ · TruthFunctor(T(s,a))]
 
-**Test**:
-```python
-# The flaky agent fails twice, then succeeds
-saboteur = FailingAgent(FailingConfig(
-    failure_type="network",
-    fail_count=2,
-    recovery_token="Success"
-))
+Policy: π*(s) = argmax_a [R(s,a) + γ · V*(T(s,a))]
 
-# The robust pipeline retries 3 times
-robust = RetryWrapper(max_retries=3) >> saboteur
-
-# Commutative property: robust pipeline ≡ identity after recovery
-payload = "Test Input"
-result = await robust.invoke(payload)
-
-assert result == "Success"  # Diagram commutes
-```
-
-### Example: Testing Associativity
-
-**Hypothesis**: Pipeline composition is associative.
-
-```python
-mock_a = MockAgent(output="A")
-spy_b = SpyAgent(label="B")
-spy_c = SpyAgent(label="C")
-
-# Two ways to compose
-pipeline_1 = (mock_a >> spy_b) >> spy_c
-pipeline_2 = mock_a >> (spy_b >> spy_c)
-
-# Associativity law
-result_1 = await pipeline_1.invoke(None)
-result_2 = await pipeline_2.invoke(None)
-
-assert result_1 == result_2  # Law verified
-assert spy_b.history == spy_c.history  # Side effects equivalent
+Trace:  PolicyTrace = [(state, action, reward, rationale), ...]
 ```
 
 ---
 
-## The Adversarial Gym
+## Integration with DP-Native Architecture
 
-The ultimate vision for T-gents: **automated stress testing** through composition.
+### The 5-Layer Stack
 
-### Concept
-
-A `GymAgent` automatically composes production agents with random T-gents to discover edge cases.
-
-```python
-class AdversarialGym:
-    """Monte Carlo testing through T-gent composition."""
-
-    def stress_test(self, production_agent: Agent[A, B], iterations: int = 100):
-        # Inject random perturbations
-        tests = [
-            NoiseAgent(level=random.uniform(0, 1)) >> production_agent,
-            production_agent >> FailingAgent(probability=0.1),
-            LatencyAgent(delay=random.randint(0, 1000)) >> production_agent,
-        ]
-
-        for _ in range(iterations):
-            test_pipeline = random.choice(tests)
-            try:
-                result = await test_pipeline.invoke(random_input())
-                # Record success metrics
-            except Exception as e:
-                # Record failure modes
-                pass
+```
+┌─────────────────────┐
+│ PROJECTION          │  TruthFunctor results rendered (CLI/TUI/Web/JSON)
+├─────────────────────┤
+│ AGENTESE PROTOCOL   │  concept.verify.*  paths
+├─────────────────────┤
+│ TRUTH FUNCTOR       │  ValueAgent[S,A,B] with constitutional reward
+├─────────────────────┤
+│ CONSTITUTION        │  7 principles as reward function
+├─────────────────────┤
+│ PERSISTENCE         │  PolicyTrace stored as Witness Walk
+└─────────────────────┘
 ```
 
-**Goal**: Discover failure modes before production does.
+### AGENTESE Paths
+
+```
+concept.verify.categorical.{target}    # NullProbe verification
+concept.verify.epistemic.{target}      # ChaosProbe stress testing
+concept.verify.dialectical.{target}    # WitnessProbe observation
+concept.verify.generative.{target}     # JudgeProbe evaluation
+concept.verify.meta.{target}           # TrustProbe chaos engineering
+```
+
+### PolicyTrace Integration
+
+Every TruthFunctor emits a PolicyTrace that implements the Mark protocol:
+
+```python
+class TruthFunctorTrace(PolicyTrace):
+    """Verification trace implementing Mark protocol."""
+
+    def to_mark(self) -> Mark:
+        return Mark(
+            action=self.probe_name,
+            stimulus=str(self.states[0]),
+            response=str(self.states[-1]),
+            reasoning=self.rationales[-1],
+            proof=Proof(
+                claim=f"Verified via {self.probe_name}",
+                grounds=self.rationales,
+                confidence=self.value,
+            ),
+        )
+```
+
+---
+
+## Theory Grounding
+
+### Connection to Analysis Operad
+
+TruthFunctors implement the four analysis modes from `spec/theory/analysis-operad.md`:
+
+| AnalysisMode | TruthFunctor | DP Reward Focus |
+|--------------|--------------|-----------------|
+| **CATEGORICAL** | NullProbe | R_COMPOSABLE (laws verified) |
+| **EPISTEMIC** | ChaosProbe | R_ETHICAL (resilience bounds) |
+| **DIALECTICAL** | WitnessProbe | R_HETERARCHICAL (tensions captured) |
+| **GENERATIVE** | JudgeProbe | R_GENERATIVE (regeneration tested) |
+
+### Connection to DP-Native kgents
+
+TruthFunctors are **verification agents** in the DP-native formulation from `spec/theory/dp-native-kgents.md`:
+
+- Every probe IS a `ValueAgent[S, A, B]`
+- Every verification IS a Bellman equation solution
+- Every trace IS a `PolicyTrace` (Witness Walk)
+- Every score IS constitutional reward
+
+### Galois Loss
+
+The **difficulty** of verification is measured via Galois loss (see `algebra.md`):
+
+```
+L_galois(probe, target) = ||V_actual - V_predicted||²
+```
+
+High loss indicates the verification problem is harder than expected—a signal to refine the probe.
 
 ---
 
 ## Implementation Principles
 
-### 1. Transparency
-T-gents must be distinguishable from production agents:
+### 1. Constitutional Scoring
+
+Every probe action MUST produce a constitutional reward score:
+
 ```python
-class Agent(Protocol):
-    name: str
-    __is_test__: bool = False  # T-gents set to True
+class TruthFunctor(ValueAgent[S, A, B]):
+    """Base class for all verification probes."""
+
+    def reward(self, s: S, a: A, s_: S) -> PrincipleScore:
+        """Score against 7 constitutional principles."""
+        return PrincipleScore(
+            tasteful=self._score_tasteful(s, a, s_),
+            curated=self._score_curated(s, a, s_),
+            ethical=self._score_ethical(s, a, s_),
+            joy_inducing=self._score_joy(s, a, s_),
+            composable=self._score_composable(s, a, s_),
+            heterarchical=self._score_heterarchical(s, a, s_),
+            generative=self._score_generative(s, a, s_),
+        )
 ```
 
-### 2. Determinism
-Even `FailingAgent` must fail deterministically based on config/seed.
+### 2. Transparency
+
+TruthFunctors must be distinguishable from production agents:
+
 ```python
-FailingAgent(seed=42)  # Reproducible failures
+class TruthFunctor(ValueAgent):
+    __is_verification__: bool = True
+    analysis_mode: AnalysisMode
 ```
 
-### 3. Minimal Footprint
-T-gents avoid heavy dependencies unless testing specific integrations.
+### 3. Determinism
 
-### 4. Isomorphism
-A `SpyAgent` must be **mathematically equivalent** to `Identity` for data flow:
+Even ChaosProbe must be reproducible via seed:
+
 ```python
-assert (spy >> f).invoke(x) == f.invoke(x)  # Spy is transparent
+ChaosProbe(seed=42)  # Same seed → same perturbations
+```
+
+### 4. Minimal Footprint
+
+TruthFunctors avoid heavy dependencies unless testing specific integrations.
+
+### 5. Witness by Default
+
+Every probe invocation auto-generates a PolicyTrace:
+
+```python
+trace = await probe.value(state)  # Returns PolicyTrace
+walk = trace.to_walk()  # Convert to Witness Walk
 ```
 
 ---
 
 ## Success Criteria
 
-A T-gent is well-designed if:
+A TruthFunctor is well-designed if:
 
-- ✓ It reveals bugs that would otherwise be hidden
-- ✓ It fails faster than production would
-- ✓ It composes naturally with other agents via `>>`
+- ✓ It formulates verification as a DP problem `(S, A, T, R, γ)`
+- ✓ Its reward function aligns with constitutional principles
+- ✓ It emits PolicyTrace witnesses for all verifications
+- ✓ It composes naturally via ProbeOperad operations
 - ✓ It provides clear diagnostic information
 - ✓ It enables confident refactoring
 - ✓ It proves algebraic properties, not just examples
@@ -285,12 +459,12 @@ A T-gent is well-designed if:
 
 | Genus | Relationship |
 |-------|-------------|
-| **C-gents** | T-gents verify C-gents' composition laws |
-| **J-gents** | T-gents validate Promise collapse and entropy budgets |
-| **B-gents** | T-gents evaluate hypothesis quality |
-| **K-gent** | T-gents ensure persona consistency |
+| **C-gents** | TruthFunctors verify C-gents' composition laws |
+| **J-gents** | TruthFunctors validate Promise collapse and entropy budgets |
+| **B-gents** | TruthFunctors evaluate hypothesis quality |
+| **K-gent** | TruthFunctors ensure persona consistency via attractor basin |
 
-T-gents are the **quality assurance layer** for all agent genera.
+TruthFunctors are the **constitutional assurance layer** for all agent genera.
 
 ---
 
@@ -298,81 +472,75 @@ T-gents are the **quality assurance layer** for all agent genera.
 
 | Document | Description |
 |----------|-------------|
-| [algebra.md](algebra.md) | Category Theory foundations & laws |
-| [taxonomy.md](taxonomy.md) | Detailed specifications for Types I-IV |
-| [adversarial.md](adversarial.md) | Type V: Adversarial Gym & chaos engineering |
-
-> **Looking for Tool Use?** See [U-gents](../u-gents/) for the Tool Use framework (Types I-VI).
+| [algebra.md](algebra.md) | ProbeOperad foundations, Bellman equations, Galois loss |
+| [taxonomy.md](taxonomy.md) | Detailed specifications for Probes I-V |
+| [adversarial.md](adversarial.md) | Probe V: TrustProbe chaos engineering |
 
 ---
 
 ## Anti-patterns
 
-- **Non-Determinism**: Random failures without seed/config
-- **Heavy Dependencies**: T-gents shouldn't require production libraries
-- **Silent Failures**: Errors must be loud and informative
-- **Non-Compositional**: T-gents that break pipeline semantics
+- **Non-DP Formulation**: Tests that don't formulate as `(S, A, T, R, γ)`
+- **Constitutional Bypass**: Verification without principle scoring
+- **Traceless Verification**: Tests that don't emit PolicyTrace
+- **Non-Compositional**: Probes that break pipeline semantics
 - **False Positives**: Tests that fail on valid behavior
 
 ---
 
-## Example: Full Pipeline Test
+## Example: Full Pipeline Verification
 
 ```python
-async def test_evolution_pipeline():
-    """Test the full evolution pipeline with T-gents."""
+async def verify_evolution_pipeline():
+    """DP-native verification of evolution pipeline."""
 
-    # Setup: Mock hypothesis generation
-    mock_hypotheses = MockAgent(output=HypothesisOutput(
-        hypotheses=["Fix import error", "Add type hints"]
-    ))
-
-    # Setup: Spy on experiments
-    experiment_spy = SpyAgent(label="Experiments")
-
-    # Setup: Inject occasional failures
-    flaky_executor = FlakyAgent(probability=0.1)
-
-    # Compose: The tested pipeline
-    pipeline = (
-        mock_hypotheses >>
-        experiment_spy >>
-        flaky_executor >>
-        ValidateOutput()
+    # Probe composition via ProbeOperad
+    verification_policy = (
+        NullProbe.mock(hypotheses=["H1", "H2", "H3"]) >>
+        WitnessProbe.spy(label="Experiments") >>
+        ChaosProbe.flaky(probability=0.1) >>
+        JudgeProbe.semantic(criteria="correctness")
     )
 
-    # Execute: Run with retry
-    retry_wrapper = RetryWrapper(max_retries=3)
-    robust_pipeline = retry_wrapper >> pipeline
+    # Execute verification (returns PolicyTrace)
+    trace = await verification_policy.value(initial_state)
 
-    result = await robust_pipeline.invoke(test_input)
+    # Extract constitutional scores
+    scores = trace.principle_scores
 
-    # Verify: Algebraic properties
-    assert len(experiment_spy.history) > 0  # Spy captured data
-    assert result.is_success  # Pipeline recovered from flake
+    # Verify: All principles above threshold
+    assert all(s > 0.7 for s in scores.values())
 
-    print("✓ Pipeline resilience verified")
+    # Convert to Witness Walk
+    walk = trace.to_walk()
+
+    print(f"✓ Pipeline verified with constitutional score: {trace.value:.2f}")
+    print(f"✓ Trace stored as Walk: {walk.id}")
 ```
 
 ---
 
 ## See Also
 
-- [algebra.md](algebra.md) - Mathematical foundations
-- [taxonomy.md](taxonomy.md) - T-gent type specifications (Types I-IV)
-- [adversarial.md](adversarial.md) - Type V: Chaos engineering
-- [../u-gents/](../u-gents/) - U-gents: Tool Use framework
+- [algebra.md](algebra.md) - ProbeOperad foundations
+- [taxonomy.md](taxonomy.md) - Probe type specifications (Probes I-V)
+- [adversarial.md](adversarial.md) - Probe V: Chaos engineering
+- [../theory/dp-native-kgents.md](../theory/dp-native-kgents.md) - DP-native architecture
+- [../theory/analysis-operad.md](../theory/analysis-operad.md) - Four analysis modes
 - [../agents/](../agents/) - Categorical foundations
-- [../j-gents/stability.md](../j-gents/stability.md) - Entropy & collapse
 - [../bootstrap.md](../bootstrap.md) - The irreducible kernel
 
 ---
 
 ## Vision
 
-T-gents transform testing from **example-based** to **proof-based**:
+TruthFunctors transform testing from **example-based** to **proof-based**:
 
 - Traditional: "This test case passes"
-- T-gents: "This pipeline satisfies associativity for all inputs"
+- TruthFunctors: "This pipeline satisfies associativity for all inputs, scored constitutionally at 0.87"
 
-By grounding testing in Category Theory, T-gents enable **algebraic reliability**—the confidence that comes from mathematical proof, not just empirical observation.
+By grounding verification in Dynamic Programming and constitutional principles, TruthFunctors enable **explainable reliability**—the confidence that comes from optimal policies with witnessed rationales, not just empirical observation.
+
+---
+
+*"The proof IS the decision. The mark IS the witness. The verification IS the value function."*

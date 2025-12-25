@@ -135,7 +135,7 @@ class Trail {
 **Usage**:
 ```
 ''     Jump to last position (trail.pop())
-TRAIL: principles.md → metatheory.md → k-block.md
+TRAIL: principles.md → formal-verification.md → k-block.md
 ```
 
 ---
