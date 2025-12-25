@@ -34,14 +34,22 @@ See: docs/theory/05-sheaf-coherence.md
 See: plans/categorical-reinvention-phase1-foundations.md
 """
 
+from .constitution import (
+    PRINCIPLE_WEIGHTS,
+    Constitution,
+    ConstitutionalEvaluation,
+    Principle,
+    PrincipleScore,
+    ProbeRewards,
+    compute_galois_loss,
+)
 from .dp_bridge import (
     # Core types
-    Principle,
     TraceEntry,
     # Writer monad
     PolicyTrace,
     # Value function
-    PrincipleScore,
+    PrincipleScore as DPPrincipleScore,
     ValueScore,
     ValueFunction,
     ValueFunctionProtocol,
@@ -122,13 +130,20 @@ __all__ = [
     "ProblemResult",
     "StudyConfig",
     "StudyResult",
-    # DP Bridge - Core types
+    # Constitution - The Reward Function
     "Principle",
+    "PRINCIPLE_WEIGHTS",
+    "PrincipleScore",
+    "ConstitutionalEvaluation",
+    "Constitution",
+    "ProbeRewards",
+    "compute_galois_loss",
+    # DP Bridge - Core types
     "TraceEntry",
     # DP Bridge - Writer monad
     "PolicyTrace",
     # DP Bridge - Value function
-    "PrincipleScore",
+    "DPPrincipleScore",
     "ValueScore",
     "ValueFunction",
     "ValueFunctionProtocol",
