@@ -469,6 +469,271 @@ def _create_mock_proof(node_id: str) -> ProofQuality:
 
 
 # =============================================================================
+# LLM Analysis Integration
+# =============================================================================
+
+
+async def _get_analysis_service() -> Any:
+    """
+    Get AnalysisService instance with LLM client.
+
+    Returns:
+        AnalysisService instance
+
+    Raises:
+        ImportError: If analysis service or LLM client unavailable
+        RuntimeError: If LLM credentials not configured
+    """
+    try:
+        from agents.k.llm import create_llm_client, has_llm_credentials
+        from services.analysis import AnalysisService
+    except ImportError as e:
+        raise ImportError(f"Analysis service dependencies unavailable: {e}")
+
+    # Check credentials
+    if not has_llm_credentials():
+        raise RuntimeError(
+            "LLM analysis requires ANTHROPIC_API_KEY. "
+            "Set the environment variable or use use_llm=false for mock data."
+        )
+
+    # Create LLM client and service
+    llm = create_llm_client()
+    return AnalysisService(llm)
+
+
+async def _get_llm_node_analysis(node_id: str) -> NodeAnalysisResponse:
+    """
+    Get real LLM-backed analysis for a node.
+
+    This is a placeholder implementation that demonstrates the integration pattern.
+    Full implementation requires:
+    1. Loading actual node content from Zero Seed graph (D-gent)
+    2. Running AnalysisService.analyze_full() on node content
+    3. Transforming FullAnalysisReport to NodeAnalysisResponse
+
+    Args:
+        node_id: Node ID to analyze
+
+    Returns:
+        NodeAnalysisResponse with LLM analysis
+
+    Raises:
+        HTTPException: If analysis fails
+    """
+    try:
+        service = await _get_analysis_service()
+    except (ImportError, RuntimeError) as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+    # TODO: Load actual node content from Zero Seed graph
+    # For now, use node_id as a placeholder "spec path"
+    # Real implementation would:
+    #   1. Query D-gent for Zero Seed node by ID
+    #   2. Extract node.content (markdown)
+    #   3. Write to temp file or pass directly to analyzer
+
+    # Placeholder: treat node_id as a spec path for demo purposes
+    # This allows testing with actual spec files
+    spec_path = f"spec/protocols/{node_id}.md" if "/" not in node_id else node_id
+
+    try:
+        # Run full four-mode analysis
+        report = await service.analyze_full(spec_path)
+
+        # Transform FullAnalysisReport → NodeAnalysisResponse
+        return _transform_analysis_report(node_id, report)
+
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Node content not found: {node_id}. "
+                   f"Real implementation will load from Zero Seed graph."
+        )
+    except Exception as e:
+        logger.error(f"LLM analysis failed for {node_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Analysis failed: {str(e)}"
+        )
+
+
+def _transform_analysis_report(node_id: str, report: Any) -> NodeAnalysisResponse:
+    """
+    Transform FullAnalysisReport to NodeAnalysisResponse format.
+
+    Maps the four analysis modes to AnalysisQuadrant format for the UI.
+
+    Args:
+        node_id: Node ID being analyzed
+        report: FullAnalysisReport from AnalysisService
+
+    Returns:
+        NodeAnalysisResponse with transformed data
+    """
+    # Import here to avoid module-level dependency
+    from agents.operad.core import LawStatus
+    from agents.operad.domains.analysis import ContradictionType
+
+    # Categorical → AnalysisQuadrant
+    cat = report.categorical
+    categorical_items = []
+
+    # Add law verifications
+    for verification in cat.law_verifications:
+        status_map = {
+            LawStatus.PASSED: "pass",
+            LawStatus.FAILED: "fail",
+            LawStatus.SKIPPED: "info",
+            LawStatus.STRUCTURAL: "pass",
+        }
+        categorical_items.append(
+            AnalysisItem(
+                label=verification.law_name,
+                value=verification.message,
+                status=status_map.get(verification.status, "info"),
+            )
+        )
+
+    # Add fixed point info if present
+    if cat.fixed_point:
+        categorical_items.append(
+            AnalysisItem(
+                label="Fixed Point",
+                value=cat.fixed_point.fixed_point_description,
+                status="info" if cat.fixed_point.is_valid else "warning",
+            )
+        )
+
+    categorical_status = "pass" if not cat.has_violations else "issues"
+    categorical = AnalysisQuadrant(
+        status=categorical_status,
+        summary=cat.summary,
+        items=categorical_items,
+    )
+
+    # Epistemic → AnalysisQuadrant
+    epi = report.epistemic
+    epistemic_items = [
+        AnalysisItem(
+            label="Layer",
+            value=f"L{epi.layer}",
+            status="info",
+        ),
+        AnalysisItem(
+            label="Grounding",
+            value="Terminates at axiom" if epi.is_grounded else "Not grounded",
+            status="pass" if epi.is_grounded else "warning",
+        ),
+        AnalysisItem(
+            label="Evidence Tier",
+            value=epi.toulmin.tier.name.title(),
+            status="info",
+        ),
+        AnalysisItem(
+            label="Qualifier",
+            value=epi.toulmin.qualifier.title(),
+            status="pass" if epi.toulmin.qualifier == "definitely" else "info",
+        ),
+    ]
+
+    epistemic_status = "pass" if epi.is_grounded else "issues"
+    epistemic = AnalysisQuadrant(
+        status=epistemic_status,
+        summary=epi.summary,
+        items=epistemic_items,
+    )
+
+    # Dialectical → AnalysisQuadrant
+    dia = report.dialectical
+    dialectical_items = []
+
+    for i, tension in enumerate(dia.tensions, 1):
+        # Classification label
+        class_map = {
+            ContradictionType.APPARENT: "Apparent",
+            ContradictionType.PRODUCTIVE: "Productive",
+            ContradictionType.PROBLEMATIC: "Problematic",
+            ContradictionType.PARACONSISTENT: "Paraconsistent",
+        }
+        classification = class_map.get(tension.classification, "Unknown")
+
+        dialectical_items.append(
+            AnalysisItem(
+                label=f"Tension {i}",
+                value=f"{tension.thesis} ⟷ {tension.antithesis}",
+                status="warning" if tension.classification == ContradictionType.PROBLEMATIC else "pass",
+            )
+        )
+        dialectical_items.append(
+            AnalysisItem(
+                label=f"Classification",
+                value=classification,
+                status="info",
+            )
+        )
+        if tension.synthesis:
+            dialectical_items.append(
+                AnalysisItem(
+                    label=f"Synthesis",
+                    value=tension.synthesis,
+                    status="pass",
+                )
+            )
+
+    dialectical_status = "pass" if dia.problematic_count == 0 else "issues"
+    dialectical = AnalysisQuadrant(
+        status=dialectical_status,
+        summary=dia.summary,
+        items=dialectical_items,
+    )
+
+    # Generative → AnalysisQuadrant
+    gen = report.generative
+    generative_items = [
+        AnalysisItem(
+            label="Compression Ratio",
+            value=f"{gen.compression_ratio:.2f}",
+            status="pass" if gen.is_compressed else "info",
+        ),
+        AnalysisItem(
+            label="Minimal Kernel",
+            value=f"{len(gen.minimal_kernel)} axioms",
+            status="info",
+        ),
+        AnalysisItem(
+            label="Regeneration Test",
+            value="Passed" if gen.regeneration.passed else "Failed",
+            status="pass" if gen.regeneration.passed else "fail",
+        ),
+    ]
+
+    if gen.regeneration.missing_elements:
+        generative_items.append(
+            AnalysisItem(
+                label="Missing Elements",
+                value=", ".join(gen.regeneration.missing_elements[:3]),
+                status="warning",
+            )
+        )
+
+    generative_status = "pass" if gen.is_regenerable else "issues"
+    generative = AnalysisQuadrant(
+        status=generative_status,
+        summary=gen.summary,
+        items=generative_items,
+    )
+
+    return NodeAnalysisResponse(
+        node_id=node_id,
+        categorical=categorical,
+        epistemic=epistemic,
+        dialectical=dialectical,
+        generative=generative,
+    )
+
+
+# =============================================================================
 # Router Factory
 # =============================================================================
 
@@ -721,8 +986,8 @@ def create_zero_seed_router() -> APIRouter | None:
         if node.layer > 2:
             proof = _create_mock_proof(node_id).proof
 
-        incoming = []
-        outgoing = [
+        incoming: list[ZeroEdge] = []
+        outgoing: list[ZeroEdge] = [
             ZeroEdge(
                 id="ze-001",
                 source=node_id,
@@ -784,7 +1049,10 @@ def create_zero_seed_router() -> APIRouter | None:
     # =========================================================================
 
     @router.get("/nodes/{node_id}/analysis", response_model=NodeAnalysisResponse)
-    async def get_node_analysis(node_id: str) -> NodeAnalysisResponse:
+    async def get_node_analysis(
+        node_id: str,
+        use_llm: bool = Query(False, description="Use LLM-backed analysis (requires API key)")
+    ) -> NodeAnalysisResponse:
         """
         Get four-mode analysis for a Zero Seed node.
 
@@ -793,16 +1061,22 @@ def create_zero_seed_router() -> APIRouter | None:
 
         Args:
             node_id: Node ID to analyze
+            use_llm: Whether to use real LLM analysis (default: False for mock data)
 
         Returns:
             Four-mode analysis report
 
         Note:
-            Currently returns meaningful mock data. Real implementation will:
-            1. Load node content from Zero Seed graph (D-gent)
-            2. Run AnalysisService.analyze_full(node_content)
-            3. Transform reports to AnalysisQuadrant format
+            With use_llm=false (default): Returns mock data for UI testing
+            With use_llm=true: Uses AnalysisService with Claude API
         """
+        # Use real LLM analysis if requested AND credentials available
+        if use_llm:
+            try:
+                return await _get_llm_node_analysis(node_id)
+            except Exception as e:
+                logger.warning(f"LLM analysis failed for {node_id}, falling back to mock: {e}")
+                # Fall through to mock data on any error
         # For now, generate rich mock data based on node ID
         # This provides a working UI while the full pipeline is built
 
