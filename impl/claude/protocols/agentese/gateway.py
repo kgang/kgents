@@ -172,6 +172,15 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (k_block): {e}")
 
+        # === Standalone AGENTESE nodes (nodes/*) ===
+        try:
+            import nodes  # noqa: F401  # world.code.*, void.*, concept.*
+
+            # Register Zero Seed schemas with Universe
+            nodes.register_crystal_schemas()
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (nodes): {e}")
+
         # === WitnessedGraph Crown Jewel (concept.graph.*) ===
         try:
             from services.witnessed_graph import node as graph_node  # noqa: F401  # concept.graph.*
@@ -196,6 +205,19 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (director): {e}")
 
+        # === Void and Concept Nodes (Zero Seed L1-L4) ===
+        try:
+            from nodes import void_node  # noqa: F401  # void.*
+            from nodes import concept_node  # noqa: F401  # concept.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (void/concept): {e}")
+
+        # === Code Crown Jewel (world.code.*) ===
+        try:
+            from services.code import node as code_node  # noqa: F401  # world.code.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (code): {e}")
+
         # === Sovereign Store Crown Jewel (concept.sovereign.*) ===
         try:
             from services.sovereign import node as sovereign_node  # noqa: F401  # concept.sovereign.*
@@ -207,6 +229,37 @@ def _import_node_modules() -> None:
             from agents.d import node as data_node  # noqa: F401  # self.data.*
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (d-gent): {e}")
+
+        # === Fusion Crown Jewel (concept.fusion.*) ===
+        try:
+            from services.fusion import node as fusion_node  # noqa: F401
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (fusion): {e}")
+
+        # === Foundry Crown Jewel (world.foundry.*) ===
+        try:
+            from services.foundry import node as foundry_node  # noqa: F401
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (foundry): {e}")
+
+        # === Hypergraph Editor Crown Jewel (self.hypergraph.*) ===
+        try:
+            from services.hypergraph_editor import node as hypergraph_editor_node  # noqa: F401
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (hypergraph_editor): {e}")
+
+        # === Living Spec Crown Jewel (self.spec.* - not yet implemented) ===
+        # Note: living_spec/node.py exists but has no @node decorator yet
+        try:
+            from services.living_spec import node as living_spec_node  # noqa: F401
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (living_spec): {e}")
+
+        # === Explorer Crown Jewel (world.explorer.*) ===
+        try:
+            from services.explorer import node as explorer_node  # noqa: F401
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (explorer): {e}")
 
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:

@@ -196,7 +196,7 @@ These compositions are ready to use:
 
 ## 📚 SKILLS: Your First Stop
 
-> *"17 skills are necessary and sufficient to build any kgents component."*
+> *"24 skills are necessary and sufficient to build any kgents component."*
 
 **Before doing ANYTHING, consult the relevant skill** in `docs/skills/`. Every task—from adding a state machine to building a responsive UI—has a corresponding skill that will save you hours.
 
@@ -206,32 +206,29 @@ These compositions are ready to use:
 |-------|-------------|-------------|
 | **`cli-strategy-tools.md`** | Every session, every commit | Five tools for evidence-driven development: audit, annotate, experiment, probe, compose. |
 | **`metaphysical-fullstack.md`** | Building any feature | Every agent is a vertical slice from persistence → projection. No explicit backend routes—AGENTESE IS the API. |
-| **`crown-jewel-patterns.md`** | Implementing service logic | 14 battle-tested patterns: Container-Owns-Workflow, Signal Aggregation, Dual-Channel Output, Teaching Mode... |
-| **`test-patterns.md`** | Writing tests | T-gent Types I-V taxonomy, property-based tests, React chaos testing, performance baselines |
 | **`elastic-ui-patterns.md`** | Any responsive UI | Three-mode pattern (Compact/Comfortable/Spacious), content degradation, density-aware constants |
 
 ### By Task Type
 
 | Task | Skills to Read |
 |------|----------------|
-| **Adding new agent** | `polynomial-agent.md` (state machine), `building-agent.md` (composition laws) |
+| **Adding new agent** | `polynomial-agent.md` (state machine) |
 | **Exposing via AGENTESE** | `agentese-node-registration.md` (@node decorator), `agentese-path.md` (path structure) |
-| **Service/Crown Jewel** | `crown-jewel-patterns.md` (14 patterns), `metaphysical-fullstack.md` (architecture) |
+| **Service implementation** | `metaphysical-fullstack.md` (architecture), `data-bus-integration.md` (events) |
 | **Hypergraph editing** | `hypergraph-editor.md` (six-mode modal editing, graph navigation, K-Block) |
 | **Event-driven feature** | `data-bus-integration.md` (DataBus, SynergyBus, EventBus) |
 | **Multi-target rendering** | `projection-target.md` (CLI/TUI/JSON/marimo), `elastic-ui-patterns.md` (responsive) |
-| **Persistence/Storage** | `unified-storage.md` (StorageProvider, XDG paths, CLI sessions) |
 | **Writing specs** | `spec-template.md` (structure), `spec-hygiene.md` (bloat patterns to avoid) |
 
 ### The Skill Composition Formula
 
 ```
 Component = Foundation ∘ Protocol ∘ Architecture ∘ Spec ∘ Projection
-          = (polynomial-agent + building-agent)
+          = polynomial-agent
           ∘ (agentese-path + agentese-node-registration)
-          ∘ (crown-jewel-patterns + metaphysical-fullstack + data-bus-integration + hypergraph-editor)
+          ∘ (metaphysical-fullstack + data-bus-integration + hypergraph-editor)
           ∘ (spec-template + spec-hygiene)
-          ∘ (projection-target + test-patterns + elastic-ui-patterns)
+          ∘ (projection-target + elastic-ui-patterns)
 ```
 
 ---

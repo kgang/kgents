@@ -10,9 +10,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-
-/** Merge strategy (from spec Part IV.4) */
-export type MergeStrategy = 'sequential' | 'interleave' | 'manual';
+import { chatApi } from '@/api/chatApi';
+import type { MergeStrategy } from '@/types/chat';
 
 /** Branch node in session tree */
 export interface Branch {
@@ -57,6 +56,8 @@ export interface UseBranchingResult {
   error: string | null;
 }
 
+export { MergeStrategy };
+
 const MAX_BRANCHES = 3; // From spec §4.2
 
 /**
@@ -88,37 +89,32 @@ export function useBranching(
   const [error, setError] = useState<string | null>(null);
 
   // Fetch branches on mount and when session changes
-  useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchBranches = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        // TODO: Replace with actual API call
-        const response = await fetch(`/api/chat/sessions/${sessionId}/branches`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch branches: ${response.statusText}`);
-        }
+      // Fetch branches via API
+      const data = await chatApi.getBranches(sessionId);
+      setBranches(data.branches || []);
 
-        const data = await response.json();
-        setBranches(data.branches || []);
-
-        // Find current branch
-        const active = data.branches?.find((b: Branch) => b.is_active);
-        if (active) {
-          setCurrentBranch(active.id);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
+      // Find current branch
+      const active = data.branches?.find((b) => b.is_active);
+      if (active) {
+        setCurrentBranch(active.id);
       }
-    };
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }, [sessionId]);
 
+  useEffect(() => {
     if (sessionId) {
       fetchBranches();
     }
-  }, [sessionId]);
+  }, [sessionId, fetchBranches]);
 
   // Build tree structure from flat branch list
   const tree = useBuildBranchTree(branches);
@@ -142,24 +138,15 @@ export function useBranching(
       try {
         setError(null);
 
-        // TODO: Replace with actual API call
-        const response = await fetch(`/api/chat/${sessionId}/fork`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ branch_name: name }),
+        // Call fork API
+        const result = await chatApi.fork(sessionId, {
+          branch_name: name,
         });
 
-        if (!response.ok) {
-          throw new Error(`Fork failed: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        const newBranchId = data.branch_id;
+        const newBranchId = result.session_id;
 
         // Refresh branches
-        const branchesResponse = await fetch(`/api/chat/sessions/${sessionId}/branches`);
-        const branchesData = await branchesResponse.json();
-        setBranches(branchesData.branches || []);
+        await fetchBranches();
 
         // Switch to new branch
         setCurrentBranch(newBranchId);
@@ -172,7 +159,7 @@ export function useBranching(
         throw err;
       }
     },
-    [sessionId, canFork, onBranchChange]
+    [sessionId, canFork, onBranchChange, fetchBranches]
   );
 
   /**
@@ -182,41 +169,27 @@ export function useBranching(
    * - sequential: Append branch turns after current
    * - interleave: Merge by timestamp
    * - manual: User selects turns
-   *
-   * TODO: Backend /merge endpoint not yet implemented.
-   * This function is a placeholder for future merge functionality.
    */
   const merge = useCallback(
     async (branchId: string, strategy: MergeStrategy): Promise<void> => {
       try {
         setError(null);
 
-        // TODO: Backend endpoint /api/chat/{session_id}/merge does not exist yet.
-        // Need to implement merge endpoint in chat.py before this will work.
-        const response = await fetch(`/api/chat/${currentBranch}/merge`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            source_branch_id: branchId,
-            strategy,
-          }),
+        // Call merge API
+        await chatApi.merge(currentBranch, {
+          other_id: branchId,
+          strategy,
         });
 
-        if (!response.ok) {
-          throw new Error(`Merge failed: ${response.statusText}`);
-        }
-
-        // Refresh branches
-        const branchesResponse = await fetch(`/api/chat/sessions/${sessionId}/branches`);
-        const branchesData = await branchesResponse.json();
-        setBranches(branchesData.branches || []);
+        // Refresh branches to reflect merge state
+        await fetchBranches();
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Merge failed';
         setError(message);
         throw err;
       }
     },
-    [sessionId, currentBranch]
+    [currentBranch, fetchBranches]
   );
 
   /**
@@ -248,28 +221,18 @@ export function useBranching(
       try {
         setError(null);
 
-        // TODO: Replace with actual API call
-        const response = await fetch(`/api/chat/${currentBranch}/rewind`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ turns }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Rewind failed: ${response.statusText}`);
-        }
+        // Call rewind API
+        await chatApi.rewind(currentBranch, { turns });
 
         // Refresh branches to update turn counts
-        const branchesResponse = await fetch(`/api/chat/sessions/${sessionId}/branches`);
-        const branchesData = await branchesResponse.json();
-        setBranches(branchesData.branches || []);
+        await fetchBranches();
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Rewind failed';
         setError(message);
         throw err;
       }
     },
-    [sessionId, currentBranch]
+    [currentBranch, fetchBranches]
   );
 
   return {

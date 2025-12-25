@@ -10,10 +10,15 @@ Provides:
 - DELETE /api/chat/:id - Delete session and all related data
 - POST /api/chat/:id/send - Send message (streaming SSE response via K-gent)
 - POST /api/chat/:id/fork - Fork session at specific turn
+- POST /api/chat/:id/merge - Merge two sessions with strategy (sequential/interleave/manual)
 - POST /api/chat/:id/rewind - Rewind session by removing turns
 - POST /api/chat/:id/checkpoint - Create checkpoint of current session state
 - GET /api/chat/:id/evidence - Get Bayesian evidence state
 - GET /api/chat/sessions/:id/branches - Get branch tree for session
+- POST /api/chat/mention/resolve - Resolve @mention to content
+- POST /api/chat/mention/search/files - Search files for autocomplete
+- POST /api/chat/mention/search/symbols - Search symbols for autocomplete
+- POST /api/chat/mention/witness - Get witness marks
 
 Architecture:
 - In-memory storage (dict) for now - will migrate to D-gent persistence
@@ -158,6 +163,21 @@ class ChatEvidence(BaseModel):
     ashc_data: dict[str, Any] | None = None  # Full ASHC output for UI display
 
 
+class PortalEmissionAPI(BaseModel):
+    """Portal emission in a turn."""
+
+    portal_id: str
+    destination: str
+    edge_type: str
+    access: Literal["read", "readwrite"]
+    content_preview: str | None = None
+    content_full: str | None = None
+    line_count: int = 0
+    exists: bool = True
+    auto_expand: bool = True
+    emitted_at: str
+
+
 class Turn(BaseModel):
     """
     A single conversation turn (API model).
@@ -176,6 +196,7 @@ class Turn(BaseModel):
     user_message: Message
     assistant_response: Message
     tools_used: list[ToolUse] = []
+    portal_emissions: list[PortalEmissionAPI] = []
     evidence_delta: EvidenceDelta
     confidence: float
     started_at: str
@@ -195,6 +216,8 @@ class ChatSession(BaseModel):
     evidence: ChatEvidence
     created_at: str
     last_active: str
+    is_merged: bool = False
+    merged_into: str | None = None
 
 
 class CreateSessionRequest(BaseModel):
@@ -216,6 +239,15 @@ class ForkSessionRequest(BaseModel):
     branch_name: str = Field(..., description="Name for the forked branch")
     fork_point: int | None = Field(
         None, description="Turn number to fork from (defaults to last turn)"
+    )
+
+
+class MergeSessionRequest(BaseModel):
+    """Request to merge two sessions."""
+
+    other_id: str = Field(..., description="Session ID to merge with")
+    strategy: Literal["sequential", "interleave", "manual"] = Field(
+        "sequential", description="Merge strategy to use"
     )
 
 
@@ -247,6 +279,22 @@ class BranchesResponse(BaseModel):
     """Response containing list of branches."""
 
     branches: list[BranchInfo]
+
+
+class PortalEmitRequest(BaseModel):
+    """Request to emit a portal."""
+
+    destination: str
+    edge_type: str = "context"
+    access: Literal["read", "readwrite"] = "read"
+    auto_expand: bool = True
+
+
+class PortalWriteRequest(BaseModel):
+    """Request to write through a portal."""
+
+    portal_id: str
+    content: str
 
 
 # =============================================================================
@@ -730,6 +778,112 @@ def create_chat_router() -> "APIRouter | None":
 
         return new_session
 
+    @router.post("/{session_id}/merge", response_model=ChatSession, status_code=201)
+    async def merge_session(
+        request: MergeSessionRequest,
+        session_id: str = Path(..., description="Session ID to merge into"),
+    ) -> ChatSession:
+        """
+        Merge another session into this one.
+
+        Creates a new merged session combining turns from both sessions.
+        Marks both source sessions as merged.
+
+        Args:
+            session_id: Target session ID
+            request: Merge request
+
+        Returns:
+            New merged session
+
+        Raises:
+            HTTPException: If either session not found
+        """
+        if session_id not in _sessions:
+            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+
+        if request.other_id not in _sessions:
+            raise HTTPException(status_code=404, detail=f"Session {request.other_id} not found")
+
+        base_session = _sessions[session_id]
+        other_session = _sessions[request.other_id]
+
+        # Merge turns based on strategy
+        if request.strategy == "sequential":
+            # Append other's turns after base session's turns
+            merged_turns = base_session.turns + other_session.turns
+        elif request.strategy == "interleave":
+            # Merge by timestamp (started_at)
+            merged_turns = sorted(
+                base_session.turns + other_session.turns,
+                key=lambda t: t.started_at,
+            )
+        else:  # manual
+            # For now, treat manual same as sequential
+            # In the future, this could support user-selected turns
+            merged_turns = base_session.turns + other_session.turns
+
+        # Combine evidence - use session with more observations
+        base_observations = (
+            base_session.evidence.prior_alpha + base_session.evidence.prior_beta
+        )
+        other_observations = (
+            other_session.evidence.prior_alpha + other_session.evidence.prior_beta
+        )
+
+        if base_observations >= other_observations:
+            merged_evidence = ChatEvidence(
+                prior_alpha=base_session.evidence.prior_alpha,
+                prior_beta=base_session.evidence.prior_beta,
+                confidence=base_session.evidence.confidence,
+                should_stop=base_session.evidence.should_stop,
+                tools_succeeded=base_session.evidence.tools_succeeded,
+                tools_failed=base_session.evidence.tools_failed,
+            )
+        else:
+            merged_evidence = ChatEvidence(
+                prior_alpha=other_session.evidence.prior_alpha,
+                prior_beta=other_session.evidence.prior_beta,
+                confidence=other_session.evidence.confidence,
+                should_stop=other_session.evidence.should_stop,
+                tools_succeeded=other_session.evidence.tools_succeeded,
+                tools_failed=other_session.evidence.tools_failed,
+            )
+
+        # Create new merged session
+        merged_session_id = str(uuid.uuid4())
+        now = datetime.now().isoformat()
+
+        merged_session = ChatSession(
+            id=merged_session_id,
+            project_id=base_session.project_id or other_session.project_id,
+            branch_name=f"{base_session.branch_name}+{other_session.branch_name}",
+            parent_id=base_session.id,
+            fork_point=None,  # Merged sessions don't have a fork point
+            turns=merged_turns,
+            context_size=_calculate_context_size(merged_turns),
+            evidence=merged_evidence,
+            created_at=now,
+            last_active=now,
+        )
+
+        # Store merged session
+        _sessions[merged_session_id] = merged_session
+
+        # Mark source sessions as merged
+        base_session.is_merged = True
+        base_session.merged_into = merged_session_id
+        other_session.is_merged = True
+        other_session.merged_into = merged_session_id
+
+        # TODO: await persistence.save_session(converted_merged_session)
+        logger.info(
+            f"Merged sessions {session_id} + {request.other_id} -> {merged_session_id} "
+            f"({request.strategy} strategy, {len(merged_turns)} turns)"
+        )
+
+        return merged_session
+
     @router.post("/{session_id}/rewind", response_model=ChatSession)
     async def rewind_session(
         request: RewindSessionRequest,
@@ -860,8 +1014,8 @@ def create_chat_router() -> "APIRouter | None":
                 turn_count=len(session.turns),
                 created_at=session.created_at,
                 last_active=session.last_active,
-                is_merged=False,  # TODO: track merge state
-                merged_into=None,
+                is_merged=session.is_merged,
+                merged_into=session.merged_into,
                 is_active=(session.id == session_id),  # Mark original requested session as active
             )
             branches.append(branch)
@@ -1004,6 +1158,409 @@ def create_chat_router() -> "APIRouter | None":
         trust_manager.revoke_trust(user_id, tool_name)
 
         return {"success": True}
+
+    # =========================================================================
+    # =========================================================================
+    # Mention Resolution Endpoints (Part VI: Context Injection)
+    # =========================================================================
+
+    @router.post("/mention/resolve")
+    async def resolve_mention(
+        request: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Resolve @mention to content for context injection.
+
+        Args:
+            request: Dict with:
+                - type: MentionType ('file' | 'symbol' | 'spec' | 'witness' | 'web' | 'terminal' | 'project')
+                - target: string (file path, symbol name, URL, etc.)
+
+        Returns:
+            Dict with:
+                - content: string (resolved content)
+                - metadata: dict (type-specific metadata)
+
+        Raises:
+            HTTPException: If type invalid or resolution fails
+        """
+        from pathlib import Path
+
+        mention_type = request.get("type")
+        target = request.get("target")
+
+        if not mention_type or not target:
+            raise HTTPException(status_code=400, detail="Missing type or target")
+
+        # Get project root (assume we're in impl/claude/protocols/api)
+        project_root = Path(__file__).parent.parent.parent.parent
+
+        try:
+            if mention_type == "file":
+                # Read file content
+                file_path = project_root / target.lstrip("/")
+                if not file_path.exists():
+                    raise HTTPException(status_code=404, detail=f"File not found: {target}")
+                if not file_path.is_file():
+                    raise HTTPException(status_code=400, detail=f"Not a file: {target}")
+
+                content = file_path.read_text(encoding="utf-8")
+                return {
+                    "content": content,
+                    "metadata": {
+                        "path": str(file_path.relative_to(project_root)),
+                        "size": len(content),
+                        "lines": content.count("\n") + 1,
+                    },
+                }
+
+            elif mention_type == "spec":
+                # Read from spec/ directory
+                spec_path = project_root / "spec" / target.lstrip("/")
+                if not spec_path.exists():
+                    raise HTTPException(status_code=404, detail=f"Spec not found: {target}")
+                if not spec_path.is_file():
+                    raise HTTPException(status_code=400, detail=f"Not a file: {target}")
+
+                content = spec_path.read_text(encoding="utf-8")
+                return {
+                    "content": content,
+                    "metadata": {
+                        "path": f"spec/{target.lstrip('/')}",
+                        "size": len(content),
+                        "lines": content.count("\n") + 1,
+                    },
+                }
+
+            elif mention_type == "project":
+                # List project files (top-level overview)
+                import fnmatch
+
+                files = []
+                for item in project_root.rglob("*"):
+                    if item.is_file():
+                        # Skip common ignore patterns
+                        rel_path = item.relative_to(project_root)
+                        str_path = str(rel_path)
+                        if any(
+                            fnmatch.fnmatch(str_path, pattern)
+                            for pattern in [
+                                ".*",
+                                "*.pyc",
+                                "__pycache__/*",
+                                ".venv/*",
+                                "node_modules/*",
+                                "dist/*",
+                                "build/*",
+                            ]
+                        ):
+                            continue
+                        files.append(str_path)
+
+                # Limit to reasonable size
+                files = sorted(files)[:200]
+
+                content = "# Project Files\n\n" + "\n".join(f"- {f}" for f in files)
+                return {
+                    "content": content,
+                    "metadata": {
+                        "total_files": len(files),
+                        "truncated": len(files) >= 200,
+                    },
+                }
+
+            elif mention_type == "witness":
+                # Placeholder for witness integration
+                # TODO: Integrate with witness service
+                return {
+                    "content": f"# Witness Marks\n\n[Witness integration coming soon]\n\nQuery: {target}",
+                    "metadata": {
+                        "query": target,
+                        "placeholder": True,
+                    },
+                }
+
+            elif mention_type == "web":
+                # Placeholder for web fetch
+                # TODO: Integrate with web fetch service
+                return {
+                    "content": f"# Web Content\n\n[Web fetch coming soon]\n\nURL: {target}",
+                    "metadata": {
+                        "url": target,
+                        "placeholder": True,
+                    },
+                }
+
+            elif mention_type == "terminal":
+                # Placeholder for terminal integration
+                # TODO: Integrate with terminal/shell
+                return {
+                    "content": f"# Terminal Output\n\n[Terminal integration coming soon]\n\nCommand: {target}",
+                    "metadata": {
+                        "command": target,
+                        "placeholder": True,
+                    },
+                }
+
+            elif mention_type == "symbol":
+                # Placeholder for symbol resolution
+                # TODO: Integrate with AST parsing
+                return {
+                    "content": f"# Symbol: {target}\n\n[Symbol resolution coming soon]",
+                    "metadata": {
+                        "symbol": target,
+                        "placeholder": True,
+                    },
+                }
+
+            else:
+                raise HTTPException(status_code=400, detail=f"Unknown mention type: {mention_type}")
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception(f"Error resolving mention {mention_type}:{target}")
+            raise HTTPException(status_code=500, detail=f"Resolution failed: {str(e)}")
+
+    @router.post("/mention/search/files")
+    async def search_files(
+        request: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Search files for @file mention autocomplete.
+
+        Args:
+            request: Dict with:
+                - query: string (search query)
+
+        Returns:
+            Dict with:
+                - files: list[string] (matching file paths, max 20)
+
+        Raises:
+            HTTPException: If search fails
+        """
+        from pathlib import Path
+        import fnmatch
+
+        query = request.get("query", "")
+
+        if not query:
+            return {"files": []}
+
+        # Get project root
+        project_root = Path(__file__).parent.parent.parent.parent
+
+        try:
+            matches = []
+            query_lower = query.lower()
+
+            # Walk project directory
+            for item in project_root.rglob("*"):
+                if item.is_file():
+                    rel_path = item.relative_to(project_root)
+                    str_path = str(rel_path)
+
+                    # Skip common ignore patterns
+                    if any(
+                        fnmatch.fnmatch(str_path, pattern)
+                        for pattern in [
+                            ".*",
+                            "*.pyc",
+                            "__pycache__/*",
+                            ".venv/*",
+                            "node_modules/*",
+                            "dist/*",
+                            "build/*",
+                        ]
+                    ):
+                        continue
+
+                    # Match query
+                    if query_lower in str_path.lower():
+                        matches.append(str_path)
+
+                    # Stop at 20 matches
+                    if len(matches) >= 20:
+                        break
+
+            return {"files": sorted(matches)}
+
+        except Exception as e:
+            logger.exception(f"Error searching files for query: {query}")
+            raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+    @router.post("/mention/search/symbols")
+    async def search_symbols(
+        request: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Search symbols for @symbol mention autocomplete.
+
+        Args:
+            request: Dict with:
+                - query: string (search query)
+
+        Returns:
+            Dict with:
+                - symbols: list[dict] (matching symbols with name, path, docstring)
+
+        Raises:
+            HTTPException: If search fails
+        """
+        query = request.get("query", "")
+
+        # Placeholder for AST parsing integration
+        # TODO: Implement AST-based symbol search
+        # This would scan Python files for classes, functions, constants
+        # and return matches with their locations and docstrings
+
+        return {
+            "symbols": [
+                # Example structure for when implemented:
+                # {
+                #     "name": "ChatSession",
+                #     "path": "impl/claude/protocols/api/chat.py",
+                #     "docstring": "A chat session with branching and evidence tracking."
+                # }
+            ]
+        }
+
+    @router.post("/mention/witness")
+    async def get_witness_marks(
+        request: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Get witness marks for @witness mention.
+
+        Args:
+            request: Dict with:
+                - query: string (optional search query)
+                - limit: int (optional max marks to return, default 10)
+
+        Returns:
+            Dict with:
+                - marks: list[dict] (witness marks with id, content, timestamp)
+
+        Raises:
+            HTTPException: If query fails
+        """
+        query = request.get("query")
+        limit = request.get("limit", 10)
+
+        # Placeholder for witness service integration
+        # TODO: Integrate with services.witness to fetch actual marks
+        # This would query the witness store for recent marks,
+        # optionally filtered by query string
+
+        return {
+            "marks": [
+                # Example structure for when implemented:
+                # {
+                #     "id": "mark_abc123",
+                #     "content": "Implemented mention resolution endpoints",
+                #     "timestamp": "2025-12-25T10:30:00Z"
+                # }
+            ]
+        }
+
+    # =========================================================================
+    # Portal Tool Endpoints
+    # =========================================================================
+
+    @router.post("/portal/emit", response_model=PortalEmissionAPI)
+    async def emit_portal(request: PortalEmitRequest) -> PortalEmissionAPI:
+        """
+        Emit a portal for inline file access in chat.
+
+        Opens a portal to a file/resource that provides inline read/write access
+        in the chat interface.
+
+        Args:
+            request: Portal emission request
+
+        Returns:
+            Portal emission with content preview
+
+        Raises:
+            HTTPException: If portal tool fails
+        """
+        try:
+            from services.tooling.tools.portal import PortalTool
+            from services.tooling.contracts import PortalRequest
+
+            tool = PortalTool()
+            result = await tool.invoke(
+                PortalRequest(
+                    destination=request.destination,
+                    edge_type=request.edge_type,
+                    access=request.access,
+                    auto_expand=request.auto_expand,
+                )
+            )
+
+            # Cast access to Literal type (tool uses str, API uses Literal)
+            access_typed: Literal["read", "readwrite"] = (
+                "readwrite" if result.access == "readwrite" else "read"
+            )
+
+            return PortalEmissionAPI(
+                portal_id=result.portal_id,
+                destination=result.destination,
+                edge_type=result.edge_type,
+                access=access_typed,
+                content_preview=result.content_preview,
+                content_full=result.content_full,
+                line_count=result.line_count,
+                exists=result.exists,
+                auto_expand=result.auto_expand,
+                emitted_at=result.emitted_at,
+            )
+
+        except Exception as e:
+            logger.exception(f"Error emitting portal to {request.destination}")
+            raise HTTPException(status_code=500, detail=f"Portal emission failed: {str(e)}")
+
+    @router.post("/portal/write")
+    async def write_portal(request: PortalWriteRequest) -> dict[str, Any]:
+        """
+        Write content through an open portal.
+
+        Allows writing back to a file through a portal that was opened
+        with readwrite access.
+
+        Args:
+            request: Portal write request
+
+        Returns:
+            Write result with success status
+
+        Raises:
+            HTTPException: If portal not found or write fails
+        """
+        try:
+            from services.tooling.tools.portal import PortalWriteTool
+            from services.tooling.contracts import PortalWriteRequest as ToolRequest
+
+            tool = PortalWriteTool()
+            result = await tool.invoke(
+                ToolRequest(
+                    portal_id=request.portal_id,
+                    content=request.content,
+                )
+            )
+
+            return {
+                "success": result.success,
+                "portal_id": result.portal_id,
+                "bytes_written": result.bytes_written,
+                "new_content_hash": result.new_content_hash,
+                "error_message": result.error_message,
+            }
+
+        except Exception as e:
+            logger.exception(f"Error writing through portal {request.portal_id}")
+            raise HTTPException(status_code=500, detail=f"Portal write failed: {str(e)}")
 
     # =========================================================================
     # Pre-Execution Gating Endpoints

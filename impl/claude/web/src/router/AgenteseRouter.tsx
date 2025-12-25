@@ -37,81 +37,67 @@ interface PathMapping {
 
 /**
  * Lazy-loaded page components.
+ *
+ * UX TRANSFORMATION (2025-12-25):
+ * "The Hypergraph Editor IS the app. Everything else is a sidebar."
+ *
+ * Deleted pages: WelcomePage, ZeroSeedPage, ChartPage, FeedPage, ValueCompassTestPage
+ * ChatPage and DirectorPage are now EMBEDDED as sidebars in the Workspace.
+ *
+ * The only remaining page is HypergraphEditorPage (the Workspace with sidebars).
  */
-const ChatPage = React.lazy(() => import('../pages/ChatPage'));
 const HypergraphEditorPage = React.lazy(() =>
   import('../pages/HypergraphEditorPage').then((m) => ({ default: m.HypergraphEditorPage }))
 );
-const ZeroSeedPage = React.lazy(() => import('../pages/ZeroSeedPage'));
-const DirectorPage = React.lazy(() => import('../pages/DirectorPage'));
-const FeedPage = React.lazy(() => import('../pages/FeedPage'));
-const ChartPage = React.lazy(() => import('../pages/ChartPage'));
-const WelcomePage = React.lazy(() => import('../pages/WelcomePage'));
 
 /**
  * AGENTESE path mappings.
  *
  * Order matters: first match wins.
+ *
+ * UX LAW: "The Hypergraph Editor IS the app."
+ * - world.document is THE route (the Workspace with sidebars)
+ * - self.chat and self.director are now embedded sidebars (redirect to editor)
+ * - Deleted: self.memory (FeedPage), world.chart (ChartPage), void.telescope (ZeroSeedPage)
  */
 const PATH_MAPPINGS: PathMapping[] = [
-  // Self context (agent-internal)
-  {
-    pattern: /^self\.chat/,
-    component: ChatPage,
-    shell: 'app',
-    description: 'Conversational interface with branching and tools',
-  },
-  {
-    pattern: /^self\.memory/,
-    component: FeedPage,
-    shell: 'app',
-    description: 'Memory exploration (crystals, teaching, wisdom)',
-  },
-  {
-    pattern: /^self\.director/,
-    component: DirectorPage,
-    shell: 'app',
-    description: 'Living document canvas (Document Director)',
-  },
-
-  // World context (external entities)
+  // World context — THE APP (Workspace with Chat and Files sidebars)
   {
     pattern: /^world\.document/,
     component: HypergraphEditorPage,
     shell: 'app',
-    description: 'Hypergraph Emacs for spec navigation/editing',
-  },
-  {
-    pattern: /^world\.chart/,
-    component: ChartPage,
-    shell: 'app',
-    description: 'Astronomical visualization',
+    description: 'Hypergraph Editor — THE application (with Chat and Files sidebars)',
   },
 
-  // Void context (accursed share)
-  {
-    pattern: /^void\.telescope/,
-    component: ZeroSeedPage,
-    shell: 'telescope',
-    description: 'Epistemic graph navigation with telescope',
-  },
+  // Deleted routes (no longer mapped):
+  // - self.memory (FeedPage deleted)
+  // - world.chart (ChartPage deleted)
+  // - void.telescope (ZeroSeedPage deleted)
+  // - self.chat (now embedded as right sidebar in Workspace)
+  // - self.director (now embedded as left sidebar in Workspace)
 ];
 
 /**
  * Legacy route redirects for backward compatibility.
  *
- * Phase 3: Pure AGENTESE - All legacy routes redirect with deprecation toast.
+ * UX TRANSFORMATION (2025-12-25):
+ * "The Hypergraph Editor IS the app. Everything else is a sidebar."
+ *
+ * ALL legacy routes now redirect to /world.document (the Workspace).
+ * Chat and Director are now sidebars in the Workspace, not separate pages.
  */
 const LEGACY_REDIRECTS: Record<string, string> = {
-  '/brain': '/self.memory',
-  '/chat': '/self.chat',
-  '/director': '/self.director',
+  '/brain': '/world.document',           // FeedPage deleted → editor
+  '/chat': '/world.document',            // ChatPage is now right sidebar (Ctrl+J)
+  '/director': '/world.document',        // DirectorPage is now left sidebar (Ctrl+B)
+  '/self.chat': '/world.document',       // AGENTESE path → editor (sidebar)
+  '/self.director': '/world.document',   // AGENTESE path → editor (sidebar)
   '/editor': '/world.document',
   '/hypergraph-editor': '/world.document',
-  '/chart': '/world.chart',
-  '/feed': '/self.memory',
-  '/proof-engine': '/void.telescope',
-  '/zero-seed': '/void.telescope',
+  '/chart': '/world.document',           // ChartPage deleted → editor
+  '/feed': '/world.document',            // FeedPage deleted → editor
+  '/proof-engine': '/world.document',    // ZeroSeedPage deleted → editor
+  '/zero-seed': '/world.document',       // ZeroSeedPage deleted → editor
 };
 
 /**
@@ -228,18 +214,7 @@ function LegacyRedirect({ from, to }: { from: string; to: string }) {
   return <Navigate to={targetPath} replace />;
 }
 
-/**
- * Welcome screen (root path).
- */
-function WelcomeScreen() {
-  return (
-    <div className="membrane membrane--comfortable">
-      <Suspense fallback={<LoadingFallback />}>
-        <WelcomePage />
-      </Suspense>
-    </div>
-  );
-}
+// WelcomeScreen DELETED — UX LAW: "No welcome page. App opens directly to editor."
 
 /**
  * Main AGENTESE Router component.
@@ -254,8 +229,8 @@ export function AgenteseRouter() {
       <AnimatePresence mode="wait" initial={false}>
         <PageTransition key={location.pathname} variant="fade">
           <Routes location={location}>
-            {/* Root - Welcome screen */}
-            <Route path="/" element={<WelcomeScreen />} />
+            {/* Root - Direct to editor (UX LAW: "App opens directly to editor") */}
+            <Route path="/" element={<Navigate to="/world.document" replace />} />
 
             {/* Legacy redirects (Phase 3: Pure AGENTESE - all redirect) */}
             {Object.entries(LEGACY_REDIRECTS).map(([from, to]) => (

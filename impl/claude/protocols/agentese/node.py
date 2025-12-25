@@ -51,6 +51,10 @@ class Observer:
     AGENTESE v3 Principle: Observer gradations allow lightweight calls
     while preserving "no view from nowhere" semantics.
 
+    TIER 2 Enhancement: Observer tracks last_trace for auditability.
+    The trace is stored in a mutable field to preserve Observer immutability
+    for archetype/capabilities while allowing trace accumulation.
+
     Examples:
         # Simple invocation with default guest
         await logos("world.garden.manifest")
@@ -64,6 +68,11 @@ class Observer:
             capabilities=frozenset({"define", "refine"})
         ))
 
+        # Access trace after invocation
+        observer = Observer(archetype="developer")
+        await logos("self.soul.challenge", observer)
+        trace = observer.last_trace  # PolicyTrace from invocation
+
     Factory methods:
         Observer.guest() - Anonymous guest observer
         Observer.test() - Test observer with all capabilities
@@ -75,8 +84,9 @@ class Observer:
                 Be explicit about archetype for non-trivial operations.
                 (Evidence: test_logos.py::test_guest_observer)
 
-        gotcha: Observer is frozen (immutable). To change capabilities,
-                create a new Observer instance. This enables safe sharing.
+        gotcha: Observer is frozen (immutable) for archetype/capabilities.
+                last_trace is stored in __dict__ to allow mutation while
+                preserving structural immutability.
                 (Evidence: test_node.py::test_observer_immutable)
     """
 

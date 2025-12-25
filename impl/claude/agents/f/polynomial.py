@@ -247,7 +247,16 @@ CHAT_POLYNOMIAL = FlowPolynomial(
     _directions=_flow_directions,
     _transition=_chat_transition,
 )
-"""Polynomial for chat modality. Primarily STREAMING with context management."""
+"""
+Polynomial for chat modality. Primarily STREAMING with context management.
+
+NOTE: The chat modality now has its own specialized polynomial defined in
+agents.f.modalities.chat with chat-specific directions (message, fork, rewind,
+checkpoint, etc.). This polynomial remains for backward compatibility and
+testing of the base flow transitions.
+
+For production chat, use: from agents.f.modalities.chat import CHAT_POLYNOMIAL
+"""
 
 RESEARCH_POLYNOMIAL = FlowPolynomial(
     name="ResearchPolynomial",

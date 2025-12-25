@@ -1,30 +1,40 @@
 """
-ChaosProbe: Perturbation morphism for dialectical testing.
+ChaosProbe: Dialectical Mode Probe for Resilience Testing
 
 Mode: DIALECTICAL
-Purpose: Inject controlled chaos to test agent resilience.
-Reward: Joy (surprising) - Ethical (if breaks safety)
+Purpose: Inject controlled chaos to test agent survival under perturbation.
+Reward: Joy (surprising behavior) - Ethical (if breaks safety)
 
-The ChaosProbe applies controlled perturbations to test robustness:
-- FAILURE: Probabilistic exceptions (test retry logic)
-- NOISE: Semantic perturbations (test input tolerance)
-- LATENCY: Delays (test timeout handling)
-- FLAKINESS: Intermittent failures (test resilience)
-
-All chaos is deterministic via seed (reproducible chaos engineering).
+The ChaosProbe is a dialectical tension testing morphism. It injects
+four types of controlled chaos to verify agents can handle:
+- FAILURE: Controlled exceptions (legacy FailingAgent)
+- NOISE: Semantic perturbation (legacy NoiseAgent)
+- LATENCY: Temporal delays (legacy LatencyAgent)
+- FLAKINESS: Probabilistic failures (legacy FlakyAgent)
 
 DP Semantics:
-- States: {READY, PERTURBING, FAILED, SUCCEEDED}
-- Actions: {inject_chaos}
-- Transition: READY --inject--> PERTURBING --{fail|succeed}--> {FAILED|SUCCEEDED}
-- Reward: Joy (chaos) - Ethical (safety violations)
+- States: {READY, INJECTING, OBSERVING, SYNTHESIZING}
+- Actions: {inject_chaos, observe_survival, synthesize_verdict}
+- Transition: READY -> INJECTING -> OBSERVING -> SYNTHESIZING
+- Reward: High if agent survives chaos, low if breaks
+
+Philosophy:
+    "Dialectical tension reveals truth. An agent that survives
+    contradiction is more truthful than one that only works in
+    ideal conditions."
 
 Example:
-    >>> probe = ChaosProbe(chaos_type=ChaosType.FAILURE, probability=0.3, seed=42)
-    >>> try:
-    ...     result = await probe.invoke("test")
-    ... except RuntimeError:
-    ...     print("Chaos injected!")
+    >>> # Test with failure chaos
+    >>> probe = ChaosProbe(ChaosConfig(
+    ...     chaos_type=ChaosType.FAILURE,
+    ...     intensity=0.3,
+    ...     seed=42
+    ... ))
+    >>> trace = await probe.verify(my_agent, test_input)
+    >>> trace.value.passed  # True if agent survived
+
+    >>> # Compose probes
+    >>> full_test = chaos_probe | null_probe  # Parallel testing
 """
 
 from __future__ import annotations
@@ -34,314 +44,393 @@ import random
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum, auto
-from typing import Any, Generic, TypeVar
+from typing import Any, Callable, FrozenSet, Generic, TypeVar
 
-from agents.poly.types import Agent
-from services.categorical.dp_bridge import PolicyTrace, Principle, TraceEntry
+from agents.t.truth_functor import (
+    AnalysisMode,
+    ConstitutionalScore,
+    PolicyTrace,
+    ProbeAction,
+    ProbeState,
+    TraceEntry,
+    TruthFunctor,
+    TruthVerdict,
+)
 
 A = TypeVar("A")
+B = TypeVar("B")
 
 
 class ChaosType(Enum):
     """Types of chaos to inject."""
 
-    FAILURE = "failure"  # Raise exceptions
-    NOISE = "noise"  # Perturb output
-    LATENCY = "latency"  # Add delays
-    FLAKINESS = "flakiness"  # Intermittent failures
+    FAILURE = auto()     # Controlled exceptions
+    NOISE = auto()       # Semantic perturbation
+    LATENCY = auto()     # Temporal delays
+    FLAKINESS = auto()   # Probabilistic failures
 
 
 class ChaosState(Enum):
-    """DP states for ChaosProbe."""
+    """States for ChaosProbe DP formulation."""
 
     READY = auto()
-    PERTURBING = auto()
-    FAILED = auto()
-    SUCCEEDED = auto()
+    INJECTING = auto()
+    OBSERVING = auto()
+    SYNTHESIZING = auto()
 
 
-@dataclass
+@dataclass(frozen=True)
 class ChaosConfig:
-    """Configuration for ChaosProbe."""
-
-    chaos_type: ChaosType = ChaosType.FAILURE
-    probability: float = 0.5  # Probability of chaos (0.0-1.0)
-    seed: int | None = None  # For reproducibility
-    latency_ms: int = 100  # Latency in milliseconds (for LATENCY type)
-    noise_level: float = 0.1  # Noise level (for NOISE type)
-
-
-class ChaosProbe(Agent[A, A], Generic[A]):
     """
-    ChaosProbe: Perturbation morphism for dialectical testing.
+    Configuration for chaos injection.
 
-    Category Theory: C_p: A → A | Error where p is probability
-    The morphism that probabilistically perturbs or fails.
+    Fields:
+        chaos_type: Type of chaos to inject
+        intensity: Severity [0.0, 1.0] (higher = more chaotic)
+        seed: Random seed for determinism (None = non-deterministic)
+        fail_count: For FAILURE type, how many failures before recovery (-1 = always fail)
+        variance: For LATENCY type, variance in delay
+    """
+    chaos_type: ChaosType = ChaosType.FAILURE
+    intensity: float = 0.3
+    seed: int | None = None
+    fail_count: int = -1  # For FAILURE: -1 = always fail, N = fail N times
+    variance: float = 0.0  # For LATENCY: delay variance
 
-    Algebraic Laws:
-    - C_0 ≡ id (zero probability is identity)
-    - C_1 ≡ bottom (probability 1 always fails)
-    - C_p ∘ C_p ≈ C_{p²} (chaos compounds)
 
-    DP Semantics:
-    - State space: {READY, PERTURBING, FAILED, SUCCEEDED}
-    - Action space: {inject_chaos}
-    - Transition: READY --inject--> PERTURBING --{fail|succeed}--> {FAILED|SUCCEEDED}
-    - Reward: R(s, inject) = JOY - ETHICAL * (safety_violations)
+class ChaosProbe(TruthFunctor[ChaosState, A, B], Generic[A, B]):
+    """
+    ChaosProbe: Dialectical mode probe for resilience testing.
 
-    TruthFunctor Interface:
-    - states(): Returns DP state space
-    - actions(s): Returns available actions from state s
-    - transition(s, a): Returns next state after action a from state s
-    - reward(s, a): Returns constitutional reward for action a in state s
-    - verify(): Verifies chaos laws (C_0 ≡ id, C_1 ≡ bottom)
+    Injects controlled chaos to test agent survival under perturbation.
+    Consolidates legacy chaos agents (Failing/Noise/Latency/Flaky) into
+    a single DP-native probe with TruthFunctor interface.
+
+    Category Theory: C_ε: Agent[A,B] → Agent[A,B ∪ {⊥}]
+    The morphism that adds chaos while observing survival.
+
+    DP Formulation:
+    - State space: {READY, INJECTING, OBSERVING, SYNTHESIZING}
+    - Action space: {inject, observe, synthesize}
+    - Reward: R = Joy(surprise) - Ethical(if breaks)
+
+    Constitutional Alignment:
+    - Ethical: Penalize if chaos breaks agent safety
+    - Joy-inducing: Reward surprising resilience
+    - Heterarchical: Test adaptation under stress
+    - Composable: Chaos probes can chain via >>
     """
 
     def __init__(self, config: ChaosConfig):
-        """Initialize ChaosProbe with configuration."""
+        """
+        Initialize ChaosProbe with configuration.
+
+        Args:
+            config: Chaos configuration (type, intensity, seed)
+        """
         self.config = config
-        self._rng = random.Random(config.seed)
-        self._state = ChaosState.READY
-        self._trace_log: list[TraceEntry] = []
-        self._injection_count = 0
-        self._failure_count = 0
-        self.__is_test__ = True  # T-gent marker
+        self.rng = random.Random(config.seed)
+        self._current_state = ChaosState.READY
+        self._attempt_count = 0
+        self._survived = False
 
-    @property
-    def name(self) -> str:
-        """Return agent name."""
-        return f"ChaosProbe({self.config.chaos_type.value}, p={self.config.probability})"
-
-    # === Agent Interface ===
-
-    async def invoke(self, input: A) -> A:
-        """
-        Apply chaos to input.
-
-        Args:
-            input: Input of type A
-
-        Returns:
-            Perturbed input or raises exception
-
-        Raises:
-            RuntimeError: If FAILURE chaos is injected
-        """
-        prev_state = self._state
-        self._state = ChaosState.PERTURBING
-        self._injection_count += 1
-
-        # Decide whether to inject chaos
-        inject = self._rng.random() < self.config.probability
-
-        try:
-            if inject:
-                result = await self._inject_chaos(input)
-                self._state = ChaosState.SUCCEEDED
-            else:
-                result = input
-                self._state = ChaosState.SUCCEEDED
-
-            # Emit trace entry (success)
-            entry = TraceEntry(
-                state_before=prev_state,
-                action="inject_chaos",
-                state_after=self._state,
-                value=self._compute_reward(prev_state, "inject_chaos", injected=inject),
-                rationale=f"Chaos: {self.config.chaos_type.value}, injected={inject}",
-                timestamp=datetime.now(timezone.utc),
-            )
-            self._trace_log.append(entry)
-
-            # Reset for next invocation
-            self._state = ChaosState.READY
-            return result
-
-        except Exception as e:
-            # Chaos caused failure
-            self._state = ChaosState.FAILED
-            self._failure_count += 1
-
-            # Emit trace entry (failure)
-            entry = TraceEntry(
-                state_before=prev_state,
-                action="inject_chaos",
-                state_after=self._state,
-                value=self._compute_reward(prev_state, "inject_chaos", injected=True, failed=True),
-                rationale=f"Chaos failed: {e}",
-                timestamp=datetime.now(timezone.utc),
-            )
-            self._trace_log.append(entry)
-
-            # Reset for next invocation
-            self._state = ChaosState.READY
-            raise
-
-    async def _inject_chaos(self, input: A) -> A:
-        """
-        Inject chaos based on configured type.
-
-        Args:
-            input: Input to perturb
-
-        Returns:
-            Perturbed input
-
-        Raises:
-            RuntimeError: For FAILURE and FLAKINESS types
-        """
-        if self.config.chaos_type == ChaosType.FAILURE:
-            raise RuntimeError("ChaosProbe: Injected failure")
-
-        elif self.config.chaos_type == ChaosType.NOISE:
-            return self._inject_noise(input)
-
-        elif self.config.chaos_type == ChaosType.LATENCY:
-            await asyncio.sleep(self.config.latency_ms / 1000.0)
-            return input
-
-        elif self.config.chaos_type == ChaosType.FLAKINESS:
-            # Flakiness: sometimes fails, sometimes succeeds
-            if self._rng.random() < 0.5:
-                raise RuntimeError("ChaosProbe: Flaky failure")
-            return input
-
-        return input
-
-    def _inject_noise(self, input: A) -> A:
-        """
-        Inject semantic noise into input.
-
-        Args:
-            input: Input to perturb
-
-        Returns:
-            Perturbed input
-        """
-        if isinstance(input, str):
-            # String noise: randomly modify characters
-            chars = list(input)
-            num_changes = max(1, int(len(chars) * self.config.noise_level))
-            for _ in range(num_changes):
-                if chars:
-                    idx = self._rng.randint(0, len(chars) - 1)
-                    chars[idx] = chr(ord(chars[idx]) + self._rng.choice([-1, 1]))
-            return "".join(chars)  # type: ignore
-
-        elif isinstance(input, (int, float)):
-            # Numeric noise: add small perturbation
-            noise = self._rng.gauss(0, self.config.noise_level)
-            return input + noise  # type: ignore
-
-        # For other types, return unchanged
-        return input
+        # TruthFunctor required attributes
+        self.name = f"ChaosProbe({config.chaos_type.name}, ε={config.intensity})"
+        self.mode = AnalysisMode.DIALECTICAL
+        self.gamma = 0.99
 
     # === TruthFunctor Interface ===
 
-    def states(self) -> frozenset[ChaosState]:
+    @property
+    def states(self) -> FrozenSet[ChaosState]:
         """Return DP state space."""
         return frozenset([
             ChaosState.READY,
-            ChaosState.PERTURBING,
-            ChaosState.FAILED,
-            ChaosState.SUCCEEDED,
+            ChaosState.INJECTING,
+            ChaosState.OBSERVING,
+            ChaosState.SYNTHESIZING,
         ])
 
-    def actions(self, state: ChaosState) -> frozenset[str]:
+    def actions(self, state: ChaosState) -> FrozenSet[ProbeAction]:
         """Return available actions from state."""
         if state == ChaosState.READY:
-            return frozenset(["inject_chaos"])
+            return frozenset([ProbeAction("inject_chaos")])
+        elif state == ChaosState.INJECTING:
+            return frozenset([ProbeAction("observe_survival")])
+        elif state == ChaosState.OBSERVING:
+            return frozenset([ProbeAction("synthesize_verdict")])
         return frozenset()
 
-    def transition(self, state: ChaosState, action: str) -> ChaosState:
+    def transition(self, state: ChaosState, action: ProbeAction) -> ChaosState:
         """Return next state after action."""
-        if state == ChaosState.READY and action == "inject_chaos":
-            return ChaosState.PERTURBING
-        # Non-deterministic: could go to FAILED or SUCCEEDED
-        # This is captured in the probability
+        if state == ChaosState.READY and action.name == "inject_chaos":
+            return ChaosState.INJECTING
+        elif state == ChaosState.INJECTING and action.name == "observe_survival":
+            return ChaosState.OBSERVING
+        elif state == ChaosState.OBSERVING and action.name == "synthesize_verdict":
+            return ChaosState.SYNTHESIZING
         return state
 
-    def reward(self, state: ChaosState, action: str, injected: bool = False, failed: bool = False) -> float:
-        """Return constitutional reward for action in state."""
-        return self._compute_reward(state, action, injected, failed)
-
-    def _compute_reward(self, state: ChaosState, action: str, injected: bool = False, failed: bool = False) -> float:
+    def reward(
+        self,
+        state: ChaosState,
+        action: ProbeAction,
+        next_state: ChaosState
+    ) -> ConstitutionalScore:
         """
-        Compute constitutional reward.
+        Constitutional reward for chaos injection.
 
-        ChaosProbe satisfies:
-        - JOY: Surprising behavior (chaos is delightful in test)
-        - ETHICAL: Penalized if causes safety violations
+        Reward structure:
+        - Ethical: 0.5 baseline, +0.5 if agent survived (no safety breaks)
+        - Joy-inducing: 0.3 * intensity (chaos provides interesting data)
+        - Heterarchical: 0.8 (tests adaptation)
+        - Composable: 0.7 (can chain with other probes)
         """
-        if state == ChaosState.READY and action == "inject_chaos":
-            reward = 0.0
-
-            # Joy from injecting chaos (testing is good)
-            if injected:
-                reward += Principle.JOY_INDUCING.weight
-
-            # Ethical penalty if caused failure
-            if failed:
-                reward -= Principle.ETHICAL.weight
-
-            return reward
-
-        return 0.0
-
-    def verify(self) -> bool:
-        """
-        Verify chaos laws:
-        - C_0 ≡ id (zero probability is identity)
-        - C_1 ≡ bottom (probability 1 always fails for FAILURE type)
-        """
-        # Law 1: C_0 should never inject chaos
-        if self.config.probability == 0.0:
-            return self._injection_count == 0 or self._failure_count == 0
-
-        # Law 2: C_1 with FAILURE should always fail
-        if self.config.probability == 1.0 and self.config.chaos_type == ChaosType.FAILURE:
-            return self._failure_count == self._injection_count
-
-        # For intermediate probabilities, laws are probabilistic
-        return True
-
-    async def get_trace(self) -> PolicyTrace[A]:
-        """
-        Get PolicyTrace with accumulated entries.
-
-        Returns:
-            PolicyTrace with value and log
-        """
-        # For ChaosProbe, the "value" is the chaos statistics
-        value = {
-            "injection_count": self._injection_count,
-            "failure_count": self._failure_count,
-            "success_rate": 1.0 - (self._failure_count / max(1, self._injection_count)),
-        }
-
-        return PolicyTrace(
-            value=value,  # type: ignore
-            log=tuple(self._trace_log),
+        base_score = ConstitutionalScore(
+            ethical=0.5,
+            joy_inducing=0.3 * self.config.intensity,
+            heterarchical=0.8,
+            composable=0.7,
         )
 
+        # Bonus if agent survived chaos
+        if self._survived and next_state == ChaosState.SYNTHESIZING:
+            return ConstitutionalScore(
+                ethical=1.0,  # Full ethical credit for survival
+                joy_inducing=0.5 * self.config.intensity,
+                heterarchical=0.9,
+                composable=0.8,
+            )
+
+        return base_score
+
+    async def verify(self, agent: Any, input: A) -> PolicyTrace[TruthVerdict[B]]:
+        """
+        Verify agent behavior under chaos injection.
+
+        Process:
+        1. READY -> INJECTING: Apply chaos wrapper
+        2. INJECTING -> OBSERVING: Invoke agent with chaotic input/behavior
+        3. OBSERVING -> SYNTHESIZING: Determine if agent survived
+        4. SYNTHESIZING: Produce verdict
+
+        Args:
+            agent: Agent under test (must have .invoke(input) method)
+            input: Input to feed to agent
+
+        Returns:
+            PolicyTrace[TruthVerdict[B]]: Trace with survival verdict
+        """
+        trace_entries: list[TraceEntry] = []
+
+        # State 1: READY -> INJECTING (inject chaos)
+        probe_state = ProbeState(
+            phase="ready",
+            observations=(),
+        )
+
+        action = ProbeAction("inject_chaos", (self.config.chaos_type,))
+        next_state = self.transition(self._current_state, action)
+
+        trace_entries.append(TraceEntry(
+            state_before=probe_state,
+            action=action,
+            state_after=probe_state.transition_to("injecting"),
+            reward=self.reward(self._current_state, action, next_state),
+            reasoning=f"Injecting {self.config.chaos_type.name} chaos with intensity {self.config.intensity}",
+            timestamp=datetime.now(timezone.utc),
+        ))
+
+        self._current_state = next_state
+        probe_state = probe_state.transition_to("injecting")
+
+        # State 2: INJECTING -> OBSERVING (apply chaos and observe)
+        action = ProbeAction("observe_survival")
+        next_state = self.transition(self._current_state, action)
+
+        try:
+            # Apply chaos based on type
+            chaotic_result = await self._apply_chaos(agent, input)
+            self._survived = True
+            observation = f"Agent survived {self.config.chaos_type.name} chaos"
+
+        except Exception as e:
+            self._survived = False
+            chaotic_result = None
+            observation = f"Agent failed under {self.config.chaos_type.name}: {str(e)}"
+
+        probe_state = probe_state.with_observation(observation)
+
+        trace_entries.append(TraceEntry(
+            state_before=probe_state,
+            action=action,
+            state_after=probe_state.transition_to("observing"),
+            reward=self.reward(self._current_state, action, next_state),
+            reasoning=observation,
+            timestamp=datetime.now(timezone.utc),
+        ))
+
+        self._current_state = next_state
+        probe_state = probe_state.transition_to("observing")
+
+        # State 3: OBSERVING -> SYNTHESIZING (compute verdict)
+        action = ProbeAction("synthesize_verdict")
+        next_state = self.transition(self._current_state, action)
+
+        verdict: TruthVerdict[B] = TruthVerdict(
+            value=chaotic_result,  # type: ignore[arg-type]
+            passed=self._survived,
+            confidence=0.95 if self._survived else 0.8,
+            reasoning=observation,
+            timestamp=datetime.now(timezone.utc),
+        )
+
+        trace_entries.append(TraceEntry(
+            state_before=probe_state,
+            action=action,
+            state_after=probe_state.transition_to("synthesizing"),
+            reward=self.reward(self._current_state, action, next_state),
+            reasoning=f"Verdict: {'PASSED' if self._survived else 'FAILED'}",
+            timestamp=datetime.now(timezone.utc),
+        ))
+
+        self._current_state = ChaosState.READY  # Reset for next run
+
+        # Return PolicyTrace with verdict and accumulated entries
+        policy_trace: PolicyTrace[TruthVerdict[B]] = PolicyTrace(
+            value=verdict,
+            entries=trace_entries,
+        )
+
+        return policy_trace
+
+    # === Chaos Injection Methods ===
+
+    async def _apply_chaos(self, agent: Any, input: A) -> B:
+        """
+        Apply chaos based on configured type.
+
+        Returns agent output if successful, raises exception if failed.
+        """
+        if self.config.chaos_type == ChaosType.FAILURE:
+            return await self._apply_failure(agent, input)
+        elif self.config.chaos_type == ChaosType.NOISE:
+            return await self._apply_noise(agent, input)
+        elif self.config.chaos_type == ChaosType.LATENCY:
+            return await self._apply_latency(agent, input)
+        elif self.config.chaos_type == ChaosType.FLAKINESS:
+            return await self._apply_flakiness(agent, input)
+        else:
+            raise ValueError(f"Unknown chaos type: {self.config.chaos_type}")
+
+    async def _apply_failure(self, agent: Any, input: A) -> B:
+        """
+        Apply FAILURE chaos: controlled exceptions.
+
+        Simulates FailingAgent behavior.
+        """
+        self._attempt_count += 1
+
+        # Check if we should fail this time
+        if self.config.fail_count == -1 or self._attempt_count <= self.config.fail_count:
+            # Inject failure
+            error_msg = f"ChaosProbe: Injected failure (attempt {self._attempt_count})"
+
+            # Choose exception type based on intensity
+            if self.config.intensity < 0.3:
+                raise RuntimeError(error_msg)
+            elif self.config.intensity < 0.6:
+                raise ValueError(error_msg)
+            else:
+                raise Exception(error_msg)
+
+        # Recovery: invoke agent normally
+        return await agent.invoke(input)  # type: ignore[no-any-return]
+
+    async def _apply_noise(self, agent: Any, input: A) -> B:
+        """
+        Apply NOISE chaos: semantic perturbation.
+
+        Simulates NoiseAgent behavior.
+        """
+        # Decide whether to inject noise
+        if self.rng.random() > self.config.intensity:
+            # No noise this time
+            return await agent.invoke(input)  # type: ignore[no-any-return]
+
+        # Perturb input if it's a string
+        if isinstance(input, str):
+            perturbed = self._perturb_string(input)
+            return await agent.invoke(perturbed)  # type: ignore[no-any-return]
+
+        # For non-string inputs, pass through
+        return await agent.invoke(input)  # type: ignore[no-any-return]
+
+    def _perturb_string(self, s: str) -> str:
+        """Apply string perturbation based on intensity."""
+        if not s:
+            return s
+
+        # Choose perturbation based on intensity
+        if self.config.intensity < 0.3:
+            # Mild: case change
+            return s.upper() if self.rng.random() > 0.5 else s.lower()
+        elif self.config.intensity < 0.6:
+            # Medium: typo (swap characters)
+            if len(s) < 2:
+                return s
+            idx = self.rng.randint(0, len(s) - 2)
+            chars = list(s)
+            chars[idx], chars[idx + 1] = chars[idx + 1], chars[idx]
+            return "".join(chars)
+        else:
+            # High: add noise characters
+            noise_chars = "!@#$%^&*()"
+            noise = self.rng.choice(noise_chars)
+            idx = self.rng.randint(0, len(s))
+            return s[:idx] + noise + s[idx:]
+
+    async def _apply_latency(self, agent: Any, input: A) -> B:
+        """
+        Apply LATENCY chaos: temporal delays.
+
+        Simulates LatencyAgent behavior.
+        """
+        # Calculate delay based on intensity
+        base_delay = self.config.intensity  # intensity maps to seconds
+        actual_delay = base_delay
+
+        # Add variance if configured
+        if self.config.variance > 0:
+            actual_delay += self.rng.uniform(-self.config.variance, self.config.variance)
+
+        # Never negative
+        actual_delay = max(0, actual_delay)
+
+        # Inject delay
+        await asyncio.sleep(actual_delay)
+
+        # Invoke agent
+        return await agent.invoke(input)  # type: ignore[no-any-return]
+
+    async def _apply_flakiness(self, agent: Any, input: A) -> B:
+        """
+        Apply FLAKINESS chaos: probabilistic failures.
+
+        Simulates FlakyAgent behavior.
+        """
+        # Fail with probability = intensity
+        if self.rng.random() < self.config.intensity:
+            raise RuntimeError(f"ChaosProbe: Flaky failure (p={self.config.intensity})")
+
+        # Otherwise invoke normally
+        return await agent.invoke(input)  # type: ignore[no-any-return]
+
     def reset(self) -> None:
-        """Reset state and trace for test isolation."""
-        self._state = ChaosState.READY
-        self._trace_log.clear()
-        self._injection_count = 0
-        self._failure_count = 0
-
-    @property
-    def call_count(self) -> int:
-        """Number of times invoke was called."""
-        return self._injection_count
-
-    @property
-    def failure_rate(self) -> float:
-        """Proportion of invocations that failed."""
-        if self._injection_count == 0:
-            return 0.0
-        return self._failure_count / self._injection_count
+        """Reset probe state for test isolation."""
+        self._current_state = ChaosState.READY
+        self._attempt_count = 0
+        self._survived = False
 
 
 # === Convenience Functions ===
@@ -349,26 +438,40 @@ class ChaosProbe(Agent[A, A], Generic[A]):
 
 def chaos_probe(
     chaos_type: ChaosType = ChaosType.FAILURE,
-    probability: float = 0.5,
+    intensity: float = 0.3,
     seed: int | None = None,
-) -> ChaosProbe[Any]:
+    **kwargs: Any,
+) -> ChaosProbe[Any, Any]:
     """
     Create a ChaosProbe with given configuration.
 
     Args:
-        chaos_type: Type of chaos to inject
-        probability: Probability of injection (0.0-1.0)
-        seed: Random seed for reproducibility
+        chaos_type: Type of chaos (FAILURE/NOISE/LATENCY/FLAKINESS)
+        intensity: Severity [0.0, 1.0]
+        seed: Random seed for determinism
+        **kwargs: Additional config parameters (fail_count, variance)
 
     Returns:
         Configured ChaosProbe
 
     Example:
-        >>> probe = chaos_probe(ChaosType.NOISE, probability=0.3, seed=42)
-        >>> result = await probe.invoke("test input")
+        >>> probe = chaos_probe(ChaosType.NOISE, intensity=0.5, seed=42)
+        >>> trace = await probe.verify(agent, input)
     """
-    return ChaosProbe(ChaosConfig(
+    config = ChaosConfig(
         chaos_type=chaos_type,
-        probability=probability,
+        intensity=intensity,
         seed=seed,
-    ))
+        fail_count=kwargs.get("fail_count", -1),
+        variance=kwargs.get("variance", 0.0),
+    )
+    return ChaosProbe(config)
+
+
+__all__ = [
+    "ChaosType",
+    "ChaosState",
+    "ChaosConfig",
+    "ChaosProbe",
+    "chaos_probe",
+]

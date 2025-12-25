@@ -34,7 +34,6 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
    - [agents/](agents/) - Categorical Foundations (composition, functors, monads)
    - [d-gents/](d-gents/) - Data Agents (state, memory, persistence)
    - [f-gents/](f-gents/) - Function/Flux (streaming, continuous agents)
-   - [h-gents/](h-gents/) - Hegelian/Dialectic (introspection)
    - [i-gents/](i-gents/) - Interface (Living Codex Garden visualization)
    - [j-gents/](j-gents/) - JIT Agent Intelligence (lazy evaluation, JIT compilation)
    - [k-gent/](k-gent/) - Personalization Functor (system's fix)
@@ -43,7 +42,6 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
    - [n-gents/](n-gents/) - Narrator (story-telling, time-travel debugging)
    - [o-gents/](o-gents/) - Observability (system-wide telemetry, bootstrap witness)
    - [p-gents/](p-gents/) - Parser (multi-strategy parsing, structured output)
-   - [r-gents/](r-gents/) - Refinery (prompt optimization, DSPy/TextGrad/OPRO integration)
    - [t-gents/](t-gents/) - Testing (algebraic reliability, Types I-V)
    - [u-gents/](u-gents/) - Utility (tool use, MCP integration)
    - [v-gents/](v-gents/) - Vector (semantic geometry, similarity search, embedding infrastructure)
@@ -77,10 +75,6 @@ Agents don't exist in isolation. Key integration points:
 | B+B | B-Banker controls B-Bio's resource allocation |
 | B+O | O-gent ValueLedgerObserver monitors B-Banker economic health |
 | B+W | W-gent renders B-Banker RoC dashboard and Value Tensor |
-| R+F | R-gent optimizes F-gent prototypes before crystallization |
-| R+T | T-gent provides loss signals for R-gent optimization |
-| R+B | B-gent gates R-gent budget (ROI check) |
-| R+L | L-gent indexes R-gent optimization metadata |
 
 See `impl/claude/agents/*/` `__init__.py` files for explicit cross-pollination labels.
 

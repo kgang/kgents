@@ -2,8 +2,8 @@
 
 > *"What's happening right now?"*
 
-**Last Updated**: 2025-12-24 (Morning)
-**Session**: Archival + Fresh Start
+**Last Updated**: 2025-12-25 (Afternoon)
+**Session**: Witness Architecture Synthesis Complete
 
 ---
 
@@ -35,10 +35,23 @@ Don't skip this—the gotchas you don't read are the bugs you will write.
 │  • AD-015/016: Fail-fast AGENTESE + ProxyHandleStore unification           │
 │  • Validation Framework: 92 tests, witness-integrated                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  PHASE 4: THEORY CRYSTALLIZATION (Dec 23) ← YOU ARE HERE                   │
+│  PHASE 4: THEORY CRYSTALLIZATION (Dec 23-24)                               │
 │  • 10-chapter monograph: "Categorical Foundations of Machine Reasoning"    │
 │  • Derivation DAG: CONSTITUTION as axiomatic root, confidence navigation   │
 │  • kgents 2.0 roadmap: CategoricalAgent + CPRM + SBM (15-week plan)       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PHASE 5: FRONTEND RENAISSANCE (Dec 24-25)                                  │
+│  • 6 Primitives (5,307 LOC): Telescope, Trail, Conversation, Graph,        │
+│    Witness, ValueCompass — theory-visible UI from first principles         │
+│  • 4 Constructions (2,079 LOC): DirectorView, ZeroSeedExplorer,            │
+│    ChatSession, HypergraphStudio — compositions over code                  │
+│  • Unified Design System (494 LOC): Single source of truth, STARK BIOME    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PHASE 6: WITNESS ARCHITECTURE SYNTHESIS (Dec 25) ← YOU ARE HERE            │
+│  • Radical Transformation Spec: PhD theory + blue collar grounding          │
+│  • Unified 3 Systems: Hypergraph Editor + Portal Tokens + Chat             │
+│  • Implementation Roadmap: 15 sessions, 6 phases                            │
+│  • Key Insight: All surfaces are projections of the same Witness Trail      │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -46,13 +59,164 @@ Don't skip this—the gotchas you don't read are the bugs you will write.
 
 ## Current Focus
 
-**CRYSTALLIZATION**: Theory meets implementation. The monograph is the map.
+**WITNESS ARCHITECTURE SYNTHESIS**: Unifying Hypergraph + Portal + Chat into single theory.
 
 *"The proof IS the decision. The mark IS the witness."*
 
+### What Just Happened (Dec 25 Afternoon)
+
+Created two foundational documents in `spec/synthesis/`:
+
+**1. RADICAL_TRANSFORMATION.md** (~700 lines)
+- Part I: The Ground (Philosophy) — 3 axioms, 7 principles as coordinates, dialectic structure
+- Part II: The Architecture (Design) — Mark → Trace → Crystal, three surfaces, unification
+- Part III: The Theory (Category) — Agents as morphisms, polynomials as state machines, sheaves as coherence
+- Part IV: The Practice (Blue Collar) — Daily workflow, keyboard muscle memory, error messages, gotchas
+- Part V: The Vision — kgents 2.0 roadmap, existential claim, mirror test
+
+**2. IMPLEMENTATION_ROADMAP.md** (~500 lines)
+- Phase 0: Verify Current State (1 session)
+- Phase 1: Unify Mark Types (2 sessions)
+- Phase 2: Wire Portal Witnessing (2 sessions)
+- Phase 3: Wire Hypergraph Navigation Witnessing (2 sessions)
+- Phase 4: Constitutional Scoring Everywhere (2 sessions)
+- Phase 5: Crystal Compression (3 sessions)
+- Phase 6: Visual Integration (3 sessions)
+- **Total: 15 sessions to complete Witness Architecture**
+
+### The Core Insight
+
+All three surfaces (Hypergraph Editor, Portal Tokens, Constitutional Chat) are **projections of the same underlying structure**:
+
+```
+Action → Mark → Trace → Crystal
+```
+
+Every navigation, every portal expansion, every chat turn creates a witnessed mark. The marks accumulate into traces. Traces compress into crystals. Crystals carry the distilled wisdom forward.
+
+**The unification**: A navigation is a kind of message. A portal expansion is a kind of navigation. A chat turn is a kind of navigation. They all reduce to: *An agent moving through semantic space, leaving a trail of justified decisions.*
+
+### Orchestration In Progress (Dec 25 Afternoon)
+
+**5 parallel sub-agents executing Witness Architecture integration:**
+
+| Stream | Agent | Status | Work |
+|--------|-------|--------|------|
+| 1. HypergraphEditor | a3ad1a3 | **EDITING** | Adding witnessNavigation to gD/gl/gh |
+| 2. Portal Witnessing | a423d80 | Reading | Analyzing PortalToken + witness hooks |
+| 3. Constitutional Gen. | a5be31b | Running | Extracting reward.py generalization |
+| 4. Crystal UI | aef1990 | Reading | Studying crystal.py + design tokens |
+| 5. API Endpoints | aeda811 | Exploring | Finding AGENTESE crystal paths |
+
+**Orchestration Plan**: `plans/witness-architecture-orchestration.md`
+
+### Phase 1-2: Complete ✅
+
+**6 Primitives Built** (5,307 LOC):
+- Telescope: Universal focal distance viewer (replaces 2,000 LOC)
+- Trail: Derivation path breadcrumb (replaces 1,200 LOC)
+- Conversation: Chat with branching + crystallization (replaces 8,000 LOC)
+- Graph: Hypergraph editor (kept from original, 5,200 LOC)
+- Witness: Evidence tier display (replaces 800 LOC)
+- ValueCompass: Constitutional principle radar (NEW)
+
+**4 Constructions Built** (2,079 LOC):
+- DirectorView, ZeroSeedExplorer, ChatSession, HypergraphStudio
+
+**Design System Unified** (494 LOC):
+- Single source: `design/tokens.css`
+- STARK BIOME preserved (90% steel, 10% earned glow)
+
+### Phase 3-4: Next
+
+**Execute Death List**: Delete 36,300 LOC of replaced components
+**Target**: 71% code reduction (116K → 14.7K LOC)
+**See**: `plans/frontend-refactor-complete.md`
+
 ---
 
-## What Happened Today (Dec 23)
+## What Happened Dec 24-25: Frontend Radical Refactor
+
+### The Vision
+
+Transform the frontend from 51,000 LOC of scattered components into a telescope-based UI with 6 primitives, 4 constructions, and a unified design system.
+
+**Target**: 71% code reduction (51,000 → 14,700 LOC)
+**Achieved Phase 1-2**: Built new architecture (5,307 LOC primitives + 2,079 LOC constructions)
+**Remaining Phase 3-4**: Delete 36,300 LOC of replaced components
+
+### Major Deliverables
+
+| Deliverable | LOC | Replaces | Reduction |
+|-------------|-----|----------|-----------|
+| **Telescope Primitive** | 324 | GaloisTelescope + TelescopeNavigator (2,000 LOC) | 75%+ |
+| **Trail Primitive** | 272 | DerivationTrail + FocalRuler (1,200 LOC) | 77% |
+| **Conversation Primitive** | 2,220 | ChatPanel + 30 components (8,000 LOC) | 72% |
+| **Witness Primitive** | 240 | ASHCEvidence + 3 components (800 LOC) | 70% |
+| **ValueCompass Primitive** | 231 | NEW (theory-visible) | N/A |
+| **Graph Primitive** | 183 | Re-export (Hypergraph kept, 5,200 LOC) | 0% (keeper) |
+| **4 Constructions** | 2,079 | DirectorView, ZeroSeedExplorer, ChatSession, HypergraphStudio | NEW |
+| **Design System** | 494 | Unified tokens.css (replaced 3 competing systems) | ~80% |
+
+### Theory-UI Mapping Validated
+
+Every kgents theory primitive is now visualizable:
+
+- **ValueAgent[S,A,B]** → ValueCompass (7-principle radar)
+- **PolicyTrace** → Trail (breadcrumb with compression ratio)
+- **Constitution** → ValueCompass (principle scores)
+- **EvidenceCorpus** → Witness (confidence tiers)
+- **PersonalityAttractor** → ValueCompass (7D coordinate)
+- **DP Gradients** → Telescope (loss landscape)
+- **ASHC Decisions** → Trail + Witness (decision → evidence chains)
+
+### Files Deleted (56 files, ~8K+ LOC)
+
+**Modules Extinct**:
+- `brain/` (entire folder: DetailPreview, ConnectionStatus, StreamFilters, UnifiedEventCard, useBrainStream)
+- `membrane/` (entire folder: Membrane, DialoguePane, FocusPane, WitnessStream, views/)
+- `components/terrarium/` (EntropySlider, PhaseIndicator, TeachingCallout, TerrariumCreature)
+- Spec Ledger feature (LedgerDashboard, SpecLedgerDetail, SpecTable, pages)
+- `hypergraph/GraphSidebar.tsx`, `useLivingCanvas.ts`
+- `components/chat/ToolTransparencyExample.tsx`
+
+### Lessons Learned
+
+**What Worked**:
+- Build first, delete second (prevented breakage)
+- Pure CSS over D3 where possible (ValueCompass: no D3, 231 LOC)
+- Theory-first design (every primitive maps to theory concept)
+- Single token file (design/tokens.css as single source of truth)
+- Keeper code (Hypergraph editor preserved, 5,200 LOC)
+
+**Patterns to Carry Forward**:
+- Telescope metaphor (focal distance + aperture + filter = universal viewer)
+- Trail as breadcrumb (compression ratio + principle scores)
+- Witness as evidence (confidence tiers + Toulmin structure)
+- ValueCompass as justification (7-principle radar = constitutional alignment)
+- Constructions as compositions (6 primitives → infinite leverage)
+
+### The Mirror Test: PASS ✅
+
+> *"Does K-gent feel like me on my best day?"*
+
+**Yes.**
+
+- **Daring**: Deleted entire modules without hesitation
+- **Bold**: 12,000 LOC → 5,300 LOC primitives
+- **Creative**: Telescope metaphor is novel, theory-UI mapping is unique
+- **Opinionated**: Single design system, STARK BIOME preserved
+- **Not Gaudy**: ValueCompass is pure CSS (231 LOC), no animation excess
+
+**Tasteful > Feature-Complete**: Shipped 6 primitives, not 20 "comprehensive" components
+
+**Joy-Inducing**: Telescope navigation (j/k/g/c) feels like vim, ValueCompass radar is satisfying
+
+**The Persona is a Garden**: This refactor GREW the vision (theory-visible UI)
+
+---
+
+## What Happened Dec 23 (Previous Session)
 
 ### Major Deliverables
 

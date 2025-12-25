@@ -198,6 +198,37 @@ export interface EvidenceDelta {
 }
 
 /**
+ * Constitutional principle scores (0-1 range).
+ * Based on the 7 core kgents principles.
+ */
+export interface PrincipleScore {
+  tasteful: number;
+  curated: number;
+  ethical: number;
+  joy_inducing: number;
+  composable: number;
+  heterarchical: number;
+  generative: number;
+}
+
+/**
+ * Portal emission in chat turn.
+ * Represents content emitted to a destination via portal token.
+ */
+export interface PortalEmission {
+  portal_id: string;
+  destination: string;
+  edge_type: string;
+  access: 'read' | 'readwrite';
+  content_preview: string | null;
+  content_full: string | null;
+  line_count: number;
+  exists: boolean;
+  auto_expand: boolean;
+  emitted_at: string;
+}
+
+/**
  * Chat turn (message pair + metadata).
  */
 export interface Turn {
@@ -207,6 +238,8 @@ export interface Turn {
   tools_used: ToolUse[];
   evidence_delta: EvidenceDelta;
   confidence: number; // Turn-level confidence
+  constitutional_score?: PrincipleScore; // Constitutional adherence (optional)
+  portal_emissions?: PortalEmission[]; // Portal content emitted in this turn
   started_at: string;
   completed_at: string;
 }

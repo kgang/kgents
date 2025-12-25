@@ -7,7 +7,11 @@
 // Context and Confidence indicators (Part X.3, Part X.4)
 export { ContextIndicator, type ContextIndicatorProps, type ChatEvidence } from './ContextIndicator';
 export { ConfidenceIndicator, type ConfidenceIndicatorProps } from './ConfidenceIndicator';
-export { ConfidenceBar, type ConfidenceBarProps } from './ConfidenceBar';
+
+// Constitutional visualization
+export { ConstitutionalBadge, type ConstitutionalBadgeProps } from './ConstitutionalBadge';
+export { ConstitutionalRadar, type ConstitutionalRadarProps } from './ConstitutionalRadar';
+export type { PrincipleScore } from '../../types/chat';
 
 // @mention system (Part VI)
 export { MentionPicker } from './MentionPicker';
@@ -58,21 +62,23 @@ export type {
   CrystallizationTrigger,
 } from './useCrystallization';
 
-export { CrystallizationTrigger as CrystallizationTriggerComponent } from './CrystallizationTrigger';
-export type { CrystallizationTriggerProps } from './CrystallizationTrigger';
-
 // Tool transparency (Part VII)
-export { ToolPanel } from './ToolPanel';
-export type { ToolPanelProps } from './ToolPanel';
-
 export { ActionPanel } from './ActionPanel';
 export type { ActionPanelProps } from './ActionPanel';
 
-export { TransparencySelector } from './TransparencySelector';
-export type { TransparencySelectorProps } from './TransparencySelector';
-
-export { MutationAcknowledger } from './MutationAcknowledger';
-export type { MutationAcknowledgerProps } from './MutationAcknowledger';
+// Portal emissions (inline content access)
+export { ChatPortal } from './ChatPortal';
+export type { ChatPortalProps } from './ChatPortal';
 
 // Export mutation types from store
 export type { PendingMutation, MutationAcknowledgment } from './store';
+
+// Export portal types from types
+export type { PortalEmission } from '../../types/chat';
+
+// Main chat components
+export { ChatPanel } from './ChatPanel';
+export type { ChatPanelProps } from './ChatPanel';
+
+export { ChatSidebar } from './ChatSidebar';
+export type { ChatSidebarProps } from './ChatSidebar';

@@ -27,9 +27,9 @@ import { useKeyHandler } from './useKeyHandler';
 import { useKBlock } from './useKBlock';
 import { useDirector } from '../hooks/useDirector';
 import { useLossNavigation } from './useLossNavigation';
+import { useNavigationWitness } from './useNavigationWitness';
 import { StatusLine } from './StatusLine';
 import { CommandLine } from './CommandLine';
-import { CommandPalette } from './CommandPalette';
 import { EdgePanel } from './EdgePanel';
 import { WitnessPanel } from './WitnessPanel';
 import { HelpPanel } from './HelpPanel';
@@ -40,12 +40,13 @@ import { DecisionStream } from './DecisionStream';
 import { VetoPanel } from './VetoPanel';
 import { useDialecticDecisions } from './useDialecticDecisions';
 import type { DialecticDecision, QuickDecisionInput, FullDialecticInput } from './types/dialectic';
-import { Header, TrailBar, EdgeGutter, ContentPane } from './panes';
+import { Header, EdgeGutter, ContentPane } from './panes';
 import type { ContentPaneRef } from './panes';
 import type { GraphNode, Edge } from './state/types';
 import { AnalysisQuadrant } from '../components/analysis/AnalysisQuadrant';
 import { ProofPanel } from './ProofPanel';
 import { ProofStatusBadge } from './ProofStatusBadge';
+import { WitnessedTrail } from './WitnessedTrail';
 
 import './HypergraphEditor.css';
 
@@ -83,8 +84,10 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   onNavigate,
   loadNode,
   loadSiblings,
-  onZeroSeed,
+  onZeroSeed, // Note: Currently unused after CommandPalette removal, kept for potential future use
 }: HypergraphEditorProps) {
+  // Suppress unused warning for onZeroSeed (kept for API compatibility)
+  void onZeroSeed;
   const navigation = useNavigation();
   const {
     state,
@@ -113,13 +116,20 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   // Loss navigation
   const lossNav = useLossNavigation();
 
+  // Witness navigation (fire-and-forget marking)
+  // Stream 1: Wire navigation actions to create witness marks automatically
+  // Every gD/gl/gh navigation creates a mark with principle scoring
+  const { witnessNavigation, witnessMode } = useNavigationWitness({
+    enabled: true,
+    subscribe: false, // Don't subscribe to real-time for now
+  });
+
   // Refs
   const commandLineRef = useRef<HTMLInputElement>(null);
   const contentPaneRef = useRef<ContentPaneRef>(null);
 
   // UI state
   const [commandLineVisible, setCommandLineVisible] = useState(false);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [witnessLoading, setWitnessLoading] = useState(false);
   const [confidenceVisible, setConfidenceVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
@@ -172,6 +182,11 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       onNavigate?.(node.derivationParent);
       loadNode(node.derivationParent).then((parentNode) => {
         if (parentNode) {
+          // Witness the navigation (fire-and-forget)
+          witnessNavigation('derivation', node, parentNode, {
+            keySequence: 'gD',
+            viaEdge: 'derives_from',
+          });
           focusNode(parentNode);
           onNodeFocus?.(parentNode);
         }
@@ -186,12 +201,17 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       onNavigate?.(parentPath);
       loadNode(parentPath).then((parentNode) => {
         if (parentNode) {
+          // Witness the navigation (fire-and-forget)
+          witnessNavigation('derivation', node, parentNode, {
+            keySequence: 'gD',
+            viaEdge: 'derives_from',
+          });
           focusNode(parentNode);
           onNodeFocus?.(parentNode);
         }
       });
     }
-  }, [state.currentNode, loadNode, focusNode, onNavigate, onNodeFocus]);
+  }, [state.currentNode, loadNode, focusNode, onNavigate, onNodeFocus, witnessNavigation]);
 
   /**
    * gc - Toggle confidence breakdown panel.
@@ -245,6 +265,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   const handleEnterInsert = useCallback(async () => {
     if (!state.currentNode) return;
 
+    // Witness the mode transition
+    witnessMode(state.mode, 'INSERT', state.currentNode.path);
+
     // Create K-Block for the current node's path
     const kblockResult = await kblockHook.create(state.currentNode.path);
 
@@ -268,7 +291,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       dispatch({ type: 'KBLOCK_CREATED', blockId: fallbackId, content: fallbackContent });
       dispatch({ type: 'ENTER_INSERT' });
     }
-  }, [state.currentNode, kblockHook, dispatch]);
+  }, [state.currentNode, state.mode, kblockHook, dispatch, witnessMode]);
 
   // Handle witness mark save
   const handleWitnessSave = useCallback(
@@ -515,6 +538,12 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     onNavigate?.(targetId);
     loadNode(targetId).then((node) => {
       if (node) {
+        // Witness the navigation (fire-and-forget)
+        witnessNavigation('loss_gradient', state.currentNode, node, {
+          keySequence: 'gl',
+          lossValue: lowest.loss,
+        });
+
         focusNode(node);
         onNodeFocus?.(node);
 
@@ -528,7 +557,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         console.info('[LossNav] Navigated to lowest-loss neighbor:', targetId, lowest.loss);
       }
     });
-  }, [state.currentNode, lossNav, loadNode, focusNode, onNavigate, onNodeFocus]);
+  }, [state.currentNode, lossNav, loadNode, focusNode, onNavigate, onNodeFocus, witnessNavigation]);
 
   /**
    * gh - Navigate to highest-loss neighbor.
@@ -555,6 +584,12 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     onNavigate?.(targetId);
     loadNode(targetId).then((node) => {
       if (node) {
+        // Witness the navigation (fire-and-forget)
+        witnessNavigation('loss_gradient', state.currentNode, node, {
+          keySequence: 'gh',
+          lossValue: highest.loss,
+        });
+
         focusNode(node);
         onNodeFocus?.(node);
 
@@ -568,7 +603,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         console.info('[LossNav] Navigated to highest-loss neighbor:', targetId, highest.loss);
       }
     });
-  }, [state.currentNode, lossNav, loadNode, focusNode, onNavigate, onNodeFocus]);
+  }, [state.currentNode, lossNav, loadNode, focusNode, onNavigate, onNodeFocus, witnessNavigation]);
 
   /**
    * gL - Zoom out (increase focal distance).
@@ -745,7 +780,6 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     onEnterInsert: handleEnterInsert,
     onEdgeConfirm: handleEdgeConfirm,
     onShowHelp: () => setHelpVisible(true),
-    onOpenCommandPalette: () => setCommandPaletteOpen(true),
     // Decision stream (witness history)
     onToggleDecisionStream: () => setDecisionStreamOpen((prev) => !prev),
     // Analysis quadrant
@@ -761,23 +795,33 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     goToDecision: handleGoToDecision,
     enabled:
       !commandLineVisible &&
-      !commandPaletteOpen &&
       !helpVisible &&
       !dialecticModalOpen &&
       !dialogueViewOpen &&
       state.mode !== 'WITNESS',
   });
 
-  // Load initial node
+  // Track if initial load has been performed for this path
+  const initialLoadedRef = useRef<string | null>(null);
+
+  // Load initial node - only once per unique path
   useEffect(() => {
-    if (initialPath && loadNode) {
-      loadNode(initialPath).then((node) => {
-        if (node) {
-          focusNode(node);
-          onNodeFocus?.(node);
-        }
-      });
+    // Guard: Skip if we've already loaded this path or if loadNode is not available
+    if (!initialPath || !loadNode) return;
+    if (initialLoadedRef.current === initialPath) {
+      console.info('[HypergraphEditor] Initial load already performed for:', initialPath);
+      return;
     }
+
+    // Mark as loading this path
+    initialLoadedRef.current = initialPath;
+
+    loadNode(initialPath).then((node) => {
+      if (node) {
+        focusNode(node);
+        onNodeFocus?.(node);
+      }
+    });
   }, [initialPath, loadNode, focusNode, onNodeFocus]);
 
   // Load siblings when node changes
@@ -941,8 +985,8 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       const rawCmd = command.trim();
       const [cmd, ...args] = rawCmd.split(/\s+/);
 
-      // NOTE: :e/:edit command removed — navigation is via URL or CommandPalette (Cmd+K)
-      // "The file is a lie. There is only the graph." Navigate by path, not by command.
+      // NOTE: :e/:edit command removed — navigation is graph-first (click nodes, follow edges)
+      // "The file is a lie. There is only the graph." Navigate by clicking, not by searching.
       if (cmd === 'w' || cmd === 'write') {
         // :w [message] - Save with optional witness message
         const message = args.join(' ') || undefined;
@@ -1014,6 +1058,38 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         } catch (err) {
           console.error('[HypergraphEditor] AGENTESE invoke failed:', err);
           setFeedbackMessage({ type: 'error', text: 'AGENTESE invoke failed' });
+          setTimeout(() => setFeedbackMessage(null), 4000);
+        }
+      } else if (cmd === 'crystallize' || cmd === 'crystal') {
+        // :crystallize [notes] - Crystallize current session
+        const notes = args.join(' ') || undefined;
+
+        try {
+          const response = await fetch('/api/witness/crystallize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              notes,
+            }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.info('[HypergraphEditor] Crystallization result:', result);
+            setFeedbackMessage({
+              type: 'success',
+              text: `✓ Session crystallized (${result.crystal?.level || 'SESSION'})`,
+            });
+            setTimeout(() => setFeedbackMessage(null), 3000);
+          } else {
+            const error = await response.text();
+            console.error('[HypergraphEditor] Crystallization error:', error);
+            setFeedbackMessage({ type: 'error', text: `Crystallization: ${error}` });
+            setTimeout(() => setFeedbackMessage(null), 4000);
+          }
+        } catch (err) {
+          console.error('[HypergraphEditor] Crystallization failed:', err);
+          setFeedbackMessage({ type: 'error', text: 'Crystallization failed' });
           setTimeout(() => setFeedbackMessage(null), 4000);
         }
       }
@@ -1101,8 +1177,26 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         </div>
       )}
 
-      {/* Trail bar */}
-      <TrailBar trail={breadcrumb} mode={state.mode} />
+      {/* Trail bar with witness marks */}
+      <WitnessedTrail
+        trail={state.trail}
+        currentNode={state.currentNode}
+        onNavigate={(_stepIndex, nodePath) => {
+          if (loadNode) {
+            loadNode(nodePath).then((node) => {
+              if (node) {
+                focusNode(node);
+                onNodeFocus?.(node);
+                onNavigate?.(nodePath);
+              }
+            });
+          }
+        }}
+        showPrinciples={true}
+        showCompression={true}
+        compact={false}
+        maxVisible={7}
+      />
 
       {/* Main content area */}
       <div className="hypergraph-editor__main">
@@ -1171,32 +1265,6 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       {commandLineVisible && (
         <CommandLine ref={commandLineRef} onSubmit={handleCommand} onCancel={handleCommandCancel} />
       )}
-
-      {/* Command palette (Cmd+K) */}
-      <CommandPalette
-        open={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-        onNavigate={(path) => {
-          onNavigate?.(path);
-          if (loadNode) {
-            loadNode(path).then((node) => {
-              if (node) {
-                focusNode(node);
-                onNodeFocus?.(node);
-              }
-            });
-          }
-        }}
-        onWitnessMode={() => dispatch({ type: 'ENTER_WITNESS' })}
-        onSave={handleWrite}
-        onReanalyze={handleReanalyze}
-        onAnalysisQuadrant={() => setAnalysisQuadrantOpen(true)}
-        onAgentese={(path) => {
-          console.info('[HypergraphEditor] AGENTESE invoked:', path);
-          // TODO: Implement AGENTESE navigation/invocation
-        }}
-        onZeroSeed={onZeroSeed}
-      />
 
       {/* Edge panel (when in EDGE mode) */}
       {state.mode === 'EDGE' && state.edgePending && <EdgePanel edgePending={state.edgePending} />}

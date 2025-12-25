@@ -10,10 +10,6 @@ Per spec/bootstrap.md:
 - Verifies identity laws: Id >> f == f == f >> Id
 - Verifies composition laws: (f >> g) >> h == f >> (g >> h)
 
-Per spec/o-gents/README.md:
-- Dimension X integration: Bootstrap component verification
-- Observer hierarchy: Level 0 (Concrete Observer)
-
 This is the Eighth Meta-Agent: not a bootstrap agent itself, but the witness
 that verifies bootstrap integrity.
 """
@@ -25,10 +21,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Generic, Protocol, TypeVar
 
-from .observer import (
-    BaseObserver,
-    ObserverLevel,
-)
+from .observer import BaseObserver
 
 # Type variables
 A = TypeVar("A")
@@ -37,7 +30,7 @@ C = TypeVar("C")
 
 
 # =============================================================================
-# Verdict Types (matching CLI laws.py)
+# Verdict Types
 # =============================================================================
 
 
@@ -276,8 +269,6 @@ class BootstrapWitness(BaseObserver):
     - Verify all 7 bootstrap agents exist and are importable
     - Verify identity laws: Id >> f == f == f >> Id
     - Verify composition laws: (f >> g) >> h == f >> (g >> h)
-
-    Hierarchy Level: CONCRETE (Level 0)
     """
 
     def __init__(
@@ -294,7 +285,6 @@ class BootstrapWitness(BaseObserver):
         """
         super().__init__(observer_id=observer_id)
         self.test_iterations = test_iterations
-        self._level = ObserverLevel.CONCRETE
 
     async def invoke(self, _: None = None) -> BootstrapVerificationResult:
         """
@@ -493,164 +483,3 @@ class BootstrapWitness(BaseObserver):
             evidence="; ".join(evidence_parts) if evidence_parts else "All tests passed",
             test_cases_run=cases_run,
         )
-
-    def synthesize_verdict(
-        self,
-        result: BootstrapVerificationResult,
-    ) -> Verdict:
-        """Synthesize overall verdict from verification result."""
-        return result.overall_verdict
-
-
-# =============================================================================
-# Bootstrap Observer (Level 1 Domain Observer)
-# =============================================================================
-
-
-class BootstrapObserver(BaseObserver):
-    """
-    Domain-level observer for bootstrap operations.
-
-    Hierarchy Level: DOMAIN (Level 1)
-    Observes: BootstrapWitness and other CONCRETE level observers
-    """
-
-    def __init__(self, observer_id: str = "bootstrap_domain_observer"):
-        super().__init__(observer_id=observer_id)
-        self._level = ObserverLevel.DOMAIN
-        self._witness = BootstrapWitness()
-        self._verification_history: list[BootstrapVerificationResult] = []
-
-    @property
-    def witness(self) -> BootstrapWitness:
-        """Access the underlying BootstrapWitness."""
-        return self._witness
-
-    async def verify_and_record(self) -> BootstrapVerificationResult:
-        """
-        Run verification and record the result.
-
-        Returns the verification result and stores it in history.
-        """
-        result = await self._witness.invoke()
-        self._verification_history.append(result)
-        return result
-
-    @property
-    def verification_history(self) -> list[BootstrapVerificationResult]:
-        """Get all historical verification results."""
-        return list(self._verification_history)
-
-    @property
-    def last_verification(self) -> BootstrapVerificationResult | None:
-        """Get the most recent verification result."""
-        return self._verification_history[-1] if self._verification_history else None
-
-    @property
-    def integrity_streak(self) -> int:
-        """
-        Count consecutive PASS verdicts from most recent.
-
-        Returns 0 if the most recent failed.
-        """
-        streak = 0
-        for result in reversed(self._verification_history):
-            if result.overall_verdict == Verdict.PASS:
-                streak += 1
-            else:
-                break
-        return streak
-
-
-# =============================================================================
-# Convenience Functions
-# =============================================================================
-
-
-def create_bootstrap_witness(test_iterations: int = 5) -> BootstrapWitness:
-    """Create a BootstrapWitness instance."""
-    return BootstrapWitness(test_iterations=test_iterations)
-
-
-def create_bootstrap_observer() -> BootstrapObserver:
-    """Create a BootstrapObserver instance (includes BootstrapWitness)."""
-    return BootstrapObserver()
-
-
-async def verify_bootstrap() -> BootstrapVerificationResult:
-    """
-    Quick verification of bootstrap integrity.
-
-    Shorthand for creating a witness and running verification.
-    """
-    witness = create_bootstrap_witness()
-    return await witness.invoke()
-
-
-# =============================================================================
-# Integration with CLI laws.py
-# =============================================================================
-
-
-async def verify_identity_laws() -> IdentityLawResult:
-    """
-    Verify identity laws for CLI integration.
-
-    Called by verify_laws() in laws.py.
-    """
-    witness = create_bootstrap_witness()
-    return await witness.verify_identity_laws()
-
-
-async def verify_composition_laws() -> CompositionLawResult:
-    """
-    Verify composition laws for CLI integration.
-
-    Called by verify_laws() in laws.py.
-    """
-    witness = create_bootstrap_witness()
-    return await witness.verify_composition_laws()
-
-
-# =============================================================================
-# ASCII Dashboard Rendering
-# =============================================================================
-
-
-def render_verification_dashboard(result: BootstrapVerificationResult) -> str:
-    """
-    Render verification result as ASCII dashboard.
-
-    Integrates with Panopticon display.
-    """
-    verdict_symbol = {
-        Verdict.PASS: "VERIFIED",
-        Verdict.FAIL: "BROKEN",
-        Verdict.SKIP: "SKIPPED",
-        Verdict.WARN: "WARNING",
-    }
-
-    overall = verdict_symbol.get(result.overall_verdict, "UNKNOWN")
-
-    lines = [
-        "┌─ BOOTSTRAP ─────────────────────────────────────────────────┐",
-        f"│ Kernel Integrity:  {overall.ljust(40)}│",
-    ]
-
-    # Identity laws
-    id_status = "HOLD" if result.identity_laws_hold else "BROKEN"
-    lines.append(f"│ Identity Laws:     {id_status.ljust(40)}│")
-
-    # Composition laws
-    comp_status = "HOLD" if result.composition_laws_hold else "BROKEN"
-    lines.append(f"│ Composition Laws:  {comp_status.ljust(40)}│")
-
-    # Agent existence summary
-    if result.agent_results:
-        importable = sum(1 for r in result.agent_results if r.importable)
-        total = len(result.agent_results)
-        lines.append(f"│ Agents: {importable}/{total} importable".ljust(63) + "│")
-
-    lines.append("└─────────────────────────────────────────────────────────────┘")
-
-    return "\n".join(lines)

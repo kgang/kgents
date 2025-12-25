@@ -19,7 +19,7 @@ import pytest
 import asyncio
 import time
 
-from agents.t.probes.null_probe import NullProbe, NullConfig, NullState
+from agents.t.probes.null_probe import NullProbe, NullState, null_probe
 
 
 class TestNullProbeBasics:
@@ -27,52 +27,54 @@ class TestNullProbeBasics:
 
     def test_initialization(self):
         """Test creating a NullProbe."""
-        config = NullConfig(output="constant_value", delay_ms=0)
-        probe = NullProbe(config)
+        probe = NullProbe(constant="constant_value", delay_ms=0)
 
-        assert probe.config.output == "constant_value"
-        assert probe.config.delay_ms == 0
+        assert probe.constant == "constant_value"
+        assert probe.delay_ms == 0
         assert probe.name == "NullProbe(output=constant_value)"
-        assert probe.__is_test__ is True
 
     def test_default_config(self):
-        """Test NullProbe with default config."""
-        config = NullConfig()
-        probe = NullProbe(config)
+        """Test NullProbe with default parameters."""
+        probe = NullProbe(constant=None)
 
-        assert probe.config.output is None
-        assert probe.config.delay_ms == 0
+        assert probe.constant is None
+        assert probe.delay_ms == 0
 
     @pytest.mark.asyncio
     async def test_constant_morphism_property(self):
         """Test that NullProbe always returns the same output."""
-        config = NullConfig(output=42)
-        probe = NullProbe(config)
+        probe = NullProbe(constant=42)
 
         # Different inputs should all produce the same output
-        result1 = await probe.invoke("input_1")
-        result2 = await probe.invoke("different_input")
-        result3 = await probe.invoke({"complex": "input"})
+        mock_agent = lambda x: x
+        trace1 = await probe.verify(mock_agent, "input_1")
+        trace2 = await probe.verify(mock_agent, "different_input")
+        trace3 = await probe.verify(mock_agent, {"complex": "input"})
 
-        assert result1 == 42
-        assert result2 == 42
-        assert result3 == 42
+        assert trace1.value.value == 42
+        assert trace2.value.value == 42
+        assert trace3.value.value == 42
 
     @pytest.mark.asyncio
     async def test_returns_configured_output(self):
         """Test that NullProbe returns pre-configured output."""
+        mock_agent = lambda x: x
+
         # Test with string
-        probe_str = NullProbe(NullConfig(output="test_string"))
-        assert await probe_str.invoke("ignored") == "test_string"
+        probe_str = NullProbe(constant="test_string")
+        trace = await probe_str.verify(mock_agent, "ignored")
+        assert trace.value.value == "test_string"
 
         # Test with dict
         expected_dict = {"status": "ok", "value": 123}
-        probe_dict = NullProbe(NullConfig(output=expected_dict))
-        assert await probe_dict.invoke("ignored") == expected_dict
+        probe_dict = NullProbe(constant=expected_dict)
+        trace = await probe_dict.verify(mock_agent, "ignored")
+        assert trace.value.value == expected_dict
 
         # Test with None
-        probe_none = NullProbe(NullConfig(output=None))
-        assert await probe_none.invoke("ignored") is None
+        probe_none = NullProbe(constant=None)
+        trace = await probe_none.verify(mock_agent, "ignored")
+        assert trace.value.value is None
 
 
 class TestNullProbeStateTransitions:
@@ -80,9 +82,9 @@ class TestNullProbeStateTransitions:
 
     def test_states(self):
         """Test that NullProbe defines correct state space."""
-        probe = NullProbe(NullConfig())
+        probe = NullProbe(constant=None)
 
-        states = probe.states()
+        states = probe.states
 
         assert NullState.READY in states
         assert NullState.COMPUTING in states
@@ -91,41 +93,49 @@ class TestNullProbeStateTransitions:
 
     def test_actions_from_ready(self):
         """Test available actions from READY state."""
-        probe = NullProbe(NullConfig())
+        from agents.t.truth_functor import ProbeAction
+
+        probe = NullProbe(constant=None)
 
         actions = probe.actions(NullState.READY)
 
-        assert "invoke" in actions
+        assert ProbeAction("invoke") in actions
         assert len(actions) == 1
 
     def test_actions_from_other_states(self):
         """Test no actions available from non-READY states."""
-        probe = NullProbe(NullConfig())
+        probe = NullProbe(constant=None)
 
         assert len(probe.actions(NullState.COMPUTING)) == 0
         assert len(probe.actions(NullState.DONE)) == 0
 
     def test_transition_ready_to_computing(self):
         """Test state transition: READY → COMPUTING."""
-        probe = NullProbe(NullConfig())
+        from agents.t.truth_functor import ProbeAction
 
-        next_state = probe.transition(NullState.READY, "invoke")
+        probe = NullProbe(constant=None)
+
+        next_state = probe.transition(NullState.READY, ProbeAction("invoke"))
 
         assert next_state == NullState.COMPUTING
 
     def test_transition_computing_to_done(self):
         """Test state transition: COMPUTING → DONE."""
-        probe = NullProbe(NullConfig())
+        from agents.t.truth_functor import ProbeAction
 
-        next_state = probe.transition(NullState.COMPUTING, "anything")
+        probe = NullProbe(constant=None)
+
+        next_state = probe.transition(NullState.COMPUTING, ProbeAction("anything"))
 
         assert next_state == NullState.DONE
 
     def test_transition_done_stays_done(self):
         """Test that DONE state is terminal."""
-        probe = NullProbe(NullConfig())
+        from agents.t.truth_functor import ProbeAction
 
-        next_state = probe.transition(NullState.DONE, "anything")
+        probe = NullProbe(constant=None)
+
+        next_state = probe.transition(NullState.DONE, ProbeAction("anything"))
 
         assert next_state == NullState.DONE
 
@@ -135,27 +145,45 @@ class TestNullProbeReward:
 
     def test_reward_for_invoke_from_ready(self):
         """Test reward for invoke action from READY state."""
-        probe = NullProbe(NullConfig())
+        from agents.t.truth_functor import ProbeAction
 
-        reward = probe.reward(NullState.READY, "invoke")
+        probe = NullProbe(constant=None)
+
+        reward = probe.reward(
+            NullState.READY, ProbeAction("invoke"), NullState.COMPUTING
+        )
 
         # NullProbe should get positive reward for:
-        # - ETHICAL: deterministic, predictable (Principle.ETHICAL.weight = 2.0)
-        # - COMPOSABLE: satisfies identity law (Principle.COMPOSABLE.weight = 1.5)
-        assert reward > 0.0
-        # Exact value is sum of weights: 2.0 + 1.5 = 3.5
-        assert reward == pytest.approx(3.5)
+        # - ETHICAL: deterministic, predictable (1.0)
+        # - COMPOSABLE: satisfies identity law (1.0)
+        # - GENERATIVE: minimal but present (0.5)
+        assert reward.ethical == 1.0
+        assert reward.composable == 1.0
+        assert reward.generative == 0.5
+        assert reward.weighted_total > 0.0
 
     def test_zero_reward_for_other_transitions(self):
         """Test that non-invoke transitions get no reward."""
-        probe = NullProbe(NullConfig())
+        from agents.t.truth_functor import ProbeAction
+
+        probe = NullProbe(constant=None)
 
         # Wrong state
-        assert probe.reward(NullState.COMPUTING, "invoke") == 0.0
-        assert probe.reward(NullState.DONE, "invoke") == 0.0
+        reward1 = probe.reward(
+            NullState.COMPUTING, ProbeAction("invoke"), NullState.DONE
+        )
+        assert reward1.weighted_total == 0.0
+
+        reward2 = probe.reward(
+            NullState.DONE, ProbeAction("invoke"), NullState.DONE
+        )
+        assert reward2.weighted_total == 0.0
 
         # Wrong action from READY
-        assert probe.reward(NullState.READY, "other_action") == 0.0
+        reward3 = probe.reward(
+            NullState.READY, ProbeAction("other_action"), NullState.READY
+        )
+        assert reward3.weighted_total == 0.0
 
 
 class TestNullProbeTrace:
@@ -164,66 +192,53 @@ class TestNullProbeTrace:
     @pytest.mark.asyncio
     async def test_emits_trace(self):
         """Test that NullProbe emits PolicyTrace with entries."""
-        probe = NullProbe(NullConfig(output="result"))
+        probe = NullProbe(constant="result")
 
-        # Invoke probe
-        await probe.invoke("input")
+        # Verify probe
+        mock_agent = lambda x: x
+        trace = await probe.verify(mock_agent, "input")
 
-        # Get trace
-        trace = await probe.get_trace()
-
-        assert trace.value == "result"
-        assert len(trace.log) == 1
+        assert trace.value.value == "result"
+        assert len(trace.entries) >= 1
 
     @pytest.mark.asyncio
     async def test_trace_entry_content(self):
         """Test trace entry contains correct information."""
-        probe = NullProbe(NullConfig(output=42))
+        probe = NullProbe(constant=42)
 
-        await probe.invoke("test_input")
+        mock_agent = lambda x: x
+        trace = await probe.verify(mock_agent, "test_input")
 
-        trace = await probe.get_trace()
-        entry = trace.log[0]
+        # Check verdict
+        assert trace.value.value == 42
+        assert trace.value.passed is True
+        assert trace.value.confidence == 1.0
+        assert "constant morphism" in trace.value.reasoning.lower()
 
-        # Check entry fields
-        assert entry.state_before == NullState.READY
-        assert entry.action == "invoke"
-        assert entry.state_after == NullState.DONE
-        assert entry.value == pytest.approx(3.5)  # ethical + composable weights
-        assert "Constant morphism" in entry.rationale
-        assert "42" in entry.rationale
-
-    @pytest.mark.asyncio
-    async def test_multiple_invocations_accumulate_trace(self):
-        """Test that multiple invocations accumulate in trace log."""
-        probe = NullProbe(NullConfig(output="result"))
-
-        await probe.invoke("input1")
-        await probe.invoke("input2")
-        await probe.invoke("input3")
-
-        trace = await probe.get_trace()
-
-        assert len(trace.log) == 3
-        # All should have same value (constant morphism)
-        for entry in trace.log:
-            assert entry.value == pytest.approx(3.5)
+        # Check trace entries
+        assert len(trace.entries) >= 1
+        entry = trace.entries[0]
+        assert "constant morphism" in entry.reasoning.lower()
 
     @pytest.mark.asyncio
-    async def test_call_count(self):
-        """Test call_count tracks invocations."""
-        probe = NullProbe(NullConfig())
+    async def test_multiple_invocations_produce_traces(self):
+        """Test that multiple invocations each produce traces."""
+        probe = NullProbe(constant="result")
 
-        assert probe.call_count == 0
+        mock_agent = lambda x: x
+        trace1 = await probe.verify(mock_agent, "input1")
+        trace2 = await probe.verify(mock_agent, "input2")
+        trace3 = await probe.verify(mock_agent, "input3")
 
-        await probe.invoke("input1")
-        assert probe.call_count == 1
+        # Each trace should have the same constant value
+        assert trace1.value.value == "result"
+        assert trace2.value.value == "result"
+        assert trace3.value.value == "result"
 
-        await probe.invoke("input2")
-        assert probe.call_count == 2
-
-        await probe.invoke("input3")
-        assert probe.call_count == 3
+        # Each should have entries
+        assert len(trace1.entries) >= 1
+        assert len(trace2.entries) >= 1
+        assert len(trace3.entries) >= 1
 
 
 class TestNullProbeTiming:
@@ -232,10 +247,11 @@ class TestNullProbeTiming:
     @pytest.mark.asyncio
     async def test_zero_delay(self):
         """Test that zero delay executes immediately."""
-        probe = NullProbe(NullConfig(output="fast", delay_ms=0))
+        probe = NullProbe(constant="fast", delay_ms=0)
 
+        mock_agent = lambda x: x
         start = time.time()
-        await probe.invoke("input")
+        await probe.verify(mock_agent, "input")
         elapsed = time.time() - start
 
         # Should be nearly instant (< 10ms)
@@ -244,10 +260,11 @@ class TestNullProbeTiming:
     @pytest.mark.asyncio
     async def test_with_delay(self):
         """Test that delay_ms adds appropriate latency."""
-        probe = NullProbe(NullConfig(output="slow", delay_ms=50))
+        probe = NullProbe(constant="slow", delay_ms=50)
 
+        mock_agent = lambda x: x
         start = time.time()
-        await probe.invoke("input")
+        await probe.verify(mock_agent, "input")
         elapsed = time.time() - start
 
         # Should take at least 50ms
@@ -258,87 +275,78 @@ class TestNullProbeTiming:
     @pytest.mark.asyncio
     async def test_delay_does_not_affect_result(self):
         """Test that delay doesn't change the constant output."""
-        probe = NullProbe(NullConfig(output="constant", delay_ms=20))
+        probe = NullProbe(constant="constant", delay_ms=20)
 
-        result = await probe.invoke("input")
+        mock_agent = lambda x: x
+        trace = await probe.verify(mock_agent, "input")
 
-        assert result == "constant"
+        assert trace.value.value == "constant"
 
 
-class TestNullProbeReset:
-    """Test reset functionality for test isolation."""
+class TestNullProbeImmutability:
+    """Test that NullProbe is immutable."""
 
-    @pytest.mark.asyncio
-    async def test_reset_clears_trace(self):
-        """Test that reset() clears the trace log."""
-        probe = NullProbe(NullConfig(output="test"))
+    def test_frozen_dataclass(self):
+        """Test that NullProbe is a frozen dataclass."""
+        probe = NullProbe(constant="test")
 
-        # Accumulate some trace
-        await probe.invoke("input1")
-        await probe.invoke("input2")
-
-        assert probe.call_count == 2
-
-        # Reset
-        probe.reset()
-
-        # Trace should be empty
-        assert probe.call_count == 0
-        trace = await probe.get_trace()
-        assert len(trace.log) == 0
+        # Should not be able to modify fields
+        with pytest.raises(Exception):  # FrozenInstanceError
+            probe.constant = "modified"  # type: ignore
 
     @pytest.mark.asyncio
-    async def test_reset_restores_ready_state(self):
-        """Test that reset() returns probe to READY state."""
-        probe = NullProbe(NullConfig(output="test"))
+    async def test_verify_is_pure(self):
+        """Test that verify() is pure (no side effects)."""
+        probe = NullProbe(constant="result")
 
-        await probe.invoke("input")
+        mock_agent = lambda x: x
 
-        # Reset
-        probe.reset()
+        # Call verify multiple times
+        trace1 = await probe.verify(mock_agent, "input")
+        trace2 = await probe.verify(mock_agent, "input")
 
-        # Should be back to READY
-        # We can't access _state directly, but we can invoke again
-        result = await probe.invoke("input")
-        assert result == "test"
-
-    @pytest.mark.asyncio
-    async def test_reset_between_tests(self):
-        """Test reset enables test isolation."""
-        probe = NullProbe(NullConfig(output="test"))
-
-        # Test 1
-        await probe.invoke("input1")
-        assert probe.call_count == 1
-
-        # Reset for Test 2
-        probe.reset()
-
-        # Test 2
-        await probe.invoke("input2")
-        assert probe.call_count == 1  # Count reset, not 2
+        # Both should produce the same result
+        assert trace1.value.value == trace2.value.value
+        assert trace1.value.passed == trace2.value.passed
+        assert trace1.value.confidence == trace2.value.confidence
 
 
 class TestNullProbeIdentityLaw:
     """Test identity law verification."""
 
-    def test_verify_identity_law(self):
-        """Test that NullProbe satisfies identity law."""
-        probe = NullProbe(NullConfig(output="constant"))
+    @pytest.mark.asyncio
+    async def test_constant_morphism_property(self):
+        """Test that NullProbe satisfies constant morphism property."""
+        probe = NullProbe(constant="constant")
+
+        mock_agent = lambda x: x
 
         # Identity law: Id >> NullProbe(x) ≡ NullProbe(x)
         # For NullProbe, this is trivially true (constant morphism)
-        assert probe.verify() is True
+        # The output is always the constant, regardless of input
+        trace = await probe.verify(mock_agent, "any_input")
+        assert trace.value.value == "constant"
+        assert trace.value.passed is True
 
-    def test_identity_law_with_different_outputs(self):
+    @pytest.mark.asyncio
+    async def test_identity_law_with_different_outputs(self):
         """Test identity law holds for different output values."""
-        probe_str = NullProbe(NullConfig(output="string"))
-        probe_int = NullProbe(NullConfig(output=42))
-        probe_none = NullProbe(NullConfig(output=None))
+        mock_agent = lambda x: x
 
-        assert probe_str.verify() is True
-        assert probe_int.verify() is True
-        assert probe_none.verify() is True
+        probe_str = NullProbe(constant="string")
+        trace_str = await probe_str.verify(mock_agent, "input")
+        assert trace_str.value.value == "string"
+        assert trace_str.value.passed is True
+
+        probe_int = NullProbe(constant=42)
+        trace_int = await probe_int.verify(mock_agent, "input")
+        assert trace_int.value.value == 42
+        assert trace_int.value.passed is True
+
+        probe_none = NullProbe(constant=None)
+        trace_none = await probe_none.verify(mock_agent, "input")
+        assert trace_none.value.value is None
+        assert trace_none.value.passed is True
 
 
 class TestNullProbeConvenienceFunction:
@@ -347,22 +355,22 @@ class TestNullProbeConvenienceFunction:
     @pytest.mark.asyncio
     async def test_null_probe_function(self):
         """Test creating NullProbe via convenience function."""
-        from agents.t.probes.null_probe import null_probe
+        probe = null_probe(constant=42, delay_ms=0)
 
-        probe = null_probe(output=42, delay_ms=0)
-
-        assert await probe.invoke("input") == 42
-        assert probe.config.delay_ms == 0
+        mock_agent = lambda x: x
+        trace = await probe.verify(mock_agent, "input")
+        assert trace.value.value == 42
+        assert probe.delay_ms == 0
 
     @pytest.mark.asyncio
     async def test_null_probe_default_args(self):
         """Test null_probe() with default arguments."""
-        from agents.t.probes.null_probe import null_probe
-
         probe = null_probe()
 
-        assert await probe.invoke("input") is None
-        assert probe.config.delay_ms == 0
+        mock_agent = lambda x: x
+        trace = await probe.verify(mock_agent, "input")
+        assert trace.value.value is None
+        assert probe.delay_ms == 0
 
 
 class TestNullProbeEdgeCases:
@@ -378,40 +386,44 @@ class TestNullProbeEdgeCases:
             }
         }
 
-        probe = NullProbe(NullConfig(output=complex_output))
+        probe = NullProbe(constant=complex_output)
 
-        result = await probe.invoke("input")
+        mock_agent = lambda x: x
+        trace = await probe.verify(mock_agent, "input")
 
-        assert result == complex_output
-        assert result is complex_output  # Same object reference
+        assert trace.value.value == complex_output
+        assert trace.value.value is complex_output  # Same object reference
 
     @pytest.mark.asyncio
     async def test_concurrent_invocations(self):
         """Test that multiple concurrent invocations work correctly."""
-        probe = NullProbe(NullConfig(output="result", delay_ms=10))
+        probe = NullProbe(constant="result", delay_ms=10)
+
+        mock_agent = lambda x: x
 
         # Run 5 concurrent invocations
-        results = await asyncio.gather(
-            probe.invoke("input1"),
-            probe.invoke("input2"),
-            probe.invoke("input3"),
-            probe.invoke("input4"),
-            probe.invoke("input5"),
+        traces = await asyncio.gather(
+            probe.verify(mock_agent, "input1"),
+            probe.verify(mock_agent, "input2"),
+            probe.verify(mock_agent, "input3"),
+            probe.verify(mock_agent, "input4"),
+            probe.verify(mock_agent, "input5"),
         )
 
         # All should return the same constant
-        assert all(r == "result" for r in results)
-        # Should have 5 trace entries
-        assert probe.call_count == 5
+        assert all(t.value.value == "result" for t in traces)
+        # Each should have passed
+        assert all(t.value.passed for t in traces)
 
     @pytest.mark.asyncio
     async def test_with_large_delay(self):
         """Test probe with larger delay (performance baseline)."""
-        probe = NullProbe(NullConfig(output="slow", delay_ms=100))
+        probe = NullProbe(constant="slow", delay_ms=100)
 
+        mock_agent = lambda x: x
         start = time.time()
-        result = await probe.invoke("input")
+        trace = await probe.verify(mock_agent, "input")
         elapsed = time.time() - start
 
-        assert result == "slow"
+        assert trace.value.value == "slow"
         assert elapsed >= 0.1  # At least 100ms

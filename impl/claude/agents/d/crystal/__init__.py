@@ -51,6 +51,7 @@ from .datum import Datum
 from .crystal import Crystal, CrystalMeta
 from .schema import Schema
 from .query import Query
+from .self_justifying import SelfJustifyingCrystal
 
 __all__ = [
     "Datum",
@@ -58,4 +59,5 @@ __all__ = [
     "CrystalMeta",
     "Schema",
     "Query",
+    "SelfJustifyingCrystal",
 ]

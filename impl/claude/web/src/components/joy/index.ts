@@ -111,3 +111,9 @@ export {
   type UnfurlPanelProps,
   type UnfurlPanelRef,
 } from './UnfurlPanel';
+
+export {
+  GrowingContainer,
+  type GrowingContainerProps,
+  type GrowingDuration,
+} from './GrowingContainer';

@@ -29,8 +29,8 @@ import {
 } from '../api/director';
 import { useWitnessStream } from '../hooks/useWitnessStream';
 import { DirectorSidebar, type StatusFilter } from './DirectorSidebar';
-import { GhostDocumentSection } from './director/GhostDocumentSection';
-import { GhostDetailPanel } from './director/GhostDetailPanel';
+// import { GhostDocumentSection } from './director/GhostDocumentSection';
+// import { GhostDetailPanel } from './director/GhostDetailPanel';
 
 import './DirectorDashboard.css';
 
@@ -254,7 +254,8 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
   const selectedDoc = filteredDocuments[selectedIndex] || null;
 
   // State for ghost section collapse
-  const [ghostSectionCollapsed, setGhostSectionCollapsed] = useState(false);
+  // TODO: Re-enable when GhostDocumentSection is implemented
+  // const [ghostSectionCollapsed, setGhostSectionCollapsed] = useState(false);
 
   // ==========================================================================
   // Document Actions
@@ -720,6 +721,7 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
           )}
 
           {/* Ghost Document Section - de-prioritized at the bottom */}
+          {/* TODO: Re-enable when GhostDocumentSection is implemented
           {statusFilter !== 'ghost' && ghostDocuments.length > 0 && (
             <GhostDocumentSection
               documents={ghostDocuments}
@@ -742,6 +744,7 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
               onToggleCollapse={() => setGhostSectionCollapsed((c) => !c)}
             />
           )}
+          */}
         </div>
       </main>
 
@@ -749,14 +752,16 @@ export function DirectorDashboard({ onSelectDocument, onUpload }: DirectorDashbo
       <aside className="flex flex-col p-4 bg-steel-900 border-l border-steel-800 overflow-y-auto min-h-0">
         {selectedDoc ? (
           // Ghost documents get a specialized detail panel
-          isGhostDocument(selectedDoc) ? (
-            <GhostDetailPanel
-              document={selectedDoc}
-              onRefresh={loadData}
-              onUploadToReconcile={(_path) => onUpload?.()}
-              onNavigateToEditor={(path) => onSelectDocument?.(path)}
-            />
-          ) : (
+          // TODO: Re-enable when GhostDetailPanel is implemented
+          // isGhostDocument(selectedDoc) ? (
+          //   <GhostDetailPanel
+          //     document={selectedDoc}
+          //     onRefresh={loadData}
+          //     onUploadToReconcile={(_path) => onUpload?.()}
+          //     onNavigateToEditor={(path) => onSelectDocument?.(path)}
+          //   />
+          // ) :
+          (
           <>
             <div className="flex items-start justify-between gap-2 mb-4">
               <h2 className="m-0 text-base font-semibold text-steel-100 leading-tight break-words">

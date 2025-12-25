@@ -25,7 +25,10 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
-from typing import Any, Callable, Protocol, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Protocol, Sequence
+
+if TYPE_CHECKING:
+    from agents.t.truth_functor import ConstitutionalScore as TFConstitutionalScore
 
 logger = logging.getLogger("kgents.categorical.probes")
 
@@ -131,6 +134,31 @@ class MonadResult:
         if self.associativity_results:
             scores.append(self.associativity_score)
         return sum(scores) / len(scores) if scores else 0.0
+
+    def to_constitutional_score(self) -> TFConstitutionalScore:
+        """
+        Convert MonadResult to ConstitutionalScore.
+
+        Maps monad law satisfaction to constitutional principles:
+        - COMPOSABLE: Direct mapping (monad laws ARE composition laws)
+        - ETHICAL: Law satisfaction implies predictability
+        - GENERATIVE: Reproducible reasoning
+        """
+        from agents.t.truth_functor import ConstitutionalScore
+
+        # Law satisfaction maps to COMPOSABLE and ETHICAL
+        composable = self.overall_score
+        ethical = self.overall_score  # Law-abiding = predictable = ethical
+
+        return ConstitutionalScore(
+            tasteful=0.5,  # Neutral - monad laws don't imply tastefulness
+            curated=0.5,  # Neutral
+            ethical=ethical,
+            joy_inducing=0.5,  # Neutral
+            composable=composable,
+            heterarchical=0.5,  # Neutral
+            generative=self.overall_score * 0.8,  # Law-satisfying reasoning is regenerable
+        )
 
 
 # =============================================================================
@@ -523,6 +551,29 @@ class CoherenceResult:
             return 0.0
         max_pairs = len(self.claims) * (len(self.claims) - 1) // 2
         return len(self.violations) / max_pairs if max_pairs > 0 else 0.0
+
+    def to_constitutional_score(self) -> TFConstitutionalScore:
+        """
+        Convert CoherenceResult to ConstitutionalScore.
+
+        Maps sheaf coherence to constitutional principles:
+        - ETHICAL: Coherence = honesty = ethical
+        - GENERATIVE: Coherent reasoning is regenerable
+        - COMPOSABLE: Sheaf gluing = optimal substructure
+        """
+        from agents.t.truth_functor import ConstitutionalScore
+
+        coherence = self.score
+
+        return ConstitutionalScore(
+            tasteful=0.5,  # Neutral
+            curated=0.5,  # Neutral
+            ethical=coherence,  # Coherence = honesty
+            joy_inducing=0.5,  # Neutral
+            composable=coherence,  # Sheaf gluing
+            heterarchical=0.5,  # Neutral
+            generative=coherence,  # Coherent reasoning is regenerable
+        )
 
 
 # =============================================================================

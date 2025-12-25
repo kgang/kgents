@@ -1,7 +1,8 @@
 # P-gents: Parser Agents
 
-**Status**: Specification v3.0 (Distilled)
-**Session**: 2025-12-17 - Spec Compression
+**Status**: Specification v4.0 (Unified Vision)
+**Session**: 2025-12-25 - The Parsing Renaissance
+**Epigraph**: *"Every LLM whispers probabilities. P-gent translates that whisper into guarantees."*
 
 ---
 
@@ -9,9 +10,33 @@
 
 P-gents bridge the **stochastic-structural gap**: LLMs produce probability distributions over token sequences. Compilers and renderers demand deterministic syntactic structures. Traditional parsers fail on LLM outputs because they expect deterministic programs. P-gents accept fuzzy text, return confidence-scored results, and compose into robust parsing pipelines.
 
+**The Reliability Mandate**: P-gents exist to increase the reliability of agent outputs at three levels:
+1. **Heuristic**: Battle-tested repair strategies that fix common LLM output errors
+2. **Prompting**: Prompt-engineering patterns that prevent malformed outputs at generation time
+3. **Theoretical**: Category-theoretic composition that guarantees type-safe transformations
+
+---
+
 ## Core Insight
 
 > **The Stochastic-Structural Gap**: LLMs don't "know" syntax—they sample from learned distributions. Standard parsers crash on unclosed brackets, trailing commas, malformed nesting, and format drift. P-gents operate across the **Prevention ← → Correction ← → Novel** spectrum to handle this gracefully.
+
+### The Translation Function
+
+P-gent IS translation. Every P-gent operation translates between domains:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        THE P-GENT TRANSLATION STACK                          │
+│                                                                              │
+│   Raw LLM Output  ────►  ParseResult[A]  ────►  Human-Understandable        │
+│   (token stream)         (confidence +          OR                           │
+│                          metadata)              Machine-Interpretable        │
+│                                                                              │
+│   "Parsing" = Translation with Transparency                                  │
+│   Every translation records: what was repaired, confidence level, strategy  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -26,6 +51,9 @@ P-gents bridge the **stochastic-structural gap**: LLMs produce probability distr
 **The dual nature**:
 - Traditional: Exact syntax → AST (binary: success or exception)
 - P-genting: Fuzzy text → ParseResult[A] (graduated: confidence ∈ [0.0, 1.0])
+
+**The Accursed Share of Parsing**:
+> Some LLM outputs are slop. P-gents cherish that slop—extracting value even from malformed chaos. Failed parses are composted into training data; partial parses are gratitude for the generative process.
 
 ---
 
@@ -65,6 +93,223 @@ class Parser[A](Protocol):
 - Morphisms: `Parser[A]` is `Text → ParseResult[A]`
 - Identity: `IdentityParser` (confidence=1.0)
 - Composition: Fallback, Fusion, Switch
+
+---
+
+## The Harness Pattern: P-gent + Tool Faceting
+
+> *"P-gents trivially supercharge agents by faceting them into arbitrary harnesses or to use arbitrary tools."*
+
+### The Faceting Insight
+
+Any tool can be **faceted** through a P-gent to gain reliability guarantees:
+
+```python
+# Without P-gent faceting: fragile, breaks on malformed output
+result = await tool.invoke(input)
+data = json.loads(result)  # 💥 Crashes on invalid JSON
+
+# With P-gent faceting: robust, graceful degradation
+faceted_tool = FacetedTool(
+    tool=tool,
+    parser=FallbackParser(
+        JsonParser(),           # Try strict first
+        ReflectionParser(...),  # LLM fixes errors
+        AnchorBasedParser(...), # Extract key-value pairs
+    )
+)
+result = await faceted_tool.invoke(input)  # Always returns ParseResult[A]
+```
+
+### Harness Integration
+
+P-gents integrate with the Exploration Harness (see `spec/protocols/exploration-harness.md`):
+
+```python
+class ParsedNavigationResult:
+    """Navigation result parsed with confidence tracking."""
+    graph: Optional[ContextGraph]
+    parse_result: ParseResult[NavigationData]
+    evidence_strength: str  # "weak", "moderate", "strong"
+
+# The harness witnesses parsing attempts
+async def navigate_with_parsing(
+    harness: ExplorationHarness,
+    edge: str,
+    parser: Parser[NavigationData]
+) -> ParsedNavigationResult:
+    raw = await harness.navigate(edge)
+    parsed = parser.parse(raw.data)
+
+    # Trail records parsing as evidence
+    harness.evidence_collector.record_parse(
+        input=raw.data,
+        output=parsed,
+        confidence=parsed.confidence
+    )
+
+    return ParsedNavigationResult(
+        graph=raw.graph if raw.success else None,
+        parse_result=parsed,
+        evidence_strength=harness.classify_evidence_strength(parsed.confidence)
+    )
+```
+
+### U-gent Tool Integration (Parser-Tool Codesign)
+
+Every U-gent tool is **co-designed with its parser** (see `spec/u-gents/tool-use.md` §Principle 2):
+
+```python
+@tool(
+    name="hypothesis_generator",
+    parser=FallbackParser(
+        PydanticParser(HypothesisOutput),
+        AnchorBasedParser(anchor="###HYPOTHESIS:"),
+        ReflectionParser(...)
+    )
+)
+class HypothesisGeneratorTool(Tool[HypothesisRequest, HypothesisOutput]):
+    async def invoke(self, input: HypothesisRequest) -> ParseResult[HypothesisOutput]:
+        response = await self.llm.generate(prompt=build_prompt(input))
+        return await self.parser.parse(response)  # Always returns ParseResult
+```
+
+**Four Parsing Boundaries in Tool Use**:
+1. **Schema Parsing**: Tool definitions → Structured schemas
+2. **Input Parsing**: Natural language → Tool parameters
+3. **Output Parsing**: Tool response → Structured data (P-gent core)
+4. **Error Parsing**: Tool errors → Recoverable/Fatal classification
+
+---
+
+## Visual Experience Design
+
+> *"Steward the experience of delight"*
+
+### The P-gent Visual Metaphor: The Translation Lens
+
+P-gent visualization should feel like looking through a **lens** that reveals hidden structure:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         THE TRANSLATION LENS                                 │
+│                                                                              │
+│   ┌──────────────┐                                ┌──────────────┐          │
+│   │ Raw Output   │    ╔══════════════════╗       │ Parsed Value │          │
+│   │              │───►║  P-GENT LENS     ║──────►│              │          │
+│   │ {"name: ...  │    ║                  ║       │ {name: "ok"} │          │
+│   │  malformed   │    ║  Confidence: 87% ║       │ ✓ validated  │          │
+│   └──────────────┘    ╚══════════════════╝       └──────────────┘          │
+│                              │                                              │
+│                              ▼                                              │
+│                     ┌─────────────────┐                                     │
+│                     │ Repair Trace:   │                                     │
+│                     │ • Added quote   │                                     │
+│                     │ • Fixed bracket │                                     │
+│                     └─────────────────┘                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Visual States
+
+| State | Visual | Meaning |
+|-------|--------|---------|
+| **Parsing** | Pulsing lens animation | Active translation in progress |
+| **High Confidence** (>0.8) | Green glow, solid lens | Reliable parse, trust result |
+| **Medium Confidence** (0.5-0.8) | Amber glow, translucent lens | Usable with caution |
+| **Low Confidence** (<0.5) | Red glow, fractured lens | Review carefully |
+| **Streaming** | Flowing particles through lens | Real-time translation |
+| **Repair Applied** | Sparkle effect + repair badge | Automatic fix was applied |
+
+### Three-Mode Responsive Pattern
+
+Following the elastic-ui-patterns (see `docs/skills/elastic-ui-patterns.md`):
+
+**Compact Mode** (CLI, Mobile):
+```
+Parsed: ✓ 87% | Repairs: 2 | Strategy: fallback[1]:anchor
+```
+
+**Comfortable Mode** (Web Dashboard):
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 🔍 Parse Result                                    Confidence: 87% │
+│─────────────────────────────────────────────────────────────────│
+│ Strategy: fallback[1]:anchor-based                               │
+│ Repairs:  ✓ Added missing quote (line 3)                         │
+│           ✓ Closed unclosed bracket (line 7)                     │
+│ Partial:  No                                                     │
+│ Stream:   Position 1,247                                         │
+│─────────────────────────────────────────────────────────────────│
+│ Value: {"name": "hypothesis", "confidence": 0.92}                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Spacious Mode** (Studio):
+Full translation lens visualization with:
+- Side-by-side raw/parsed comparison
+- Confidence heat map over parsed fields
+- Strategy waterfall (which strategies tried, why they failed/succeeded)
+- Repair animation (replay the repair steps)
+- Streaming progress indicator
+- Probabilistic AST tree view (per-node confidence)
+
+### Joy-Inducing Moments
+
+**1. The "Save" Counter**
+Track how many errors P-gent caught and fixed:
+```
+💫 P-gent has saved 1,247 parse failures today
+```
+
+**2. Confidence Celebration**
+When confidence > 0.95, brief confetti effect:
+```
+🎉 Perfect parse! (99% confidence, no repairs needed)
+```
+
+**3. The Repair Story**
+Show repairs as a narrative, not a list:
+```
+"Found malformed JSON → Added 2 missing brackets → Quoted 3 keys → Result valid!"
+```
+
+**4. Strategy Waterfall**
+Visualize fallback chain as a cascade:
+```
+╔═══════════════════════════════════════════════════════════════╗
+║ Strategy Waterfall                                             ║
+║                                                                ║
+║ strict_json ─✗─▶ stack_balance ─✗─▶ reflection ─✓─▶ Success!  ║
+║     │                 │                 │            87%       ║
+║     ▼                 ▼                 ▼                      ║
+║ "Expected }     "Unclosed [        "Fixed via                  ║
+║  at line 3"      at line 7"         LLM reflection"            ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
+### Portal Token Integration
+
+P-gent results can be represented as Portal Tokens (see `spec/protocols/portal-token.md`):
+
+```tsx
+// ParseResultToken: collapsed view of parse result
+<PortalToken
+    icon="🔍"
+    label="Parse Result"
+    summary="87% | 2 repairs"
+    expandedContent={<ParseResultDetail result={result} />}
+    contextType="parse_result"
+    expandable={true}
+/>
+```
+
+When expanded, the token reveals:
+- Full strategy trace
+- Repair list with line numbers
+- Before/after diff
+- Confidence explanation
+- Re-parse action button
 
 ---
 
@@ -286,6 +531,48 @@ class ParserConfig:
 
 ---
 
+## AGENTESE Integration
+
+P-gents expose parsing capabilities via AGENTESE paths:
+
+### Context: `self.parse.*`
+
+| Path | Aspect | Description |
+|------|--------|-------------|
+| `self.parse.manifest` | GET | Current parser configuration and stats |
+| `self.parse.invoke` | POST | Parse text with configured strategy |
+| `self.parse.stream` | STREAM | Parse token stream with live results |
+| `self.parse.configure` | PATCH | Update parser configuration |
+| `self.parse.history` | GET | Recent parse attempts with results |
+| `self.parse.strategies` | GET | Available parsing strategies |
+
+### Context: `concept.parse.*`
+
+| Path | Aspect | Description |
+|------|--------|-------------|
+| `concept.parse.json` | GET | JSON parsing strategy catalog |
+| `concept.parse.html` | GET | HTML parsing strategy catalog |
+| `concept.parse.code` | GET | Code parsing strategy catalog |
+| `concept.parse.compose` | POST | Compose strategies into pipeline |
+
+### Usage Example
+
+```python
+# Via AGENTESE
+parse_result = await logos.invoke(
+    "self.parse.invoke",
+    observer=agent_umwelt,
+    text=llm_output,
+    strategy="fallback:json,anchor,reflection"
+)
+
+# The observer sees what they need
+# Developer sees: full trace, confidence breakdown, repair details
+# End user sees: clean result or human-readable error
+```
+
+---
+
 ## Anti-Patterns
 
 ### ❌ Retry Without Reflection
@@ -321,6 +608,21 @@ return {"success": True, "value": data}
 return ParseResult(success=True, value=data, confidence=0.75, repairs=["..."])
 ```
 
+### ❌ Parsing Without Witness
+```python
+# BAD: No trace of what happened
+result = parse(text)
+
+# GOOD: Witnessed parsing with evidence
+result = parser.parse(text)
+await witness.mark(
+    action="parsed_llm_output",
+    result=result.success,
+    confidence=result.confidence,
+    repairs=result.repairs
+)
+```
+
 ---
 
 ## Integration Patterns
@@ -354,6 +656,14 @@ result = parser.parse(llm_response)
 # Immune to conversational filler
 ```
 
+### T-gent (Probe Integration)
+```python
+# P-gent parsing tested via T-gent patterns
+flaky_parser = FlakyParser(wrapped=json_parser, probability=0.1)
+chaos_result = await flaky_parser.parse(test_input)
+# Verify graceful degradation under chaos
+```
+
 ---
 
 ## Laws & Invariants
@@ -363,6 +673,29 @@ result = parser.parse(llm_response)
 3. **Confidence Monotonicity**: Sequential operations reduce confidence (multiply)
 4. **Minimal Output**: Parser extracts ONE `A`, not `[A]` (compose at pipeline level)
 5. **Heterarchical Duality**: Parsers support both functional (`parse`) and autonomous (`parse_stream`) modes
+6. **Witness Integration**: All parsing operations can emit witness marks
+
+---
+
+## PolyAgent Formalization
+
+P-gent as a PolyAgent (see `spec/agents/primitives.md`):
+
+```python
+PARSE: PolyAgent[ParseState, (str, ParserConfig), ParseResult[A]]
+    positions: {IDLE, PARSING, REFLECTING, SUCCEEDED, FAILED}
+    directions: λs → {(str, ParserConfig)} if s in {IDLE, REFLECTING} else {}
+    transition: λ(s, (text, config)) → (new_state, ParseResult[A])
+```
+
+**State Machine**:
+```
+IDLE --[text]--> PARSING
+PARSING --[success]--> SUCCEEDED
+PARSING --[failure, retries < max]--> REFLECTING
+PARSING --[failure, retries >= max]--> FAILED
+REFLECTING --[fix attempt]--> PARSING
+```
 
 ---
 
@@ -398,6 +731,9 @@ result = parser.parse(llm_response)
 5. Graceful degradation (no exceptions on malformed input)
 6. Transparency (repairs tracked)
 7. Bootstrappable (regenerate from spec)
+8. **Visual delight** (translation lens metaphor implemented)
+9. **Harness integration** (works with exploration-harness.md)
+10. **Tool faceting** (U-gent tools can be faceted through P-gent)
 
 ---
 
@@ -407,6 +743,8 @@ result = parser.parse(llm_response)
 - `impl/claude/agents/p/`: Reference implementation
 - `impl/claude/agents/shared/ast_utils.py`: AST utilities
 - `impl/claude/runtime/json_utils.py`: Robust JSON parsing
+- `spec/protocols/exploration-harness.md`: Harness integration
+- `spec/u-gents/tool-use.md`: Tool use parsing patterns
 
 ### Theoretical Foundations
 - **Stochastic-Structural Gap**: LLM probability distributions vs deterministic parsers
@@ -422,6 +760,6 @@ result = parser.parse(llm_response)
 
 ---
 
-**End of P-gents Specification v3.0**
+**End of P-gents Specification v4.0**
 
-*Compressed from 1,568 lines to 300 lines (81% compression). Implementation regenerates from this spec.*
+*Evolved from 426 lines to 600 lines (new: visual experience, harness integration, AGENTESE paths, tool faceting). Implementation regenerates from this spec.*

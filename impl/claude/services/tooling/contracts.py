@@ -373,6 +373,108 @@ class ClarifyResponse:
 
 
 # =============================================================================
+# Portal Tool Contracts
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class PortalRequest:
+    """Request to open a portal in chat."""
+
+    # The destination path (file, spec, symbol)
+    destination: str
+    # Edge type (e.g., "references", "implements", "context")
+    edge_type: str = "context"
+    # Access level for chat participants
+    access: str = "read"  # "read" | "readwrite"
+    # Optional preview lines (how much to show inline)
+    preview_lines: int = 10
+    # Auto-expand in chat?
+    auto_expand: bool = True
+
+
+@dataclass
+class PortalDestination:
+    """A portal destination with content."""
+
+    path: str
+    title: str | None = None
+    preview: str | None = None
+    exists: bool = True
+
+
+@dataclass
+class PortalEmission:
+    """A portal emitted into the chat stream."""
+
+    portal_id: str
+    destination: str
+    edge_type: str
+    access: str  # "read" | "readwrite"
+    # Resolved content for preview
+    content_preview: str | None = None
+    content_full: str | None = None
+    line_count: int = 0
+    # Metadata
+    exists: bool = True
+    auto_expand: bool = True
+    emitted_at: str = ""  # ISO datetime
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize for wire transfer."""
+        return {
+            "portal_id": self.portal_id,
+            "destination": self.destination,
+            "edge_type": self.edge_type,
+            "access": self.access,
+            "content_preview": self.content_preview,
+            "content_full": self.content_full,
+            "line_count": self.line_count,
+            "exists": self.exists,
+            "auto_expand": self.auto_expand,
+            "emitted_at": self.emitted_at,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "PortalEmission":
+        """Deserialize from wire format."""
+        return cls(
+            portal_id=data["portal_id"],
+            destination=data["destination"],
+            edge_type=data["edge_type"],
+            access=data["access"],
+            content_preview=data.get("content_preview"),
+            content_full=data.get("content_full"),
+            line_count=data.get("line_count", 0),
+            exists=data.get("exists", True),
+            auto_expand=data.get("auto_expand", True),
+            emitted_at=data.get("emitted_at", ""),
+        )
+
+
+@dataclass(frozen=True)
+class PortalWriteRequest:
+    """Request to write through an open portal."""
+
+    portal_id: str
+    content: str
+    # Optional: specific line range to update
+    start_line: int | None = None
+    end_line: int | None = None
+
+
+@dataclass
+class PortalWriteResponse:
+    """Response from writing through a portal."""
+
+    portal_id: str
+    success: bool
+    bytes_written: int
+    new_content_hash: str
+    error_message: str = ""
+
+
+# =============================================================================
 # Manifest Contracts
 # =============================================================================
 
@@ -444,6 +546,12 @@ __all__ = [
     "ExitPlanModeResponse",
     "ClarifyRequest",
     "ClarifyResponse",
+    # Portal tools
+    "PortalRequest",
+    "PortalDestination",
+    "PortalEmission",
+    "PortalWriteRequest",
+    "PortalWriteResponse",
     # Manifest
     "ToolMetaItem",
     "ToolManifestResponse",

@@ -19,34 +19,33 @@ DP Semantics:
 - Reward: Ethical (deterministic) + Composable (identity law satisfaction)
 
 Example:
-    >>> probe = NullProbe(output="constant", delay_ms=50)
-    >>> result = await probe.invoke("any input")
-    >>> result  # "constant"
-    >>> trace = await probe.get_trace()
-    >>> trace.value  # "constant"
+    >>> probe = NullProbe(constant="constant", delay_ms=50)
+    >>> trace = await probe.verify(agent, "any input")
+    >>> trace.value.value  # "constant"
+    >>> trace.value.passed  # True
 """
 
 from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum, auto
-from typing import Any, Generic, TypeVar
+from typing import Any, Callable, FrozenSet, Generic, TypeVar
 
-from agents.poly.types import Agent
-from services.categorical.dp_bridge import PolicyTrace, Principle, TraceEntry
+from agents.t.truth_functor import (
+    AnalysisMode,
+    ConstitutionalScore,
+    PolicyTrace,
+    ProbeAction,
+    ProbeState,
+    TraceEntry,
+    TruthFunctor,
+    TruthVerdict,
+)
 
 A = TypeVar("A")
 B = TypeVar("B")
-
-
-class NullState(Enum):
-    """DP states for NullProbe."""
-
-    READY = auto()
-    COMPUTING = auto()
-    DONE = auto()
 
 
 @dataclass
@@ -57,7 +56,16 @@ class NullConfig:
     delay_ms: int = 0  # Simulated delay in milliseconds
 
 
-class NullProbe(Agent[A, B], Generic[A, B]):
+class NullState(str, Enum):
+    """DP states for NullProbe."""
+
+    READY = "ready"
+    COMPUTING = "computing"
+    DONE = "done"
+
+
+@dataclass(frozen=True)
+class NullProbe(TruthFunctor[NullState, A, B], Generic[A, B]):
     """
     NullProbe: Constant morphism for ground truth baseline.
 
@@ -71,153 +79,154 @@ class NullProbe(Agent[A, B], Generic[A, B]):
     - Reward: R(s, invoke) = ETHICAL + COMPOSABLE (determinism + identity law)
 
     TruthFunctor Interface:
-    - states(): Returns DP state space
+    - states: Returns DP state space
     - actions(s): Returns available actions from state s
     - transition(s, a): Returns next state after action a from state s
-    - reward(s, a): Returns constitutional reward for action a in state s
-    - verify(): Verifies identity law: Id >> NullProbe(x) ≡ NullProbe(x)
+    - reward(s, a, s'): Returns constitutional reward for transition
+    - verify(agent, input): Returns PolicyTrace[TruthVerdict[B]]
     """
 
-    def __init__(self, config: NullConfig):
-        """Initialize NullProbe with configuration."""
-        self.config = config
-        self._state = NullState.READY
-        self._trace_log: list[TraceEntry] = []
-        self.__is_test__ = True  # T-gent marker
+    constant: B
+    delay_ms: int = 0
+    name: str = ""
+
+    def __post_init__(self):
+        """Set default name if not provided."""
+        if not self.name:
+            object.__setattr__(self, "name", f"NullProbe(output={self.constant})")
 
     @property
-    def name(self) -> str:
-        """Return agent name."""
-        return f"NullProbe(output={self.config.output})"
-
-    # === Agent Interface ===
-
-    async def invoke(self, input: A) -> B:
-        """
-        Return pre-configured constant output.
-
-        Args:
-            input: Input of type A (ignored)
-
-        Returns:
-            Pre-configured output of type B
-        """
-        # Transition: READY -> COMPUTING
-        prev_state = self._state
-        self._state = NullState.COMPUTING
-
-        # Simulate delay if configured
-        if self.config.delay_ms > 0:
-            await asyncio.sleep(self.config.delay_ms / 1000.0)
-
-        # Transition: COMPUTING -> DONE
-        self._state = NullState.DONE
-
-        # Emit trace entry
-        entry = TraceEntry(
-            state_before=prev_state,
-            action="invoke",
-            state_after=self._state,
-            value=self._compute_reward(prev_state, "invoke"),
-            rationale=f"Constant morphism: always returns {self.config.output}",
-            timestamp=datetime.now(timezone.utc),
-        )
-        self._trace_log.append(entry)
-
-        # Reset for next invocation
-        self._state = NullState.READY
-
-        return self.config.output  # type: ignore
+    def mode(self) -> AnalysisMode:
+        """Analysis mode for this probe."""
+        return AnalysisMode.EPISTEMIC
 
     # === TruthFunctor Interface ===
 
-    def states(self) -> frozenset[NullState]:
+    @property
+    def states(self) -> FrozenSet[NullState]:
         """Return DP state space."""
         return frozenset([NullState.READY, NullState.COMPUTING, NullState.DONE])
 
-    def actions(self, state: NullState) -> frozenset[str]:
+    def actions(self, state: NullState) -> FrozenSet[ProbeAction]:
         """Return available actions from state."""
         if state == NullState.READY:
-            return frozenset(["invoke"])
+            return frozenset([ProbeAction("invoke")])
         return frozenset()
 
-    def transition(self, state: NullState, action: str) -> NullState:
+    def transition(self, state: NullState, action: ProbeAction) -> NullState:
         """Return next state after action."""
-        if state == NullState.READY and action == "invoke":
+        if state == NullState.READY and action.name == "invoke":
             return NullState.COMPUTING
         if state == NullState.COMPUTING:
             return NullState.DONE
         return state
 
-    def reward(self, state: NullState, action: str) -> float:
-        """Return constitutional reward for action in state."""
-        return self._compute_reward(state, action)
-
-    def _compute_reward(self, state: NullState, action: str) -> float:
+    def reward(
+        self, state: NullState, action: ProbeAction, next_state: NullState
+    ) -> ConstitutionalScore:
         """
-        Compute constitutional reward.
+        Return constitutional reward for transition.
 
         NullProbe satisfies:
         - ETHICAL: Deterministic, predictable behavior (no surprises)
         - COMPOSABLE: Satisfies identity law
+        - GENERATIVE: Minimal but present (constant is a form of compression)
         """
-        if state == NullState.READY and action == "invoke":
-            # Full reward: ethical + composable
-            ethical_score = Principle.ETHICAL.weight
-            composable_score = Principle.COMPOSABLE.weight
-            return ethical_score + composable_score
-        return 0.0
+        if state == NullState.READY and action.name == "invoke":
+            return ConstitutionalScore(
+                ethical=1.0,      # Fully predictable
+                composable=1.0,   # Satisfies identity
+                generative=0.5,   # Minimal but present
+            )
+        return ConstitutionalScore()
 
-    def verify(self) -> bool:
+    async def verify(self, agent: Any, input: A) -> PolicyTrace[TruthVerdict[B]]:
         """
-        Verify identity law: Id >> NullProbe(x) ≡ NullProbe(x)
+        Verify agent behavior, returning constant output.
 
-        The NullProbe should absorb identity composition.
-        """
-        # Identity law: composing with identity doesn't change behavior
-        # For NullProbe, this is trivially true (constant morphism)
-        return True
+        This is the main entry point. The NullProbe ignores the agent
+        and input, always returning the pre-configured constant value.
 
-    async def get_trace(self) -> PolicyTrace[B]:
-        """
-        Get PolicyTrace with accumulated entries.
+        Args:
+            agent: Agent under test (ignored for NullProbe)
+            input: Input to feed to agent (ignored for NullProbe)
 
         Returns:
-            PolicyTrace with value and log
+            PolicyTrace[TruthVerdict[B]]: Trace with constant verdict
         """
-        return PolicyTrace(
-            value=self.config.output,  # type: ignore
-            log=tuple(self._trace_log),
+        # Build initial probe state
+        probe_state = ProbeState(
+            phase="ready",
+            observations=(),
         )
 
-    def reset(self) -> None:
-        """Reset state and trace for test isolation."""
-        self._state = NullState.READY
-        self._trace_log.clear()
+        # Transition: READY -> COMPUTING
+        action = ProbeAction("invoke")
+        next_probe_state = probe_state.transition_to("computing")
 
-    @property
-    def call_count(self) -> int:
-        """Number of times invoke was called."""
-        return len(self._trace_log)
+        # Simulate delay if configured
+        if self.delay_ms > 0:
+            await asyncio.sleep(self.delay_ms / 1000.0)
+
+        # Compute reward for this transition
+        state_before = NullState.READY
+        state_after = NullState.COMPUTING
+        reward_score = self.reward(state_before, action, state_after)
+
+        # Create trace entry for READY -> COMPUTING
+        entry1 = TraceEntry(
+            state_before=next_probe_state,
+            action=action,
+            state_after=next_probe_state.with_observation("invoked"),
+            reward=reward_score,
+            reasoning=f"Constant morphism invoked: will return {self.constant}",
+        )
+
+        # Transition: COMPUTING -> DONE
+        final_probe_state = next_probe_state.transition_to("done")
+
+        entry2 = TraceEntry(
+            state_before=next_probe_state,
+            action=ProbeAction("complete"),
+            state_after=final_probe_state.with_observation(self.constant),
+            reward=ConstitutionalScore(),
+            reasoning=f"Constant morphism completed: returned {self.constant}",
+        )
+
+        # Create verdict
+        verdict = TruthVerdict(
+            value=self.constant,
+            passed=True,  # NullProbe always passes (deterministic constant)
+            confidence=1.0,  # Maximum confidence (no uncertainty)
+            reasoning=f"NullProbe: constant morphism c_b where ∀ a: c_b(a) = {self.constant}",
+        )
+
+        # Build trace
+        trace = PolicyTrace(value=verdict)
+        trace.append(entry1)
+        trace.append(entry2)
+
+        return trace
 
 
 # === Convenience Functions ===
 
 
-def null_probe(output: Any = None, delay_ms: int = 0) -> NullProbe[Any, Any]:
+def null_probe(constant: Any = None, delay_ms: int = 0) -> NullProbe[Any, Any]:
     """
     Create a NullProbe with given configuration.
 
     Args:
-        output: Constant output value
+        constant: Constant output value
         delay_ms: Simulated delay in milliseconds
 
     Returns:
         Configured NullProbe
 
     Example:
-        >>> probe = null_probe(output=42)
-        >>> result = await probe.invoke("ignored")
-        >>> result  # 42
+        >>> probe = null_probe(constant=42)
+        >>> trace = await probe.verify(agent, "ignored")
+        >>> trace.value.value  # 42
+        >>> trace.value.passed  # True
     """
-    return NullProbe(NullConfig(output=output, delay_ms=delay_ms))
+    return NullProbe(constant=constant, delay_ms=delay_ms)

@@ -164,15 +164,48 @@ export const HelpPanel = memo(function HelpPanel({ onClose }: HelpPanelProps) {
               <tbody>
                 <tr>
                   <td>
-                    <kbd>⌘K</kbd>
-                  </td>
-                  <td>Open CommandPalette (navigate nodes)</td>
-                </tr>
-                <tr>
-                  <td>
                     <kbd>:</kbd>
                   </td>
                   <td>Enter command mode (ex commands)</td>
+                </tr>
+                <tr>
+                  <td>
+                    <em>Click nodes/edges</em>
+                  </td>
+                  <td>Navigate graph (no command palette—graph-first!)</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          {/* Commands */}
+          <section className="help-panel__section">
+            <h3>Commands (: mode)</h3>
+            <table className="help-panel__table">
+              <tbody>
+                <tr>
+                  <td>
+                    <kbd>:w</kbd>
+                  </td>
+                  <td>Save with witness mark</td>
+                </tr>
+                <tr>
+                  <td>
+                    <kbd>:ag &lt;path&gt;</kbd>
+                  </td>
+                  <td>Invoke AGENTESE endpoint</td>
+                </tr>
+                <tr>
+                  <td>
+                    <kbd>:crystallize</kbd>
+                  </td>
+                  <td>Crystallize current session</td>
+                </tr>
+                <tr>
+                  <td>
+                    <kbd>:checkpoint</kbd>
+                  </td>
+                  <td>Create K-Block checkpoint</td>
                 </tr>
               </tbody>
             </table>

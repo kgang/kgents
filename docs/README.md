@@ -6,7 +6,69 @@ context: self
 
 > *"Read the skills first. They'll save you hours. Skip them and you'll reinvent wheels we already built."*
 
-This documentation is organized for **developers and researchers** who want to build with kgents, not just read about it. Everything here assumes you've cloned the repo and want to ship something.
+This documentation is organized for **developers, researchers, and AI agents** who want to build with kgents. Everything here assumes you've cloned the repo and want to ship something.
+
+---
+
+## The Four Pillars
+
+kgents rests on four core abstractions. Understanding these unlocks the entire system.
+
+### I. AGENTESE — The Universal Protocol
+
+The native language of kgents. Paths ARE the API.
+
+```python
+await logos.invoke("world.document.manifest", observer)  # Different observers → different projections
+await logos.invoke("void.axiom.mirror-test", observer)   # Ground truth queries
+```
+
+| Context | Domain |
+|---------|--------|
+| `world.*` | External entities |
+| `self.*` | Internal state |
+| `concept.*` | Abstract structures |
+| `void.*` | Irreducible ground |
+| `time.*` | Temporal traces |
+
+**Skill**: [agentese-path.md](skills/agentese-path.md), [agentese-node-registration.md](skills/agentese-node-registration.md)
+
+### II. D-gents — Persistence with Optics
+
+Categorical storage with law-verified access. Universe for typed objects, DataBus for reactive events.
+
+```python
+universe = await get_universe()
+crystal = await universe.get(Crystal, id="abc123")
+bus.subscribe("crystal.created", handler)
+```
+
+**Stack**: `Universe → DgentRouter → Backends (Memory/JSONL/SQLite/Postgres) → DataBus`
+
+**Skill**: [unified-storage.md](skills/unified-storage.md), [data-bus-integration.md](skills/data-bus-integration.md)
+
+### III. Galois Theory + Agent-DP + ASHC
+
+Value-encoded self-justification. Every decision quantified by Galois loss.
+
+- **Galois Loss**: L(P) = information destroyed when restructuring. Low loss = self-justifying.
+- **Agent-DP**: Design as dynamic programming. State = specs, Actions = decisions, Reward = Constitution - λ·Loss.
+- **ASHC**: Automated Self-Healing Code with formal verification gatekeepers.
+
+**Theory**: `spec/theory/galois-modularization.md`, `spec/theory/agent-dp.md`
+
+### IV. Hypergraph Editor + K-Blocks + Trails + Marks
+
+Novel UX for conceptual navigation. Specs as graph nodes, navigation as edge traversal.
+
+| Component | Purpose |
+|-----------|---------|
+| **Hypergraph Editor** | Six-mode modal editing (NORMAL/INSERT/EDGE/VISUAL/COMMAND/WITNESS) |
+| **K-Block** | Monadic isolation—changes don't escape until commit |
+| **Trail** | Semantic breadcrumb through the graph |
+| **Mark** | Atomic witness with reasoning + principles |
+
+**Skill**: [hypergraph-editor.md](skills/hypergraph-editor.md)
 
 ---
 
@@ -14,9 +76,7 @@ This documentation is organized for **developers and researchers** who want to b
 
 **Read `docs/skills/` before building anything.**
 
-The 13 skills cover every task you'll encounter. They're battle-tested patterns extracted from building the Crown Jewels. Each skill answers: "How do I do X without breaking Y?"
-
-If you're thinking "I'll just figure it out"—don't. The skills exist because we made the mistakes already.
+The skills cover every task you'll encounter. Each skill answers: "How do I do X without breaking Y?"
 
 ---
 
@@ -35,131 +95,64 @@ If you're thinking "I'll just figure it out"—don't. The skills exist because w
 
 ---
 
-## The 13 Skills (Curated, Not Exhaustive)
-
-These are **necessary and sufficient** to build any kgents component. Organized by layer:
+## Skills (Organized by Layer)
 
 ### Foundation (The Ground)
 
 | Skill | When You Need It |
 |-------|------------------|
-| [polynomial-agent.md](skills/polynomial-agent.md) | Building state machines with mode-dependent inputs |
-| [building-agent.md](skills/building-agent.md) | Composition laws, the `>>` operator, testing agents |
+| [polynomial-agent.md](skills/polynomial-agent.md) | State machines with mode-dependent inputs |
+| [building-agent.md](skills/building-agent.md) | Composition laws, the `>>` operator |
 
 ### Protocol (The API)
 
 | Skill | When You Need It |
 |-------|------------------|
-| [agentese-path.md](skills/agentese-path.md) | Understanding `world.town.citizen` path structure |
-| [agentese-node-registration.md](skills/agentese-node-registration.md) | Exposing services via `@node` decorator (**read Enlightened Resolution**) |
+| [agentese-path.md](skills/agentese-path.md) | Understanding path structure |
+| [agentese-node-registration.md](skills/agentese-node-registration.md) | Exposing services via `@node` |
 
-### Architecture (The Crown Jewels)
-
-| Skill | When You Need It |
-|-------|------------------|
-| [crown-jewel-patterns.md](skills/crown-jewel-patterns.md) | 14 patterns: Container-Owns-Workflow, Signal Aggregation, Dual-Channel... |
-| [metaphysical-fullstack.md](skills/metaphysical-fullstack.md) | "Every agent is a vertical slice from persistence to projection" |
-| [data-bus-integration.md](skills/data-bus-integration.md) | DataBus → SynergyBus → EventBus reactive wiring |
-
-### Projection (The UI)
+### Architecture (Crown Jewels)
 
 | Skill | When You Need It |
 |-------|------------------|
-| [projection-target.md](skills/projection-target.md) | CLI, TUI, JSON, marimo, Web—same agent, different surfaces |
-| [elastic-ui-patterns.md](skills/elastic-ui-patterns.md) | Responsive: Compact/Comfortable/Spacious density modes |
-| [3d-projection-patterns.md](skills/3d-projection-patterns.md) | Three.js, React Three Fiber, the 3D garden |
+| [crown-jewel-patterns.md](skills/crown-jewel-patterns.md) | 14 patterns for production services |
+| [metaphysical-fullstack.md](skills/metaphysical-fullstack.md) | Vertical slice architecture |
+| [data-bus-integration.md](skills/data-bus-integration.md) | Reactive event wiring |
 
-### Process (The Meta)
-
-| Skill | When You Need It |
-|-------|------------------|
-| [plan-file.md](skills/plan-file.md) | How to structure implementation plans |
-| [spec-template.md](skills/spec-template.md) | Writing specs that generate implementations |
-| [spec-hygiene.md](skills/spec-hygiene.md) | Avoiding bloat, keeping specs generative |
-
-### Testing (The Guarantee)
+### Projection (UI)
 
 | Skill | When You Need It |
 |-------|------------------|
-| [test-patterns.md](skills/test-patterns.md) | T-gent Types I-V, property-based tests, chaos testing |
+| [projection-target.md](skills/projection-target.md) | Same agent, different surfaces |
+| [elastic-ui-patterns.md](skills/elastic-ui-patterns.md) | Responsive density modes |
+| [hypergraph-editor.md](skills/hypergraph-editor.md) | Modal graph navigation |
+
+### Process (Meta)
+
+| Skill | When You Need It |
+|-------|------------------|
+| [spec-template.md](skills/spec-template.md) | Writing generative specs |
+| [spec-hygiene.md](skills/spec-hygiene.md) | Avoiding bloat |
+
+### Testing
+
+| Skill | When You Need It |
+|-------|------------------|
+| [test-patterns.md](skills/test-patterns.md) | Types I-V, property-based, chaos |
 
 ---
 
-## Common Pitfalls (Read Before You Hit Them)
+## Task-to-Skill Routing
 
-### DI Enlightened Resolution (2025-12-21)
-```python
-# Required deps (no default) → DependencyNotFoundError with helpful message
-@node(dependencies=("foo",))
-class MyNode: ...
-
-# Optional deps (with default) → Skip gracefully
-def __init__(self, foo: Foo | None = None): ...  # Uses None if not registered
-
-# THE FIX for required: Register in services/providers.py
-container.register("foo", get_foo, singleton=True)
-```
-
-### Frontend Type Drift
-```bash
-# You changed a backend model. Frontend now has stale types.
-cd impl/claude/web && npm run typecheck  # ALWAYS run before committing
-```
-
-### Import-Time Node Registration
-```python
-# @node runs at import time. If module not imported → node not registered.
-# THE FIX: Ensure _import_node_modules() in gateway.py includes your module.
-```
-
-### Timer-Driven Loops
-```python
-# ❌ Creates zombie processes
-while True:
-    await asyncio.sleep(1.0)
-    process()
-
-# ✅ Event-driven Flux
-async for event in event_stream:
-    process(event)
-```
-
----
-
-## Documentation Index
-
-### Getting Started
-- [quickstart.md](quickstart.md) — Zero to agent in 5 minutes
-- [cli-reference.md](cli-reference.md) — Complete CLI command reference
-- [local-development.md](local-development.md) — Development environment, editor setup
-
-### Architecture
-- [architecture-overview.md](architecture-overview.md) — Three pillars, functor system, polynomial architecture
-- [systems-reference.md](systems-reference.md) — 17 production systems inventory
-- [categorical-foundations.md](categorical-foundations.md) — Category theory for the curious
-
-### Skills (Read These First!)
-- [skills/README.md](skills/README.md) — Full index with quick summaries
-
-### Specialized
-- [terminal-integration.md](terminal-integration.md) — Tmux, raw mode, terminal handling
-
-### Archived
-- [_archive/](_archive/) — Historical docs, consolidated 2025-12-18
-
----
-
-## AGENTESE Context Mapping
-
-Each doc is annotated with an AGENTESE context (frontmatter `context:`):
-
-| Context | Docs | For Whom |
-|---------|------|----------|
-| `world` | quickstart | Visitors, evaluators, newcomers |
-| `self` | skills/, systems-reference, local-dev | Developers in the codebase |
-| `concept` | principles, architecture, categorical | Researchers, architects |
-
-This enables future tooling (context-aware search, navigation) without disrupting existing paths.
+| Task | Primary Skill | Supporting |
+|------|---------------|------------|
+| Add new agent | building-agent.md | polynomial-agent.md, test-patterns.md |
+| Expose via AGENTESE | agentese-node-registration.md | agentese-path.md |
+| Fix DI errors | agentese-node-registration.md | metaphysical-fullstack.md |
+| Debug event flow | data-bus-integration.md | crown-jewel-patterns.md |
+| Add Crown Jewel | crown-jewel-patterns.md | metaphysical-fullstack.md |
+| Build UI component | elastic-ui-patterns.md | projection-target.md |
+| Navigate graph | hypergraph-editor.md | — |
 
 ---
 
@@ -167,19 +160,86 @@ This enables future tooling (context-aware search, navigation) without disruptin
 
 If you're an AI agent working in this codebase:
 
-1. **Read [../CLAUDE.md](../CLAUDE.md)** — Your context, anti-sausage protocol, voice anchors
-2. **Read [skills/](skills/)** — Before building anything, these cover every task
-3. **Check [systems-reference.md](systems-reference.md)** — Before building new, check what exists
+### Essential Reads
+1. **[../CLAUDE.md](../CLAUDE.md)** — Context, anti-sausage protocol, voice anchors
+2. **[skills/](skills/)** — Before building anything
+3. **[systems-reference.md](systems-reference.md)** — Before building new, check what exists
 
-**Critical learnings**:
-- DI Enlightened Resolution: Required deps fail fast, optional deps (`= None`) skip gracefully
-- `@node` runs at import time (check `_import_node_modules()` in gateway.py)
-- Frontend TypeScript must typecheck (`npm run typecheck` catches real bugs)
+### Critical Learnings
+```python
+# DI Enlightened Resolution
+# Required deps fail fast, optional deps (= None) skip gracefully
+@node(dependencies=("foo",))  # REQUIRED: must be registered
+def __init__(self, bar: Bar | None = None): ...  # OPTIONAL: skips if missing
 
-**Voice preservation**:
+# @node runs at import time
+# If module not imported → node not registered
+# Fix: ensure _import_node_modules() in gateway.py includes your module
+
+# Frontend TypeScript must typecheck
+cd impl/claude/web && npm run typecheck  # Catches real bugs
+```
+
+### Voice Preservation
 - Quote Kent's anchors directly: *"Daring, bold, creative, opinionated but not gaudy"*
 - The Mirror Test: *"Does this feel like Kent on his best day?"*
 - If you're smoothing rough edges that should stay rough, stop.
+
+### Agent-Specific Skills
+- [witness-for-agents.md](skills/witness-for-agents.md) — JSON output, subprocess integration
+- [zero-seed-for-agents.md](skills/zero-seed-for-agents.md) — Seven-layer navigation
+
+### Quick Error Fixes
+
+| Error Pattern | Fix |
+|---------------|-----|
+| `DependencyNotFoundError: Missing '*'` | Register in services/providers.py |
+| `@node declares X but __init__ has no X` | Add X param to __init__ |
+| `object async_generator can't be used in await` | Don't await async generators |
+
+---
+
+## Common Pitfalls
+
+### DI Enlightened Resolution
+```python
+# THE FIX for required deps: Register in services/providers.py
+container.register("foo", get_foo, singleton=True)
+```
+
+### Frontend Type Drift
+```bash
+cd impl/claude/web && npm run typecheck  # ALWAYS before committing
+```
+
+### Import-Time Node Registration
+```python
+# @node runs at import. Module not imported → node not registered.
+# Fix: check _import_node_modules() in gateway.py
+```
+
+---
+
+## Documentation Structure
+
+### Getting Started
+- [quickstart.md](quickstart.md) — Zero to agent in 5 minutes
+- [cli-reference.md](cli-reference.md) — CLI command reference
+- [local-development.md](local-development.md) — Dev environment
+
+### Architecture
+- [architecture-overview.md](architecture-overview.md) — Three pillars, functor system
+- [systems-reference.md](systems-reference.md) — Production systems inventory
+- [categorical-foundations.md](categorical-foundations.md) — Category theory
+
+### Theory (Core Abstractions)
+- `spec/theory/galois-modularization.md` — Galois loss as quality signal
+- `spec/theory/agent-dp.md` — Design as dynamic programming
+- `spec/protocols/zero-seed.md` — Seven-layer epistemic holarchy
+- `spec/protocols/witness.md` — Marks, crystals, dialectical fusion
+
+### Skills
+- [skills/README.md](skills/README.md) — Full index
 
 ---
 
@@ -196,8 +256,6 @@ Component = Foundation ∘ Protocol ∘ Architecture ∘ Spec ∘ Projection
           ∘ (spec-template + spec-hygiene)                # Spec
           ∘ (projection-target + test-patterns + elastic-ui)  # Projection
 ```
-
-If you're missing a skill from this composition, your component will have gaps.
 
 ---
 

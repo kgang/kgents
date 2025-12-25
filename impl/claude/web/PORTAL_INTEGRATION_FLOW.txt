@@ -1,0 +1,229 @@
+PORTAL INTEGRATION: DATA FLOW DIAGRAM
+=====================================
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                          ChatPanel.tsx                              │
+│                                                                     │
+│  Handlers:                                                          │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │ handleEditPortal(portalId, content)                         │   │
+│  │   → POST /api/chat/portal/write                             │   │
+│  │   → {portal_id, content}                                    │   │
+│  │   ✓ Success: console.log                                    │   │
+│  │   ✗ Error: throw (caught by ChatPortal)                     │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │ handleNavigatePortal(path)                                  │   │
+│  │   → window.open(/editor?file=${path}, '_blank')            │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  Render:                                                            │
+│  <MessageList                                                       │
+│    session={currentSession}                                         │
+│    isStreaming={isStreaming}                                        │
+│    onEditPortal={handleEditPortal} ────────┐                        │
+│    onNavigatePortal={handleNavigatePortal} ─┼──┐                    │
+│  />                                         │  │                    │
+└─────────────────────────────────────────────┼──┼────────────────────┘
+                                              │  │
+                                              ▼  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        MessageList.tsx                              │
+│                                                                     │
+│  Props:                                                             │
+│    session: ChatSession                                             │
+│    isStreaming: boolean                                             │
+│    onEditPortal?: (portalId, content) => Promise<void>              │
+│    onNavigatePortal?: (path) => void                                │
+│                                                                     │
+│  Render:                                                            │
+│  {session.turns.map(turn =>                                         │
+│    <AssistantMessage                                                │
+│      message={turn.assistant_response}                              │
+│      tools={turn.tools_used}                                        │
+│      confidence={turn.confidence}                                   │
+│      evidenceDelta={turn.evidence_delta}                            │
+│      portalEmissions={turn.portal_emissions} ──┐                    │
+│      onEditPortal={onEditPortal} ──────────────┼─┐                  │
+│      onNavigatePortal={onNavigatePortal} ──────┼─┼─┐                │
+│    />                                          │ │ │                │
+│  )}                                            │ │ │                │
+└────────────────────────────────────────────────┼─┼─┼────────────────┘
+                                                 │ │ │
+                                                 ▼ ▼ ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     AssistantMessage.tsx                            │
+│                                                                     │
+│  Props:                                                             │
+│    message: Message                                                 │
+│    tools: ToolUse[]                                                 │
+│    confidence: number                                               │
+│    evidenceDelta: EvidenceDelta                                     │
+│    portalEmissions?: PortalEmission[]                               │
+│    onEditPortal?: (portalId, content) => Promise<void>              │
+│    onNavigatePortal?: (path) => void                                │
+│                                                                     │
+│  Render:                                                            │
+│  <div className="assistant-message__portals">                       │
+│    {portalEmissions.map(emission =>                                 │
+│      <ChatPortal                                                    │
+│        key={emission.portal_id}                                     │
+│        emission={emission} ────────────────────┐                    │
+│        onEdit={onEditPortal} ──────────────────┼─┐                  │
+│        onNavigate={onNavigatePortal} ──────────┼─┼─┐                │
+│        defaultExpanded={emission.auto_expand}  │ │ │                │
+│      />                                        │ │ │                │
+│    )}                                          │ │ │                │
+│  </div>                                        │ │ │                │
+└────────────────────────────────────────────────┼─┼─┼────────────────┘
+                                                 │ │ │
+                                                 ▼ ▼ ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        ChatPortal.tsx                               │
+│                                                                     │
+│  Props:                                                             │
+│    emission: PortalEmission {                                       │
+│      portal_id: string                                              │
+│      destination: string                                            │
+│      edge_type: string                                              │
+│      access: 'read' | 'readwrite'                                   │
+│      content_preview: string | null                                 │
+│      content_full: string | null                                    │
+│      line_count: number                                             │
+│      exists: boolean                                                │
+│      auto_expand: boolean                                           │
+│      emitted_at: string                                             │
+│    }                                                                │
+│    onEdit?: (portalId, content) => Promise<void>                    │
+│    onNavigate?: (path) => void                                      │
+│    defaultExpanded?: boolean                                        │
+│                                                                     │
+│  State:                                                             │
+│    expanded: boolean                                                │
+│    editing: boolean                                                 │
+│    editContent: string                                              │
+│    syncStatus: 'idle' | 'saving' | 'saved' | 'failed'               │
+│    syncError: string | null                                         │
+│                                                                     │
+│  Interactions:                                                      │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ User clicks expand/collapse                                  │  │
+│  │   → setExpanded(!expanded)                                   │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ User clicks navigate button                                  │  │
+│  │   → onNavigate(emission.destination)                         │  │
+│  │   → window.open(/editor?file=${destination})                 │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ User clicks edit button (if access === 'readwrite')          │  │
+│  │   → setEditing(true)                                         │  │
+│  │   → textarea auto-focused                                    │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ User edits and saves (Cmd+Enter or click Save)               │  │
+│  │   → setSyncStatus('saving')                                  │  │
+│  │   → await onEdit(portal_id, editContent)                     │  │
+│  │   ✓ Success:                                                 │  │
+│  │     → setSyncStatus('saved')                                 │  │
+│  │     → setEditing(false)                                      │  │
+│  │     → setTimeout(() => setSyncStatus('idle'), 2000)          │  │
+│  │   ✗ Error:                                                   │  │
+│  │     → setSyncStatus('failed')                                │  │
+│  │     → setSyncError(err.message)                              │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ User cancels edit (Esc or click Cancel)                      │  │
+│  │   → setEditing(false)                                        │  │
+│  │   → setEditContent(emission.content_full)  // reset          │  │
+│  │   → setSyncError(null)                                       │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  Render:                                                            │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ Header:                                                      │  │
+│  │   [▶/▼] [edge_type] ──→ destination                          │  │
+│  │   Actions: [↗ Navigate] [✎ Edit] [◐/✓/⚠️ Sync Status]      │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ Metadata:                                                    │  │
+│  │   N lines | access | [file missing?] | [auto-expanded?]     │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ Content (if expanded):                                       │  │
+│  │   Edit mode:                                                 │  │
+│  │     <textarea> with Cmd+Enter/Esc keyboard shortcuts         │  │
+│  │     [Save] [Cancel] buttons + error/hint text                │  │
+│  │   Read mode:                                                 │  │
+│  │     <pre><code> syntax-highlighted content                   │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+
+TYPE DEFINITIONS
+================
+
+PortalEmission (from types/chat.ts):
+  portal_id: string
+  destination: string          // File path
+  edge_type: string            // 'output', 'spec', 'test', etc.
+  access: 'read' | 'readwrite' // Permissions
+  content_preview: string | null
+  content_full: string | null
+  line_count: number
+  exists: boolean              // File exists on disk?
+  auto_expand: boolean         // Show content immediately?
+  emitted_at: string           // ISO timestamp
+
+Turn (from store.ts):
+  turn_number: number
+  user_message: Message
+  assistant_response: Message
+  tools_used: ToolUse[]
+  evidence_delta: EvidenceDelta
+  confidence: number
+  portal_emissions?: PortalEmission[]  ← Portal data source
+  started_at: string
+  completed_at: string
+
+KEYBOARD SHORTCUTS
+==================
+
+When editing portal content:
+  Cmd+Enter / Ctrl+Enter  → Save changes
+  Esc                     → Cancel edit
+
+VISUAL INDICATORS
+=================
+
+Sync Status:
+  ◐  Saving...
+  ✓  Saved
+  ⚠️  Failed (hover for error message)
+
+Expand/Collapse:
+  ▶  Collapsed
+  ▼  Expanded
+
+BACKEND API CONTRACT
+====================
+
+POST /api/chat/portal/write
+
+Request:
+  {
+    "portal_id": "uuid-string",
+    "content": "file content to write..."
+  }
+
+Response:
+  200 OK on success
+  4xx/5xx on error
+
+Note: Backend endpoint implementation is separate from this frontend work.

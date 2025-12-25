@@ -31,7 +31,7 @@ interface CommandLineProps {
  * Parse command and extract prefix for completion
  * Returns { cmdPrefix: 'ag', partial: 'world.h' }
  *
- * NOTE: :e/:edit removed — navigation is via URL or CommandPalette (Cmd+K)
+ * NOTE: :e/:edit removed — navigation is graph-first (click nodes, follow edges)
  * "The file is a lie. There is only the graph."
  */
 function parseCommandForCompletion(value: string): {

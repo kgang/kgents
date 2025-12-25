@@ -15,26 +15,18 @@ import { MapPin, ArrowRight } from 'lucide-react';
  */
 const AGENTESE_PATHS = [
   { path: '/self.chat', label: 'Chat', description: 'Conversational interface with branching' },
-  { path: '/self.memory', label: 'Memory', description: 'Explore crystals, marks, and wisdom' },
   { path: '/self.director', label: 'Director', description: 'Living document canvas' },
   { path: '/world.document', label: 'Document', description: 'Hypergraph spec editor' },
-  { path: '/world.chart', label: 'Chart', description: 'Astronomical visualization' },
-  { path: '/void.telescope', label: 'Telescope', description: 'Epistemic graph navigation' },
 ];
 
 /**
  * Legacy path mapping for suggestions.
  */
 const LEGACY_SUGGESTIONS: Record<string, string> = {
-  '/brain': '/self.memory',
   '/chat': '/self.chat',
   '/director': '/self.director',
   '/editor': '/world.document',
   '/hypergraph-editor': '/world.document',
-  '/chart': '/world.chart',
-  '/feed': '/self.memory',
-  '/proof-engine': '/void.telescope',
-  '/zero-seed': '/void.telescope',
 };
 
 /**

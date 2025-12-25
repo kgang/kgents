@@ -1,65 +1,30 @@
-import { useLocation } from 'react-router-dom';
-import { TelescopeShell } from './components/layout/TelescopeShell';
 import { AppShell } from './components/layout/AppShell';
 import { AgenteseRouter } from './router';
-import { parseAgentesePath } from './router';
 
 /**
- * kgents Web — Pure AGENTESE Navigation (Phase 3)
+ * kgents Web — UX TRANSFORMATION (2025-12-25)
  *
- * AGENTESE-ONLY ROUTING:
- * URLs are AGENTESE paths directly:
- * - /self.chat → Chat page
- * - /self.memory → Memory feed
- * - /self.director → Director canvas
- * - /world.document → Hypergraph Editor
- * - /world.chart → Astronomical chart
- * - /void.telescope → Proof Engine with telescope
+ * "The Hypergraph Editor IS the app. Everything else is a sidebar."
  *
- * Legacy routes (/chat, /editor, /brain, etc.) redirect with deprecation warnings.
+ * SIMPLIFIED ROUTING:
+ * - / → redirects to /world.document (the editor)
+ * - /world.document → Hypergraph Editor (THE app)
+ * - /self.chat → Chat (becoming right sidebar)
+ * - /self.director → Director (becoming left sidebar)
  *
- * Shell Selection:
- * - void.telescope → TelescopeShell (7-layer epistemic navigation)
- * - All other AGENTESE → AppShell (standard app chrome)
- * - Root path → Welcome screen
+ * DELETED:
+ * - TelescopeShell (void.telescope no longer exists)
+ * - WelcomePage (no welcome, open directly to editor)
+ * - ZeroSeedPage, ChartPage, FeedPage (features deleted)
+ *
+ * All routes now use AppShell.
  */
 
 function App() {
-  const location = useLocation();
-
-  // Determine shell based on AGENTESE context
-  let shell: 'telescope' | 'app' | 'none' = 'none';
-
-  try {
-    const path = parseAgentesePath(location.pathname);
-
-    // void.telescope gets TelescopeShell
-    if (path.fullPath.startsWith('void.telescope')) {
-      shell = 'telescope';
-    }
-    // All other AGENTESE paths get AppShell
-    else if (path.context) {
-      shell = 'app';
-    }
-  } catch {
-    // Root path or invalid AGENTESE path
-    shell = 'none';
-  }
-
   return (
-    <>
-      {shell === 'telescope' ? (
-        <TelescopeShell>
-          <AgenteseRouter />
-        </TelescopeShell>
-      ) : shell === 'app' ? (
-        <AppShell>
-          <AgenteseRouter />
-        </AppShell>
-      ) : (
-        <AgenteseRouter />
-      )}
-    </>
+    <AppShell>
+      <AgenteseRouter />
+    </AppShell>
   );
 }
 

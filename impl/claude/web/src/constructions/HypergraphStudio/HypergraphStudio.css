@@ -1,0 +1,338 @@
+/**
+ * HypergraphStudio: Graph + Trail + ValueCompass
+ *
+ * Layout:
+ * - Trail (top bar)
+ * - HypergraphEditor (main area)
+ * - ValueCompass (collapsible bottom panel)
+ */
+
+/* =============================================================================
+ * Container
+ * ============================================================================= */
+
+.hypergraph-studio {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background: var(--life-background, #1a1f1a);
+  color: var(--glow-lichen, #8ba98b);
+  position: relative;
+  overflow: hidden;
+}
+
+/* =============================================================================
+ * Trail (Top Bar)
+ * ============================================================================= */
+
+.hypergraph-studio__trail {
+  flex-shrink: 0;
+  background: var(--life-depth-1, #222722);
+  border-bottom: 1px solid var(--life-depth-2, #2a302a);
+  padding: 0.5rem 1rem;
+  z-index: 10;
+}
+
+/* =============================================================================
+ * Main Editor Area
+ * ============================================================================= */
+
+.hypergraph-studio__main {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* =============================================================================
+ * ValueCompass Panel (Bottom)
+ * ============================================================================= */
+
+.hypergraph-studio__compass {
+  flex-shrink: 0;
+  background: var(--life-depth-1, #222722);
+  border-top: 1px solid var(--life-depth-2, #2a302a);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 5;
+}
+
+/* Open state */
+.hypergraph-studio__compass--open {
+  height: 400px;
+  overflow-y: auto;
+}
+
+/* Collapsed state */
+.hypergraph-studio__compass--collapsed {
+  height: 40px;
+  overflow: hidden;
+}
+
+/* =============================================================================
+ * Compass Toggle Button
+ * ============================================================================= */
+
+.hypergraph-studio__compass-toggle {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--glow-lichen, #8ba98b);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.hypergraph-studio__compass-toggle:hover {
+  background: var(--life-depth-2, #2a302a);
+}
+
+.hypergraph-studio__compass-toggle:focus {
+  outline: 1px solid var(--glow-spore, #c4a77d);
+  outline-offset: -1px;
+}
+
+.hypergraph-studio__compass-toggle-icon {
+  font-size: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+.hypergraph-studio__compass-toggle-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* =============================================================================
+ * Compass Content (When Open)
+ * ============================================================================= */
+
+.hypergraph-studio__compass-content {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  grid-template-rows: auto 1fr auto;
+  gap: 1.5rem;
+  height: calc(100% - 40px); /* Subtract toggle height */
+}
+
+.hypergraph-studio__compass-header {
+  grid-column: 1 / -1;
+}
+
+.hypergraph-studio__compass-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--glow-light, #e5c99d);
+}
+
+.hypergraph-studio__compass-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--glow-lichen, #8ba98b);
+  opacity: 0.7;
+}
+
+/* Visualization area */
+.hypergraph-studio__compass-viz {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: var(--life-depth-2, #2a302a);
+  border-radius: 4px;
+}
+
+/* =============================================================================
+ * Principle Scores (Detailed List)
+ * ============================================================================= */
+
+.hypergraph-studio__compass-scores {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--life-depth-2, #2a302a);
+  border-radius: 4px;
+}
+
+.hypergraph-studio__compass-score {
+  display: grid;
+  grid-template-columns: 120px 1fr 60px;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hypergraph-studio__compass-score-label {
+  font-size: 0.875rem;
+  color: var(--glow-lichen, #8ba98b);
+  text-transform: capitalize;
+}
+
+.hypergraph-studio__compass-score-bar {
+  height: 8px;
+  background: var(--life-depth-3, #333833);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hypergraph-studio__compass-score-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 4px;
+}
+
+.hypergraph-studio__compass-score-value {
+  font-size: 0.875rem;
+  color: var(--glow-light, #e5c99d);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =============================================================================
+ * Metadata (Compression Ratio, etc.)
+ * ============================================================================= */
+
+.hypergraph-studio__compass-meta {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: var(--life-depth-2, #2a302a);
+  border-radius: 4px;
+}
+
+.hypergraph-studio__compass-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hypergraph-studio__compass-meta-label {
+  font-size: 0.875rem;
+  color: var(--glow-lichen, #8ba98b);
+  opacity: 0.7;
+}
+
+.hypergraph-studio__compass-meta-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--glow-light, #e5c99d);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =============================================================================
+ * Collapsed State Indicator
+ * ============================================================================= */
+
+.hypergraph-studio__compass-collapsed-indicator {
+  padding: 0 1rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--glow-lichen, #8ba98b);
+  opacity: 0.7;
+}
+
+.hypergraph-studio__compass-collapsed-icon {
+  font-size: 0.75rem;
+}
+
+.hypergraph-studio__compass-collapsed-text {
+  font-variant-numeric: tabular-nums;
+}
+
+/* =============================================================================
+ * Help Overlay (Bottom Right)
+ * ============================================================================= */
+
+.hypergraph-studio__help {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--life-depth-2, #2a302a);
+  border: 1px solid var(--life-depth-3, #333833);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--glow-lichen, #8ba98b);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+/* Show on Cmd key press (handled via JS or CSS :focus-within) */
+.hypergraph-studio:hover .hypergraph-studio__help {
+  opacity: 0.5;
+}
+
+.hypergraph-studio__help kbd {
+  padding: 0.125rem 0.375rem;
+  background: var(--life-depth-3, #333833);
+  border: 1px solid var(--life-depth-4, #3f443f);
+  border-radius: 2px;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  font-size: 0.7rem;
+  color: var(--glow-light, #e5c99d);
+}
+
+/* =============================================================================
+ * Responsive Adjustments
+ * ============================================================================= */
+
+/* Tablet and below: Stack compass content vertically */
+@media (max-width: 768px) {
+  .hypergraph-studio__compass-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr auto;
+  }
+
+  .hypergraph-studio__compass-viz {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .hypergraph-studio__compass-scores {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .hypergraph-studio__compass--open {
+    height: 600px;
+  }
+
+  .hypergraph-studio__compass-score {
+    grid-template-columns: 100px 1fr 50px;
+    gap: 0.75rem;
+  }
+}
+
+/* Mobile: Further reduce spacing */
+@media (max-width: 480px) {
+  .hypergraph-studio__compass-content {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .hypergraph-studio__compass-score {
+    grid-template-columns: 80px 1fr 40px;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .hypergraph-studio__help {
+    display: none;
+  }
+}

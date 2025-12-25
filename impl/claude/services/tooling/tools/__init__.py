@@ -52,6 +52,13 @@ from .mode import (
     set_approval_handler,
     set_mode_state,
 )
+from .portal import (
+    OpenPortal,
+    PortalTool,
+    PortalWriteTool,
+    get_open_portals,
+    reset_open_portals,
+)
 from .search import GlobTool, GrepTool
 from .system import BashTool, KillShellTool
 from .task import (
@@ -131,6 +138,10 @@ def register_orchestration_tools(registry: "ToolRegistry") -> None:
     # Clarify tool
     registry.register(ClarifyTool())
 
+    # Portal tools
+    registry.register(PortalTool())
+    registry.register(PortalWriteTool())
+
 
 def register_all_tools(registry: "ToolRegistry") -> None:
     """
@@ -180,6 +191,12 @@ __all__ = [
     # Clarify tool
     "ClarifyTool",
     "QuestionBuilder",
+    # Portal tools
+    "PortalTool",
+    "PortalWriteTool",
+    "OpenPortal",
+    "get_open_portals",
+    "reset_open_portals",
     # Registration
     "register_core_tools",
     "register_system_tools",

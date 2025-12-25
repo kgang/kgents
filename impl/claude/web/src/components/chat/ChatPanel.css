@@ -23,7 +23,18 @@
 }
 
 .chat-panel--compact {
-  max-height: 600px;
+  /* Remove max-height when used in sidebar (set by parent) */
+  /* max-height: 600px; */
+}
+
+/* Compact mode: Hide context indicator for cleaner sidebar */
+.chat-panel--compact .chat-panel__context {
+  display: none;
+}
+
+/* Compact mode: Ensure branches can collapse */
+.chat-panel--compact .chat-panel__branches {
+  max-height: 100px;
 }
 
 /* Context indicator row */

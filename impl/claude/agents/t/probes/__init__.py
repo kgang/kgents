@@ -34,12 +34,12 @@ from ..truth_functor import (
 )
 
 # Concrete probe implementations
-from .null_probe import NullProbe, NullConfig
+from .null_probe import NullProbe, NullConfig, null_probe
+from .witness_probe import WitnessProbe, WitnessConfig, Law, IDENTITY_LAW, ASSOCIATIVITY_LAW, witness_probe
+from .judge_probe import JudgeProbe, JudgeConfig, JudgmentCriteria, JudgmentResult, JudgePhase, judge_probe
+from .trust_probe import TrustProbe, TrustConfig, TrustState, Proposal, TrustDecision, trust_probe
 # TODO: Fix dataclass errors in remaining probes before enabling
 # from .chaos_probe import ChaosProbe, ChaosConfig, ChaosType
-# from .witness_probe import WitnessProbe, WitnessConfig
-# from .judge_probe import JudgeProbe, JudgeConfig, JudgmentCriteria
-# from .trust_probe import TrustProbe, TrustConfig, Proposal, TrustDecision
 
 __all__ = [
     # Core TruthFunctor types
@@ -55,21 +55,31 @@ __all__ = [
     # NullProbe (EPISTEMIC)
     "NullProbe",
     "NullConfig",
+    "null_probe",
+    # WitnessProbe (CATEGORICAL)
+    "WitnessProbe",
+    "WitnessConfig",
+    "Law",
+    "IDENTITY_LAW",
+    "ASSOCIATIVITY_LAW",
+    "witness_probe",
+    # JudgeProbe (EPISTEMIC)
+    "JudgeProbe",
+    "JudgeConfig",
+    "JudgmentCriteria",
+    "JudgmentResult",
+    "JudgePhase",
+    "judge_probe",
+    # TrustProbe (GENERATIVE)
+    "TrustProbe",
+    "TrustConfig",
+    "TrustState",
+    "Proposal",
+    "TrustDecision",
+    "trust_probe",
     # TODO: Export remaining probes when implemented
     # # ChaosProbe (DIALECTICAL)
     # "ChaosProbe",
     # "ChaosConfig",
     # "ChaosType",
-    # # WitnessProbe (CATEGORICAL)
-    # "WitnessProbe",
-    # "WitnessConfig",
-    # # JudgeProbe (EPISTEMIC)
-    # "JudgeProbe",
-    # "JudgeConfig",
-    # "JudgmentCriteria",
-    # # TrustProbe (GENERATIVE)
-    # "TrustProbe",
-    # "TrustConfig",
-    # "Proposal",
-    # "TrustDecision",
 ]

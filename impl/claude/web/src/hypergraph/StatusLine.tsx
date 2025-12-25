@@ -11,6 +11,7 @@ import React, { memo } from 'react';
 import type { EditorMode, Position } from './state/types';
 import type { DocumentStatus } from '../api/director';
 import { DocumentStatusBadge } from '../components/director';
+import { NavigationConstitutionalBadge } from './NavigationConstitutionalBadge';
 
 import './StatusLine.css';
 
@@ -55,6 +56,9 @@ interface StatusLineProps {
 
   /** Director document status (for spec files) */
   directorStatus?: DocumentStatus;
+
+  /** Show navigation constitutional badge */
+  showConstitutionalBadge?: boolean;
 }
 
 // =============================================================================
@@ -122,6 +126,7 @@ export const StatusLine = memo(function StatusLine({
   confidence,
   derivationTier,
   directorStatus,
+  showConstitutionalBadge = true,
 }: StatusLineProps) {
   const modeColor = MODE_COLORS[mode];
   const modeLabel = MODE_LABELS[mode];
@@ -190,6 +195,13 @@ export const StatusLine = memo(function StatusLine({
       {directorStatus && (
         <div className="status-line__director">
           <DocumentStatusBadge status={directorStatus} size="sm" />
+        </div>
+      )}
+
+      {/* Constitutional Badge (navigation alignment) */}
+      {showConstitutionalBadge && (
+        <div className="status-line__constitutional">
+          <NavigationConstitutionalBadge size="sm" expandable={true} />
         </div>
       )}
 

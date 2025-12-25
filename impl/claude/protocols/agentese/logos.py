@@ -50,6 +50,14 @@ from typing import (
     cast,
 )
 
+from agents.t.truth_functor import (
+    ConstitutionalScore,
+    PolicyTrace,
+    ProbeAction,
+    ProbeState,
+    TraceEntry,
+)
+
 from .contexts import (
     VALID_CONTEXTS,
     create_context_resolvers,
@@ -689,6 +697,9 @@ class Logos:
 
         v3 API: Observer can be None (defaults to guest), Observer, or Umwelt.
 
+        TIER 2 Enhancement: Emits PolicyTrace for full auditability.
+        Trace entries capture resolution, affordance checking, and invocation.
+
         Example:
             # v3 style - anonymous invocation
             await logos.invoke("world.public.manifest")
@@ -715,8 +726,24 @@ class Logos:
         if observer is None:
             observer = Observer.guest()
 
+        # TIER 2: Initialize PolicyTrace for this invocation
+        trace: PolicyTrace[Any] = PolicyTrace(value=None)
+
         # v3: Expand aliases
+        original_path = path
         path = self._expand_aliases(path)
+
+        # TIER 2: Trace alias expansion if occurred
+        if path != original_path:
+            trace.append(
+                TraceEntry(
+                    state_before=ProbeState(phase="alias_expansion", observations=(original_path,)),
+                    action=ProbeAction("expand_alias", (original_path, path)),
+                    state_after=ProbeState(phase="alias_expanded", observations=(path,)),
+                    reward=ConstitutionalScore(composable=1.0),
+                    reasoning=f"Expanded alias: {original_path} → {path}",
+                )
+            )
 
         parts = path.split(".")
         if len(parts) < 3:
@@ -729,6 +756,17 @@ class Logos:
         node_path = ".".join(parts[:-1])
         aspect = parts[-1]
 
+        # TIER 2: Trace path resolution
+        trace.append(
+            TraceEntry(
+                state_before=ProbeState(phase="resolution", observations=(path,)),
+                action=ProbeAction("resolve", (node_path,)),
+                state_after=ProbeState(phase="resolved", observations=(node_path, aspect)),
+                reward=ConstitutionalScore(composable=1.0, tasteful=1.0),
+                reasoning=f"Resolved path to node={node_path}, aspect={aspect}",
+            )
+        )
+
         node = self.resolve(node_path)
 
         # Get AgentMeta from observer (v3: supports Observer and Umwelt)
@@ -736,7 +774,29 @@ class Logos:
 
         # Check affordances (Ethical principle)
         available = node.affordances(meta)
-        if aspect not in available:
+
+        # TIER 2: Trace affordance check
+        affordance_passed = aspect in available
+        trace.append(
+            TraceEntry(
+                state_before=ProbeState(
+                    phase="affordance_check",
+                    observations=(aspect, meta.archetype, tuple(available)),
+                ),
+                action=ProbeAction("check_affordance", (aspect, meta.archetype)),
+                state_after=ProbeState(
+                    phase="affordance_verified" if affordance_passed else "affordance_denied",
+                    observations=(),
+                ),
+                reward=ConstitutionalScore(ethical=1.0 if affordance_passed else 0.0, tasteful=1.0),
+                reasoning=(
+                    f"Affordance check: {aspect} {'available' if affordance_passed else 'denied'} "
+                    f"for {meta.archetype} (available: {available})"
+                ),
+            )
+        )
+
+        if not affordance_passed:
             raise AffordanceError(
                 f"Aspect '{aspect}' not available to {meta.archetype}",
                 aspect=aspect,
@@ -744,11 +804,38 @@ class Logos:
                 available=available,
             )
 
+        # TIER 2: Trace invocation start
+        trace.append(
+            TraceEntry(
+                state_before=ProbeState(phase="invoking", observations=(node_path, aspect)),
+                action=ProbeAction("invoke", (node_path, aspect, tuple(kwargs.keys()))),
+                state_after=ProbeState(phase="in_progress", observations=()),
+                reward=ConstitutionalScore(composable=1.0, ethical=1.0),
+                reasoning=f"Invoking {node_path}.{aspect} with kwargs={list(kwargs.keys())}",
+            )
+        )
+
         # Apply telemetry if enabled (Phase 6: OpenTelemetry integration)
         if self._telemetry_enabled:
             result = await self._invoke_with_telemetry(node, aspect, observer, path, **kwargs)
         else:
             result = await node.invoke(aspect, observer, **kwargs)  # type: ignore[arg-type]
+
+        # TIER 2: Trace successful invocation
+        trace.append(
+            TraceEntry(
+                state_before=ProbeState(phase="in_progress", observations=()),
+                action=ProbeAction("complete", (True,)),
+                state_after=ProbeState(phase="complete", observations=(type(result).__name__,)),
+                reward=ConstitutionalScore(
+                    composable=1.0,
+                    ethical=1.0,
+                    tasteful=1.0,
+                    joy_inducing=0.8,
+                ),
+                reasoning=f"Successfully invoked {path}, returned {type(result).__name__}",
+            )
+        )
 
         # Apply curator filtering (Phase 5: Wundt Curve aesthetic filtering)
         # PAYADOR Enhancement (v2.5): Auto-apply curator for GENERATION aspects
@@ -757,6 +844,14 @@ class Logos:
         elif self._should_auto_curate(aspect):
             # Auto-create curator for GENERATION aspects
             result = await self._auto_curate(result, observer, path)
+
+        # TIER 2: Store trace on observer (if Observer instance)
+        # Use object.__setattr__ to bypass frozen dataclass restriction
+        if isinstance(observer, Observer):
+            object.__setattr__(observer, "last_trace", trace)
+
+        # TIER 2: Update trace value with final result
+        trace.value = result
 
         return result
 

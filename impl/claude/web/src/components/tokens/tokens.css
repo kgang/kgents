@@ -762,6 +762,123 @@
   text-decoration: underline;
 }
 
+/* -----------------------------------------------------------------------------
+   Portal Authoring States — §15 Deep Integration
+
+   UNPARSED: Natural language query (💭)
+   CURING: LLM resolution in progress (◐)
+   FAILED: LLM couldn't resolve (⚠️)
+   ----------------------------------------------------------------------------- */
+
+.portal-token--cursor {
+  /* STARK: highlight ring for cursor position in PORTAL mode */
+  outline: 2px solid #6b8b6b;
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(107, 139, 107, 0.3);
+}
+
+.portal-token--discovered {
+  /* STARK: dashed border for auto-discovered portals (vs authored) */
+  border-style: dashed;
+}
+
+.portal-token__discovered-badge {
+  font-size: 0.75em;
+  opacity: 0.7;
+  margin-left: 0.5em;
+}
+
+.portal-token__witness-badge {
+  font-size: 0.75em;
+  opacity: 0.5;
+  margin-left: 0.5em;
+  color: var(--color-text-dim);
+  transition: opacity 0.2s ease;
+}
+
+.portal-token__witness-badge:hover {
+  opacity: 0.9;
+}
+
+/* UNPARSED: Natural language portal needing cure */
+.portal-token--unparsed {
+  /* STARK: muted amber background for attention */
+  background-color: rgba(196, 167, 125, 0.1);
+  border-color: rgba(196, 167, 125, 0.3);
+}
+
+.portal-token__unparsed {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em 0.75em;
+}
+
+.portal-token__unparsed-icon {
+  font-size: 1.1em;
+}
+
+.portal-token__unparsed-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  /* STARK: glow-spore for natural language */
+  color: #c4a77d;
+  font-style: italic;
+}
+
+.portal-token__cure-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid rgba(196, 167, 125, 0.4);
+  border-radius: 3px;
+  padding: 0.25em 0.5em;
+  cursor: pointer;
+  font-size: 0.85em;
+  color: #c4a77d;
+  transition: all 200ms ease;
+}
+
+.portal-token__cure-btn:hover:not(:disabled) {
+  background-color: rgba(196, 167, 125, 0.2);
+  border-color: #c4a77d;
+}
+
+.portal-token__cure-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* CURING: LLM resolution in progress */
+.portal-token--curing {
+  background-color: rgba(127, 170, 170, 0.1);
+  border-color: rgba(127, 170, 170, 0.3);
+}
+
+.portal-token__curing-indicator {
+  font-size: 0.8em;
+  color: #7faaaa;
+  font-style: italic;
+  margin-left: auto;
+  animation: portal-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes portal-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* FAILED: LLM couldn't resolve */
+.portal-token--failed {
+  background-color: rgba(166, 93, 74, 0.1);
+  border-color: rgba(166, 93, 74, 0.3);
+}
+
+.portal-token__error {
+  font-size: 0.8em;
+  color: #a65d4a;
+  margin-left: auto;
+}
+
 /* =============================================================================
    Principle Token — Architectural Principle Reference
 
@@ -1005,6 +1122,505 @@
   color: #5a5a64;
   font-style: italic;
   text-align: center;
+}
+
+/* =============================================================================
+   Portal Resource Icon — Resource type indicators
+   ============================================================================= */
+
+.portal-resource-icon {
+  display: inline-block;
+  font-size: 1em;
+  line-height: 1;
+  margin-right: 0.25em;
+}
+
+/* =============================================================================
+   Portal Content — Resource-aware content renderer
+   ============================================================================= */
+
+.portal-content {
+  display: block;
+  padding: 0.75em;
+}
+
+.portal-content__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid #28282f;
+}
+
+.portal-content__title {
+  font-weight: 600;
+  color: rgb(200 200 210);
+}
+
+.portal-content__id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75em;
+  color: #5a5a64;
+  background-color: rgba(28, 28, 34, 0.5);
+  padding: 0.2em 0.4em;
+  border-radius: 2px;
+}
+
+.portal-content__body {
+  /* Content-specific styling in nested components */
+}
+
+.portal-content__actions {
+  display: flex;
+  gap: 0.5em;
+  margin-top: 0.75em;
+  padding-top: 0.75em;
+  border-top: 1px solid #28282f;
+}
+
+.portal-content__action {
+  background: none;
+  border: 1px solid #28282f;
+  border-radius: 3px;
+  padding: 0.25em 0.5em;
+  cursor: pointer;
+  font-size: 0.85em;
+  color: #6b8b6b;
+  transition: all 200ms ease;
+}
+
+.portal-content__action:hover {
+  background-color: rgba(74, 107, 74, 0.15);
+  border-color: #4a6b4a;
+}
+
+/* Type-specific content containers */
+.portal-content--file,
+.portal-content--chat,
+.portal-content--turn,
+.portal-content--mark,
+.portal-content--constitutional,
+.portal-content--trace,
+.portal-content--evidence,
+.portal-content--crystal,
+.portal-content--node {
+  /* Future: type-specific styling if needed */
+}
+
+/* =============================================================================
+   Turn Preview — User/Assistant message pair
+   ============================================================================= */
+
+.turn-preview {
+  display: block;
+}
+
+.turn-preview__header {
+  margin-bottom: 0.5em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid rgba(40, 40, 47, 0.5);
+}
+
+.turn-preview__number {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #6b8b6b;
+}
+
+.turn-preview__messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+}
+
+.turn-preview__message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.turn-preview__role {
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5a5a64;
+}
+
+.turn-preview__message--user .turn-preview__role {
+  color: #8ba98b;
+}
+
+.turn-preview__message--assistant .turn-preview__role {
+  color: #7faaaa;
+}
+
+.turn-preview__content {
+  color: rgb(180 180 190);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* =============================================================================
+   Mark Preview — Turn + constitutional scores
+   ============================================================================= */
+
+.mark-preview {
+  display: block;
+}
+
+.mark-preview__scores {
+  margin-top: 0.75em;
+  padding: 0.75em;
+  background-color: rgba(20, 20, 24, 0.4);
+  border-radius: 4px;
+  border: 1px solid #28282f;
+}
+
+.mark-preview__scores-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5em;
+}
+
+.mark-preview__scores-label {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #6b8b6b;
+}
+
+.mark-preview__scores-total {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: #8ba98b;
+}
+
+.mark-preview__scores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5em;
+}
+
+.mark-preview__score-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8em;
+}
+
+.mark-preview__score-name {
+  color: rgb(160 160 170);
+}
+
+.mark-preview__score-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: #8ba98b;
+}
+
+.mark-preview__tools {
+  margin-top: 0.5em;
+  font-size: 0.85em;
+  color: rgb(140 140 150);
+}
+
+.mark-preview__tools-label {
+  font-weight: 600;
+  margin-right: 0.5em;
+}
+
+.mark-preview__tools-list {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.mark-preview__reasoning {
+  margin-top: 0.5em;
+  padding: 0.5em;
+  background-color: rgba(28, 28, 34, 0.5);
+  border-radius: 3px;
+}
+
+.mark-preview__reasoning-label {
+  font-size: 0.8em;
+  font-weight: 600;
+  color: #6b8b6b;
+  margin-bottom: 0.25em;
+}
+
+.mark-preview__reasoning-text {
+  font-size: 0.85em;
+  color: rgb(160 160 170);
+  line-height: 1.5;
+}
+
+/* =============================================================================
+   Chat Session Preview — Session summary
+   ============================================================================= */
+
+.chat-session-preview {
+  display: block;
+}
+
+.chat-session-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5em;
+}
+
+.chat-session-preview__title {
+  font-size: 1em;
+  font-weight: 600;
+  color: rgb(200 200 210);
+}
+
+.chat-session-preview__state {
+  font-size: 0.75em;
+  padding: 0.2em 0.4em;
+  border-radius: 2px;
+  background-color: rgba(74, 107, 74, 0.2);
+  color: #8ba98b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chat-session-preview__stats {
+  display: flex;
+  gap: 1em;
+  margin-bottom: 0.5em;
+}
+
+.chat-session-preview__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+}
+
+.chat-session-preview__stat-label {
+  font-size: 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5a5a64;
+}
+
+.chat-session-preview__stat-value {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: rgb(180 180 190);
+}
+
+.chat-session-preview__id {
+  font-size: 0.75em;
+  color: #5a5a64;
+  margin-top: 0.5em;
+  padding-top: 0.5em;
+  border-top: 1px solid rgba(40, 40, 47, 0.5);
+}
+
+.chat-session-preview__id-label {
+  margin-right: 0.5em;
+}
+
+.chat-session-preview__id-value {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* =============================================================================
+   Constitutional Preview — Scores with radar
+   ============================================================================= */
+
+.constitutional-preview {
+  display: block;
+}
+
+.constitutional-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75em;
+}
+
+.constitutional-preview__label {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #6b8b6b;
+}
+
+.constitutional-preview__total {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: #8ba98b;
+}
+
+.constitutional-preview__scores-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5em;
+}
+
+.constitutional-preview__score-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8em;
+}
+
+.constitutional-preview__score-name {
+  color: rgb(160 160 170);
+}
+
+.constitutional-preview__score-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: #8ba98b;
+}
+
+.constitutional-preview__radar {
+  display: flex;
+  justify-content: center;
+  padding: 1em 0;
+}
+
+.constitutional-preview__empty {
+  font-size: 0.85em;
+  color: rgb(140 140 150);
+  font-style: italic;
+  text-align: center;
+  padding: 1em;
+}
+
+/* =============================================================================
+   File Content — File preview with syntax highlighting
+   ============================================================================= */
+
+.file-content {
+  display: block;
+}
+
+.file-content__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid #28282f;
+}
+
+.file-content__path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  color: #8ba98b;
+}
+
+.file-content__language {
+  font-size: 0.75em;
+  padding: 0.2em 0.4em;
+  border-radius: 2px;
+  background-color: rgba(74, 107, 74, 0.2);
+  color: #6b8b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.file-content__pre {
+  margin: 0;
+  padding: 0.75em;
+  background-color: #141418;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.file-content__code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  line-height: 1.5;
+  color: rgb(180 180 190);
+  white-space: pre;
+}
+
+.file-content__footer {
+  margin-top: 0.5em;
+  text-align: center;
+}
+
+.file-content__more {
+  font-size: 0.8em;
+  color: #5a5a64;
+  font-style: italic;
+}
+
+/* =============================================================================
+   Generic Content — JSON fallback
+   ============================================================================= */
+
+.generic-content {
+  display: block;
+}
+
+.generic-content__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid #28282f;
+}
+
+.generic-content__label {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #6b8b6b;
+}
+
+.generic-content__type {
+  font-size: 0.75em;
+  padding: 0.2em 0.4em;
+  border-radius: 2px;
+  background-color: rgba(58, 58, 68, 0.3);
+  color: #8a8a94;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.generic-content__pre {
+  margin: 0;
+  padding: 0.75em;
+  background-color: #141418;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.generic-content__code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  line-height: 1.5;
+  color: rgb(180 180 190);
+  white-space: pre;
+}
+
+.generic-content__footer {
+  margin-top: 0.5em;
+  text-align: center;
+}
+
+.generic-content__more {
+  font-size: 0.8em;
+  color: #5a5a64;
+  font-style: italic;
+}
+
+/* =============================================================================
+   Portal Token Resolved Content — Container for resource content
+   ============================================================================= */
+
+.portal-token__resolved-content {
+  background-color: rgba(14, 14, 18, 0.6);
+  border-top: 1px solid #28282f;
 }
 
 /* =============================================================================

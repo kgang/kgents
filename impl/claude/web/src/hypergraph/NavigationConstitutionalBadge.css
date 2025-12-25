@@ -1,0 +1,158 @@
+/**
+ * NavigationConstitutionalBadge Styles
+ *
+ * STARK BIOME: Brutalist, functional, earned glow
+ *
+ * @see spec/synthesis/RADICAL_TRANSFORMATION.md
+ */
+
+.nav-constitutional-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Button */
+.nav-constitutional-badge__button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border, #333);
+  border-radius: 3px;
+  background: var(--color-surface-2, #252525);
+  color: var(--color-text, #e0e0e0);
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-constitutional-badge__button:hover {
+  background: var(--color-surface-3, #333);
+  border-color: var(--color-border-hover, #555);
+}
+
+/* Health levels */
+.nav-constitutional-badge__button--high {
+  border-color: var(--color-life-sage, #4a6b4a);
+}
+
+.nav-constitutional-badge__button--high .nav-constitutional-badge__icon {
+  color: var(--color-life-sage, #4a6b4a);
+}
+
+.nav-constitutional-badge__button--medium {
+  border-color: var(--color-glow-amber, #d4b88c);
+}
+
+.nav-constitutional-badge__button--medium .nav-constitutional-badge__icon {
+  color: var(--color-glow-amber, #d4b88c);
+}
+
+.nav-constitutional-badge__button--low {
+  border-color: var(--color-warning, #c44);
+}
+
+.nav-constitutional-badge__button--low .nav-constitutional-badge__icon {
+  color: var(--color-warning, #c44);
+}
+
+/* Score */
+.nav-constitutional-badge__score {
+  font-weight: 500;
+}
+
+/* Pending indicator */
+.nav-constitutional-badge__pending {
+  padding: 0 4px;
+  border-radius: 2px;
+  background: var(--color-surface-3, #333);
+  color: var(--color-text-muted, #888);
+  font-size: 10px;
+}
+
+/* Expanded radar panel */
+.nav-constitutional-badge__radar {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 100;
+  margin-top: 4px;
+  padding: 12px;
+  min-width: 280px;
+  background: var(--color-surface-1, #1a1a1a);
+  border: 1px solid var(--color-border, #333);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.nav-constitutional-badge__radar-title {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text, #e0e0e0);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Principle bars */
+.nav-constitutional-badge__principles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-constitutional-badge__principle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-constitutional-badge__principle-name {
+  flex: 0 0 100px;
+  font-size: 11px;
+  color: var(--color-text-muted, #888);
+}
+
+.nav-constitutional-badge__principle-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--color-surface-3, #333);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.nav-constitutional-badge__principle-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.nav-constitutional-badge__principle-value {
+  flex: 0 0 32px;
+  text-align: right;
+  font-size: 11px;
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  color: var(--color-text-muted, #888);
+}
+
+/* Meta info */
+.nav-constitutional-badge__meta {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border, #333);
+  font-size: 10px;
+  color: var(--color-text-muted, #666);
+}
+
+/* Size variants */
+.nav-constitutional-badge--sm .nav-constitutional-badge__button {
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.nav-constitutional-badge--lg .nav-constitutional-badge__button {
+  padding: 6px 12px;
+  font-size: 14px;
+}

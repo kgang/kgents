@@ -4,7 +4,7 @@ mood: pruned
 momentum: 0.8
 trajectory: steady
 season: BLOOMING
-last_gardened: 2025-12-23
+last_gardened: 2025-12-24
 gardener: claude-opus-4.5
 ---
 
@@ -12,11 +12,77 @@ gardener: claude-opus-4.5
 
 > *One insight per line. If it takes a paragraph, it's not distilled.*
 
-**Protocol**: Append atomic learnings. Prune monthly. **200-line cap**.
+**Protocol**: Append atomic learnings. Prune monthly. **250-line cap**.
 
 **Transferred to CLAUDE.md** (2025-12-17): Core categorical, graceful degradation, testing, anti-patterns, and design heuristics. This file remains the append-only source; CLAUDE.md gets the curated subset.
 
 **Pruned** (2025-12-23): Removed date-specific implementation notes, Living Docs details, Foundry specifics. Kept universal patterns. Dropped from 420→200 lines.
+
+---
+
+## The Four Pillars (Core Abstractions)
+
+```
+I.   AGENTESE          Paths ARE the API; observer-dependent projections
+II.  D-gents           Categorical persistence; Universe + DataBus + verified optics
+III. Galois/DP/ASHC    Value-encoded self-justification; design as optimization
+IV.  Hypergraph/UX     Six-mode modal editing; K-Blocks; Trails; Marks
+```
+
+### Galois Insight
+```
+L(P) = d(P, C(R(P)))           # Information destroyed in restructuring
+Low loss = self-justifying     # Axioms are fixed points where L ≈ 0
+R_constitutional = 1 - L       # Reward = inverse of Galois loss
+Seven layers from convergence  # L1-L7 emerge from restructuring depth
+```
+
+### UX Innovation
+```
+"The file is a lie. There is only the graph."
+K-Block: monadic isolation until commit
+Trail: semantic breadcrumb (not position history)
+Mark: atomic witness with reasoning + principles
+Six modes: NORMAL, INSERT, EDGE, VISUAL, COMMAND, WITNESS
+```
+
+---
+
+## Documentation Roadmap (from Audit 2025-12-24)
+
+### Priority 1: Task-to-Skill Routing (HIGH)
+```
+docs/skills/ROUTING.md - Decision tree + task taxonomy
+Maps natural language tasks → skill combinations
+```
+
+### Priority 2: Quick-Reference Cards (HIGH)
+```
+docs/skills/_quickref/*.md - One per skill, <100 lines
+Commands, decision trees, anti-patterns compressed
+```
+
+### Priority 3: Error Index (MEDIUM)
+```
+docs/ERRORS.md - Searchable error catalog
+Error pattern → Skill section → Fix (one line each)
+```
+
+### Priority 4: Standardized Frontmatter (MEDIUM)
+```yaml
+# Every skill should have:
+id: skill-name
+prerequisites: [skill-a, skill-b]
+enables: [skill-c]
+difficulty: easy|medium|hard
+```
+
+### Priority 5: Expand Agent Skills (MEDIUM)
+```
+Add "For Agents" sections to: crown-jewel-patterns.md,
+metaphysical-fullstack.md, test-patterns.md
+JSON output formats, subprocess integration, agent workflows
+```
 
 ---
 

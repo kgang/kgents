@@ -319,6 +319,8 @@ export interface PortalTreeState {
   error: string | null;
   /** Paths of nodes currently being expanded */
   expandingPaths: Set<string>;
+  /** Evidence IDs for witnessed portal expansions (path -> evidence_id) */
+  evidenceIds: Map<string, string>;
 }
 
 /**
@@ -343,6 +345,7 @@ export function usePortalTree(_initialPath: string | null = null) {
     loading: false,
     error: null,
     expandingPaths: new Set(),
+    evidenceIds: new Map(),
   });
 
   /**
@@ -397,16 +400,20 @@ export function usePortalTree(_initialPath: string | null = null) {
             root: response.tree.root,
             max_depth: response.tree.max_depth,
           });
+
+          // Phase 2: Track evidence_id for witnessed expansions
+          const updatedEvidenceIds = new Map(state.evidenceIds);
+          if (response.evidence_id) {
+            updatedEvidenceIds.set(pathKey, response.evidence_id);
+            console.debug('[Portal] Expansion witnessed:', response.evidence_id);
+          }
+
           setState((prev) => ({
             ...prev,
             tree: mergedTree,
             expandingPaths: new Set([...prev.expandingPaths].filter((p) => p !== pathKey)),
+            evidenceIds: updatedEvidenceIds,
           }));
-
-          // Phase 2: Log evidence_id for debugging
-          if (response.evidence_id) {
-            console.debug('[Portal] Expansion witnessed:', response.evidence_id);
-          }
 
           return true;
         }
@@ -477,6 +484,17 @@ export function usePortalTree(_initialPath: string | null = null) {
     [state.expandingPaths]
   );
 
+  /**
+   * Get evidence_id for a portal path (if witnessed).
+   */
+  const getEvidenceId = useCallback(
+    (portalPath: string[]) => {
+      const pathKey = portalPath.join('/');
+      return state.evidenceIds.get(pathKey);
+    },
+    [state.evidenceIds]
+  );
+
   return {
     tree: state.tree,
     loading: state.loading,
@@ -485,6 +503,7 @@ export function usePortalTree(_initialPath: string | null = null) {
     expand,
     collapse,
     isExpanding,
+    getEvidenceId,
   };
 }
 

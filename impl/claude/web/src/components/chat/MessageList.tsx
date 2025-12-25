@@ -23,6 +23,8 @@ import './MessageList.css';
 export interface MessageListProps {
   session: ChatSession;
   isStreaming: boolean;
+  onEditPortal?: (portalId: string, content: string) => Promise<void>;
+  onNavigatePortal?: (path: string) => void;
 }
 
 // =============================================================================
@@ -35,6 +37,8 @@ export interface MessageListProps {
 export const MessageList = memo(function MessageList({
   session,
   isStreaming,
+  onEditPortal,
+  onNavigatePortal,
 }: MessageListProps) {
   const { streamingContent } = useChatStore();
 
@@ -65,6 +69,9 @@ export const MessageList = memo(function MessageList({
             tools={turn.tools_used}
             confidence={turn.confidence}
             evidenceDelta={turn.evidence_delta}
+            portalEmissions={turn.portal_emissions}
+            onEditPortal={onEditPortal}
+            onNavigatePortal={onNavigatePortal}
           />
         </div>
       ))}

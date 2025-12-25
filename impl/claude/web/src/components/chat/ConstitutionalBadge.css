@@ -1,0 +1,135 @@
+/**
+ * ConstitutionalBadge Styles — BRUTALIST VERSION
+ *
+ * Minimal badge showing aggregated constitutional health.
+ * No rounded corners, no gradients, pure function.
+ */
+
+/* =============================================================================
+ * Base Badge
+ * ============================================================================= */
+
+.constitutional-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--brutalist-border, #333);
+  border-radius: 0;
+  background: var(--brutalist-surface, #141414);
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--brutalist-text, #e0e0e0);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Size Variants */
+.constitutional-badge--sm {
+  padding: 2px 6px;
+  font-size: 10px;
+  gap: 4px;
+}
+
+.constitutional-badge--lg {
+  padding: 6px 10px;
+  font-size: 12px;
+  gap: 8px;
+}
+
+/* =============================================================================
+ * Badge Content
+ * ============================================================================= */
+
+.constitutional-badge__label {
+  font-weight: 700;
+  color: var(--brutalist-text-dim, #888);
+}
+
+.constitutional-badge__value {
+  font-weight: 700;
+  color: var(--brutalist-accent, #fff);
+  font-size: 1.2em;
+  min-width: 24px;
+  text-align: center;
+}
+
+.constitutional-badge__icon {
+  font-size: 0.8em;
+  color: var(--brutalist-text-dim, #888);
+  transition: transform 0.15s ease;
+}
+
+/* =============================================================================
+ * Health Level Colors (Subtle, Text-Based)
+ * ============================================================================= */
+
+/* High (>80) - Brightest text */
+.constitutional-badge--high .constitutional-badge__value {
+  color: var(--brutalist-success, #fff);
+}
+
+.constitutional-badge--high:hover {
+  border-color: var(--brutalist-success, #fff);
+}
+
+/* Medium (50-80) - Moderate brightness */
+.constitutional-badge--medium .constitutional-badge__value {
+  color: var(--brutalist-warning, #ccc);
+}
+
+.constitutional-badge--medium:hover {
+  border-color: var(--brutalist-warning, #ccc);
+}
+
+/* Low (<50) - Dimmer text */
+.constitutional-badge--low .constitutional-badge__value {
+  color: var(--brutalist-error, #999);
+}
+
+.constitutional-badge--low:hover {
+  border-color: var(--brutalist-error, #999);
+}
+
+/* =============================================================================
+ * Interactive States
+ * ============================================================================= */
+
+.constitutional-badge:hover {
+  background: var(--brutalist-bg, #0a0a0a);
+}
+
+.constitutional-badge:hover .constitutional-badge__icon {
+  transform: translateX(2px);
+}
+
+.constitutional-badge:focus {
+  outline: 2px solid var(--brutalist-accent, #fff);
+  outline-offset: 0;
+}
+
+.constitutional-badge:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.constitutional-badge:active {
+  transform: scale(0.98);
+}
+
+/* =============================================================================
+ * Responsive
+ * ============================================================================= */
+
+@media (max-width: 640px) {
+  .constitutional-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+    gap: 4px;
+  }
+
+  .constitutional-badge__value {
+    min-width: 20px;
+  }
+}

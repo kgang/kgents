@@ -460,50 +460,6 @@ async def agent_startup():
         pending_contradictions=contradictions
     )
 ```
-
----
-
-## CLI Integration
-
-### Core Commands (Proposed)
-
-```bash
-# Ground a claim
-kg zero-seed ground "Use SSE instead of WebSockets"
-# Output: Grounding report with axiom links and coherence tier
-
-# Construct proof
-kg zero-seed prove "Add caching layer" --evidence "..."
-# Output: Toulmin proof with Galois coherence
-
-# Detect contradiction
-kg zero-seed contradict <node-a> <node-b>
-# Output: Super-additivity analysis and synthesis hints
-
-# Validate proof
-kg zero-seed validate <node-id>
-# Output: Coherence score, tier, issues
-
-# Navigate from node
-kg zero-seed navigate <node-id>
-# Output: Suggested next nodes by loss gradient
-
-# Graph health
-kg zero-seed health
-# Output: Overall loss, weak edges, high-loss nodes
-```
-
-### JSON Output for Agents
-
-```bash
-# Always use --json for programmatic access
-kg zero-seed ground "..." --json
-# {"grounding": {"claim": "...", "entity_grounded": true, ...}, "loss": 0.15, "tier": "EMPIRICAL"}
-
-kg zero-seed contradict <a> <b> --json
-# {"loss_a": 0.2, "loss_b": 0.3, "loss_combined": 0.7, "super_additivity": 0.2, "contradicts": true, ...}
-```
-
 ---
 
 ## Evidence Tiers Reference

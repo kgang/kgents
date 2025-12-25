@@ -1,6 +1,10 @@
 """
 Cross-Agent Integration Tests: Observation Stack
 
+DEPRECATED (2025-12): O-gent was radically refactored to ~400 lines.
+The full observation stack (Panopticon, VoI, etc.) was removed.
+This test file imports deleted functionality and needs to be updated or removed.
+
 Tests integration across the observation domain:
 - O × W: O-gent observations → W-gent wire protocol emission
 - O × I: O-gent observations → I-gent dashboard display

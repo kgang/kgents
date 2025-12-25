@@ -34,11 +34,17 @@ interface NavItem {
 // Constants
 // =============================================================================
 
+/**
+ * Navigation items.
+ *
+ * UX Simplification (2025-12-25):
+ * "The Hypergraph Editor IS the app."
+ *
+ * Chat and Files are sidebars toggled with Ctrl+J / Ctrl+B, not separate routes.
+ * The navbar is minimal - just the Editor and quick sidebar hints.
+ */
 const NAV_ITEMS: NavItem[] = [
-  { path: '/self.chat', label: 'Chat', shortcut: 'C', icon: '◉' },
   { path: '/world.document', label: 'Editor', shortcut: 'E', icon: '⎔' },
-  { path: '/self.director', label: 'Docs', shortcut: 'D', icon: '◈' },
-  { path: '/self.memory', label: 'Memory', shortcut: 'M', icon: '⊛' },
 ];
 
 // =============================================================================
@@ -117,14 +123,18 @@ export function AppShell({ children }: AppShellProps) {
           ))}
         </div>
 
-        {/* Right side: help/settings placeholder */}
+        {/* Right side: sidebar toggles + help */}
         <div className="app-shell__actions">
+          <span className="app-shell__sidebar-hints">
+            <kbd>Ctrl+B</kbd> Files
+            <kbd>Ctrl+J</kbd> Chat
+          </span>
           <button
             className="app-shell__help"
             title="Keyboard shortcuts"
             onClick={() => {
               console.info(
-                'Shortcuts: Shift+C: Chat | Shift+E: Editor | Shift+D: Docs | Shift+M: Memory'
+                'Shortcuts: Ctrl+B: Toggle Files sidebar | Ctrl+J: Toggle Chat sidebar | Shift+E: Editor'
               );
             }}
           >

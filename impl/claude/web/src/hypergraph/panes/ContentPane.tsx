@@ -259,7 +259,7 @@ export const ContentPane = memo(forwardRef<ContentPaneRef, ContentPaneProps>(fun
           <p>&quot;The file is a lie. There is only the graph.&quot;</p>
           <div className="content-pane__hints">
             <p>
-              <kbd>⌘K</kbd> Open CommandPalette
+              <em>Click nodes/edges to navigate</em> — Graph-first navigation
             </p>
             <p>
               <kbd>gh/gl</kbd> Navigate parent/child

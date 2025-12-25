@@ -89,6 +89,49 @@ export const chatApi = {
   },
 
   /**
+   * Get all branches for a session.
+   *
+   * Returns the complete branch tree including parent relationships.
+   *
+   * @param sessionId - Session ID
+   * @returns List of branches with parent relationships
+   */
+  getBranches: async (
+    sessionId: string
+  ): Promise<{
+    branches: Array<{
+      id: string;
+      parent_id: string | null;
+      fork_point: number;
+      branch_name: string;
+      turn_count: number;
+      created_at: string;
+      last_active: string;
+      is_merged: boolean;
+      merged_into: string | null;
+      is_active: boolean;
+    }>;
+  }> => {
+    const response = await apiClient.get<
+      AgenteseResponse<{
+        branches: Array<{
+          id: string;
+          parent_id: string | null;
+          fork_point: number;
+          branch_name: string;
+          turn_count: number;
+          created_at: string;
+          last_active: string;
+          is_merged: boolean;
+          merged_into: string | null;
+          is_active: boolean;
+        }>;
+      }>
+    >(`/api/chat/sessions/${sessionId}/branches`);
+    return unwrapAgentese(response);
+  },
+
+  /**
    * Fork a chat session at a specific turn.
    *
    * Creates a new branch with independent conversation history.

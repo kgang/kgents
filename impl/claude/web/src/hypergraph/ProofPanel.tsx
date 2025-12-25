@@ -369,7 +369,7 @@ export const ProofPanel = memo(function ProofPanel({
         aria-label={isOpen ? 'Close proof panel' : 'Open proof panel'}
         title={isOpen ? 'Close proof panel (gp)' : 'Open proof panel (gp)'}
       >
-        <span className="proof-panel__toggle-icon">{isOpen ? '◂' : '▸'}</span>
+        <span className="proof-panel__toggle-icon">{isOpen ? '▸' : '◂'}</span>
         <span className="proof-panel__toggle-label">Proof</span>
       </button>
 

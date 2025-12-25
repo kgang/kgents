@@ -619,7 +619,526 @@ These are ideas that may become phases later:
 - `spec/protocols/typed-hypergraph.md` — The conceptual model
 - `spec/protocols/exploration-harness.md` — Safety and evidence
 - `spec/protocols/agentese.md` — The verb-first ontology
+- `spec/protocols/portal-resource-system.md` — **Generalized resource URIs** (chat, crystal, trace, evidence)
+
+---
+
+## 15. Deep Integration: Authoring & Ubiquity
+
+> *"Every doc should shimmer with expandable edges."*
+> *"Writing portals should be as easy as writing links."*
+
+Portal tokens are **implemented but not yet embedded** deeply into the reading and writing experience. This section specifies how to make portals ubiquitous—authored naturally in markdown, auto-discovered when opening documents, and created with typeahead assistance.
+
+---
+
+### 15.1 Markdown Authoring Syntax
+
+Like `[text](url)` for links, we define portal syntax:
+
+```
+@[edge_type -> destination]
+
+Examples:
+@[tests -> services/brain/_tests/]
+@[implements -> spec/protocols/witness.md]
+@[extends -> agents/d-gent.md]
+@[related -> RFC-7519]
+
+# Resource URIs (see portal-resource-system.md)
+@[context -> chat:session-abc123]
+@[decision -> chat:session-abc123#turn-5]
+@[evidence -> evidence:session-abc123]
+@[scores -> constitutional:session-abc123]
+@[history -> crystal:design-decisions-2025]
+```
+
+**Syntax Rules:**
+
+| Element | Meaning |
+|---------|---------|
+| `@[` | Portal marker (not `[[` to avoid wikilink collision) |
+| `edge_type` | The relationship type (tests, implements, extends, etc.) |
+| `->` | Direction indicator |
+| `destination` | Path (relative or absolute) |
+
+#### 15.1.1 Multi-Destination Syntax
+
+```markdown
+@[tests -> {
+  services/brain/_tests/test_persistence.py,
+  services/brain/_tests/test_cortex.py
+}]
+```
+
+#### 15.1.2 Inline vs Block
+
+**Inline** (in prose):
+```markdown
+This module @[implements -> spec/protocols/witness.md] the witness pattern.
+```
+
+**Block** (standalone):
+```markdown
+## Related
+
+@[extends -> agents/d-gent.md]
+@[tests -> services/brain/_tests/]
+@[evidence -> claims/witness-perf-2025-12.md]
+```
+
+---
+
+### 15.2 Portal States: Beyond Expand/Collapse
+
+Portal authoring introduces new states beyond the expansion state machine:
+
+```
+                                 ┌─────────────────┐
+                                 │    RESOLVED     │
+                                 │  @[tests -> x]  │
+                                 └────────┬────────┘
+                                          │
+              ┌───────────────────────────┼───────────────────────────┐
+              │                           │                           │
+              ▼                           ▼                           ▼
+     ┌─────────────────┐        ┌─────────────────┐        ┌─────────────────┐
+     │   COLLAPSED     │        │    LOADING      │        │   EXPANDED      │
+     │   ▶ [tests]     │───────▶│   ◐ [tests]     │───────▶│   ▼ [tests]     │
+     └─────────────────┘        └─────────────────┘        └─────────────────┘
+
+                                 ┌─────────────────┐
+                                 │   UNPARSED      │
+                                 │ @[natural lang?]│
+                                 └────────┬────────┘
+                                          │ LLM cure
+                                          ▼
+                                 ┌─────────────────┐
+                                 │    CURING       │
+                                 │   ◐ resolving   │
+                                 └────────┬────────┘
+                                          │
+                                          ▼
+                              ┌───────────┴───────────┐
+                              │                       │
+                              ▼                       ▼
+                     ┌─────────────────┐     ┌─────────────────┐
+                     │   RESOLVED      │     │    FAILED       │
+                     │ @[tests -> x]   │     │ ⚠️ couldn't cure │
+                     └─────────────────┘     └─────────────────┘
+```
+
+#### 15.2.1 Unparsed Portals (Self-Notes)
+
+Users can write **incomplete portals** that lack the `->` syntax:
+
+```markdown
+@[Natural language description of what I'm looking for?]
+@[TODO: link to the auth tests somehow]
+@[where are the validation helpers?]
+```
+
+These are displayed as **unparsed notes** with a distinct visual treatment:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 💭 @[Natural language description of what I'm looking for?] │
+│    ⚡ Click to cure with LLM                                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key behaviors:**
+- Absence of `->` signifies an unparsed/self-note portal
+- Displayed with a "thinking" indicator (`💭`)
+- Offers "cure" action to resolve via LLM
+- Persists in markdown as-is until cured
+
+#### 15.2.2 LLM Curing
+
+When user clicks "cure" on an unparsed portal:
+
+```python
+@dataclass
+class PortalCureRequest:
+    """Request to resolve an unparsed portal via LLM."""
+
+    raw_text: str                    # "Natural language description..."
+    document_context: str            # Surrounding markdown
+    available_edge_types: list[str]  # ["tests", "implements", "extends", ...]
+    file_index: list[str]            # Paths the LLM can suggest
+
+@dataclass
+class PortalCureResult:
+    """Result of LLM curing."""
+
+    success: bool
+    resolved_portal: str | None      # "@[tests -> path/to/file.py]"
+    confidence: float                # 0.0 - 1.0
+    alternatives: list[str]          # Other possible resolutions
+```
+
+---
+
+### 15.3 Typeahead Authoring Experience
+
+Writing portals should be assisted with **typeahead autocomplete** to prevent typos and aid discovery.
+
+#### 15.3.1 Trigger
+
+Typeahead activates when user types `@[`:
+
+```
+User types: @[
+┌─────────────────────────────────────────┐
+│ 📦 tests          Common edge types     │
+│ 📄 implements                           │
+│ 🔗 extends                              │
+│ 🧪 covers                               │
+│ 📚 derived_from                         │
+│ 📎 evidence                             │
+│ ➕ Create custom...                      │
+└─────────────────────────────────────────┘
+```
+
+#### 15.3.2 Edge Type Selection
+
+After selecting edge type (e.g., `tests`), show `->` and destination typeahead:
+
+```
+User types: @[tests ->
+┌─────────────────────────────────────────┐
+│ 🔍 Search files...                      │
+├─────────────────────────────────────────┤
+│ 📁 services/brain/_tests/               │  ← Suggested based on current file
+│ 📄 test_witness.py                      │
+│ 📄 test_persistence.py                  │
+│ 📁 agents/o/_tests/                     │
+└─────────────────────────────────────────┘
+```
+
+#### 15.3.3 Fuzzy File Finder
+
+Typing filters results:
+
+```
+User types: @[tests -> pers
+┌─────────────────────────────────────────┐
+│ 📄 services/brain/_tests/test_persistence.py  │
+│ 📄 agents/d/_tests/test_persistence_layer.py  │
+└─────────────────────────────────────────┘
+```
+
+#### 15.3.4 Escape Hatch: Natural Language
+
+If no match found, offer natural language option:
+
+```
+User types: @[tests -> something about auth
+┌─────────────────────────────────────────┐
+│ ⚠️ No exact match                        │
+│ 💭 Save as natural language query?       │
+│    "@[tests -> something about auth?]"  │
+│    Can be cured later with LLM          │
+└─────────────────────────────────────────┘
+```
+
+---
+
+### 15.4 Auto-Discovery Integration
+
+When opening a document, the system should automatically discover portals:
+
+#### 15.4.1 Discovery Pipeline
+
+```python
+async def discover_portals_for_document(path: str) -> list[PortalToken]:
+    """
+    Discover both authored and implicit portals.
+
+    1. Parse authored: @[...] syntax in markdown
+    2. Discover implicit: hyperedge resolvers (tests, imports, implements)
+    3. Merge & dedupe
+    4. Return unified list
+    """
+    authored = await parse_authored_portals(path)
+    discovered = await resolve_implicit_edges(path)
+
+    # Authored portals take precedence (user intent > automation)
+    merged = dedupe_by_edge_type(authored + discovered, prefer=authored)
+
+    return merged
+```
+
+#### 15.4.2 Discovery Modes
+
+| Mode | Portals Shown | Best For |
+|------|---------------|----------|
+| **Authored Only** | Only explicit `@[...]` | Clean reading |
+| **Auto-Discovered** | Implicit edges from resolvers | Source files |
+| **Full** | Both authored + discovered | Exploration |
+
+User can toggle via `Cmd+Shift+P` → "Toggle Portal Discovery Mode"
+
+#### 15.4.3 Visual Distinction
+
+```
+## Portals
+
+@[tests -> services/brain/_tests/]           ← AUTHORED (solid border)
+▶ [imports] ──→ 5 modules                    ← DISCOVERED (dashed border)
+▶ [implements] ──→ spec/protocols/brain.md   ← DISCOVERED
+```
+
+---
+
+### 15.5 Creation UX
+
+#### 15.5.1 Command Palette (`Cmd+K`)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 🔍 Create Portal...                                         │
+├─────────────────────────────────────────────────────────────┤
+│ 📦 tests      → Select destination                          │
+│ 📄 implements → Select destination                          │
+│ 🔗 extends    → Select destination                          │
+│ 📎 evidence   → Select destination                          │
+│ ➕ Custom edge type...                                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+Flow:
+1. User presses `Cmd+K`, types "portal"
+2. Selects edge type
+3. Fuzzy file finder opens
+4. Selects destination(s)
+5. Portal `@[type -> dest]` inserted at cursor
+
+#### 15.5.2 Context Menu
+
+Right-click on a file path in the document:
+
+```
+┌─────────────────────────────────┐
+│ 📋 Copy path                    │
+│ 📂 Open file                    │
+├─────────────────────────────────┤
+│ 🔗 Create portal to this...     │
+│    └─ 📦 as [tests]             │
+│    └─ 📄 as [implements]        │
+│    └─ 🔗 as [extends]           │
+│    └─ ➕ Custom...              │
+└─────────────────────────────────┘
+```
+
+#### 15.5.3 Drag-and-Drop
+
+Drag file from sidebar onto document:
+1. Drop zone appears at cursor
+2. Edge type selector appears
+3. Portal inserted
+
+---
+
+### 15.6 Where Portals Should Be Numerous
+
+Every document should naturally contain portals:
+
+| Document Type | Expected Portals |
+|---------------|------------------|
+| **Spec files** | implements, tests, extends, derived_from |
+| **Source files** | tests, imports, implements, calls |
+| **Test files** | covers, fixtures, mocks |
+| **ADRs** | supersedes, related, evidence |
+| **Plans** | implements, depends_on, tracks |
+
+#### 15.6.1 Doc Linting (Optional)
+
+A document without portals might be isolated:
+
+```
+⚠️ This document has no portal connections.
+   Consider adding: @[tests -> ...] @[implements -> ...]
+
+   💡 Run "Discover Portals" to find implicit connections
+```
+
+---
+
+### 15.7 Hypergraph Editor PORTAL Mode Integration
+
+Wire the spec-defined PORTAL mode (`e` key) to real functionality:
+
+#### 15.7.1 Keybindings
+
+```
+e           Enter PORTAL mode from NORMAL
+Esc         Exit to NORMAL mode
+
+In PORTAL mode:
+j/k         Navigate between portals in document
+Enter       Expand/collapse current portal
+l           Focus into expanded portal content
+h           Focus back to parent document
+/           Search portals by edge type or destination
+c           Cure unparsed portal (triggers LLM)
+n           Create new portal at cursor
+```
+
+#### 15.7.2 Visual Indicators
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ spec/protocols/witness.md                       [PORTAL MODE]   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  # Witness Protocol                                             │
+│                                                                 │
+│  > "The proof IS the decision."                                 │
+│                                                                 │
+│  ▶ [implements] ──→ 2 files          ← CURSOR HERE (highlight) │
+│  ▼ [tests] ──→ 3 files               ← EXPANDED                │
+│  │  ┌───────────────────────────────────────────────────────┐  │
+│  │  │ test_witness.py                                       │  │
+│  │  │ def test_mark_creation():                             │  │
+│  │  │     mark = witness.mark(...)                          │  │
+│  │  └───────────────────────────────────────────────────────┘  │
+│  💭 @[TODO: add evidence from perf tests?]   ← UNPARSED        │
+│                                                                 │
+│  ─────────────────────────────────────────────────────────────  │
+│  [j/k] Navigate  [Enter] Expand  [c] Cure  [n] New  [Esc] Exit │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 15.8 Type Definitions
+
+```python
+@dataclass
+class PortalSyntax:
+    """Parsed portal from markdown."""
+
+    # Authoring state
+    class State(Enum):
+        RESOLVED = auto()      # Has edge_type -> destination
+        UNPARSED = auto()      # Natural language, missing ->
+        CURING = auto()        # LLM resolution in progress
+        FAILED = auto()        # LLM couldn't resolve
+
+    raw_text: str                     # Original @[...] text
+    state: State
+
+    # Resolved fields (None if UNPARSED)
+    edge_type: str | None
+    destinations: list[str] | None
+
+    # Unparsed fields
+    natural_language: str | None       # The query text
+
+    # Source location
+    span: tuple[int, int]              # Character positions
+    line: int
+
+    @classmethod
+    def parse(cls, text: str, span: tuple[int, int]) -> "PortalSyntax":
+        """
+        Parse portal syntax.
+
+        @[tests -> path]           → RESOLVED
+        @[natural language?]       → UNPARSED (no ->)
+        @[tests -> {a, b, c}]      → RESOLVED (multi-dest)
+        """
+        if " -> " in text:
+            edge_type, dest_part = text.split(" -> ", 1)
+            destinations = cls._parse_destinations(dest_part)
+            return cls(
+                raw_text=text,
+                state=cls.State.RESOLVED,
+                edge_type=edge_type.strip(),
+                destinations=destinations,
+                natural_language=None,
+                span=span,
+                line=0,  # Computed by parser
+            )
+        else:
+            return cls(
+                raw_text=text,
+                state=cls.State.UNPARSED,
+                edge_type=None,
+                destinations=None,
+                natural_language=text.strip(),
+                span=span,
+                line=0,
+            )
+
+    @staticmethod
+    def _parse_destinations(dest_part: str) -> list[str]:
+        """Parse single path or {multi, path, list}."""
+        dest_part = dest_part.strip()
+        if dest_part.startswith("{") and dest_part.endswith("}"):
+            inner = dest_part[1:-1]
+            return [d.strip() for d in inner.split(",")]
+        return [dest_part]
+```
+
+---
+
+### 15.9 Laws
+
+#### 15.9.1 Authoring Roundtrip
+
+Parsing then rendering preserves portal:
+```
+render(parse("@[tests -> x]")) ≡ "@[tests -> x]"
+```
+
+#### 15.9.2 Unparsed Preservation
+
+Unparsed portals persist until explicitly cured:
+```
+save(load(doc_with_unparsed)) contains unparsed_portals
+```
+
+#### 15.9.3 Discovery Precedence
+
+Authored portals override discovered for same edge type:
+```
+authored(@[tests -> x]) ∪ discovered(@[tests -> y])
+  ≡ authored(@[tests -> x])  # x wins
+```
+
+#### 15.9.4 Typeahead Completeness
+
+Every valid path can be reached via typeahead:
+```
+∀ path ∈ file_index, ∃ query : typeahead(query) ∋ path
+```
+
+---
+
+### 15.10 Implementation Phases
+
+| Phase | Focus | Sessions |
+|-------|-------|----------|
+| **7** | Markdown syntax parser | 1-2 |
+| **8** | Typeahead UI component | 2-3 |
+| **9** | LLM curing pipeline | 1-2 |
+| **10** | Auto-discovery merge | 1 |
+| **11** | PORTAL mode wiring | 1-2 |
+| **12** | Creation UX (Cmd+K, context menu) | 1-2 |
+
+---
+
+### 15.11 Anti-Patterns
+
+- **Silent auto-resolution** — Don't cure unparsed without user action
+- **Typeahead delay** — Must be instant (<50ms for keystrokes)
+- **Destination sprawl** — Limit multi-dest to 10 items; use folder for more
+- **Edge type proliferation** — Curate: tests, implements, extends, evidence, derived_from, related
+- **Hiding unparsed** — Always show them; they're intentional notes
 
 ---
 
 *"Navigation is expansion. Expansion is navigation. The document IS the exploration."*
+*"And now: **authoring is exploring**. Write a portal, open a world."*

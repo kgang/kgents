@@ -1,0 +1,270 @@
+# Frontend Radical Refactor: Visual Summary
+
+## The Transformation
+
+BEFORE (51,000 LOC):
+```
+components/
+├── DirectorDashboard.tsx
+├── analysis/
+│   ├── AnalysisQuadrant.tsx (1,000 LOC)
+│   └── DialecticalPanel.tsx
+├── zero-seed/
+│   ├── GaloisTelescope.tsx
+│   ├── TelescopeNavigator.tsx
+│   └── [15 more files] (4,582 LOC total)
+├── chat/
+│   ├── ChatPanel.tsx
+│   ├── ToolPanel.tsx
+│   ├── TransparencySelector.tsx
+│   ├── ConfidenceBar.tsx
+│   ├── ChatMutationManager.tsx
+│   ├── CrystallizationTrigger.tsx
+│   ├── [24 more files] (8,000 LOC total)
+├── layout/
+│   ├── TelescopeShell.tsx
+│   ├── FocalDistanceRuler.tsx
+│   ├── DerivationTrail.tsx
+│   └── [5 more files] (1,300 LOC)
+├── director/
+│   ├── DocumentStatus.tsx
+│   ├── GhostDetailPanel.tsx
+│   └── [10 more files] (1,850 LOC)
+├── brain/ [DELETED]
+├── membrane/ [DELETED]
+└── terrarium/ [DELETED]
+
+Design Systems: 3 competing (STARK, Brutalist, Elastic)
+Total Files: 350+
+Total Components: 137+
+```
+
+AFTER Phase 1-2 (7,880 LOC core):
+```
+primitives/                    # 5,307 LOC
+├── Telescope/                 # 324 LOC (replaces 2,000)
+│   ├── Telescope.tsx
+│   ├── utils.ts
+│   ├── useTelescopeNavigation.ts
+│   └── __tests__/
+├── Trail/                     # 272 LOC (replaces 1,200)
+│   └── Trail.tsx
+├── Conversation/              # 2,220 LOC (replaces 8,000)
+│   ├── Conversation.tsx
+│   ├── BranchTree.tsx
+│   ├── InputArea.tsx
+│   ├── SafetyGate.tsx
+│   ├── ForkModal.tsx
+│   ├── useBranching.ts
+│   └── useCrystallization.ts
+├── Graph/                     # 183 LOC (re-export)
+│   └── index.ts
+├── Witness/                   # 240 LOC (replaces 800)
+│   └── Witness.tsx
+└── ValueCompass/              # 231 LOC (NEW)
+    └── ValueCompass.tsx
+
+constructions/                 # 2,079 LOC
+├── DirectorView/              # 298 LOC
+├── ZeroSeedExplorer/          # 195 LOC
+├── ChatSession/               # 260 LOC
+└── HypergraphStudio/          # 383 LOC
+
+design/                        # 494 LOC
+└── tokens.css                 # Single source of truth
+
+Total Files: 492 (includes old components not yet deleted)
+Total Primitives: 6
+Total Constructions: 4
+```
+
+## The Leverage Formula
+
+```
+6 Primitives × 4 Constructions = 24 Possible Combinations
+
+Current Constructions:
+1. DirectorView    = Telescope + Trail + Witness
+2. ZeroSeedExplorer = Telescope + Trail + ValueCompass
+3. ChatSession     = Conversation + Witness + Trail
+4. HypergraphStudio = Graph + Witness + Trail
+
+Future Constructions (Examples):
+5. ConstitutionalMonitor = ValueCompass + Witness + Trail
+6. GradientExplorer = Telescope + ValueCompass + Witness
+7. EvidenceNavigator = Telescope + Witness + Trail
+8. DecisionStudio = ValueCompass + Trail + Conversation
+...
+```
+
+## Theory-UI Mapping
+
+```
+Theory Primitive         UI Primitive       Visual Form
+─────────────────────────────────────────────────────────────────
+ValueAgent[S,A,B]    →  ValueCompass    →  7-spoke radar chart
+PolicyTrace          →  Trail           →  Breadcrumb path
+Constitution         →  ValueCompass    →  Principle scores
+EvidenceCorpus       →  Witness         →  Tiered evidence cards
+PersonalityAttractor →  ValueCompass    →  7D coordinate basin
+DP Gradients         →  Telescope       →  Arrow field overlay
+ASHC Decisions       →  Trail + Witness →  Linked evidence chain
+```
+
+## The Telescope Metaphor
+
+```
+          ╔══════════════════════════════════════╗
+          ║         TELESCOPE VIEWER             ║
+          ║                                      ║
+          ║  ┌────────────────────────────────┐  ║
+          ║  │  Focal Distance: 0.5 (L2-L3)  │  ║ ← Universal Control
+          ║  │  Aperture: 0.7 (Expanded)     │  ║
+          ║  │  Filter: gradient              │  ║
+          ║  └────────────────────────────────┘  ║
+          ║                                      ║
+          ║        L0 ● ← Root (CONSTITUTION)    ║
+          ║       ╱  ╲                           ║
+          ║      L1 ● ● L1                       ║
+          ║        ╲  ╱                          ║
+          ║         L2 ● ← Focal Point           ║
+          ║        ╱ │ ╲                         ║
+          ║      L3 ●●● L3                       ║ ← Visible Layers
+          ║       ╱  │  ╲                        ║
+          ║      L4 ●●●●● L4                     ║
+          ║                                      ║
+          ║  [Gradient arrows shown as →]        ║
+          ║  [Loss colored by value]             ║
+          ╚══════════════════════════════════════╝
+
+NOT 15 components. NOT 4 modes.
+ONE component with 3 dimensions (focal/aperture/filter).
+```
+
+## Design System Unification
+
+```
+BEFORE (3 Competing Systems):
+
+globals.css:
+  --stark-gold: #d4af37
+  --stark-steel: #2a2a2a
+
+brutalist.css:
+  --color-black: #000
+  --color-white: #fff
+
+elastic.css:
+  --elastic-gap-xs: 4px
+  --elastic-gap-sm: 8px
+
+Result: Token confusion, duplicate definitions, inconsistent usage
+
+
+AFTER (1 Unified System):
+
+design/tokens.css (494 LOC):
+  /* Colors */
+  --accent-gold: #d4af37
+  --surface-0: #1a1a1a
+  
+  /* Spacing */
+  --space-xs: 4px
+  --space-sm: 8px
+  
+  /* Brutalist Variant */
+  .brutalist {
+    --accent-gold: #fff;
+    --surface-0: #000;
+    --shadow-sm: none;
+    --transition-fast: 0ms;
+  }
+
+Result: Single source of truth, variant support, zero confusion
+```
+
+## The Death List (Phase 3-4)
+
+```
+FILES TO DELETE (36,300 LOC):
+
+✓ brain/                    [DELETED]
+✓ membrane/                 [DELETED]
+✓ terrarium/                [DELETED]
+✓ SpecLedger feature        [DELETED]
+
+⏳ components/zero-seed/     (4,582 LOC) → Telescope
+⏳ components/analysis/      (1,000 LOC) → Telescope filters
+⏳ components/layout/        (1,300 LOC) → Trail
+⏳ components/chat/          (5,900 LOC) → Conversation
+⏳ components/director/      (1,850 LOC) → DirectorView
+
+⏳ styles/brutalist.css      → Merged into design/tokens.css
+⏳ Example files (*.Example.tsx, INTEGRATION_*.tsx)
+⏳ Duplicate stores (chat/store.ts vs stores/chatStore.ts)
+
+TOTAL DELETED: 56 files (~8K LOC) ✅
+REMAINING: ~36K LOC ⏳
+```
+
+## Metrics Snapshot
+
+```
+CURRENT STATE (Phase 1-2 Complete):
+┌─────────────────────────────────────────────────┐
+│  Metric              Value        Target        │
+├─────────────────────────────────────────────────┤
+│  Total LOC           116,805      14,700        │
+│  Primitives LOC      5,307        8,300 ✅      │
+│  Constructions LOC   2,079        2,500 ✅      │
+│  Design System LOC   494          1,500 ✅      │
+│  Tests               296 (Tele)   TBD           │
+│  Files               492          80            │
+│  Bundle (main)       166K         TBD           │
+└─────────────────────────────────────────────────┘
+
+PRIMITIVE EFFICIENCY:
+┌─────────────────────────────────────────────────┐
+│  Primitive      Built    Replaces    Reduction  │
+├─────────────────────────────────────────────────┤
+│  Telescope      324      2,000       75%+       │
+│  Trail          272      1,200       77%        │
+│  Conversation   2,220    8,000       72%        │
+│  Witness        240      800         70%        │
+│  ValueCompass   231      NEW         N/A        │
+│  Graph          183      5,200       0% (keep)  │
+└─────────────────────────────────────────────────┘
+
+TOTAL: 12,000 LOC → 5,307 LOC (56% reduction)
+```
+
+## The Journey
+
+```
+Dec 21:  EXTINCTION    - 67K lines archived (Town, Park, Gestalt...)
+Dec 22:  REBUILDING    - Hypergraph Emacs, WitnessedGraph
+Dec 23:  HARDENING     - Validation framework, ProxyHandleStore
+Dec 24:  THEORY        - 10-chapter monograph, Derivation DAG
+Dec 24-25: RENAISSANCE - 6 primitives, 4 constructions, unified design
+
+NEXT: Execute death list, ship 71% reduction
+```
+
+## The Celebration
+
+```
+"The Telescope sees all.
+ The Trail remembers all.
+ The ValueCompass justifies all."
+
+ 6 primitives
+ 4 constructions
+ 1 design system
+ ∞ possibilities
+
+ Daring, bold, creative, opinionated.
+ Not gaudy.
+ Tasteful.
+
+ The frontend is a telescope now.
+```

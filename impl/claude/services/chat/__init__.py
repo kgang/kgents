@@ -4,6 +4,7 @@ Chat Crown Jewel: Web-Native Chat Protocol with K-Block Semantics.
 The Chat service provides:
 - ChatSession: K-Block-based conversation management
 - ChatEvidence: Bayesian evidence accumulation per turn
+- ConstitutionalReward: 7-Principle evaluation for every turn
 - WorkingContext: Incremental context compression
 - Branching: Fork/merge/checkpoint/rewind operations
 - ChatPersistence: D-gent-backed persistent storage (survives restarts)
@@ -11,7 +12,7 @@ The Chat service provides:
 Philosophy:
     "The session is a K-Block. The turn is a Mark. The conversation is a proof."
 
-See: spec/protocols/chat-web.md
+See: spec/protocols/chat-unified.md
 See: docs/skills/metaphysical-fullstack.md
 See: MIGRATION.md for persistence migration guide
 """
@@ -35,12 +36,21 @@ from .kgent_bridge import (
 from .persistence import (
     ChatPersistence,
 )
+from .reward import (
+    Principle,
+    PrincipleScore,
+    constitutional_reward,
+)
 from .session import (
     BranchError,
     ChatSession,
     MergeStrategy,
     SessionNode,
     generate_session_id,
+)
+from .witness import (
+    ChatMark,
+    ChatPolicyTrace,
 )
 
 __all__ = [
@@ -55,6 +65,10 @@ __all__ = [
     "ChatEvidence",
     "StoppingDecision",
     "TurnResult",
+    # Constitutional Reward
+    "Principle",
+    "PrincipleScore",
+    "constitutional_reward",
     # Context
     "LinearityTag",
     "WorkingContext",
@@ -65,4 +79,7 @@ __all__ = [
     "create_kgent_bridge",
     # Persistence
     "ChatPersistence",
+    # Witness (PolicyTrace)
+    "ChatMark",
+    "ChatPolicyTrace",
 ]

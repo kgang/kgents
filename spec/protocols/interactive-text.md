@@ -49,7 +49,7 @@ The text file is the source of truth. Interactive rendering is a **projection**�
 
 ### 2.1 Token Grammar
 
-Six token types. No more. Curated, not catalogued.
+Seven token types. Curated, not catalogued.
 
 ````bnf
 Document     := Block*
@@ -62,6 +62,7 @@ Token        := AGENTESEPath
               | CodeBlock
               | PrincipleRef
               | RequirementRef
+              | PortalLink
 
 AGENTESEPath := "`" Context "." Holon ("." Aspect)? "`"
 Context      := "world" | "self" | "concept" | "void" | "time"
@@ -85,6 +86,20 @@ PrincipleName := "Tasteful" | "Curated" | "Ethical" | "Joy-Inducing"
 RequirementRef := "_Requirements:" Space? RequirementList "_"
 RequirementList := RequirementId ("," Space? RequirementId)*
 RequirementId   := Digits "." Digits
+
+PortalLink     := "@[" PortalContent "]"
+PortalContent  := ResolvedPortal | UnparsedPortal
+ResolvedPortal := EdgeType " -> " Destination
+UnparsedPortal := NaturalLanguage
+EdgeType       := Identifier
+Destination    := ResourceURI | "{" ResourceURIList "}"
+ResourceURI    := (ResourceType ":")? ResourcePath Fragment?
+ResourceType   := "file" | "chat" | "mark" | "trace" | "evidence"
+               | "constitutional" | "crystal" | "witness" | "node"
+ResourcePath   := Path
+Fragment       := "#" Identifier
+ResourceURIList := ResourceURI ("," Space? ResourceURI)*
+NaturalLanguage := Text+  ; absence of " -> " indicates unparsed/LLM-processable
 ````
 
 ### 2.2 The Interactive Functor
@@ -301,6 +316,62 @@ class TaskCheckboxToken:
 |------------|--------|--------|
 | Hover | Show requirement text | Full acceptance criteria |
 | Click | Open trace | Verification history for this requirement |
+
+### 3.7 Portal Links
+
+**Pattern**: `@[edge_type -> destination]` or `@[natural language query?]`
+
+> *"You don't go to the document. The document comes to you."*
+> *"Every kgents concept is addressable. Every address is expandable."*
+
+Portal links are expandable hyperedges that bring connected resources inline rather than navigating away. Resources include files, chat sessions, memory crystals, witness traces, and more.
+
+See:
+- `spec/protocols/portal-token.md` — Core portal mechanics and authoring
+- `spec/protocols/portal-resource-system.md` — Generalized resource URIs
+
+| Affordance | Action | Result |
+|------------|--------|--------|
+| Hover | Show destinations | Preview of linked files/count |
+| Click | Expand/collapse | Inline content appears/hides |
+| `l` key (PORTAL mode) | Focus into | Navigate cursor into expanded content |
+| `c` key (PORTAL mode) | Cure unparsed | Trigger LLM resolution |
+
+**Resolved Portals** (`@[tests -> path/to/file]`):
+```python
+@semantic_token("portal_link")
+class PortalLinkToken:
+    pattern = re.compile(r'@\[([^\]]+)\]')
+
+    async def get_affordances(self, content: str, observer: Observer) -> Affordances:
+        parsed = PortalSyntax.parse(content)
+
+        if parsed.state == PortalSyntax.State.RESOLVED:
+            return Affordances(
+                hover=f"[{parsed.edge_type}] → {len(parsed.destinations)} destinations",
+                click=PortalExpandAction(parsed.edge_type, parsed.destinations),
+                states=["COLLAPSED", "LOADING", "EXPANDED", "ERROR"],
+            )
+        else:
+            # Unparsed: natural language query
+            return Affordances(
+                hover="💭 Unparsed portal — click to cure with LLM",
+                click=PortalCureAction(parsed.natural_language),
+                states=["UNPARSED", "CURING", "RESOLVED", "FAILED"],
+            )
+```
+
+**Unparsed Portals** (`@[what are the related auth tests?]`):
+- Absence of ` -> ` indicates natural language query
+- Displayed with 💭 indicator
+- Offers "cure" action to resolve via LLM
+- Persists in markdown until explicitly cured
+
+**Typeahead Authoring**:
+When user types `@[`, typeahead activates:
+1. Show common edge types (tests, implements, extends, evidence, etc.)
+2. After edge type, show fuzzy file finder for destination
+3. If no match, offer to save as natural language query
 
 ---
 

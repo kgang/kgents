@@ -43,9 +43,12 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
-from typing import Any, Callable, Protocol
+from typing import TYPE_CHECKING, Any, Callable, Protocol
 
 from .dp_bridge import Principle, PrincipleScore as DPPrincipleScore
+
+if TYPE_CHECKING:
+    from agents.t.truth_functor import ConstitutionalScore as TFConstitutionalScore
 
 logger = logging.getLogger("kgents.categorical.constitution")
 
@@ -180,6 +183,27 @@ class ConstitutionalEvaluation:
             ],
             "timestamp": self.timestamp.isoformat(),
         }
+
+    def to_constitutional_score(self) -> TFConstitutionalScore:
+        """
+        Convert ConstitutionalEvaluation to ConstitutionalScore.
+
+        Maps principle scores to ConstitutionalScore fields.
+        This enables integration with TruthFunctor probes.
+        """
+        from agents.t.truth_functor import ConstitutionalScore
+
+        score_map = {p.principle: p.score for p in self.scores}
+
+        return ConstitutionalScore(
+            tasteful=score_map.get(Principle.TASTEFUL, 0.0),
+            curated=score_map.get(Principle.CURATED, 0.0),
+            ethical=score_map.get(Principle.ETHICAL, 0.0),
+            joy_inducing=score_map.get(Principle.JOY_INDUCING, 0.0),
+            composable=score_map.get(Principle.COMPOSABLE, 0.0),
+            heterarchical=score_map.get(Principle.HETERARCHICAL, 0.0),
+            generative=score_map.get(Principle.GENERATIVE, 0.0),
+        )
 
 
 # =============================================================================

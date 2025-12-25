@@ -12,6 +12,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { nanoid } from 'nanoid';
+import { chatContextApi } from '@/api/chatApi';
 import type { MentionType, MentionSuggestion } from './MentionPicker';
 import type { Mention } from './MentionCard';
 
@@ -45,64 +46,24 @@ export interface UseMentionsResult {
 }
 
 // =============================================================================
-// Mock Resolution Functions
-// These will be replaced with actual API calls
+// Mention Resolution
 // =============================================================================
 
 async function resolveMentionContent(
   type: MentionType,
   value: string
 ): Promise<ResolvedContent> {
-  // Simulate network delay
-  await new Promise<void>((resolve) => {
-    setTimeout(() => resolve(), 300);
-  });
-
-  switch (type) {
-    case 'file':
-      // TODO: Replace with actual file fetch
-      return {
-        content: `// File: ${value}\n// TODO: Fetch actual file contents from backend`,
-      };
-
-    case 'symbol':
-      // TODO: Replace with actual symbol lookup
-      return {
-        content: `# Symbol: ${value}\n# TODO: Fetch definition + docstring from backend`,
-      };
-
-    case 'spec':
-      // TODO: Replace with actual spec fetch
-      return {
-        content: `# Spec: ${value}\n# TODO: Fetch spec contents from backend`,
-      };
-
-    case 'witness':
-      // TODO: Replace with actual witness query
-      return {
-        content: `# Witness: ${value}\n# TODO: Fetch witness marks from backend`,
-      };
-
-    case 'web':
-      // TODO: Replace with actual web fetch
-      return {
-        content: `# Web: ${value}\n# TODO: Fetch web page contents from backend`,
-      };
-
-    case 'terminal':
-      // TODO: Replace with actual terminal output
-      return {
-        content: `# Terminal: ${value}\n# TODO: Fetch terminal output from backend`,
-      };
-
-    case 'project':
-      // TODO: Replace with actual project tree
-      return {
-        content: `# Project: ${value}\n# TODO: Fetch project file tree from backend`,
-      };
-
-    default:
-      throw new Error(`Unknown mention type: ${type}`);
+  try {
+    const result = await chatContextApi.resolveMention(type, value);
+    return {
+      content: result.content,
+      metadata: result.metadata,
+    };
+  } catch (error) {
+    // Surface error per UX-LAWS.md ("Errors must surface. Never swallow.")
+    throw new Error(
+      `Failed to resolve @${type}:${value}: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 

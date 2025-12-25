@@ -23,7 +23,7 @@ import { InputArea } from './InputArea';
 import { BranchTree } from './BranchTree';
 import { TrailingSession } from './TrailingSession';
 import { SessionCrystal } from './SessionCrystal';
-import { MutationAcknowledger } from './MutationAcknowledger';
+import { SafetyGate } from '../../primitives/Conversation/SafetyGate';
 import { useBranching } from './useBranching';
 import { extractPendingMutations } from './mutationDetector';
 import './ChatPanel.css';
@@ -167,6 +167,39 @@ export function ChatPanel({
     [rewind, currentSession]
   );
 
+  const handleEditPortal = useCallback(
+    async (portalId: string, content: string) => {
+      try {
+        const response = await fetch('/api/chat/portal/write', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ portal_id: portalId, content }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to write to portal');
+        }
+
+        // Success - ChatPortal component will show success indicator
+        console.log('Portal content saved:', portalId);
+      } catch (err) {
+        console.error('Portal write failed:', err);
+        throw err; // Re-throw so ChatPortal can show error
+      }
+    },
+    []
+  );
+
+  const handleNavigatePortal = useCallback(
+    (path: string) => {
+      // Navigate to file in editor
+      // For now, open in new tab - can integrate with routing later
+      console.log('Navigate to:', path);
+      window.open(`/editor?file=${encodeURIComponent(path)}`, '_blank');
+    },
+    []
+  );
+
   // Build classes
   const panelClasses = [
     'chat-panel',
@@ -242,6 +275,8 @@ export function ChatPanel({
         <MessageList
           session={currentSession}
           isStreaming={isStreaming}
+          onEditPortal={handleEditPortal}
+          onNavigatePortal={handleNavigatePortal}
         />
 
         {/* Trailing session (crystallized context) */}
@@ -262,11 +297,11 @@ export function ChatPanel({
       {pendingMutations.length > 0 && (
         <div className="chat-panel__mutations">
           {pendingMutations.map((mutation) => (
-            <MutationAcknowledger
+            <SafetyGate
               key={mutation.id}
+              mode="post"
               mutation={mutation}
               onAcknowledge={acknowledgeMutation}
-              timeout={10}
             />
           ))}
         </div>

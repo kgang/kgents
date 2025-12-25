@@ -199,6 +199,7 @@ export function BranchTree({
             ref={svgRef}
             tree={tree}
             currentBranch={currentBranch}
+            compact={compact}
             onNodeClick={handleNodeClick}
             onNodeRightClick={handleNodeRightClick}
             onNodeHover={handleNodeHover}
@@ -236,14 +237,18 @@ const BranchTreeSVG = React.forwardRef<
   {
     tree: BranchTreeNode;
     currentBranch: string;
+    compact: boolean;
     onNodeClick: (branch: Branch) => void;
     onNodeRightClick: (e: MouseEvent, branch: Branch) => void;
     onNodeHover: (e: MouseEvent, branch: Branch) => void;
     onNodeLeave: () => void;
   }
->(({ tree, currentBranch, onNodeClick, onNodeRightClick, onNodeHover, onNodeLeave }, ref) => {
-  const layout = computeTreeLayout(tree);
+>(({ tree, currentBranch, compact, onNodeClick, onNodeRightClick, onNodeHover, onNodeLeave }, ref) => {
+  const layout = computeTreeLayout(tree, compact);
   const { width, height, nodes, edges } = layout;
+
+  // Node size: square, not circle
+  const nodeSize = compact ? 10 : 12;
 
   return (
     <svg
@@ -252,12 +257,20 @@ const BranchTreeSVG = React.forwardRef<
       preserveAspectRatio="xMidYMid meet"
       style={{ overflow: 'visible' }}
     >
-      {/* Define gradient for active edges */}
+      {/* No gradients — 90% steel */}
       <defs>
-        <linearGradient id="active-edge-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="var(--accent-primary, #8b5cf6)" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="var(--accent-primary, #8b5cf6)" stopOpacity="1" />
-        </linearGradient>
+        {/* Active edge: solid white */}
+        <marker
+          id="arrow-active"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--brutalist-accent, #fff)" />
+        </marker>
       </defs>
 
       {/* Edges - render first so they appear behind nodes */}
@@ -272,15 +285,13 @@ const BranchTreeSVG = React.forwardRef<
                 isMerged ? 'branch-edge--merged' : ''
               }`}
               d={edge.path}
-              style={{
-                stroke: isToActive ? 'url(#active-edge-gradient)' : undefined,
-              }}
+              markerEnd={isToActive ? 'url(#arrow-active)' : undefined}
             />
           );
         })}
       </g>
 
-      {/* Nodes */}
+      {/* Nodes — SQUARE, not circle */}
       <g className="branch-nodes">
         {nodes.map((node) => {
           const isActive = node.branch.id === currentBranch;
@@ -300,23 +311,37 @@ const BranchTreeSVG = React.forwardRef<
               role="button"
               aria-label={`Branch: ${node.branch.branch_name} (${node.branch.turn_count} turns)`}
             >
-              {/* Outer glow for active node */}
+              {/* Outer glow for active node ONLY (earned, not decorative) */}
               {isActive && (
-                <circle
+                <rect
                   className="branch-node__glow"
-                  r={18}
+                  x={-nodeSize - 4}
+                  y={-nodeSize - 4}
+                  width={(nodeSize + 4) * 2}
+                  height={(nodeSize + 4) * 2}
                   fill="none"
-                  stroke="var(--accent-primary, #8b5cf6)"
+                  stroke="var(--brutalist-accent, #fff)"
                   strokeWidth="1"
                   opacity="0.3"
                 />
               )}
-              <circle className="branch-node__circle" r={12} />
-              <text className="branch-node__label" y={-20}>
-                {node.branch.branch_name}
-              </text>
-              <text className="branch-node__turn-count" y={28}>
-                {node.branch.turn_count} {node.branch.turn_count === 1 ? 'turn' : 'turns'}
+              {/* SQUARE node */}
+              <rect
+                className="branch-node__square"
+                x={-nodeSize}
+                y={-nodeSize}
+                width={nodeSize * 2}
+                height={nodeSize * 2}
+              />
+              {/* Branch name (hide in compact mode if too small) */}
+              {!compact && (
+                <text className="branch-node__label" y={-nodeSize - 8}>
+                  {node.branch.branch_name}
+                </text>
+              )}
+              {/* Turn count */}
+              <text className="branch-node__turn-count" y={nodeSize + 16}>
+                {compact ? node.branch.turn_count : `${node.branch.turn_count} turn${node.branch.turn_count === 1 ? '' : 's'}`}
               </text>
             </g>
           );
@@ -426,7 +451,8 @@ function BranchTooltip({ x, y, branch }: { x: number; y: number; branch: Branch 
 /**
  * Compute tree layout for SVG rendering using D3.js hierarchy.
  *
- * Uses d3.tree() for proper hierarchical layout with curved paths.
+ * Uses d3.tree() for proper hierarchical layout with ANGULAR paths (not curves).
+ * "90% steel, 10% glow" — brutalist aesthetic, earned glow only.
  */
 
 interface LayoutNode {
@@ -448,10 +474,10 @@ interface TreeLayout {
   edges: LayoutEdge[];
 }
 
-function computeTreeLayout(branchTree: BranchTreeNode): TreeLayout {
-  const NODE_SPACING = 120;
-  const LEVEL_HEIGHT = 100;
-  const PADDING = 50;
+function computeTreeLayout(branchTree: BranchTreeNode, compact = false): TreeLayout {
+  const NODE_SPACING = compact ? 80 : 120;
+  const LEVEL_HEIGHT = compact ? 60 : 100;
+  const PADDING = compact ? 30 : 50;
 
   // Convert BranchTreeNode to D3 hierarchy
   const root = hierarchy(branchTree, (d) => d.children);
@@ -479,7 +505,8 @@ function computeTreeLayout(branchTree: BranchTreeNode): TreeLayout {
     });
   });
 
-  // Extract edges with curved paths
+  // Extract edges with ANGULAR paths (not curved)
+  // Brutalist aesthetic: right angles, no smoothness
   const edges: LayoutEdge[] = [];
   treeData.links().forEach((link) => {
     const source: LayoutNode = {
@@ -493,9 +520,10 @@ function computeTreeLayout(branchTree: BranchTreeNode): TreeLayout {
       y: link.target.y + PADDING,
     };
 
-    // Create curved path using Bezier curves
+    // ANGULAR path: vertical then horizontal (L-shape)
+    // "The file is a lie. There is only the graph." — pure geometry
     const midY = (source.y + target.y) / 2;
-    const path = `M ${source.x} ${source.y} C ${source.x} ${midY}, ${target.x} ${midY}, ${target.x} ${target.y}`;
+    const path = `M ${source.x} ${source.y} L ${source.x} ${midY} L ${target.x} ${midY} L ${target.x} ${target.y}`;
 
     edges.push({ source, target, path });
   });

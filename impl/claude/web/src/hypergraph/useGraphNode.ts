@@ -320,7 +320,7 @@ export function useGraphNode(): UseGraphNodeResult {
         confidence: 0,
         outgoingEdges: [],
         incomingEdges: [],
-        content: `# Node: ${normalizedPath}\n\n*Error loading from WitnessedGraph: ${errorMsg}*\n\nUse ⌘K (CommandPalette) to navigate to another node.`,
+        content: `# Node: ${normalizedPath}\n\n*Error loading from WitnessedGraph: ${errorMsg}*\n\nClick nodes or edges to navigate the graph.`,
       };
     } finally {
       setLoading(false);

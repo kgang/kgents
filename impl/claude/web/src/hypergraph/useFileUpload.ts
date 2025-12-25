@@ -48,6 +48,8 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
   const { events } = useWitnessStream();
 
   // Track analysis completion from SSE events
+  // NOTE: uploadStatus is NOT in deps to avoid infinite loop (Map recreation triggers effect)
+  // We use functional setState to access current status safely
   useEffect(() => {
     // Find completed analysis events (sovereign type events with analysis completion)
     const analysisCompleted = events.filter(
@@ -56,20 +58,29 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
         (e.action === 'analysis_completed' || e.action === 'analyzed')
     );
 
-    for (const event of analysisCompleted) {
-      const path = event.path;
-      if (path && uploadStatus.has(path)) {
-        setUploadStatus((prev) => {
-          const newStatus = new Map(prev);
+    if (analysisCompleted.length === 0) return;
+
+    setUploadStatus((prev) => {
+      let hasChanges = false;
+      const newStatus = new Map(prev);
+
+      for (const event of analysisCompleted) {
+        const path = event.path;
+        // Only update if path exists and status is NOT already 'ready'
+        if (path && prev.has(path) && prev.get(path) !== 'ready') {
           newStatus.set(path, 'ready');
-          return newStatus;
-        });
-        console.info('[useFileUpload] Analysis completed for:', path);
+          hasChanges = true;
+          console.info('[useFileUpload] Analysis completed for:', path);
+        }
       }
-    }
-  }, [events, uploadStatus]);
+
+      // Only return new Map if there were actual changes (prevents unnecessary re-renders)
+      return hasChanges ? newStatus : prev;
+    });
+  }, [events]);  // Removed uploadStatus from deps - accessed via functional setState
 
   // Custom loadNode that checks local cache first, then sovereign store
+  // IMPORTANT: Depend on graphNode.loadNode (stable), not graphNode (object recreated each render)
   const loadNode = useCallback(
     async (path: string): Promise<GraphNode | null> => {
       // Validate path BEFORE any processing to prevent infinite loops
@@ -125,7 +136,7 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
       console.info('[useFileUpload] Falling back to graphNode.loadNode for:', path);
       return graphNode.loadNode(path);
     },
-    [graphNode]
+    [graphNode.loadNode]  // FIX: Use stable function reference, not the whole object
   );
 
   // Handle file upload - ingest into sovereign store

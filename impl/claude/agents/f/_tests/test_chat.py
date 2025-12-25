@@ -7,6 +7,7 @@ Validates chat-specific behavior:
 - Streaming output
 - System prompt handling
 - Metrics tracking
+- FlowPolynomial integration
 
 See: spec/f-gents/chat.md
 """
@@ -16,8 +17,16 @@ import asyncio
 import pytest
 
 from agents.f.config import ChatConfig
-from agents.f.modalities.chat import ChatFlow, Turn
+from agents.f.modalities.chat import (
+    CHAT_POLYNOMIAL,
+    ChatFlow,
+    ChatPolynomialAdapter,
+    Turn,
+    chat_directions,
+    chat_transition,
+)
 from agents.f.modalities.context import Message, SlidingContext, SummarizingContext
+from agents.f.state import FlowState
 
 # ============================================================================
 # Test Context Management
@@ -625,3 +634,369 @@ class TestChatFlowIntegration:
 
         assert len(tokens2) > 0
         assert chat.turn_count == 2
+
+
+# ============================================================================
+# Test Polynomial Integration
+# ============================================================================
+
+
+class TestChatPolynomial:
+    """Test chat-specific polynomial functions."""
+
+    def test_chat_directions_dormant(self) -> None:
+        """DORMANT state has start and configure actions."""
+        directions = chat_directions(FlowState.DORMANT)
+        assert "start" in directions
+        assert "configure" in directions
+        assert len(directions) == 2
+
+    def test_chat_directions_streaming(self) -> None:
+        """STREAMING state has message, fork, checkpoint, etc."""
+        directions = chat_directions(FlowState.STREAMING)
+        assert "message" in directions
+        assert "fork" in directions
+        assert "rewind" in directions
+        assert "checkpoint" in directions
+        assert "stop" in directions
+        assert "inject_context" in directions
+        # Should have 6 actions
+        assert len(directions) == 6
+
+    def test_chat_directions_branching(self) -> None:
+        """BRANCHING state has confirm_fork and cancel_fork."""
+        directions = chat_directions(FlowState.BRANCHING)
+        assert "confirm_fork" in directions
+        assert "cancel_fork" in directions
+        assert len(directions) == 2
+
+    def test_chat_directions_converging(self) -> None:
+        """CONVERGING state has merge-related actions."""
+        directions = chat_directions(FlowState.CONVERGING)
+        assert "confirm_merge" in directions
+        assert "cancel_merge" in directions
+        assert "resolve_conflict" in directions
+        assert len(directions) == 3
+
+    def test_chat_directions_draining(self) -> None:
+        """DRAINING state has flush and crystallize."""
+        directions = chat_directions(FlowState.DRAINING)
+        assert "flush" in directions
+        assert "crystallize" in directions
+        assert len(directions) == 2
+
+    def test_chat_directions_collapsed(self) -> None:
+        """COLLAPSED state has reset and harvest."""
+        directions = chat_directions(FlowState.COLLAPSED)
+        assert "reset" in directions
+        assert "harvest" in directions
+        assert len(directions) == 2
+
+    def test_chat_transition_start(self) -> None:
+        """Start transitions DORMANT -> STREAMING."""
+        new_state, output = chat_transition(FlowState.DORMANT, "start")
+        assert new_state == FlowState.STREAMING
+        assert output["event"] == "started"
+        assert output["ready"] is True
+
+    def test_chat_transition_message(self) -> None:
+        """Message keeps state in STREAMING."""
+        new_state, output = chat_transition(FlowState.STREAMING, "message")
+        assert new_state == FlowState.STREAMING
+        assert output["event"] == "message_processed"
+
+    def test_chat_transition_fork(self) -> None:
+        """Fork transitions STREAMING -> BRANCHING."""
+        new_state, output = chat_transition(FlowState.STREAMING, "fork")
+        assert new_state == FlowState.BRANCHING
+        assert output["event"] == "fork_initiated"
+
+    def test_chat_transition_confirm_fork(self) -> None:
+        """Confirm fork transitions BRANCHING -> STREAMING."""
+        new_state, output = chat_transition(FlowState.BRANCHING, "confirm_fork")
+        assert new_state == FlowState.STREAMING
+        assert output["event"] == "fork_confirmed"
+
+    def test_chat_transition_stop(self) -> None:
+        """Stop transitions STREAMING -> DRAINING."""
+        new_state, output = chat_transition(FlowState.STREAMING, "stop")
+        assert new_state == FlowState.DRAINING
+        assert output["event"] == "stopping"
+
+    def test_chat_transition_crystallize(self) -> None:
+        """Crystallize transitions DRAINING -> COLLAPSED."""
+        new_state, output = chat_transition(FlowState.DRAINING, "crystallize")
+        assert new_state == FlowState.COLLAPSED
+        assert output["event"] == "crystallized"
+
+    def test_chat_transition_reset(self) -> None:
+        """Reset transitions COLLAPSED -> DORMANT."""
+        new_state, output = chat_transition(FlowState.COLLAPSED, "reset")
+        assert new_state == FlowState.DORMANT
+        assert output["event"] == "reset"
+
+    def test_chat_transition_invalid(self) -> None:
+        """Invalid transition raises ValueError."""
+        with pytest.raises(ValueError, match="Invalid chat transition"):
+            chat_transition(FlowState.DORMANT, "message")
+
+    def test_chat_polynomial_instance(self) -> None:
+        """CHAT_POLYNOMIAL is properly configured."""
+        assert CHAT_POLYNOMIAL.name == "ChatPolynomial"
+        assert FlowState.DORMANT in CHAT_POLYNOMIAL.positions
+        assert FlowState.STREAMING in CHAT_POLYNOMIAL.positions
+        assert FlowState.COLLAPSED in CHAT_POLYNOMIAL.positions
+
+    def test_chat_polynomial_invoke(self) -> None:
+        """CHAT_POLYNOMIAL.invoke() executes transitions."""
+        state = FlowState.DORMANT
+        new_state, output = CHAT_POLYNOMIAL.invoke(state, "start")
+        assert new_state == FlowState.STREAMING
+        assert output["event"] == "started"
+
+
+class TestChatPolynomialAdapter:
+    """Test ChatPolynomialAdapter."""
+
+    def test_adapter_init(self) -> None:
+        """Adapter initializes with DORMANT state."""
+        adapter = ChatPolynomialAdapter()
+        assert adapter.state == FlowState.DORMANT
+        assert len(adapter.get_history()) == 0
+
+    def test_adapter_can_perform_valid(self) -> None:
+        """can_perform() returns True for valid actions."""
+        adapter = ChatPolynomialAdapter()
+        assert adapter.can_perform("start") is True
+        assert adapter.can_perform("configure") is True
+
+    def test_adapter_can_perform_invalid(self) -> None:
+        """can_perform() returns False for invalid actions."""
+        adapter = ChatPolynomialAdapter()
+        assert adapter.can_perform("message") is False
+        assert adapter.can_perform("fork") is False
+
+    def test_adapter_get_valid_actions(self) -> None:
+        """get_valid_actions() returns directions for current state."""
+        adapter = ChatPolynomialAdapter()
+        valid = adapter.get_valid_actions()
+        assert "start" in valid
+        assert "configure" in valid
+
+    def test_adapter_perform_valid(self) -> None:
+        """perform() executes valid action."""
+        adapter = ChatPolynomialAdapter()
+        output = adapter.perform("start")
+        assert adapter.state == FlowState.STREAMING
+        assert output["event"] == "started"
+
+    def test_adapter_perform_invalid(self) -> None:
+        """perform() raises ValueError for invalid action."""
+        adapter = ChatPolynomialAdapter()
+        with pytest.raises(ValueError, match="Invalid action"):
+            adapter.perform("message")
+
+    def test_adapter_records_history(self) -> None:
+        """Adapter records transition history."""
+        adapter = ChatPolynomialAdapter()
+        adapter.perform("start")
+        adapter.perform("message")
+        adapter.perform("fork")
+
+        history = adapter.get_history()
+        assert len(history) == 3
+        assert history[0] == (FlowState.DORMANT, "start", FlowState.STREAMING)
+        assert history[1] == (FlowState.STREAMING, "message", FlowState.STREAMING)
+        assert history[2] == (FlowState.STREAMING, "fork", FlowState.BRANCHING)
+
+    def test_adapter_reset(self) -> None:
+        """reset() returns to DORMANT and clears history."""
+        adapter = ChatPolynomialAdapter()
+        adapter.perform("start")
+        adapter.perform("message")
+
+        adapter.reset()
+
+        assert adapter.state == FlowState.DORMANT
+        assert len(adapter.get_history()) == 0
+
+    def test_adapter_verify_laws(self) -> None:
+        """verify_laws() checks polynomial constraints."""
+        adapter = ChatPolynomialAdapter()
+        assert adapter.verify_laws() is True
+
+    def test_adapter_full_lifecycle(self) -> None:
+        """Adapter can execute full conversation lifecycle."""
+        adapter = ChatPolynomialAdapter()
+
+        # Start conversation
+        adapter.perform("start")
+        assert adapter.state == FlowState.STREAMING
+
+        # Send messages
+        adapter.perform("message")
+        adapter.perform("message")
+        assert adapter.state == FlowState.STREAMING
+
+        # Create checkpoint
+        adapter.perform("checkpoint")
+        assert adapter.state == FlowState.STREAMING
+
+        # Fork conversation
+        adapter.perform("fork")
+        assert adapter.state == FlowState.BRANCHING
+
+        # Confirm fork
+        adapter.perform("confirm_fork")
+        assert adapter.state == FlowState.STREAMING
+
+        # Stop conversation
+        adapter.perform("stop")
+        assert adapter.state == FlowState.DRAINING
+
+        # Crystallize
+        adapter.perform("crystallize")
+        assert adapter.state == FlowState.COLLAPSED
+
+        # Reset
+        adapter.perform("reset")
+        assert adapter.state == FlowState.DORMANT
+
+        # Verify complete history
+        history = adapter.get_history()
+        assert len(history) == 9
+
+
+class TestPolynomialLaws:
+    """Test polynomial laws hold for chat modality."""
+
+    def test_all_states_have_directions(self) -> None:
+        """Every state has defined directions."""
+        for state in FlowState:
+            directions = chat_directions(state)
+            assert isinstance(directions, frozenset)
+            assert len(directions) > 0
+
+    def test_terminal_state_limited_exits(self) -> None:
+        """COLLAPSED state only allows reset and harvest."""
+        directions = chat_directions(FlowState.COLLAPSED)
+        assert directions == frozenset(["reset", "harvest"])
+
+    def test_start_from_dormant_only(self) -> None:
+        """Start action only valid from DORMANT."""
+        assert "start" in chat_directions(FlowState.DORMANT)
+        assert "start" not in chat_directions(FlowState.STREAMING)
+        assert "start" not in chat_directions(FlowState.BRANCHING)
+
+    def test_message_only_in_streaming(self) -> None:
+        """Message action only valid in STREAMING."""
+        assert "message" in chat_directions(FlowState.STREAMING)
+        assert "message" not in chat_directions(FlowState.DORMANT)
+        assert "message" not in chat_directions(FlowState.BRANCHING)
+
+    def test_fork_merge_symmetry(self) -> None:
+        """Fork and merge operations are symmetric."""
+        # Fork: STREAMING -> BRANCHING
+        new_state, _ = chat_transition(FlowState.STREAMING, "fork")
+        assert new_state == FlowState.BRANCHING
+
+        # Confirm fork: BRANCHING -> STREAMING
+        new_state, _ = chat_transition(FlowState.BRANCHING, "confirm_fork")
+        assert new_state == FlowState.STREAMING
+
+    def test_deterministic_transitions(self) -> None:
+        """Same (state, action) always gives same result."""
+        # Execute same transition multiple times
+        results = [
+            chat_transition(FlowState.STREAMING, "message")
+            for _ in range(10)
+        ]
+
+        # All results should be identical
+        first = results[0]
+        for result in results[1:]:
+            assert result == first
+
+    def test_stop_draining_collapsed_sequence(self) -> None:
+        """Proper shutdown sequence: STREAMING -> DRAINING -> COLLAPSED."""
+        # Stop
+        state1, _ = chat_transition(FlowState.STREAMING, "stop")
+        assert state1 == FlowState.DRAINING
+
+        # Crystallize
+        state2, _ = chat_transition(state1, "crystallize")
+        assert state2 == FlowState.COLLAPSED
+
+    def test_checkpoint_preserves_state(self) -> None:
+        """Checkpoint action doesn't change state."""
+        new_state, output = chat_transition(FlowState.STREAMING, "checkpoint")
+        assert new_state == FlowState.STREAMING
+        assert output["event"] == "checkpointed"
+
+    def test_rewind_preserves_state(self) -> None:
+        """Rewind action doesn't change state."""
+        new_state, output = chat_transition(FlowState.STREAMING, "rewind")
+        assert new_state == FlowState.STREAMING
+        assert output["event"] == "rewound"
+
+
+class TestPolynomialComposition:
+    """Test polynomial composition properties."""
+
+    def test_adapter_composition_associative(self) -> None:
+        """Action sequences are associative: (a∘b)∘c = a∘(b∘c)."""
+        # Path 1: (start, message), checkpoint
+        adapter1 = ChatPolynomialAdapter()
+        adapter1.perform("start")
+        adapter1.perform("message")
+        adapter1.perform("checkpoint")
+        state1 = adapter1.state
+
+        # Path 2: start, (message, checkpoint)
+        adapter2 = ChatPolynomialAdapter()
+        adapter2.perform("start")
+        adapter2.perform("message")
+        adapter2.perform("checkpoint")
+        state2 = adapter2.state
+
+        # Should end in same state
+        assert state1 == state2
+
+    def test_reset_is_idempotent(self) -> None:
+        """Reset followed by reset has same effect as single reset."""
+        adapter = ChatPolynomialAdapter()
+        adapter.perform("start")
+        adapter.perform("message")
+        adapter.reset()
+        state1 = adapter.state
+
+        adapter.reset()
+        state2 = adapter.state
+
+        assert state1 == state2 == FlowState.DORMANT
+
+    def test_checkpoint_idempotent(self) -> None:
+        """Multiple checkpoints in STREAMING don't change state."""
+        adapter = ChatPolynomialAdapter()
+        adapter.perform("start")
+        adapter.perform("checkpoint")
+        adapter.perform("checkpoint")
+        adapter.perform("checkpoint")
+
+        assert adapter.state == FlowState.STREAMING
+
+    def test_fork_cancel_identity(self) -> None:
+        """Fork followed by cancel returns to original state."""
+        adapter = ChatPolynomialAdapter()
+        adapter.perform("start")
+        adapter.perform("message")
+
+        # Remember state before fork
+        state_before = adapter.state
+
+        # Fork and cancel
+        adapter.perform("fork")
+        adapter.perform("cancel_fork")
+
+        # Should be back to original state
+        assert adapter.state == state_before

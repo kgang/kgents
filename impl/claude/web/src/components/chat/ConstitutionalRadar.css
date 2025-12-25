@@ -1,0 +1,154 @@
+/**
+ * ConstitutionalRadar Styles — BRUTALIST VERSION
+ *
+ * Minimal radar chart for 7 constitutional principles.
+ * Pure SVG, no decoration, function-first.
+ */
+
+/* =============================================================================
+ * Base Container
+ * ============================================================================= */
+
+.constitutional-radar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--brutalist-border, #333);
+  border-radius: 0;
+  background: var(--brutalist-surface, #141414);
+  font-family: 'Berkeley Mono', 'JetBrains Mono', monospace;
+}
+
+/* Size Variants */
+.constitutional-radar--sm {
+  padding: 8px;
+  gap: 8px;
+}
+
+.constitutional-radar--lg {
+  padding: 16px;
+  gap: 16px;
+}
+
+/* =============================================================================
+ * SVG Chart
+ * ============================================================================= */
+
+.constitutional-radar__svg {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Grid lines */
+.constitutional-radar__grid path {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Axis lines */
+.constitutional-radar__axes line {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Score polygon */
+.constitutional-radar__score polygon {
+  transition: fill-opacity 0.2s ease;
+}
+
+.constitutional-radar:hover .constitutional-radar__score polygon {
+  fill-opacity: 0.25;
+}
+
+/* Score vertices */
+.constitutional-radar__vertices circle {
+  transition: r 0.2s ease;
+}
+
+.constitutional-radar:hover .constitutional-radar__vertices circle {
+  r: calc(attr(r) * 1.2);
+}
+
+/* Labels */
+.constitutional-radar__label {
+  fill: var(--brutalist-text, #e0e0e0);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* =============================================================================
+ * Score Legend
+ * ============================================================================= */
+
+.constitutional-radar__legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  font-size: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--brutalist-border, #333);
+}
+
+.constitutional-radar--sm .constitutional-radar__legend {
+  font-size: 9px;
+  gap: 4px;
+}
+
+.constitutional-radar--lg .constitutional-radar__legend {
+  font-size: 11px;
+  gap: 8px;
+}
+
+.constitutional-radar__score-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.constitutional-radar__score-label {
+  font-weight: 400;
+  color: var(--brutalist-text-dim, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.constitutional-radar__score-value {
+  font-weight: 700;
+  font-size: 1.1em;
+  /* Color set inline based on score */
+}
+
+/* =============================================================================
+ * Responsive
+ * ============================================================================= */
+
+@media (max-width: 640px) {
+  .constitutional-radar {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .constitutional-radar__legend {
+    font-size: 9px;
+    gap: 4px;
+  }
+
+  .constitutional-radar__label {
+    font-size: 8px;
+  }
+}
+
+/* =============================================================================
+ * Accessibility
+ * ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .constitutional-radar__score polygon,
+  .constitutional-radar__vertices circle {
+    transition: none;
+  }
+}

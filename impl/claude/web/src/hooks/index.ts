@@ -176,4 +176,22 @@ export {
   type TelescopeContextValue,
 } from './useTelescopeState';
 
-export { useTelescopeUrlSync } from './useTelescopeUrlSync';
+// Workspace sidebar state (three-panel layout)
+export {
+  useSidebarState,
+  type SidebarState,
+  type UseSidebarStateReturn,
+} from './useSidebarState';
+
+// Unified witness hook (Witness Architecture)
+export {
+  useWitness,
+  extractActionType,
+  formatMark,
+  type WitnessDomain,
+  type NavigationAction,
+  type PortalAction,
+  type ChatAction,
+  type DomainMark,
+  type WitnessOptions,
+} from './useWitness';

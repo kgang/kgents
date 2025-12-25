@@ -94,3 +94,18 @@ export type {
   UseDocumentProxyReturn,
   DocumentProxyStatus,
 } from './useDocumentProxy';
+
+// Navigation Witness (Witness Architecture)
+export { useNavigationWitness, createWitnessedReducer } from './useNavigationWitness';
+export type {
+  NavigationWitnessOptions,
+  NavigationWitnessResult,
+} from './useNavigationWitness';
+
+// Witnessed Trail (Trail + live marks)
+export { WitnessedTrail } from './WitnessedTrail';
+export type { WitnessedTrailProps } from './WitnessedTrail';
+
+// Navigation Constitutional Badge
+export { NavigationConstitutionalBadge } from './NavigationConstitutionalBadge';
+export type { NavigationConstitutionalBadgeProps } from './NavigationConstitutionalBadge';

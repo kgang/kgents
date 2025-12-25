@@ -120,13 +120,6 @@ export type { UseKeyHandlerOptions, UseKeyHandlerResult } from '../../hypergraph
 export { useKBlock } from '../../hypergraph/useKBlock';
 export type { UseKBlockOptions, UseKBlockResult } from '../../hypergraph/useKBlock';
 
-export { useCommandRegistry } from '../../hypergraph/useCommandRegistry';
-export type { Command } from '../../hypergraph/useCommandRegistry';
-
-// Note: useCommandRegistry doesn't export a named return type, so consumers can use:
-// ReturnType<typeof useCommandRegistry> or inline the structure:
-// { commands: Command[], recentCommands: string[], trackCommand: (id: string) => void }
-
 // =============================================================================
 // Graph API Hooks
 // =============================================================================
@@ -169,7 +162,6 @@ export { createInitialState, createTrailStep } from '../../hypergraph/state/type
 
 export { StatusLine } from '../../hypergraph/StatusLine';
 export { CommandLine } from '../../hypergraph/CommandLine';
-export { CommandPalette } from '../../hypergraph/CommandPalette';
 export { FileExplorer } from '../../hypergraph/FileExplorer';
 export type { UploadedFile } from '../../hypergraph/FileExplorer';
 

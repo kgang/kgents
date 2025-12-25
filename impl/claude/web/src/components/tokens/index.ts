@@ -31,6 +31,16 @@ export { ImageToken } from './ImageToken';
 export { PrincipleToken, type PrincipleCategory } from './PrincipleToken';
 export { LinkToken } from './LinkToken';
 
+// Portal resource components (NEW)
+export { PortalResourceIcon } from './PortalResourceIcon';
+export { PortalContent } from './PortalContent';
+export { TurnPreview } from './TurnPreview';
+export { MarkPreview } from './MarkPreview';
+export { ChatSessionPreview } from './ChatSessionPreview';
+export { ConstitutionalPreview } from './ConstitutionalPreview';
+export { FileContent } from './FileContent';
+export { GenericContent } from './GenericContent';
+
 // =============================================================================
 // Supporting Token Components
 // =============================================================================
@@ -85,6 +95,10 @@ export type {
   PortalData,
   PrincipleData,
   TaskCheckboxData,
+  // Portal resource types (NEW)
+  PortalResourceType,
+  PortalURI,
+  ResolvedResource,
 } from './types';
 
 // =============================================================================

@@ -132,6 +132,22 @@
 }
 
 /* =============================================================================
+   Active Mentions
+   ============================================================================= */
+
+.input-area__mentions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 8px;
+  max-height: 120px;
+  overflow-y: auto;
+  background: var(--brutalist-bg, #0a0a0a);
+  border: 1px solid var(--brutalist-border, #333);
+  border-radius: 0;
+}
+
+/* =============================================================================
    Mention Hint
    ============================================================================= */
 

@@ -28,7 +28,10 @@ import zlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, ClassVar, Literal, Optional
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, Optional
+
+if TYPE_CHECKING:
+    from agents.t.truth_functor import ConstitutionalScore as TFConstitutionalScore
 
 # =============================================================================
 # Dimension 1: Physical Resources
@@ -191,6 +194,36 @@ class SemanticDimension:
             ast_valid=passed > 0,
             confidence=0.8,
             measurement_method="validation_heuristic",
+        )
+
+    def to_constitutional_score(self) -> TFConstitutionalScore:
+        """
+        Convert SemanticDimension to ConstitutionalScore.
+
+        Maps semantic metrics to constitutional principles:
+        - GENERATIVE: compression_ratio → spec compression
+        - TASTEFUL: input_alignment → clear purpose
+        - ETHICAL: self_consistency → no contradictions
+        """
+        from agents.t.truth_functor import ConstitutionalScore
+
+        # Compression maps to GENERATIVE (spec is compression)
+        generative = (1.0 - self.compression_ratio) * self.confidence
+
+        # Alignment maps to TASTEFUL (clear purpose)
+        tasteful = self.input_alignment * self.confidence
+
+        # Consistency maps to ETHICAL (no contradictions)
+        ethical = self.self_consistency * self.confidence
+
+        return ConstitutionalScore(
+            tasteful=tasteful,
+            curated=self.domain_relevance * self.confidence,  # On-topic = curated
+            ethical=ethical,
+            joy_inducing=self.quality_score,  # High quality = joyful
+            composable=0.5,  # Neutral - semantic doesn't imply composability
+            heterarchical=0.5,  # Neutral
+            generative=generative,
         )
 
 

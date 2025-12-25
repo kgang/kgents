@@ -11,6 +11,7 @@
  */
 
 import { create } from 'zustand';
+import type { PortalEmission } from '../../types/chat';
 
 // =============================================================================
 // Types (from spec Part X.6)
@@ -36,6 +37,7 @@ export interface Turn {
   tools_used: ToolUse[];
   evidence_delta: EvidenceDelta;
   confidence: number;
+  portal_emissions?: PortalEmission[];
   started_at: string;
   completed_at: string;
 }

@@ -1,0 +1,139 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                         PORTAL TOOLS QUICK REFERENCE                      ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+📦 LOCATION
+  impl/claude/services/tooling/tools/portal.py
+
+📋 CONTRACTS
+  PortalRequest, PortalEmission, PortalWriteRequest, PortalWriteResponse
+
+🔧 TOOLS
+  portal.emit  (L1) - Open portal with read/readwrite access
+  portal.write (L2) - Write through open portal
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 QUICK START
+
+from services.tooling.tools import PortalTool, PortalWriteTool
+from services.tooling.contracts import PortalRequest, PortalWriteRequest
+
+# Emit portal
+portal = PortalTool()
+emission = await portal.invoke(
+    PortalRequest(
+        destination="path/to/file.py",
+        edge_type="implements",
+        access="readwrite",
+        preview_lines=10
+    )
+)
+
+# Write through portal
+writer = PortalWriteTool()
+result = await writer.invoke(
+    PortalWriteRequest(
+        portal_id=emission.portal_id,
+        content="New content"
+    )
+)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 PORTAL REQUEST
+
+PortalRequest(
+    destination: str,           # File path
+    edge_type: str = "context", # Relationship type
+    access: str = "read",       # "read" | "readwrite"
+    preview_lines: int = 10,    # Preview length
+    auto_expand: bool = True    # Auto-expand in UI?
+)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📤 PORTAL EMISSION
+
+PortalEmission(
+    portal_id: str,             # UUID for this portal
+    destination: str,           # File path
+    edge_type: str,             # Relationship type
+    access: str,                # "read" | "readwrite"
+    content_preview: str?,      # First N lines (if truncated)
+    content_full: str?,         # Complete content
+    line_count: int,            # Total lines
+    exists: bool,               # File found?
+    auto_expand: bool,          # Auto-expand flag
+    emitted_at: str             # ISO timestamp
+)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✏️  PORTAL WRITE
+
+PortalWriteRequest(
+    portal_id: str,             # Portal to write through
+    content: str,               # New file content
+    start_line: int? = None,    # (Future) Line range
+    end_line: int? = None       # (Future) Line range
+)
+
+PortalWriteResponse(
+    portal_id: str,             # Portal written to
+    success: bool,              # Write succeeded?
+    bytes_written: int,         # Bytes written
+    new_content_hash: str,      # SHA-256 of new content
+    error_message: str = ""     # Error if failed
+)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔐 CAUSAL CONSTRAINTS
+
+1. Portal must be open before write
+   → CausalityViolation if portal_id not in registry
+
+2. Portal must have readwrite access
+   → CausalityViolation if access="read"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 EDGE TYPES
+
+context     - General context/background
+implements  - Implementation of spec
+tests       - Test coverage
+references  - External references
+extends     - Inheritance/extension
+imports     - Code dependencies
+
+(Custom edge types supported)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧪 TESTING
+
+pytest services/tooling/tools/_tests/test_portal.py -v
+
+21 tests covering:
+  ✓ Portal emission
+  ✓ Content preview generation
+  ✓ Access control
+  ✓ Session tracking
+  ✓ Write operations
+  ✓ Error handling
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 DOCUMENTATION
+
+services/tooling/tools/PORTAL_USAGE.md
+  → Comprehensive usage guide with examples
+
+services/tooling/tools/PORTAL_IMPLEMENTATION_SUMMARY.md
+  → Implementation details and architecture
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ STATUS: Production Ready (287/287 tests passing, mypy clean)

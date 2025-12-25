@@ -28,7 +28,7 @@ from .storage import StorageProvider, XDGPaths
 if TYPE_CHECKING:
     from agents.d.bicameral import BicameralMemory
 
-    from agents.o.cortex_observer import CortexObserver
+    from services.brain.cortex_observer import CortexObserver
     from weave import TheWeave
 
     from .dreamer import LucidDreamer
@@ -490,7 +490,7 @@ class LifecycleManager:
 
         # Create CortexObserver (O-gent health monitoring)
         try:
-            from agents.o.cortex_observer import (
+            from services.brain.cortex_observer import (
                 IHippocampus,
                 ILucidDreamer,
                 ISynapse,

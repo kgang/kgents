@@ -1,0 +1,162 @@
+/**
+ * CrystalHierarchy Styles
+ * STARK BIOME: 90% steel, 10% earned glow
+ */
+
+.crystal-hierarchy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
+}
+
+/* =============================================================================
+ * Level Container
+ * ============================================================================= */
+
+.crystal-hierarchy__level {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* =============================================================================
+ * Level Header
+ * ============================================================================= */
+
+.crystal-hierarchy__level-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-bare);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.crystal-hierarchy__level-header:hover {
+  background: var(--surface-3);
+  border-color: var(--color-steel-zinc);
+}
+
+.crystal-hierarchy__level-header--empty {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.crystal-hierarchy__level-header--empty:hover {
+  background: var(--surface-2);
+  border-color: var(--surface-3);
+}
+
+.crystal-hierarchy__level-name {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.crystal-hierarchy__level-count {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  background: var(--surface-1);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-bare);
+  min-width: 24px;
+  text-align: center;
+}
+
+.crystal-hierarchy__level-toggle {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  transition: transform var(--transition-fast);
+}
+
+/* =============================================================================
+ * Level Content
+ * ============================================================================= */
+
+.crystal-hierarchy__level-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-left: var(--space-lg);
+}
+
+/* =============================================================================
+ * Tree Variant
+ * ============================================================================= */
+
+.crystal-hierarchy--tree .crystal-hierarchy__level-content {
+  position: relative;
+}
+
+.crystal-hierarchy--tree .crystal-hierarchy__level-content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--surface-3);
+}
+
+/* =============================================================================
+ * Timeline Variant
+ * ============================================================================= */
+
+.crystal-hierarchy--timeline .crystal-hierarchy__level {
+  position: relative;
+}
+
+.crystal-hierarchy--timeline .crystal-hierarchy__level::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--space-md) / 2);
+  top: 32px; /* Header height */
+  bottom: 0;
+  width: 1px;
+  background: var(--surface-3);
+}
+
+.crystal-hierarchy--timeline .crystal-hierarchy__level:last-child::before {
+  display: none;
+}
+
+/* =============================================================================
+ * Empty State
+ * ============================================================================= */
+
+.crystal-hierarchy__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-2xl);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-bare);
+}
+
+.crystal-hierarchy__empty-hint {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.crystal-hierarchy__empty-hint code {
+  background: var(--surface-2);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-bare);
+  color: var(--color-glow-spore);
+}

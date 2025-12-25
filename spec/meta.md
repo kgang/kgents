@@ -99,7 +99,7 @@ The seven principles that define what agents ARE:
 
 ### "I want to build something"
 
-→ `docs/skills/` (17 skills that are necessary and sufficient)
+→ `docs/skills/` (24 skills that are necessary and sufficient)
 → `docs/skills/metaphysical-fullstack.md` (start here)
 
 ### "I need to understand a specific agent genus"

@@ -12,8 +12,13 @@
  * @see spec/protocols/chat-web.md Part X
  */
 
-import { memo, useCallback, useRef, useState, KeyboardEvent } from 'react';
+import { memo, useCallback, useRef, useState, KeyboardEvent, useEffect } from 'react';
 import { ForkModal } from './ForkModal';
+import { MentionPicker } from './MentionPicker';
+import { MentionCard } from './MentionCard';
+import { useMentions } from './useMentions';
+import { chatContextApi } from '@/api/chatApi';
+import type { MentionSuggestion } from './MentionPicker';
 import './InputArea.css';
 
 // =============================================================================
@@ -28,6 +33,19 @@ export interface InputAreaProps {
   compact?: boolean;
   currentTurn?: number;
   existingBranches?: string[];
+}
+
+// =============================================================================
+// Debounce Utility
+// =============================================================================
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
 }
 
 // =============================================================================
@@ -51,15 +69,77 @@ export const InputArea = memo(function InputArea({
   const [forkModalOpen, setForkModalOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize textarea
+  // Mention management
+  const { activeMentions, addMention, removeMention, recentMentions } = useMentions();
+  const [mentionPickerOpen, setMentionPickerOpen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionCursorPos, setMentionCursorPos] = useState({ top: 0, left: 0 });
+  const [availableFiles, setAvailableFiles] = useState<string[]>([]);
+  const debouncedMentionQuery = useDebounce(mentionQuery, 300);
+
+  // Fetch files when debounced query changes
+  useEffect(() => {
+    if (!debouncedMentionQuery || !mentionPickerOpen) return;
+
+    const fetchFiles = async () => {
+      try {
+        // Detect mention type from query
+        const isFileSearch = debouncedMentionQuery.startsWith('file:') || !debouncedMentionQuery.includes(':');
+
+        if (isFileSearch) {
+          const searchTerm = debouncedMentionQuery.replace(/^file:/, '');
+          if (searchTerm) {
+            const result = await chatContextApi.searchFiles(searchTerm);
+            setAvailableFiles(result.files);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch files:', error);
+        setAvailableFiles([]);
+      }
+    };
+
+    void fetchFiles();
+  }, [debouncedMentionQuery, mentionPickerOpen]);
+
+  // Auto-resize textarea and detect mentions
   const handleInput = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const target = e.target;
-    setMessage(target.value);
+    const value = target.value;
+    setMessage(value);
 
     // Auto-resize
     target.style.height = 'auto';
     target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
-  }, []);
+
+    // Detect @ mention trigger
+    const cursorPos = target.selectionStart;
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.slice(lastAtIndex + 1);
+
+      // Check if we're still in a mention (no spaces after @)
+      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+        // Calculate cursor position for picker
+        const rect = target.getBoundingClientRect();
+
+        setMentionQuery(textAfterAt);
+        setMentionCursorPos({
+          top: rect.bottom + 4,
+          left: rect.left + 8,
+        });
+        setMentionPickerOpen(true);
+        return;
+      }
+    }
+
+    // Close picker if @ is removed or space after @
+    if (mentionPickerOpen) {
+      setMentionPickerOpen(false);
+    }
+  }, [mentionPickerOpen]);
 
   // Send message
   const handleSend = useCallback(async () => {
@@ -79,9 +159,48 @@ export const InputArea = memo(function InputArea({
     }
   }, [message, onSend, disabled, isSending]);
 
+  // Handle mention selection
+  const handleMentionSelect = useCallback(
+    async (suggestion: MentionSuggestion) => {
+      // Add mention to active mentions
+      await addMention(suggestion);
+
+      // Remove @query from message
+      const cursorPos = textareaRef.current?.selectionStart || 0;
+      const textBeforeCursor = message.slice(0, cursorPos);
+      const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+      if (lastAtIndex !== -1) {
+        const textBeforeAt = message.slice(0, lastAtIndex);
+        const textAfterCursor = message.slice(cursorPos);
+        setMessage(textBeforeAt + textAfterCursor);
+      }
+
+      // Close picker
+      setMentionPickerOpen(false);
+      setMentionQuery('');
+
+      // Refocus textarea
+      textareaRef.current?.focus();
+    },
+    [message, addMention]
+  );
+
+  // Handle mention picker close
+  const handleMentionPickerClose = useCallback(() => {
+    setMentionPickerOpen(false);
+    setMentionQuery('');
+  }, []);
+
   // Keyboard handling
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      // If mention picker is open, let it handle navigation keys
+      if (mentionPickerOpen && ['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
+        // MentionPicker will handle these via global event listener
+        return;
+      }
+
       // Enter (without Shift) = send
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -93,8 +212,14 @@ export const InputArea = memo(function InputArea({
         e.preventDefault();
         onRewind(1);
       }
+
+      // Escape = close mention picker
+      if (e.key === 'Escape' && mentionPickerOpen) {
+        e.preventDefault();
+        handleMentionPickerClose();
+      }
     },
-    [handleSend, onRewind]
+    [handleSend, onRewind, mentionPickerOpen, handleMentionPickerClose]
   );
 
   // Rewind handler
@@ -152,6 +277,20 @@ export const InputArea = memo(function InputArea({
         </div>
       )}
 
+      {/* Active mentions */}
+      {activeMentions.length > 0 && (
+        <div className="input-area__mentions">
+          {activeMentions.map((mention) => (
+            <MentionCard
+              key={mention.id}
+              mention={mention}
+              onDismiss={removeMention}
+              defaultExpanded={false}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Input row */}
       <div className="input-area__input-row">
         <textarea
@@ -175,14 +314,16 @@ export const InputArea = memo(function InputArea({
         </button>
       </div>
 
-      {/* Mention picker placeholder */}
-      {message.includes('@') && (
-        <div className="input-area__mention-hint">
-          <span className="input-area__mention-hint-text">
-            Type @file, @symbol, @spec, @witness, or @web
-          </span>
-        </div>
-      )}
+      {/* Mention picker */}
+      <MentionPicker
+        isOpen={mentionPickerOpen}
+        query={mentionQuery}
+        onSelect={handleMentionSelect}
+        onClose={handleMentionPickerClose}
+        position={mentionCursorPos}
+        recentMentions={recentMentions}
+        availableFiles={availableFiles}
+      />
 
       {/* Fork Modal */}
       <ForkModal

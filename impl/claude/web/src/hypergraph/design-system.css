@@ -146,7 +146,7 @@
   --z-sidebar: 100;        /* GraphSidebar, permanent UI */
   --z-panel: 150;          /* EdgePanel, DialecticModal, temporary overlays */
   --z-overlay: 200;        /* DialogueView, DecisionStream, full-screen modals */
-  --z-modal: 1000;         /* HelpPanel, CommandPalette, top-level UI */
+  --z-modal: 1000;         /* HelpPanel, top-level UI */
 }
 
 /* =============================================================================
@@ -189,6 +189,49 @@ kbd {
   color: var(--steel-300);
   font-weight: 500;
   box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* =============================================================================
+   Collapsed Sidebar Pattern (Reusable Utility)
+   ============================================================================= */
+
+/**
+ * Collapsed sidebar label pattern - ensures rotated text stays within bounds
+ *
+ * Problem: When using `writing-mode: vertical-rl` for sidebar labels, rotated
+ * text can overflow the collapsed container if overflow is not managed.
+ *
+ * Solution: Apply this class to any collapsed sidebar container that contains
+ * vertical text. It ensures proper containment.
+ *
+ * Key principles:
+ * 1. overflow: hidden - Prevents rotated content from escaping container
+ * 2. Fixed width - Container must have explicit dimensions for containment
+ * 3. position: relative - Establishes stacking context for absolute children
+ *
+ * Usage:
+ *   <aside class="sidebar sidebar--collapsed collapsed-sidebar-container">
+ *     <button class="sidebar__toggle">
+ *       <span class="collapsed-sidebar-label">FILES</span>
+ *     </button>
+ *   </aside>
+ *
+ * Applied to:
+ * - ProofPanel (32px collapsed)
+ * - Workspace left/right sidebars (40px collapsed)
+ * - Any future collapsible panels with vertical labels
+ */
+.collapsed-sidebar-container {
+  overflow: hidden;
+  position: relative;
+}
+
+.collapsed-sidebar-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  white-space: nowrap;
+  /* Ensure label stays centered within collapsed container */
+  display: inline-block;
 }
 
 /* =============================================================================

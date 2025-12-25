@@ -104,15 +104,21 @@ from .probes import (
     NullProbe,
     NullConfig,
 )
+# Import WitnessProbe for law validation (replacement for law_validator.py)
+from .probes.witness_probe import (
+    WitnessProbe,
+    WitnessConfig,
+    witness_probe,
+    IDENTITY_LAW,
+    ASSOCIATIVITY_LAW,
+)
 # TODO: Import remaining probes when dataclass errors are fixed
 # from .probes import (
 #     ChaosType,
 #     ChaosProbe,
-#     WitnessProbe,
 #     JudgeProbe,
 #     TrustProbe,
 #     ChaosConfig,
-#     WitnessConfig,
 #     JudgeConfig,
 #     TrustConfig,
 # )
@@ -140,20 +146,8 @@ try:
 except ImportError:
     PROBE_OPERAD = None  # Fallback if operad not available
 
-from .counter import (
-    CounterAgent,
-)
-
 # ARCHIVED: E-gent integration (2025-12-16)
-# These are kept for backwards compatibility but raise NotImplementedError
-from .evolution_integration import (
-    EvolutionPipelineValidationReport,
-    PipelineStageReport,
-    PipelineValidationConfig,
-    evolve_with_law_validation,
-    validate_evolution_pipeline,
-    validate_evolution_stages_from_pipeline,
-)
+# Removed: evolution_integration.py deleted (see commit for restoration if needed)
 from .failing import (
     FailingAgent,
     FailingConfig,
@@ -161,11 +155,6 @@ from .failing import (
     failing_agent,
     import_failing,
     syntax_failing,
-)
-from .fixture import (
-    FixtureAgent,
-    FixtureConfig,
-    fixture_agent,
 )
 from .flaky import (
     FlakyAgent,
@@ -190,28 +179,12 @@ from .judge import (
 from .latency import (
     LatencyAgent,
 )
-from .law_validator import (
-    LawValidationReport,
-    LawValidator,
-    LawViolation,
-    check_associativity,
-    check_functor_composition,
-    check_functor_identity,
-    check_left_identity,
-    check_monad_associativity,
-    check_monad_left_identity,
-    check_monad_right_identity,
-    check_right_identity,
-    validate_evolution_pipeline_laws,
-)
+# DEPRECATED: law_validator.py removed (2025-12-25)
+# Use WitnessProbe instead - all functionality migrated
+# See: agents.t.probes.WitnessProbe for law validation
 from .metrics import (
     MetricsAgent,
     PerformanceMetrics,
-)
-from .mock import (
-    MockAgent,
-    MockConfig,
-    mock_agent,
 )
 from .noise import (
     NoiseAgent,
@@ -243,16 +216,52 @@ from .property import (
     length_preserved_property,
     not_none_property,
 )
-from .spy import (
-    SpyAgent,
-    spy_agent,
-)
 from .trustgate import (
     Proposal,
     TrustDecision,
     TrustGate,
     create_trust_gate,
 )
+
+# Legacy imports (DEPRECATED - now provided by compat.py wrappers)
+# These re-export the @deprecated compat layer for backwards compatibility
+MockAgent = MockAgentCompat
+FixtureAgent = FixtureAgentCompat
+SpyAgent = SpyAgentCompat
+CounterAgent = CounterAgentCompat
+
+# Legacy Config types (DEPRECATED - for backwards compatibility)
+from dataclasses import dataclass
+from typing import Any, Dict, TypeVar
+
+A_Config = TypeVar("A_Config")
+B_Config = TypeVar("B_Config")
+
+@dataclass
+class MockConfig:
+    """DEPRECATED: Use NullConfig instead."""
+    output: Any
+    delay_ms: int = 0
+
+@dataclass
+class FixtureConfig:
+    """DEPRECATED: Use NullConfig with fixtures instead."""
+    fixtures: Dict[Any, Any]
+    default: Any = None
+    strict: bool = False
+
+# Legacy convenience functions (still supported, use compat types)
+def mock_agent(output, delay_ms: int = 0):
+    """DEPRECATED: Use NullProbe instead."""
+    return MockAgent(constant=output, delay_ms=delay_ms)
+
+def fixture_agent(fixtures: dict, default=None, strict: bool = False):
+    """DEPRECATED: Use NullProbe with fixtures instead."""
+    return FixtureAgent(fixtures=fixtures, default=default, strict=strict)
+
+def spy_agent(label: str = "Spy"):
+    """DEPRECATED: Use WitnessProbe instead."""
+    return SpyAgent(label=label)
 
 __all__ = [
     # TruthFunctor Protocol (DP-Native Verification)
@@ -267,26 +276,29 @@ __all__ = [
     "ComposedProbe",
     # New Probe Types
     "NullProbe",
+    "WitnessProbe",  # CATEGORICAL mode - law verification (replaces LawValidator)
     # TODO: Export remaining probes when implemented
     # "ChaosType",
     # "ChaosProbe",
-    # "WitnessProbe",
     # "JudgeProbe",
     # "TrustProbe",
-    # Probe Configs
+    # Probe Configs (New)
     "NullConfig",
+    "WitnessConfig",
+    "witness_probe",  # Convenience function for WitnessProbe
+    "IDENTITY_LAW",
+    "ASSOCIATIVITY_LAW",
     # "ChaosConfig",
-    # "WitnessConfig",
     # "JudgeConfig",
     # "TrustConfig",
     # Operad
     "PROBE_OPERAD",
-    # Type I - Nullifiers
+    # Type I - Nullifiers (DEPRECATED - use NullProbe)
     "MockAgent",
-    "MockConfig",
+    "MockConfig",  # Legacy config type
     "mock_agent",
     "FixtureAgent",
-    "FixtureConfig",
+    "FixtureConfig",  # Legacy config type
     "fixture_agent",
     # Type II - Saboteurs
     "FailingAgent",
@@ -331,27 +343,11 @@ __all__ = [
     "not_empty",
     "is_positive",
     "is_non_negative",
-    # Law Validation (Cross-pollination T2.6)
-    "LawValidator",
-    "LawValidationReport",
-    "LawViolation",
-    "check_associativity",
-    "check_left_identity",
-    "check_right_identity",
-    "check_functor_identity",
-    "check_functor_composition",
-    "check_monad_left_identity",
-    "check_monad_right_identity",
-    "check_monad_associativity",
-    "validate_evolution_pipeline_laws",
-    # E-gent Integration (ARCHIVED 2025-12-16)
-    # Kept for backwards compatibility but raise NotImplementedError
-    "PipelineValidationConfig",
-    "PipelineStageReport",
-    "EvolutionPipelineValidationReport",
-    "validate_evolution_pipeline",
-    "validate_evolution_stages_from_pipeline",
-    "evolve_with_law_validation",
+    # Law Validation - REMOVED (2025-12-25)
+    # Use WitnessProbe instead: from agents.t.probes import WitnessProbe
+    # Migration: law_validator.py functionality → WitnessProbe with PolicyTrace
+    # E-gent Integration - REMOVED (2025-12-25)
+    # Archived with E-gent removal: evolution_integration.py deleted
     # Type V - Trust Gate (Capital Integration)
     "Proposal",
     "TrustDecision",

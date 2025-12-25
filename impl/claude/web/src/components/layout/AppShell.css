@@ -161,6 +161,25 @@
   font-family: 'JetBrains Mono', monospace;
 }
 
+/* Sidebar toggle hints */
+.app-shell__sidebar-hints {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  color: var(--text-muted, #666);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.app-shell__sidebar-hints kbd {
+  font-size: 0.6rem;
+  padding: 0.125rem 0.375rem;
+  background: var(--surface-3, #252540);
+  border-radius: 2px;
+  color: var(--text-secondary, #9ca3af);
+  margin-right: 0.25rem;
+}
+
 /* Main content — explicitly placed in row 2 (navbar is fixed, out of flow) */
 .app-shell__content {
   grid-row: 2; /* Explicit placement since navbar is position: fixed */
@@ -190,5 +209,9 @@
 
   .app-shell__nav-link {
     padding: 0.5rem;
+  }
+
+  .app-shell__sidebar-hints {
+    display: none;
   }
 }

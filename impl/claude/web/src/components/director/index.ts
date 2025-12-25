@@ -23,7 +23,3 @@ export { AnalysisSummary } from './AnalysisSummary';
 export type { AnalysisSummaryProps } from './AnalysisSummary';
 
 export { CaptureDialog } from './CaptureDialog';
-
-// Ghost document components (negative space of the graph)
-export { GhostDocumentSection } from './GhostDocumentSection';
-export { GhostDetailPanel } from './GhostDetailPanel';

@@ -62,6 +62,7 @@ if TYPE_CHECKING:
     from services.ashc.persistence import PostgresLemmaDatabase
     from services.brain import BrainPersistence
     from services.chat.persistence import ChatPersistence
+    from services.code import CodeService
     from services.conductor import Summarizer, WindowPersistence
     from services.conductor.file_guard import FileEditGuard
     from services.conductor.swarm import SwarmSpawner
@@ -753,6 +754,31 @@ async def get_composition_store():
 
 
 # =============================================================================
+# Code Crown Jewel (Function-Level Artifact Tracking)
+# =============================================================================
+
+
+async def get_code_service() -> "CodeService":
+    """
+    Get the CodeService for function-level code artifact tracking.
+
+    The Code Crown Jewel tracks Python code at function granularity:
+    - Functions as atomic crystals
+    - K-Blocks as file-level boundaries
+    - Ghosts as spec placeholders
+    - Call graphs as semantic edges
+
+    Used by CodeNode for world.code.* AGENTESE paths.
+    """
+    from services.code import CodeService
+
+    # Get Universe for storage
+    universe = await get_universe()
+
+    return CodeService(universe=universe)
+
+
+# =============================================================================
 # Proxy Handle Store (AD-015: Epistemic Hygiene for Computed Data)
 # =============================================================================
 
@@ -892,8 +918,11 @@ async def setup_providers() -> None:
     container.register("experiment_store", get_experiment_store, singleton=True)
     container.register("composition_store", get_composition_store, singleton=True)
 
+    # Code Crown Jewel (Function-Level Artifact Tracking)
+    container.register("code_service", get_code_service, singleton=True)
+
     logger.info(
-        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion + CLI Tool Use)"
+        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion + CLI Tool Use + Code)"
     )
 
     # Import service nodes to trigger @node registration
@@ -994,6 +1023,14 @@ async def setup_providers() -> None:
         logger.info("ExplorerNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"ExplorerNode not available: {e}")
+
+    # Code Crown Jewel (Function-Level Artifact Tracking)
+    try:
+        from services.code.node import CodeNode  # noqa: F401
+
+        logger.info("CodeNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"CodeNode not available: {e}")
 
     # Wire KgentSoul to SoulNode
     try:
@@ -1118,4 +1155,6 @@ __all__ = [
     "get_probe_store",
     "get_experiment_store",
     "get_composition_store",
+    # Code Crown Jewel
+    "get_code_service",
 ]

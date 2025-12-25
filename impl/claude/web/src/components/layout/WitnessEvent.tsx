@@ -5,7 +5,7 @@
  * Uses Joy primitives for entry animation.
  */
 
-import { GrowingContainer } from '../genesis/GrowingContainer';
+import { GrowingContainer } from '../joy';
 
 import type { WitnessEvent as WitnessEventData } from '../../hooks/useWitnessStream';
 

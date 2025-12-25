@@ -163,9 +163,14 @@ def editor_directions(mode: EditorMode) -> frozenset[type]:
             })
         case EditorMode.PORTAL:
             return frozenset({
-                ExpandInput,      # e
-                CollapseInput,    # c
-                NavigateInput,    # move to portal
+                ExpandInput,      # Enter - expand/collapse current portal
+                CollapseInput,    # c - collapse current portal
+                NavigateInput,    # j/k - move between portals
+                FocusIntoInput,   # l - focus into expanded portal content
+                FocusOutInput,    # h - focus back to parent document
+                SearchInput,      # / - search portals by edge type
+                CureInput,        # c - cure unparsed portal via LLM
+                CreateInput,      # n - create new portal at cursor
                 ModeExitInput,    # Esc
             })
         case EditorMode.GRAPH:
@@ -215,6 +220,94 @@ e           PORTAL mode (expand)
 g           GRAPH mode (visualize)
 <Leader>k   KBLOCK mode (isolation controls)
 Esc         → NORMAL
+```
+
+### Layer 5: PORTAL Mode (Deep Integration)
+
+> *"You don't go to the document. The document comes to you."*
+
+PORTAL mode enables navigation, expansion, creation, and curing of portal tokens.
+See `spec/protocols/portal-token.md` §15 for the complete authoring specification.
+
+```
+e           Enter PORTAL mode from NORMAL
+Esc         Exit to NORMAL mode
+
+Navigation:
+j/k         Move cursor to next/prev portal in document
+Enter       Toggle expand/collapse on current portal
+l           Focus INTO expanded portal content (nested navigation)
+h           Focus OUT to parent document context
+/           Search portals by edge type or destination
+
+Portal Actions:
+n           Create new portal at cursor (opens typeahead)
+c           Cure unparsed portal via LLM (if cursor on 💭 portal)
+d           Delete portal under cursor
+
+Typeahead (active during portal creation):
+Tab         Accept current suggestion
+↑/↓         Navigate suggestions
+Esc         Cancel creation (or exit if not creating)
+```
+
+**Visual Feedback:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ spec/protocols/witness.md                       [PORTAL MODE]   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  # Witness Protocol                                             │
+│                                                                 │
+│  > "The proof IS the decision."                                 │
+│                                                                 │
+│  ▶ [implements] ──→ 2 files          ← CURSOR (highlighted)    │
+│  ▼ [tests] ──→ 3 files               ← EXPANDED                │
+│  │  ┌───────────────────────────────────────────────────────┐  │
+│  │  │ test_witness.py                                       │  │
+│  │  │ def test_mark_creation():                             │  │
+│  │  │     mark = witness.mark(...)                          │  │
+│  │  └───────────────────────────────────────────────────────┘  │
+│  💭 @[TODO: add evidence from perf tests?]   ← UNPARSED        │
+│                                                                 │
+│  ─────────────────────────────────────────────────────────────  │
+│  [j/k] Navigate  [Enter] Expand  [c] Cure  [n] New  [Esc] Exit │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Portal Creation Flow (pressing `n`):**
+```
+1. User presses `n` in PORTAL mode
+2. Typeahead appears at cursor: @[|]
+   ┌─────────────────────────────────────────┐
+   │ 📦 tests          Common edge types     │
+   │ 📄 implements                           │
+   │ 🔗 extends                              │
+   │ 📎 evidence                             │
+   └─────────────────────────────────────────┘
+3. User types/selects edge type: @[tests -> |]
+   ┌─────────────────────────────────────────┐
+   │ 🔍 Search files...                      │
+   │ 📄 _tests/test_witness.py               │
+   │ 📄 _tests/test_persistence.py           │
+   └─────────────────────────────────────────┘
+4. User selects destination: @[tests -> _tests/test_witness.py]
+5. Portal inserted, cursor moves to next line
+```
+
+**Curing Unparsed Portals (pressing `c` on 💭):**
+```
+1. Cursor on: 💭 @[TODO: add evidence from perf tests?]
+2. User presses `c`
+3. LLM processes natural language query with document context
+4. Suggestions appear:
+   ┌─────────────────────────────────────────────────────────────┐
+   │ 🔮 LLM suggests:                                             │
+   │ ✓ @[evidence -> claims/witness-perf-2025-12.md] (0.85)      │
+   │   @[tests -> _tests/test_witness_perf.py] (0.62)            │
+   │   Keep as note                                               │
+   └─────────────────────────────────────────────────────────────┘
+5. User accepts/rejects, portal updated in markdown
 ```
 
 ### Layer 4: Structural Selection (Tree-sitter)

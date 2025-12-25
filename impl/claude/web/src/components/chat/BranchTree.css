@@ -113,43 +113,41 @@
   transition: none;
 }
 
-.branch-node__circle {
+.branch-node__square {
   fill: var(--brutalist-surface, #141414);
   stroke: var(--brutalist-border, #333);
   stroke-width: 2;
-  /* Make square instead of circle */
-  rx: 0;
-  ry: 0;
   transition: none;
 }
 
-/* Active branch */
-.branch-node--active .branch-node__circle {
+/* Active branch — earned glow only */
+.branch-node--active .branch-node__square {
   fill: var(--brutalist-accent, #fff);
   stroke: var(--brutalist-accent, #fff);
   filter: none;
 }
 
-/* No glow animation */
+/* Glow for active node only (10% earned glow) */
 .branch-node__glow {
-  display: none;
+  /* Only shown when isActive in TSX */
+  opacity: 0.3;
 }
 
 /* Merged branch */
-.branch-node--merged .branch-node__circle {
+.branch-node--merged .branch-node__square {
   fill: var(--brutalist-bg, #0a0a0a);
   stroke: var(--brutalist-border, #333);
   stroke-dasharray: 4, 2;
   opacity: 0.5;
 }
 
-/* Hover state */
-.branch-node:hover .branch-node__circle {
+/* Hover state — acknowledgment, not celebration */
+.branch-node:hover .branch-node__square {
   stroke-width: 3;
   filter: none;
 }
 
-.branch-node--active:hover .branch-node__circle {
+.branch-node--active:hover .branch-node__square {
   filter: none;
 }
 

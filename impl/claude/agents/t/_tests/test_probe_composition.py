@@ -21,7 +21,7 @@ from agents.t.truth_functor import (
     PolicyTrace,
     TruthVerdict,
 )
-from agents.t.probes.null_probe import NullProbe, NullConfig
+from agents.t.probes.null_probe import NullProbe, NullState
 
 
 class TestSequentialComposition:
@@ -30,8 +30,8 @@ class TestSequentialComposition:
     @pytest.mark.asyncio
     async def test_basic_sequential_composition(self):
         """Test basic f >> g composition."""
-        probe1 = NullProbe(NullConfig(output="a"))
-        probe2 = NullProbe(NullConfig(output="b"))
+        probe1 = NullProbe(constant="a")
+        probe2 = NullProbe(constant="b")
 
         # Compose: probe1 >> probe2
         composed = probe1 >> probe2
@@ -44,8 +44,8 @@ class TestSequentialComposition:
     @pytest.mark.asyncio
     async def test_sequential_executes_both(self):
         """Test that sequential composition runs both probes."""
-        probe1 = NullProbe(NullConfig(output="first"))
-        probe2 = NullProbe(NullConfig(output="second"))
+        probe1 = NullProbe(constant="first")
+        probe2 = NullProbe(constant="second")
 
         composed = probe1 >> probe2
 
@@ -60,8 +60,8 @@ class TestSequentialComposition:
     @pytest.mark.asyncio
     async def test_sequential_accumulates_traces(self):
         """Test that sequential composition merges traces."""
-        probe1 = NullProbe(NullConfig(output="a"))
-        probe2 = NullProbe(NullConfig(output="b"))
+        probe1 = NullProbe(constant="a")
+        probe2 = NullProbe(constant="b")
 
         composed = probe1 >> probe2
 
@@ -69,14 +69,14 @@ class TestSequentialComposition:
         result = await composed.verify(mock_agent, "input")
 
         # Should have entries from both probes
-        # Each NullProbe emits 1 entry per invocation
-        assert len(result.entries) >= 2
+        # Each NullProbe emits 2 entries per invocation
+        assert len(result.entries) >= 4
 
     @pytest.mark.asyncio
     async def test_sequential_preserves_order(self):
         """Test that sequential composition preserves execution order."""
-        probe1 = NullProbe(NullConfig(output="first", delay_ms=10))
-        probe2 = NullProbe(NullConfig(output="second", delay_ms=5))
+        probe1 = NullProbe(constant="first", delay_ms=10)
+        probe2 = NullProbe(constant="second", delay_ms=5)
 
         composed = probe1 >> probe2
 
@@ -93,8 +93,8 @@ class TestParallelComposition:
     @pytest.mark.asyncio
     async def test_basic_parallel_composition(self):
         """Test basic f | g composition."""
-        probe1 = NullProbe(NullConfig(output="a"))
-        probe2 = NullProbe(NullConfig(output="b"))
+        probe1 = NullProbe(constant="a")
+        probe2 = NullProbe(constant="b")
 
         # Compose: probe1 | probe2
         composed = probe1 | probe2
@@ -107,8 +107,8 @@ class TestParallelComposition:
     @pytest.mark.asyncio
     async def test_parallel_executes_both(self):
         """Test that parallel composition runs both probes."""
-        probe1 = NullProbe(NullConfig(output="left"))
-        probe2 = NullProbe(NullConfig(output="right"))
+        probe1 = NullProbe(constant="left")
+        probe2 = NullProbe(constant="right")
 
         composed = probe1 | probe2
 
@@ -122,8 +122,8 @@ class TestParallelComposition:
     @pytest.mark.asyncio
     async def test_parallel_combines_passed_status(self):
         """Test that parallel composition ANDs the passed status."""
-        probe1 = NullProbe(NullConfig(output="a"))
-        probe2 = NullProbe(NullConfig(output="b"))
+        probe1 = NullProbe(constant="a")
+        probe2 = NullProbe(constant="b")
 
         composed = probe1 | probe2
 
@@ -137,8 +137,8 @@ class TestParallelComposition:
     @pytest.mark.asyncio
     async def test_parallel_takes_min_confidence(self):
         """Test that parallel composition takes minimum confidence."""
-        probe1 = NullProbe(NullConfig(output="a"))
-        probe2 = NullProbe(NullConfig(output="b"))
+        probe1 = NullProbe(constant="a")
+        probe2 = NullProbe(constant="b")
 
         composed = probe1 | probe2
 
@@ -151,8 +151,8 @@ class TestParallelComposition:
     @pytest.mark.asyncio
     async def test_parallel_merges_traces(self):
         """Test that parallel composition merges traces from both probes."""
-        probe1 = NullProbe(NullConfig(output="a"))
-        probe2 = NullProbe(NullConfig(output="b"))
+        probe1 = NullProbe(constant="a")
+        probe2 = NullProbe(constant="b")
 
         composed = probe1 | probe2
 
@@ -169,9 +169,9 @@ class TestAssociativityLaw:
     @pytest.mark.asyncio
     async def test_sequential_associativity(self):
         """Test that sequential composition is associative."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
-        p3 = NullProbe(NullConfig(output="c"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
+        p3 = NullProbe(constant="c")
 
         # Two ways to associate
         left_assoc = (p1 >> p2) >> p3
@@ -195,9 +195,9 @@ class TestAssociativityLaw:
     @pytest.mark.asyncio
     async def test_parallel_associativity(self):
         """Test that parallel composition is associative."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
-        p3 = NullProbe(NullConfig(output="c"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
+        p3 = NullProbe(constant="c")
 
         # Two ways to associate
         left_assoc = (p1 | p2) | p3
@@ -216,10 +216,10 @@ class TestAssociativityLaw:
     @pytest.mark.asyncio
     async def test_mixed_composition_associativity(self):
         """Test associativity with mixed >> and | operators."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
-        p3 = NullProbe(NullConfig(output="c"))
-        p4 = NullProbe(NullConfig(output="d"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
+        p3 = NullProbe(constant="c")
+        p4 = NullProbe(constant="d")
 
         # Complex composition: (p1 >> p2) | (p3 >> p4)
         left_branch = p1 >> p2
@@ -238,8 +238,8 @@ class TestComposedProbeName:
 
     def test_sequential_name(self):
         """Test that sequential composition has readable name."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 >> p2
 
@@ -248,8 +248,8 @@ class TestComposedProbeName:
 
     def test_parallel_name(self):
         """Test that parallel composition has readable name."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 | p2
 
@@ -258,9 +258,9 @@ class TestComposedProbeName:
 
     def test_nested_composition_name(self):
         """Test naming of nested compositions."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
-        p3 = NullProbe(NullConfig(output="c"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
+        p3 = NullProbe(constant="c")
 
         # Nested: (p1 >> p2) | p3
         composed = (p1 >> p2) | p3
@@ -275,8 +275,8 @@ class TestComposedProbeStates:
 
     def test_sequential_state_space(self):
         """Test that sequential composition has product state space."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 >> p2
 
@@ -288,8 +288,8 @@ class TestComposedProbeStates:
 
     def test_parallel_state_space(self):
         """Test that parallel composition has product state space."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 | p2
 
@@ -300,8 +300,8 @@ class TestComposedProbeStates:
 
     def test_composed_states_are_tuples(self):
         """Test that composed states are tuples of component states."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 >> p2
 
@@ -318,8 +318,8 @@ class TestComposedProbeActions:
 
     def test_sequential_actions(self):
         """Test that sequential composition exposes left actions initially."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 >> p2
 
@@ -331,12 +331,12 @@ class TestComposedProbeActions:
 
         # Sequential: only left's actions available
         # NullProbe READY has "invoke" action
-        assert "invoke" in actions
+        assert any(a.name == "invoke" for a in actions)
 
     def test_parallel_actions(self):
         """Test that parallel composition unions actions."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 | p2
 
@@ -347,7 +347,7 @@ class TestComposedProbeActions:
 
         # Parallel: union of both actions
         # Both NullProbes have "invoke", so union is just {"invoke"}
-        assert "invoke" in actions
+        assert any(a.name == "invoke" for a in actions)
 
 
 class TestComposedProbeReward:
@@ -355,13 +355,13 @@ class TestComposedProbeReward:
 
     def test_sequential_reward_left_only(self):
         """Test reward when only left component transitions."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 >> p2
 
         from agents.t.probes.null_probe import NullState
-        from agents.t.probes.null_probe import ProbeAction
+        from agents.t.truth_functor import ProbeAction
 
         state_before = (NullState.READY, NullState.READY)
         state_after = (NullState.COMPUTING, NullState.READY)
@@ -375,13 +375,13 @@ class TestComposedProbeReward:
 
     def test_sequential_reward_right_only(self):
         """Test reward when only right component transitions."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 >> p2
 
         from agents.t.probes.null_probe import NullState
-        from agents.t.probes.null_probe import ProbeAction
+        from agents.t.truth_functor import ProbeAction
 
         state_before = (NullState.DONE, NullState.READY)
         state_after = (NullState.DONE, NullState.COMPUTING)
@@ -395,13 +395,13 @@ class TestComposedProbeReward:
 
     def test_parallel_reward_sum(self):
         """Test that parallel rewards sum when both transition."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 | p2
 
         from agents.t.probes.null_probe import NullState
-        from agents.t.probes.null_probe import ProbeAction
+        from agents.t.truth_functor import ProbeAction
 
         # Both transition
         state_before = (NullState.READY, NullState.READY)
@@ -412,10 +412,11 @@ class TestComposedProbeReward:
         reward = composed.reward(state_before, action, state_after)
 
         # Both transitioned, so sum of both rewards
-        # Each NullProbe gives ethical (2.0) + composable (1.5) = 3.5
-        # Total should be 2 * 3.5 = 7.0
-        assert reward.ethical == pytest.approx(2.0 + 2.0)
-        assert reward.composable == pytest.approx(1.5 + 1.5)
+        # Each NullProbe gives ethical (1.0) + composable (1.0) + generative (0.5)
+        # Total ethical should be 2 * 1.0 = 2.0
+        assert reward.ethical == pytest.approx(1.0 + 1.0)
+        assert reward.composable == pytest.approx(1.0 + 1.0)
+        assert reward.generative == pytest.approx(0.5 + 0.5)
 
 
 class TestComposedProbeMode:
@@ -423,8 +424,8 @@ class TestComposedProbeMode:
 
     def test_composed_inherits_left_mode(self):
         """Test that composed probe uses left probe's mode."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 >> p2
 
@@ -439,8 +440,8 @@ class TestTracePreservation:
     @pytest.mark.asyncio
     async def test_sequential_preserves_total_reward(self):
         """Test that sequential composition preserves cumulative reward."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 >> p2
 
@@ -453,8 +454,8 @@ class TestTracePreservation:
     @pytest.mark.asyncio
     async def test_parallel_preserves_total_reward(self):
         """Test that parallel composition preserves cumulative reward."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
 
         composed = p1 | p2
 
@@ -467,10 +468,10 @@ class TestTracePreservation:
     @pytest.mark.asyncio
     async def test_nested_composition_accumulates_traces(self):
         """Test that deeply nested composition accumulates all traces."""
-        p1 = NullProbe(NullConfig(output="a"))
-        p2 = NullProbe(NullConfig(output="b"))
-        p3 = NullProbe(NullConfig(output="c"))
-        p4 = NullProbe(NullConfig(output="d"))
+        p1 = NullProbe(constant="a")
+        p2 = NullProbe(constant="b")
+        p3 = NullProbe(constant="c")
+        p4 = NullProbe(constant="d")
 
         # Complex nesting: ((p1 >> p2) | p3) >> p4
         composed = ((p1 >> p2) | p3) >> p4
@@ -488,7 +489,7 @@ class TestCompositionEdgeCases:
     @pytest.mark.asyncio
     async def test_compose_with_self(self):
         """Test composing a probe with itself."""
-        probe = NullProbe(NullConfig(output="self"))
+        probe = NullProbe(constant="self")
 
         composed = probe >> probe
 
@@ -501,7 +502,7 @@ class TestCompositionEdgeCases:
     @pytest.mark.asyncio
     async def test_long_sequential_chain(self):
         """Test long chain of sequential compositions."""
-        probes = [NullProbe(NullConfig(output=f"p{i}")) for i in range(5)]
+        probes = [NullProbe(constant=f"p{i}") for i in range(5)]
 
         # Chain them all: p0 >> p1 >> p2 >> p3 >> p4
         composed = probes[0]
@@ -520,7 +521,7 @@ class TestCompositionEdgeCases:
     @pytest.mark.asyncio
     async def test_wide_parallel_composition(self):
         """Test wide parallel composition (many probes in parallel)."""
-        probes = [NullProbe(NullConfig(output=f"p{i}")) for i in range(4)]
+        probes = [NullProbe(constant=f"p{i}") for i in range(4)]
 
         # Parallel: p0 | p1 | p2 | p3
         composed = probes[0]

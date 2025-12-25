@@ -27,21 +27,45 @@ from dataclasses import dataclass
 
 from .probes import (
     NullProbe,
-    NullConfig,
+    WitnessProbe,
+    WitnessConfig,
 )
 # TODO: Uncomment when remaining probes are implemented
 # from .probes import (
 #     ChaosProbe,
 #     ChaosType,
 #     ChaosConfig,
-#     WitnessProbe,
-#     WitnessConfig,
 #     JudgeProbe,
 #     JudgeConfig,
 #     TrustProbe,
 #     TrustConfig,
 # )
 from .truth_functor import PolicyTrace, TruthVerdict
+
+# Stub types for unimplemented probes (used in compat layer)
+class ChaosType:
+    FAILURE = "failure"
+    NOISE = "noise"
+    LATENCY = "latency"
+    FLAKINESS = "flakiness"
+
+class ChaosProbe:
+    def __init__(self, **kwargs):
+        self.error_msg = kwargs.get("error_msg", "Chaos error")
+    async def verify(self, agent, input):
+        return PolicyTrace(value=TruthVerdict(value=input, passed=False, confidence=0.0, reasoning="Chaos injected"))
+
+class JudgeProbe:
+    def __init__(self, **kwargs):
+        pass
+    async def verify(self, agent, input):
+        return PolicyTrace(value=TruthVerdict(value=input, passed=True, confidence=1.0, reasoning="Judgment passed"))
+
+class TrustProbe:
+    def __init__(self, **kwargs):
+        pass
+    async def verify(self, agent, input):
+        return PolicyTrace(value=TruthVerdict(value=input, passed=True, confidence=1.0, reasoning="Trust granted"))
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -81,7 +105,7 @@ class MockAgent(Generic[A, B]):
         result = await mock.invoke(input)
 
         # New
-        probe = NullProbe(NullConfig(constant="result"))
+        probe = NullProbe(constant="result")
         trace = await probe.verify(agent, input)
         result = trace.value.value
     """
@@ -90,17 +114,20 @@ class MockAgent(Generic[A, B]):
         # Handle both MockConfig and direct args
         if hasattr(constant, "output"):
             # MockConfig passed
-            config = NullConfig(output=constant.output, delay_ms=getattr(constant, "delay_ms", delay_ms))
+            output = constant.output
+            delay = getattr(constant, "delay_ms", delay_ms)
         else:
-            config = NullConfig(output=constant, delay_ms=delay_ms)
-        self._probe = NullProbe(config)
+            output = constant
+            delay = delay_ms
+        self._probe = NullProbe(constant=output, delay_ms=delay)
         self._call_count_val = 0
+        self.name = f"MockAgent({output})"
 
     async def invoke(self, input: A) -> B:
         """Legacy API: returns just the value."""
         self._call_count_val += 1
-        # NullProbe.invoke returns the constant output directly
-        return await self._probe.invoke(input)
+        # NullProbe doesn't have invoke, so we just return the constant
+        return self._probe.constant
 
     @property
     def _call_count(self) -> int:
@@ -125,22 +152,27 @@ class FixtureAgent(Generic[A, B]):
         result = await fixture.invoke(1)
 
         # New
-        config = NullConfig(constant=None, fixtures={1: "one", 2: "two"})
-        probe = NullProbe(config)
-        trace = await probe.verify(agent, 1)
-        result = trace.value.value
+        # Note: NullProbe doesn't support fixtures, use dict lookup
+        fixtures = {1: "one", 2: "two"}
+        result = fixtures.get(input, default)
     """
 
     def __init__(
-        self, fixtures: dict[A, B], default: B | None = None, strict: bool = False
+        self, fixtures: dict[A, B] | Any, default: B | None = None, strict: bool = False
     ):
-        self._fixtures = fixtures
-        self._default = default
-        self._strict = strict
+        # Handle both FixtureConfig and direct args
+        if hasattr(fixtures, "fixtures"):
+            # FixtureConfig passed
+            self._fixtures = fixtures.fixtures
+            self._default = getattr(fixtures, "default", default)
+            self._strict = getattr(fixtures, "strict", strict)
+        else:
+            self._fixtures = fixtures
+            self._default = default
+            self._strict = strict
         # For now, use a simple NullProbe that returns default
         # TODO: Extend NullProbe to support fixture lookups
-        config = NullConfig(output=default)
-        self._probe = NullProbe(config)
+        self._probe = NullProbe(constant=default)
 
     async def invoke(self, input: A) -> B:
         if input in self._fixtures:
@@ -276,13 +308,14 @@ class SpyAgent(Generic[A]):
         history = spy.history
 
         # New
-        probe = WitnessProbe(label="Observer")
+        probe = WitnessProbe(WitnessConfig(label="Observer"))
         trace = await probe.verify(agent, input)
         history = probe.history
     """
 
     def __init__(self, label: str = "Spy", max_history: int = 100):
-        self._probe = WitnessProbe(label=label, max_history=max_history)
+        config = WitnessConfig(label=label, max_history=max_history)
+        self._probe = WitnessProbe(config)
 
     async def invoke(self, input: A) -> A:
         async def identity_agent(x):
@@ -331,13 +364,14 @@ class PredicateAgent(Generic[A]):
         result = await pred.invoke(5)
 
         # New
-        probe = WitnessProbe(predicate=lambda x: x > 0)
+        probe = WitnessProbe(WitnessConfig(label="Predicate"))
         trace = await probe.verify(agent, 5)
         assert trace.value.passed
     """
 
     def __init__(self, predicate: Callable[[A], bool], label: str = "Predicate"):
-        self._probe = WitnessProbe(label=label, predicate=predicate)
+        config = WitnessConfig(label=label)
+        self._probe = WitnessProbe(config)
         self._predicate = predicate
 
     async def invoke(self, input: A) -> A:
@@ -362,13 +396,14 @@ class CounterAgent(Generic[A]):
         count = counter.count
 
         # New
-        probe = WitnessProbe(label="Counter")
+        probe = WitnessProbe(WitnessConfig(label="Counter"))
         trace = await probe.verify(agent, input)
         count = len(probe.history)
     """
 
-    def __init__(self):
-        self._probe = WitnessProbe(label="Counter")
+    def __init__(self, label: str = "Counter"):
+        config = WitnessConfig(label=label)
+        self._probe = WitnessProbe(config)
 
     async def invoke(self, input: A) -> A:
         async def identity_agent(x):
@@ -397,13 +432,14 @@ class MetricsAgent(Generic[A]):
         perf = metrics.metrics
 
         # New
-        probe = WitnessProbe(label="Metrics")
+        probe = WitnessProbe(WitnessConfig(label="Metrics"))
         trace = await probe.verify(agent, input)
         # Analyze trace.entries for performance metrics
     """
 
     def __init__(self):
-        self._probe = WitnessProbe(label="Metrics")
+        config = WitnessConfig(label="Metrics")
+        self._probe = WitnessProbe(config)
 
     async def invoke(self, input: A) -> A:
         async def identity_agent(x):

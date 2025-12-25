@@ -325,6 +325,14 @@ def create_app(
         app.include_router(chat_router)
         logger.info("Chat API mounted at /api/chat")
 
+    # === Portal API ===
+    from .portal import create_portal_router
+
+    portal_router = create_portal_router()
+    if portal_router is not None:
+        app.include_router(portal_router)
+        logger.info("Portal API mounted at /api/portal")
+
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
     # - GET/POST /agentese/world/codebase/{aspect}
@@ -647,6 +655,11 @@ def create_app(
                     "fork": "POST /api/chat/{session_id}/fork",
                     "rewind": "POST /api/chat/{session_id}/rewind",
                     "evidence": "GET /api/chat/{session_id}/evidence",
+                },
+                "portal": {
+                    "note": "Universal resource addressing and expansion",
+                    "resolve": "POST /api/portal/resolve",
+                    "health": "GET /api/portal/health",
                 },
                 "webhooks": {
                     "stripe": "/webhooks/stripe",

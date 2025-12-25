@@ -46,7 +46,6 @@ type ActionType =
   | 'ENTER_INSERT'
   | 'ENTER_COMMAND'
   | 'SHOW_HELP'
-  | 'OPEN_COMMAND_PALETTE'
   // Scroll navigation (reader mode)
   | 'SCROLL_DOWN'
   | 'SCROLL_UP'
@@ -102,12 +101,6 @@ const NORMAL_BINDINGS: Binding[] = [
   { keys: ['a'], action: 'ENTER_INSERT', description: 'Enter insert mode (append)' },
   { keys: [':'], action: 'ENTER_COMMAND', description: 'Enter command mode' },
   { keys: ['?'], action: 'SHOW_HELP', description: 'Show keyboard shortcuts' },
-  {
-    keys: ['k'],
-    modifiers: { meta: true },
-    action: 'OPEN_COMMAND_PALETTE',
-    description: 'Open command palette',
-  },
 
   // --- Graph Navigation (g-prefix) ---
   {
@@ -192,7 +185,6 @@ export interface UseKeyHandlerOptions {
   onEnterInsert?: () => void | Promise<void>;
   onEdgeConfirm?: () => Promise<void>;
   onShowHelp?: () => void;
-  onOpenCommandPalette?: () => void;
 
   // Decision stream (witness history)
   onToggleDecisionStream?: () => void;
@@ -250,7 +242,6 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     onEnterInsert,
     onEdgeConfirm,
     onShowHelp,
-    onOpenCommandPalette,
     onToggleDecisionStream,
     onToggleAnalysisQuadrant,
     goLowestLoss,
@@ -306,7 +297,6 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
         onEnterCommand?.();
       },
       SHOW_HELP: () => onShowHelp?.(),
-      OPEN_COMMAND_PALETTE: () => onOpenCommandPalette?.(),
       TOGGLE_DECISION_STREAM: () => onToggleDecisionStream?.(),
       TOGGLE_ANALYSIS_QUADRANT: () => onToggleAnalysisQuadrant?.(),
       // Loss-gradient navigation
@@ -360,7 +350,6 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       onEnterCommand,
       onEnterInsert,
       onShowHelp,
-      onOpenCommandPalette,
       onToggleDecisionStream,
       onToggleAnalysisQuadrant,
       goLowestLoss,
@@ -539,13 +528,6 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       const target = e.target as HTMLElement;
       const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
 
-      // Universal: Cmd+K opens command palette (works in ANY mode)
-      if (e.key === 'k' && e.metaKey) {
-        e.preventDefault();
-        onOpenCommandPalette?.();
-        return;
-      }
-
       // Universal: Escape always exits to NORMAL
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -553,7 +535,6 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
         if (state.mode !== 'NORMAL') {
           dispatch({ type: 'SET_MODE', mode: 'NORMAL' });
         }
-        // Note: CommandPalette handles its own Escape (via cmdk)
         return;
       }
 
@@ -591,7 +572,6 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       dispatch,
       handleNormalMode,
       handleEdgeMode,
-      onOpenCommandPalette,
     ]
   );
 

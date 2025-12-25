@@ -73,6 +73,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     FrozenSet,
@@ -82,6 +83,9 @@ from typing import (
     Sequence,
     TypeVar,
 )
+
+if TYPE_CHECKING:
+    from agents.t.truth_functor import ConstitutionalScore as TFConstitutionalScore
 
 logger = logging.getLogger("kgents.categorical.dp_bridge")
 
@@ -342,6 +346,88 @@ class ValueScore:
             },
             "timestamp": self.timestamp.isoformat(),
         }
+
+    def to_constitutional_score(self) -> TFConstitutionalScore:
+        """
+        Convert ValueScore to ConstitutionalScore.
+
+        Direct mapping since both use the same 7 principles.
+        Bidirectional adapter for DP-Bridge integration.
+        """
+        from agents.t.truth_functor import ConstitutionalScore
+
+        score_map = {ps.principle: ps.score for ps in self.principle_scores}
+
+        return ConstitutionalScore(
+            tasteful=score_map.get(Principle.TASTEFUL, 0.0),
+            curated=score_map.get(Principle.CURATED, 0.0),
+            ethical=score_map.get(Principle.ETHICAL, 0.0),
+            joy_inducing=score_map.get(Principle.JOY_INDUCING, 0.0),
+            composable=score_map.get(Principle.COMPOSABLE, 0.0),
+            heterarchical=score_map.get(Principle.HETERARCHICAL, 0.0),
+            generative=score_map.get(Principle.GENERATIVE, 0.0),
+        )
+
+    @classmethod
+    def from_constitutional_score(
+        cls,
+        const_score: TFConstitutionalScore,
+        agent_name: str = "unknown",
+    ) -> ValueScore:
+        """
+        Create ValueScore from ConstitutionalScore.
+
+        Bidirectional adapter for TruthFunctor integration.
+        """
+        principle_scores = (
+            PrincipleScore(
+                principle=Principle.TASTEFUL,
+                score=const_score.tasteful,
+                evidence="From ConstitutionalScore",
+                weight=Principle.TASTEFUL.weight,
+            ),
+            PrincipleScore(
+                principle=Principle.CURATED,
+                score=const_score.curated,
+                evidence="From ConstitutionalScore",
+                weight=Principle.CURATED.weight,
+            ),
+            PrincipleScore(
+                principle=Principle.ETHICAL,
+                score=const_score.ethical,
+                evidence="From ConstitutionalScore",
+                weight=Principle.ETHICAL.weight,
+            ),
+            PrincipleScore(
+                principle=Principle.JOY_INDUCING,
+                score=const_score.joy_inducing,
+                evidence="From ConstitutionalScore",
+                weight=Principle.JOY_INDUCING.weight,
+            ),
+            PrincipleScore(
+                principle=Principle.COMPOSABLE,
+                score=const_score.composable,
+                evidence="From ConstitutionalScore",
+                weight=Principle.COMPOSABLE.weight,
+            ),
+            PrincipleScore(
+                principle=Principle.HETERARCHICAL,
+                score=const_score.heterarchical,
+                evidence="From ConstitutionalScore",
+                weight=Principle.HETERARCHICAL.weight,
+            ),
+            PrincipleScore(
+                principle=Principle.GENERATIVE,
+                score=const_score.generative,
+                evidence="From ConstitutionalScore",
+                weight=Principle.GENERATIVE.weight,
+            ),
+        )
+
+        return cls(
+            agent_name=agent_name,
+            principle_scores=principle_scores,
+        )
 
 
 class ValueFunctionProtocol(Protocol):

@@ -811,6 +811,16 @@ class SemanticGatekeeper:
     """
     Semantic Gatekeeper: Validate code against kgents principles.
 
+    DEPRECATED: Use agents.k.gatekeeper_probe.GatekeeperProbe instead.
+    The new GatekeeperProbe provides:
+    - DP-native TruthFunctor pattern
+    - PolicyTrace emission for full witnessing
+    - ConstitutionalScore integration
+    - Composable verification (>> and | operators)
+    - 40% smaller codebase
+
+    This class is maintained for backward compatibility only.
+
     The gatekeeper performs:
     1. Heuristic pattern matching (fast, no LLM)
     2. Specialized analyzers (Tastefulness, Composability, Gratitude)
@@ -826,6 +836,19 @@ class SemanticGatekeeper:
         >>> # Deep analysis with explanations (110%)
         >>> deep = await gatekeeper.validate_deep("src/agent.py", explain=True)
         >>> print(deep.format())
+
+    Migration:
+        >>> # Old
+        >>> from agents.k.gatekeeper import SemanticGatekeeper
+        >>> gatekeeper = SemanticGatekeeper()
+        >>> result = await gatekeeper.validate_file("test.py")
+        >>>
+        >>> # New
+        >>> from agents.k.gatekeeper_probe import GatekeeperProbe, ValidationInput
+        >>> probe = GatekeeperProbe()
+        >>> trace = await probe.verify(None, ValidationInput("test.py", content))
+        >>> # trace.value.passed == result.passed
+        >>> # trace.value.value == result.violations
     """
 
     def __init__(
@@ -837,11 +860,21 @@ class SemanticGatekeeper:
         """
         Initialize gatekeeper.
 
+        DEPRECATED: Use agents.k.gatekeeper_probe.GatekeeperProbe instead.
+
         Args:
             llm: Optional LLM client for semantic analysis
             use_llm: Whether to use LLM for deep analysis
             history: Optional ValidationHistory for pattern tracking
         """
+        import warnings
+
+        warnings.warn(
+            "SemanticGatekeeper is deprecated. Use agents.k.gatekeeper_probe.GatekeeperProbe instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         self._llm = llm
         self._use_llm = use_llm
         self._history = history or ValidationHistory()

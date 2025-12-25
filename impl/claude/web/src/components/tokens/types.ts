@@ -199,8 +199,19 @@ export interface HorizontalRuleData {
 }
 
 // =============================================================================
-// NEW: Portal Token Data (from SYNTHESIS-living-spec.md)
+// NEW: Portal Token Data (from SYNTHESIS-living-spec.md + §15 Deep Integration)
 // =============================================================================
+
+/**
+ * Portal authoring state — beyond expand/collapse.
+ * See spec/protocols/portal-token.md §15.2
+ *
+ * RESOLVED: Has edge_type -> destination (can be expanded)
+ * UNPARSED: Natural language query, missing -> (can be cured)
+ * CURING: LLM resolution in progress
+ * FAILED: LLM couldn't resolve
+ */
+export type PortalAuthoringState = 'RESOLVED' | 'UNPARSED' | 'CURING' | 'FAILED';
 
 export interface PortalDestination {
   path: string;
@@ -209,10 +220,76 @@ export interface PortalDestination {
   exists?: boolean;
 }
 
+export interface PortalCureResult {
+  success: boolean;
+  resolved_portal?: string;
+  confidence: number;
+  alternatives?: string[];
+}
+
+/**
+ * Resource types for portal URIs.
+ * See spec/protocols/portal-resource-system.md
+ */
+export type PortalResourceType =
+  | 'file'
+  | 'chat'
+  | 'turn'
+  | 'mark'
+  | 'trace'
+  | 'evidence'
+  | 'constitutional'
+  | 'crystal'
+  | 'node';
+
+export interface PortalURI {
+  raw: string;
+  resource_type: PortalResourceType;
+  resource_path: string;
+  fragment: string | null;
+}
+
+export interface ResolvedResource {
+  uri: string;
+  resource_type: PortalResourceType;
+  exists: boolean;
+  title: string;
+  preview: string;
+  content: unknown;
+  actions: string[];
+  metadata: Record<string, unknown>;
+}
+
 export interface PortalData {
-  edge_type: string;
+  /** Edge type — null if unparsed */
+  edge_type: string | null;
   source_path?: string;
   destinations: PortalDestination[];
+  /** Authoring state (defaults to RESOLVED for backward compat) */
+  authoring_state?: PortalAuthoringState;
+  /** Natural language query (if UNPARSED) */
+  natural_language?: string;
+  /** Whether auto-discovered vs explicitly authored */
+  is_discovered?: boolean;
+  /** Resource type information (NEW) */
+  resource_type?: PortalResourceType;
+  resolved_resource?: ResolvedResource;
+  /** Evidence ID from witness mark (Phase 2) */
+  evidence_id?: string;
+}
+
+/**
+ * Portal syntax as parsed from markdown @[...] tokens.
+ * See spec/protocols/portal-token.md §15.8
+ */
+export interface PortalSyntax {
+  raw_text: string;
+  state: PortalAuthoringState;
+  edge_type: string | null;
+  destinations: string[] | null;
+  natural_language: string | null;
+  span: [number, number];
+  line: number;
 }
 
 // =============================================================================
