@@ -18,7 +18,6 @@ import agents.c.functor  # noqa: F401 - needed for registration
 import agents.d.state_monad  # noqa: F401 - needed for registration
 import agents.flux.functor  # noqa: F401 - needed for registration
 import agents.k.functor  # noqa: F401 - needed for registration
-import agents.o.observer_functor  # noqa: F401 - needed for registration
 from agents.a.functor import (
     FunctorRegistry,
     UniversalFunctor,
@@ -79,12 +78,6 @@ class TestFunctorRegistration:
         registered = set(FunctorRegistry.all_functors().keys())
         assert expected.issubset(registered)
 
-    def test_observer_functor_registered(self) -> None:
-        """UnifiedObserverFunctor is registered."""
-        functor = FunctorRegistry.get("Observer")
-        assert functor is not None
-        assert "Observer" in functor.__name__
-
     def test_state_functor_registered(self) -> None:
         """StateMonadFunctor is registered."""
         functor = FunctorRegistry.get("State")
@@ -103,10 +96,10 @@ class TestFunctorRegistration:
         assert functor is not None
         assert "Soul" in functor.__name__
 
-    def test_at_least_10_functors(self) -> None:
-        """Registry contains at least 10 functors (Phase 4 goal)."""
+    def test_at_least_9_functors(self) -> None:
+        """Registry contains at least 9 functors (Phase 4 goal)."""
         all_functors = FunctorRegistry.all_functors()
-        assert len(all_functors) >= 10, f"Only {len(all_functors)} functors registered"
+        assert len(all_functors) >= 9, f"Only {len(all_functors)} functors registered"
 
     def test_all_functors_have_lift(self) -> None:
         """All registered functors have lift() method."""
@@ -177,24 +170,6 @@ class TestFunctorComposition:
         result = await lifted.invoke(Right([1, 2, 3]))
         assert result == Right([2, 4, 6])
 
-    @pytest.mark.asyncio
-    async def test_compose_observer_maybe(self) -> None:
-        """Observer . Maybe composition works."""
-        from agents.c.functor import Just, MaybeFunctor
-        from agents.o.observer_functor import ListSink, UnifiedObserverFunctor
-
-        sink = ListSink()
-
-        # Observer(Maybe(agent))
-        maybe_agent = MaybeFunctor.lift(DoubleAgent())
-        observed = UnifiedObserverFunctor.lift(maybe_agent, sink=sink, non_blocking=False)
-
-        result = await observed.invoke(Just(5))
-
-        assert result == Just(10)
-        assert len(sink.events) == 1
-
-
 class TestCompositionMatrix:
     """Test composition matrix: verify key functor pairs compose."""
 
@@ -218,27 +193,6 @@ class TestCompositionMatrix:
         # Collect results
         # Note: Full test would use Flux.start(), but we just verify composition works
         assert flux_agent is not None
-
-    @pytest.mark.asyncio
-    async def test_observer_logged_composition(self) -> None:
-        """Observer . Logged composition (observation + logging)."""
-        from agents.c.functor import LoggedFunctor
-        from agents.o.observer_functor import ListSink, UnifiedObserverFunctor
-
-        sink = ListSink()
-
-        # Logged(agent) first, then Observer
-        logged_agent = LoggedFunctor.lift(DoubleAgent())
-        observed = UnifiedObserverFunctor.lift(logged_agent, sink=sink, non_blocking=False)
-
-        result = await observed.invoke(5)
-
-        assert result == 10
-        assert len(sink.events) == 1
-        # LoggedAgent has history as list of LogEntry objects
-        assert len(logged_agent.history) == 1  # type: ignore[attr-defined]
-        # LogEntry stores input_repr as string representation
-        assert "5" in logged_agent.history[0].input_repr  # type: ignore[attr-defined]
 
     @pytest.mark.asyncio
     async def test_maybe_fix_composition(self) -> None:

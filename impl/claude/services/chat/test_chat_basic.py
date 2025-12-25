@@ -5,15 +5,9 @@ Basic test of chat service implementation.
 Tests the ChatKBlock pattern with K-Block operations.
 """
 
-import sys
-from pathlib import Path
-
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from chat.session import ChatSession, ChatState, MergeStrategy
-from chat.evidence import ChatEvidence, BetaPrior, TurnResult
-from chat.context import WorkingContext, LinearityTag, Turn
+from services.chat.session import ChatSession, ChatState, MergeStrategy
+from services.chat.evidence import ChatEvidence, BetaPrior, TurnResult
+from services.chat.context import WorkingContext, LinearityTag, Turn
 
 
 def test_session_creation():

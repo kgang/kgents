@@ -6,8 +6,8 @@ from datetime import datetime, UTC
 
 import pytest
 
-from ..proof import GaloisWitnessedProof
-from ..reflection import ReflectionCrystal, InterpretationCrystal
+from agents.d.schemas.proof import GaloisWitnessedProof
+from agents.d.schemas.reflection import ReflectionCrystal, InterpretationCrystal
 
 
 def test_reflection_crystal_creation():

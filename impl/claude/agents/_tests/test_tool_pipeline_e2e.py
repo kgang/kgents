@@ -50,9 +50,8 @@ from agents.t import (
     FailingAgent,
     FailingConfig,
     FailureType,
-    MockAgent,
-    MockConfig,
-    SpyAgent,
+    quick_mock,
+    counting_agent,
 )
 
 # U-gent imports (utility/tool agents)
@@ -431,25 +430,25 @@ class TestMockTools:
 
     @pytest.mark.asyncio
     async def test_mock_agent_returns_configured_output(self) -> None:
-        """Test MockAgent returns configured output."""
-        mock: MockAgent[Any, Any] = MockAgent(MockConfig(output="mocked result"))
+        """Test quick_mock returns configured output."""
+        mock = quick_mock("mocked result")
 
         result = await mock.invoke("any input")
         assert result == "mocked result"
 
     @pytest.mark.asyncio
     async def test_spy_agent_records_calls(self) -> None:
-        """Test SpyAgent records all calls."""
-        spy: SpyAgent[Any] = SpyAgent(label="test-spy")
+        """Test counting_agent records all calls."""
+        inner = quick_mock("result")
+        spy, calls = counting_agent(inner)
 
         await spy.invoke("first")
         await spy.invoke("second")
         await spy.invoke("third")
 
-        assert spy.call_count == 3
-        # SpyAgent uses 'history' property, not 'calls'
-        assert "first" in spy.history
-        assert "second" in spy.history
+        assert len(calls) == 3
+        assert "first" in calls
+        assert "second" in calls
 
     @pytest.mark.asyncio
     async def test_failing_agent_simulates_failure(self) -> None:

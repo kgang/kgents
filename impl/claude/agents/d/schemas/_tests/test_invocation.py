@@ -6,7 +6,7 @@ from datetime import datetime, UTC
 
 import pytest
 
-from ..invocation import StateChange, LLMInvocationMark
+from agents.d.schemas.invocation import StateChange, LLMInvocationMark
 
 
 def test_state_change_creation():
