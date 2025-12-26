@@ -1,211 +1,149 @@
 # kgents
 
+*A quiet framework for agents that justify their behavior.*
+
+---
+
+## The Central Idea
+
+What if we could measure how much meaning is lost when we restructure a thought?
+
 ```
 L(P) = d(P, C(R(P)))
 ```
 
-That equation measures the information destroyed when you modularize a decision. We call it **Galois Loss**. When `L < 0.05`, you've found a fixed point—an axiom. When `L > 0.5`, your abstraction is leaking. Every agent framework ignores this. kgents quantifies it.
+This is **Galois Loss**. Take a proposition, restructure it, reconstitute it, measure the distance. When `L → 0`, you've found something stable—a fixed point. An axiom. When `L → 1`, your abstraction leaks meaning everywhere.
 
-**678 tests. 21 chapters of theory. 6 months of hardening.** Not a wrapper. Not a demo. A specification for agents that justify their behavior mathematically.
+Most agent frameworks assume coherence. kgents measures it.
 
 ---
 
-<table>
-<tr>
-<td width="33%">
+## What You'll Find Here
 
-### For Developers
+### A Theory of Agent Composition
 
-Your agents don't compose. You chain them, debug them, pray they work. kgents verifies composition laws at runtime:
+Agents aren't just functions with LLMs inside. They're morphisms in a category. This means they must compose:
 
 ```python
-# This is a theorem, not a hope
+# If this isn't true, something is broken
 assert (f >> g) >> h == f >> (g >> h)
 ```
 
-**What you get**:
-- PolyAgent: State machines with verified transitions
-- AGENTESE: Protocol-as-API (no REST routes)
-- Witness: Every decision traced with proof
+kgents verifies these laws at runtime. Not as a nice-to-have, but because composition that isn't associative isn't really composition at all.
 
-</td>
-<td width="33%">
+**Explore**: [The Agent Category](docs/theory/02-agent-category.md)
 
-### For Researchers
+### A Loss Function for Decisions
 
-Agent architecture has deep mathematical structure. We derive it from category theory, formalize it with Galois connections, and optimize it with dynamic programming:
+Every decision has a cost—not in compute, but in coherence. We quantify it:
 
-```
-Agent ≅ PolyAgent[S, A, B]
-V*(s) = max_a [R(s,a) + γV*(T(s,a))]
-```
+| Loss | Interpretation |
+|------|----------------|
+| `< 0.05` | Fixed point (axiomatic) |
+| `< 0.15` | Stable |
+| `< 0.30` | Drifting |
+| `≥ 0.30` | Volatile |
 
-**What you get**:
-- [21-chapter treatise](docs/theory/README.md)
-- Galois modularization as loss function
-- Constitution as reward signal
+**Explore**: [Galois Modularization](docs/theory/06-galois-modularization.md) | [Galois Loss](docs/theory/07-galois-loss.md)
 
-</td>
-<td width="33%">
+### A Protocol Where the Path *Is* the API
 
-### For Builders
-
-Decisions should be measurable. Every choice has a Galois loss. Every trace is witnessed. Trust accumulates:
-
-```
-L < 0.05 → Axiom (fixed point)
-L < 0.15 → Stable
-L < 0.30 → Drifting
-L ≥ 0.30 → Volatile
-```
-
-**What you get**:
-- Quantified decision quality
-- Trust gradient from evidence
-- Constitutional compliance scoring
-
-</td>
-</tr>
-</table>
-
-## See It
+AGENTESE replaces REST routes with semantic paths. The same path yields different projections for different observers:
 
 ```python
-from agents.poly import from_function, sequential
-
-double = from_function("double", lambda x: x * 2)
-add_one = from_function("add_one", lambda x: x + 1)
-
-pipe = sequential(double, add_one)
-_, outputs = pipe.run(initial=("ready", "ready"), inputs=[5, 10])
-# 5 → 11, 10 → 21
-# Composition verified, not assumed
+await logos.invoke("world.document.manifest", architect)  # → Blueprint
+await logos.invoke("world.document.manifest", poet)       # → Metaphor
 ```
 
-```python
-from agents.d import GaloisLossComputer
+**Explore**: [AGENTESE Path Protocol](docs/skills/agentese-path.md)
 
-computer = GaloisLossComputer(metric="bertscore")
-loss = await computer.compute("Build minimal kernel, validate, then decide")
-# → 0.12 (low loss = high coherence = self-justifying)
+### A Witness for Every Action
+
+Every decision leaves a mark. Marks compose into traces. Traces crystallize into knowledge:
+
+```
+Mark → Trace → Crystal → Grant → Playbook
 ```
 
-```python
-# AGENTESE: The protocol IS the API
-await logos.invoke("world.document.manifest", architect_umwelt)  # → Blueprint
-await logos.invoke("world.document.manifest", poet_umwelt)       # → Metaphor
-# Same path, different observers, different projections
-```
+The system remembers not just what you decided, but *why*.
+
+**Explore**: [Witness Protocol](docs/theory/16-witness.md)
 
 ---
 
-## The Architecture
+## The Theory
 
-### I. The Four Pillars
-
-| Pillar | What | Why |
-|--------|------|-----|
-| **AGENTESE** | Verb-first protocol where paths ARE the API | No REST. No GraphQL. Observer-dependent projections. |
-| **D-gents** | Persistence with categorical guarantees | Lenses verify their laws. Schemas validate at read. |
-| **Galois Theory** | Loss quantifies abstraction cost | Low loss = high coherence. Fixed points = axioms. |
-| **Witness** | Every action leaves a mark | Traces are morphisms. Decisions are proofs. |
-
-### II. The Theory Stack
+Twenty chapters derive agent architecture from first principles:
 
 ```
-Part VII: Synthesis and Frontier
-Part VI:  Co-Engineering Practice (Analysis Operad, Witness, Dialectic)
-Part V:   Distributed Agents (Multi-Agent, Heterarchy, Binding)
-Part IV:  Dynamic Programming (Agent-DP, Value Agent, Meta-DP)
-Part III: Galois Theory (Modularization, Loss, Polynomial Bootstrap)
-Part II:  Categorical Infrastructure (Monads, Operads, Sheaves)
-Part I:   Foundations (Agent Category, Composition Laws)
+Part I    Foundations           Agent category, composition laws
+Part II   Infrastructure        Monads, operads, sheaves
+Part III  Galois Theory         Modularization, loss, bootstrap
+Part IV   Dynamic Programming   Agent-DP, value functions, meta-DP
+Part V    Distributed Agents    Multi-agent, heterarchy, binding
+Part VI   Co-Engineering        Witness, dialectic, analysis operad
+Part VII  Synthesis             Framework comparison, open problems
 ```
 
-Full treatise: [docs/theory/README.md](docs/theory/README.md)
-
-### III. The Crown Jewels
-
-| Jewel | Purpose | Status |
-|-------|---------|--------|
-| **Witness** | Marks, crystals, dialectical fusion | 98% (678+ tests) |
-| **Brain** | Memory cathedral, teaching crystals | 100% (200+ tests) |
-| **Zero Seed** | Galois loss, layer assignment | 85% |
-| **K-Block** | Monadic isolation, transactional edits | 75% |
-| **Constitutional** | 7-principle scoring, ETHICAL floor | 80% (52 tests) |
+**Start here**: [docs/theory/README.md](docs/theory/README.md)
 
 ---
 
-## Run It
+## The Implementation
+
+| Component | Purpose |
+|-----------|---------|
+| **Witness** | Marks, crystals, trust gradients |
+| **Zero Seed** | Galois loss computation, layer assignment |
+| **K-Block** | Monadic isolation for transactional edits |
+| **Constitutional** | Seven-principle compliance scoring |
+| **Brain** | Memory cathedral with teaching crystals |
 
 ```bash
+# Quick start
 git clone https://github.com/kentgang/kgents.git && cd kgents
-uv sync && cd impl/claude/web && npm install
-
-# Terminal 1: Backend
-cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
-
-# Terminal 2: Frontend
-cd impl/claude/web && npm run dev
-# Visit http://localhost:3000
-```
-
-**Verify**:
-```bash
-cd impl/claude && uv run pytest -q && uv run mypy .
-cd impl/claude/web && npm run typecheck && npm run lint
+cd impl/claude && uv sync
+uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
 ```
 
 ---
 
 ## The Seven Principles
 
-These aren't platitudes. They're the reward function.
+These shape what we build and how:
 
-| # | Principle | Meaning |
-|---|-----------|---------|
-| 1 | **Tasteful** | Each agent serves a clear, justified purpose. Say "no" more than "yes." |
-| 2 | **Curated** | 10 excellent agents beat 100 mediocre ones. |
-| 3 | **Ethical** | Agents augment humans, never replace judgment. (ETHICAL ≥ 0.6 required) |
-| 4 | **Joy-Inducing** | Personality encouraged. Warmth over coldness. |
-| 5 | **Composable** | Agents are morphisms. `(f >> g) >> h = f >> (g >> h)`. Verified. |
-| 6 | **Heterarchical** | No fixed boss agent. Leadership is contextual. |
-| 7 | **Generative** | Spec is compression. If you can't compress, you don't understand. |
+1. **Tasteful** — Each agent justifies its existence
+2. **Curated** — Quality over quantity, always
+3. **Ethical** — Augment humans, never replace judgment
+4. **Joy-Inducing** — Warmth and personality matter
+5. **Composable** — Verified morphisms, not hopeful chaining
+6. **Heterarchical** — No permanent hierarchies; context determines leadership
+7. **Generative** — Specs compress; if you can't compress, you don't understand
 
 ---
 
-## What Makes This Different
-
-| Framework | Optimizes For | kgents |
-|-----------|---------------|--------|
-| LangChain/LlamaIndex | Orchestration | **Specification** with mathematical structure |
-| AutoGPT/CrewAI | Autonomy | **Composability** with verified laws |
-| DSPy | Prompts as programs | **Agents as morphisms** (complementary) |
-
----
-
-## Key Paths
+## Navigating
 
 ```
-docs/theory/        # 21-chapter categorical treatise
-spec/theory/        # Galois modularization, Agent-DP, Zero Seed
-impl/claude/        # Reference implementation (Python + React)
-docs/skills/        # 29 skills — READ BEFORE BUILDING
-NOW.md              # What's happening this week
+docs/theory/     Theory treatise (start with 00-overture.md)
+docs/skills/     Practical guides for building
+impl/claude/     Reference implementation
+spec/            Formal specifications
+NOW.md           Current focus and status
 ```
 
 ---
 
-## For AI Agents
+## An Invitation
 
-Read [CLAUDE.md](CLAUDE.md) first.
+This is not a finished product. It's an exploration of what agent architecture could be if we took mathematical structure seriously.
 
-- **Anti-Sausage Protocol**: Kent's voice gets diluted. Quote directly; don't paraphrase.
-- **The Mirror Test**: *"Does this feel like Kent on his best day?"*
-- **Fail-Fast DI**: Required deps error immediately. Optional deps (`= None`) degrade gracefully.
+The ideas here emerged from asking: *What would agents look like if every claim about their behavior could be verified?*
+
+If that question interests you, you're welcome here.
 
 ---
 
-MIT License | [Contributing](CONTRIBUTING.md) | [Changelog](CHANGELOG.md)
+MIT License
 
-> *"Agents that don't compose associatively aren't agents. They're functions with aspirations."*
+> *"The proof is the decision. The mark is the witness."*
