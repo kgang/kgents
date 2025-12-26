@@ -1,0 +1,93 @@
+/**
+ * TrustLevelBadge styles
+ *
+ * Brutalist badge with color-coded trust levels.
+ */
+
+.trust-level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--font-mono);
+  cursor: help;
+}
+
+.trust-level-badge__indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border: 2px solid currentColor;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+/* Size variants */
+.trust-level-badge[data-size='sm'] .trust-level-badge__indicator {
+  width: 32px;
+  height: 24px;
+  font-size: var(--font-size-xs);
+}
+
+.trust-level-badge[data-size='md'] .trust-level-badge__indicator {
+  width: 40px;
+  height: 28px;
+  font-size: var(--font-size-sm);
+}
+
+.trust-level-badge[data-size='lg'] .trust-level-badge__indicator {
+  width: 48px;
+  height: 32px;
+  font-size: var(--font-size-base);
+}
+
+.trust-level-badge__label {
+  font-size: var(--font-size-sm);
+  color: var(--steel-300);
+}
+
+/* Trust level colors — STARK BIOME Edition */
+/* L0 (READ_ONLY): steel-zinc (#3A3A44) - default, no trust */
+.trust-level-badge[data-level='L0'] .trust-level-badge__indicator {
+  color: var(--color-steel-zinc);
+  background-color: var(--color-steel-carbon);
+}
+
+/* L1 (BOUNDED): life-moss (#1A2E1A) - earned, bounded trust */
+.trust-level-badge[data-level='L1'] .trust-level-badge__indicator {
+  color: var(--color-life-mint);
+  background-color: var(--color-life-moss);
+}
+
+/* L2 (SUGGESTION): life-sage (#4A6B4A) - high trust */
+.trust-level-badge[data-level='L2'] .trust-level-badge__indicator {
+  color: var(--color-life-sprout);
+  background-color: rgba(74, 107, 74, 0.2);
+}
+
+/* L3 (AUTONOMOUS): glow-spore (#C4A77D) - maximum trust, earned glow */
+.trust-level-badge[data-level='L3'] .trust-level-badge__indicator {
+  color: var(--color-glow-spore);
+  background-color: rgba(196, 167, 125, 0.15);
+}
+
+/* Hover effects — STARK BIOME: subtle glow, not garish */
+.trust-level-badge:hover .trust-level-badge__indicator {
+  transform: scale(1.05);
+}
+
+.trust-level-badge[data-level='L0']:hover .trust-level-badge__indicator {
+  border-color: var(--color-steel-400);
+}
+
+.trust-level-badge[data-level='L1']:hover .trust-level-badge__indicator {
+  border-color: var(--color-life-sage);
+}
+
+.trust-level-badge[data-level='L2']:hover .trust-level-badge__indicator {
+  border-color: var(--color-life-mint);
+}
+
+.trust-level-badge[data-level='L3']:hover .trust-level-badge__indicator {
+  border-color: var(--color-glow-amber);
+}

@@ -1,0 +1,185 @@
+{/* @jsxImportSource react */}
+import { Meta, Canvas, Story, Source, Description } from '@storybook/blocks';
+import { GenesisPage } from '../../pages/Genesis/GenesisPage';
+import { FirstQuestion } from '../../pages/Genesis/FirstQuestion';
+import { GenesisStream } from '../../pages/Genesis/GenesisStream';
+import { WelcomeToStudio } from '../../pages/Genesis/WelcomeToStudio';
+
+<Meta title="Journeys/1. Genesis - First Time User Experience" />
+
+# Journey 1: Genesis
+
+> "You are witnessing Genesis."
+
+The Genesis journey is the first-time user experience (FTUE) for kgents.
+This is the moment where the system bootstraps itself into existence,
+establishing the ground of grounds from which all coherence flows.
+
+## Philosophy
+
+**The Zero Seed Axiom**: Every system has a beginning. In kgents, that beginning
+is not arbitrary—it is the Zero Seed, the ground truth from which all other
+truths derive. The Genesis journey makes this metaphysical reality tangible.
+
+**Key Principle**: "The proof IS the decision. The mark IS the witness."
+
+Users don't just sign up for an account—they witness the birth of their
+personal knowledge system. This witnessing creates the first mark, the
+first proof, the first act of agency.
+
+---
+
+## The Three Phases
+
+### Phase 1: Witnessing Genesis
+
+The system spawns its foundational axioms in real-time:
+
+| Time | Entry | Layer | Loss |
+|------|-------|-------|------|
+| t=0 | ZERO SEED — The ground of grounds | L0 | 0.000 |
+| t=1 | AXIOM A1: Everything is a node | L1 | 0.002 |
+| t=2 | AXIOM A2: Everything composes | L1 | 0.003 |
+| t=3 | GROUND G: Loss measures truth | L1 | 0.000 |
+
+Each entry appears with dramatic timing, using the 4-7-8 breathing pattern.
+The feed creates a sense of witnessing something momentous—the birth of coherence.
+
+```tsx
+// From GenesisPage.tsx
+const GENESIS_ENTRIES: GenesisEntry[] = [
+  {
+    time: 0,
+    title: 'ZERO SEED',
+    description: 'The ground of grounds.',
+    layer: 'L0',
+    kind: 'System',
+    loss: 0.0,
+  },
+  // ... axioms follow
+];
+```
+
+**Design Notes**:
+- GrowingContainer animations use `duration="deliberate"` for gravitas
+- Each entry has a `t=N` timestamp, grounding the user in temporal reality
+- Loss scores communicate: perfect coherence is possible, and we're starting there
+
+---
+
+### Phase 2: The First Question
+
+> "What matters most to you right now?"
+
+After witnessing the system's genesis, the user is invited to add their
+first personal axiom. This transforms them from spectator to co-creator.
+
+```tsx
+// Example declarations
+const examples = [
+  'I want to build a personal knowledge base',
+  'I believe in open source',
+  "I'm exploring what I believe",
+  'I value clarity over complexity',
+];
+```
+
+**Constitutional Alignment**:
+- **Tasteful**: The question is singular and focused
+- **Joy-Inducing**: Example declarations show personality is welcome
+- **Generative**: This declaration will seed the user's K-Block hierarchy
+
+---
+
+### Phase 3: Welcome to Studio
+
+The user's declaration is processed and becomes their first K-Block:
+
+- **Layer Assignment**: Usually L3 (Goal layer) for aspirational declarations
+- **Loss Score**: Indicates initial coherence with system axioms
+- **Justification**: AI-generated explanation of the classification
+
+The celebration moment uses the `GrowingContainer` with deliberate timing,
+creating a sense of achievement.
+
+---
+
+## Component Architecture
+
+```
+GenesisPage.tsx         — Phase 1: Witness genesis entries
+    |
+FirstQuestion.tsx       — Phase 2: Capture first declaration
+    |
+WelcomeToStudio.tsx     — Phase 3: Celebrate first K-Block
+```
+
+Each phase is a separate route for clean navigation:
+- `/genesis` — Phase 1
+- `/genesis/first-question` — Phase 2
+- `/genesis/first-kblock` — Phase 3
+
+---
+
+## STARK BIOME Aesthetics
+
+The Genesis journey embodies the STARK BIOME philosophy:
+
+**90% Steel**: The background is dark, the frames are humble.
+
+**10% Earned Glow**: The amber accent appears at the celebration moment—
+earned through the act of declaration.
+
+**Breathing Motion**: All animations use the 4-7-8 pattern:
+- 4 units inhale (opacity/scale increase)
+- 7 units hold (stable)
+- 8 units exhale (gentle fade)
+
+---
+
+## Integration Points
+
+### Backend API
+
+```typescript
+// POST /api/onboarding/first-declaration
+interface FirstDeclarationRequest {
+  declaration: string;
+}
+
+interface FirstDeclarationResponse {
+  kblock_id: string;
+  layer: number;
+  loss: number;
+  justification: string;
+}
+```
+
+### Session State
+
+After completing Genesis, the user's `onboarding_complete` flag is set,
+and they're redirected to the main Hypergraph Studio with their first
+K-Block highlighted.
+
+---
+
+## The Deeper Meaning
+
+Genesis isn't just onboarding—it's a philosophical statement:
+
+1. **You are not a user, you are a witness**: The system doesn't hide its
+   internals. You see the axioms. You understand the foundation.
+
+2. **Your declaration matters**: The first thing you say becomes structure.
+   This is the opposite of endless profile fields—one question, one answer,
+   infinite implications.
+
+3. **Coherence is measurable**: From the first moment, you see loss scores.
+   This isn't a black box—it's a transparent system that shows you how
+   close (or far) your beliefs are from coherent.
+
+---
+
+*"The noun is a lie. There is only the rate of change."*
+
+Genesis is the moment rate becomes form.

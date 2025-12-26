@@ -1,0 +1,173 @@
+/**
+ * ConstitutionalSummary Styles - STARK biome design
+ *
+ * Compact overview card with tier-based color coding.
+ * Expandable to show individual principle breakdown.
+ */
+
+/* =============================================================================
+ * Base Container
+ * ============================================================================= */
+
+.constitutional-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-bare);
+  font-family: var(--font-mono);
+}
+
+/* Tier-based border colors */
+.constitutional-summary--high {
+  border-left: 3px solid var(--health-healthy);
+}
+
+.constitutional-summary--medium {
+  border-left: 3px solid var(--health-degraded);
+}
+
+.constitutional-summary--low {
+  border-left: 3px solid var(--health-critical);
+}
+
+/* Size Variants */
+.constitutional-summary--sm {
+  padding: var(--space-sm);
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.constitutional-summary--lg {
+  padding: var(--space-lg);
+  gap: var(--space-lg);
+  font-size: var(--font-size-md);
+}
+
+/* =============================================================================
+ * Compact Variant
+ * ============================================================================= */
+
+.constitutional-summary--compact {
+  padding: var(--space-sm) var(--space-md);
+}
+
+.constitutional-summary__badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+/* =============================================================================
+ * Expanded Variant
+ * ============================================================================= */
+
+.constitutional-summary__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--surface-3);
+}
+
+.constitutional-summary__title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* =============================================================================
+ * Elements
+ * ============================================================================= */
+
+.constitutional-summary__label {
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: var(--font-weight-medium);
+  font-size: 0.85em;
+}
+
+.constitutional-summary__tier {
+  color: var(--text-muted);
+  font-size: 0.75em;
+  font-style: italic;
+}
+
+.constitutional-summary__score {
+  font-size: 1.5em;
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-mono);
+}
+
+/* Tier-based score colors */
+.constitutional-summary--high .constitutional-summary__score {
+  color: var(--health-healthy);
+}
+
+.constitutional-summary--medium .constitutional-summary__score {
+  color: var(--health-degraded);
+}
+
+.constitutional-summary--low .constitutional-summary__score {
+  color: var(--health-critical);
+}
+
+/* =============================================================================
+ * Breakdown Section
+ * ============================================================================= */
+
+.constitutional-summary__breakdown {
+  margin-top: var(--space-xs);
+}
+
+/* =============================================================================
+ * Responsive
+ * ============================================================================= */
+
+@media (max-width: 640px) {
+  .constitutional-summary {
+    padding: var(--space-sm);
+    gap: var(--space-sm);
+    font-size: var(--font-size-sm);
+  }
+
+  .constitutional-summary__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .constitutional-summary__score {
+    font-size: 1.25em;
+  }
+}
+
+/* =============================================================================
+ * Accessibility
+ * ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .constitutional-summary {
+    transition: none;
+  }
+}
+
+/* =============================================================================
+ * High Contrast Mode
+ * ============================================================================= */
+
+@media (prefers-contrast: high) {
+  .constitutional-summary {
+    border-width: 2px;
+  }
+
+  .constitutional-summary--high,
+  .constitutional-summary--medium,
+  .constitutional-summary--low {
+    border-left-width: 4px;
+  }
+}

@@ -1,0 +1,213 @@
+/**
+ * ConstitutionalScorecard styles — STARK BIOME Edition
+ *
+ * Stark table layout for principle scores.
+ * Card background: steel-carbon (#141418)
+ * Border: steel-gunmetal (#28282F)
+ * Good scores (>0.8): life-sage (#4A6B4A)
+ * Medium scores (0.5-0.8): glow-spore (#C4A77D)
+ * Low scores (<0.5): accent-error (#A65D4A) - muted rust
+ */
+
+.constitutional-scorecard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  background: var(--color-steel-carbon);
+  border: 1px solid var(--color-steel-gunmetal);
+  border-radius: var(--radius-bare);
+  padding: var(--space-lg);
+}
+
+.constitutional-scorecard--empty {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.constitutional-scorecard__placeholder {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+/* Header */
+.constitutional-scorecard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-steel-gunmetal);
+}
+
+.constitutional-scorecard__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--steel-200);
+  font-family: var(--font-mono);
+}
+
+.constitutional-scorecard__violations {
+  font-size: var(--font-size-sm);
+  color: var(--accent-error);
+  font-family: var(--font-mono);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(166, 93, 74, 0.15);
+  border-radius: var(--radius-bare);
+}
+
+/* Overall score */
+.constitutional-scorecard__overall {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-steel-slate);
+  border-radius: var(--radius-bare);
+}
+
+.constitutional-scorecard__overall-label {
+  font-size: var(--font-size-sm);
+  color: var(--steel-400);
+  font-family: var(--font-mono);
+}
+
+.constitutional-scorecard__overall-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.constitutional-scorecard__overall-tier {
+  margin-left: auto;
+  font-size: var(--font-size-sm);
+  color: var(--steel-400);
+  font-family: var(--font-mono);
+}
+
+/* Principle rows */
+.constitutional-scorecard__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.constitutional-scorecard-row {
+  display: grid;
+  grid-template-columns: 1fr 200px 80px;
+  gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.constitutional-scorecard-row:hover {
+  background-color: var(--color-steel-slate);
+}
+
+.constitutional-scorecard-row[data-warning='true'] {
+  background-color: rgba(166, 93, 74, 0.08);
+}
+
+.constitutional-scorecard-row[data-compact='true'] {
+  grid-template-columns: 120px 200px 80px;
+}
+
+/* Principle name */
+.constitutional-scorecard-row__name {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.constitutional-scorecard-row__label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--steel-200);
+  font-family: var(--font-mono);
+}
+
+.constitutional-scorecard-row__description {
+  font-size: var(--font-size-xs);
+  color: var(--steel-500);
+}
+
+/* Score bar */
+.constitutional-scorecard-row__score-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.constitutional-scorecard-row__bar {
+  flex: 1;
+  height: 8px;
+  background: var(--color-steel-gunmetal);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.constitutional-scorecard-row__bar-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.constitutional-scorecard-row__percentage {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Health indicator */
+.constitutional-scorecard-row__health {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
+/* Average (when trust data available) */
+.constitutional-scorecard-row__average {
+  font-size: var(--font-size-xs);
+  color: var(--steel-400);
+  font-family: var(--font-mono);
+}
+
+/* Insights section */
+.constitutional-scorecard__insights {
+  display: flex;
+  gap: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--color-steel-slate);
+  border-radius: var(--radius-bare);
+}
+
+.constitutional-scorecard__insight {
+  display: flex;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+}
+
+.constitutional-scorecard__insight-label {
+  color: var(--steel-500);
+}
+
+.constitutional-scorecard__insight-value {
+  color: var(--steel-200);
+  font-weight: 600;
+}
+
+/* Compact mode adjustments */
+.constitutional-scorecard[data-compact='true'] .constitutional-scorecard-row__description {
+  display: none;
+}
+
+.constitutional-scorecard[data-compact='true'] .constitutional-scorecard__insights {
+  display: none;
+}

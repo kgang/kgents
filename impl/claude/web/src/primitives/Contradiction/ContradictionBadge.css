@@ -1,0 +1,88 @@
+/**
+ * ContradictionBadge styles
+ *
+ * Lightning bolt indicator with severity-based coloring.
+ * STARK BIOME aesthetic: subtle steel → bright on contradiction.
+ */
+
+.contradiction-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  cursor: help;
+  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+}
+
+.contradiction-badge[data-clickable='true'] {
+  cursor: pointer;
+}
+
+.contradiction-badge[data-clickable='true']:hover {
+  transform: scale(1.1);
+}
+
+.contradiction-badge[data-clickable='true']:focus {
+  outline: 2px solid var(--color-glow-spore);
+  outline-offset: 2px;
+}
+
+/* Size variants */
+.contradiction-badge[data-size='sm'] {
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+}
+
+.contradiction-badge[data-size='md'] {
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+}
+
+.contradiction-badge[data-size='lg'] {
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+}
+
+.contradiction-badge__icon {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* Severity levels — STARK BIOME Edition */
+
+/* Low: Apparent contradiction (steel-blue, subtle) */
+.contradiction-badge[data-severity='low'] {
+  color: var(--color-steel-300);
+  background-color: rgba(138, 138, 148, 0.1);
+}
+
+.contradiction-badge[data-severity='low']:hover {
+  border-color: var(--color-steel-400);
+  background-color: rgba(138, 138, 148, 0.15);
+}
+
+/* Medium: Productive tension (life-sage, healthy conflict) */
+.contradiction-badge[data-severity='medium'] {
+  color: var(--color-life-sage);
+  background-color: rgba(74, 107, 74, 0.15);
+}
+
+.contradiction-badge[data-severity='medium']:hover {
+  border-color: var(--color-life-mint);
+  background-color: rgba(74, 107, 74, 0.25);
+}
+
+/* High: Genuine contradiction (glow-spore, attention-grabbing) */
+.contradiction-badge[data-severity='high'] {
+  color: var(--color-glow-spore);
+  background-color: rgba(196, 167, 125, 0.15);
+}
+
+.contradiction-badge[data-severity='high']:hover {
+  border-color: var(--color-glow-amber);
+  background-color: rgba(196, 167, 125, 0.25);
+}

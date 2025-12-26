@@ -1,0 +1,370 @@
+/**
+ * breathing.css - Zero Seed Genesis Breathing Animation System
+ *
+ * Implements Motion Law M-01: Asymmetric Breathing (4-7-8 timing)
+ *
+ * STARK BIOME: "Stillness, then life."
+ * - M-01: Asymmetric breathing uses 4-7-8 timing (not symmetric)
+ * - M-02: Default is still, animation is earned
+ * - M-03: Mechanical precision for structure, organic life for content
+ * - M-04: Respect prefers-reduced-motion
+ * - M-05: Every animation has semantic reason
+ *
+ * 4-7-8 Breathing Pattern (19s total cycle):
+ * - 4s inhale (21%): Gentle rise, soft curve
+ * - 7s hold (37%): Brief moment of fullness at peak
+ * - 8s exhale (42%): Long, calming release back to rest
+ *
+ * This creates a calming, organic rhythm — not mechanical oscillation.
+ *
+ * @see plans/zero-seed-creative-strategy.md - Motion Laws (M-01 through M-05)
+ * @see docs/creative/stark-biome-moodboard.md
+ */
+
+/* =============================================================================
+ * Core 4-7-8 Breathing Animation
+ * ============================================================================= */
+
+/**
+ * breathe-4-7-8
+ *
+ * The canonical breathing animation for Zero Seed Genesis.
+ * Total cycle: 19s (4s inhale + 7s hold + 8s exhale)
+ *
+ * Use for: Active elements that have earned motion through interaction
+ * Don't use for: Static text, decorative elements, default states
+ */
+@keyframes breathe-4-7-8 {
+  /* Rest → Inhale (0-21%): 4 seconds */
+  0% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  5.26% { /* 1s */
+    transform: scale(1.002);
+    opacity: 0.97;
+  }
+  10.53% { /* 2s */
+    transform: scale(1.006);
+    opacity: 0.985;
+  }
+  15.79% { /* 3s */
+    transform: scale(1.012);
+    opacity: 0.995;
+  }
+  21.05% { /* 4s - peak of inhale */
+    transform: scale(1.015);
+    opacity: 1;
+  }
+
+  /* Hold (21-58%): 7 seconds */
+  26.32% { /* 5s */
+    transform: scale(1.015);
+    opacity: 1;
+  }
+  31.58% { /* 6s */
+    transform: scale(1.015);
+    opacity: 1;
+  }
+  36.84% { /* 7s */
+    transform: scale(1.015);
+    opacity: 1;
+  }
+  42.11% { /* 8s */
+    transform: scale(1.015);
+    opacity: 1;
+  }
+  47.37% { /* 9s */
+    transform: scale(1.015);
+    opacity: 1;
+  }
+  52.63% { /* 10s */
+    transform: scale(1.015);
+    opacity: 1;
+  }
+  57.89% { /* 11s - end of hold */
+    transform: scale(1.015);
+    opacity: 1;
+  }
+
+  /* Exhale (58-100%): 8 seconds - slow, calming release */
+  63.16% { /* 12s */
+    transform: scale(1.012);
+    opacity: 0.995;
+  }
+  68.42% { /* 13s */
+    transform: scale(1.009);
+    opacity: 0.985;
+  }
+  73.68% { /* 14s */
+    transform: scale(1.006);
+    opacity: 0.975;
+  }
+  78.95% { /* 15s */
+    transform: scale(1.004);
+    opacity: 0.97;
+  }
+  84.21% { /* 16s */
+    transform: scale(1.002);
+    opacity: 0.965;
+  }
+  89.47% { /* 17s */
+    transform: scale(1.001);
+    opacity: 0.96;
+  }
+  94.74% { /* 18s */
+    transform: scale(1.0005);
+    opacity: 0.955;
+  }
+  100% { /* 19s - back to rest */
+    transform: scale(1);
+    opacity: 0.95;
+  }
+}
+
+/**
+ * breathe-4-7-8-subtle
+ *
+ * Even more subtle variation for background elements.
+ * Uses 50% amplitude of standard breathing.
+ */
+@keyframes breathe-4-7-8-subtle {
+  0% {
+    transform: scale(1);
+    opacity: 0.975;
+  }
+  21.05% { /* Peak inhale */
+    transform: scale(1.0075);
+    opacity: 1;
+  }
+  57.89% { /* End of hold */
+    transform: scale(1.0075);
+    opacity: 1;
+  }
+  100% { /* Back to rest */
+    transform: scale(1);
+    opacity: 0.975;
+  }
+}
+
+/**
+ * breathe-4-7-8-intense
+ *
+ * More pronounced breathing for elements that need attention.
+ * Uses 150% amplitude of standard breathing.
+ */
+@keyframes breathe-4-7-8-intense {
+  0% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  21.05% { /* Peak inhale */
+    transform: scale(1.0225);
+    opacity: 1;
+  }
+  57.89% { /* End of hold */
+    transform: scale(1.0225);
+    opacity: 1;
+  }
+  100% { /* Back to rest */
+    transform: scale(1);
+    opacity: 0.92;
+  }
+}
+
+/* =============================================================================
+ * Utility Classes
+ * ============================================================================= */
+
+/**
+ * M-02: Default is still, animation is earned
+ *
+ * These classes should only be applied when an element has "earned" motion:
+ * - After user interaction
+ * - When showing active/living state
+ * - To indicate health/vitality
+ *
+ * DO NOT apply by default to all elements.
+ */
+
+.breathe {
+  animation: breathe-4-7-8 19s ease-in-out infinite;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.breathe-subtle {
+  animation: breathe-4-7-8-subtle 19s ease-in-out infinite;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.breathe-intense {
+  animation: breathe-4-7-8-intense 19s ease-in-out infinite;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+/* Speed variants for different contexts */
+.breathe-slow {
+  animation-duration: 25.3s; /* 33% slower */
+}
+
+.breathe-fast {
+  animation-duration: 14.25s; /* 25% faster */
+}
+
+/* =============================================================================
+ * M-04: Reduced Motion Respect
+ * ============================================================================= */
+
+/**
+ * When user prefers reduced motion, disable all breathing animations.
+ * Static state becomes the default.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .breathe,
+  .breathe-subtle,
+  .breathe-intense {
+    animation: none;
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* =============================================================================
+ * Glow Pulse (Earned Motion Only)
+ * ============================================================================= */
+
+/**
+ * breathe-glow
+ *
+ * Synchronized glow pulse for elements that breathe.
+ * Follows same 4-7-8 timing.
+ *
+ * Use for: Status indicators, active badges, living elements
+ */
+@keyframes breathe-glow {
+  0% {
+    box-shadow: 0 0 4px currentColor;
+  }
+  21.05% { /* Peak inhale */
+    box-shadow:
+      0 0 12px currentColor,
+      0 0 20px currentColor;
+  }
+  57.89% { /* End of hold */
+    box-shadow:
+      0 0 12px currentColor,
+      0 0 20px currentColor;
+  }
+  100% { /* Back to rest */
+    box-shadow: 0 0 4px currentColor;
+  }
+}
+
+.breathe-with-glow {
+  animation:
+    breathe-4-7-8 19s ease-in-out infinite,
+    breathe-glow 19s ease-in-out infinite;
+}
+
+/* =============================================================================
+ * Phase Stagger (For Lists)
+ * ============================================================================= */
+
+/**
+ * When multiple elements breathe, stagger their phases for organic feel.
+ * These delays distribute breathing across the 19s cycle using golden ratio.
+ */
+.breathe-stagger-1 { animation-delay: 0s; }
+.breathe-stagger-2 { animation-delay: 2.37s; } /* 12.5% */
+.breathe-stagger-3 { animation-delay: 4.75s; } /* 25% */
+.breathe-stagger-4 { animation-delay: 7.13s; } /* 37.5% */
+.breathe-stagger-5 { animation-delay: 9.5s; }  /* 50% */
+.breathe-stagger-6 { animation-delay: 11.88s; } /* 62.5% */
+.breathe-stagger-7 { animation-delay: 14.25s; } /* 75% */
+.breathe-stagger-8 { animation-delay: 16.63s; } /* 87.5% */
+
+/* =============================================================================
+ * Semantic Usage Examples
+ * ============================================================================= */
+
+/**
+ * M-05: Animation Justification
+ *
+ * Every animation must have a semantic reason. Here are approved uses:
+ *
+ * .k-block-active     - K-Block is being edited (earned motion)
+ * .axiom-living       - Axiom is grounded and active (living state)
+ * .coherence-healthy  - Coherence score is high (health indicator)
+ * .witness-fresh      - Recent witness mark (attention indicator)
+ * .portal-connected   - Portal has active connection (status indicator)
+ *
+ * DO NOT use breathing for:
+ * - Static text
+ * - Decorative elements
+ * - Default button states
+ * - Navigation items
+ * - Inactive content
+ */
+
+/* Example: K-Block active state (earned through interaction) */
+.k-block-active {
+  animation: breathe-4-7-8 19s ease-in-out infinite;
+}
+
+/* Example: Axiom in living state (semantic: shows life) */
+.axiom-living {
+  animation: breathe-4-7-8-subtle 19s ease-in-out infinite;
+}
+
+/* Example: High coherence indicator (semantic: shows health) */
+.coherence-healthy {
+  animation:
+    breathe-4-7-8 19s ease-in-out infinite,
+    breathe-glow 19s ease-in-out infinite;
+}
+
+/* =============================================================================
+ * Integration with Framer Motion
+ * ============================================================================= */
+
+/**
+ * For use with framer-motion, apply the .breathe class to the motion.div.
+ * The CSS animation will run alongside any framer-motion animations.
+ *
+ * Example:
+ * <motion.div className="breathe" {...otherMotionProps}>
+ *   Content
+ * </motion.div>
+ */
+
+/* =============================================================================
+ * Performance Optimization
+ * ============================================================================= */
+
+/**
+ * Breathing animations use will-change to hint browser optimization.
+ * Only animate transform and opacity (compositor-friendly).
+ * Avoid animating layout properties (width, height, margin, padding).
+ */
+
+.breathe,
+.breathe-subtle,
+.breathe-intense {
+  /* Compositor hint for smooth animation */
+  will-change: transform, opacity;
+
+  /* Ensure GPU acceleration */
+  transform: translateZ(0);
+
+  /* Prevent subpixel antialiasing issues */
+  backface-visibility: hidden;
+}
+
+/* Remove will-change after animation settles (done via JS if needed) */
+.breathe-paused {
+  animation-play-state: paused;
+  will-change: auto;
+}

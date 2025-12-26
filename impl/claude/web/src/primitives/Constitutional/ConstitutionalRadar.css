@@ -1,0 +1,156 @@
+/**
+ * ConstitutionalRadar Styles - STARK biome design
+ *
+ * Heptagonal radar chart for 7 constitutional principles.
+ * Pure SVG with subtle hover effects and breathing animation.
+ */
+
+/* =============================================================================
+ * Base Container
+ * ============================================================================= */
+
+.constitutional-radar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-bare);
+}
+
+/* Size Variants */
+.constitutional-radar--sm {
+  padding: var(--space-sm);
+  gap: var(--space-sm);
+}
+
+.constitutional-radar--lg {
+  padding: var(--space-lg);
+  gap: var(--space-lg);
+}
+
+/* =============================================================================
+ * SVG Chart
+ * ============================================================================= */
+
+.constitutional-radar__svg {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Grid lines (non-scaling stroke for crisp rendering) */
+.constitutional-radar__grid path {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Axis lines */
+.constitutional-radar__axes line {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Score polygon */
+.constitutional-radar__score polygon {
+  transition: fill-opacity var(--transition-fast);
+}
+
+.constitutional-radar--interactive:hover .constitutional-radar__score polygon {
+  fill-opacity: 0.25;
+}
+
+/* Score vertices */
+.constitutional-radar__vertices circle {
+  transition: r var(--transition-fast), filter var(--transition-fast);
+}
+
+.constitutional-radar--interactive:hover .constitutional-radar__vertices circle {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.constitutional-radar__vertex--clickable:hover {
+  r: calc(1.2 * attr(r));
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.constitutional-radar__vertex--clickable:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Labels */
+.constitutional-radar__label {
+  fill: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* =============================================================================
+ * Breathing Animation (Optional)
+ * For "living" dashboards - subtle pulse on high scores
+ * ============================================================================= */
+
+@keyframes breathe-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 2px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+}
+
+.constitutional-radar--interactive .constitutional-radar__vertices circle[fill='var(--health-healthy)'] {
+  animation: breathe-glow 3s ease-in-out infinite;
+}
+
+/* =============================================================================
+ * Responsive
+ * ============================================================================= */
+
+@media (max-width: 640px) {
+  .constitutional-radar {
+    padding: var(--space-sm);
+    gap: var(--space-sm);
+  }
+
+  .constitutional-radar__label {
+    font-size: 8px;
+  }
+}
+
+/* =============================================================================
+ * Accessibility
+ * ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .constitutional-radar__score polygon,
+  .constitutional-radar__vertices circle {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* =============================================================================
+ * High Contrast Mode
+ * ============================================================================= */
+
+@media (prefers-contrast: high) {
+  .constitutional-radar {
+    border-width: 2px;
+  }
+
+  .constitutional-radar__grid path,
+  .constitutional-radar__axes line {
+    stroke-width: 2;
+    opacity: 1;
+  }
+
+  .constitutional-radar__score polygon {
+    stroke-width: 3;
+  }
+}

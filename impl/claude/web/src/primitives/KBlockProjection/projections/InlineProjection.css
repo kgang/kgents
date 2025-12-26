@@ -1,0 +1,19 @@
+/**
+ * InlineProjection Styles
+ */
+
+.inline-projection {
+  display: inline;
+  font-family: var(--font-mono);
+  font-size: inherit;
+  color: var(--accent-primary);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.inline-projection:hover {
+  color: var(--accent-primary-bright);
+}

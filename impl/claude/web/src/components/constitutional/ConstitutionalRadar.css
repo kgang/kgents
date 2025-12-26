@@ -1,0 +1,92 @@
+/**
+ * ConstitutionalRadar styles — STARK BIOME Edition
+ *
+ * Pure SVG radar chart for 7 principles.
+ * Background: steel-obsidian (#0A0A0C)
+ * Grid: steel-gunmetal (#28282F)
+ * Filled area: life-moss (#1A2E1A) with life-sage border
+ * Score dots: glow-spore (#C4A77D)
+ * Text: text-secondary (#8A8A94)
+ */
+
+.constitutional-radar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  background: var(--color-steel-obsidian);
+  border-radius: var(--radius-bare);
+  padding: var(--space-md);
+}
+
+.constitutional-radar--empty {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.constitutional-radar__placeholder {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+.constitutional-radar__svg {
+  display: block;
+}
+
+/* Summary section */
+.constitutional-radar__summary {
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.constitutional-radar__score {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.constitutional-radar__score-label {
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+/* SVG elements */
+.constitutional-radar__grid-circle {
+  transition: opacity 0.2s ease;
+}
+
+.constitutional-radar__axis {
+  transition: opacity 0.2s ease;
+}
+
+.constitutional-radar__area {
+  transition: all 0.3s ease;
+}
+
+.constitutional-radar__dot {
+  transition: all 0.2s ease;
+}
+
+.constitutional-radar__dot:hover {
+  r: 6;
+  filter: brightness(1.2);
+}
+
+.constitutional-radar__label {
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Compact mode */
+.constitutional-radar[data-compact='true'] .constitutional-radar__summary {
+  gap: var(--space-xs);
+}
+
+.constitutional-radar[data-compact='true'] .constitutional-radar__score {
+  font-size: var(--font-size-lg);
+}

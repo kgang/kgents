@@ -1,0 +1,228 @@
+/**
+ * KBlockProjection Styles
+ *
+ * STARK BIOME: 90% steel, 10% earned glow
+ * Design: Humble frame, glowing content
+ */
+
+/* =============================================================================
+ * Container
+ * ============================================================================= */
+
+.kblock-projection {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-bare);
+  transition: border-color var(--transition-fast);
+}
+
+.kblock-projection:hover {
+  border-color: var(--color-steel-zinc);
+}
+
+.kblock-projection__inner {
+  flex: 1;
+  min-height: 0;
+}
+
+/* =============================================================================
+ * Indicators (shared across all projections)
+ * ============================================================================= */
+
+.kblock-projection__indicators {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  display: flex;
+  gap: var(--space-xs);
+  align-items: center;
+  z-index: var(--z-sticky);
+}
+
+/* Galois Loss Indicator */
+.kblock-projection__loss-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--surface-2);
+  border: 1px solid;
+  border-radius: var(--radius-bare);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.kblock-projection__loss-indicator:hover {
+  background: var(--surface-3);
+  transform: translateY(-1px);
+}
+
+.kblock-projection__loss-icon {
+  font-size: var(--font-size-sm);
+}
+
+.kblock-projection__loss-value {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Contradiction Badge */
+.kblock-projection__contradiction {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--surface-2);
+  border-radius: var(--radius-bare);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.kblock-projection__contradiction--minor {
+  border: 1px solid var(--health-degraded);
+}
+
+.kblock-projection__contradiction--major {
+  border: 1px solid var(--health-warning);
+}
+
+.kblock-projection__contradiction--critical {
+  border: 1px solid var(--health-critical);
+}
+
+.kblock-projection__contradiction-icon {
+  font-size: var(--font-size-sm);
+}
+
+.kblock-projection__contradiction-label {
+  text-transform: uppercase;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Constitutional Score (Low Warning) */
+.kblock-projection__constitutional-low {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--health-warning);
+  border-radius: var(--radius-bare);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.kblock-projection__constitutional-icon {
+  font-size: var(--font-size-sm);
+}
+
+.kblock-projection__constitutional-value {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Proof Badge */
+.kblock-projection__proof-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--accent-success);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  color: var(--surface-0);
+}
+
+.kblock-projection__proof-icon {
+  font-weight: var(--font-weight-bold);
+}
+
+/* =============================================================================
+ * Projection Mode Variants
+ * ============================================================================= */
+
+/* Graph: Node in hypergraph */
+.kblock-projection--graph {
+  min-width: 200px;
+  max-width: 300px;
+  padding: var(--space-md);
+}
+
+/* Feed: Item in chronological stream */
+.kblock-projection--feed {
+  margin-bottom: var(--space-md);
+}
+
+/* Chat: Message bubble */
+.kblock-projection--chat {
+  max-width: 800px;
+  margin-bottom: var(--space-sm);
+}
+
+/* Portal: Expanded full detail */
+.kblock-projection--portal {
+  width: 100%;
+  min-height: 400px;
+}
+
+/* Genesis: Cascade lineage view */
+.kblock-projection--genesis {
+  padding-left: calc(var(--space-md) * var(--depth, 0));
+  margin-bottom: var(--space-xs);
+}
+
+/* Card: Compact summary */
+.kblock-projection--card {
+  padding: var(--space-sm);
+  max-width: 400px;
+}
+
+/* Inline: Minimal text */
+.kblock-projection--inline {
+  display: inline-flex;
+  padding: var(--space-xs);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+/* Diff: Side-by-side comparison */
+.kblock-projection--diff {
+  min-height: 300px;
+}
+
+/* Proof: Toulmin argument structure */
+.kblock-projection--proof {
+  padding: var(--space-lg);
+}
+
+/* =============================================================================
+ * Data Attributes (for debugging/styling)
+ * ============================================================================= */
+
+.kblock-projection[data-isolation='PRISTINE'] {
+  /* Clean, no drift */
+}
+
+.kblock-projection[data-isolation='DIRTY'] {
+  border-left: 2px solid var(--health-degraded);
+}
+
+.kblock-projection[data-isolation='STALE'] {
+  border-left: 2px solid var(--health-warning);
+}
+
+.kblock-projection[data-isolation='CONFLICTING'] {
+  border-left: 2px solid var(--health-critical);
+}
+
+.kblock-projection[data-isolation='ENTANGLED'] {
+  border-left: 2px solid var(--severity-critical);
+}

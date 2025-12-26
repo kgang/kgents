@@ -1,0 +1,339 @@
+/**
+ * GenesisPage - STARK BIOME with Earned Glow
+ *
+ * 90% Steel, 10% Earned Glow
+ * - Dark canvas: obsidian #0A0A0C
+ * - Life accent: mint #4A6B4A → #6B8B6B
+ * - Bioluminescence: K-Blocks glow as they materialize
+ * - 4-7-8 breathing: 6.75s asymmetric (slow exhale)
+ */
+
+/* =============================================================================
+ * Page Layout
+ * ============================================================================= */
+
+/* =============================================================================
+ * LAYOUT FIX: Scroll within AppShell constraint
+ *
+ * The AppShell uses:
+ *   .app-shell { height: 100vh; overflow: hidden }
+ *   .app-shell__content { overflow: hidden } (children manage scroll)
+ *
+ * Genesis page must:
+ *   1. Use height: 100% to fit within the grid row, NOT min-height: 100vh
+ *   2. Have overflow-y: auto for scrolling when content exceeds container
+ *   3. Remove justify-content: center which causes top-clipping on overflow
+ *   4. Use padding and auto margins for centering instead
+ * ============================================================================= */
+
+.genesis-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #0a0a0c; /* steel-obsidian */
+  color: #b4b4be;
+  overflow-y: auto;
+  padding: 48px 24px;
+}
+
+.genesis-page__container {
+  max-width: 600px;
+  width: 100%;
+  padding: 0 24px;
+  padding-bottom: 80px; /* Extra space at bottom for scroll/button visibility */
+  text-align: center;
+  margin: auto 0; /* Vertical centering when content is smaller than container */
+}
+
+/* =============================================================================
+ * Title & Subtitle
+ * ============================================================================= */
+
+.genesis-page__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #e6e6f0;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.05em;
+}
+
+.genesis-page__subtitle {
+  font-size: 1rem;
+  color: #8c8c96;
+  margin: 0 0 48px 0;
+  font-weight: 400;
+}
+
+/* =============================================================================
+ * Cascade Container
+ * ============================================================================= */
+
+.genesis-page__cascade {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 48px;
+}
+
+/* =============================================================================
+ * Genesis Block - Emerges with Bioluminescent Glow
+ * ============================================================================= */
+
+.genesis-block {
+  background: #141418;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  padding: 20px;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease-out;
+}
+
+.genesis-block--visible {
+  opacity: 1;
+  transform: translateY(0);
+  animation: genesis-breathe 6.75s ease-out infinite;
+}
+
+/* =============================================================================
+ * 4-7-8 Breathing Animation
+ *
+ * Asymmetric timing (slow exhale for calm):
+ * - 0-15% (1s): Rest at baseline
+ * - 15-40% (1.7s): Inhale - glow builds
+ * - 40-50% (0.7s): Hold - peak glow
+ * - 50-100% (3.4s): Exhale - slow fade (2x inhale = calming)
+ * ============================================================================= */
+
+@keyframes genesis-breathe {
+  0%,
+  15% {
+    box-shadow: 0 0 0 rgba(74, 107, 74, 0);
+    border-color: #28282f;
+  }
+  40% {
+    box-shadow: 0 0 20px rgba(74, 107, 74, 0.3);
+    border-color: #4a6b4a;
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(74, 107, 74, 0.3);
+    border-color: #4a6b4a;
+  }
+  95%,
+  100% {
+    box-shadow: 0 0 0 rgba(74, 107, 74, 0);
+    border-color: #28282f;
+  }
+}
+
+/* =============================================================================
+ * Block Header
+ * ============================================================================= */
+
+.genesis-block__header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.genesis-block__layer {
+  color: #6b8b6b; /* life-mint */
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+}
+
+.genesis-block__layer-name {
+  color: #8c8c96;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* =============================================================================
+ * Block Content
+ * ============================================================================= */
+
+.genesis-block__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #d2d2dc;
+  margin: 0 0 4px 0;
+}
+
+.genesis-block__content {
+  font-size: 0.9rem;
+  color: #8c8c96;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+/* =============================================================================
+ * Block Meta (Loss + Foundation)
+ * ============================================================================= */
+
+.genesis-block__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: #6b6b75;
+}
+
+.genesis-block__foundation {
+  color: #6b6b75;
+  font-style: italic;
+}
+
+/* =============================================================================
+ * Derivation Arrow
+ * ============================================================================= */
+
+.genesis-block__arrow {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.genesis-block__arrow-symbol {
+  color: #4a6b4a;
+  font-size: 1.4rem;
+  line-height: 1;
+  display: inline-block;
+  animation: arrow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes arrow-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* =============================================================================
+ * Coherence Gauge
+ * ============================================================================= */
+
+.genesis-page__coherence {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.genesis-page__coherence-label {
+  font-size: 0.9rem;
+  color: #8c8c96;
+}
+
+.genesis-page__coherence-bar {
+  width: 200px;
+  height: 8px;
+  background: #1c1c22;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.genesis-page__coherence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4a6b4a, #6b8b6b);
+  border-radius: 4px;
+  transition: width 0.1s ease-out;
+}
+
+.genesis-page__coherence-value {
+  font-size: 0.9rem;
+  color: #6b8b6b;
+  font-weight: 600;
+  min-width: 40px;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+}
+
+/* =============================================================================
+ * Enter Button
+ * ============================================================================= */
+
+.genesis-page__enter {
+  padding: 12px 32px;
+  background: #1c1c22;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  color: #8c8c96;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: not-allowed;
+  transition: all 0.3s ease-out;
+}
+
+.genesis-page__enter--ready {
+  background: #4a6b4a;
+  border-color: #4a6b4a;
+  color: #e6e6f0;
+  cursor: pointer;
+}
+
+.genesis-page__enter--ready:hover {
+  background: #5a7b5a;
+  box-shadow: 0 0 20px rgba(74, 107, 74, 0.4);
+}
+
+.genesis-page__enter--ready:active {
+  transform: translateY(1px);
+}
+
+/* =============================================================================
+ * Responsive
+ * ============================================================================= */
+
+@media (max-width: 768px) {
+  .genesis-page {
+    padding: 24px 16px;
+    padding-bottom: 60px; /* Maintain bottom space on mobile */
+  }
+
+  .genesis-page__container {
+    padding: 0 8px;
+  }
+
+  .genesis-page__title {
+    font-size: 1.5rem;
+  }
+
+  .genesis-block {
+    padding: 16px;
+  }
+
+  .genesis-block__title {
+    font-size: 1rem;
+  }
+
+  .genesis-page__coherence-bar {
+    width: 140px;
+  }
+}
+
+/* =============================================================================
+ * Reduced Motion
+ * ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .genesis-block--visible {
+    animation: none;
+  }
+
+  .genesis-block__arrow-symbol {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  .genesis-block {
+    transition: opacity 0.3s ease-out;
+    transform: none;
+  }
+}

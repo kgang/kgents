@@ -1,0 +1,195 @@
+/**
+ * ConstitutionalDashboard styles
+ *
+ * Grid layout for composite constitutional view.
+ */
+
+.constitutional-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--steel-950);
+  border-radius: var(--radius-lg);
+}
+
+.constitutional-dashboard[data-layout='horizontal'] {
+  flex-direction: row;
+}
+
+/* Loading, error, empty states */
+.constitutional-dashboard--loading,
+.constitutional-dashboard--error,
+.constitutional-dashboard--empty {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.constitutional-dashboard__placeholder {
+  text-align: center;
+  color: var(--steel-500);
+  font-family: var(--font-mono);
+}
+
+.constitutional-dashboard__placeholder h3 {
+  font-size: var(--font-size-lg);
+  color: var(--steel-400);
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.constitutional-dashboard__placeholder p {
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.constitutional-dashboard__spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto var(--space-md) auto;
+  border: 3px solid var(--steel-800);
+  border-top-color: var(--steel-400);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Header */
+.constitutional-dashboard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--steel-800);
+}
+
+.constitutional-dashboard__title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--steel-200);
+  font-family: var(--font-mono);
+}
+
+/* Top row: Radar + Scorecard */
+.constitutional-dashboard__top {
+  display: grid;
+  grid-template-columns: minmax(0, 450px) 1fr;
+  gap: var(--space-lg);
+}
+
+@media (max-width: 1024px) {
+  .constitutional-dashboard__top {
+    grid-template-columns: 1fr;
+  }
+}
+
+.constitutional-dashboard__radar {
+  display: flex;
+  justify-content: center;
+}
+
+.constitutional-dashboard__scorecard {
+  /* Auto-sized */
+}
+
+/* Metrics row */
+.constitutional-dashboard__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-md);
+}
+
+.constitutional-dashboard__metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--steel-900);
+  border-radius: var(--radius-md);
+}
+
+.constitutional-dashboard__metric-label {
+  font-size: var(--font-size-xs);
+  color: var(--steel-500);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.constitutional-dashboard__metric-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--steel-200);
+  font-family: var(--font-mono);
+}
+
+/* Dominant principles */
+.constitutional-dashboard__dominant {
+  padding: var(--space-md);
+  background: var(--steel-900);
+  border-radius: var(--radius-md);
+}
+
+.constitutional-dashboard__dominant-title {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--steel-400);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.constitutional-dashboard__dominant-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.constitutional-dashboard__dominant-item {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--steel-800);
+  border: 1px solid var(--steel-700);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--steel-300);
+}
+
+/* Reasoning section */
+.constitutional-dashboard__reasoning {
+  padding: var(--space-md);
+  background: var(--steel-900);
+  border-radius: var(--radius-md);
+}
+
+.constitutional-dashboard__reasoning-title {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--steel-400);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.constitutional-dashboard__reasoning-text {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  color: var(--steel-300);
+}
+
+/* Horizontal layout adjustments */
+.constitutional-dashboard[data-layout='horizontal'] .constitutional-dashboard__top {
+  grid-template-columns: 1fr;
+}
+
+.constitutional-dashboard[data-layout='horizontal'] .constitutional-dashboard__metrics {
+  grid-template-columns: 1fr;
+}

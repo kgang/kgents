@@ -1,0 +1,316 @@
+/**
+ * CoherenceTimeline Styles
+ * STARK BIOME: 90% steel, 10% earned glow
+ */
+
+.coherence-timeline {
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-bare);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* =============================================================================
+ * Header
+ * ============================================================================= */
+
+.coherence-timeline__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--surface-3);
+}
+
+.coherence-timeline__tabs {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.coherence-timeline__tab {
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-subtle);
+  padding: var(--space-sm) var(--space-lg);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.coherence-timeline__tab:hover {
+  background: var(--surface-3);
+  border-color: var(--color-steel-zinc);
+}
+
+.coherence-timeline__tab--active {
+  background: var(--color-life-moss);
+  border-color: var(--color-life-sage);
+  color: var(--color-life-mint);
+}
+
+.coherence-timeline__actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.coherence-timeline__action {
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+  border-radius: var(--radius-subtle);
+  padding: var(--space-sm) var(--space-md);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.coherence-timeline__action:hover {
+  background: var(--surface-3);
+  border-color: var(--color-glow-spore);
+  color: var(--text-primary);
+}
+
+/* =============================================================================
+ * Chart
+ * ============================================================================= */
+
+.coherence-timeline__chart {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.coherence-timeline__svg {
+  display: block;
+}
+
+.coherence-timeline__grid line {
+  opacity: 0.3;
+}
+
+.coherence-timeline__line {
+  filter: drop-shadow(0 0 4px rgba(74, 107, 74, 0.3));
+  transition: all var(--transition-fast);
+}
+
+.coherence-timeline__point {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.coherence-timeline__point:hover,
+.coherence-timeline__point--hovered {
+  filter: drop-shadow(0 0 8px var(--color-life-sage));
+}
+
+.coherence-timeline__breakthrough-badge {
+  animation: breakthrough-pulse 2s ease-in-out infinite;
+}
+
+@keyframes breakthrough-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* =============================================================================
+ * Tooltip
+ * ============================================================================= */
+
+.coherence-timeline__tooltip {
+  position: absolute;
+  background: var(--surface-2);
+  border: 1px solid var(--color-glow-spore);
+  border-radius: var(--radius-subtle);
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  pointer-events: none;
+  z-index: var(--z-dropdown);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(-50%);
+  animation: tooltip-appear 120ms var(--ease-out);
+}
+
+@keyframes tooltip-appear {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.coherence-timeline__tooltip-score {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-life-sage);
+}
+
+.coherence-timeline__tooltip-date {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.coherence-timeline__tooltip-commit {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  padding: 2px var(--space-xs);
+  background: var(--surface-3);
+  border-radius: var(--radius-bare);
+  align-self: flex-start;
+}
+
+.coherence-timeline__tooltip-breakthrough {
+  font-size: var(--font-size-xs);
+  color: var(--color-glow-amber);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* =============================================================================
+ * Distribution (Pie Chart)
+ * ============================================================================= */
+
+.coherence-timeline__distribution {
+  display: flex;
+  gap: var(--space-xl);
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+}
+
+.coherence-timeline__distribution-arc {
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.coherence-timeline__distribution-arc:hover {
+  opacity: 0.8;
+  filter: brightness(1.2);
+}
+
+.coherence-timeline__distribution-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.coherence-timeline__distribution-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.coherence-timeline__distribution-legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-bare);
+  border: 1px solid var(--surface-3);
+  flex-shrink: 0;
+}
+
+.coherence-timeline__distribution-legend-label {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  min-width: 64px;
+}
+
+.coherence-timeline__distribution-legend-value {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* =============================================================================
+ * Empty State
+ * ============================================================================= */
+
+.coherence-timeline--empty {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coherence-timeline__empty-state {
+  color: var(--text-muted);
+  font-size: var(--font-size-md);
+  text-align: center;
+}
+
+/* =============================================================================
+ * Responsive (4-7-8 Breathing)
+ * ============================================================================= */
+
+@media (max-width: 768px) {
+  .coherence-timeline {
+    padding: var(--space-md);
+  }
+
+  .coherence-timeline__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .coherence-timeline__tabs {
+    justify-content: stretch;
+  }
+
+  .coherence-timeline__tab {
+    flex: 1;
+    text-align: center;
+  }
+
+  .coherence-timeline__actions {
+    justify-content: flex-end;
+  }
+
+  .coherence-timeline__distribution {
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+}
+
+/* Compact density */
+@media (max-width: 640px) {
+  .coherence-timeline {
+    padding: var(--space-sm);
+  }
+
+  .coherence-timeline__header {
+    gap: var(--space-sm);
+  }
+
+  .coherence-timeline__tab,
+  .coherence-timeline__action {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-xs);
+  }
+
+  .coherence-timeline__svg {
+    max-width: 100%;
+    height: auto;
+  }
+}

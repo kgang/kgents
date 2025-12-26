@@ -1,0 +1,776 @@
+/**
+ * FeedPage Styles
+ *
+ * STARK BIOME: 90% steel, 10% earned glow.
+ *
+ * "The feed is not a view of data. The feed IS the primary interface."
+ *
+ * Palette:
+ * - Steel: obsidian #0A0A0C, carbon #141418, gunmetal #28282F
+ * - Life: sage #4A6B4A, mint #6B8B6B
+ * - Loss: green (grounded) -> yellow (exploratory) -> rust (frontier)
+ * - Glow: spore #C4A77D (earned, on hover)
+ */
+
+/* =============================================================================
+ * Page Container
+ * ============================================================================= */
+
+.feed-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0c; /* steel-obsidian */
+  color: #b4b4be;
+  overflow: hidden;
+}
+
+/* =============================================================================
+ * Header
+ * ============================================================================= */
+
+.feed-page__header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #141418; /* steel-carbon */
+  border-bottom: 1px solid #28282f;
+}
+
+.feed-page__title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feed-page__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #1c1c22;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #8c8c96;
+}
+
+.feed-page__title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #d2d2dc;
+  margin: 0;
+}
+
+.feed-page__controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Compact dropdown selector (for mobile/narrow) */
+.feed-page__ranking-select {
+  padding: 6px 12px;
+  background: #1c1c22;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #b4b4be;
+  cursor: pointer;
+  transition: border-color 0.15s ease-out;
+}
+
+.feed-page__ranking-select:hover {
+  border-color: #4a6b4a;
+}
+
+.feed-page__ranking-select:focus {
+  outline: none;
+  border-color: #6b8b6b;
+}
+
+/* =============================================================================
+ * Ranking Bar (Below Header)
+ * ============================================================================= */
+
+.feed-page__ranking-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 24px;
+  background: #141418;
+  border-bottom: 1px solid #28282f;
+}
+
+.feed-page__ranking-label {
+  font-size: 0.8rem;
+  color: #8c8c96;
+  font-weight: 500;
+}
+
+.feed-page__ranking-label--secondary {
+  margin-left: 16px;
+}
+
+/* Aspect Pills (Feed Source Toggle) */
+.aspect-pills {
+  display: flex;
+  gap: 2px;
+  background: #1c1c22;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.aspect-pills__btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: #8c8c96;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s ease-out;
+}
+
+.aspect-pills__btn:hover {
+  color: #b4b4be;
+  background: #28282f;
+}
+
+.aspect-pills__btn--active {
+  background: #4a6b4a; /* life-sage */
+  color: #e6e6f0;
+}
+
+.aspect-pills__btn--active:hover {
+  background: #5a7b5a;
+}
+
+/* Contradiction aspect - warm red accent when active */
+.aspect-pills__btn--contradiction.aspect-pills__btn--active {
+  background: #FF6B6B; /* coral - productive tension */
+  color: #1a0a0a;
+}
+
+.aspect-pills__btn--contradiction.aspect-pills__btn--active:hover {
+  background: #ff7b7b;
+}
+
+.aspect-pills__icon {
+  font-size: 1rem;
+}
+
+/* Ranking Pills */
+.ranking-pills {
+  display: flex;
+  gap: 2px;
+  background: #1c1c22;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.ranking-pills__btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: #8c8c96;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s ease-out;
+}
+
+.ranking-pills__btn:hover {
+  color: #b4b4be;
+  background: #28282f;
+}
+
+.ranking-pills__btn--active {
+  background: #4a6b4a; /* life-sage */
+  color: #e6e6f0;
+}
+
+.ranking-pills__btn--active:hover {
+  background: #5a7b5a;
+}
+
+/* =============================================================================
+ * Main Content
+ * ============================================================================= */
+
+.feed-page__main {
+  flex: 1;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* Override Feed primitive styling for full-width */
+.feed-page__main .feed {
+  height: 100%;
+  border-radius: 0;
+}
+
+.feed-page__main .feed__container {
+  padding: 16px 24px;
+}
+
+/* =============================================================================
+ * Filter Dropdown
+ * ============================================================================= */
+
+.filter-dropdown {
+  position: relative;
+}
+
+.filter-dropdown__trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #1c1c22;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #b4b4be;
+  cursor: pointer;
+  transition: border-color 0.15s ease-out;
+}
+
+.filter-dropdown__trigger:hover {
+  border-color: #4a6b4a;
+}
+
+.filter-dropdown__icon {
+  font-size: 0.85rem;
+}
+
+.filter-dropdown__badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: #4a6b4a;
+  border-radius: 9px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #e6e6f0;
+}
+
+.filter-dropdown__chevron {
+  font-size: 0.65rem;
+  color: #5a5a64;
+}
+
+/* Dropdown Menu */
+.filter-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 220px;
+  background: #141418;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.filter-dropdown__section {
+  padding: 8px 12px;
+  border-bottom: 1px solid #28282f;
+}
+
+.filter-dropdown__section:last-child {
+  border-bottom: none;
+}
+
+.filter-dropdown__section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #5a5a64;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.filter-dropdown__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.filter-dropdown__option {
+  padding: 4px 10px;
+  background: #1c1c22;
+  border: 1px solid #28282f;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  color: #b4b4be;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.filter-dropdown__option:hover {
+  background: #28282f;
+  border-color: #c4a77d; /* glow-spore on hover */
+}
+
+/* Loss filter color hints */
+.filter-dropdown__option--grounded {
+  border-color: #4a6b4a;
+}
+
+.filter-dropdown__option--grounded:hover {
+  background: #4a6b4a;
+  color: #e6e6f0;
+}
+
+.filter-dropdown__option--exploratory {
+  border-color: #c4a77d;
+}
+
+.filter-dropdown__option--exploratory:hover {
+  background: #c4a77d;
+  color: #0a0a0c;
+}
+
+.filter-dropdown__option--frontier {
+  border-color: #a65d4a;
+}
+
+.filter-dropdown__option--frontier:hover {
+  background: #a65d4a;
+  color: #e6e6f0;
+}
+
+.filter-dropdown__clear {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid #28282f;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  color: #8c8c96;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.filter-dropdown__clear:hover {
+  background: #1c1c22;
+  color: #b4b4be;
+}
+
+/* Active Filters */
+.filter-dropdown__active {
+  padding: 8px 12px;
+  background: #0a0a0c;
+}
+
+.filter-dropdown__active-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.filter-dropdown__chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: #1c1c22;
+  border: 1px solid #28282f;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  color: #8c8c96;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.filter-dropdown__chip:hover {
+  border-color: #c4a77d;
+}
+
+.filter-dropdown__chip--active {
+  border-color: #4a6b4a;
+  color: #b4b4be;
+}
+
+.filter-dropdown__chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-size: 0.7rem;
+  color: #5a5a64;
+  cursor: pointer;
+  transition: color 0.15s ease-out;
+}
+
+.filter-dropdown__chip-remove:hover {
+  color: #a65d4a;
+}
+
+/* =============================================================================
+ * K-Block Card Enhancements (Override Feed primitives)
+ * ============================================================================= */
+
+/* Loss Thermometer (Vertical) */
+.feed-page .feed-item {
+  position: relative;
+}
+
+/* Stillness by default - animation only on new items */
+@keyframes kblock-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feed-page .feed-item--new {
+  animation: kblock-enter 0.3s ease-out;
+}
+
+/* Earned glow on hover */
+.feed-page .feed-item:hover {
+  border-color: #4a6b4a;
+  box-shadow: 0 4px 16px rgba(74, 107, 74, 0.15);
+}
+
+/* =============================================================================
+ * Responsive
+ * ============================================================================= */
+
+@media (max-width: 768px) {
+  .feed-page__header {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .feed-page__title {
+    font-size: 1.1rem;
+  }
+
+  .feed-page__controls {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .feed-page__ranking-bar {
+    padding: 8px 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ranking-pills {
+    flex-shrink: 0;
+  }
+
+  .ranking-pills__btn {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+
+  .feed-page__main .feed__container {
+    padding: 12px 16px;
+  }
+}
+
+/* Hide ranking dropdown on larger screens (pills are visible) */
+@media (min-width: 640px) {
+  .feed-page__ranking-select {
+    display: none;
+  }
+}
+
+/* Hide ranking pills on very small screens (dropdown visible) */
+@media (max-width: 639px) {
+  .feed-page__ranking-bar {
+    display: none;
+  }
+}
+
+/* =============================================================================
+ * Scrollbar Styling
+ * ============================================================================= */
+
+.feed-page__main ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.feed-page__main ::-webkit-scrollbar-track {
+  background: #0a0a0c;
+}
+
+.feed-page__main ::-webkit-scrollbar-thumb {
+  background: #28282f;
+  border-radius: 4px;
+}
+
+.feed-page__main ::-webkit-scrollbar-thumb:hover {
+  background: #3a3a44;
+}
+
+/* =============================================================================
+ * Witness Status Indicator
+ * ============================================================================= */
+
+.feed-page__witness-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #1c1c22;
+  border: 1px solid #28282f;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #5a5a64;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.feed-page__witness-status--connected {
+  border-color: #4a6b4a;
+  color: #6b8b6b;
+}
+
+.feed-page__witness-status--connected::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #6b8b6b;
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* =============================================================================
+ * Unified Aspect (new tab)
+ * ============================================================================= */
+
+.aspect-pills__btn--unified.aspect-pills__btn--active {
+  background: #c4a77d; /* glow-spore for witness */
+  color: #0a0a0c;
+}
+
+.aspect-pills__btn--unified.aspect-pills__btn--active:hover {
+  background: #d4b78d;
+}
+
+/* =============================================================================
+ * Unified Feed Container
+ * ============================================================================= */
+
+.unified-feed {
+  padding: 16px 24px;
+  background: #0a0a0c;
+}
+
+.unified-feed__items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* =============================================================================
+ * Mark Feed Item
+ * ============================================================================= */
+
+.mark-feed-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #141418;
+  border: 1px solid #28282f;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.mark-feed-item:hover {
+  border-color: #c4a77d; /* glow-spore for marks */
+  background: #1c1c22;
+  box-shadow: 0 4px 16px rgba(196, 167, 125, 0.1);
+}
+
+/* Recent marks get amber left border */
+.mark-feed-item--recent {
+  border-left: 3px solid #c4a77d;
+}
+
+/* Icon (left gutter) */
+.mark-feed-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background: #1c1c22;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #c4a77d; /* glow-spore */
+}
+
+/* Main content area */
+.mark-feed-item__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Header row (author + time) */
+.mark-feed-item__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+}
+
+.mark-feed-item__author {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.mark-feed-item__time {
+  color: #5a5a64;
+  margin-left: auto;
+}
+
+/* Action (main text) */
+.mark-feed-item__action {
+  font-size: 0.95rem;
+  color: #d2d2dc;
+  line-height: 1.4;
+}
+
+/* Reasoning preview */
+.mark-feed-item__reasoning {
+  font-size: 0.8rem;
+  color: #8c8c96;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* Principles tags */
+.mark-feed-item__principles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.mark-feed-item__principle {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #1c1c22;
+  border: 1px solid #3a3a44;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  color: #8c8c96;
+}
+
+.mark-feed-item__principle--more {
+  color: #5a5a64;
+  font-style: italic;
+}
+
+/* Recent badge */
+.mark-feed-item__recent-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 4px 8px;
+  background: rgba(196, 167, 125, 0.15);
+  border: 1px solid #c4a77d;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #c4a77d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* =============================================================================
+ * Breathing Animation for Recent Items
+ * ============================================================================= */
+
+/* Use the global breathe-subtle class from breathing.css */
+@keyframes breathe-subtle-fallback {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.975;
+  }
+  21.05% {
+    transform: scale(1.0075);
+    opacity: 1;
+  }
+  57.89% {
+    transform: scale(1.0075);
+    opacity: 1;
+  }
+}
+
+/* Fallback if breathing.css not loaded */
+.mark-feed-item--recent.breathe-subtle {
+  animation: breathe-subtle-fallback 19s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* =============================================================================
+ * Responsive for Mark Items
+ * ============================================================================= */
+
+@media (max-width: 768px) {
+  .unified-feed {
+    padding: 12px 16px;
+  }
+
+  .mark-feed-item {
+    padding: 10px 12px;
+  }
+
+  .mark-feed-item__icon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+
+  .mark-feed-item__action {
+    font-size: 0.9rem;
+  }
+
+  .mark-feed-item__reasoning {
+    font-size: 0.75rem;
+  }
+}

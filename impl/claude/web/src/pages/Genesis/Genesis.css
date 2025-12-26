@@ -1,0 +1,1020 @@
+/**
+ * Genesis FTUE Styling
+ *
+ * "Witness Genesis" — Dramatic, deliberate, joy-inducing.
+ *
+ * Design principles:
+ * - Stark Biome foundation (90% steel, 10% life)
+ * - Generous spacing for calm, deliberate experience
+ * - Subtle animations that enhance, don't distract
+ * - Warm glows for earned moments (celebration)
+ *
+ * @see plans/zero-seed-genesis-grand-strategy.md §6.3 (Joy Moments)
+ */
+
+/* =============================================================================
+ * Genesis Page Layout
+ * ============================================================================= */
+
+/* =============================================================================
+ * LAYOUT FIX: Scroll within AppShell constraint
+ *
+ * The AppShell uses:
+ *   .app-shell { height: 100vh; overflow: hidden }
+ *   .app-shell__content { overflow: hidden } (children manage scroll)
+ *
+ * Genesis page must:
+ *   1. Use height: 100% to fit within the grid row, NOT min-height: 100vh
+ *   2. Have overflow-y: auto for scrolling when content exceeds container
+ *   3. Remove justify-content: center which causes top-clipping on overflow
+ *   4. Use padding for spacing instead of flex centering
+ * ============================================================================= */
+
+.genesis-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  padding: 2rem;
+  padding-bottom: 4rem; /* Extra space for scroll/button visibility */
+  background: var(--surface-0, #0a0a0c);
+  color: var(--text-primary, #e5e7eb);
+}
+
+/* =============================================================================
+ * Genesis Header (Phase 1: GENESIS)
+ * ============================================================================= */
+
+.genesis-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.genesis-title {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  margin-bottom: 1rem;
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary, #c4a77d),
+    var(--accent-primary-bright, #d4b88c)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+}
+
+.genesis-subtitle {
+  font-size: 1.25rem;
+  color: var(--text-secondary, #8a8a94);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+
+/* =============================================================================
+ * Genesis Feed (Phase 1: GENESIS)
+ * ============================================================================= */
+
+.genesis-feed {
+  width: 100%;
+  max-width: 42rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.genesis-entry {
+  background: var(--surface-1, #141418);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.genesis-entry:hover {
+  border-color: var(--accent-primary, #c4a77d);
+  box-shadow: 0 0 20px rgba(196, 167, 125, 0.1);
+}
+
+.genesis-entry-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.genesis-entry-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--accent-primary, #c4a77d);
+  font-weight: 600;
+  min-width: 3rem;
+}
+
+.genesis-entry-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #e5e7eb);
+}
+
+.genesis-entry-description {
+  margin: 0.75rem 0;
+  color: var(--text-secondary, #8a8a94);
+  line-height: 1.6;
+}
+
+.genesis-entry-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted, #5a5a64);
+}
+
+.genesis-entry-meta-item {
+  color: var(--text-secondary, #8a8a94);
+}
+
+.genesis-entry-meta-separator {
+  color: var(--text-muted, #5a5a64);
+}
+
+/* =============================================================================
+ * Genesis Complete (Phase 1: GENESIS)
+ * ============================================================================= */
+
+.genesis-complete {
+  margin-top: 3rem;
+  text-align: center;
+}
+
+.genesis-awareness {
+  font-size: 1.25rem;
+  color: var(--accent-primary, #c4a77d);
+  font-weight: 300;
+  margin-bottom: 2rem;
+  letter-spacing: 0.05em;
+}
+
+.genesis-continue-btn {
+  background: var(--accent-primary, #c4a77d);
+  color: var(--surface-0, #0a0a0c);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.05em;
+}
+
+.genesis-continue-btn:hover {
+  background: var(--accent-primary-bright, #d4b88c);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(196, 167, 125, 0.3);
+}
+
+.genesis-continue-btn:active {
+  transform: translateY(0);
+}
+
+/* =============================================================================
+ * First Question (Phase 2: FIRST QUESTION)
+ * ============================================================================= */
+
+.genesis-question-container {
+  width: 100%;
+  max-width: 36rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.genesis-question-title {
+  font-size: 2rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-primary, #e5e7eb);
+  line-height: 1.4;
+}
+
+.genesis-question-subtitle {
+  text-align: center;
+  color: var(--text-secondary, #8a8a94);
+  font-size: 1rem;
+  font-weight: 300;
+  font-style: italic;
+}
+
+/* =============================================================================
+ * Input (Phase 2: FIRST QUESTION)
+ * ============================================================================= */
+
+.genesis-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.genesis-textarea {
+  width: 100%;
+  min-height: 6rem;
+  padding: 1rem;
+  background: var(--surface-1, #141418);
+  border: 2px solid var(--surface-3, #28282f);
+  border-radius: 0.5rem;
+  color: var(--text-primary, #e5e7eb);
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.genesis-textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary, #c4a77d);
+  box-shadow: 0 0 0 3px rgba(196, 167, 125, 0.1);
+}
+
+.genesis-textarea::placeholder {
+  color: var(--text-muted, #5a5a64);
+}
+
+.genesis-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.genesis-input-hint {
+  text-align: right;
+  font-size: 0.875rem;
+  color: var(--text-muted, #5a5a64);
+}
+
+.genesis-input-hint kbd {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  background: var(--surface-2, #1c1c22);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 0.25rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  margin: 0 0.125rem;
+}
+
+/* =============================================================================
+ * Examples (Phase 2: FIRST QUESTION)
+ * ============================================================================= */
+
+.genesis-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.genesis-examples-title {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #8a8a94);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.genesis-examples-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.genesis-example-item {
+  margin: 0;
+}
+
+.genesis-example-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: var(--surface-1, #141418);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 0.375rem;
+  color: var(--text-secondary, #8a8a94);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.genesis-example-btn:hover:not(:disabled) {
+  background: var(--surface-2, #1c1c22);
+  border-color: var(--accent-primary, #c4a77d);
+  color: var(--text-primary, #e5e7eb);
+}
+
+.genesis-example-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+ * Error State
+ * ============================================================================= */
+
+.genesis-error {
+  padding: 1rem;
+  background: rgba(166, 93, 74, 0.1);
+  border: 1px solid var(--accent-error, #a65d4a);
+  border-radius: 0.375rem;
+  color: var(--accent-error, #a65d4a);
+  font-size: 0.875rem;
+}
+
+/* =============================================================================
+ * Submit Button
+ * ============================================================================= */
+
+.genesis-submit-btn {
+  align-self: center;
+  background: var(--accent-primary, #c4a77d);
+  color: var(--surface-0, #0a0a0c);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.05em;
+}
+
+.genesis-submit-btn:hover:not(:disabled) {
+  background: var(--accent-primary-bright, #d4b88c);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(196, 167, 125, 0.3);
+}
+
+.genesis-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.genesis-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* =============================================================================
+ * K-Block Preview (Phase 3: FIRST K-BLOCK)
+ * ============================================================================= */
+
+.genesis-kblock-container {
+  width: 100%;
+  max-width: 40rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.genesis-kblock-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-primary, #e5e7eb);
+}
+
+.genesis-kblock-preview {
+  background: var(--surface-1, #141418);
+  border: 2px solid var(--accent-primary, #c4a77d);
+  border-radius: 0.75rem;
+  padding: 2rem;
+  box-shadow: 0 0 40px rgba(196, 167, 125, 0.15);
+}
+
+.genesis-kblock-header {
+  margin-bottom: 1.5rem;
+}
+
+.genesis-kblock-kind {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent-primary, #c4a77d);
+  margin-bottom: 0.5rem;
+}
+
+.genesis-kblock-declaration {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #e5e7eb);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.genesis-kblock-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--surface-3, #28282f);
+}
+
+.genesis-kblock-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.genesis-kblock-meta-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #5a5a64);
+}
+
+.genesis-kblock-meta-value {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #8a8a94);
+  line-height: 1.5;
+}
+
+/* =============================================================================
+ * Celebration (Phase 3: FIRST K-BLOCK)
+ * ============================================================================= */
+
+.genesis-celebration {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(
+    135deg,
+    rgba(196, 167, 125, 0.05),
+    rgba(212, 184, 140, 0.05)
+  );
+  border-radius: 0.75rem;
+}
+
+.genesis-celebration-emoji {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: celebrate 0.6s ease-out;
+}
+
+@keyframes celebrate {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.genesis-celebration-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--accent-primary, #c4a77d);
+  margin-bottom: 0.5rem;
+}
+
+.genesis-celebration-subtext {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #8a8a94);
+  line-height: 1.6;
+}
+
+/* =============================================================================
+ * Enter Button (Phase 3: FIRST K-BLOCK)
+ * ============================================================================= */
+
+.genesis-enter-btn {
+  align-self: center;
+  background: var(--accent-primary, #c4a77d);
+  color: var(--surface-0, #0a0a0c);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem 3rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 20px rgba(196, 167, 125, 0.2);
+}
+
+.genesis-enter-btn:hover {
+  background: var(--accent-primary-bright, #d4b88c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(196, 167, 125, 0.4);
+}
+
+.genesis-enter-btn:active {
+  transform: translateY(0);
+}
+
+/* =============================================================================
+ * Judgment Experience (Phase 4: F3 JUDGMENT)
+ * ============================================================================= */
+
+.genesis-judgment-container {
+  width: 100%;
+  max-width: 42rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.genesis-judgment-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-primary, #e5e7eb);
+  line-height: 1.4;
+}
+
+.genesis-judgment-subtitle {
+  text-align: center;
+  color: var(--text-secondary, #8a8a94);
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.genesis-judgment-subtitle strong {
+  color: var(--accent-primary, #c4a77d);
+  font-weight: 500;
+}
+
+/* Loading animation */
+.genesis-judgment-loading {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 0;
+}
+
+.genesis-judgment-loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-primary, #c4a77d);
+  animation: judgmentPulse 1.4s ease-in-out infinite;
+}
+
+.genesis-judgment-loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.genesis-judgment-loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes judgmentPulse {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Context (user's declaration) */
+.genesis-judgment-context {
+  background: var(--surface-1, #141418);
+  border: 1px solid var(--surface-3, #28282f);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.genesis-judgment-context-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #5a5a64);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.genesis-judgment-context-quote {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #8a8a94);
+  font-style: italic;
+  padding-left: 1rem;
+  border-left: 2px solid var(--surface-3, #28282f);
+}
+
+/* Proposal card */
+.genesis-judgment-proposal {
+  background: var(--surface-1, #141418);
+  border: 2px solid var(--accent-primary, #c4a77d);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 0 30px rgba(196, 167, 125, 0.1);
+}
+
+.genesis-judgment-proposal--faded {
+  opacity: 0.6;
+  border-color: var(--surface-3, #28282f);
+  box-shadow: none;
+}
+
+.genesis-judgment-proposal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.genesis-judgment-proposal-type {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-primary, #c4a77d);
+  background: rgba(196, 167, 125, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.genesis-judgment-proposal-confidence {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted, #5a5a64);
+}
+
+.genesis-judgment-proposal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #e5e7eb);
+  margin: 0 0 0.75rem 0;
+}
+
+.genesis-judgment-proposal-description {
+  font-size: 0.95rem;
+  color: var(--text-secondary, #8a8a94);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+.genesis-judgment-proposal-rationale {
+  font-size: 0.85rem;
+  color: var(--text-muted, #5a5a64);
+  line-height: 1.5;
+  margin: 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-3, #28282f);
+}
+
+.genesis-judgment-proposal-rationale em {
+  color: var(--text-secondary, #8a8a94);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* Verdict buttons */
+.genesis-judgment-verdicts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.genesis-judgment-verdict {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 1rem;
+  background: var(--surface-1, #141418);
+  border: 2px solid var(--surface-3, #28282f);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.genesis-judgment-verdict:hover:not(:disabled) {
+  border-color: var(--accent-primary, #c4a77d);
+  transform: translateY(-2px);
+}
+
+.genesis-judgment-verdict:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.genesis-judgment-verdict-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.genesis-judgment-verdict-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #e5e7eb);
+}
+
+.genesis-judgment-verdict-description {
+  font-size: 0.75rem;
+  color: var(--text-muted, #5a5a64);
+  text-align: center;
+}
+
+/* Verdict button variants */
+.genesis-judgment-verdict--accept:hover:not(:disabled) {
+  border-color: var(--life-sage, #6b8b6b);
+  background: rgba(107, 139, 107, 0.1);
+}
+
+.genesis-judgment-verdict--accept .genesis-judgment-verdict-icon {
+  color: var(--life-sage, #6b8b6b);
+}
+
+.genesis-judgment-verdict--revise:hover:not(:disabled) {
+  border-color: var(--accent-primary, #c4a77d);
+  background: rgba(196, 167, 125, 0.1);
+}
+
+.genesis-judgment-verdict--revise .genesis-judgment-verdict-icon {
+  color: var(--accent-primary, #c4a77d);
+}
+
+.genesis-judgment-verdict--reject:hover:not(:disabled) {
+  border-color: var(--accent-error, #a65d4a);
+  background: rgba(166, 93, 74, 0.1);
+}
+
+.genesis-judgment-verdict--reject .genesis-judgment-verdict-icon {
+  color: var(--accent-error, #a65d4a);
+}
+
+/* Note at bottom */
+.genesis-judgment-note {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted, #5a5a64);
+  font-style: italic;
+}
+
+.genesis-judgment-note em {
+  color: var(--text-secondary, #8a8a94);
+}
+
+/* Action buttons for revision */
+.genesis-judgment-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.genesis-judgment-btn {
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.03em;
+}
+
+.genesis-judgment-btn--primary {
+  background: var(--accent-primary, #c4a77d);
+  color: var(--surface-0, #0a0a0c);
+  border: none;
+}
+
+.genesis-judgment-btn--primary:hover:not(:disabled) {
+  background: var(--accent-primary-bright, #d4b88c);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(196, 167, 125, 0.3);
+}
+
+.genesis-judgment-btn--secondary {
+  background: transparent;
+  color: var(--text-secondary, #8a8a94);
+  border: 1px solid var(--surface-3, #28282f);
+}
+
+.genesis-judgment-btn--secondary:hover:not(:disabled) {
+  border-color: var(--text-secondary, #8a8a94);
+  color: var(--text-primary, #e5e7eb);
+}
+
+.genesis-judgment-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Result display */
+.genesis-judgment-result {
+  background: var(--surface-1, #141418);
+  border: 2px solid var(--accent-primary, #c4a77d);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.genesis-judgment-result-verdict {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.genesis-judgment-result-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #8a8a94);
+}
+
+.genesis-judgment-result-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.genesis-judgment-result-value--accept {
+  color: var(--life-sage, #6b8b6b);
+  background: rgba(107, 139, 107, 0.15);
+}
+
+.genesis-judgment-result-value--revise {
+  color: var(--accent-primary, #c4a77d);
+  background: rgba(196, 167, 125, 0.15);
+}
+
+.genesis-judgment-result-value--reject {
+  color: var(--accent-error, #a65d4a);
+  background: rgba(166, 93, 74, 0.15);
+}
+
+.genesis-judgment-result-emerged {
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-3, #28282f);
+}
+
+.genesis-judgment-result-emerged-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #e5e7eb);
+  margin: 0 0 0.5rem 0;
+}
+
+.genesis-judgment-result-emerged-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #8a8a94);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.genesis-judgment-result-insight {
+  margin: 1rem 0 0 0;
+  padding: 0.75rem 1rem;
+  background: rgba(196, 167, 125, 0.05);
+  border-left: 3px solid var(--accent-primary, #c4a77d);
+  border-radius: 0 0.25rem 0.25rem 0;
+  font-size: 0.9rem;
+  color: var(--text-primary, #e5e7eb);
+  font-style: italic;
+}
+
+.genesis-judgment-result-witness {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-3, #28282f);
+}
+
+.genesis-judgment-result-witness-icon {
+  font-size: 1rem;
+}
+
+.genesis-judgment-result-witness-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted, #5a5a64);
+}
+
+/* Axiom planted notice */
+.genesis-judgment-axiom-planted {
+  text-align: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(
+    135deg,
+    rgba(196, 167, 125, 0.08),
+    rgba(212, 184, 140, 0.08)
+  );
+  border-radius: 0.5rem;
+  border: 1px solid rgba(196, 167, 125, 0.2);
+}
+
+.genesis-judgment-axiom-planted-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #8a8a94);
+}
+
+.genesis-judgment-axiom-planted-text strong {
+  color: var(--accent-primary, #c4a77d);
+}
+
+/* =============================================================================
+ * Responsive Adjustments
+ * ============================================================================= */
+
+@media (max-width: 768px) {
+  .genesis-page {
+    padding: 1rem;
+    padding-bottom: 3rem; /* Maintain bottom space on mobile */
+  }
+
+  .genesis-title {
+    font-size: 2rem;
+    letter-spacing: 0.2em;
+  }
+
+  .genesis-subtitle {
+    font-size: 1rem;
+  }
+
+  .genesis-question-title {
+    font-size: 1.5rem;
+  }
+
+  .genesis-feed {
+    max-width: 100%;
+  }
+
+  .genesis-entry {
+    padding: 1rem;
+  }
+
+  .genesis-kblock-preview {
+    padding: 1.5rem;
+  }
+
+  .genesis-kblock-declaration {
+    font-size: 1.25rem;
+  }
+
+  /* Judgment responsive */
+  .genesis-judgment-title {
+    font-size: 1.5rem;
+  }
+
+  .genesis-judgment-verdicts {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .genesis-judgment-verdict {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .genesis-judgment-verdict-description {
+    text-align: left;
+  }
+
+  .genesis-judgment-proposal {
+    padding: 1.25rem;
+  }
+
+  .genesis-judgment-proposal-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .genesis-judgment-actions {
+    flex-direction: column;
+  }
+
+  .genesis-judgment-btn {
+    width: 100%;
+  }
+}
