@@ -295,6 +295,30 @@ Single source of truth: K-Block table is spine; all systems project from it
 
 ---
 
+### Constitutional Decision OS (2025-12-26)
+```
+Amendment A: ETHICAL as floor constraint (≥0.6), not weighted principle
+Literature: L(P) = d(P, C(R(P))) is NOT novel formula — novel APPLICATION
+Pilot-first: Every week validates infrastructure THROUGH a pilot, not in isolation
+Joy calibration: FLOW (productivity), WARMTH (consumer), SURPRISE (creative)
+5 pilots: trail-to-crystal (wedge), wasm-survivors, disney-portal, rap-coach, sprite-procedural
+Consumer-first: Ship trail-to-crystal before Galois API; enterprise deferred until design partner
+Super-additivity: L(A∪B) > L(A) + L(B) + τ signals contradiction
+Ghost preservation: Unchosen paths remain inspectable for audit
+Compression honesty: Crystal must disclose what was dropped
+```
+
+### Aggressive Cleanup Protocol (2025-12-26)
+```
+One truth source: plans/enlightened-synthesis/ replaces 20+ scattered docs
+Archive don't delete: _archive/2025-12-26-cleanup/ preserves history
+NOW.md ceiling: 200 lines max (was 425)
+HYDRATE.md ceiling: 150 lines max
+Redundant doc detection: If absorbed into synthesis, archive immediately
+```
+
+---
+
 ## Unanswered
 
 ```
@@ -304,4 +328,4 @@ Servo embedding vs Electron: which path for desktop app?
 
 ---
 
-*Lines: 210/250 | Last updated: 2025-12-25 | Unified Data Spine added*
+*Lines: 240/250 | Last updated: 2025-12-26 | Constitutional Decision OS + Cleanup Protocol added*

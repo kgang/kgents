@@ -13,15 +13,29 @@ kg docs hydrate "<your task>"
 ```
 
 This surfaces critical gotchas, likely files, and voice anchors for YOUR specific task.
-**Don't skip this**—the gotchas you don't read are the bugs you will write.
 
-For file-specific work: `kg docs relevant <path>`
+---
+
+## THE ONE TRUTH
+
+**All plans consolidated to**: `plans/enlightened-synthesis/`
+
+```
+00-master-synthesis.md       ← Master vision (READ FIRST)
+01-theoretical-amendments.md ← 7 amendments
+02-execution-roadmap.md      ← 8-week pilot-grounded plan
+03-risk-mitigations.md       ← 47 vulnerabilities
+04-joy-integration.md        ← Joy calibration by domain
+05-product-strategy.md       ← Consumer-first path
+```
 
 ---
 
 ## Principles
 
 **Tasteful** • **Curated** • **Ethical** • **Joy-Inducing** • **Composable** • **Heterarchical** • **Generative**
+
+**Amendment A (2025-12-26)**: ETHICAL is a floor constraint (≥0.6 required), not a weighted principle.
 
 Full specification: [spec/principles.md](spec/principles.md)
 
@@ -39,31 +53,35 @@ await logos.invoke("world.house.manifest", umwelt)  # Observer-dependent
 
 ---
 
-## Built Systems (USE THESE)
+## Galois Loss Framework
 
-| Category | Location | Purpose |
-|----------|----------|---------|
-| **Categorical** | `agents/poly/`, `agents/operad/`, `agents/sheaf/` | PolyAgent, composition grammar, emergence |
-| **Streaming** | `agents/flux/` | Living pipelines, event-driven flows |
-| **Semantics** | `protocols/agentese/` | Logos, parser, JIT, wiring |
-| **SpecGraph** | `protocols/specgraph/` | Specs as navigable hypergraph |
-| **Services** | `services/` | Crown Jewels (Brain, Witness, Atelier, Liminal) |
-| **Soul** | `agents/k/` | LLM dialogue, hypnagogia, gatekeeper |
-| **Memory** | `agents/m/` | Crystals, cartography, stigmergy |
-| **UI** | `agents/i/reactive/` | Signal/Computed/Effect → multi-target |
+The core theoretical innovation:
+
+```python
+L(P) = d(P, C(R(P)))
+
+# Where:
+# R: Restructure via LLM (break into components)
+# C: Reconstitute via LLM (rebuild from components)
+# d: Semantic distance (BERTScore → cosine → fallback)
+```
+
+**Capabilities**:
+- Axiom detection: `L < 0.05` = fixed point
+- Layer assignment: L1-L7 via loss thresholds
+- Contradiction detection: super-additivity signals tension
 
 ---
 
-## Crown Jewels (Post-Extinction)
+## Crown Jewels (Post-Consolidation)
 
 | Jewel | Status | Purpose |
 |-------|--------|---------|
-| Brain | 100% | Spatial cathedral of memory + TeachingCrystal crystallization |
-| Witness | 98% | Marks, crystals, streaming, promotion (678 tests) |
-| Atelier | 75% | Design forge and creative workshop |
-| Liminal | 50% | Transition protocols: Morning Coffee |
-
-*Town, Park, Gestalt, Forge, Coalition, Muse, Gardener — archived 2025-12-21*
+| Witness | 98% | Mark, Crystal, Grant, Playbook (678 tests) |
+| Zero Seed | 85% | Galois Loss, Layer Assignment |
+| K-Block | 75% | Monad bind, Layer Factories |
+| Constitutional | 80% | 7-principle scoring, Amendment A |
+| Brain | 100% | Spatial cathedral of memory |
 
 ---
 
@@ -79,8 +97,6 @@ km "insight" --reasoning "why it matters"  # With justification
 km "gotcha" --tag gotcha --tag agentese    # Tagged for retrieval
 km "action" --json                         # Machine-readable
 ```
-
-**Tags**: `eureka` `gotcha` `taste` `friction` `joy` `veto` `decision` `pattern`
 
 ### Record Decisions (`kg decide`)
 
@@ -98,76 +114,22 @@ kg decide --kent "view" --kent-reasoning "why" \
 
 ```bash
 kg witness show --today                # Today's marks
-kg witness show --tag joy              # Filter by tag
 kg witness crystallize                 # Marks → Session crystal
-kg witness context --budget 2000       # Budget-aware context
 ```
-
-**Crystal Hierarchy**: Marks → Session (L0) → Day (L1) → Week (L2) → Epoch (L3)
 
 ---
 
-## Skills (READ THESE)
+## Current Execution: 5 Pilots
 
-`docs/skills/` — Essential skills covering every task.
+| Pilot | Domain | Joy | Status |
+|-------|--------|-----|--------|
+| **trail-to-crystal-daily-lab** | Productivity | FLOW | Week 6 (FIRST) |
+| wasm-survivors-witnessed-run-lab | Gaming | FLOW | Week 7 |
+| disney-portal-planner | Consumer | WARMTH | Week 8 |
+| rap-coach-flow-lab | Creative | SURPRISE | Week 7 |
+| sprite-procedural-taste-lab | Generative | SURPRISE | Week 8 |
 
-**Universal**: `metaphysical-fullstack.md` • `crown-jewel-patterns.md` • `test-patterns.md`
-
----
-
-## CLI Strategy Tools
-
-> *"Evidence over intuition. Traces over reflexes."*
-
-```bash
-# Session start
-kg probe health --all
-
-# Before modifying spec (four-mode analysis)
-kg analyze <spec>                  # Full LLM analysis (cat+epi → dia+gen)
-kg analyze <spec> --mode cat       # Categorical only (laws, fixed points)
-kg analyze <spec> --structural     # Fast structural mode (no LLM)
-
-# Before modifying spec (audit)
-kg audit spec/protocols/witness.md --full
-
-# After implementation
-kg annotate <spec> --impl --section "X" --link "services/y/z.py"
-
-# After bug fix
-kg annotate <spec> --gotcha --section "X" --note "Don't do Y"
-
-# When uncertain
-kg experiment generate --spec "..." --adaptive
-
-# Before commit
-kg compose --run "pre-commit"
-```
-
-Full guide: `docs/skills/cli-strategy-tools.md`
-
----
-
-## Analysis Operad: Four Modes
-
-> *"Analysis is not one thing but four."*
-
-```bash
-kg analyze <spec>                  # Full four-mode LLM analysis
-kg analyze <spec> --mode cat       # Categorical (laws, fixed points)
-kg analyze <spec> --mode epi       # Epistemic (grounding, Toulmin)
-kg analyze <spec> --mode dia       # Dialectical (tensions, synthesis)
-kg analyze <spec> --mode gen       # Generative (compression, regeneration)
-kg analyze --self                  # Self-analysis (meta-applicability)
-```
-
-**Modes**: `categorical` `epistemic` `dialectical` `generative` `full`
-
-**Two Backends**:
-- **LLM** (default): Real Claude-powered analysis via `services/analysis/`
-- **Structural** (`--structural`): Fast fallback, verifies what holds by construction
-
-**Integration with Witness**: Analysis marks are emitted to the Witness system for traceability.
+**Wedge**: `trail-to-crystal` — "Turn your day into proof of intention"
 
 ---
 
@@ -183,4 +145,13 @@ cd impl/claude/web && npm run typecheck && npm run lint
 
 ---
 
-*Lines: 145. Ceiling: 150.*
+## Voice Anchors
+
+> *"Daring, bold, creative, opinionated but not gaudy"*
+> *"The Mirror Test: Does K-gent feel like me on my best day?"*
+> *"Tasteful > feature-complete; Joy-inducing > merely functional"*
+> *"Depth over breadth"*
+
+---
+
+*Lines: 120. Ceiling: 150.*
