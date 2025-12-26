@@ -1,0 +1,80 @@
+name: Chromatic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'impl/claude/web/**'
+      - '.github/workflows/chromatic.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'impl/claude/web/**'
+      - '.github/workflows/chromatic.yml'
+
+# =============================================================================
+# VISUAL REGRESSION TESTING WITH CHROMATIC
+# =============================================================================
+# Design Philosophy:
+#   - Visual changes are caught before they reach main
+#   - Every PR gets a visual diff review link
+#   - Storybook snapshots become the source of truth for UI
+#   - STARK BIOME design system consistency is enforced
+#
+# Setup required:
+#   1. Create project at chromatic.com
+#   2. Add CHROMATIC_PROJECT_TOKEN to GitHub Secrets
+#   3. See impl/claude/web/VISUAL_TESTING.md for full guide
+# =============================================================================
+
+concurrency:
+  group: chromatic-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  chromatic:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: impl/claude/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for Chromatic to detect changes
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: impl/claude/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Run Chromatic
+        uses: chromaui/action@latest
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: impl/claude/web
+          storybookBuildDir: storybook-static
+          # Performance optimizations
+          onlyChanged: true
+          exitOnceUploaded: true
+          # Skip for dependabot PRs (no design changes)
+          skip: ${{ github.actor == 'dependabot[bot]' }}
+          # Auto-accept changes on main (baseline updates)
+          autoAcceptChanges: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Upload Storybook Build
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-build
+          path: impl/claude/web/storybook-static
+          retention-days: 7
