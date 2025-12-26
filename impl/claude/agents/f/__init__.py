@@ -8,53 +8,34 @@ The unified substrate for continuous agent interaction:
 
 See: spec/f-gents/README.md
 
-Migration Note:
-The old Forge implementation (intent, contract, crystallize) is deprecated.
-Use Flow, FlowConfig, FlowState for new code.
-Old exports are still available for backward compatibility.
+ARCHITECTURE (2025-12-25):
+===========================
+F-gents implements Flow: streaming substrate with polynomial state machines.
+
+FLOW API:
+- Flow: Continuous stream processing with polynomial state machines
+- ChatFlow, ResearchFlow, CollaborationFlow: Modalities built on Flow
+- FlowConfig, FlowState: Configuration and state management
+- See: impl/claude/agents/f/flow.py and impl/claude/agents/f/modalities/
+
+REMOVED (2025-12-25):
+- Forge API (Intent/Contract/Prototype/Validate/Crystallize) has been fully removed
+- Integrations (C-gent/J-gent/G-gent) that depended on Forge have been removed
+- See: brainstorming/FORGE_DEPRECATION.md for historical context
 """
 
-# === New Flow Implementation ===
+# === Flow Implementation ===
 from agents.f.config import (
     ChatConfig,
     CollaborationConfig,
     FlowConfig,
     ResearchConfig,
 )
-
-# === Deprecated Forge Implementation (Backward Compatibility) ===
-# TODO: Add deprecation warnings and eventually remove
-from agents.f.contract import (
-    CompositionRule,
-    Contract,
-    Invariant,
-    synthesize_contract,
-)
-from agents.f.crystallize import (
-    Artifact,
-    ArtifactMetadata,
-    ArtifactStatus,
-    Version,
-    VersionBump,
-    assemble_artifact,
-    crystallize,
-    determine_version_bump,
-    extract_tags_from_intent,
-    register_with_lgent,
-    save_artifact,
-)
 from agents.f.flow import (
     AgentProtocol,
     Flow,
     FlowAgent,
     FlowEvent,
-)
-from agents.f.intent import (
-    Dependency,
-    DependencyType,
-    Example,
-    Intent,
-    parse_intent,
 )
 from agents.f.j_integration import (
     BoundedComplexity,
@@ -97,53 +78,28 @@ from agents.f.polynomial import (
     FlowPolynomial,
     get_polynomial,
 )
-from agents.f.prototype import (
-    PrototypeConfig,
-    SourceCode,
-    StaticAnalysisReport,
-    ValidationCategory,
-    ValidationResult,
-    ValidationStatus,
-    generate_prototype,
-    generate_prototype_async,
-    run_static_analysis,
-)
 from agents.f.state import (
     ContributionType,
     FlowState,
     HypothesisStatus,
     Permission,
 )
-from agents.f.validate import (
-    ExampleResult,
-    ExampleResultStatus,
-    InvariantCheckResult,
-    TestResult,
-    TestResultStatus,
-    ValidationConfig,
-    ValidationReport,
-    ValidationTestResult,
-    ValidationTestStatus,
-    VerdictStatus,
-    run_test,
-    validate,
-    validate_with_self_healing,
-    verify_invariant,
-)
 
 __all__ = [
-    # === New Flow API ===
-    # Core
+    # ============================================================================
+    # FLOW API - Use these for all code
+    # ============================================================================
+    # Core Flow
     "Flow",
     "FlowAgent",
     "FlowEvent",
     "AgentProtocol",
-    # State
+    # State Management
     "FlowState",
     "HypothesisStatus",
     "ContributionType",
     "Permission",
-    # Config
+    # Configuration
     "FlowConfig",
     "ChatConfig",
     "ResearchConfig",
@@ -155,14 +111,14 @@ __all__ = [
     "SlidingContext",
     "SummarizingContext",
     "count_tokens",
-    # Polynomial
+    # Polynomial State Machines
     "FlowPolynomial",
     "FLOW_POLYNOMIAL",
     "CHAT_POLYNOMIAL",
     "RESEARCH_POLYNOMIAL",
     "COLLABORATION_POLYNOMIAL",
     "get_polynomial",
-    # Operad
+    # Composition Operads
     "Operation",
     "OpLaw",
     "Operad",
@@ -173,55 +129,6 @@ __all__ = [
     "get_operad",
     # Pipeline
     "FlowPipeline",
-    # === Deprecated Forge API (for backward compatibility) ===
-    # Intent parsing (Phase 1)
-    "Dependency",
-    "DependencyType",
-    "Example",
-    "Intent",
-    "parse_intent",
-    # Contract synthesis (Phase 2)
-    "CompositionRule",
-    "Contract",
-    "Invariant",
-    "synthesize_contract",
-    # Prototype generation (Phase 3)
-    "PrototypeConfig",
-    "SourceCode",
-    "StaticAnalysisReport",
-    "ValidationCategory",
-    "ValidationResult",
-    "ValidationStatus",
-    "generate_prototype",
-    "generate_prototype_async",
-    "run_static_analysis",
-    # Validation (Phase 4)
-    "ExampleResult",
-    "ExampleResultStatus",
-    "InvariantCheckResult",
-    "TestResult",
-    "TestResultStatus",
-    "ValidationConfig",
-    "ValidationReport",
-    "ValidationTestResult",
-    "ValidationTestStatus",
-    "VerdictStatus",
-    "run_test",
-    "validate",
-    "validate_with_self_healing",
-    "verify_invariant",
-    # Crystallization (Phase 5)
-    "Artifact",
-    "ArtifactMetadata",
-    "ArtifactStatus",
-    "Version",
-    "VersionBump",
-    "assemble_artifact",
-    "crystallize",
-    "determine_version_bump",
-    "extract_tags_from_intent",
-    "register_with_lgent",
-    "save_artifact",
     # Reality contracts (J-gent integration)
     "RealityGate",
     "DeterministicOnly",

@@ -36,15 +36,7 @@ from .conditional import (
     switch,
 )
 
-# Contract validation (Cross-pollination T2.8)
-from .contract_validator import (
-    ContractLawViolation,
-    ContractValidationReport,
-    ContractValidator,
-    suggest_contract_improvements,
-    validate_composition_compatibility,
-    validate_contract_laws,
-)
+# Contract validation removed 2025-12-25 (Forge API deprecated)
 from .functor import (
     # Async
     AsyncAgent,
@@ -191,10 +183,5 @@ __all__ = [
     "pure_either",
     "fail_either",
     # Contract validation (Cross-pollination T2.8)
-    "ContractValidator",
-    "ContractValidationReport",
-    "ContractLawViolation",
-    "validate_contract_laws",
-    "validate_composition_compatibility",
-    "suggest_contract_improvements",
+    # Contract validation removed 2025-12-25 (Forge API deprecated)
 ]

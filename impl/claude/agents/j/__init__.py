@@ -38,15 +38,7 @@ from .factory_integration import (
     get_jit_meta,
     is_jit_agent,
 )
-from .forge_integration import (
-    ForgeTemplate,
-    InstantiatedAgent,
-    TemplateParameters,
-    TemplateRegistry,
-    contract_to_template,
-    forge_and_instantiate,
-    instantiate_template,
-)
+# forge_integration removed 2025-12-25 (Forge API deprecated)
 from .jgent import (
     GeneratedTest,
     JGent,
@@ -182,15 +174,7 @@ __all__ = [
     "jgent",
     "jgent_sync",
     "generate_test_for_intent",
-    # F+J Integration types (Cross-Pollination T1.3)
-    "ForgeTemplate",
-    "TemplateParameters",
-    "InstantiatedAgent",
-    "TemplateRegistry",
-    # F+J Integration helpers (Cross-Pollination T1.3)
-    "contract_to_template",
-    "instantiate_template",
-    "forge_and_instantiate",
+    # F+J Integration removed 2025-12-25 (Forge API deprecated)
     # AgentFactory Integration (Phase 5)
     "JITAgentMeta",
     "JITAgentWrapper",

@@ -112,32 +112,15 @@ from .probes.witness_probe import (
     IDENTITY_LAW,
     ASSOCIATIVITY_LAW,
 )
-# TODO: Import remaining probes when dataclass errors are fixed
-# from .probes import (
-#     ChaosType,
-#     ChaosProbe,
-#     JudgeProbe,
-#     TrustProbe,
-#     ChaosConfig,
-#     JudgeConfig,
-#     TrustConfig,
-# )
-
-# Backwards compatibility (legacy types that emit deprecation warnings)
-from .compat import (
-    MockAgent as MockAgentCompat,
-    FixtureAgent as FixtureAgentCompat,
-    FailingAgent as FailingAgentCompat,
-    NoiseAgent as NoiseAgentCompat,
-    LatencyAgent as LatencyAgentCompat,
-    FlakyAgent as FlakyAgentCompat,
-    SpyAgent as SpyAgentCompat,
-    PredicateAgent as PredicateAgentCompat,
-    CounterAgent as CounterAgentCompat,
-    MetricsAgent as MetricsAgentCompat,
-    JudgeAgent as JudgeAgentCompat,
-    OracleAgent as OracleAgentCompat,
-    TrustGate as TrustGateCompat,
+# Import all remaining probes (dataclass errors fixed)
+from .probes import (
+    ChaosType,
+    ChaosProbe,
+    ChaosConfig,
+    JudgeProbe,
+    JudgeConfig,
+    TrustProbe,
+    TrustConfig,
 )
 
 # Operad for probe composition
@@ -223,45 +206,14 @@ from .trustgate import (
     create_trust_gate,
 )
 
-# Legacy imports (DEPRECATED - now provided by compat.py wrappers)
-# These re-export the @deprecated compat layer for backwards compatibility
-MockAgent = MockAgentCompat
-FixtureAgent = FixtureAgentCompat
-SpyAgent = SpyAgentCompat
-CounterAgent = CounterAgentCompat
+# Note: Legacy compat.py removed (2025-12-25)
+# MockAgent, FixtureAgent, SpyAgent, CounterAgent deprecated.
+# Use NullProbe, WitnessProbe instead.
 
-# Legacy Config types (DEPRECATED - for backwards compatibility)
-from dataclasses import dataclass
-from typing import Any, Dict, TypeVar
-
-A_Config = TypeVar("A_Config")
-B_Config = TypeVar("B_Config")
-
-@dataclass
-class MockConfig:
-    """DEPRECATED: Use NullConfig instead."""
-    output: Any
-    delay_ms: int = 0
-
-@dataclass
-class FixtureConfig:
-    """DEPRECATED: Use NullConfig with fixtures instead."""
-    fixtures: Dict[Any, Any]
-    default: Any = None
-    strict: bool = False
-
-# Legacy convenience functions (still supported, use compat types)
-def mock_agent(output, delay_ms: int = 0):
-    """DEPRECATED: Use NullProbe instead."""
-    return MockAgent(constant=output, delay_ms=delay_ms)
-
-def fixture_agent(fixtures: dict, default=None, strict: bool = False):
-    """DEPRECATED: Use NullProbe with fixtures instead."""
-    return FixtureAgent(fixtures=fixtures, default=default, strict=strict)
-
-def spy_agent(label: str = "Spy"):
-    """DEPRECATED: Use WitnessProbe instead."""
-    return SpyAgent(label=label)
+# Legacy Config types removed (2025-12-25)
+# Use NullConfig, WitnessConfig instead.
+# Legacy convenience functions removed (2025-12-25)
+# Use null_probe(), witness_probe() instead.
 
 __all__ = [
     # TruthFunctor Protocol (DP-Native Verification)
@@ -277,30 +229,23 @@ __all__ = [
     # New Probe Types
     "NullProbe",
     "WitnessProbe",  # CATEGORICAL mode - law verification (replaces LawValidator)
-    # TODO: Export remaining probes when implemented
-    # "ChaosType",
-    # "ChaosProbe",
-    # "JudgeProbe",
-    # "TrustProbe",
+    "ChaosType",
+    "ChaosProbe",
+    "JudgeProbe",
+    "TrustProbe",
     # Probe Configs (New)
     "NullConfig",
     "WitnessConfig",
     "witness_probe",  # Convenience function for WitnessProbe
     "IDENTITY_LAW",
     "ASSOCIATIVITY_LAW",
-    # "ChaosConfig",
-    # "JudgeConfig",
-    # "TrustConfig",
+    "ChaosConfig",
+    "JudgeConfig",
+    "TrustConfig",
     # Operad
     "PROBE_OPERAD",
-    # Type I - Nullifiers (DEPRECATED - use NullProbe)
-    "MockAgent",
-    "MockConfig",  # Legacy config type
-    "mock_agent",
-    "FixtureAgent",
-    "FixtureConfig",  # Legacy config type
-    "fixture_agent",
-    # Type II - Saboteurs
+    # Type I - Nullifiers (LEGACY - removed 2025-12-25, use NullProbe)
+    # Type II - Saboteurs (LEGACY - removed 2025-12-25, use ChaosProbe)
     "FailingAgent",
     "FailingConfig",
     "FailureType",
@@ -312,9 +257,7 @@ __all__ = [
     "NoiseType",
     "LatencyAgent",
     "FlakyAgent",
-    # Type III - Observers
-    "SpyAgent",
-    "spy_agent",
+    # Type III - Observers (LEGACY - use WitnessProbe)
     "PredicateAgent",
     "predicate_agent",
     "CounterAgent",

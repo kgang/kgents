@@ -17,16 +17,7 @@ from agents.g.catalog_integration import (
     register_tongue,
     update_tongue_metrics,
 )
-from agents.g.forge_integration import (
-    ArtifactInterface,
-    InterfaceTongue,
-    TongueEmbedding,
-    bind_handlers,
-    create_artifact_interface,
-    create_invocation_handler,
-    embed_tongue_in_contract,
-    forge_with_interface,
-)
+# forge_integration removed 2025-12-25 (Forge API deprecated)
 from agents.g.fuzzing_integration import (
     # Types
     FuzzInputType,
@@ -117,15 +108,7 @@ __all__ = [
     "check_compatibility",
     "find_composable",
     "update_tongue_metrics",
-    # F-gent integration
-    "InterfaceTongue",
-    "TongueEmbedding",
-    "ArtifactInterface",
-    "create_artifact_interface",
-    "embed_tongue_in_contract",
-    "create_invocation_handler",
-    "bind_handlers",
-    "forge_with_interface",
+    # F-gent integration removed 2025-12-25 (Forge API deprecated)
     # T-gent integration (Phase 6)
     "FuzzInputType",
     "FuzzResult",
