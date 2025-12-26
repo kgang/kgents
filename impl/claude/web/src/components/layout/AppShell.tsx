@@ -11,6 +11,7 @@
 import { ReactNode, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
+import { useRouteAwareModeReset } from '@/hooks/useRouteAwareModeReset';
 import { WitnessFooter } from './WitnessFooter';
 
 import './AppShell.css';
@@ -41,10 +42,15 @@ interface NavItem {
  * "The Hypergraph Editor IS the app."
  *
  * Chat and Files are sidebars toggled with Ctrl+J / Ctrl+B, not separate routes.
- * The navbar is minimal - just the Editor and quick sidebar hints.
+ * Top-level pages: Editor (main), Studio (workspace), Feed (truth stream), Genesis (FTUE demo).
+ *
+ * STARK BIOME aesthetic: Subtle glyphs, minimal labels, not flashy.
  */
 const NAV_ITEMS: NavItem[] = [
   { path: '/world.document', label: 'Editor', shortcut: 'E', icon: '⎔' },
+  { path: '/studio', label: 'Studio', shortcut: 'S', icon: '⊞' },
+  { path: '/self.feed', label: 'Feed', shortcut: 'F', icon: '≡' },
+  { path: '/genesis/showcase', label: 'Genesis', shortcut: 'G', icon: '✦' },
 ];
 
 // =============================================================================
@@ -77,6 +83,9 @@ function NavLink({ item, isActive }: NavLinkProps) {
 export function AppShell({ children }: AppShellProps) {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Reset mode to NORMAL on route changes
+  useRouteAwareModeReset();
 
   // Determine active surface
   const activePath = NAV_ITEMS.find((item) => location.pathname.startsWith(item.path))?.path;

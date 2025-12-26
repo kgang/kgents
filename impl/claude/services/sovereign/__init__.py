@@ -86,6 +86,39 @@ from .analysis_reactor import (
     reset_analysis_reactor,
 )
 
+# Phase 2: Zero Seed Genesis Grand Strategy
+from .uploads import (
+    FileExplorerEntry,
+    FileExplorerService,
+    UploadedFile,
+    UploadService,
+    UploadStatus,
+    get_file_explorer_service,
+    get_upload_service,
+    reset_file_explorer_service,
+    reset_upload_service,
+)
+from .integration import (
+    Contradiction,
+    DiscoveredEdge as IntegrationDiscoveredEdge,
+    IdentifiedConcept,
+    IntegrationResult,
+    IntegrationService,
+    PortalToken,
+    get_integration_service,
+    reset_integration_service,
+)
+from .splitting import (
+    SplitPlan,
+    SplitReason,
+    SplitReasonType,
+    SplitRecommendation,
+    SplitSection,
+    SplittingService,
+    get_splitting_service,
+    reset_splitting_service,
+)
+
 __all__ = [
     # Core types
     "IngestEvent",
@@ -136,4 +169,33 @@ __all__ = [
     "get_analysis_reactor",
     "init_analysis_reactor",
     "reset_analysis_reactor",
+    # Zero Seed Genesis Grand Strategy (Phase 2)
+    # Uploads
+    "UploadedFile",
+    "UploadStatus",
+    "UploadService",
+    "FileExplorerEntry",
+    "FileExplorerService",
+    "get_upload_service",
+    "get_file_explorer_service",
+    "reset_upload_service",
+    "reset_file_explorer_service",
+    # Integration
+    "IntegrationDiscoveredEdge",
+    "PortalToken",
+    "IdentifiedConcept",
+    "Contradiction",
+    "IntegrationResult",
+    "IntegrationService",
+    "get_integration_service",
+    "reset_integration_service",
+    # Splitting
+    "SplitReasonType",
+    "SplitReason",
+    "SplitSection",
+    "SplitPlan",
+    "SplitRecommendation",
+    "SplittingService",
+    "get_splitting_service",
+    "reset_splitting_service",
 ]

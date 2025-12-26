@@ -17,7 +17,7 @@ The keybinding system for the Hypergraph Editor, implementing the four-layer key
    │  Registry  │                      │  Defaults   │
    │    Core    │                      │  (4 Layers) │
    └────────────┘                      └─────────────┘
-   - resolve()                         - Layer 1: Vim
+   - resolve()                         - Layer 1: Content
    - is_prefix()                       - Layer 2: Graph
    - register()                        - Layer 3: Modes
                                        - Layer 4: AST
@@ -99,7 +99,7 @@ input = registry.resolve("j", EditorMode.GRAPH)
 
 ## The Four Layers
 
-### Layer 1: Traditional Vim (Within Node)
+### Layer 1: Content Navigation (Within Node)
 
 ```python
 j/k         # Line down/up → NavigateInput(direction="down"/"up")

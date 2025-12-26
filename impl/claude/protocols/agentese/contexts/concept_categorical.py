@@ -497,9 +497,12 @@ The correlation study validates kgents 2.0's core hypothesis.
 ```python
 from services.categorical.study import CorrelationStudy, ProblemSet, StudyConfig
 from agents.k.llm import create_llm_client
+from services.storage import get_kgents_data_root
 
 llm = create_llm_client()
-problem_set = ProblemSet.from_json(Path("data/gsm8k_sample.json"))
+# Use XDG-compliant data directory
+data_dir = get_kgents_data_root() / "categorical"
+problem_set = ProblemSet.from_json(data_dir / "gsm8k_sample.json")
 
 study = CorrelationStudy(llm, problem_set)
 result = await study.run(StudyConfig(n_problems={n_problems}))

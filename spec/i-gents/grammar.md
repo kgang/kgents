@@ -459,7 +459,7 @@ All elements are keyboard-addressable:
 
 | Key | Action |
 |-----|--------|
-| `h/j/k/l` | Vim-style navigation |
+| `h/j/k/l` | Keyboard navigation |
 | `Enter` | Select/open focused element |
 | `Esc` | Back/up one level |
 | `Tab` | Cycle through actions |

@@ -7,7 +7,7 @@
 export { MarkdownEditor } from './MarkdownEditor';
 export type { MarkdownEditorProps, MarkdownEditorRef } from './MarkdownEditor';
 
-export { useCodeMirror, configureVimDefaults } from './useCodeMirror';
+export { useCodeMirror } from './useCodeMirror';
 export type { UseCodeMirrorOptions, UseCodeMirrorReturn } from './useCodeMirror';
 
 export { starkBiome, starkBiomeTheme, starkBiomeHighlighting } from './starkBiomeTheme';
@@ -19,3 +19,12 @@ export { useGhostTextSources } from './useGhostTextSources';
 export type { CompletionSource, GhostTextCompletion } from './useGhostTextSources';
 
 export { AGENTESE_PATHS, matchAgentesePath, getPathsByContext, suggestNextSegment } from './agentesePaths';
+
+export {
+  edgeGutterExtension,
+  updateEdges,
+  getEdges,
+  filterEdgesWithLineNumbers,
+  setEdges,
+} from './edgeGutterExtension';
+export type { LineEdge, EdgeGutterExtensionOptions } from './edgeGutterExtension';

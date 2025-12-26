@@ -195,3 +195,22 @@ export {
   type DomainMark,
   type WitnessOptions,
 } from './useWitness';
+
+// Mode system (six-mode editing for hypergraph)
+export {
+  useMode,
+  type UseModeReturn,
+} from './useMode';
+
+// Route-aware mode reset (reset to NORMAL on navigation)
+export { useRouteAwareModeReset } from './useRouteAwareModeReset';
+
+// Contradiction detection for K-Blocks
+export {
+  useItemContradictions,
+  getSeverityLevel,
+  getOtherKBlock,
+  type ContradictionPair,
+  type ContradictionKBlockSummary,
+  type UseItemContradictionsResult,
+} from './useItemContradictions';

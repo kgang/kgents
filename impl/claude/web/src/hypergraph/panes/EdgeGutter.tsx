@@ -7,6 +7,10 @@
  * - Count if multiple edges of same type
  * - Confidence level (color)
  * - Witness mark indicator (if present)
+ *
+ * Zero Seed Integration:
+ * - derives_from edges are highlighted prominently (gD navigation)
+ * - Axiom derivations show special styling
  */
 
 import { memo } from 'react';
@@ -16,6 +20,17 @@ interface EdgeGutterProps {
   edges: Edge[];
   side: 'left' | 'right';
   onEdgeClick?: (edge: Edge) => void;
+}
+
+/**
+ * Check if an edge links to a Zero Seed foundational axiom.
+ */
+function isFoundationalEdge(edge: Edge): boolean {
+  const foundationalIds = ['A1', 'A2', 'G'];
+  return (
+    edge.type === 'derives_from' &&
+    (foundationalIds.includes(edge.source) || foundationalIds.includes(edge.target))
+  );
 }
 
 /**
@@ -87,28 +102,47 @@ export const EdgeGutter = memo(function EdgeGutter({ edges, side, onEdgeClick }:
         const origins = [...new Set(typeEdges.map((e) => e.origin).filter(Boolean))];
         const hasWitness = typeEdges.some((e) => e.markId);
 
+        // Check if this is a derivation edge (Zero Seed navigation via gD)
+        const isDerivation = type === 'derives_from';
+        const hasFoundational = typeEdges.some(isFoundationalEdge);
+
         // Build rich tooltip
         const tooltip = [
           `${type}: ${count} edge${count > 1 ? 's' : ''}`,
           avgConfidence !== undefined ? `Confidence: ${Math.round(avgConfidence * 100)}%` : null,
           origins.length > 0 ? `Sources: ${origins.join(', ')}` : null,
           hasWitness ? '⊢ Has witness marks' : null,
+          isDerivation ? 'Press gD to navigate to derivation parent' : null,
+          hasFoundational ? '★ Links to Zero Seed axiom' : null,
         ]
           .filter(Boolean)
           .join('\n');
 
+        // Build class list
+        const classList = [
+          'edge-gutter__badge',
+          confidenceClass,
+          isDerivation ? 'edge-gutter__badge--derivation' : '',
+          hasFoundational ? 'edge-gutter__badge--foundational' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+
         return (
           <button
             key={type}
-            className={`edge-gutter__badge ${confidenceClass}`}
+            className={classList}
             data-edge-type={type}
             data-has-witness={hasWitness}
+            data-is-derivation={isDerivation}
+            data-has-foundational={hasFoundational}
             onClick={() => onEdgeClick?.(typeEdges[0])}
             title={tooltip}
           >
             <span className="edge-gutter__abbrev">{abbrev}</span>
             {count > 1 && <span className="edge-gutter__count">{count}</span>}
             {hasWitness && <span className="edge-gutter__witness">⊢</span>}
+            {hasFoundational && <span className="edge-gutter__foundational-star">★</span>}
           </button>
         );
       })}

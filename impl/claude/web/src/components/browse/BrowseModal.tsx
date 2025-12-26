@@ -36,8 +36,35 @@ const CATEGORY_CONFIG: Record<
   docs: { label: 'Docs', icon: '📖', shortcut: '3' },
   specs: { label: 'Specs', icon: '📋', shortcut: '4' },
   kblocks: { label: 'K-Blocks', icon: '📦', shortcut: '5' },
-  convos: { label: 'Convos', icon: '💬', shortcut: '6' },
+  uploads: { label: 'Uploads', icon: '📤', shortcut: '6' },
+  'zero-seed': { label: 'Zero Seed', icon: '🌱', shortcut: '7' },
+  convos: { label: 'Convos', icon: '💬', shortcut: '8' },
 };
+
+/**
+ * Get icon for content kind (for visual distinction in results).
+ */
+function getKindIcon(kind?: string): string {
+  const kindIcons: Record<string, string> = {
+    file: '📄',
+    upload: '📤',
+    axiom: '📍',
+    value: '💎',
+    goal: '🎯',
+    action: '⚡',
+    reflection: '🪞',
+    representation: '🖼️',
+  };
+  return kindIcons[kind ?? 'file'] ?? '📄';
+}
+
+/**
+ * Get layer badge for Zero Seed items.
+ */
+function getLayerBadge(layer?: number): string | null {
+  if (layer === undefined) return null;
+  return `L${layer}`;
+}
 
 // =============================================================================
 // Props
@@ -293,7 +320,17 @@ export const BrowseModal = memo(function BrowseModal({
               ) : (
                 filteredItems.map((item, index) => {
                   const isSelected = index === selectedIndex;
-                  const icon = CATEGORY_CONFIG[item.category]?.icon ?? '📄';
+                  // Use kind-specific icon if available, otherwise category icon
+                  const icon = item.kind
+                    ? getKindIcon(item.kind)
+                    : CATEGORY_CONFIG[item.category]?.icon ?? '📄';
+                  const layerBadge = getLayerBadge(item.layer);
+                  // Show loss indicator for items with galoisLoss
+                  const lossClass = item.galoisLoss !== undefined
+                    ? item.galoisLoss < 0.2 ? 'browse-modal__loss--healthy'
+                    : item.galoisLoss < 0.5 ? 'browse-modal__loss--warning'
+                    : 'browse-modal__loss--critical'
+                    : null;
 
                   return (
                     <div
@@ -309,6 +346,16 @@ export const BrowseModal = memo(function BrowseModal({
                         {item.directory && (
                           <span className="browse-modal__item-directory">
                             {item.directory}
+                          </span>
+                        )}
+                        {/* Layer badge for Zero Seed items */}
+                        {layerBadge && (
+                          <span className="browse-modal__item-layer">{layerBadge}</span>
+                        )}
+                        {/* Loss indicator */}
+                        {lossClass && (
+                          <span className={`browse-modal__item-loss ${lossClass}`}
+                                title={`Galois loss: ${((item.galoisLoss ?? 0) * 100).toFixed(1)}%`}>
                           </span>
                         )}
                         {item.annotations && item.annotations > 0 && (
@@ -336,7 +383,7 @@ export const BrowseModal = memo(function BrowseModal({
             </span>
             <span className="browse-modal__separator">•</span>
             <span>
-              <kbd>1-5</kbd> categories
+              <kbd>1-8</kbd> categories
             </span>
             <span className="browse-modal__separator">•</span>
             <span>

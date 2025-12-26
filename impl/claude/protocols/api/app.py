@@ -243,6 +243,13 @@ def create_app(
     if metrics_router is not None:
         app.include_router(metrics_router)
 
+    # Meta (Journey 5: Watching Yourself Grow)
+    from .meta import create_meta_router
+
+    meta_router = create_meta_router()
+    if meta_router is not None:
+        app.include_router(meta_router)
+
     # === N-Phase Session REMOVED (AD-009 Phase 2) ===
     # The /v1/nphase/* endpoints are superseded by:
     # - POST /agentese/self/session/create - Create session
@@ -285,6 +292,14 @@ def create_app(
         app.include_router(witness_router)
         logger.info("Witness API mounted at /api/witness")
 
+    # Constitutional REST API (Phase 1: Constitutional Enforcement)
+    from .constitutional import create_constitutional_router
+
+    constitutional_router = create_constitutional_router()
+    if constitutional_router is not None:
+        app.include_router(constitutional_router)
+        logger.info("Constitutional API mounted at /api/witness/constitutional")
+
     # === Sovereign API ===
     from .sovereign import create_sovereign_router
 
@@ -309,6 +324,22 @@ def create_app(
         app.include_router(director_router)
         logger.info("Document Director API mounted at /api/director")
 
+    # === Genesis API ===
+    from .genesis import create_genesis_router
+
+    genesis_router = create_genesis_router()
+    if genesis_router is not None:
+        app.include_router(genesis_router)
+        logger.info("Genesis API mounted at /api/genesis")
+
+    # === Feed API (Feedback & Analytics) ===
+    from .feed import create_feed_router
+
+    feed_router = create_feed_router()
+    if feed_router is not None:
+        app.include_router(feed_router)
+        logger.info("Feed API mounted at /api/feed")
+
     # === Zero Seed API ===
     from .zero_seed import create_zero_seed_router
 
@@ -332,6 +363,38 @@ def create_app(
     if portal_router is not None:
         app.include_router(portal_router)
         logger.info("Portal API mounted at /api/portal")
+
+    # === Onboarding API (Genesis FTUE) ===
+    from .onboarding import create_onboarding_router
+
+    onboarding_router = create_onboarding_router()
+    if onboarding_router is not None:
+        app.include_router(onboarding_router)
+        logger.info("Onboarding API mounted at /api/onboarding")
+
+    # === Contradiction Engine API ===
+    from .contradiction import create_contradiction_router
+
+    contradiction_router = create_contradiction_router()
+    if contradiction_router is not None:
+        app.include_router(contradiction_router)
+        logger.info("Contradiction API mounted at /api/contradictions")
+
+    # === K-Blocks API (Unified Browse) ===
+    from .kblocks import create_kblocks_router
+
+    kblocks_router = create_kblocks_router()
+    if kblocks_router is not None:
+        app.include_router(kblocks_router)
+        logger.info("K-Blocks API mounted at /api/kblocks")
+
+    # === Edges API (Edge Explorer) ===
+    from .edges import create_edges_router
+
+    edges_router = create_edges_router()
+    if edges_router is not None:
+        app.include_router(edges_router)
+        logger.info("Edges API mounted at /api/edges")
 
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
@@ -637,6 +700,12 @@ def create_app(
                     "evidence": "GET /api/director/documents/{path}/evidence",
                     "evidence_add": "POST /api/director/documents/{path}/evidence",
                 },
+                "genesis": {
+                    "note": "Zero Seed bootstrap and system initialization",
+                    "seed": "POST /api/genesis/seed",
+                    "status": "GET /api/genesis/status",
+                    "zero_seed": "GET /api/genesis/zero-seed",
+                },
                 "zero_seed": {
                     "note": "Epistemic graph navigation with Galois loss visualization",
                     "axioms": "GET /api/zero-seed/axioms",
@@ -660,6 +729,32 @@ def create_app(
                     "note": "Universal resource addressing and expansion",
                     "resolve": "POST /api/portal/resolve",
                     "health": "GET /api/portal/health",
+                },
+                "onboarding": {
+                    "note": "Genesis FTUE - First Time User Experience",
+                    "start": "POST /api/onboarding/start",
+                    "first_declaration": "POST /api/onboarding/first-declaration",
+                    "status": "GET /api/onboarding/status",
+                },
+                "contradictions": {
+                    "note": "Contradiction Engine - super-additive loss detection and resolution",
+                    "detect": "POST /api/contradictions/detect",
+                    "list": "GET /api/contradictions",
+                    "get": "GET /api/contradictions/{id}",
+                    "resolve": "POST /api/contradictions/{id}/resolve",
+                    "stats": "GET /api/contradictions/stats",
+                },
+                "kblocks": {
+                    "note": "Unified K-Block browsing for FileExplorer, BrowseModal, Feed",
+                    "browse": "GET /api/kblocks/browse",
+                    "layer": "GET /api/kblocks/layer/{layer}",
+                    "detail": "GET /api/kblocks/{kblock_id}",
+                },
+                "edges": {
+                    "note": "K-Block edges as first-class entities for Edge Explorer",
+                    "browse": "GET /api/edges/browse",
+                    "by_kind": "GET /api/edges/kind/{kind}",
+                    "detail": "GET /api/edges/{edge_id}",
                 },
                 "webhooks": {
                     "stripe": "/webhooks/stripe",

@@ -461,7 +461,7 @@ class GaloisLossComputer:
         if self.llm is None:
             self.llm = SimpleLLMClient()
 
-    async def compute_loss(self, content: str) -> float:
+    async def compute_loss(self, content: str, use_cache: bool = True) -> float:
         """
         Compute L(content) = d(content, C(R(content))).
 
@@ -469,14 +469,16 @@ class GaloisLossComputer:
 
         Args:
             content: Any textual content
+            use_cache: Whether to use cached results (default: True)
 
         Returns:
             Loss in [0, 1] where 0 = perfect preservation
         """
         # Check cache
-        cached = self.cache.get(content, "raw_loss")
-        if cached is not None:
-            return cached
+        if use_cache:
+            cached = self.cache.get(content, "raw_loss")
+            if cached is not None:
+                return cached
 
         # Restructure
         modular = await self.llm.restructure(content)
@@ -488,7 +490,8 @@ class GaloisLossComputer:
         loss = self.metric.distance(content, reconstituted)
 
         # Cache result
-        self.cache.set(content, "raw_loss", loss, self.metric.name)
+        if use_cache:
+            self.cache.set(content, "raw_loss", loss, self.metric.name)
 
         return loss
 
@@ -903,6 +906,186 @@ def classify_evidence_tier(loss: float) -> EvidenceTier:
 
 
 # -----------------------------------------------------------------------------
+# Production Async Loss Computation with Fallback
+# -----------------------------------------------------------------------------
+
+
+@dataclass
+class GaloisLoss:
+    """
+    Result of Galois loss computation.
+
+    Contains the loss value and metadata about computation method.
+    """
+
+    loss: float
+    method: str  # "llm" or "fallback"
+    metric_name: str
+    cached: bool = False
+
+
+async def compute_galois_loss_async(
+    content: str,
+    llm_client: LLMClientProtocol | None = None,
+    use_cache: bool = True,
+    cache: LossCache | None = None,
+) -> GaloisLoss:
+    """
+    Compute Galois loss with async LLM support and fallback.
+
+    This is the production-ready async loss computation function that:
+    1. Uses LLM for restructure (R) and reconstitute (C) operations
+    2. Computes semantic distance d(P, C(R(P)))
+    3. Falls back to fast metrics (BERTScore, cosine) when LLM unavailable
+    4. Uses caching to avoid redundant LLM calls
+
+    The Galois loss formula:
+        L(P) = d(P, C(R(P)))
+    where:
+        - R: Prompt -> ModularPrompt (restructure via LLM)
+        - C: ModularPrompt -> Prompt (reconstitute via LLM)
+        - d: Prompt x Prompt -> [0,1] (semantic distance)
+
+    Args:
+        content: The content to analyze
+        llm_client: Optional LLM client (if None, uses SimpleLLMClient or falls back)
+        use_cache: Whether to use cached results (default: True)
+        cache: Optional cache instance (if None, creates new one)
+
+    Returns:
+        GaloisLoss with loss value and computation metadata
+
+    Example:
+        >>> from agents.k.llm import create_llm_client
+        >>> llm = create_llm_client()
+        >>> result = await compute_galois_loss_async(
+        ...     "This is test content",
+        ...     llm_client=llm,
+        ...     use_cache=True,
+        ... )
+        >>> assert 0.0 <= result.loss <= 1.0
+        >>> assert result.method in ("llm", "fallback")
+    """
+    # Initialize cache if needed
+    if cache is None:
+        cache = LossCache()
+
+    # Check cache first
+    cached_loss = None
+    if use_cache:
+        cached_loss = cache.get(content, "galois_loss_async")
+        if cached_loss is not None:
+            # Need to determine metric name from cache
+            # For now, return with generic name
+            return GaloisLoss(
+                loss=cached_loss,
+                method="llm",  # Assume cached value was from LLM
+                metric_name="cached",
+                cached=True,
+            )
+
+    # Try LLM-based computation
+    try:
+        # Use provided client or create one
+        if llm_client is None:
+            llm_client = SimpleLLMClient()
+
+        # Create computer with LLM
+        metric = get_default_metric()
+        computer = GaloisLossComputer(
+            llm=llm_client,
+            metric=metric,
+            cache=cache if use_cache else LossCache(),
+        )
+
+        # Compute loss via R o C
+        loss = await computer.compute_loss(content, use_cache=use_cache)
+
+        # Cache result
+        if use_cache:
+            cache.set(content, "galois_loss_async", loss, metric.name)
+
+        return GaloisLoss(
+            loss=loss,
+            method="llm",
+            metric_name=metric.name,
+            cached=False,
+        )
+
+    except Exception as e:
+        # Fall back to fast metrics without LLM
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.warning(f"LLM-based loss computation failed, using fallback: {e}")
+
+        # Try BERTScore first (most accurate fallback)
+        try:
+            metric = BERTScoreDistance()
+            # For fallback, we can't do R o C, so we approximate
+            # by comparing content to a simplified version
+            simplified = _simplify_content(content)
+            loss = metric.distance(content, simplified)
+
+            if use_cache:
+                cache.set(content, "galois_loss_async", loss, "bertscore_fallback")
+
+            return GaloisLoss(
+                loss=loss,
+                method="fallback",
+                metric_name="bertscore",
+                cached=False,
+            )
+        except Exception:
+            pass
+
+        # Final fallback: cosine embedding
+        try:
+            from .distance import CosineEmbeddingDistance
+
+            metric = CosineEmbeddingDistance()
+            simplified = _simplify_content(content)
+            loss = metric.distance(content, simplified)
+
+            if use_cache:
+                cache.set(content, "galois_loss_async", loss, "cosine_fallback")
+
+            return GaloisLoss(
+                loss=loss,
+                method="fallback",
+                metric_name="cosine",
+                cached=False,
+            )
+        except Exception:
+            # Ultimate fallback: moderate loss estimate
+            return GaloisLoss(
+                loss=0.5,
+                method="fallback",
+                metric_name="default",
+                cached=False,
+            )
+
+
+def _simplify_content(content: str) -> str:
+    """
+    Simplify content for fallback loss computation.
+
+    This is a heuristic approximation of restructure-reconstitute
+    when no LLM is available.
+
+    Strategy:
+    - Extract first and last sentences (compression)
+    - This approximates what R o C might produce
+    """
+    sentences = content.split(". ")
+    if len(sentences) <= 2:
+        return content
+
+    # Take first and last sentences as compressed representation
+    return f"{sentences[0]}. {sentences[-1]}"
+
+
+# -----------------------------------------------------------------------------
 # Bootstrap Fixed Point Verification
 # -----------------------------------------------------------------------------
 
@@ -990,6 +1173,9 @@ __all__ = [
     "find_fixed_point",
     # Classification
     "classify_evidence_tier",
+    # Production async loss
+    "GaloisLoss",
+    "compute_galois_loss_async",
     # Bootstrap
     "BootstrapVerification",
     "verify_bootstrap_fixed_point",

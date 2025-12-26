@@ -83,7 +83,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <p className="text-gray-400 mb-6">{this.state.error?.message || 'An error occurred'}</p>
             <button
               onClick={this.reset}
-              className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg font-medium transition-colors text-white"
+              className="px-6 py-2 rounded-lg font-medium transition-colors text-white"
+              style={{
+                background: 'var(--color-life-sage)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--color-life-mint)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--color-life-sage)';
+              }}
             >
               Try Again
             </button>

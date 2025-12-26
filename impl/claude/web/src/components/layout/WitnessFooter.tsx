@@ -3,6 +3,7 @@
  *
  * Shows last 3 events in a single-line compact view.
  * Click to expand full WitnessStream panel.
+ * Mode indicator integrated on right side when collapsed.
  *
  * "The proof IS the decision. The mark IS the witness."
  */

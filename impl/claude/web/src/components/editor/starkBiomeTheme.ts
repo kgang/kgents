@@ -135,19 +135,6 @@ export const starkBiomeTheme = EditorView.theme(
       border: `1px solid ${colors.surface3}`,
       color: colors.textPrimary,
     },
-    // Vim mode styling
-    '.cm-vim-panel': {
-      backgroundColor: colors.surface0,
-      padding: '4px 8px',
-      fontFamily: "'JetBrains Mono', monospace",
-    },
-    '.cm-fat-cursor': {
-      backgroundColor: `${colors.accentPrimary}88 !important`,
-    },
-    '&:not(.cm-focused) .cm-fat-cursor': {
-      backgroundColor: 'transparent !important',
-      outline: `1px solid ${colors.accentPrimary}`,
-    },
   },
   { dark: true }
 );

@@ -52,6 +52,9 @@ interface MinimapLine {
 /**
  * Extract text lines from raw content for mini-rendering.
  * Returns structured line data for visualization.
+ *
+ * IMPORTANT: Ignores headers inside code blocks (``` fences).
+ * Python comments like `# comment` inside code blocks are NOT headers.
  */
 function extractLines(content: string): MinimapLine[] {
   if (!content) return [];
@@ -62,9 +65,28 @@ function extractLines(content: string): MinimapLine[] {
   // Calculate max line length for proportional widths
   const maxLength = Math.max(...lines.map(line => line.length), 1);
 
+  // Track whether we're inside a fenced code block
+  let inCodeBlock = false;
+
   lines.forEach((line, index) => {
     const position = index / Math.max(lines.length - 1, 1);
     const trimmed = line.trim();
+
+    // Toggle code block state when encountering ``` fence markers
+    // Must check BEFORE any other processing so fence lines themselves
+    // are treated as regular text, not headers
+    if (trimmed.startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      // Treat fence line as regular text
+      const width = Math.max((trimmed.length / maxLength) * 100, 10);
+      result.push({
+        index,
+        position,
+        type: 'text',
+        width,
+      });
+      return;
+    }
 
     // Empty line
     if (!trimmed) {
@@ -78,20 +100,23 @@ function extractLines(content: string): MinimapLine[] {
 
     // H1 header (# Title) - ONLY match single # followed by space
     // Negative lookahead (?!#) ensures we don't match ##, ###, etc.
-    const h1Match = trimmed.match(/^#(?!#)\s+(.+)$/);
-    if (h1Match) {
-      const headerText = h1Match[1].trim();
-      const truncated = headerText.length > 10
-        ? headerText.substring(0, 10) + '...'
-        : headerText;
+    // IMPORTANT: Only detect headers OUTSIDE of code blocks
+    if (!inCodeBlock) {
+      const h1Match = trimmed.match(/^#(?!#)\s+(.+)$/);
+      if (h1Match) {
+        const headerText = h1Match[1].trim();
+        const truncated = headerText.length > 10
+          ? headerText.substring(0, 10) + '...'
+          : headerText;
 
-      result.push({
-        index,
-        position,
-        type: 'h1',
-        text: truncated,
-      });
-      return;
+        result.push({
+          index,
+          position,
+          type: 'h1',
+          text: truncated,
+        });
+        return;
+      }
     }
 
     // Regular text line - calculate proportional width

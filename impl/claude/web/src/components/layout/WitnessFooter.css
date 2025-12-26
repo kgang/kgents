@@ -111,6 +111,40 @@
   font-style: italic;
 }
 
+/* DEPRECATED: Mode indicator styles moved to ModeIndicator component
+ * Keeping for reference during transition period.
+ * Remove after confirming all uses migrated to ModeIndicator badge variant.
+ */
+/*
+.witness-footer__mode {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--mode-color, #6b8ba3) 15%, transparent);
+  border-left: 2px solid var(--mode-color, #6b8ba3);
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+.witness-footer__mode-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted, #666);
+}
+
+.witness-footer__mode[data-mode='INSERT'] .witness-footer__mode-label,
+.witness-footer__mode[data-mode='EDGE'] .witness-footer__mode-label,
+.witness-footer__mode[data-mode='VISUAL'] .witness-footer__mode-label,
+.witness-footer__mode[data-mode='WITNESS'] .witness-footer__mode-label {
+  color: var(--text-secondary, #9ca3af);
+}
+*/
+
 /* Toggle button */
 .witness-footer__toggle {
   flex-shrink: 0;

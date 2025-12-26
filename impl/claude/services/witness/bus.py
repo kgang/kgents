@@ -64,6 +64,9 @@ class WitnessTopics:
     # Thought events
     THOUGHT_CAPTURED = "witness.thought.captured"
 
+    # Constitutional events (Phase 1: Constitutional Enforcement)
+    CONSTITUTIONAL_EVALUATED = "witness.constitutional.evaluated"
+
     # Trail events (Context Perception integration - Phase 4)
     TRAIL_CAPTURED = "witness.trail.captured"
 
@@ -115,6 +118,7 @@ class WitnessTopics:
     MARK_ALL = "witness.mark.*"
     GIT_ALL = "witness.git.*"
     THOUGHT_ALL = "witness.thought.*"
+    CONSTITUTIONAL_ALL = "witness.constitutional.*"
     TRAIL_ALL = "witness.trail.*"
     KBLOCK_ALL = "witness.kblock.*"
     DAEMON_ALL = "witness.daemon.*"
@@ -123,6 +127,198 @@ class WitnessTopics:
     PROXY_ALL = "witness.proxy.*"
     SOVEREIGN_ALL = "witness.sovereign.*"
     DIRECTOR_ALL = "witness.director.*"
+
+
+# =============================================================================
+# WitnessEventType (SSE Event Type Enum)
+# =============================================================================
+
+
+from enum import Enum
+import os
+
+
+class WitnessEventType(Enum):
+    """
+    SSE event types sent to frontend via /api/witness/stream.
+
+    SINGLE SOURCE OF TRUTH for backend/frontend event type contract.
+
+    When adding a new event type:
+    1. Add enum member here
+    2. Add topic mapping(s) in TOPIC_TO_EVENT_TYPE below
+    3. Add handler in web/src/hooks/useWitnessStream.ts
+
+    Philosophy:
+        "Fail fast, fail loud. Unknown events are bugs, not features."
+    """
+
+    # Core events (always visible in witness stream)
+    MARK = "mark"
+    THOUGHT = "thought"
+    CRYSTAL = "crystal"
+    KBLOCK = "kblock"
+    TRAIL = "trail"
+
+    # Domain events
+    SPEC = "spec"
+    SOVEREIGN = "sovereign"
+    DIRECTOR = "director"
+    GIT = "git"
+    AGENTESE = "agentese"
+    CONSTITUTIONAL = "constitutional"
+    PROXY = "proxy"
+
+    # Lifecycle events (internal, may not need UI handler)
+    DAEMON = "daemon"
+
+    # Connection events (special, handled separately in SSE)
+    CONNECTED = "connected"
+    HEARTBEAT = "heartbeat"
+
+    @property
+    def requires_frontend_handler(self) -> bool:
+        """Whether this event type must have a frontend SSE handler."""
+        # Internal/connection events don't need UI representation
+        return self not in {
+            WitnessEventType.DAEMON,
+            WitnessEventType.HEARTBEAT,
+            WitnessEventType.CONNECTED,
+        }
+
+
+# =============================================================================
+# Topic to Event Type Mapping (Exhaustive)
+# =============================================================================
+
+
+TOPIC_TO_EVENT_TYPE: dict[str, WitnessEventType] = {
+    # Git events → GIT
+    WitnessTopics.GIT_COMMIT: WitnessEventType.GIT,
+    WitnessTopics.GIT_CHECKOUT: WitnessEventType.GIT,
+    WitnessTopics.GIT_PUSH: WitnessEventType.GIT,
+    WitnessTopics.GIT_MERGE: WitnessEventType.GIT,
+    # Mark events → MARK
+    WitnessTopics.MARK_CREATED: WitnessEventType.MARK,
+    WitnessTopics.MARK_RETRACTED: WitnessEventType.MARK,
+    # Thought events → THOUGHT
+    WitnessTopics.THOUGHT_CAPTURED: WitnessEventType.THOUGHT,
+    # Constitutional events → CONSTITUTIONAL
+    WitnessTopics.CONSTITUTIONAL_EVALUATED: WitnessEventType.CONSTITUTIONAL,
+    # Trail events → TRAIL
+    WitnessTopics.TRAIL_CAPTURED: WitnessEventType.TRAIL,
+    # K-Block events → KBLOCK
+    WitnessTopics.KBLOCK_EDITED: WitnessEventType.KBLOCK,
+    WitnessTopics.KBLOCK_SAVED: WitnessEventType.KBLOCK,
+    WitnessTopics.KBLOCK_DISCARDED: WitnessEventType.KBLOCK,
+    # Daemon lifecycle → DAEMON
+    WitnessTopics.DAEMON_STARTED: WitnessEventType.DAEMON,
+    WitnessTopics.DAEMON_STOPPED: WitnessEventType.DAEMON,
+    # AGENTESE events → AGENTESE
+    WitnessTopics.AGENTESE_INVOKED: WitnessEventType.AGENTESE,
+    WitnessTopics.AGENTESE_COMPLETED: WitnessEventType.AGENTESE,
+    WitnessTopics.AGENTESE_ERROR: WitnessEventType.AGENTESE,
+    # Spec Ledger events → SPEC
+    WitnessTopics.SPEC_SCANNED: WitnessEventType.SPEC,
+    WitnessTopics.SPEC_DEPRECATED: WitnessEventType.SPEC,
+    WitnessTopics.SPEC_EVIDENCE_ADDED: WitnessEventType.SPEC,
+    WitnessTopics.SPEC_CONTRADICTION_FOUND: WitnessEventType.SPEC,
+    WitnessTopics.SPEC_ORPHAN_DETECTED: WitnessEventType.SPEC,
+    # Proxy Handle events → PROXY
+    WitnessTopics.PROXY_STARTED: WitnessEventType.PROXY,
+    WitnessTopics.PROXY_COMPLETED: WitnessEventType.PROXY,
+    WitnessTopics.PROXY_FAILED: WitnessEventType.PROXY,
+    WitnessTopics.PROXY_STALE: WitnessEventType.PROXY,
+    # Sovereign events → SOVEREIGN
+    WitnessTopics.SOVEREIGN_INGESTED: WitnessEventType.SOVEREIGN,
+    WitnessTopics.SOVEREIGN_ANALYSIS_STARTED: WitnessEventType.SOVEREIGN,
+    WitnessTopics.SOVEREIGN_ANALYSIS_COMPLETED: WitnessEventType.SOVEREIGN,
+    WitnessTopics.SOVEREIGN_ANALYSIS_FAILED: WitnessEventType.SOVEREIGN,
+    WitnessTopics.SOVEREIGN_PLACEHOLDER_CREATED: WitnessEventType.SOVEREIGN,
+    # Director events → DIRECTOR
+    WitnessTopics.DIRECTOR_ANALYSIS_COMPLETE: WitnessEventType.DIRECTOR,
+    WitnessTopics.DIRECTOR_PROMPT_GENERATED: WitnessEventType.DIRECTOR,
+    WitnessTopics.DIRECTOR_EXECUTION_CAPTURED: WitnessEventType.DIRECTOR,
+    WitnessTopics.DIRECTOR_PLACEHOLDER_RESOLVED: WitnessEventType.DIRECTOR,
+    WitnessTopics.DIRECTOR_STATUS_CHANGED: WitnessEventType.DIRECTOR,
+}
+
+
+def get_event_type_for_topic(topic: str) -> WitnessEventType:
+    """
+    Get the SSE event type for a WitnessTopics value.
+
+    FAILS LOUDLY on unknown topics in development.
+
+    Args:
+        topic: The WitnessTopics value (e.g., "witness.git.commit")
+
+    Returns:
+        The corresponding WitnessEventType
+
+    Raises:
+        ValueError: If topic is not mapped (development mode only)
+
+    Note:
+        In production, logs error and returns MARK as fallback.
+        In development, raises ValueError to catch misconfigurations early.
+    """
+    event_type = TOPIC_TO_EVENT_TYPE.get(topic)
+
+    if event_type is not None:
+        return event_type
+
+    # Unknown topic - this is a bug!
+    error_msg = (
+        f"Unknown WitnessTopics value: '{topic}'\n\n"
+        f"FIX: Add mapping in services/witness/bus.py TOPIC_TO_EVENT_TYPE:\n"
+        f"    WitnessTopics.YOUR_TOPIC: WitnessEventType.YOUR_TYPE,\n\n"
+        f"Available event types: {[e.value for e in WitnessEventType]}"
+    )
+
+    # Fail hard in development
+    env = os.environ.get("KGENTS_ENV", "development")
+    if env == "development":
+        raise ValueError(error_msg)
+
+    # Log and fallback in production
+    logger.error(error_msg)
+    return WitnessEventType.MARK
+
+
+def _assert_all_topics_mapped() -> None:
+    """
+    Import-time validation: Ensure ALL WitnessTopics are mapped.
+
+    Called at module load to catch missing mappings immediately.
+
+    Raises:
+        AssertionError: If any non-wildcard topic is unmapped
+    """
+    all_attrs = [
+        attr
+        for attr in dir(WitnessTopics)
+        if not attr.startswith("_") and attr.isupper()
+    ]
+
+    unmapped: list[str] = []
+    for attr in all_attrs:
+        topic = getattr(WitnessTopics, attr)
+        # Skip wildcards (end with *)
+        if topic.endswith("*"):
+            continue
+        if topic not in TOPIC_TO_EVENT_TYPE:
+            unmapped.append(f"WitnessTopics.{attr} = '{topic}'")
+
+    if unmapped:
+        raise AssertionError(
+            f"Unmapped WitnessTopics found! Add to TOPIC_TO_EVENT_TYPE:\n"
+            + "\n".join(f"  - {t}" for t in unmapped)
+        )
+
+
+# Run validation at import time (fail fast, fail loud)
+_assert_all_topics_mapped()
 
 
 # =============================================================================
@@ -579,6 +775,10 @@ def get_synergy_bus() -> WitnessSynergyBus:
 __all__ = [
     # Topics
     "WitnessTopics",
+    # Event Types (Single Source of Truth)
+    "WitnessEventType",
+    "TOPIC_TO_EVENT_TYPE",
+    "get_event_type_for_topic",
     # Buses
     "WitnessSynergyBus",
     "WitnessEventBus",

@@ -587,4 +587,97 @@ Parts I-III were about ideas. Part IV is about validation. These papers prove th
 
 ---
 
+## Part V: Galois Modularization Theory (Added 2025-12-25)
+
+> *"Every structure decomposes into irreducibles. This decomposition is itself irreducible."*
+
+The foundational meta-theory that justifies kgents' axiom-finding approach.
+
+### 14. Galois Theory of Axiomatization
+
+**Core Insight:**
+
+Just as Galois theory reveals the minimal field extensions needed to solve polynomial equations, kgents applies an analogous principle to agent systems: **every valid structure admits a minimal axiom set from which it derives**.
+
+```
+G: For any valid structure S, there exists a minimal axiom set A
+   such that S derives from A and no proper subset of A suffices.
+```
+
+**Why This Is Heritage:**
+
+The Bootstrap Problem asks: "What cannot be derived must be given." But how do we know when we've found the irreducible kernel? G is the meta-axiom that guarantees this search terminates—every concept bottoms out.
+
+**The kgents Instance:**
+
+| Galois Concept | kgents Mapping |
+|----------------|----------------|
+| Field extension | Agent derivation |
+| Minimal polynomial | Minimal axiom set |
+| Galois group | Symmetry group of derivations |
+| Fixed field | Stable agent configuration |
+
+**The Three + One Axioms:**
+
+```
+A1 (Entity):   "There exist things" — objects in a category
+A2 (Morphism): "Things relate" — arrows between objects
+A3 (Mirror):   "We judge by reflection" — the human oracle
+G  (Galois):   "Axioms exist and are minimal" — meta-axiom
+```
+
+From A1-A3, the Minimal Kernel derives: `{Compose, Judge, Ground}`.
+From the Minimal Kernel, the seven bootstrap agents derive.
+From the bootstrap, all of kgents regenerates.
+
+---
+
+### 15. Lawvere Fixed-Point Theorem
+
+**Citation:**
+```
+@article{lawvere1969,
+  title={Diagonal Arguments and Cartesian Closed Categories},
+  author={Lawvere, F. William},
+  journal={Category Theory, Homology Theory and Their Applications II},
+  year={1969}
+}
+```
+
+**Core Contribution:**
+
+In a cartesian closed category C, for any point-surjective f: A → A^A, there exists x: 1 → A such that f(x) = x.
+
+**Why This Is Heritage:**
+
+This theorem is why the Fix operator works. Self-referential definitions aren't paradoxical—they're mathematically grounded. The bootstrap can describe itself because fixed points exist.
+
+**kgents Integration:**
+
+| Lawvere Concept | kgents Mapping |
+|-----------------|----------------|
+| Cartesian closed category | Category of agents |
+| Point-surjective | Agent that enumerates behaviors |
+| Fixed point | Stable agent configuration |
+| Diagonal argument | Self-referential agent definition |
+
+**Verification:**
+- `impl/claude/bootstrap/fix.py` — Fix operator implementation
+- `impl/claude/bootstrap/_tests/test_fix.py` — Fixed-point convergence tests
+
+---
+
+### Galois Heritage Summary
+
+| Paper | Core Claim | kgents Verification |
+|-------|------------|---------------------|
+| **Galois Theory** | Minimal axioms exist | Bootstrap is minimal |
+| **Lawvere** | Fixed points exist | Fix operator converges |
+
+**The Meta-Insight:**
+
+Parts I-IV were about domain concepts and mathematical validation. Part V is about **why axiom-finding works at all**. The Galois meta-axiom guarantees that our search for irreducibles terminates; Lawvere guarantees that self-referential definitions have solutions.
+
+---
+
 *"The river remembers its sources. So must we."*

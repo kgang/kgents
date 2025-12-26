@@ -226,5 +226,73 @@ mark = await witness.mark(
 
 ---
 
+## The Minimal Kernel Derivation
+
+> *"From three primitives, all agency follows."*
+
+The Constitution can be regenerated from an even smaller kernel:
+
+```
+MinimalBootstrap = {Compose, Judge, Ground}
+```
+
+### Derivations from the Kernel
+
+| Derived | From | How |
+|---------|------|-----|
+| **Id** | Compose + Judge | The agent that Judge never rejects composing with anything |
+| **Contradict** | Judge | Recognition that Judge rejects A∘B for some valid A, B |
+| **Sublate** | Compose + Judge + Contradict | Search for C where Judge accepts (Contradict(A,B) → C) |
+| **Fix** | Compose + Judge | Iteration of Compose until Judge says "stable" |
+
+### The Meta-Axiom: Galois Ground (G)
+
+Above the three primitives sits a meta-axiom:
+
+```
+G: For any valid structure, there exists a minimal axiom set from which it derives.
+```
+
+This is the **Galois Modularization Principle**—every derivation bottoms out in irreducibles. The Minimal Kernel is itself an instance of G applied to agency.
+
+### Lawvere Fixed-Point Connection
+
+The Fix operator connects to Lawvere's fixed-point theorem: in a cartesian closed category, for any point-surjective f: A → A^A, there exists x: 1 → A such that f(x) = x. This is why self-referential systems (agents that modify themselves) are mathematically grounded, not paradoxical.
+
+---
+
+## The Axiom Hierarchy
+
+The full Constitution derives from these layers:
+
+```
+LEVEL 0: IRREDUCIBLES
+  A1 (Entity):    "There exist things" — objects in a category
+  A2 (Morphism):  "Things relate" — arrows between objects
+  A3 (Mirror):    "We judge by reflection" — the human oracle (Kent's somatic response)
+
+LEVEL 1: MINIMAL KERNEL
+  Compose:  A2 → operational form (sequential composition)
+  Judge:    A3 → operational form (verdict generation)
+  Ground:   A1 → operational form (factual seed)
+
+LEVEL 2: DERIVED PRIMITIVES
+  Id, Contradict, Sublate, Fix (derived as above)
+
+LEVEL 3: PRINCIPLES (Ontology)
+  1. Tasteful    — Judge applied to aesthetics
+  2. Curated     — Judge applied to selection
+  3. Ethical     — Judge applied to harm
+  4. Joy-Inducing — Judge applied to affect
+  5. Composable  — Compose as design principle
+  6. Heterarchical — Judge applied to hierarchy
+  7. Generative  — Ground + Compose → regenerability
+
+LEVEL 4: ARTICLES (Governance)
+  I-VII derived from Principles applied to multi-agent interaction
+```
+
+---
+
 **Filed:** 2025-12-21
 **Status:** Emerging — ready for dialectical refinement

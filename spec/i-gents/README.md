@@ -372,7 +372,7 @@ kgents garden attach --process evolve-12345
 
 ```
 Navigation:
-  h/j/k/l     Vim movement (move focus)
+  h/j/k/l     Keyboard navigation (move focus)
   ←↓↑→        Arrow key movement
   Tab         Cycle through entities
   Enter       Focus/select entity

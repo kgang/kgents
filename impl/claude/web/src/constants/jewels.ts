@@ -40,17 +40,22 @@ export interface JewelColor {
  *
  * Removed 2025-12-21: gestalt, coalition
  *
+ * Colors follow STARK BIOME muted palette:
+ * - No saturated Tailwind colors (cyan-500, etc.)
+ * - Muted earth tones with organic feel
+ * - Barely-there differentiation, not garish
+ *
  * @see docs/creative/stark-biome-moodboard.md
  */
 export const JEWEL_COLORS: Record<JewelName, JewelColor> = {
-  // STARK BIOME: Muted teal moss — knowledge growing quietly
+  // STARK BIOME: Muted teal moss — knowledge growing quietly (from tokens: life-sage variant)
   brain: { primary: '#4A6B6B', accent: '#5A7B7B', bg: '#3A5B5B' },
-  // STARK BIOME: Fern family — nurturing growth
-  gardener: { primary: '#6B8B6B', accent: '#7B9B7B', bg: '#5A7B5A' },
-  // STARK BIOME: Umber family — creative warmth (same as atelier)
+  // STARK BIOME: Fern/sage family — nurturing growth (from tokens: life-sage)
+  gardener: { primary: '#4A6B4A', accent: '#5A7B5A', bg: '#3A5B3A' },
+  // STARK BIOME: Umber family — creative warmth (matches atelier)
   forge: { primary: '#8B7355', accent: '#9B8365', bg: '#7B6345' },
-  // STARK BIOME: Muted rust — alert without alarm (per state-alert)
-  domain: { primary: '#8B5A4A', accent: '#9B6A5A', bg: '#7B4A3A' },
+  // STARK BIOME: Muted rust — alert without alarm (from tokens: accent-error)
+  domain: { primary: '#A65D4A', accent: '#B67D6A', bg: '#964D3A' },
 } as const;
 
 /**

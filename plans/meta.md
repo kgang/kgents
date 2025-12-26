@@ -283,6 +283,18 @@ Shadowing with @property affordances: causes 'tuple not callable' error
 
 ---
 
+### Unified Data Spine (2025-12-25)
+```
+Crystal→K-Block: Crystals ARE K-Blocks with isolation=SEALED; unify storage
+Upload→Layer: Always assign layer on ingest; editable suggestion pattern
+Edge dual storage: Normalized + JSONB for performance; EdgeSyncService maintains consistency
+Mark→K-Block linkage: target_kblock_id field enables join queries
+Feed/Meta layer-aware: Layers optional filter; Meta reads galois_loss from K-Block
+Single source of truth: K-Block table is spine; all systems project from it
+```
+
+---
+
 ## Unanswered
 
 ```
@@ -292,4 +304,4 @@ Servo embedding vs Electron: which path for desktop app?
 
 ---
 
-*Lines: 200/200 | Last updated: 2025-12-23 | Pruned to cap*
+*Lines: 210/250 | Last updated: 2025-12-25 | Unified Data Spine added*

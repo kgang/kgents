@@ -297,7 +297,6 @@ export const ContentPane = memo(forwardRef<ContentPaneRef, ContentPaneProps>(fun
           value={displayContent}
           onChange={handleContentChange}
           readonly={false}
-          vimMode={false}
           placeholder="Enter content..."
           fillHeight
           autoFocus

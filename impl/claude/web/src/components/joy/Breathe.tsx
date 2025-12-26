@@ -1,19 +1,26 @@
 /**
- * Breathe Animation Component — STARK BIOME Edition
+ * Breathe Animation Component — Zero Seed Genesis Edition
  *
- * Calming breath animation for healthy/living elements.
- * Uses 4-7-8 asymmetric timing for organic, non-mechanical feel.
+ * Implements Motion Law M-01: Asymmetric breathing uses 4-7-8 timing.
+ * Calming breath animation for healthy/living elements that have earned motion.
+ *
+ * Motion Laws Applied:
+ * - M-01: Asymmetric breathing (4s inhale, 7s hold, 8s exhale = 19s total)
+ * - M-02: Stillness is default, animation is earned (only use on active elements)
+ * - M-03: Mechanical precision for structure, organic life for content
+ * - M-04: Respects prefers-reduced-motion
+ * - M-05: Animation has semantic reason (shows life/health/activity)
  *
  * STARK BIOME: "Stillness, then life."
  * Only living elements should breathe. Most things stay still.
  *
- * 4-7-8 Timing Pattern:
- * - 15% rest (stillness before inhale)
- * - 25% gentle rise (soft inhale)
- * - 10% brief hold (moment of fullness)
- * - 50% slow release (long, calming exhale)
+ * 4-7-8 Timing Pattern (19s total cycle):
+ * - 21% inhale (4 seconds): Gentle rise
+ * - 37% hold (7 seconds): Moment of fullness at peak
+ * - 42% exhale (8 seconds): Long, calming release
  *
- * @see docs/creative/stark-biome-moodboard.md
+ * @see plans/zero-seed-creative-strategy.md - Motion Laws
+ * @see styles/breathing.css - CSS keyframes implementation
  *
  * @example
  * ```tsx
@@ -54,13 +61,13 @@ export interface BreatheProps {
 }
 
 /**
- * STARK BIOME: Calming breath durations
- * Based on 4-7-8 breathing pattern — asymmetric, organic timing
+ * Zero Seed Genesis: 4-7-8 Breathing Durations
+ * Motion Law M-01: 4s inhale + 7s hold + 8s exhale = 19s total cycle
  */
 const SPEED_DURATION: Record<BreatheSpeed, number> = {
-  slow: 8.1, // Full calming cycle — ambient elements
-  normal: 6.75, // Standard living breath — active elements
-  fast: 5.4, // Quicker but still calming — attention needed
+  slow: 25.3, // 33% slower than standard (19s * 1.33) — ambient, gentle
+  normal: 19, // Standard 4-7-8 cycle — active elements
+  fast: 14.25, // 25% faster than standard (19s * 0.75) — attention needed
 };
 
 /**
@@ -131,38 +138,35 @@ export function Breathe({
   const [maxOpacity, minOpacity] = getOpacityRange(effectiveIntensity);
 
   /**
-   * STARK BIOME: 4-7-8 Asymmetric Calming Breath
+   * Motion Law M-01: 4-7-8 Asymmetric Calming Breath
    *
-   * Timeline breakdown:
-   * - 0-15% (0-1.01s): Rest — stillness before inhale
-   * - 15-40% (1.01-2.7s): Gentle rise — soft inhale
-   * - 40-50% (2.7-3.375s): Brief hold — moment of fullness
-   * - 50-100% (3.375-6.75s): Slow release — long, calming exhale
+   * Timeline breakdown (19s total cycle):
+   * - 0-21% (0-4s): Inhale — gentle rise
+   * - 21-58% (4-11s): Hold — moment of fullness (7 seconds)
+   * - 58-100% (11-19s): Exhale — long, calming release (8 seconds)
    *
    * This creates a natural breathing feel, not mechanical oscillation.
    */
   const breatheVariants: Variants = {
     animate: {
-      // 4-7-8 timing: rest → rise → hold → slow release
+      // 4-7-8 timing: inhale (21%) → hold (37%) → exhale (42%)
       scale: [
-        minScale, // 0% - rest
-        minScale, // 15% - still resting
-        maxScale, // 40% - peak of inhale
-        maxScale, // 50% - hold
-        minScale, // 100% - end of exhale
+        minScale,    // 0% - start
+        maxScale,    // 21% - peak of inhale (4 seconds)
+        maxScale,    // 58% - end of hold (11 seconds total)
+        minScale,    // 100% - end of exhale (19 seconds total)
       ],
       opacity: [
-        minOpacity, // 0% - rest (dim)
-        minOpacity, // 15% - still dim
-        maxOpacity, // 40% - peak brightness
-        maxOpacity, // 50% - hold brightness
-        minOpacity, // 100% - back to dim
+        minOpacity,  // 0% - start (dim)
+        maxOpacity,  // 21% - peak brightness (4 seconds)
+        maxOpacity,  // 58% - end of hold brightness (11 seconds total)
+        minOpacity,  // 100% - end of exhale (19 seconds total)
       ],
       transition: {
         duration,
         repeat: Infinity,
-        // Custom timing to match 4-7-8 pattern
-        times: [0, 0.15, 0.4, 0.5, 1.0],
+        // 4-7-8 pattern: inhale (0-21%), hold (21-58%), exhale (58-100%)
+        times: [0, 0.2105, 0.5789, 1.0],
         ease: 'linear', // Easing baked into keyframe placement
       },
     },

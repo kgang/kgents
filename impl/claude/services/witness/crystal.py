@@ -13,6 +13,7 @@ The Core Laws:
 - Law 3 (Level Consistency): Level N crystals only source from level N-1 (clean DAG)
 - Law 4 (Temporal Containment): Crystal time_range contains all source time_ranges
 - Law 5 (Compression Monotonicity): Higher levels are always denser (fewer, broader)
+- Law 6 (Constitutional Preservation): Constitutional alignment aggregates through compression
 
 The Transformative Insight:
     "Marks are observations. Crystals are insights."
@@ -21,8 +22,16 @@ The Transformative Insight:
     navigable memory. A crystal is not a summary—it's a semantic compression
     that preserves causal structure while reducing volume.
 
+Constitutional Integration (Phase 1: Witness as Constitutional Enforcement):
+    Crystals now preserve constitutional metadata through the compression hierarchy.
+    ConstitutionalCrystalMeta aggregates principle trends, tracks alignment trajectories,
+    and computes trust earned during the crystallized period.
+
+    Formula: trust_earned = Σ(0.02 if alignment > 0.8 else 0.0) for each mark
+
 Philosophy:
     "The garden thrives through pruning. Marks become crystals. Crystals become wisdom."
+    "Constitutional compliance compounds through compression."
 
 See: spec/protocols/witness-crystallization.md
 See: docs/skills/crown-jewel-patterns.md
@@ -37,7 +46,7 @@ from typing import TYPE_CHECKING, Any, NewType
 from uuid import uuid4
 
 if TYPE_CHECKING:
-    from .mark import Mark, MarkId
+    from .mark import Mark, MarkId, ConstitutionalAlignment
 
 # =============================================================================
 # Type Aliases
@@ -296,6 +305,252 @@ class MoodVector:
 
 
 # =============================================================================
+# ConstitutionalCrystalMeta: Constitutional Preservation Through Compression
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class ConstitutionalCrystalMeta:
+    """
+    Constitutional metadata preserved through crystal compression.
+
+    When marks are compressed into crystals, this class aggregates
+    constitutional alignment data to preserve the constitutional
+    character of the crystallized period.
+
+    Philosophy:
+        "Constitutional compliance compounds through compression."
+
+        Wisdom isn't just facts—it's principled facts. A crystal that
+        represents 50 marks should preserve whether those marks were
+        ethical, composable, joyful. Trust accumulates from demonstrated
+        constitutional alignment over time.
+
+    Integration:
+        - Created by ConstitutionalCrystallizer during compression
+        - Used by ConstitutionalTrustComputer to compute trust levels
+        - Displayed in ConstitutionalDashboard as crystal-level overview
+
+    The Seven Principles (with weights):
+        - ETHICAL: 2.0 (safety first)
+        - COMPOSABLE: 1.5 (architecture second)
+        - JOY_INDUCING: 1.2 (Kent's aesthetic)
+        - TASTEFUL, CURATED, HETERARCHICAL, GENERATIVE: 1.0 each
+
+    Example:
+        >>> meta = ConstitutionalCrystalMeta.from_marks(marks)
+        >>> print(f"Dominant: {meta.dominant_principles}")
+        >>> print(f"Trust earned: {meta.trust_earned}")
+    """
+
+    # Top 3 principles in this crystal (by aggregate score)
+    dominant_principles: tuple[str, ...]
+
+    # Alignment scores over time (trajectory for sparkline visualization)
+    alignment_trajectory: tuple[float, ...]
+
+    # Mean alignment across all source marks
+    average_alignment: float
+
+    # Total number of violations (marks below threshold)
+    violations_count: int
+
+    # Trust delta earned from this crystal (Article V: Trust Accumulation)
+    trust_earned: float
+
+    # Per-principle aggregate scores (for radar chart)
+    principle_trends: dict[str, float] = field(default_factory=dict)
+
+    @classmethod
+    def from_marks(
+        cls,
+        marks: list["Mark"],
+        threshold: float = 0.5,
+    ) -> "ConstitutionalCrystalMeta":
+        """
+        Aggregate constitutional metadata from a list of marks.
+
+        This is the primary factory for creating ConstitutionalCrystalMeta
+        during crystal compression. It:
+        1. Extracts constitutional alignments from each mark
+        2. Computes per-principle aggregate scores
+        3. Identifies top 3 dominant principles
+        4. Computes trust earned based on alignment quality
+
+        Args:
+            marks: List of marks with optional constitutional alignment
+            threshold: Compliance threshold (default 0.5)
+
+        Returns:
+            ConstitutionalCrystalMeta with aggregated data
+        """
+        # Extract alignments from marks
+        alignments = [m.constitutional for m in marks if m.constitutional is not None]
+
+        if not alignments:
+            return cls(
+                dominant_principles=(),
+                alignment_trajectory=(),
+                average_alignment=0.0,
+                violations_count=0,
+                trust_earned=0.0,
+                principle_trends={},
+            )
+
+        # Compute per-principle aggregate scores
+        principle_totals: dict[str, float] = {}
+        principle_counts: dict[str, int] = {}
+
+        for alignment in alignments:
+            for principle, score in alignment.principle_scores.items():
+                principle = principle.upper()
+                principle_totals[principle] = principle_totals.get(principle, 0.0) + score
+                principle_counts[principle] = principle_counts.get(principle, 0) + 1
+
+        # Average per principle
+        principle_trends = {
+            p: principle_totals[p] / principle_counts[p]
+            for p in principle_totals
+            if principle_counts[p] > 0
+        }
+
+        # Identify top 3 dominant principles
+        sorted_principles = sorted(
+            principle_trends.keys(),
+            key=lambda p: -principle_trends[p],
+        )
+        dominant_principles = tuple(sorted_principles[:3])
+
+        # Alignment trajectory (for sparkline)
+        alignment_trajectory = tuple(a.weighted_total for a in alignments)
+
+        # Average alignment
+        average_alignment = sum(alignment_trajectory) / len(alignment_trajectory)
+
+        # Count violations
+        violations_count = sum(1 for a in alignments if not a.is_compliant)
+
+        # Compute trust earned (Article V: Trust Accumulation)
+        # +0.02 for each high-alignment mark (above 0.8)
+        trust_earned = sum(0.02 if a.weighted_total > 0.8 else 0.0 for a in alignments)
+
+        return cls(
+            dominant_principles=dominant_principles,
+            alignment_trajectory=alignment_trajectory,
+            average_alignment=average_alignment,
+            violations_count=violations_count,
+            trust_earned=trust_earned,
+            principle_trends=principle_trends,
+        )
+
+    @classmethod
+    def from_crystals(
+        cls,
+        crystals: list["Crystal"],
+    ) -> "ConstitutionalCrystalMeta":
+        """
+        Aggregate constitutional metadata from source crystals.
+
+        Used for DAY, WEEK, and EPOCH crystals that aggregate
+        lower-level crystals.
+        """
+        metas = [c.constitutional_meta for c in crystals if c.constitutional_meta is not None]
+
+        if not metas:
+            return cls(
+                dominant_principles=(),
+                alignment_trajectory=(),
+                average_alignment=0.0,
+                violations_count=0,
+                trust_earned=0.0,
+                principle_trends={},
+            )
+
+        # Aggregate principle trends (weighted by trajectory length)
+        principle_totals: dict[str, float] = {}
+        principle_weights: dict[str, float] = {}
+
+        for meta in metas:
+            weight = len(meta.alignment_trajectory) if meta.alignment_trajectory else 1
+            for principle, score in meta.principle_trends.items():
+                principle_totals[principle] = principle_totals.get(principle, 0.0) + score * weight
+                principle_weights[principle] = principle_weights.get(principle, 0.0) + weight
+
+        principle_trends = {
+            p: principle_totals[p] / principle_weights[p]
+            for p in principle_totals
+            if principle_weights[p] > 0
+        }
+
+        # Identify top 3
+        sorted_principles = sorted(
+            principle_trends.keys(),
+            key=lambda p: -principle_trends[p],
+        )
+        dominant_principles = tuple(sorted_principles[:3])
+
+        # Concatenate trajectories (sample if too long)
+        all_trajectories = [t for m in metas for t in m.alignment_trajectory]
+        if len(all_trajectories) > 100:
+            # Sample to 100 points for visualization
+            step = len(all_trajectories) // 100
+            all_trajectories = all_trajectories[::step][:100]
+
+        # Aggregate other metrics
+        total_weight = sum(len(m.alignment_trajectory) for m in metas if m.alignment_trajectory) or 1
+        average_alignment = sum(
+            m.average_alignment * len(m.alignment_trajectory)
+            for m in metas
+            if m.alignment_trajectory
+        ) / total_weight
+
+        violations_count = sum(m.violations_count for m in metas)
+        trust_earned = sum(m.trust_earned for m in metas)
+
+        return cls(
+            dominant_principles=dominant_principles,
+            alignment_trajectory=tuple(all_trajectories),
+            average_alignment=average_alignment,
+            violations_count=violations_count,
+            trust_earned=trust_earned,
+            principle_trends=principle_trends,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for serialization."""
+        return {
+            "dominant_principles": list(self.dominant_principles),
+            "alignment_trajectory": list(self.alignment_trajectory),
+            "average_alignment": self.average_alignment,
+            "violations_count": self.violations_count,
+            "trust_earned": self.trust_earned,
+            "principle_trends": self.principle_trends,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ConstitutionalCrystalMeta":
+        """Create from dictionary."""
+        return cls(
+            dominant_principles=tuple(data.get("dominant_principles", [])),
+            alignment_trajectory=tuple(data.get("alignment_trajectory", [])),
+            average_alignment=data.get("average_alignment", 0.0),
+            violations_count=data.get("violations_count", 0),
+            trust_earned=data.get("trust_earned", 0.0),
+            principle_trends=data.get("principle_trends", {}),
+        )
+
+    def __repr__(self) -> str:
+        """Concise representation."""
+        dom = ",".join(self.dominant_principles[:2]) if self.dominant_principles else "none"
+        return (
+            f"ConstitutionalCrystalMeta("
+            f"dominant=[{dom}], "
+            f"avg={self.average_alignment:.2f}, "
+            f"trust={self.trust_earned:.2f})"
+        )
+
+
+# =============================================================================
 # Crystal: The Unified Memory Unit
 # =============================================================================
 
@@ -363,6 +618,9 @@ class Crystal:
 
     # Optional session context
     session_id: str = ""
+
+    # Constitutional metadata (Phase 1: Witness as Constitutional Enforcement)
+    constitutional_meta: ConstitutionalCrystalMeta | None = None
 
     def __post_init__(self) -> None:
         """Validate crystal laws."""
@@ -459,6 +717,32 @@ class Crystal:
             session_id="",
         )
 
+    def with_constitutional_meta(self, meta: ConstitutionalCrystalMeta) -> "Crystal":
+        """
+        Return new Crystal with constitutional metadata (immutable pattern).
+
+        This is typically called by ConstitutionalCrystallizer after
+        aggregating constitutional alignment data from source marks.
+        """
+        return Crystal(
+            id=self.id,
+            level=self.level,
+            insight=self.insight,
+            significance=self.significance,
+            principles=self.principles,
+            source_marks=self.source_marks,
+            source_crystals=self.source_crystals,
+            time_range=self.time_range,
+            crystallized_at=self.crystallized_at,
+            topics=self.topics,
+            mood=self.mood,
+            compression_ratio=self.compression_ratio,
+            confidence=self.confidence,
+            token_estimate=self.token_estimate,
+            session_id=self.session_id,
+            constitutional_meta=meta,
+        )
+
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -482,6 +766,7 @@ class Crystal:
             "confidence": self.confidence,
             "token_estimate": self.token_estimate,
             "session_id": self.session_id,
+            "constitutional_meta": self.constitutional_meta.to_dict() if self.constitutional_meta else None,
         }
 
     @classmethod
@@ -495,6 +780,12 @@ class Crystal:
                 datetime.fromisoformat(data["time_range"][0]),
                 datetime.fromisoformat(data["time_range"][1]),
             )
+
+        constitutional_meta = (
+            ConstitutionalCrystalMeta.from_dict(data["constitutional_meta"])
+            if data.get("constitutional_meta")
+            else None
+        )
 
         return cls(
             id=CrystalId(data["id"]),
@@ -514,6 +805,7 @@ class Crystal:
             confidence=data.get("confidence", 0.8),
             token_estimate=data.get("token_estimate", 0),
             session_id=data.get("session_id", ""),
+            constitutional_meta=constitutional_meta,
         )
 
     @property
@@ -554,5 +846,6 @@ __all__ = [
     "CrystalLevel",
     # Data classes
     "MoodVector",
+    "ConstitutionalCrystalMeta",
     "Crystal",
 ]

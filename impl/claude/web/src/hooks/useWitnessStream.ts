@@ -13,16 +13,55 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // Types
 // =============================================================================
 
+/**
+ * Witness SSE event types.
+ *
+ * MUST MATCH services/witness/bus.py WitnessEventType enum.
+ *
+ * When adding a new type:
+ * 1. Add to this union
+ * 2. Add to VISIBLE_EVENT_TYPES if it needs UI handling
+ * 3. Add to eventTypes array in useWitnessStream
+ */
 export type WitnessEventType =
+  // Core events (always visible in witness stream)
   | 'mark'
   | 'thought'
   | 'crystal'
-  | 'heartbeat'
-  | 'connected'
   | 'kblock'
   | 'trail'
+  // Domain events
   | 'spec'
-  | 'sovereign';
+  | 'sovereign'
+  | 'director'
+  | 'git'
+  | 'agentese'
+  | 'constitutional'
+  | 'proxy'
+  // Lifecycle events (internal)
+  | 'daemon'
+  // Connection events (special)
+  | 'connected'
+  | 'heartbeat';
+
+/**
+ * Event types that require SSE handlers.
+ * Excludes: connected (handled by onopen), heartbeat (skipped), daemon (internal).
+ */
+const VISIBLE_EVENT_TYPES: readonly WitnessEventType[] = [
+  'mark',
+  'thought',
+  'crystal',
+  'kblock',
+  'trail',
+  'spec',
+  'sovereign',
+  'director',
+  'git',
+  'agentese',
+  'constitutional',
+  'proxy',
+] as const;
 
 // Semantic delta from K-Block edits
 export interface SemanticDelta {
@@ -67,6 +106,21 @@ export interface WitnessEvent {
   specPaths?: string[];
   specSummary?: Record<string, number>;
   orphanCount?: number;
+
+  // AGENTESE fields (Law 3: Every invocation emits Mark)
+  agentesePath?: string;
+  agenteseAspect?: string;
+
+  // Git fields
+  commitHash?: string;
+  commitMessage?: string;
+  filesChanged?: number;
+
+  // Director fields
+  directorStatus?: string;
+
+  // Topic (included for debugging/transparency)
+  topic?: string;
 }
 
 export interface UseWitnessStream {
@@ -151,6 +205,17 @@ export function useWitnessStream(): UseWitnessStream {
           specPaths: data.paths,
           specSummary: data.summary,
           orphanCount: data.orphan_count,
+          // AGENTESE fields
+          agentesePath: data.stimulus?.metadata?.path,
+          agenteseAspect: data.stimulus?.metadata?.aspect,
+          // Git fields
+          commitHash: data.commit_hash,
+          commitMessage: data.message,
+          filesChanged: data.files_changed,
+          // Director fields
+          directorStatus: data.status,
+          // Topic (for debugging/transparency)
+          topic: data.topic,
         };
 
         setEvents((prev) => [event, ...prev].slice(0, MAX_EVENTS));
@@ -162,18 +227,9 @@ export function useWitnessStream(): UseWitnessStream {
     // SSE uses NAMED events (event: mark\ndata: {...})
     // We must use addEventListener for each event type, NOT onmessage
     // onmessage only catches unnamed events or "message" events
-    // Note: 'connected' is handled by onopen, 'heartbeat' is skipped - don't add listeners for these
-    const eventTypes: WitnessEventType[] = [
-      'mark',
-      'thought',
-      'crystal',
-      'kblock',
-      'trail',
-      'spec',
-      'sovereign',
-    ];
-
-    eventTypes.forEach((eventType) => {
+    // Note: 'connected' is handled by onopen, 'heartbeat' is skipped, 'daemon' is internal
+    // Use VISIBLE_EVENT_TYPES as the single source of truth
+    VISIBLE_EVENT_TYPES.forEach((eventType) => {
       eventSource.addEventListener(eventType, (e) => processEvent(e as MessageEvent, eventType));
     });
 

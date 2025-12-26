@@ -12,19 +12,48 @@
  * - /world.document — FileExplorer in left sidebar, no document open
  * - /world.document/<path> — Editor with document
  *
+ * Zero Seed Integration:
+ * - After Genesis, location.state.showZeroSeed triggers foundation panel
+ * - Displays A1, A2, G axioms with derivation edges
+ *
  * @see docs/UX-LAWS.md
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { normalizePath, isValidFilePath, useFileUpload } from '../hypergraph';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { normalizePath, isValidFilePath, useFileUpload, ZeroSeedFoundation } from '../hypergraph';
 import { useRecentFiles } from '../hypergraph/useRecentFiles';
 import { Workspace } from '../constructions/Workspace';
 import './HypergraphEditorPage.css';
 
+// =============================================================================
+// Types
+// =============================================================================
+
+interface ZeroSeedContext {
+  userAxiomId: string;
+  userDeclaration?: string;
+  layer: number;
+  loss: number;
+}
+
+interface LocationState {
+  highlightKBlock?: string;
+  showZeroSeed?: boolean;
+  zeroSeedContext?: ZeroSeedContext;
+}
+
 export function HypergraphEditorPage() {
   const { '*': rawPath } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Extract Zero Seed context from location state (passed from Genesis)
+  const locationState = location.state as LocationState | null;
+  const [showZeroSeed, setShowZeroSeed] = useState<boolean>(
+    locationState?.showZeroSeed ?? false
+  );
+  const zeroSeedContext = locationState?.zeroSeedContext;
 
   const normalizedRawPath = rawPath ? normalizePath(rawPath) : null;
   const initialPath = normalizedRawPath && isValidFilePath(normalizedRawPath) ? normalizedRawPath : null;
@@ -39,6 +68,29 @@ export function HypergraphEditorPage() {
 
   const [currentPath, setCurrentPath] = useState<string | null>(initialPath);
   const { recentFiles, addRecentFile, removeRecentFile, clearRecentFiles } = useRecentFiles();
+
+  // Handle navigation from Zero Seed Foundation panel
+  const handleZeroSeedNavigate = useCallback(
+    (nodeId: string) => {
+      // For foundational axioms (A1, A2, G), we might want to navigate to a special view
+      // For now, just log and close the panel
+      console.info('[HypergraphEditorPage] Zero Seed navigate:', nodeId);
+      // If it's the user's axiom, navigate to it
+      if (nodeId === zeroSeedContext?.userAxiomId) {
+        // User's K-Block - navigate to it if we have a path
+        // For now, just close the panel
+        setShowZeroSeed(false);
+      }
+    },
+    [zeroSeedContext?.userAxiomId]
+  );
+
+  // Close Zero Seed panel
+  const handleCloseZeroSeed = useCallback(() => {
+    setShowZeroSeed(false);
+    // Clear location state to prevent panel from reappearing on refresh
+    navigate(location.pathname, { replace: true, state: null });
+  }, [navigate, location.pathname]);
 
   const handleFileReady = useCallback(
     (path: string) => {
@@ -90,6 +142,19 @@ export function HypergraphEditorPage() {
         onClearRecent={clearRecentFiles}
         loadNode={loadNode}
       />
+
+      {/* Zero Seed Foundation Panel (shown after Genesis) */}
+      {zeroSeedContext && (
+        <ZeroSeedFoundation
+          userAxiomId={zeroSeedContext.userAxiomId}
+          userDeclaration={zeroSeedContext.userDeclaration}
+          layer={zeroSeedContext.layer}
+          loss={zeroSeedContext.loss}
+          isVisible={showZeroSeed}
+          onNavigate={handleZeroSeedNavigate}
+          onClose={handleCloseZeroSeed}
+        />
+      )}
     </div>
   );
 }

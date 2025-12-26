@@ -58,7 +58,7 @@ interface SidebarState {
 |----------|--------|
 | Ctrl+B | Toggle left sidebar (Files) |
 | Ctrl+J | Toggle right sidebar (Chat) |
-| ? | Open help panel (vim-style) |
+| ? | Open help panel |
 
 ## Routes After Transformation
 

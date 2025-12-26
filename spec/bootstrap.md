@@ -4,6 +4,69 @@ The irreducible kernel from which all of kgents can be regenerated.
 
 ---
 
+## The Foundational Axioms
+
+> *"What cannot be derived must be given."*
+
+Before the seven bootstrap agents, there exist three pre-categorical axioms:
+
+### A1: Entity (Existence)
+
+```
+A1: There exist things.
+```
+
+The irreducible claim that *something is*. Without entities, there is nothing to compose, nothing to judge, nothing to ground. This maps to **objects** in category theory.
+
+### A2: Morphism (Relation)
+
+```
+A2: Things relate.
+```
+
+The irreducible claim that entities connect. Without relations, entities are isolated atoms with no structure. This maps to **arrows** in category theory.
+
+### A3: Mirror Test (Human Oracle)
+
+```
+A3: We judge by reflection.
+```
+
+The irreducible claim that Kent's somatic response (the "disgust veto") is the ultimate arbiter. This cannot be algorithmized—it is the oracle that grounds all judgment.
+
+### G: Galois Ground (Meta-Axiom)
+
+```
+G: For any valid structure, there exists a minimal axiom set from which it derives.
+```
+
+This is the **Galois Modularization Principle**—the guarantee that our axiom-finding process terminates. Every concept bottoms out in irreducibles. G is not derivable from A1-A3; it is the meta-axiom that justifies searching for axioms in the first place.
+
+### The Derivation Hierarchy
+
+```
+LEVEL 0: Pre-Categorical
+  A1 (Entity)   → objects exist
+  A2 (Morphism) → relations exist
+  A3 (Mirror)   → judgment is grounded in human oracle
+  G  (Galois)   → axioms exist and are minimal
+
+LEVEL 1: Minimal Kernel
+  Compose = operational form of A2
+  Judge   = operational form of A3
+  Ground  = operational form of A1
+
+LEVEL 2: Derived Primitives
+  Id         = Compose + Judge → neutral element
+  Contradict = Judge → tension detection
+  Sublate    = Compose + Judge + Contradict → synthesis
+  Fix        = Compose + Judge → iteration to stability
+
+LEVEL 3: The Seven Bootstrap Agents (see below)
+```
+
+---
+
 ## Implementation Status (2025-12-16)
 
 The bootstrap spec defines **what** the agents are. The implementation is now distributed:
@@ -529,9 +592,9 @@ If forced to choose the **absolute minimum**:
 MinimalBootstrap = {Compose, Judge, Ground}
 ```
 
-- **Compose** gives you structure
-- **Judge** gives you direction (what to keep, what to discard)
-- **Ground** gives you starting material
+- **Compose** gives you structure (operational A2)
+- **Judge** gives you direction (operational A3)
+- **Ground** gives you starting material (operational A1)
 
 From these three, you can derive:
 - Id = the agent that Judge never rejects composing with anything
@@ -540,6 +603,17 @@ From these three, you can derive:
 - Fix = the iteration of Compose until Judge says "stable"
 
 But this derivation requires *effort*—the seven-agent bootstrap is more efficient for regeneration.
+
+### Connection to Lawvere's Fixed-Point Theorem
+
+The Fix operator has deep mathematical grounding. In a cartesian closed category, for any point-surjective f: A → A^A, there exists x: 1 → A such that f(x) = x.
+
+This is why:
+- Self-referential agent definitions are valid (not paradoxical)
+- The bootstrap can describe itself
+- Agents that modify their own behavior converge to stable points
+
+The seven-agent bootstrap is the fixed point of the Minimal Kernel: `Fix(Compose + Judge + Ground) = {Id, Compose, Judge, Ground, Contradict, Sublate, Fix}`.
 
 ---
 

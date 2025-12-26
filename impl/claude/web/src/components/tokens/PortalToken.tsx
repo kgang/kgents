@@ -27,6 +27,7 @@ import { GrowingContainer } from '../joy';
 import { PortalResourceIcon } from './PortalResourceIcon';
 import { PortalContent } from './PortalContent';
 import type { PortalResourceType, ResolvedResource } from './types';
+import { useWitness } from '../../hooks';
 
 import './tokens.css';
 
@@ -115,7 +116,7 @@ export const PortalToken = memo(function PortalToken({
   isDiscovered = false,
   resourceType,
   resolvedResource,
-  depth: _depth = 0,
+  depth = 0,
   evidenceId: initialEvidenceId,
 }: PortalTokenProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -124,13 +125,25 @@ export const PortalToken = memo(function PortalToken({
   const [cureError, setCureError] = useState<string | null>(null);
   const [evidenceId] = useState<string | undefined>(initialEvidenceId);
 
+  // Witness hook for tracking portal interactions
+  const { witnessPortal } = useWitness();
+
   const handleToggleExpand = useCallback(() => {
     if (authoringState !== 'RESOLVED') return; // Can't expand unparsed portals
     const newState = !expanded;
+
+    // Witness the portal interaction (fire-and-forget for non-blocking UX)
+    if (edgeType && destinations.length > 0) {
+      const actionType = newState ? 'expand' : 'collapse';
+      const destination = destinations[0].path; // Use first destination as representative
+
+      witnessPortal(actionType, edgeType, destination, depth);
+    }
+
     setExpanded(newState);
     // Pass evidence_id to parent if we have one
     onExpand?.(newState, evidenceId);
-  }, [expanded, onExpand, authoringState, evidenceId]);
+  }, [expanded, onExpand, authoringState, evidenceId, edgeType, destinations, depth, witnessPortal]);
 
   const handleDestinationClick = useCallback(
     (path: string) => {
@@ -156,6 +169,12 @@ export const PortalToken = memo(function PortalToken({
     setCureError(null);
     try {
       const result = await onCure();
+
+      // Witness the cure attempt (fire-and-forget)
+      if (naturalLanguage) {
+        witnessPortal('cure', 'unparsed', naturalLanguage, depth);
+      }
+
       if (!result.success) {
         setCureError('Could not resolve portal');
       }
@@ -165,7 +184,7 @@ export const PortalToken = memo(function PortalToken({
     } finally {
       setCuring(false);
     }
-  }, [onCure, curing]);
+  }, [onCure, curing, naturalLanguage, depth, witnessPortal]);
 
   const count = destinations.length;
   const visibleDestinations = showAll ? destinations : destinations.slice(0, maxVisible);

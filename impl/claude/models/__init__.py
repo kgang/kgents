@@ -12,6 +12,7 @@ Crown Jewel Tables:
 - annotation.py: SpecAnnotationRow
 - ashc.py: VerifiedLemmaModel
 - sovereign.py: SovereignCollectionRow, SovereignPlaceholderRow
+- onboarding.py: OnboardingSession
 
 Note: town.py removed 2025-12-21 (extinct).
 """
@@ -65,6 +66,12 @@ from .ashc import VerifiedLemmaModel
 # Sovereign Crown Jewel
 from .sovereign import SovereignCollectionRow, SovereignPlaceholderRow
 
+# Onboarding
+from .onboarding import OnboardingSession
+
+# Feed Feedback
+from .feed_feedback import FeedEngagementStats, FeedInteraction
+
 __all__ = [
     # Base infrastructure
     "Base",
@@ -101,4 +108,9 @@ __all__ = [
     # Sovereign
     "SovereignCollectionRow",
     "SovereignPlaceholderRow",
+    # Onboarding
+    "OnboardingSession",
+    # Feed Feedback
+    "FeedInteraction",
+    "FeedEngagementStats",
 ]

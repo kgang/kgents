@@ -30,6 +30,10 @@ export interface SelfKblockGetResponse {
   is_dirty: boolean;
   active_views: string[];
   checkpoints: Record<string, unknown>[];
+  // Genesis feed fields
+  galois_loss: number;
+  created_by: string | null;
+  tags: string[];
 }
 
 /**

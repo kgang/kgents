@@ -83,7 +83,7 @@ const BINDINGS: KeyBinding[] = [
 ```
 HypergraphEditor (Main Component)
   ├── useNavigation       // State: current node, trail, mode
-  ├── useKeyHandler       // Vim-like keybindings
+  ├── useKeyHandler       // Modal keybindings
   ├── useKBlock           // Isolation layer
   ├── useCommandRegistry  // Cmd+K palette
   └── Panes

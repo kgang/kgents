@@ -844,9 +844,264 @@ class TokenBudget:
 
 ---
 
-## Part X: Implementation Roadmap
+## Part X: FTUE Bootstrap (First-Time User Experience)
 
-### Phase 1: Galois Infrastructure (Weeks 1-3)
+> *"The act of declaring, capturing, and auditing your decisions is itself a radical act of self-transformation."*
+
+### 10.1 The Irreducible Kernel
+
+The FTUE presents the **minimal generative set** required to bootstrap a personal knowledge garden:
+
+| Component | Statement | Loss | Type |
+|-----------|-----------|------|------|
+| **A1: Entity** | "Everything is a node" | L=0.002 | Computational axiom |
+| **A2: Morphism** | "Everything composes" | L=0.003 | Computational axiom |
+| **A3: Mirror Test** | "Does this feel true on your best day?" | L=0.000 | Human oracle |
+| **G: Galois Ground** | "Loss measures structure; axioms are fixed points" | L=0.000 | Meta-axiom |
+
+**The Minimal Bootstrap Equation**:
+```
+MinimalBootstrap = {Compose, Judge, Ground}
+                 = A2 ∘ A3 ∘ G
+```
+
+**Why These Three**:
+- **Compose (A2)**: Without composition, no structure can grow
+- **Judge (A3)**: Without human validation, no ground truth
+- **Ground (G)**: Without loss measurement, no axiom discovery
+
+**A1 is Derived**: Entity (A1) is *implied* by A2—you cannot compose nothing. But A1 is still presented for pedagogical clarity.
+
+### 10.2 Three-Stage Discovery Protocol
+
+The FTUE walks users through axiom discovery using the same three stages defined in Part II:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Stage 1: CONSTITUTION MINING (Computational)                            │
+│                                                                         │
+│ System extracts low-loss statements from user's initial declaration:    │
+│   - L(statement) < 0.05 → Candidate axiom                              │
+│   - LLM Scout tier (haiku) for extraction (~300 tokens)                │
+│   - Output: Candidate axioms with loss scores                          │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Stage 2: MIRROR TEST (Human Oracle)                                     │
+│                                                                         │
+│ User validates via felt sense:                                          │
+│   - "Does this feel true on your best day?"                            │
+│   - Accept / Reframe / Reject for each candidate                       │
+│   - Reframe = L(user_version) := 0.000 (human override)                │
+│   - Output: Accepted axioms (L1 nodes)                                 │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Stage 3: LIVING CORPUS VALIDATION (Behavioral)                          │
+│                                                                         │
+│ Future: Compare axioms against witnessed marks:                         │
+│   - Do user's actions align with stated axioms?                        │
+│   - behavioral_loss = misalignment score                               │
+│   - Deferred until enough marks accumulate                             │
+│   - Output: Behavioral coherence metrics                               │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 10.3 The Onboarding Flow
+
+**Phase 1: Greet & Present Foundation**
+```
+1. Welcome screen with Zero Seed visualization
+2. Present A1/A2/G as "the three things we believe"
+3. Ask: "Do these resonate?" (Mirror Test for foundation)
+4. If accept → proceed; if reject → allow customization
+```
+
+**Phase 2: First Declaration**
+```
+1. Prompt: "What matters most to you right now?"
+2. User enters first declaration (free text)
+3. System:
+   a. Assigns to L1 (Axiom layer) — first statement is foundational
+   b. Computes Galois loss (clarity score)
+   c. Creates K-Block with witnessed mark
+   d. Links to Zero Seed axioms via `derives_from` edges
+4. Celebrate: confetti, color based on loss
+```
+
+**Phase 3: Show the Graph**
+```
+1. Reveal the emerging structure:
+   - User's axiom as new node
+   - Edges to Zero Seed foundation
+   - Loss visualization (color = coherence)
+2. Explain: "This is your garden. It grows from here."
+3. Transition to main Studio
+```
+
+**Implementation Reference**: `impl/claude/protocols/api/onboarding.py`
+
+### 10.4 Layer Assignment for FTUE
+
+**FTUE Special Rule**: First declaration always goes to **L1 (Axiom)** because:
+
+1. L1 Axioms are foundational and require NO lineage
+2. User's first statement IS their foundational assumption
+3. This makes the first K-Block a valid root in the derivation DAG
+
+```python
+def assign_layer_for_ftue(declaration: str) -> int:
+    """
+    FTUE always assigns to L1 (Axiom).
+
+    Philosophy: "Your first declaration is axiomatic—
+    it needs no proof, only witnessing."
+    """
+    return 1  # L1 Axiom
+```
+
+**Loss Computation** (for L1 FTUE):
+```python
+def compute_ftue_loss(declaration: str) -> float:
+    """
+    Loss reflects clarity of foundational assumption:
+    - Very specific (>80 chars) → 0.10-0.25 (low loss)
+    - Medium (30-80 chars) → 0.30-0.45 (medium loss)
+    - Vague (<30 chars) → 0.50-0.65 (higher loss)
+
+    Note: Loss != quality. Exploratory axioms are valid.
+    """
+    base = 0.35
+    if len(declaration) > 80:
+        return max(0.10, base - 0.18)
+    elif len(declaration) < 30:
+        return min(0.65, base + 0.20)
+    return base
+```
+
+### 10.5 Edge Creation: Linking to Foundation
+
+After creating the user's first K-Block, the system creates `derives_from` edges to the Zero Seed axioms:
+
+```
+User's Axiom (L1)
+       │
+       ├──derives_from──→ A1: Entity
+       ├──derives_from──→ A2: Morphism
+       └──derives_from──→ G: Galois Ground
+```
+
+**Semantic**: The user's axiom "builds on" the Zero Seed foundation, even if implicitly.
+
+**Edge Metadata**:
+```python
+EdgeInfo(
+    edge_type="derives_from",
+    context="User's first axiom builds on Zero Seed foundation",
+    # mark_id populated if witness is available
+)
+```
+
+### 10.6 Success Metrics
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| **Axiom Acceptance Rate** | >80% | % of presented axioms accepted via Mirror Test |
+| **Regenerability** | >85% | 1 - L(user_corpus) after bootstrap |
+| **Time to First Node** | <2 min | Time from start to first K-Block creation |
+| **Edge Density** | ≥3 edges | Edges created per first K-Block |
+| **Celebration Rate** | 100% | Every first declaration triggers celebration |
+
+**Tracking**:
+```python
+class FTUEMetrics:
+    """Track FTUE success metrics."""
+    axiom_acceptance_rate: float  # Target: >0.80
+    regenerability: float          # Target: >0.85
+    time_to_first_node_seconds: float  # Target: <120
+    edges_created: int             # Target: ≥3
+    celebrated: bool               # Target: True
+```
+
+### 10.7 The Mirror Test as Human Oracle
+
+The Mirror Test deserves special treatment—it's the only component with **L=0.000** not because it's computational, but because human felt sense is *defined* as ground truth:
+
+```python
+async def mirror_test(candidate: str) -> MirrorTestResult:
+    """
+    Present candidate axiom for human validation.
+
+    Returns:
+        MirrorTestResult with one of:
+        - accept: Candidate becomes axiom (L=0.000 by definition)
+        - reframe: User provides alternative (L=0.000)
+        - reject: Candidate discarded
+    """
+    response = await prompt_user(
+        f'Does this feel true for you on your best day?\n\n> "{candidate}"'
+    )
+
+    if response.accepted:
+        return MirrorTestResult(
+            outcome="accept",
+            axiom=candidate,
+            galois_loss=0.000,  # Human oracle = ground truth
+        )
+    elif response.reframed:
+        return MirrorTestResult(
+            outcome="reframe",
+            axiom=response.user_text,
+            galois_loss=0.000,  # User override = ground truth
+        )
+    else:
+        return MirrorTestResult(
+            outcome="reject",
+            axiom=None,
+            galois_loss=None,
+        )
+```
+
+**Philosophy**: Computational loss (L=0.002 for A1) measures *semantic compression*. Human-accepted axioms have L=0.000 by *definitional fiat*—the user's felt sense is the ultimate arbiter.
+
+### 10.8 Bootstrap Verification
+
+After FTUE completes, verify the bootstrap is a Galois fixed point:
+
+```python
+async def verify_ftue_bootstrap(
+    user_axioms: list[ZeroNode],
+    zero_seed_axioms: list[ZeroNode],
+) -> BootstrapVerification:
+    """
+    Verify that user's bootstrap + Zero Seed forms a valid fixed point.
+
+    Success criteria:
+    - Combined corpus regenerability ≥ 85%
+    - All edges are valid (no orphans)
+    - Layer assignments are consistent
+    """
+    combined = zero_seed_axioms + user_axioms
+
+    # Compute total corpus loss
+    corpus_text = "\n".join(n.content for n in combined)
+    loss = await galois_loss(corpus_text)
+
+    return BootstrapVerification(
+        regenerability_pct=(1 - loss) * 100,
+        is_valid=(loss < 0.15),
+        node_count=len(combined),
+        edge_count=count_edges(combined),
+    )
+```
+
+---
+
+## Part XI: Implementation Roadmap
+
+### 11.1 Phase 1: Galois Infrastructure (Weeks 1-3)
 ```
 Files: impl/claude/services/zero_seed/galois/
   - galois_loss.py (core loss computation)
@@ -860,7 +1115,7 @@ Success:
   ✓ Unit tests pass
 ```
 
-### Phase 2: Validation & Triage (Weeks 4-6)
+### 11.2 Phase 2: Validation & Triage (Weeks 4-6)
 ```
 Files:
   - galois/validation.py (proof validation)
@@ -873,7 +1128,7 @@ Success:
   ✓ classify_by_loss() maps to evidence tiers
 ```
 
-### Phase 3: Contradiction & DP (Weeks 7-10)
+### 11.3 Phase 3: Contradiction & DP (Weeks 7-10)
 ```
 Files:
   - galois/contradiction.py (super-additive detection)
@@ -886,7 +1141,7 @@ Success:
   ✓ proof_to_trace() round-trip preserves loss
 ```
 
-### Phase 4: Layer Stratification & Discovery (Weeks 11-14)
+### 11.4 Phase 4: Layer Stratification & Discovery (Weeks 11-14)
 ```
 Files:
   - galois/layers.py (convergence-based stratification)
@@ -899,7 +1154,7 @@ Success:
   ✓ retroactive_witnessing() validates Lawvere theorem
 ```
 
-### Phase 5: LLM & Navigation (Weeks 15-18)
+### 11.5 Phase 5: LLM & Navigation (Weeks 15-18)
 ```
 Files:
   - llm/augmented_intelligence.py (LLM as Galois guidance)
@@ -912,7 +1167,7 @@ Success:
   ✓ UI displays gradient field via focal distance
 ```
 
-### Phase 6: Integration & Hardening (Weeks 19-22)
+### 11.6 Phase 6: Integration & Hardening (Weeks 19-22)
 ```
 Files:
   - protocols/api/zero_seed.py (unified API)
@@ -1100,6 +1355,11 @@ The following experimental extensions were developed in `zero-seed1/` but are NO
 - `spec/protocols/telescope-navigation.md` - DP-guided navigation with loss
 - `spec/services/categorical.md` - Category-theoretic foundations
 
+**FTUE Implementation**:
+- `impl/claude/protocols/api/onboarding.py` - Onboarding API endpoints
+- `impl/claude/models/onboarding.py` - OnboardingSession persistence model
+- `impl/claude/system/migrations/002_onboarding_sessions.sql` - Database schema
+
 **Implementation Skills**:
 - `docs/skills/zero-seed-galois.md` - Galois framework guide
 - `docs/skills/proof-patterns.md` - Toulmin proof construction
@@ -1109,16 +1369,21 @@ The following experimental extensions were developed in `zero-seed1/` but are NO
 
 ## Document Metadata
 
-- **Version**: 1.0.0 (Unified Canonical)
-- **Date**: 2025-12-24
+- **Version**: 1.1.0 (FTUE Bootstrap Addition)
+- **Date**: 2025-12-25
 - **Authors**: Kent Gang, Claude (Anthropic)
 - **Status**: CANONICAL
 - **Supersedes**:
   - `spec/protocols/zero-seed.md` (v1, ~2,498 lines)
   - `spec/protocols/zero-seed/` (v2, modular, ~10 files)
   - `spec/protocols/zero-seed1/` (v3, Galois-native, ~14 files)
-- **Line Count**: ~1,350 (vs. ~27,486 combined)
-- **Compression Ratio**: 20.4:1
+- **Line Count**: ~1,600 (vs. ~27,486 combined)
+- **Compression Ratio**: 17.2:1
+- **Changes in 1.1.0**:
+  - Added Part X: FTUE Bootstrap (First-Time User Experience)
+  - Documented A3: Mirror Test as human oracle
+  - Added success metrics for onboarding
+  - Renumbered Implementation Roadmap to Part XI
 
 ---
 

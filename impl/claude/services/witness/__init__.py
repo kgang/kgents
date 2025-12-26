@@ -49,11 +49,19 @@ from .contracts import (
 
 # Crystal (Unified Memory Compression)
 from .crystal import (
+    ConstitutionalCrystalMeta,
     Crystal,
     CrystalId,
     CrystalLevel,
     MoodVector,
     generate_crystal_id,
+)
+
+# Constitutional Evaluator (Phase 1: Witness as Constitutional Enforcement)
+from .constitutional_evaluator import (
+    BatchConstitutionalEvaluator,
+    ConstitutionalEvaluatorProtocol,
+    MarkConstitutionalEvaluator,
 )
 from .crystal_store import (
     CrystalNotFoundError,
@@ -176,6 +184,7 @@ from .lesson import (
 
 # Mark (renamed from TraceNode)
 from .mark import (
+    ConstitutionalAlignment,
     EvidenceTier,
     LinkRelation,
     Mark,
@@ -188,6 +197,7 @@ from .mark import (
     Stimulus,
     UmweltSnapshot,
     WalkId,
+    WitnessDomain,
     generate_mark_id,
 )
 from .node import (
@@ -305,6 +315,11 @@ from .stream import (
     stream_crystals_cli,
 )
 
+# Trace (Immutable Mark Sequence)
+from .trace import (
+    Trace,
+)
+
 # MarkStore (renamed from TraceStore)
 from .trace_store import (
     CausalityViolation,
@@ -345,6 +360,13 @@ from .trust import (
     PendingSuggestion,
     SuggestionStats,
     check_escalation,
+)
+
+# Constitutional Trust (Phase 1: Witness as Constitutional Enforcement)
+from .trust.constitutional_trust import (
+    ConstitutionalTrustComputer,
+    ConstitutionalTrustResult,
+    TrustComputerProtocol,
 )
 from .voice_gate import (
     DENYLIST_PATTERNS,
@@ -392,11 +414,16 @@ __all__ = [
     "TrustResponse",
     "WitnessManifestResponse",
     # Crystal (Unified Memory Compression)
+    "ConstitutionalCrystalMeta",
     "Crystal",
     "CrystalId",
     "CrystalLevel",
     "MoodVector",
     "generate_crystal_id",
+    # Constitutional Evaluator (Phase 1)
+    "BatchConstitutionalEvaluator",
+    "ConstitutionalEvaluatorProtocol",
+    "MarkConstitutionalEvaluator",
     # Crystal Store
     "CrystalNotFoundError",
     "CrystalQuery",
@@ -452,6 +479,7 @@ __all__ = [
     "reset_lesson_store",
     "set_lesson_store",
     # Mark (renamed from TraceNode)
+    "ConstitutionalAlignment",
     "EvidenceTier",
     "LinkRelation",
     "Mark",
@@ -464,6 +492,7 @@ __all__ = [
     "Stimulus",
     "UmweltSnapshot",
     "WalkId",
+    "WitnessDomain",
     "generate_mark_id",
     # Node
     "ThoughtStreamRendering",
@@ -545,6 +574,8 @@ __all__ = [
     "source_overlap",
     "verify_associativity_law",
     "verify_identity_law",
+    # Trace (Immutable Mark Sequence)
+    "Trace",
     # Mark Store
     "CausalityViolation",
     "DuplicateMarkError",
@@ -573,6 +604,10 @@ __all__ = [
     "PendingSuggestion",
     "SuggestionStats",
     "check_escalation",
+    # Constitutional Trust (Phase 1)
+    "ConstitutionalTrustComputer",
+    "ConstitutionalTrustResult",
+    "TrustComputerProtocol",
     # Voice Gate
     "DENYLIST_PATTERNS",
     "HEDGE_PATTERNS",

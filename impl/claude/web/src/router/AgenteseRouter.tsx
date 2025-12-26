@@ -45,9 +45,55 @@ interface PathMapping {
  * ChatPage and DirectorPage are now EMBEDDED as sidebars in the Workspace.
  *
  * The only remaining page is HypergraphEditorPage (the Workspace with sidebars).
+ *
+ * GENESIS FTUE (2025-12-25):
+ * First-time user experience for witnessing Genesis and creating first K-Block.
  */
 const HypergraphEditorPage = React.lazy(() =>
   import('../pages/HypergraphEditorPage').then((m) => ({ default: m.HypergraphEditorPage }))
+);
+
+// Genesis FTUE pages (full flow)
+const GenesisPage = React.lazy(() =>
+  import('../pages/Genesis').then((m) => ({ default: m.GenesisPage }))
+);
+const FirstQuestion = React.lazy(() =>
+  import('../pages/Genesis').then((m) => ({ default: m.FirstQuestion }))
+);
+const WelcomeToStudio = React.lazy(() =>
+  import('../pages/Genesis').then((m) => ({ default: m.WelcomeToStudio }))
+);
+const JudgmentExperience = React.lazy(() =>
+  import('../pages/Genesis').then((m) => ({ default: m.JudgmentExperience }))
+);
+const GrowthWitness = React.lazy(() =>
+  import('../pages/Genesis').then((m) => ({ default: m.GrowthWitness }))
+);
+
+// Genesis Showcase (DEPRECATED - now unified with main Genesis flow)
+// Redirects to /genesis which has the synthesized design
+const GenesisShowcase = React.lazy(() =>
+  import('../pages/Genesis').then((m) => ({ default: m.GenesisPage }))
+);
+
+// StudioPage (three-panel workspace with Feed + Editor + Witness)
+const StudioPage = React.lazy(() =>
+  import('../pages/StudioPage').then((m) => ({ default: m.StudioPage }))
+);
+
+// FeedPage (full-screen chronological truth stream)
+const FeedPage = React.lazy(() =>
+  import('../pages/FeedPage').then((m) => ({ default: m.FeedPage }))
+);
+
+// Meta page (Journey 5: Watching Yourself Grow)
+const MetaPage = React.lazy(() =>
+  import('../pages/MetaPage').then((m) => ({ default: m.MetaPage }))
+);
+
+// Contradiction Workspace (focused dialectical resolution)
+const ContradictionWorkspacePage = React.lazy(() =>
+  import('../pages/ContradictionWorkspacePage').then((m) => ({ default: m.ContradictionWorkspacePage }))
 );
 
 /**
@@ -69,6 +115,22 @@ const PATH_MAPPINGS: PathMapping[] = [
     description: 'Hypergraph Editor — THE application (with Chat and Files sidebars)',
   },
 
+  // Self context — Meta reflection
+  {
+    pattern: /^self\.meta/,
+    component: MetaPage,
+    shell: 'app',
+    description: 'Meta — Journey 5: Watching Yourself Grow (coherence timeline)',
+  },
+
+  // World context — Contradiction workspace
+  {
+    pattern: /^world\.contradiction/,
+    component: ContradictionWorkspacePage,
+    shell: 'app',
+    description: 'Contradiction Workspace — Focused dialectical resolution',
+  },
+
   // Deleted routes (no longer mapped):
   // - self.memory (FeedPage deleted)
   // - world.chart (ChartPage deleted)
@@ -87,7 +149,7 @@ const PATH_MAPPINGS: PathMapping[] = [
  * Chat and Director are now sidebars in the Workspace, not separate pages.
  */
 const LEGACY_REDIRECTS: Record<string, string> = {
-  '/brain': '/world.document',           // FeedPage deleted → editor
+  '/brain': '/self.feed',                // Brain → FeedPage
   '/chat': '/world.document',            // ChatPage is now right sidebar (Ctrl+J)
   '/director': '/world.document',        // DirectorPage is now left sidebar (Ctrl+B)
   '/self.chat': '/world.document',       // AGENTESE path → editor (sidebar)
@@ -95,9 +157,9 @@ const LEGACY_REDIRECTS: Record<string, string> = {
   '/editor': '/world.document',
   '/hypergraph-editor': '/world.document',
   '/chart': '/world.document',           // ChartPage deleted → editor
-  '/feed': '/world.document',            // FeedPage deleted → editor
-  '/proof-engine': '/world.document',    // ZeroSeedPage deleted → editor
-  '/zero-seed': '/world.document',       // ZeroSeedPage deleted → editor
+  '/feed': '/self.feed',                 // Legacy feed → FeedPage
+  '/proof-engine': '/genesis/showcase',  // Proof engine → Genesis showcase
+  '/zero-seed': '/genesis/showcase',     // Zero seed → Genesis showcase
 };
 
 /**
@@ -229,8 +291,78 @@ export function AgenteseRouter() {
       <AnimatePresence mode="wait" initial={false}>
         <PageTransition key={location.pathname} variant="fade">
           <Routes location={location}>
-            {/* Root - Direct to editor (UX LAW: "App opens directly to editor") */}
+            {/* Root - Check onboarding status, redirect to Genesis or editor */}
             <Route path="/" element={<Navigate to="/world.document" replace />} />
+
+            {/* Genesis FTUE routes */}
+            <Route
+              path="/genesis"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <GenesisPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/genesis/first-question"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <FirstQuestion />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/genesis/first-kblock"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <WelcomeToStudio />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/genesis/judgment"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <JudgmentExperience />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/genesis/growth-witness"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <GrowthWitness />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/genesis/showcase"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <GenesisShowcase />
+                </Suspense>
+              }
+            />
+
+            {/* StudioPage - Three-panel workspace (Feed | Editor | Witness) */}
+            <Route
+              path="/studio"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <StudioPage />
+                </Suspense>
+              }
+            />
+
+            {/* FeedPage - Full-screen chronological truth stream */}
+            <Route
+              path="/self.feed"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <FeedPage />
+                </Suspense>
+              }
+            />
 
             {/* Legacy redirects (Phase 3: Pure AGENTESE - all redirect) */}
             {Object.entries(LEGACY_REDIRECTS).map(([from, to]) => (
@@ -240,6 +372,38 @@ export function AgenteseRouter() {
                 element={<LegacyRedirect from={from} to={to} />}
               />
             ))}
+
+            {/* Meta page (Journey 5: Watching Yourself Grow) */}
+            <Route
+              path="/self.meta"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <MetaPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/meta"
+              element={<LegacyRedirect from="/meta" to="/self.meta" />}
+            />
+
+            {/* Contradiction Workspace (focused dialectical resolution) */}
+            <Route
+              path="/world.contradiction/:id"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <ContradictionWorkspacePage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/world.contradiction"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <ContradictionWorkspacePage />
+                </Suspense>
+              }
+            />
 
             {/* Special route for world.document with file paths */}
             {/* This bypasses AGENTESE parsing since file paths use slashes, not dots */}

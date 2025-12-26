@@ -72,13 +72,26 @@ await router.put(datum)  # Routes to best available backend
 
 ## XDG Compliance
 
-| Purpose | Path | Env Variable |
-|---------|------|--------------|
-| Config | `~/.config/kgents/` | `XDG_CONFIG_HOME` |
-| Data | `~/.local/share/kgents/` | `XDG_DATA_HOME` |
-| Cache | `~/.cache/kgents/` | `XDG_CACHE_HOME` |
+D-gent backends (SQLite, JSONL) use XDG-compliant paths internally:
 
-**Per-Project**: `.kgents/` in project root for local config.
+| Backend | Default Path | Env Variable |
+|---------|--------------|--------------|
+| SQLite | `~/.kgents/data/{namespace}.db` | `KGENTS_DATA_ROOT` |
+| JSONL | `~/.kgents/data/{namespace}.jsonl` | `KGENTS_DATA_ROOT` |
+| Postgres | *(connection URL)* | `KGENTS_DATABASE_URL` |
+
+**Note**: For user-friendliness, kgents uses `~/.kgents` as the default data root instead of `~/.local/share/kgents`. This can be overridden with `KGENTS_DATA_ROOT`.
+
+**For higher-level file operations** (uploads, exports, backups), use the unified `StorageProvider`:
+
+```python
+from services.storage import get_storage_provider
+
+provider = get_storage_provider()
+uploads_dir = provider.paths.uploads  # ~/.kgents/uploads
+```
+
+See: `spec/protocols/storage-unified.md` for the complete storage architecture.
 
 ---
 
@@ -268,6 +281,7 @@ class DataAgent(Protocol[S]):
 
 ## Cross-References
 
+- **Protocol**: `spec/protocols/storage-unified.md` (Unified storage architecture)
 - **Skill**: `docs/skills/unified-storage.md`
 - **Skill**: `docs/skills/metaphysical-fullstack.md` (Layer 0)
 - **Functor**: `spec/agents/functor-catalog.md` §14 (State Functor)

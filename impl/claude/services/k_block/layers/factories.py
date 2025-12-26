@@ -13,6 +13,7 @@ Philosophy:
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
@@ -21,12 +22,12 @@ if TYPE_CHECKING:
 
 
 class ZeroSeedKBlockFactory:
-    """Base factory for Zero Seed K-Blocks."""
+    """Base factory for Zero Seed K-Blocks (L0 - the Zero Seed itself)."""
 
     LAYER: int = 0
-    KIND: str = "unknown"
+    KIND: str = "SYSTEM"  # Zero Seed is SYSTEM kind, not unknown
     PATH_PREFIX: str = "void"
-    DEFAULT_CONFIDENCE: float = 0.50
+    DEFAULT_CONFIDENCE: float = 1.0  # Zero Seed has perfect confidence
 
     @classmethod
     def create(
@@ -79,15 +80,40 @@ class ZeroSeedKBlockFactory:
             modified_at=datetime.now(timezone.utc),
         )
 
-        # Attach Zero Seed metadata (stored in _cosmos for now)
-        # In full implementation, this would use a proper metadata store
-        kblock._layer = cls.LAYER
-        kblock._kind = cls.KIND
-        kblock._title = title
-        kblock._lineage = lineage
-        kblock._confidence = confidence
-        kblock._tags = tags
-        kblock._created_by = created_by
+        # Set public fields for persistence
+        kblock.zero_seed_layer = cls.LAYER
+        kblock.zero_seed_kind = cls.KIND
+        kblock.lineage = lineage
+        kblock.confidence = confidence
+        kblock.tags = tags
+        kblock.created_by = created_by
+
+        # Create derives_from edges from lineage
+        from ..core.edge import KBlockEdge
+
+        incoming_edges = []
+        for parent_id in lineage:
+            edge = KBlockEdge(
+                id=f"edge_{uuid.uuid4().hex[:12]}",
+                source_id=parent_id,  # Parent is the source
+                target_id=kblock_id,  # This K-Block is the target
+                edge_type="derives_from",
+                context=f"Derived from parent in Zero Seed L{cls.LAYER}",
+                confidence=confidence,
+                mark_id=None,
+                created_at=datetime.now(timezone.utc),
+            )
+            incoming_edges.append(edge)
+
+        kblock.incoming_edges = incoming_edges
+        kblock.outgoing_edges = []  # No outgoing edges at creation
+
+        # Legacy private fields for backward compatibility (type: ignore for dynamic attrs)
+        kblock._layer = cls.LAYER  # type: ignore[attr-defined]
+        kblock._kind = cls.KIND  # type: ignore[attr-defined]
+        kblock._title = title  # type: ignore[attr-defined]
+        kblock._tags = tags  # type: ignore[attr-defined]
+        kblock._created_by = created_by  # type: ignore[attr-defined]
 
         return kblock
 
@@ -239,6 +265,7 @@ class RepresentationKBlockFactory(ZeroSeedKBlockFactory):
 
 # Factory registry for dynamic lookup
 LAYER_FACTORIES = {
+    0: ZeroSeedKBlockFactory,  # L0: Zero Seed genesis
     1: AxiomKBlockFactory,
     2: ValueKBlockFactory,
     3: GoalKBlockFactory,
@@ -263,7 +290,7 @@ def create_kblock_for_layer(
     Create a K-Block at the specified layer.
 
     Args:
-        layer: Zero Seed layer (1-7)
+        layer: Zero Seed layer (0-7)
         kblock_id: K-Block identifier
         title: Display title
         content: Markdown content
@@ -279,7 +306,7 @@ def create_kblock_for_layer(
         ValueError: If layer invalid or lineage validation fails
     """
     if layer not in LAYER_FACTORIES:
-        raise ValueError(f"Invalid layer: {layer} (must be 1-7)")
+        raise ValueError(f"Invalid layer: {layer} (must be 0-7)")
 
     factory = LAYER_FACTORIES[layer]
     return factory.create(

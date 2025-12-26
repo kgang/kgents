@@ -84,7 +84,7 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
     if modes is None:
         print("Error: Invalid mode specified")
         print()
-        print("Valid modes: categorical (cat), epistemic (epi), dialectical (dia), generative (gen)")
+        print("Valid modes: categorical (cat), epistemic (epi), dialectical (dia), generative (gen), constitutional (const)")
         print()
         return 1
 
@@ -115,6 +115,7 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
             DialecticalReport,
             EpistemicReport,
             GenerativeReport,
+            ConstitutionalReport,
             FullAnalysisReport,
         )
 
@@ -128,6 +129,7 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
                 analyze_epistemic_llm,
                 analyze_dialectical_llm,
                 analyze_generative_llm,
+                analyze_constitutional_llm,
                 analyze_full_llm,
             )
 
@@ -166,6 +168,10 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
                 print("Running generative LLM analysis...")
                 results["generative"] = await analyze_generative_llm(target_str)
 
+            if "constitutional" in modes or "const" in modes:
+                print("Running constitutional LLM analysis...")
+                results["constitutional"] = await analyze_constitutional_llm(target_str)
+
         else:
             # Structural (non-LLM) analysis
             from agents.operad.domains.analysis import (
@@ -173,6 +179,7 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
                 _epistemic_analysis,
                 _dialectical_analysis,
                 _generative_analysis,
+                _constitutional_analysis,
                 _full_analysis,
             )
 
@@ -206,6 +213,9 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
 
             if "generative" in modes or "gen" in modes:
                 results["generative"] = _generative_analysis(target_str)
+
+            if "constitutional" in modes or "const" in modes:
+                results["constitutional"] = _constitutional_analysis(target_str)
 
         if use_json:
             _print_json_modes(results)
@@ -266,7 +276,7 @@ def _parse_modes(args: list[str]) -> str | list[str] | None:
     modes = [m.strip().lower() for m in mode_arg.split(",")]
 
     # Validate modes
-    valid_modes = {"categorical", "cat", "epistemic", "epi", "dialectical", "dia", "generative", "gen"}
+    valid_modes = {"categorical", "cat", "epistemic", "epi", "dialectical", "dia", "generative", "gen", "constitutional", "const"}
     for mode in modes:
         if mode not in valid_modes:
             return None
@@ -336,6 +346,8 @@ def _check_for_issues(results: dict) -> bool:
         if mode == "dialectical" and report.problematic_count > 0:
             return True
         if mode == "generative" and not report.is_regenerable:
+            return True
+        if mode == "constitutional" and not report.is_aligned:
             return True
     return False
 
@@ -416,6 +428,15 @@ def _print_json_modes(results: dict) -> None:
                 "is_compressed": report.is_compressed,
                 "is_regenerable": report.is_regenerable,
                 "minimal_kernel_size": len(report.minimal_kernel),
+                "summary": report.summary,
+            }
+        elif mode == "constitutional":
+            output[mode] = {
+                "is_aligned": report.is_aligned,
+                "alignment_score": report.alignment_score,
+                "violation_count": report.violation_count,
+                "violations": list(report.violations),
+                "principle_scores": report.alignment.principle_scores,
                 "summary": report.summary,
             }
 
@@ -603,6 +624,31 @@ def _print_rich_modes(results: dict, target: str) -> None:
             print(f"Summary: {report.summary}")
             print()
 
+        elif mode == "constitutional":
+            print("CONSTITUTIONAL ANALYSIS")
+            print("─" * 60)
+            status = "✓ PASS" if report.is_aligned else "✗ FAIL"
+            print(f"Status: {status}")
+            print(f"Alignment Score: {report.alignment_score:.2f}")
+            print()
+            print("Principle Scores:")
+            for principle, score in sorted(report.alignment.principle_scores.items()):
+                symbol = "✓" if score >= report.alignment.threshold else "✗"
+                print(f"  {symbol} {principle}: {score:.2f}")
+            print()
+            if report.violations:
+                print(f"Violations ({len(report.violations)}):")
+                for violation in report.violations:
+                    print(f"  ✗ {violation}")
+                print()
+            if report.remediation_suggestions:
+                print("Remediation Suggestions:")
+                for suggestion in report.remediation_suggestions:
+                    print(f"  → {suggestion}")
+                print()
+            print(f"Summary: {report.summary}")
+            print()
+
     print("=" * 60)
 
 
@@ -703,10 +749,11 @@ Commands:
   kg analyze --self                Analyze the Analysis Operad itself
 
 Modes:
-  categorical, cat    Verify composition laws via Lawvere fixed-point
-  epistemic, epi      Analyze justification structure and grounding
-  dialectical, dia    Identify tensions and synthesize resolutions
-  generative, gen     Test regenerability from axioms
+  categorical, cat       Verify composition laws via Lawvere fixed-point
+  epistemic, epi         Analyze justification structure and grounding
+  dialectical, dia       Identify tensions and synthesize resolutions
+  generative, gen        Test regenerability from axioms
+  constitutional, const  Verify alignment with 7 kgents principles
 
 Options:
   --mode <modes>      Comma-separated list of modes (default: full)

@@ -23,9 +23,13 @@ from sqlalchemy import (
     Text,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, CausalMixin, TimestampMixin
+
+# Use JSONB on PostgreSQL, JSON elsewhere (for GIN indexes)
+JSONBCompat = JSON().with_variant(JSONB(), "postgresql")
 
 if TYPE_CHECKING:
     from typing import Optional
@@ -51,7 +55,7 @@ class Crystal(TimestampMixin, Base):
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     content_hash: Mapped[str] = mapped_column(String(64), index=True)
     summary: Mapped[str] = mapped_column(Text, nullable=False)
-    tags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    tags: Mapped[list[str]] = mapped_column(JSONBCompat, default=list)
 
     # Usage tracking for relevance scoring
     access_count: Mapped[int] = mapped_column(Integer, default=0)

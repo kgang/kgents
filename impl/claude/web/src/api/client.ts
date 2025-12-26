@@ -1330,6 +1330,36 @@ export const sovereignApi = {
     return response.data;
   },
 
+  /**
+   * Upload a file to sovereign store (multipart/form-data).
+   * @param file - File object to upload
+   * @param path - Optional target path (defaults to uploads/{filename})
+   */
+  uploadFile: async (
+    file: File,
+    path?: string
+  ): Promise<{ path: string; version: number; ingest_mark_id: string; edge_count: number }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Build URL with optional path query param
+    const url = path
+      ? `/api/sovereign/upload?path=${encodeURIComponent(path)}`
+      : '/api/sovereign/upload';
+
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Upload failed');
+    }
+
+    return response.json();
+  },
+
   renameEntity: async (
     oldPath: string,
     newPath: string
@@ -1990,5 +2020,720 @@ export const graphApi = {
       { query, limit }
     );
     return unwrapAgentese(response);
+  },
+};
+
+// =============================================================================
+// Genesis API (Zero Seed Bootstrap) - REST API
+// Routes:
+//   GET  /api/genesis/status - Check if system has been seeded
+//   POST /api/genesis/seed - Create the Zero Seed and initial axioms
+//   GET  /api/genesis/zero-seed - Get the Zero Seed K-Block
+//   GET  /api/zero-seed/axioms - Get axioms with loss information
+//
+// Philosophy:
+//   "Genesis is visible - users watch it spawn."
+// =============================================================================
+
+/**
+ * Response from axiom in genesis.
+ */
+export interface GenesisAxiomResponse {
+  id: string;
+  statement: string;
+  loss: number;
+  tier: string;
+  kind: string;
+  kblock_id: string;
+}
+
+/**
+ * Response from design law in genesis.
+ */
+export interface GenesisDesignLawResponse {
+  id: string;
+  name: string;
+  statement: string;
+  layer: number;
+  immutable: boolean;
+  kblock_id: string;
+}
+
+/**
+ * Response from genesis status check.
+ */
+export interface GenesisStatusResponse {
+  is_seeded: boolean;
+  zero_seed_exists: boolean;
+  axiom_count: number;
+  design_law_count: number;
+  seed_timestamp: string | null;
+}
+
+/**
+ * Response from seeding operation.
+ */
+export interface GenesisSeedResponse {
+  success: boolean;
+  message: string;
+  zero_seed_kblock_id: string;
+  axioms: GenesisAxiomResponse[];
+  design_laws: GenesisDesignLawResponse[];
+  timestamp: string;
+}
+
+/**
+ * Response from Zero Seed K-Block.
+ */
+export interface GenesisZeroSeedResponse {
+  id: string;
+  kblock_id: string;
+  created_at: string;
+  kind: string;
+  layer: number;
+  galois_loss: number;
+  content: string;
+  axioms: GenesisAxiomResponse[];
+  design_laws: GenesisDesignLawResponse[];
+}
+
+export const genesisApi = {
+  /**
+   * Check if system has been seeded via REST: GET /api/genesis/status
+   */
+  getStatus: async (): Promise<GenesisStatusResponse> => {
+    const response = await apiClient.get<GenesisStatusResponse>('/api/genesis/status');
+    return response.data;
+  },
+
+  /**
+   * Seed the Zero Seed and initial axioms via REST: POST /api/genesis/seed
+   *
+   * Creates:
+   * - t=0: Zero Seed (L0, system, loss=0.000)
+   * - t=1: A1 Entity Axiom (L1, axiom, loss=0.002)
+   * - t=2: A2 Morphism Axiom (L1, axiom, loss=0.003)
+   * - t=3: G Galois Ground (L1, ground, loss=0.000)
+   * - Design Laws as L1-L2 nodes
+   *
+   * @param force - Force re-seeding even if already seeded (DANGEROUS)
+   */
+  seed: async (force = false): Promise<GenesisSeedResponse> => {
+    const response = await apiClient.post<GenesisSeedResponse>('/api/genesis/seed', { force });
+    return response.data;
+  },
+
+  /**
+   * Get the Zero Seed K-Block via REST: GET /api/genesis/zero-seed
+   */
+  getZeroSeed: async (): Promise<GenesisZeroSeedResponse> => {
+    const response = await apiClient.get<GenesisZeroSeedResponse>('/api/genesis/zero-seed');
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Feed API (Unified K-Block Content) - REST API
+// Routes:
+//   GET /api/feed/cosmos - All K-Blocks (unfiltered)
+//   GET /api/feed/coherent - Low-loss K-Blocks
+//   GET /api/feed/personal - Personalized feed
+//
+// Used by: FileExplorer, BrowseModal for unified content display
+// =============================================================================
+
+/**
+ * K-Block summary for feed display.
+ */
+export interface FeedKBlockItem {
+  id: string;
+  path: string;
+  content: string;
+  zero_seed_layer: number | null;
+  zero_seed_kind: string | null;
+  confidence: number;
+  attention_score: number | null;
+}
+
+/**
+ * Feed response with pagination.
+ */
+export interface FeedResponse {
+  items: FeedKBlockItem[];
+  total: number;
+  has_more: boolean;
+  offset: number;
+  limit: number;
+}
+
+/**
+ * Unified content item for FileExplorer/BrowseModal.
+ * Combines files, uploads, and zero-seed nodes.
+ */
+export interface UnifiedContentItem {
+  id: string;
+  path: string;
+  name: string;
+  kind: 'file' | 'upload' | 'axiom' | 'value' | 'goal' | 'action' | 'reflection' | 'representation';
+  layer?: number;
+  galoisLoss?: number;
+  preview?: string;
+  modifiedAt?: string;
+}
+
+export const feedApi = {
+  /**
+   * Get cosmos feed (all K-Blocks) via REST: GET /api/feed/cosmos
+   *
+   * @param offset - Pagination offset
+   * @param limit - Maximum items to return
+   * @param ranking - Ranking strategy (chronological, coherence, principles)
+   */
+  getCosmos: async (
+    offset = 0,
+    limit = 50,
+    ranking = 'chronological'
+  ): Promise<FeedResponse> => {
+    const response = await apiClient.get<FeedResponse>(
+      `/api/feed/cosmos?offset=${offset}&limit=${limit}&ranking=${ranking}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get coherent feed (low-loss K-Blocks) via REST: GET /api/feed/coherent
+   *
+   * @param offset - Pagination offset
+   * @param limit - Maximum items to return
+   * @param maxLoss - Maximum Galois loss threshold (0-1)
+   */
+  getCoherent: async (
+    offset = 0,
+    limit = 50,
+    maxLoss = 0.2
+  ): Promise<FeedResponse> => {
+    const response = await apiClient.get<FeedResponse>(
+      `/api/feed/coherent?offset=${offset}&limit=${limit}&max_loss=${maxLoss}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get unified content for FileExplorer.
+   * Combines file tree, uploads, and zero-seed nodes.
+   *
+   * @returns Array of unified content items grouped by type
+   */
+  getUnifiedContent: async (): Promise<{
+    files: UnifiedContentItem[];
+    uploads: UnifiedContentItem[];
+    zeroSeed: UnifiedContentItem[];
+  }> => {
+    // Fetch all content sources in parallel
+    const [cosmosResponse, uploadsResponse] = await Promise.all([
+      feedApi.getCosmos(0, 100).catch(() => ({ items: [], total: 0, has_more: false, offset: 0, limit: 100 })),
+      sovereignApi.listEntities('uploads/', 100).catch(() => ({ entities: [], total: 0 })),
+    ]);
+
+    // Transform cosmos items into unified format
+    const zeroSeed: UnifiedContentItem[] = cosmosResponse.items
+      .filter(item => item.zero_seed_layer !== null)
+      .map(item => ({
+        id: item.id,
+        path: item.path,
+        name: item.path.split('/').pop() || item.path,
+        kind: mapLayerToKind(item.zero_seed_layer, item.zero_seed_kind),
+        layer: item.zero_seed_layer ?? undefined,
+        galoisLoss: 1 - item.confidence, // Approximate loss from confidence
+        preview: item.content.slice(0, 200),
+      }));
+
+    // Transform uploads into unified format
+    const uploads: UnifiedContentItem[] = uploadsResponse.entities.map(entity => ({
+      id: entity.path,
+      path: entity.path,
+      name: entity.path.split('/').pop() || entity.path,
+      kind: 'upload' as const,
+      preview: entity.content?.slice(0, 200),
+    }));
+
+    // Files are loaded via graphApi.neighbors in FileTree
+    // Return empty array here as files are handled separately
+    const files: UnifiedContentItem[] = [];
+
+    return { files, uploads, zeroSeed };
+  },
+};
+
+/**
+ * Map Zero Seed layer and kind to unified content kind.
+ */
+function mapLayerToKind(
+  layer: number | null,
+  kind: string | null
+): UnifiedContentItem['kind'] {
+  if (kind) {
+    const kindMap: Record<string, UnifiedContentItem['kind']> = {
+      axiom: 'axiom',
+      value: 'value',
+      goal: 'goal',
+      action: 'action',
+      reflection: 'reflection',
+      representation: 'representation',
+    };
+    if (kind in kindMap) return kindMap[kind];
+  }
+
+  // Fallback to layer-based mapping
+  if (layer === null) return 'file';
+  if (layer === 1) return 'axiom';
+  if (layer === 2) return 'value';
+  if (layer <= 4) return 'goal';
+  if (layer === 5) return 'action';
+  if (layer === 6) return 'reflection';
+  if (layer === 7) return 'representation';
+  return 'file';
+}
+
+// =============================================================================
+// K-Blocks API (Unified Browse) - REST API
+// Routes:
+//   GET /api/kblocks/browse - Browse all K-Blocks organized as a tree
+//   GET /api/kblocks/layer/{layer} - Get K-Blocks by layer
+//   GET /api/kblocks/{kblock_id} - Get a specific K-Block
+//
+// Philosophy:
+//   "Zero Seed nodes ARE K-Blocks. The derivation IS the lineage."
+//   "All UI surfaces query the same source of truth."
+// =============================================================================
+
+/**
+ * K-Block summary for browsing.
+ */
+export interface KBlockBrowseSummary {
+  id: string;
+  path: string;
+  title: string;
+  layer: number | null;
+  kind: string | null;
+  confidence: number;
+  galois_loss: number;
+  preview: string;
+  has_proof: boolean;
+  tags: string[];
+  created_at: string | null;
+}
+
+/**
+ * K-Blocks grouped by layer.
+ */
+export interface KBlockLayerGroup {
+  layer: number;
+  layer_name: string;
+  items: KBlockBrowseSummary[];
+  count: number;
+}
+
+/**
+ * Response from /api/kblocks/browse.
+ */
+export interface KBlockBrowseResponse {
+  zero_seed: Record<string, KBlockBrowseSummary[]>;
+  layers: KBlockLayerGroup[];
+  user: KBlockBrowseSummary[];
+  total_count: number;
+  zero_seed_count: number;
+  user_count: number;
+}
+
+/**
+ * Response from /api/kblocks/layer/{layer}.
+ */
+export interface KBlockLayerResponse {
+  layer: number;
+  layer_name: string;
+  kblocks: KBlockBrowseSummary[];
+  count: number;
+}
+
+/**
+ * Detailed K-Block response from /api/kblocks/{id}.
+ */
+export interface KBlockDetailResponse {
+  id: string;
+  path: string;
+  content: string;
+  base_content: string;
+  layer: number | null;
+  kind: string | null;
+  confidence: number;
+  lineage: string[];
+  has_proof: boolean;
+  toulmin_proof: Record<string, unknown> | null;
+  tags: string[];
+  created_at: string | null;
+  incoming_edges: Array<Record<string, unknown>>;
+  outgoing_edges: Array<Record<string, unknown>>;
+}
+
+export const kblocksApi = {
+  /**
+   * Browse all K-Blocks organized as a tree.
+   * Used by FileExplorer, BrowseModal, Feed.
+   */
+  browse: async (): Promise<KBlockBrowseResponse> => {
+    const response = await apiClient.get<KBlockBrowseResponse>('/api/kblocks/browse');
+    return response.data;
+  },
+
+  /**
+   * Get K-Blocks by layer.
+   *
+   * @param layer - Layer number (0-7)
+   */
+  getByLayer: async (layer: number): Promise<KBlockLayerResponse> => {
+    const response = await apiClient.get<KBlockLayerResponse>(`/api/kblocks/layer/${layer}`);
+    return response.data;
+  },
+
+  /**
+   * Get a specific K-Block by ID.
+   *
+   * @param kblockId - K-Block ID
+   */
+  getById: async (kblockId: string): Promise<KBlockDetailResponse> => {
+    const response = await apiClient.get<KBlockDetailResponse>(`/api/kblocks/${encodeURIComponent(kblockId)}`);
+    return response.data;
+  },
+
+  /**
+   * Transform browse response to BrowseItem[] for BrowseModal.
+   */
+  toBrowseItems: (response: KBlockBrowseResponse): BrowseItem[] => {
+    const items: BrowseItem[] = [];
+
+    // Add Zero Seed items
+    for (const [category, kblocks] of Object.entries(response.zero_seed)) {
+      for (const kb of kblocks) {
+        items.push({
+          id: kb.id,
+          title: kb.title,
+          path: kb.path,
+          directory: `zero-seed/${category}`,
+          category: 'zero-seed' as BrowseCategory,
+          kind: (kb.kind ?? undefined) as ContentKind | undefined,
+          layer: kb.layer ?? undefined,
+          galoisLoss: kb.galois_loss,
+          preview: kb.preview,
+          modifiedAt: kb.created_at ? new Date(kb.created_at) : undefined,
+        });
+      }
+    }
+
+    // Add user items
+    for (const kb of response.user) {
+      items.push({
+        id: kb.id,
+        title: kb.title,
+        path: kb.path,
+        directory: 'user',
+        category: 'kblocks' as BrowseCategory,
+        kind: (kb.kind ?? undefined) as ContentKind | undefined,
+        layer: kb.layer ?? undefined,
+        galoisLoss: kb.galois_loss,
+        preview: kb.preview,
+        modifiedAt: kb.created_at ? new Date(kb.created_at) : undefined,
+      });
+    }
+
+    return items;
+  },
+
+  /**
+   * Transform browse response to FileNode[] for FileExplorer.
+   * Creates a virtual "zero-seed" directory with children.
+   */
+  toFileNodes: (response: KBlockBrowseResponse): FileNode[] => {
+    const nodes: FileNode[] = [];
+
+    // Create category directories under zero-seed
+    const categories = ['axioms', 'values', 'goals', 'specs', 'actions', 'reflections', 'representations'];
+
+    for (const category of categories) {
+      const kblocks = response.zero_seed[category] || [];
+      if (kblocks.length === 0) continue;
+
+      // Create children for this category
+      const children: FileNode[] = kblocks.map((kb) => ({
+        path: `zero-seed/${category}/${kb.id}`,
+        name: kb.title,
+        type: 'file' as const,
+        depth: 2,
+        kblock: {
+          layer: kb.layer !== null ? `L${kb.layer}` : undefined,
+          loss: kb.galois_loss,
+          hasProof: kb.has_proof,
+          kind: mapKindToContentKind(kb.kind),
+        },
+        kind: mapKindToContentKind(kb.kind),
+      }));
+
+      nodes.push({
+        path: `zero-seed/${category}`,
+        name: category.charAt(0).toUpperCase() + category.slice(1),
+        type: 'directory',
+        depth: 1,
+        children,
+      });
+    }
+
+    return nodes;
+  },
+};
+
+/**
+ * Map K-Block kind to FileExplorer ContentKind.
+ */
+function mapKindToContentKind(kind: string | null): ContentKind {
+  if (!kind) return 'file';
+  const map: Record<string, ContentKind> = {
+    axiom: 'axiom',
+    ground: 'axiom',
+    value: 'value',
+    goal: 'goal',
+    spec: 'goal',
+    action: 'action',
+    reflection: 'reflection',
+    representation: 'representation',
+  };
+  return map[kind] ?? 'file';
+}
+
+// Import types from FileExplorer and browse
+import type { FileNode } from '../components/FileExplorer/types';
+import type { BrowseItem, BrowseCategory, ContentKind, WitnessMark, MarkBrowseResponse } from '../components/browse/types';
+
+// =============================================================================
+// Witness API (Marks Explorer) - REST API
+// Routes:
+//   GET /api/witness/marks - List marks with filters
+//   GET /api/witness/marks/browse - Browse marks by category
+//   GET /api/witness/marks/{id} - Get single mark
+//   POST /api/witness/marks - Create mark
+//
+// Philosophy:
+//   "The proof IS the decision. The mark IS the witness."
+// =============================================================================
+
+export const witnessApi = {
+  /**
+   * List marks with optional filters.
+   *
+   * @param options - Filter options
+   * @returns List of marks
+   */
+  listMarks: async (options?: {
+    limit?: number;
+    offset?: number;
+    author?: string;
+    today?: boolean;
+    grep?: string;
+    principle?: string;
+  }): Promise<{ marks: WitnessMark[]; total: number; has_more: boolean }> => {
+    const params = new URLSearchParams();
+    if (options?.limit) params.set('limit', String(options.limit));
+    if (options?.offset) params.set('offset', String(options.offset));
+    if (options?.author) params.set('author', options.author);
+    if (options?.today) params.set('today', 'true');
+    if (options?.grep) params.set('grep', options.grep);
+    if (options?.principle) params.set('principle', options.principle);
+
+    const response = await apiClient.get<{ marks: WitnessMark[]; total: number; has_more: boolean }>(
+      `/api/witness/marks?${params}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Browse marks organized by category for FileTree display.
+   *
+   * Categories:
+   * - today: Marks from today
+   * - decisions: Marks with decision/synthesis
+   * - eurekas: Insights and discoveries
+   * - gotchas: Traps and warnings
+   * - all_marks: All recent marks
+   *
+   * @param limitPerCategory - Max marks per category (default 20)
+   * @returns Categorized marks response
+   */
+  browse: async (limitPerCategory = 20): Promise<MarkBrowseResponse> => {
+    const response = await apiClient.get<MarkBrowseResponse>(
+      `/api/witness/marks/browse?limit_per_category=${limitPerCategory}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get a single mark by ID.
+   *
+   * @param markId - Mark ID
+   * @returns Mark details
+   */
+  getMark: async (markId: string): Promise<WitnessMark> => {
+    const response = await apiClient.get<WitnessMark>(
+      `/api/witness/marks/${encodeURIComponent(markId)}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Create a new mark.
+   *
+   * @param data - Mark creation data
+   * @returns Created mark
+   */
+  createMark: async (data: {
+    action: string;
+    reasoning?: string;
+    principles?: string[];
+    author?: string;
+    parent_mark_id?: string;
+  }): Promise<WitnessMark> => {
+    const response = await apiClient.post<WitnessMark>('/api/witness/marks', data);
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Edges API (Edge Explorer) - REST API
+// Routes:
+//   GET /api/edges/browse - Browse all edges organized by kind
+//   GET /api/edges/kind/{kind} - Get edges by kind
+//   GET /api/edges/{edge_id} - Get a specific edge with full details
+//
+// Philosophy:
+//   "The edge IS the proof. The mark IS the witness."
+//   "Edges are first-class citizens, not hidden metadata."
+// =============================================================================
+
+/**
+ * Edge summary for browsing.
+ */
+export interface EdgeSummary {
+  id: string;
+  source_id: string;
+  target_id: string;
+  source_title: string;
+  target_title: string;
+  source_path: string;
+  target_path: string;
+  edge_type: string;
+  context: string | null;
+  confidence: number;
+  mark_id: string | null;
+  created_at: string | null;
+}
+
+/**
+ * Edge kind group for browsing.
+ */
+export interface EdgeKindGroup {
+  kind: string;
+  display_name: string;
+  edges: EdgeSummary[];
+  count: number;
+}
+
+/**
+ * Response from /api/edges/browse.
+ */
+export interface EdgeBrowseResponse {
+  by_kind: Record<string, EdgeSummary[]>;
+  kind_groups: EdgeKindGroup[];
+  total_count: number;
+  kind_counts: Record<string, number>;
+}
+
+/**
+ * Response from /api/edges/kind/{kind}.
+ */
+export interface EdgeKindResponse {
+  kind: string;
+  display_name: string;
+  edges: EdgeSummary[];
+  count: number;
+}
+
+/**
+ * Detailed edge response from /api/edges/{edge_id}.
+ */
+export interface EdgeDetailResponse {
+  id: string;
+  source_id: string;
+  target_id: string;
+  source_title: string;
+  target_title: string;
+  source_path: string;
+  target_path: string;
+  source_layer: number | null;
+  target_layer: number | null;
+  source_kind: string | null;
+  target_kind: string | null;
+  edge_type: string;
+  context: string | null;
+  confidence: number;
+  mark_id: string | null;
+  created_at: string | null;
+  source_preview: string | null;
+  target_preview: string | null;
+}
+
+/**
+ * Edge kind display names.
+ */
+export const EDGE_KIND_DISPLAY_NAMES: Record<string, string> = {
+  derives_from: 'Derives From',
+  implements: 'Implements',
+  tests: 'Tests',
+  references: 'References',
+  contradicts: 'Contradicts',
+};
+
+export const edgesApi = {
+  /**
+   * Browse all edges organized by kind.
+   * Used by FileExplorer sidebar (edges/ directory).
+   */
+  browse: async (): Promise<EdgeBrowseResponse> => {
+    const response = await apiClient.get<EdgeBrowseResponse>('/api/edges/browse');
+    return response.data;
+  },
+
+  /**
+   * Get edges by kind.
+   *
+   * @param kind - Edge kind (derives_from, implements, tests, references, contradicts)
+   */
+  getByKind: async (kind: string): Promise<EdgeKindResponse> => {
+    const response = await apiClient.get<EdgeKindResponse>(`/api/edges/kind/${kind}`);
+    return response.data;
+  },
+
+  /**
+   * Get a specific edge by ID.
+   *
+   * @param edgeId - Edge ID
+   */
+  getById: async (edgeId: string): Promise<EdgeDetailResponse> => {
+    const response = await apiClient.get<EdgeDetailResponse>(`/api/edges/${encodeURIComponent(edgeId)}`);
+    return response.data;
+  },
+
+  /**
+   * Format edge as display string: "Source -> Target".
+   */
+  formatEdgeLabel: (edge: EdgeSummary): string => {
+    return `${edge.source_title} -> ${edge.target_title}`;
   },
 };

@@ -24,6 +24,8 @@ A protocol is not a single agent—it is the **grammar of interaction** between 
 |----------|---------|------------|--------|
 | [agentese.md](agentese.md) | Verb-first ontology, the protocol IS the API | All | **Canonical** |
 | [cli-v7.md](cli-v7.md) | Collaborative Canvas — the living interface | K, I, Reactive | **Canonical** |
+| [zero-seed.md](zero-seed.md) | Axiom discovery and dialectical refinement | Zero, Witness | **Canonical** |
+| [ftue-axioms.md](ftue-axioms.md) | First-Time User Experience from first principles | Genesis, Zero Seed | **Canonical** |
 | [projection.md](projection.md) | Multi-target rendering (CLI/TUI/Web/marimo) | I, Reactive | Spec v1.0 |
 | [interactive-text.md](interactive-text.md) | Living documents with semantic tokens | I, D, Verification | Spec v1.0 |
 | [umwelt.md](umwelt.md) | Agent-specific world projection | D, F, G | Spec v1.0 |

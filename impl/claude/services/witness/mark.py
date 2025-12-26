@@ -50,6 +50,174 @@ MarkId = NewType("MarkId", str)
 PlanPath = NewType("PlanPath", str)  # e.g., "plans/witness-phase1.md"
 WalkId = NewType("WalkId", str)
 
+# Domain categorization for frontend routing and filtering
+WitnessDomain = str  # Literal values: "navigation", "portal", "chat", "edit", "system"
+
+
+# =============================================================================
+# Constitutional Alignment (Phase 1: Witness as Constitutional Enforcement)
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class ConstitutionalAlignment:
+    """
+    Constitutional metadata preserved through compression.
+
+    Every Mark can carry constitutional alignment scores, tracking how well
+    the action it represents adheres to the 7 constitutional principles.
+
+    Philosophy:
+        "Constitutional Compliance = 1 - Galois Loss"
+
+        This is the atomic unit of constitutional tracking. When Marks are
+        compressed into Crystals, constitutional metadata is preserved and
+        aggregated (see ConstitutionalCrystalMeta in crystal.py).
+
+    Integration:
+        - Created by MarkConstitutionalEvaluator when a Mark is emitted
+        - Preserved through Crystal compression hierarchy
+        - Used by ConstitutionalTrustComputer to compute trust levels
+        - Displayed in ConstitutionalDashboard on frontend
+
+    The Seven Principles (with weights):
+        - ETHICAL: 2.0 (safety first)
+        - COMPOSABLE: 1.5 (architecture second)
+        - JOY_INDUCING: 1.2 (Kent's aesthetic)
+        - TASTEFUL, CURATED, HETERARCHICAL, GENERATIVE: 1.0 each
+
+    Example:
+        >>> alignment = ConstitutionalAlignment.from_evaluation(eval)
+        >>> print(f"Total: {alignment.weighted_total:.2f}")
+        >>> print(f"Compliant: {alignment.is_compliant}")
+    """
+
+    # Per-principle scores (0.0 - 1.0)
+    principle_scores: dict[str, float]
+
+    # Weighted total (Σ(wᵢ × scoreᵢ) / Σwᵢ)
+    weighted_total: float
+
+    # Optional Galois loss for regenerability tracking
+    galois_loss: float | None = None
+
+    # Evidence tier (from Proof system)
+    tier: str = "EMPIRICAL"  # CATEGORICAL, EMPIRICAL, AESTHETIC, GENEALOGICAL, SOMATIC
+
+    # Compliance threshold (configurable, default 0.5)
+    threshold: float = 0.5
+
+    @property
+    def is_compliant(self) -> bool:
+        """Check if all principles meet minimum threshold."""
+        return all(score >= self.threshold for score in self.principle_scores.values())
+
+    @property
+    def dominant_principle(self) -> str:
+        """Return the highest-scoring principle."""
+        if not self.principle_scores:
+            return "unknown"
+        return max(self.principle_scores.keys(), key=lambda p: self.principle_scores[p])
+
+    @property
+    def weakest_principle(self) -> str:
+        """Return the lowest-scoring principle (bottleneck)."""
+        if not self.principle_scores:
+            return "unknown"
+        return min(self.principle_scores.keys(), key=lambda p: self.principle_scores[p])
+
+    @property
+    def violation_count(self) -> int:
+        """Count principles below threshold."""
+        return sum(1 for score in self.principle_scores.values() if score < self.threshold)
+
+    @classmethod
+    def from_scores(
+        cls,
+        principle_scores: dict[str, float],
+        galois_loss: float | None = None,
+        tier: str = "EMPIRICAL",
+        threshold: float = 0.5,
+    ) -> "ConstitutionalAlignment":
+        """
+        Create alignment from principle scores.
+
+        Uses PRINCIPLE_WEIGHTS from constitution.py for weighted total.
+        """
+        # Default weights (from constitution.py)
+        weights = {
+            "ETHICAL": 2.0,
+            "COMPOSABLE": 1.5,
+            "JOY_INDUCING": 1.2,
+            "TASTEFUL": 1.0,
+            "CURATED": 1.0,
+            "HETERARCHICAL": 1.0,
+            "GENERATIVE": 1.0,
+        }
+
+        # Compute weighted total
+        total = 0.0
+        weight_sum = 0.0
+        for principle, score in principle_scores.items():
+            w = weights.get(principle.upper(), 1.0)
+            total += score * w
+            weight_sum += w
+
+        weighted_total = total / weight_sum if weight_sum > 0 else 0.0
+
+        return cls(
+            principle_scores=principle_scores,
+            weighted_total=weighted_total,
+            galois_loss=galois_loss,
+            tier=tier,
+            threshold=threshold,
+        )
+
+    @classmethod
+    def neutral(cls) -> "ConstitutionalAlignment":
+        """Create a neutral alignment (all 0.5, no Galois loss)."""
+        return cls.from_scores(
+            principle_scores={
+                "TASTEFUL": 0.5,
+                "CURATED": 0.5,
+                "ETHICAL": 0.5,
+                "JOY_INDUCING": 0.5,
+                "COMPOSABLE": 0.5,
+                "HETERARCHICAL": 0.5,
+                "GENERATIVE": 0.5,
+            }
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for serialization."""
+        return {
+            "principle_scores": self.principle_scores,
+            "weighted_total": self.weighted_total,
+            "galois_loss": self.galois_loss,
+            "tier": self.tier,
+            "threshold": self.threshold,
+            "is_compliant": self.is_compliant,
+            "dominant_principle": self.dominant_principle,
+            "weakest_principle": self.weakest_principle,
+            "violation_count": self.violation_count,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ConstitutionalAlignment":
+        """Create from dictionary."""
+        return cls(
+            principle_scores=data.get("principle_scores", {}),
+            weighted_total=data.get("weighted_total", 0.0),
+            galois_loss=data.get("galois_loss"),
+            tier=data.get("tier", "EMPIRICAL"),
+            threshold=data.get("threshold", 0.5),
+        )
+
+    def __repr__(self) -> str:
+        """Concise representation."""
+        status = "✓" if self.is_compliant else f"✗({self.violation_count})"
+        return f"ConstitutionalAlignment(total={self.weighted_total:.2f}, {status})"
+
 # Backwards compatibility aliases (remove after migration complete)
 MarkId = MarkId
 
@@ -658,6 +826,9 @@ class Mark:
     # Origin (what/who emitted it)
     origin: str = "unknown"  # Jewel or agent name: "witness", "brain", "gardener", etc.
 
+    # Domain (for frontend routing and filtering)
+    domain: WitnessDomain = "system"  # "navigation", "portal", "chat", "edit", "system"
+
     # Content
     stimulus: Stimulus = field(default_factory=lambda: Stimulus(kind="unknown", content=""))
     response: Response = field(default_factory=lambda: Response(kind="unknown", content=""))
@@ -677,6 +848,9 @@ class Mark:
 
     # Justification (Phase 1: Explicit Toulmin)
     proof: Proof | None = None  # Toulmin argumentation structure
+
+    # Constitutional alignment (Phase 1: Witness as Constitutional Enforcement)
+    constitutional: ConstitutionalAlignment | None = None
 
     # Metadata
     tags: tuple[str, ...] = ()
@@ -739,6 +913,7 @@ class Mark:
         return Mark(
             id=self.id,
             origin=self.origin,
+            domain=self.domain,
             stimulus=self.stimulus,
             response=self.response,
             umwelt=self.umwelt,
@@ -747,6 +922,7 @@ class Mark:
             phase=self.phase,
             walk_id=self.walk_id,
             proof=self.proof,
+            constitutional=self.constitutional,
             tags=self.tags,
             metadata=self.metadata,
         )
@@ -756,6 +932,7 @@ class Mark:
         return Mark(
             id=self.id,
             origin=self.origin,
+            domain=self.domain,
             stimulus=self.stimulus,
             response=self.response,
             umwelt=self.umwelt,
@@ -764,6 +941,36 @@ class Mark:
             phase=self.phase,
             walk_id=self.walk_id,
             proof=proof,
+            constitutional=self.constitutional,
+            tags=self.tags,
+            metadata=self.metadata,
+        )
+
+    def with_constitutional(self, constitutional: ConstitutionalAlignment) -> Mark:
+        """
+        Return new Mark with constitutional alignment (immutable pattern).
+
+        This is the primary method for enriching marks with constitutional metadata.
+        Typically called by MarkConstitutionalEvaluator after mark creation.
+
+        Example:
+            >>> evaluator = MarkConstitutionalEvaluator()
+            >>> alignment = await evaluator.evaluate(mark)
+            >>> enriched = mark.with_constitutional(alignment)
+        """
+        return Mark(
+            id=self.id,
+            origin=self.origin,
+            domain=self.domain,
+            stimulus=self.stimulus,
+            response=self.response,
+            umwelt=self.umwelt,
+            links=self.links,
+            timestamp=self.timestamp,
+            phase=self.phase,
+            walk_id=self.walk_id,
+            proof=self.proof,
+            constitutional=constitutional,
             tags=self.tags,
             metadata=self.metadata,
         )
@@ -773,6 +980,7 @@ class Mark:
         return {
             "id": str(self.id),
             "origin": self.origin,
+            "domain": self.domain,
             "stimulus": self.stimulus.to_dict(),
             "response": self.response.to_dict(),
             "umwelt": self.umwelt.to_dict(),
@@ -781,6 +989,7 @@ class Mark:
             "phase": self.phase.value if self.phase else None,
             "walk_id": str(self.walk_id) if self.walk_id else None,
             "proof": self.proof.to_dict() if self.proof else None,
+            "constitutional": self.constitutional.to_dict() if self.constitutional else None,
             "tags": list(self.tags),
             "metadata": self.metadata,
         }
@@ -790,10 +999,16 @@ class Mark:
         """Create from dictionary."""
         phase = NPhase(data["phase"]) if data.get("phase") else None
         proof = Proof.from_dict(data["proof"]) if data.get("proof") else None
+        constitutional = (
+            ConstitutionalAlignment.from_dict(data["constitutional"])
+            if data.get("constitutional")
+            else None
+        )
 
         return cls(
             id=MarkId(data["id"]),
             origin=data.get("origin", "unknown"),
+            domain=data.get("domain", "system"),
             stimulus=Stimulus.from_dict(data.get("stimulus", {})),
             response=Response.from_dict(data.get("response", {})),
             umwelt=UmweltSnapshot.from_dict(data.get("umwelt", {})),
@@ -802,6 +1017,7 @@ class Mark:
             phase=phase,
             walk_id=WalkId(data["walk_id"]) if data.get("walk_id") else None,
             proof=proof,
+            constitutional=constitutional,
             tags=tuple(data.get("tags", [])),
             metadata=data.get("metadata", {}),
         )
@@ -950,6 +1166,7 @@ __all__ = [
     "MarkId",
     "PlanPath",
     "WalkId",
+    "WitnessDomain",
     "generate_mark_id",
     # Backwards compatibility aliases
     "MarkId",
@@ -969,6 +1186,8 @@ __all__ = [
     # Phase 1: Toulmin Argumentation
     "EvidenceTier",
     "Proof",
+    # Phase 1: Constitutional Enforcement
+    "ConstitutionalAlignment",
     # Core (new name)
     "Mark",
     # Backwards compatibility

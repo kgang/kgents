@@ -14,7 +14,6 @@ import { Compartment, EditorState, Extension } from '@codemirror/state';
 import { EditorView, keymap, placeholder as placeholderExt } from '@codemirror/view';
 import { markdown } from '@codemirror/lang-markdown';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { vim, Vim } from '@replit/codemirror-vim';
 import { starkBiome } from './starkBiomeTheme';
 
 export interface UseCodeMirrorOptions {
@@ -26,8 +25,6 @@ export interface UseCodeMirrorOptions {
   onBlur?: () => void;
   /** Language mode */
   language?: 'markdown' | 'plaintext';
-  /** Enable vim keybindings (CodeMirror vim, not our custom handler) */
-  vimMode?: boolean;
   /** Read-only mode - can be changed dynamically */
   readonly?: boolean;
   /** Placeholder text */
@@ -79,7 +76,6 @@ export function useCodeMirror(options: UseCodeMirrorOptions = {}): UseCodeMirror
     onChange,
     onBlur,
     language = 'markdown',
-    vimMode = false,
     readonly = false,
     placeholder = '',
     extensions: additionalExtensions = [],
@@ -115,11 +111,6 @@ export function useCodeMirror(options: UseCodeMirrorOptions = {}): UseCodeMirror
    */
   const buildStaticExtensions = useCallback((): Extension[] => {
     const exts: Extension[] = [];
-
-    // Vim mode (must be first if enabled)
-    if (vimMode) {
-      exts.push(vim());
-    }
 
     // Base extensions
     exts.push(history());
@@ -170,7 +161,7 @@ export function useCodeMirror(options: UseCodeMirrorOptions = {}): UseCodeMirror
     exts.push(...additionalExtensions);
 
     return exts;
-  }, [vimMode, language, lineWrapping, placeholder, onChange, onBlur, additionalExtensions]);
+  }, [language, lineWrapping, placeholder, onChange, onBlur, additionalExtensions]);
 
   // Initialize editor
   useEffect(() => {
@@ -364,18 +355,6 @@ export function useCodeMirror(options: UseCodeMirrorOptions = {}): UseCodeMirror
     scrollToTop,
     scrollToBottom,
   };
-}
-
-/**
- * Configure Vim mode defaults
- * Call this once at app startup if using vim mode
- */
-export function configureVimDefaults(): void {
-  // Set default options
-  Vim.defineOption('number', true, 'boolean');
-
-  // Example: Custom mappings can be added here
-  // Vim.map('jj', '<Esc>', 'insert');
 }
 
 export default useCodeMirror;

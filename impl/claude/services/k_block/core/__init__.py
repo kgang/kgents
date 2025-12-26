@@ -25,6 +25,14 @@ from .cosmos import (
     set_cosmos,
 )
 from .edge import KBlockEdge
+from .edge_discovery import (
+    ConceptSignature,
+    DiscoveredEdge,
+    EdgeDiscoveryService,
+    EdgeKind,
+    get_edge_discovery_service,
+    reset_edge_discovery_service,
+)
 from .errors import (
     GluingError,
     PropagationError,
@@ -50,7 +58,10 @@ from .kblock import (
     IsolationState,
     KBlock,
     KBlockId,
+    KBlockKind,
     generate_kblock_id,
+    kblock_from_zero_node,
+    zero_node_from_kblock,
 )
 from .polynomial import (
     EditingState,
@@ -84,7 +95,18 @@ __all__ = [
     "KBlock",
     "KBlockEdge",
     "KBlockId",
+    "KBlockKind",  # Unification: Kind taxonomy
     "generate_kblock_id",
+    # Unification: KBlock ≅ ZeroNode isomorphism
+    "kblock_from_zero_node",
+    "zero_node_from_kblock",
+    # Edge Discovery
+    "ConceptSignature",
+    "DiscoveredEdge",
+    "EdgeDiscoveryService",
+    "EdgeKind",
+    "get_edge_discovery_service",
+    "reset_edge_discovery_service",
     # Cosmos
     "AppendOnlyLog",
     "BlameEntry",

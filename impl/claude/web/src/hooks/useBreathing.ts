@@ -1,15 +1,52 @@
 /**
- * useBreathing - Ghibli-inspired breathing animation hook
+ * useBreathing - Zero Seed Genesis 4-7-8 Breathing Animation Hook
  *
- * Implements "Everything Breathes" from Crown Jewels Genesis Moodboard.
- * Provides organic, subtle scale animations for elements.
+ * Implements Motion Law M-01: Asymmetric breathing uses 4-7-8 timing.
+ * Provides organic, calming scale/opacity animations for earned motion.
  *
- * @see plans/town-visualizer-renaissance.md - Phase 5: Animation
- * @see constants/town.ts - BREATHING_ANIMATION constants
+ * 4-7-8 Pattern (19s total):
+ * - 4s inhale (21%): Gentle rise
+ * - 7s hold (37%): Moment of fullness
+ * - 8s exhale (42%): Long, calming release
+ *
+ * M-02: Default is still, animation is earned (only use when appropriate)
+ * M-04: Respects prefers-reduced-motion
+ *
+ * @see plans/zero-seed-creative-strategy.md - Motion Laws (M-01 through M-05)
+ * @see styles/breathing.css - CSS keyframes implementation
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { BREATHING_ANIMATION } from '@/constants';
+
+// =============================================================================
+// Constants - 4-7-8 Breathing Timing
+// =============================================================================
+
+/**
+ * BREATHING_4_7_8 - Core timing constants
+ *
+ * Total cycle: 19 seconds (4 + 7 + 8)
+ * Amplitude: 1.5% scale variation (subtle, not mechanical)
+ */
+export const BREATHING_4_7_8 = {
+  /** Total cycle duration in ms (4s + 7s + 8s = 19s) */
+  period: 19000,
+
+  /** Inhale duration (4s = 21% of cycle) */
+  inhaleDuration: 4000,
+
+  /** Hold duration (7s = 37% of cycle) */
+  holdDuration: 7000,
+
+  /** Exhale duration (8s = 42% of cycle) */
+  exhaleDuration: 8000,
+
+  /** Scale amplitude - subtle (1.5% variation) */
+  amplitude: 0.015,
+
+  /** Opacity amplitude - very subtle (5% variation) */
+  opacityAmplitude: 0.05,
+} as const;
 
 // =============================================================================
 // Types
@@ -18,17 +55,17 @@ import { BREATHING_ANIMATION } from '@/constants';
 export interface BreathingOptions {
   /**
    * Enable/disable breathing animation.
-   * Useful for pause during interactions.
+   * M-02: Default should be FALSE (stillness is default, animation is earned)
    */
   enabled?: boolean;
 
   /**
-   * Custom period in ms (default: 3500)
+   * Custom period in ms (default: 19000 for 4-7-8 timing)
    */
   period?: number;
 
   /**
-   * Custom amplitude (default: 0.03 = 3%)
+   * Custom amplitude (default: 0.015 = 1.5%)
    */
   amplitude?: number;
 
@@ -40,7 +77,7 @@ export interface BreathingOptions {
 
   /**
    * Respect prefers-reduced-motion media query.
-   * Default: true
+   * M-04: Default: true (always respect accessibility)
    */
   respectReducedMotion?: boolean;
 }
@@ -104,8 +141,8 @@ export interface BreathingState {
 export function useBreathing(options: BreathingOptions = {}): BreathingState {
   const {
     enabled = true,
-    period = BREATHING_ANIMATION.period,
-    amplitude = BREATHING_ANIMATION.amplitude,
+    period = BREATHING_4_7_8.period,
+    amplitude = BREATHING_4_7_8.amplitude,
     phaseOffset = 0,
     respectReducedMotion = true,
   } = options;
@@ -126,53 +163,52 @@ export function useBreathing(options: BreathingOptions = {}): BreathingState {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, [respectReducedMotion]);
 
-  // Calculate calming breath value at given cycle position (0-1)
-  // Pattern: rest → gentle rise → hold → slow release
-  const getCalmingBreathValue = useCallback((cyclePosition: number): number => {
-    if (cyclePosition <= 0.15) {
-      // Rest phase (0-15%): stillness with tiny drift
-      return (cyclePosition / 0.15) * 0.05;
-    } else if (cyclePosition <= 0.4) {
-      // Rise phase (15-40%): gentle curve up
-      const progress = (cyclePosition - 0.15) / 0.25;
-      return 0.05 + Math.sin((progress * Math.PI) / 2) * 0.95;
-    } else if (cyclePosition <= 0.5) {
-      // Hold phase (40-50%): stay at peak
+  // Calculate 4-7-8 breath value at given cycle position (0-1)
+  // Pattern: 4s inhale (21%) → 7s hold (37%) → 8s exhale (42%)
+  const get478BreathValue = useCallback((cyclePosition: number): number => {
+    // Inhale phase (0-21%): 4 seconds - gentle rise
+    if (cyclePosition <= 0.2105) {
+      const progress = cyclePosition / 0.2105;
+      // Ease-in curve for gentle start
+      return Math.sin((progress * Math.PI) / 2);
+    }
+    // Hold phase (21-58%): 7 seconds - stay at peak
+    else if (cyclePosition <= 0.5789) {
       return 1;
-    } else if (cyclePosition <= 0.95) {
-      // Release phase (50-95%): slow descent
-      const progress = (cyclePosition - 0.5) / 0.45;
+    }
+    // Exhale phase (58-100%): 8 seconds - long, calming release
+    else {
+      const progress = (cyclePosition - 0.5789) / 0.4211;
+      // Ease-out curve for gentle landing
       return Math.cos((progress * Math.PI) / 2);
     }
-    // Return to rest (95-100%)
-    return 0;
   }, []);
 
-  // Calculate scale at given time
+  // Calculate scale at given time (4-7-8 pattern)
   const calculateScale = useCallback(
     (timeMs: number): number => {
       const offsetMs = phaseOffset * period;
       const adjustedTime = timeMs + offsetMs;
       const cyclePosition = (adjustedTime % period) / period;
 
-      const breathValue = getCalmingBreathValue(cyclePosition);
+      const breathValue = get478BreathValue(cyclePosition);
       return 1 + breathValue * amplitude;
     },
-    [period, amplitude, phaseOffset, getCalmingBreathValue]
+    [period, amplitude, phaseOffset, get478BreathValue]
   );
 
-  // Calculate opacity (same calming curve, subtler amplitude)
+  // Calculate opacity (same 4-7-8 curve, subtler amplitude)
   const calculateOpacity = useCallback(
     (timeMs: number): number => {
       const offsetMs = phaseOffset * period;
       const adjustedTime = timeMs + offsetMs;
       const cyclePosition = (adjustedTime % period) / period;
 
-      const breathValue = getCalmingBreathValue(cyclePosition);
-      // Opacity ranges from 0.985 to 1.0 (1.5% variation)
-      return 0.985 + breathValue * 0.015;
+      const breathValue = get478BreathValue(cyclePosition);
+      // Opacity ranges from 0.95 to 1.0 (5% variation)
+      return 0.95 + breathValue * 0.05;
     },
-    [period, phaseOffset, getCalmingBreathValue]
+    [period, phaseOffset, get478BreathValue]
   );
 
   // Animation loop
@@ -277,46 +313,40 @@ export function getStaggeredPhaseOffset(
 // =============================================================================
 
 /**
- * Generate a CSS keyframes animation string for breathing effect.
- * Calming asymmetric pattern: rest → gentle rise → hold → slow release
- * Use with linear timing.
+ * Generate a CSS keyframes animation string for 4-7-8 breathing effect.
+ * 4s inhale (21%) → 7s hold (37%) → 8s exhale (42%)
+ * Use with linear timing function.
  */
-export function getBreathingKeyframes(amplitude: number = BREATHING_ANIMATION.amplitude): string {
-  // Calming breath pattern:
-  // 0-15%: rest (stillness)
-  // 15-40%: gentle rise (inhale)
-  // 40-50%: brief hold (fullness)
-  // 50-95%: slow release (exhale)
-  // 95-100%: return to rest
+export function getBreathingKeyframes(amplitude: number = BREATHING_4_7_8.amplitude): string {
+  // 4-7-8 breath pattern:
+  // 0-21%: inhale (4 seconds)
+  // 21-58%: hold (7 seconds)
+  // 58-100%: exhale (8 seconds)
   const keyframes = Array.from({ length: 21 }, (_, i) => {
     const pct = i * 5;
+    const cyclePosition = pct / 100;
     let value: number;
 
-    if (pct <= 15) {
-      // Rest phase: stay at baseline with tiny drift
-      value = (pct / 15) * 0.05; // 0 → 0.05
-    } else if (pct <= 40) {
-      // Rise phase: gentle curve up
-      const progress = (pct - 15) / 25;
-      value = 0.05 + Math.sin((progress * Math.PI) / 2) * 0.95; // 0.05 → 1
-    } else if (pct <= 50) {
+    if (cyclePosition <= 0.2105) {
+      // Inhale phase: gentle rise
+      const progress = cyclePosition / 0.2105;
+      value = Math.sin((progress * Math.PI) / 2);
+    } else if (cyclePosition <= 0.5789) {
       // Hold phase: stay at peak
       value = 1;
-    } else if (pct <= 95) {
-      // Release phase: slow descent (longer than rise)
-      const progress = (pct - 50) / 45;
-      value = Math.cos((progress * Math.PI) / 2); // 1 → 0
     } else {
-      // Return to rest
-      value = 0;
+      // Exhale phase: long release
+      const progress = (cyclePosition - 0.5789) / 0.4211;
+      value = Math.cos((progress * Math.PI) / 2);
     }
 
     const scale = 1 + value * amplitude;
-    return `${pct}% { transform: scale(${scale.toFixed(4)}); }`;
+    const opacity = 0.95 + value * 0.05;
+    return `${pct}% { transform: scale(${scale.toFixed(4)}); opacity: ${opacity.toFixed(3)}; }`;
   });
 
   return `
-    @keyframes breathing {
+    @keyframes breathing-4-7-8 {
       ${keyframes.join('\n      ')}
     }
   `;

@@ -24,7 +24,7 @@ Usage:
         ground=MyGround(),
     )
 
-    interface = logos.bridge("world.house", observer=my_hypha)
+    interface = logos.bridge("world.house", observer=my_observer)
     output = interface.step(ObserveHouse("architect", "view"))
 """
 
@@ -38,7 +38,7 @@ from .interface import PolyInterface
 from .morphism import IdentityMorphism, PolyMorphism
 
 if TYPE_CHECKING:
-    pass  # Hypha will be imported when hypha module exists
+    pass
 
 
 # Type variables
@@ -68,7 +68,7 @@ class LogosProfunctor(Protocol):
 
         Args:
             intent: The AGENTESE path (e.g., "world.house")
-            observer: The requesting hypha (provides context)
+            observer: The requesting observer (provides context)
 
         Returns:
             A PolyInterface ready for dynamics() calls

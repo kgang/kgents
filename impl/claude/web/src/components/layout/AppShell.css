@@ -183,7 +183,7 @@
 /* Main content — explicitly placed in row 2 (navbar is fixed, out of flow) */
 .app-shell__content {
   grid-row: 2; /* Explicit placement since navbar is position: fixed */
-  overflow: hidden; /* Children manage their own overflow */
+  overflow: auto; /* Allow scrolling for pages with tall content */
   min-height: 0; /* Prevents grid blowout */
   position: relative;
 }

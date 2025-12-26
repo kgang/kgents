@@ -188,7 +188,7 @@ def editor_directions(mode: EditorMode) -> frozenset[type]:
 
 Inspired by Helix/Kakoune: **select → action** rather than **action → motion**.
 
-### Layer 1: Traditional Vim (Within Node)
+### Layer 1: Content Navigation (Within Node)
 
 ```
 j/k         Line down/up

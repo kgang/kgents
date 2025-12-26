@@ -421,6 +421,48 @@
 }
 
 /* =============================================================================
+   Zero Seed Derivation Edges (gD navigation)
+   ============================================================================= */
+
+/* Derivation edges are highlighted for gD navigation */
+.edge-gutter__badge--derivation {
+  background: rgba(139, 92, 246, 0.1); /* Purple tint for derivation */
+  border-left: 2px solid var(--color-axiom, #8b5cf6);
+}
+
+.edge-gutter__badge--derivation:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: var(--color-axiom, #8b5cf6);
+}
+
+/* Foundational edges link to Zero Seed axioms (A1, A2, G) */
+.edge-gutter__badge--foundational {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.15) 0%,
+    rgba(167, 139, 250, 0.1) 100%
+  );
+  border-left: 3px solid var(--color-axiom, #8b5cf6);
+  box-shadow: 0 0 4px rgba(139, 92, 246, 0.3);
+}
+
+.edge-gutter__badge--foundational:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.25) 0%,
+    rgba(167, 139, 250, 0.2) 100%
+  );
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+}
+
+/* Foundational star indicator */
+.edge-gutter__foundational-star {
+  color: var(--color-axiom, #8b5cf6);
+  font-size: 0.6rem;
+  margin-left: 0.15rem;
+}
+
+/* =============================================================================
    Content Pane
    ============================================================================= */
 

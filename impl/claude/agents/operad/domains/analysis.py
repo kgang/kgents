@@ -1,11 +1,12 @@
 """
-Analysis Operad: Four Modes of Rigorous Inquiry.
+Analysis Operad: Five Modes of Rigorous Inquiry.
 
-The Analysis Operad extends AGENT_OPERAD with four analysis modes:
+The Analysis Operad extends AGENT_OPERAD with five analysis modes:
 - categorical: Verify composition laws and fixed points
 - epistemic: Analyze justification structure and grounding
 - dialectical: Identify tensions and synthesize resolutions
 - generative: Test regenerability from axioms
+- constitutional: Verify alignment with 7 kgents principles
 
 Key insight: Analysis that can analyze itself is the only analysis worth having.
 
@@ -249,6 +250,36 @@ class GenerativeReport:
     @property
     def is_regenerable(self) -> bool:
         return self.regeneration.passed
+
+
+@dataclass(frozen=True)
+class ConstitutionalReport:
+    """
+    Result of constitutional analysis.
+
+    Verifies alignment with the 7 kgents principles.
+    """
+
+    target: str
+    alignment: "ConstitutionalAlignment"  # From services.witness.mark
+    violations: tuple[str, ...]  # Principles below threshold
+    remediation_suggestions: tuple[str, ...]
+    summary: str
+
+    @property
+    def is_aligned(self) -> bool:
+        """Check if spec meets constitutional alignment threshold."""
+        return self.alignment.is_compliant
+
+    @property
+    def violation_count(self) -> int:
+        """Count principles below threshold."""
+        return len(self.violations)
+
+    @property
+    def alignment_score(self) -> float:
+        """Return weighted total alignment score."""
+        return self.alignment.weighted_total
 
 
 @dataclass(frozen=True)
@@ -497,6 +528,44 @@ def _generative_analysis_structural(spec_path: str) -> GenerativeReport:
     )
 
 
+def _constitutional_analysis_structural(spec_path: str) -> ConstitutionalReport:
+    """
+    Structural constitutional analysis (no LLM).
+
+    Returns neutral alignment (cannot evaluate without LLM).
+    For real analysis, use the async LLM-backed service.
+    """
+    from pathlib import Path
+
+    path = Path(spec_path)
+    if not path.exists():
+        # Import ConstitutionalAlignment from witness
+        from services.witness.mark import ConstitutionalAlignment
+
+        return ConstitutionalReport(
+            target=spec_path,
+            alignment=ConstitutionalAlignment.neutral(),
+            violations=("file not found",),
+            remediation_suggestions=("Ensure file exists at specified path",),
+            summary=f"Structural analysis failed: file not found",
+        )
+
+    # Import ConstitutionalAlignment
+    from services.witness.mark import ConstitutionalAlignment
+
+    # Structural mode: return neutral alignment
+    # Cannot evaluate principles without LLM
+    alignment = ConstitutionalAlignment.neutral()
+
+    return ConstitutionalReport(
+        target=spec_path,
+        alignment=alignment,
+        violations=(),  # Cannot detect violations without LLM
+        remediation_suggestions=("Use --llm for constitutional analysis",),
+        summary="Structural analysis: neutral alignment (use --llm for full constitutional analysis)",
+    )
+
+
 def _full_analysis_structural(spec_path: str) -> FullAnalysisReport:
     """
     Structural full analysis (no LLM).
@@ -628,6 +697,28 @@ async def analyze_generative_llm(spec_path: str) -> GenerativeReport:
         )
 
 
+async def analyze_constitutional_llm(spec_path: str) -> ConstitutionalReport:
+    """LLM-backed constitutional analysis."""
+    try:
+        from services.analysis import AnalysisService
+        from agents.k.soul import create_llm_client
+
+        llm = create_llm_client()
+        service = AnalysisService(llm)
+        return await service.analyze_constitutional(spec_path)
+    except ImportError:
+        return _constitutional_analysis_structural(spec_path)
+    except Exception as e:
+        report = _constitutional_analysis_structural(spec_path)
+        return ConstitutionalReport(
+            target=report.target,
+            alignment=report.alignment,
+            violations=report.violations,
+            remediation_suggestions=report.remediation_suggestions,
+            summary=f"LLM error ({e}); fell back to structural: {report.summary}",
+        )
+
+
 async def analyze_full_llm(spec_path: str) -> FullAnalysisReport:
     """
     LLM-backed full four-mode analysis.
@@ -687,6 +778,11 @@ def _generative_analysis(spec_path: str) -> GenerativeReport:
     return _generative_analysis_structural(spec_path)
 
 
+def _constitutional_analysis(spec_path: str) -> ConstitutionalReport:
+    """Backward-compatible sync wrapper. Use analyze_constitutional_llm() for real analysis."""
+    return _constitutional_analysis_structural(spec_path)
+
+
 def _full_analysis(spec_path: str) -> FullAnalysisReport:
     """Backward-compatible sync wrapper. Use analyze_full_llm() for real analysis."""
     return _full_analysis_structural(spec_path)
@@ -715,6 +811,11 @@ def _dialectical_compose() -> PolyAgent[Any, str, DialecticalReport]:
 def _generative_compose() -> PolyAgent[Any, str, GenerativeReport]:
     """Create generative analysis agent."""
     return from_function("GenerativeAnalysis", _generative_analysis)
+
+
+def _constitutional_compose() -> PolyAgent[Any, str, ConstitutionalReport]:
+    """Create constitutional analysis agent."""
+    return from_function("ConstitutionalAnalysis", _constitutional_analysis)
 
 
 def _full_compose() -> PolyAgent[Any, str, FullAnalysisReport]:
@@ -841,6 +942,14 @@ def create_analysis_operad() -> Operad:
         description="Test regenerability from axioms",
     )
 
+    ops["constitutional"] = Operation(
+        name="constitutional",
+        arity=0,
+        signature="() -> Agent[str, ConstitutionalReport]",
+        compose=_constitutional_compose,
+        description="Verify alignment with 7 kgents principles",
+    )
+
     ops["full"] = Operation(
         name="full",
         arity=0,
@@ -944,6 +1053,7 @@ __all__ = [
     "EpistemicReport",
     "DialecticalReport",
     "GenerativeReport",
+    "ConstitutionalReport",
     "FullAnalysisReport",
     # Supporting types
     "LawExtraction",
@@ -962,6 +1072,7 @@ __all__ = [
     "analyze_epistemic_llm",
     "analyze_dialectical_llm",
     "analyze_generative_llm",
+    "analyze_constitutional_llm",
     "analyze_full_llm",
     "self_analyze_llm",
     # Structural analysis (sync) - fallback when LLM unavailable
@@ -970,5 +1081,6 @@ __all__ = [
     "_epistemic_analysis",
     "_dialectical_analysis",
     "_generative_analysis",
+    "_constitutional_analysis",
     "_full_analysis",
 ]

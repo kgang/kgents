@@ -5,7 +5,7 @@ Sovereign Store: Manages sovereign copies of ingested entities.
 
 This store maintains the filesystem-based sovereign copy storage:
 
-    .kgents/sovereign/
+    ~/.kgents/sovereign/
     ├── spec/
     │   └── protocols/
     │       └── k-block.md/           # Directory per entity
@@ -26,6 +26,7 @@ Design Principles:
     2. Symlinks for current version → easy to see what's active
     3. Versioned directories → full history
     4. Overlay separate from content → our mods don't touch original
+    5. XDG-compliant storage under ~/.kgents/
 
 Teaching:
     gotcha: Windows doesn't support symlinks without admin privileges.
@@ -34,7 +35,11 @@ Teaching:
     gotcha: Paths can be deep (spec/protocols/very/nested/thing.md).
             Entity directory mirrors the full path structure.
 
-See: spec/protocols/inbound-sovereignty.md
+    gotcha: Now uses unified StorageProvider for XDG-compliant paths.
+            Default is ~/.kgents/sovereign/ instead of .kgents/sovereign/.
+            (Evidence: services/storage/provider.py)
+
+See: spec/protocols/inbound-sovereignty.md, spec/protocols/storage-unified.md
 """
 
 from __future__ import annotations
@@ -47,6 +52,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from ..storage import get_kgents_data_root
 from .types import Annotation, Diff, DiffType, ExportBundle, ExportedEntity, SovereignEntity
 
 if TYPE_CHECKING:
@@ -59,7 +65,8 @@ logger = logging.getLogger(__name__)
 # Constants
 # =============================================================================
 
-DEFAULT_SOVEREIGN_ROOT = Path(".kgents/sovereign")
+# Default: ~/.kgents/sovereign (XDG-compliant)
+DEFAULT_SOVEREIGN_ROOT = get_kgents_data_root() / "sovereign"
 META_FILENAME = "meta.json"
 CURRENT_LINK = "current"
 OVERLAY_DIR = "overlay"

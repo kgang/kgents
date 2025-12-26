@@ -81,6 +81,8 @@ export function useBrowse({
       docs: 0,
       specs: 0,
       kblocks: 0,
+      uploads: 0,
+      'zero-seed': 0,
       convos: 0,
     };
 
@@ -190,7 +192,7 @@ export function useBrowse({
           }
           break;
 
-        // Category switching (1-5)
+        // Category switching (1-8)
         case '1':
           e.preventDefault();
           setCategory('all');
@@ -214,6 +216,21 @@ export function useBrowse({
         case '5':
           e.preventDefault();
           setCategory('kblocks');
+          setSelectedIndex(0);
+          break;
+        case '6':
+          e.preventDefault();
+          setCategory('uploads');
+          setSelectedIndex(0);
+          break;
+        case '7':
+          e.preventDefault();
+          setCategory('zero-seed');
+          setSelectedIndex(0);
+          break;
+        case '8':
+          e.preventDefault();
+          setCategory('convos');
           setSelectedIndex(0);
           break;
       }

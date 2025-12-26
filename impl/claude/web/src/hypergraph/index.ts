@@ -109,3 +109,40 @@ export type { WitnessedTrailProps } from './WitnessedTrail';
 // Navigation Constitutional Badge
 export { NavigationConstitutionalBadge } from './NavigationConstitutionalBadge';
 export type { NavigationConstitutionalBadgeProps } from './NavigationConstitutionalBadge';
+
+// =============================================================================
+// Composable Hooks (extracted from HypergraphEditor)
+// =============================================================================
+
+// Feedback Message Hook
+export { useFeedbackMessage } from './useFeedbackMessage';
+export type { FeedbackMessage } from './useFeedbackMessage';
+
+// Panel State Management
+export { useEditorPanels } from './useEditorPanels';
+
+// Witness Handlers
+export { useWitnessHandlers } from './useWitnessHandlers';
+
+// Dialectic Handlers
+export { useDialecticHandlers } from './useDialecticHandlers';
+
+// Command Handlers
+export { useCommandHandlers } from './useCommandHandlers';
+
+// Navigation Handlers
+export { useDerivationNavigation } from './useDerivationNavigation';
+export { useLossNavigationHandlers } from './useLossNavigationHandlers';
+export { useWitnessNavigationHandlers } from './useWitnessNavigationHandlers';
+
+// Zero Seed Foundation (Post-Genesis)
+export { ZeroSeedFoundation } from './ZeroSeedFoundation';
+export type { ZeroSeedFoundationProps } from './ZeroSeedFoundation';
+
+// K-Block to GraphNode Conversion (Zero Seed wiring)
+export {
+  kblockToGraphNode,
+  isZeroSeedPath,
+  extractKBlockId,
+  extractZeroSeedCategory,
+} from './kblockToGraphNode';

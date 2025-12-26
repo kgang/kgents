@@ -199,6 +199,12 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (analysis): {e}")
 
+        # === Feed Crown Jewel (self.feed.*) ===
+        try:
+            from services.feed import node as feed_node  # noqa: F401  # self.feed.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (feed): {e}")
+
         # === Document Director Crown Jewel (concept.document.*) ===
         try:
             from services.director import node as director_node  # noqa: F401  # concept.document.*

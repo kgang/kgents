@@ -168,6 +168,10 @@ class GetResponse:
     is_dirty: bool
     active_views: list[str]
     checkpoints: list[dict[str, Any]]
+    # Genesis feed fields
+    galois_loss: float = 0.0
+    created_by: str | None = None
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -228,6 +232,10 @@ class KBlockManifestRendering:
                     "checkpoints": len(b.checkpoints),
                     "created_at": b.created_at.isoformat(),
                     "modified_at": b.modified_at.isoformat(),
+                    # Genesis feed fields
+                    "galois_loss": b.galois_loss,
+                    "created_by": b.created_by,
+                    "tags": b.tags,
                 }
                 for b in self.blocks
             ],
@@ -536,6 +544,10 @@ class KBlockNode(BaseLogosNode):
                     }
                     for cp in get_block.checkpoints
                 ],
+                # Genesis feed fields
+                "galois_loss": get_block.galois_loss,
+                "created_by": get_block.created_by,
+                "tags": get_block.tags,
             }
 
             # Include analysis_required if set

@@ -15,6 +15,8 @@
     "test:run": "vitest --run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "test:design-laws": "vitest run tests/design-laws",
+    "test:design-laws:watch": "vitest tests/design-laws",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "typecheck": "tsc --noEmit",
@@ -23,7 +25,11 @@
     "validate:fix": "npm run lint:fix && npm run format && npm run typecheck && npm run test:run",
     "prepare": "cd ../../.. && husky impl/claude/web/.husky",
     "sync-types": "npx tsx scripts/sync-types.ts",
-    "sync-types:check": "npx tsx scripts/sync-types.ts --check"
+    "sync-types:check": "npx tsx scripts/sync-types.ts --check",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "chromatic": "chromatic --project-token=${CHROMATIC_PROJECT_TOKEN}",
+    "chromatic:ci": "chromatic --project-token=${CHROMATIC_PROJECT_TOKEN} --exit-once-uploaded --only-changed"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
@@ -41,7 +47,6 @@
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.2",
     "@radix-ui/react-tooltip": "^1.1.3",
-    "@replit/codemirror-vim": "^6.3.0",
     "@stripe/stripe-js": "^4.9.0",
     "@tanstack/react-virtual": "^3.13.13",
     "@types/d3-force": "^3.0.10",
@@ -94,6 +99,13 @@
     "typescript": "~5.6.3",
     "typescript-eslint": "^8.11.0",
     "vite": "^5.4.10",
-    "vitest": "^2.1.5"
+    "vitest": "^2.1.5",
+    "storybook": "^10.1.10",
+    "@storybook/react-vite": "^10.1.10",
+    "@storybook/addon-a11y": "^10.1.10",
+    "@storybook/addon-docs": "^10.1.10",
+    "@storybook/addon-onboarding": "^10.1.10",
+    "eslint-plugin-storybook": "^10.1.10",
+    "chromatic": "^11.20.0"
   }
 }

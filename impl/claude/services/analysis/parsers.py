@@ -354,10 +354,75 @@ def parse_generative_response(response: str, target: str) -> GenerativeReport:
         )
 
 
+# =============================================================================
+# Constitutional Parsing
+# =============================================================================
+
+
+def parse_constitutional_response(response: str, target: str) -> "ConstitutionalReport":
+    """
+    Parse LLM response into ConstitutionalReport.
+
+    Args:
+        response: Raw LLM response (may be JSON-wrapped)
+        target: Spec path being analyzed
+
+    Returns:
+        ConstitutionalReport with parsed data or error information
+    """
+    try:
+        json_str = extract_json_from_response(response)
+        data = json.loads(json_str)
+
+        # Import ConstitutionalAlignment from witness
+        from services.witness.mark import ConstitutionalAlignment
+        from agents.operad.domains.analysis import ConstitutionalReport
+
+        # Build ConstitutionalAlignment
+        principle_scores = data.get("principle_scores", {})
+        weighted_total = data.get("weighted_total", 0.5)
+        threshold = data.get("threshold", 0.5)
+
+        alignment = ConstitutionalAlignment(
+            principle_scores=principle_scores,
+            weighted_total=weighted_total,
+            galois_loss=None,  # Not computed in this analysis
+            tier="EMPIRICAL",  # LLM-based evaluation
+            threshold=threshold,
+        )
+
+        # Parse violations and suggestions
+        violations = tuple(data.get("violations", []))
+        remediation_suggestions = tuple(data.get("remediation_suggestions", []))
+        summary = data.get("summary", "Constitutional analysis completed")
+
+        return ConstitutionalReport(
+            target=target,
+            alignment=alignment,
+            violations=violations,
+            remediation_suggestions=remediation_suggestions,
+            summary=summary,
+        )
+
+    except (json.JSONDecodeError, KeyError, ValueError) as e:
+        # Return error report
+        from services.witness.mark import ConstitutionalAlignment
+        from agents.operad.domains.analysis import ConstitutionalReport
+
+        return ConstitutionalReport(
+            target=target,
+            alignment=ConstitutionalAlignment.neutral(),
+            violations=("All principles",),
+            remediation_suggestions=(f"Parse error: {e}",),
+            summary=f"Parse error: {e}",
+        )
+
+
 __all__ = [
     "extract_json_from_response",
     "parse_categorical_response",
     "parse_epistemic_response",
     "parse_dialectical_response",
     "parse_generative_response",
+    "parse_constitutional_response",
 ]

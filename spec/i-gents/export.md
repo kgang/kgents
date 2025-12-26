@@ -1,6 +1,6 @@
-# I-gent Export: Markdown & Vim Serialization
+# I-gent Export: Markdown Serialization
 
-Every I-gent view has a canonical markdown representation. This ensures the interface is **portable**—viewable in vim, printable to paper, editable in any text editor.
+Every I-gent view has a canonical markdown representation. This ensures the interface is **portable**—editable in any text editor, printable to paper, viewable on any device.
 
 ---
 
@@ -16,7 +16,7 @@ I-gents treat screen displays as *rendering* of underlying documents:
 
 ```
 Markdown (source) → TUI (interactive rendering)
-                  → Vim (editing rendering)
+                  → Text editor (editing rendering)
                   → Paper (archival rendering)
 ```
 
@@ -332,40 +332,31 @@ gantt
 
 ---
 
-## Vim Integration
+## Text Editor Integration
 
-Exports are designed for vim editing.
+Exports are standard markdown files, editable in any text editor.
 
 ### Navigation
 
-Use standard vim markdown navigation:
-- `[[` / `]]` — Jump between headers
-- `/` — Search
-- `gd` — Go to definition (for Mermaid node IDs)
+Use standard markdown navigation features in your editor:
+- Jump between headers
+- Search by keyword
+- Follow Mermaid node references
 
 ### Folding
 
-Headers create natural fold points:
-```vim
-:set foldmethod=syntax
-```
+Headers create natural fold points in editors that support markdown folding.
 
 ### Editing Margin Notes
 
-Table rows are editable:
+Table rows are editable markdown:
 ```markdown
 | 00:14:30 | kent | adding new observation here |
 ```
 
 ### Syntax Highlighting
 
-Standard markdown highlighting works. Mermaid blocks are recognized by most vim plugins.
-
-### Recommended Plugins
-
-- `vim-markdown` — Enhanced markdown support
-- `vim-mermaid` — Mermaid syntax highlighting
-- `vim-table-mode` — Table editing
+Standard markdown highlighting works in all modern editors. Most editors recognize Mermaid code blocks.
 
 ---
 

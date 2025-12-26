@@ -40,7 +40,7 @@ export { useNavigation } from '../../hypergraph/useNavigation';
 **Core exports**:
 - `HypergraphEditor` - Main component
 - `useNavigation` - State management
-- `useKeyHandler` - Vim-like keybindings
+- `useKeyHandler` - Modal keybindings
 - `useKBlock` - Isolation layer
 - `useCommandRegistry` - Cmd+K palette
 - `useGraphNode` - API bridge

@@ -41,10 +41,17 @@ export function normalizePath(path: string): string {
  *
  * Edge labels look like: "edge.discovered: extends → spec/j-gents/integration.md"
  * File paths look like: "spec/agents/polynomial-agent.md" or "uploads/doc.pdf"
+ * Zero Seed paths look like: "zero-seed/axioms/A1"
  *
  * This prevents infinite loops when edge labels are mistakenly passed to loadNode.
  */
 export function isValidFilePath(path: string): boolean {
+  // Zero Seed paths are always valid (handled specially in useFileUpload)
+  // Format: zero-seed/{category}/{id}
+  if (path.startsWith('zero-seed/')) {
+    return true;
+  }
+
   // Edge labels contain arrows (→ or ->)
   if (path.includes('→') || path.includes('->')) {
     return false;
@@ -216,8 +223,8 @@ export interface UseGraphNodeResult {
   acknowledgeUpdates: () => void;
 }
 
-/** Polling interval for checking graph updates (5 seconds) */
-const UPDATE_POLL_INTERVAL = 5000;
+/** Polling interval for checking graph updates (60 seconds) */
+const UPDATE_POLL_INTERVAL = 60000;
 
 /**
  * Hook for loading graph nodes from the WitnessedGraph API.

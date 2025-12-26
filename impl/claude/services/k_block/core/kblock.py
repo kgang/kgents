@@ -60,6 +60,70 @@ class IsolationState(Enum):
 
 
 # -----------------------------------------------------------------------------
+# K-Block Kind (Unification: Everything is an Agent)
+# -----------------------------------------------------------------------------
+
+
+class KBlockKind(Enum):
+    """
+    K-Block content taxonomy: Everything is an Agent represented as a K-Block.
+
+    The Radical Insight:
+        Agent ≅ K-Block ≅ ZeroNode ≅ File ≅ Upload ≅ Crystal
+
+    This enum captures the morphism type in the category of Content.
+    Every K-Block is a morphism: A → B where:
+        - Source (A): The origin/context of the content
+        - Target (B): The manifestation in the cosmos
+
+    Kind Taxonomy:
+        FILE: Traditional filesystem content (specs, implementations)
+        UPLOAD: User-uploaded sovereign content
+        ZERO_NODE: Zero Seed axiom/value/goal/spec/action/reflection/representation
+        AGENT_STATE: Serialized agent state (PolyAgent positions)
+        CRYSTAL: Crystallized memory/decision (Witness crystals)
+
+    Category-Theoretic Grounding:
+        Each kind forms a subcategory of the K-Block category.
+        The inclusion functors preserve composition and identity.
+
+    See: spec/protocols/kblock-unification.md
+    """
+
+    FILE = "file"  # Traditional filesystem content
+    UPLOAD = "upload"  # User-uploaded content (sovereign)
+    ZERO_NODE = "zero_node"  # Zero Seed node (L1-L7)
+    AGENT_STATE = "agent_state"  # Serialized agent polynomial state
+    CRYSTAL = "crystal"  # Crystallized memory/decision from Witness
+
+    @property
+    def is_sovereign(self) -> bool:
+        """Whether this kind requires sovereign store."""
+        return self in {KBlockKind.UPLOAD, KBlockKind.CRYSTAL}
+
+    @property
+    def is_structural(self) -> bool:
+        """Whether this kind participates in the Zero Seed hierarchy."""
+        return self == KBlockKind.ZERO_NODE
+
+    @property
+    def requires_witnessing(self) -> bool:
+        """Whether modifications require witness marks."""
+        return self in {KBlockKind.ZERO_NODE, KBlockKind.CRYSTAL, KBlockKind.UPLOAD}
+
+    def to_agentese_context(self) -> str:
+        """Map kind to AGENTESE context prefix."""
+        mapping = {
+            KBlockKind.FILE: "world",
+            KBlockKind.UPLOAD: "world",
+            KBlockKind.ZERO_NODE: "void",  # Zero nodes can be void/concept depending on layer
+            KBlockKind.AGENT_STATE: "self",
+            KBlockKind.CRYSTAL: "time",
+        }
+        return mapping[self]
+
+
+# -----------------------------------------------------------------------------
 # Content Delta Types
 # -----------------------------------------------------------------------------
 
@@ -203,9 +267,20 @@ class KBlock:
         bind   : KBlock Doc -> (Doc -> KBlock Doc) -> KBlock Doc
         join   : KBlock (KBlock Doc) -> KBlock Doc  (prohibited - no nesting)
 
+    UNIFICATION PRINCIPLE (AD-010):
+        Everything is an Agent, and every Agent can be represented as a K-Block.
+
+        The isomorphism:
+            KBlock ≅ Agent ≅ ZeroNode ≅ File ≅ Upload ≅ Crystal
+
+        This dataclass is the UNIFIED representation across all content types.
+        The `kind` field determines the morphism type in the category of Content.
+
     Philosophy:
         "Everything in the cosmos affects everything else.
          But inside the K-Block, you are sovereign."
+
+    See: spec/protocols/kblock-unification.md
     """
 
     # Identity
@@ -215,6 +290,10 @@ class KBlock:
     # Content
     content: str  # Current edited content
     base_content: str  # Content at K-Block creation (for diffing)
+
+    # Kind (Unification: Everything is an Agent)
+    # Placed after required fields to maintain dataclass field ordering
+    kind: KBlockKind = KBlockKind.FILE  # Default to FILE for backward compatibility
 
     # State
     isolation: IsolationState = IsolationState.PRISTINE
@@ -266,6 +345,21 @@ class KBlock:
     # Edge tracking (bidirectional for efficient traversal)
     incoming_edges: list["KBlockEdge"] = field(default_factory=list)
     outgoing_edges: list["KBlockEdge"] = field(default_factory=list)
+
+    # -------------------------------------------------------------------------
+    # Genesis Feed Integration (P0: K-Block Schema Extension)
+    # -------------------------------------------------------------------------
+
+    # Coherence metric: Galois connection loss [0.0, 1.0]
+    # 0.0 = perfect coherence (all views agree)
+    # 1.0 = complete incoherence (views contradict)
+    galois_loss: float = 0.0
+
+    # Author/origin tracking
+    created_by: str | None = None
+
+    # Classification tags for filtering/grouping
+    tags: list[str] = field(default_factory=list)
 
     # ---------------------------------------------------------------------
     # Content Operations
@@ -502,6 +596,7 @@ class KBlock:
         result: dict[str, Any] = {
             "id": self.id,
             "path": self.path,
+            "kind": self.kind.value,  # Unification: Always serialize kind
             "content": self.content,
             "base_content": self.base_content,
             "isolation": self.isolation.name,
@@ -533,6 +628,11 @@ class KBlock:
             result["incoming_edges"] = [edge.to_dict() for edge in self.incoming_edges]
             result["outgoing_edges"] = [edge.to_dict() for edge in self.outgoing_edges]
 
+        # Genesis feed fields (always serialized)
+        result["galois_loss"] = self.galois_loss
+        result["created_by"] = self.created_by
+        result["tags"] = self.tags
+
         return result
 
     @classmethod
@@ -561,11 +661,19 @@ class KBlock:
             for edge_data in data.get("outgoing_edges", [])
         ]
 
+        # Parse kind with backward compatibility (default to FILE)
+        kind_str = data.get("kind", "file")
+        try:
+            kind = KBlockKind(kind_str)
+        except ValueError:
+            kind = KBlockKind.FILE  # Fallback for unknown kinds
+
         return cls(
             id=KBlockId(data["id"]),
             path=data["path"],
             content=data["content"],
             base_content=data["base_content"],
+            kind=kind,  # Unification: Deserialize kind
             isolation=IsolationState[data["isolation"]],
             created_at=datetime.fromisoformat(data["created_at"]),
             modified_at=datetime.fromisoformat(data["modified_at"]),
@@ -582,6 +690,10 @@ class KBlock:
             confidence=data.get("confidence", 1.0),
             incoming_edges=incoming_edges,
             outgoing_edges=outgoing_edges,
+            # Genesis feed fields
+            galois_loss=data.get("galois_loss", 0.0),
+            created_by=data.get("created_by"),
+            tags=data.get("tags", []),
         )
 
     # ---------------------------------------------------------------------
@@ -591,7 +703,7 @@ class KBlock:
     def __repr__(self) -> str:
         lines = len(self.content.split("\n"))
         return (
-            f"KBlock(id={self.id!r}, path={self.path!r}, "
+            f"KBlock(id={self.id!r}, kind={self.kind.value}, path={self.path!r}, "
             f"isolation={self.isolation.name}, lines={lines}, "
             f"checkpoints={len(self.checkpoints)})"
         )
@@ -599,3 +711,136 @@ class KBlock:
 
 # Type alias for bind function
 from typing import Callable  # noqa: E402
+
+
+# =============================================================================
+# Unification: KBlock ≅ ZeroNode Isomorphism
+# =============================================================================
+
+
+def kblock_from_zero_node(
+    node: "ZeroNode",
+    *,
+    base_content: str | None = None,
+) -> KBlock:
+    """
+    Convert a ZeroNode to a KBlock (isomorphism left-to-right).
+
+    This implements the categorical insight:
+        Agent ≅ K-Block ≅ ZeroNode
+
+    The ZeroNode's layer and kind map to K-Block's zero_seed_* fields.
+    The unified kind is always ZERO_NODE.
+
+    Args:
+        node: The ZeroNode to convert
+        base_content: Optional base content (defaults to node.content)
+
+    Returns:
+        KBlock representing the ZeroNode
+
+    Example:
+        >>> from services.zero_seed.core import ZeroNode
+        >>> node = ZeroNode(path="void.axiom.entity", layer=1, kind="axiom", ...)
+        >>> kblock = kblock_from_zero_node(node)
+        >>> assert kblock.kind == KBlockKind.ZERO_NODE
+        >>> assert kblock.zero_seed_layer == 1
+    """
+    # Import here to avoid circular dependency
+    from services.zero_seed.core import ZeroNode as ZN
+
+    if not isinstance(node, ZN):
+        raise TypeError(f"Expected ZeroNode, got {type(node)}")
+
+    content = node.content
+    base = base_content if base_content is not None else content
+
+    # Map lineage from tuple of NodeId to list of strings
+    lineage_list = [str(lid) for lid in node.lineage]
+
+    # Map proof to dict if present
+    toulmin_proof = node.proof.to_dict() if node.proof else None
+
+    return KBlock(
+        id=generate_kblock_id(),
+        path=node.path,
+        kind=KBlockKind.ZERO_NODE,
+        content=content,
+        base_content=base,
+        # Zero Seed specific fields
+        zero_seed_layer=node.layer,
+        zero_seed_kind=node.kind,
+        lineage=lineage_list,
+        has_proof=node.proof is not None,
+        toulmin_proof=toulmin_proof,
+        confidence=node.confidence,
+        # Metadata
+        created_by=node.created_by,
+        tags=list(node.tags),
+    )
+
+
+def zero_node_from_kblock(kblock: KBlock) -> "ZeroNode":
+    """
+    Convert a KBlock to a ZeroNode (isomorphism right-to-left).
+
+    This implements the categorical insight:
+        Agent ≅ K-Block ≅ ZeroNode
+
+    Only K-Blocks with kind=ZERO_NODE can be converted.
+    For other kinds, use appropriate converters.
+
+    Args:
+        kblock: The KBlock to convert (must have kind=ZERO_NODE)
+
+    Returns:
+        ZeroNode derived from the KBlock
+
+    Raises:
+        ValueError: If kblock.kind is not ZERO_NODE
+
+    Example:
+        >>> kblock = KBlock(kind=KBlockKind.ZERO_NODE, zero_seed_layer=1, ...)
+        >>> node = zero_node_from_kblock(kblock)
+        >>> assert node.layer == 1
+    """
+    # Import here to avoid circular dependency
+    from services.zero_seed.core import NodeId, Proof, ZeroNode
+
+    if kblock.kind != KBlockKind.ZERO_NODE:
+        raise ValueError(
+            f"Cannot convert KBlock with kind={kblock.kind} to ZeroNode. "
+            f"Expected kind=ZERO_NODE."
+        )
+
+    if kblock.zero_seed_layer is None:
+        raise ValueError(
+            "Cannot convert KBlock to ZeroNode: zero_seed_layer is None"
+        )
+
+    # Parse proof if present
+    proof = None
+    if kblock.toulmin_proof:
+        proof = Proof.from_dict(kblock.toulmin_proof)
+
+    # Map lineage from list of strings to tuple of NodeId
+    lineage_tuple = tuple(NodeId(lid) for lid in kblock.lineage)
+
+    return ZeroNode(
+        path=kblock.path,
+        layer=kblock.zero_seed_layer,
+        kind=kblock.zero_seed_kind or "",
+        content=kblock.content,
+        title=kblock.path.split(".")[-1] if "." in kblock.path else kblock.path,
+        proof=proof,
+        confidence=kblock.confidence,
+        created_at=kblock.created_at,
+        created_by=kblock.created_by or "system",
+        lineage=lineage_tuple,
+        tags=frozenset(kblock.tags),
+    )
+
+
+# Type hint for ZeroNode (deferred import)
+if TYPE_CHECKING:
+    from services.zero_seed.core import ZeroNode

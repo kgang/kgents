@@ -33,12 +33,12 @@ def test_axiom_factory():
     )
 
     assert kblock.id == kblock_id
-    assert kblock._layer == 1
-    assert kblock._kind == "axiom"
+    assert kblock.zero_seed_layer == 1
+    assert kblock.zero_seed_kind == "axiom"
     assert kblock._title == "Entity Axiom"
     assert kblock.content == "Everything is a node."
-    assert kblock._confidence == 1.0  # Axioms have max confidence
-    assert len(kblock._lineage) == 0
+    assert kblock.confidence == 1.0  # Axioms have max confidence
+    assert len(kblock.lineage) == 0
     assert "foundational" in kblock._tags
     assert "void.axiom" in kblock.path
 
@@ -70,11 +70,11 @@ def test_value_factory():
         tags=["principle"],
     )
 
-    assert kblock._layer == 2
-    assert kblock._kind == "value"
-    assert kblock._confidence == 0.95  # Values have high confidence
-    assert len(kblock._lineage) == 1
-    assert kblock._lineage[0] == axiom_id
+    assert kblock.zero_seed_layer == 2
+    assert kblock.zero_seed_kind == "value"
+    assert kblock.confidence == 0.95  # Values have high confidence
+    assert len(kblock.lineage) == 1
+    assert kblock.lineage[0] == axiom_id
     assert "void.value" in kblock.path
 
 
@@ -103,9 +103,9 @@ def test_goal_factory():
         lineage=[value_id],
     )
 
-    assert kblock._layer == 3
-    assert kblock._kind == "goal"
-    assert kblock._confidence == 0.90
+    assert kblock.zero_seed_layer == 3
+    assert kblock.zero_seed_kind == "goal"
+    assert kblock.confidence == 0.90
     assert "concept.goal" in kblock.path
 
 
@@ -121,9 +121,9 @@ def test_spec_factory():
         lineage=[goal_id],
     )
 
-    assert kblock._layer == 4
-    assert kblock._kind == "spec"
-    assert kblock._confidence == 0.85
+    assert kblock.zero_seed_layer == 4
+    assert kblock.zero_seed_kind == "spec"
+    assert kblock.confidence == 0.85
     assert "concept.spec" in kblock.path
 
 
@@ -139,9 +139,9 @@ def test_action_factory():
         lineage=[spec_id],
     )
 
-    assert kblock._layer == 5
-    assert kblock._kind == "action"
-    assert kblock._confidence == 0.80
+    assert kblock.zero_seed_layer == 5
+    assert kblock.zero_seed_kind == "action"
+    assert kblock.confidence == 0.80
     assert "world.action" in kblock.path
 
 
@@ -157,9 +157,9 @@ def test_reflection_factory():
         lineage=[action_id],
     )
 
-    assert kblock._layer == 6
-    assert kblock._kind == "reflection"
-    assert kblock._confidence == 0.75
+    assert kblock.zero_seed_layer == 6
+    assert kblock.zero_seed_kind == "reflection"
+    assert kblock.confidence == 0.75
     assert "self.reflection" in kblock.path
 
 
@@ -176,9 +176,9 @@ def test_representation_factory():
         lineage=[spec_id],
     )
 
-    assert kblock._layer == 7
-    assert kblock._kind == "representation"
-    assert kblock._confidence == 0.70
+    assert kblock.zero_seed_layer == 7
+    assert kblock.zero_seed_kind == "representation"
+    assert kblock.confidence == 0.70
     assert "void.representation" in kblock.path
 
 
@@ -193,7 +193,7 @@ def test_representation_accepts_any_lineage():
         content="...",
         lineage=[],
     )
-    assert len(kblock1._lineage) == 0
+    assert len(kblock1.lineage) == 0
 
     # Lineage from any layer is OK
     kblock_id2 = generate_kblock_id()
@@ -204,13 +204,14 @@ def test_representation_accepts_any_lineage():
         content="...",
         lineage=[parent_id],
     )
-    assert len(kblock2._lineage) == 1
+    assert len(kblock2.lineage) == 1
 
 
 def test_layer_factory_registry():
     """Test that all layers have factories registered."""
-    assert len(LAYER_FACTORIES) == 7
-    for layer in range(1, 8):
+    # L0 is ZeroSeedKBlockFactory (system), L1-L7 are user-facing layers
+    assert len(LAYER_FACTORIES) == 8
+    for layer in range(0, 8):  # 0-7
         assert layer in LAYER_FACTORIES
 
 
@@ -227,25 +228,27 @@ def test_create_kblock_for_layer():
         lineage=[],
     )
 
-    assert kblock._layer == 1
-    assert kblock._kind == "axiom"
+    assert kblock.zero_seed_layer == 1
+    assert kblock.zero_seed_kind == "axiom"
 
 
 def test_create_kblock_for_layer_invalid():
     """Test that invalid layers raise error."""
     kblock_id = generate_kblock_id()
 
+    # Layer 8 is invalid (valid range is 0-7)
     with pytest.raises(ValueError, match="Invalid layer"):
         create_kblock_for_layer(
-            layer=0,  # Invalid!
+            layer=8,  # Invalid!
             kblock_id=kblock_id,
             title="Invalid",
             content="...",
         )
 
+    # Layer -1 is invalid
     with pytest.raises(ValueError, match="Invalid layer"):
         create_kblock_for_layer(
-            layer=8,  # Invalid!
+            layer=-1,  # Invalid!
             kblock_id=kblock_id,
             title="Invalid",
             content="...",
@@ -264,7 +267,7 @@ def test_custom_confidence():
         content="...",
         lineage=[axiom_id],
     )
-    assert kblock1._confidence == 0.95
+    assert kblock1.confidence == 0.95
 
     # Custom confidence
     kblock_id2 = generate_kblock_id()
@@ -275,7 +278,7 @@ def test_custom_confidence():
         lineage=[axiom_id],
         confidence=0.60,
     )
-    assert kblock2._confidence == 0.60
+    assert kblock2.confidence == 0.60
 
 
 def test_path_generation():

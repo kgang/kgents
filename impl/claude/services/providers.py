@@ -68,6 +68,7 @@ if TYPE_CHECKING:
     from services.conductor.swarm import SwarmSpawner
     from services.director.director import DocumentDirector
     from services.explorer import UnifiedQueryService
+    from services.feed.service import FeedService
     from services.foundry import AgentFoundry
     from services.fusion import FusionService
     from services.hypergraph_editor import HypergraphEditorService
@@ -812,6 +813,41 @@ async def get_proxy_handle_store() -> "ProxyHandleStore":
     return get_store()
 
 
+async def get_feed_service():
+    """
+    Get the FeedService for algorithmic K-Block discovery.
+
+    Feed is a primitive, not a component. Provides filtered, ranked streams
+    of K-Blocks with pagination support.
+
+    Example:
+        service = await get_feed_service()
+        result = await service.get_cosmos(user, offset=0, limit=20)
+    """
+    from services.feed.service import get_feed_service as get_service
+
+    return get_service()
+
+
+async def get_feed_feedback_persistence():
+    """
+    Get the FeedFeedbackPersistence for user interaction tracking.
+
+    Records user interactions (views, engagements, dismissals) with K-Blocks
+    to enable personalized ranking and analytics.
+
+    Example:
+        persistence = await get_feed_feedback_persistence()
+        await persistence.record_interaction(user_id, kblock_id, FeedbackAction.VIEW)
+    """
+    from services.feed.persistence import FeedFeedbackPersistence
+
+    # Get session factory for database access
+    session_factory = await get_session_factory()
+
+    return FeedFeedbackPersistence(session_factory=session_factory)
+
+
 # =============================================================================
 # Setup Function
 # =============================================================================
@@ -907,6 +943,10 @@ async def setup_providers() -> None:
 
     # Proxy Handle Store (AD-015: Epistemic Hygiene)
     container.register("proxy_handle_store", get_proxy_handle_store, singleton=True)
+
+    # Feed Primitive (Algorithmic K-Block Discovery)
+    container.register("feed_service", get_feed_service, singleton=True)
+    container.register("feed_feedback_persistence", get_feed_feedback_persistence, singleton=True)
 
     # Explorer Crown Jewel (Unified Data Explorer)
     container.register("unified_query_service", get_unified_query_service, singleton=True)
@@ -1157,4 +1197,6 @@ __all__ = [
     "get_composition_store",
     # Code Crown Jewel
     "get_code_service",
+    # Feed Feedback
+    "get_feed_feedback_persistence",
 ]

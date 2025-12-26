@@ -180,20 +180,40 @@ export function ElasticPlaceholder({
   if (state === 'error') {
     return (
       <div
-        className={`p-4 rounded-lg bg-red-500/10 border border-red-500/30 ${className}`}
-        style={containerStyle}
+        className={`p-4 rounded-lg border ${className}`}
+        style={{
+          ...containerStyle,
+          background: 'rgba(166, 93, 74, 0.1)',
+          borderColor: 'var(--accent-error)',
+        }}
         role="alert"
       >
         <div className="flex flex-col items-center text-center gap-3">
           <span className="text-2xl">◆</span>
           <div>
-            <p className="font-medium text-red-400">Something went wrong</p>
-            {error && <p className="text-sm text-red-300/80 mt-1">{error}</p>}
+            <p className="font-medium" style={{ color: 'var(--accent-error)' }}>
+              Something went wrong
+            </p>
+            {error && (
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                {error}
+              </p>
+            )}
           </div>
           {onRetry && (
             <button
               onClick={onRetry}
-              className="elastic-button px-4 py-2 rounded-md bg-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/30 transition-colors"
+              className="elastic-button px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              style={{
+                background: 'rgba(166, 93, 74, 0.2)',
+                color: 'var(--accent-error)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(166, 93, 74, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(166, 93, 74, 0.2)';
+              }}
             >
               Try again
             </button>

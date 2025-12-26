@@ -618,7 +618,6 @@ _DOMAIN_RULES: list[tuple[str, list[str]]] = [
         [
             "weave/",
             "field/",
-            "hypha/",
             "shared/",
             "system/",
             "bootstrap/",

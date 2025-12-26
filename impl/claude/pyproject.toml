@@ -19,6 +19,7 @@ dependencies = [
     "numpy>=1.24.0",
     "fastapi>=0.115.0",
     "uvicorn>=0.32.0",
+    "python-multipart>=0.0.9",  # Required for file upload support in FastAPI
     "textual>=0.89.0",
     "pyyaml>=6.0",
     "jinja2>=3.1.6",
@@ -128,7 +129,7 @@ markers = [
     "domain_cli: CLI handler and instance_db tests",
     "domain_agents_core: Core agents (k, town, brain, f, j)",
     "domain_agents_aux: Auxiliary agents (a, b, c, d, g, i, l, m, n, etc.)",
-    "domain_infra: Infrastructure (weave, field, hypha, shared, system)",
+    "domain_infra: Infrastructure (weave, field, shared, system)",
     "domain_api: API and billing protocol tests",
 ]
 

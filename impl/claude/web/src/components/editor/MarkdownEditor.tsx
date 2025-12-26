@@ -2,7 +2,7 @@
  * MarkdownEditor Component
  *
  * A STARK BIOME-themed markdown editor using CodeMirror 6.
- * Supports vim-like mode switching: readonly (NORMAL) ↔ editable (INSERT).
+ * Supports mode switching: readonly (NORMAL) to editable (INSERT).
  *
  * Key feature: Dynamic readonly switching via CodeMirror Compartments.
  * When readonly prop changes, the editor reconfigures without remounting.
@@ -11,9 +11,11 @@
 import React, { useEffect, forwardRef, useImperativeHandle, useState, useRef, useCallback, useMemo } from 'react';
 import { useCodeMirror, UseCodeMirrorOptions } from './useCodeMirror';
 import { ghostTextExtension } from './ghostText';
+import { edgeGutterExtension, updateEdges, type LineEdge } from './edgeGutterExtension';
 import { useGhostTextSources } from './useGhostTextSources';
 import './MarkdownEditor.css';
 import './ghostText.css';
+import './edgeGutter.css';
 
 /** Scroll cursor fade duration in ms (fast fade for smooth reading) */
 const SCROLL_CURSOR_FADE_MS = 650;
@@ -25,8 +27,6 @@ export interface MarkdownEditorProps {
   onChange?: (value: string) => void;
   /** Called on blur */
   onBlur?: () => void;
-  /** Enable vim mode (CodeMirror vim, not our custom handler) */
-  vimMode?: boolean;
   /** Read-only mode - can be changed dynamically */
   readonly?: boolean;
   /** Placeholder text when empty */
@@ -43,6 +43,10 @@ export interface MarkdownEditorProps {
   fillHeight?: boolean;
   /** Enable ghost text completions (only in INSERT mode) */
   enableGhostText?: boolean;
+  /** Edges with line numbers to display in gutter */
+  edges?: LineEdge[];
+  /** Called when an edge marker is clicked */
+  onEdgeClick?: (edge: LineEdge) => void;
 }
 
 export interface MarkdownEditorRef {
@@ -80,7 +84,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       value = '',
       onChange,
       onBlur,
-      vimMode = false,
       readonly = false,
       placeholder = '',
       autoFocus = false,
@@ -89,12 +92,18 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       maxHeight,
       fillHeight = false,
       enableGhostText = false,
+      edges = [],
+      onEdgeClick,
     } = props;
 
     // Ghost text sources
     const { getCompletion } = useGhostTextSources();
 
-    // Build extensions including ghost text if enabled and not readonly
+    // Stable reference for onEdgeClick to avoid extension recreation
+    const onEdgeClickRef = useRef(onEdgeClick);
+    onEdgeClickRef.current = onEdgeClick;
+
+    // Build extensions including ghost text and edge gutter
     const extensions = useMemo(() => {
       const exts = [];
 
@@ -107,15 +116,23 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         );
       }
 
+      // Add edge gutter extension (always active, shows edges with line numbers)
+      // Use stable callback wrapper to avoid recreating extension
+      exts.push(
+        edgeGutterExtension({
+          edges,
+          onEdgeClick: (edge) => onEdgeClickRef.current?.(edge),
+        })
+      );
+
       return exts;
-    }, [enableGhostText, readonly, getCompletion]);
+    }, [enableGhostText, readonly, getCompletion, edges]);
 
     const options: UseCodeMirrorOptions = {
       initialValue: value,
       onChange,
       onBlur,
       language: 'markdown',
-      vimMode,
       readonly,
       placeholder,
       autoFocus,
@@ -125,6 +142,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
 
     const {
       containerRef,
+      view,
       getValue,
       setValue,
       focus,
@@ -135,6 +153,13 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       scrollToTop: rawScrollToTop,
       scrollToBottom: rawScrollToBottom,
     } = useCodeMirror(options);
+
+    // Update edges when they change (after initial mount)
+    useEffect(() => {
+      if (view && edges.length > 0) {
+        updateEdges(view, edges);
+      }
+    }, [view, edges]);
 
     // --- Scroll Cursor State ---
     const [scrollCursorVisible, setScrollCursorVisible] = useState(false);
@@ -227,7 +252,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
 
     const containerClass = [
       'markdown-editor',
-      vimMode && 'markdown-editor--vim',
       readonly && 'markdown-editor--readonly',
       fillHeight && 'markdown-editor--fill',
       className,
@@ -249,3 +273,6 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
 );
 
 export default MarkdownEditor;
+
+// Re-export LineEdge for convenience
+export type { LineEdge } from './edgeGutterExtension';

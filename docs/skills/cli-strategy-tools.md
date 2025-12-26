@@ -606,13 +606,13 @@ Are you running 3+ commands in sequence?
 
 ```bash
 # 1. Design phase
-vim spec/agents/new/new.md
+# Edit spec/agents/new/new.md
 
 # 2. Audit spec
 kg audit spec/agents/new/new.md --full
 
 # 3. Implement
-vim services/new/core.py
+# Edit services/new/core.py
 
 # 4. Link impl to spec
 kg annotate spec/agents/new/new.md --impl \

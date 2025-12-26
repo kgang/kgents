@@ -141,7 +141,7 @@ bus.emit(SnippetCopiedEvent(snippet_id="abc", content="..."))
 
 ---
 
-## Pattern 4: Vim-Style Navigation
+## Pattern 4: Keyboard-First Navigation
 
 **Problem**: Arrow keys require hand travel; inconsistent with terminal conventions.
 
@@ -153,7 +153,7 @@ BINDINGS = [
 ]
 ```
 
-**Right**: Vim keys as primary, arrows as aliases
+**Right**: Home-row keys as primary, arrows as aliases
 ```python
 BINDINGS = [
     Binding("j", "move_down", "↓"),
@@ -547,7 +547,7 @@ class SelectablePane(Widget, can_focus=True):
 | 1 | DI Container | Architecture |
 | 2 | Atomic Writes | Persistence |
 | 3 | EventBus | Architecture |
-| 4 | Vim Navigation | UX |
+| 4 | Keyboard Navigation | UX |
 | 5 | Copy Confirmation | Feedback |
 | 6 | Elastic Width | Layout |
 | 7 | Status Glyphs | Visual |
@@ -574,7 +574,7 @@ class SelectablePane(Widget, can_focus=True):
 
 **Immediate** (Kent's priorities):
 1. Pattern 5: Copy confirmation → Wire to Garden + notify()
-2. Pattern 4: Vim navigation → Add j/k bindings
+2. Pattern 4: Keyboard navigation → Add j/k bindings
 3. Add focus modal → New widget needed
 
 **Next Phase**:

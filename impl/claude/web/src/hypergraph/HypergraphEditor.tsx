@@ -40,7 +40,7 @@ import { DecisionStream } from './DecisionStream';
 import { VetoPanel } from './VetoPanel';
 import { useDialecticDecisions } from './useDialecticDecisions';
 import type { DialecticDecision, QuickDecisionInput, FullDialecticInput } from './types/dialectic';
-import { Header, EdgeGutter, ContentPane } from './panes';
+import { Header, EdgeGutter, EdgeMetadataPanel, ContentPane } from './panes';
 import type { ContentPaneRef } from './panes';
 import type { GraphNode, Edge } from './state/types';
 import { AnalysisQuadrant } from '../components/analysis/AnalysisQuadrant';
@@ -152,6 +152,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
   // Proof panel state
   const [proofPanelOpen, setProofPanelOpen] = useState(false);
+
+  // Edge metadata panel state
+  const [edgePanelOpen, setEdgePanelOpen] = useState(false);
 
   // Loss navigation state (focal distance for future telescope integration)
   const [focalDistance, setFocalDistance] = useState(1.0);
@@ -784,6 +787,8 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     onToggleDecisionStream: () => setDecisionStreamOpen((prev) => !prev),
     // Analysis quadrant
     onToggleAnalysisQuadrant: () => setAnalysisQuadrantOpen((prev) => !prev),
+    // Edge metadata panel
+    onToggleEdgePanel: () => setEdgePanelOpen((prev) => !prev),
     // Loss-gradient navigation (gl/gh/gL/gH)
     goLowestLoss: handleGoLowestLoss,
     goHighestLoss: handleGoHighestLoss,
@@ -1258,6 +1263,16 @@ export const HypergraphEditor = memo(function HypergraphEditor({
           }}
           isOpen={proofPanelOpen}
           onToggle={() => setProofPanelOpen((prev) => !prev)}
+        />
+
+        {/* Edge Metadata Panel (collapsible right sidebar - gE toggle) */}
+        <EdgeMetadataPanel
+          incomingEdges={state.currentNode?.incomingEdges || []}
+          outgoingEdges={state.currentNode?.outgoingEdges || []}
+          currentNodePath={state.currentNode?.path}
+          onEdgeClick={handleEdgeClick}
+          isOpen={edgePanelOpen}
+          onToggle={() => setEdgePanelOpen((prev) => !prev)}
         />
       </div>
 

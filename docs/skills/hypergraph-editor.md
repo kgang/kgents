@@ -106,7 +106,7 @@ class Trail {
   }
 
   pop(): SpecNode {
-    // Go back (like <C-o> in vim but graph-aware)
+    // Go back along the trail (graph-aware history)
     if (this.nodes.length > 1) {
       this.nodes.pop();
       this.edges.pop();

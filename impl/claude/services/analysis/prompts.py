@@ -316,10 +316,112 @@ OUTPUT FORMAT (plain text, 2-4 sentences):
 """
 
 
+# =============================================================================
+# Constitutional Analysis Prompt
+# =============================================================================
+
+CONSTITUTIONAL_PROMPT = """You are a constitutional analyst evaluating a specification against the 7 kgents principles.
+
+Your task is to perform **constitutional analysis** on the provided spec:
+1. Evaluate alignment with each of the 7 principles (0.0 - 1.0 scale)
+2. Identify violations (principles scoring below 0.5 threshold)
+3. Provide remediation suggestions for violations
+4. Compute weighted total alignment score
+
+SPECIFICATION TO ANALYZE:
+---
+{spec_content}
+---
+
+ANALYSIS FRAMEWORK:
+
+**The 7 Constitutional Principles:**
+
+1. TASTEFUL (weight: 1.0)
+   - Does the spec embody aesthetic restraint and clarity?
+   - Is it "daring, bold, creative, opinionated but not gaudy"?
+   - Does it pass the Mirror Test: "Does this feel like me on my best day?"
+
+2. CURATED (weight: 1.0)
+   - Is this spec intentionally selected, not exhaustive?
+   - Does it represent "depth over breadth"?
+   - Is it necessary and sufficient, or bloated?
+
+3. ETHICAL (weight: 2.0) [HIGHEST PRIORITY]
+   - Does the spec augment human capability without replacing judgment?
+   - Is transparency and grounding explicit?
+   - Does it respect user autonomy and consent?
+
+4. JOY_INDUCING (weight: 1.2)
+   - Does the spec delight in interaction?
+   - Is it "joy-inducing" not just functional?
+   - Does it create positive developer/user experience?
+
+5. COMPOSABLE (weight: 1.5)
+   - Are components morphisms in a category?
+   - Do composition laws hold (identity, associativity)?
+   - Can parts be combined to create emergent behavior?
+
+6. HETERARCHICAL (weight: 1.0)
+   - Does the spec avoid rigid hierarchy?
+   - Are agents "in flux, not fixed hierarchy"?
+   - Is authority distributed, not centralized?
+
+7. GENERATIVE (weight: 1.0)
+   - Is the spec compression (smaller than implementation)?
+   - Can implementation be regenerated from spec?
+   - Does the spec generate behavior, not just document it?
+
+**Scoring Guidelines:**
+- 1.0: Exemplary alignment (spec is a model for this principle)
+- 0.8: Strong alignment (clearly embodies principle)
+- 0.6: Moderate alignment (present but not central)
+- 0.4: Weak alignment (barely addresses principle)
+- 0.2: Misalignment (contradicts principle)
+- 0.0: Complete violation (antithetical to principle)
+
+**Threshold:** 0.5 (principles below this are violations)
+
+**Weighted Total:**
+weighted_total = Σ(weight_i × score_i) / Σ(weight_i)
+
+Example calculation:
+- ETHICAL (2.0): 0.9 → 2.0 × 0.9 = 1.8
+- COMPOSABLE (1.5): 0.8 → 1.5 × 0.8 = 1.2
+- JOY_INDUCING (1.2): 0.7 → 1.2 × 0.7 = 0.84
+- TASTEFUL, CURATED, HETERARCHICAL, GENERATIVE (1.0 each): 0.6 average → 4.0 × 0.6 = 2.4
+- Total weights: 2.0 + 1.5 + 1.2 + 4.0 = 8.7
+- Weighted total: (1.8 + 1.2 + 0.84 + 2.4) / 8.7 = 0.71
+
+OUTPUT FORMAT (JSON):
+{{
+  "principle_scores": {{
+    "TASTEFUL": 0.8,
+    "CURATED": 0.7,
+    "ETHICAL": 0.9,
+    "JOY_INDUCING": 0.6,
+    "COMPOSABLE": 0.8,
+    "HETERARCHICAL": 0.5,
+    "GENERATIVE": 0.7
+  }},
+  "weighted_total": 0.74,
+  "threshold": 0.5,
+  "violations": ["JOY_INDUCING", "HETERARCHICAL"],
+  "remediation_suggestions": [
+    "JOY_INDUCING: Add user delight patterns, consider developer experience improvements",
+    "HETERARCHICAL: Reduce rigid hierarchies, introduce distributed authority"
+  ],
+  "summary": "Constitutional analysis: 7/7 principles evaluated, 2 violations (JOY_INDUCING, HETERARCHICAL). Weighted score: 0.74. Strong ethical and composable foundation, needs improvement in joy and heterarchy."
+}}
+
+Provide ONLY the JSON output, no additional commentary.
+"""
+
 __all__ = [
     "CATEGORICAL_PROMPT",
     "EPISTEMIC_PROMPT",
     "DIALECTICAL_PROMPT",
     "GENERATIVE_PROMPT",
+    "CONSTITUTIONAL_PROMPT",
     "SYNTHESIS_PROMPT",
 ]

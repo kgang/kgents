@@ -24,6 +24,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useSidebarState } from '../../hooks/useSidebarState';
 import { HypergraphEditor } from '../../hypergraph/HypergraphEditor';
 import { FileSidebar, FileTree, BrowseModal, type UploadedFile, type BrowseItem } from '../../components/browse';
+import { useBrowseItems } from '../../components/browse/hooks/useBrowseItems';
 import { ChatSidebar } from '../../components/chat/ChatSidebar';
 import type { GraphNode } from '../../hypergraph/state/types';
 import './Workspace.css';
@@ -77,6 +78,9 @@ export const Workspace = memo(function Workspace({
   const [chatHasUnread, setChatHasUnread] = useState(false);
   const [browseModalOpen, setBrowseModalOpen] = useState(false);
 
+  // Fetch K-Blocks from PostgreSQL for BrowseModal
+  const { items: browseItems, loading: browseLoading, refresh: refreshBrowseItems } = useBrowseItems();
+
   // ==========================================================================
   // Keyboard Shortcuts (Ctrl+B, Ctrl+J, Ctrl+O)
   // ==========================================================================
@@ -91,6 +95,8 @@ export const Workspace = memo(function Workspace({
       if (e.ctrlKey && e.key === 'o') {
         e.preventDefault();
         setBrowseModalOpen(true);
+        // Refresh items when modal opens to get latest K-Blocks
+        void refreshBrowseItems();
         return;
       }
 
@@ -114,7 +120,7 @@ export const Workspace = memo(function Workspace({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [sidebar]);
+  }, [sidebar, refreshBrowseItems]);
 
   // ==========================================================================
   // Handlers
@@ -143,7 +149,9 @@ export const Workspace = memo(function Workspace({
   // Open browse modal from sidebar
   const handleOpenBrowseModal = useCallback(() => {
     setBrowseModalOpen(true);
-  }, []);
+    // Refresh items when modal opens to get latest K-Blocks
+    void refreshBrowseItems();
+  }, [refreshBrowseItems]);
 
   // ==========================================================================
   // CSS Variables for dynamic widths
@@ -276,6 +284,8 @@ export const Workspace = memo(function Workspace({
         open={browseModalOpen}
         onClose={() => setBrowseModalOpen(false)}
         onSelectItem={handleBrowseSelect}
+        items={browseItems}
+        loading={browseLoading}
       />
     </div>
   );

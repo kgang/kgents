@@ -58,6 +58,7 @@
   gap: var(--space-sm);
   padding: 0.3rem var(--space-sm);
   margin: 1px 0;
+  position: relative;
 
   /* Surface */
   background: transparent;
@@ -152,6 +153,35 @@
   color: var(--steel-500);
 }
 
+/* Icon colors for new content kinds */
+.file-tree__icon[data-kind='upload'] {
+  color: var(--accent-purple, #a855f7);
+}
+
+.file-tree__icon[data-kind='axiom'] {
+  color: var(--health-healthy, #22c55e);
+}
+
+.file-tree__icon[data-kind='value'] {
+  color: var(--accent-cyan, #06b6d4);
+}
+
+.file-tree__icon[data-kind='goal'] {
+  color: var(--accent-gold, #ffd700);
+}
+
+.file-tree__icon[data-kind='action'] {
+  color: var(--health-warning, #eab308);
+}
+
+.file-tree__icon[data-kind='reflection'] {
+  color: var(--accent-indigo, #6366f1);
+}
+
+.file-tree__icon[data-kind='representation'] {
+  color: var(--accent-pink, #ec4899);
+}
+
 /* Chevron rotation for expanded directories */
 .file-tree__chevron {
   transition: transform var(--transition-fast);
@@ -170,6 +200,129 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* =============================================================================
+   Badges (Layer, Confidence, Principles)
+   ============================================================================= */
+
+.file-tree__badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.file-tree__badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: var(--radius-xs, 2px);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Layer badges (L1-L7) */
+.file-tree__badge--layer {
+  background: var(--steel-800);
+  color: var(--steel-300);
+  border: 1px solid var(--steel-600);
+}
+
+.file-tree__badge--layer[data-layer='1'],
+.file-tree__badge--layer[data-layer='2'] {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--health-healthy, #22c55e);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.file-tree__badge--layer[data-layer='3'],
+.file-tree__badge--layer[data-layer='4'] {
+  background: rgba(255, 215, 0, 0.15);
+  color: var(--accent-gold, #ffd700);
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.file-tree__badge--layer[data-layer='5'],
+.file-tree__badge--layer[data-layer='6'],
+.file-tree__badge--layer[data-layer='7'] {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent-indigo, #6366f1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Confidence indicator (edge nodes) */
+.file-tree__badge--confidence {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  padding: 1px 3px;
+  background: var(--steel-800);
+  color: var(--steel-400);
+  border: 1px solid var(--steel-700);
+}
+
+.file-tree__badge--confidence[data-confidence='high'] {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--health-healthy, #22c55e);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.file-tree__badge--confidence[data-confidence='medium'] {
+  background: rgba(234, 179, 8, 0.15);
+  color: var(--health-warning, #eab308);
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+.file-tree__badge--confidence[data-confidence='low'] {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--health-critical, #ef4444);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Principles count badge (marks) */
+.file-tree__badge--principles {
+  font-size: 8px;
+  padding: 1px 3px;
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--accent-purple, #a855f7);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+/* Retracted mark indicator */
+.file-tree__node[data-retracted='true'] {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+/* =============================================================================
+   Breathing Animation (recently modified items)
+   ============================================================================= */
+
+@keyframes file-tree-breathe {
+  0%, 100% {
+    box-shadow: inset 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: inset 0 0 8px var(--accent-gold-glow, rgba(255, 215, 0, 0.3));
+  }
+}
+
+.file-tree__node[data-breathing='true'] {
+  animation: file-tree-breathe 2s ease-in-out infinite;
+}
+
+/* Subtle glow for recently active items */
+.file-tree__node[data-breathing='true']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent-gold);
+  opacity: 0.6;
+  animation: file-tree-breathe 2s ease-in-out infinite;
 }
 
 /* =============================================================================

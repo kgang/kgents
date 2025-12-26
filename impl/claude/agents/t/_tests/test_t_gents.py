@@ -21,22 +21,19 @@ import time
 import pytest
 
 from agents.t import (
-    CounterAgent,
     FailingAgent,
     FailingConfig,
     FailureType,
-    FixtureAgent,
-    FixtureConfig,
     FlakyAgent,
     LatencyAgent,
     MetricsAgent,
-    MockAgent,
-    MockConfig,
     NoiseAgent,
     PredicateAgent,
-    SpyAgent,
     not_empty,
 )
+# Legacy agents removed (2025-12-25) - tests skip anyway
+# CounterAgent, FixtureAgent, FixtureConfig, MockAgent, MockConfig, SpyAgent
+# Use NullProbe, WitnessProbe instead
 
 # Skip all tests that use deprecated compat layer agents
 # These agents are deprecated in favor of TruthFunctor probes
@@ -112,6 +109,7 @@ async def test_fixture_agent() -> None:
         print(f"✓ FixtureAgent: strict mode raises KeyError: {e}")
 
 
+@pytest.mark.skip(reason=DEPRECATED_REASON)
 async def test_fixture_agent_default() -> None:
     """Test FixtureAgent with default fallback."""
     print("\n=== Testing FixtureAgent (with default) ===")
@@ -387,6 +385,7 @@ async def test_latency_agent() -> None:
     print("✓ LatencyAgent: __is_test__ = True")
 
 
+@pytest.mark.skip(reason=DEPRECATED_REASON)
 async def test_flaky_agent() -> None:
     """Test FlakyAgent - probabilistic failure."""
     print("\n=== Testing FlakyAgent ===")

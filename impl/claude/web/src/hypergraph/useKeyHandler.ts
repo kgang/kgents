@@ -57,6 +57,8 @@ type ActionType =
   | 'TOGGLE_DECISION_STREAM'
   // Analysis quadrant
   | 'TOGGLE_ANALYSIS_QUADRANT'
+  // Edge metadata panel
+  | 'TOGGLE_EDGE_PANEL'
   // Loss-gradient navigation
   | 'GO_LOWEST_LOSS'
   | 'GO_HIGHEST_LOSS'
@@ -91,8 +93,11 @@ interface Binding {
  */
 const NORMAL_BINDINGS: Binding[] = [
   // --- Scroll Navigation (reader mode) ---
+  // N-01 Law: j/k are primary, arrows are aliases
   { keys: ['j'], action: 'SCROLL_DOWN', description: 'Scroll down one line' },
+  { keys: ['ArrowDown'], action: 'SCROLL_DOWN', description: 'Scroll down one line (arrow alias)' },
   { keys: ['k'], action: 'SCROLL_UP', description: 'Scroll up one line' },
+  { keys: ['ArrowUp'], action: 'SCROLL_UP', description: 'Scroll up one line (arrow alias)' },
   { keys: ['}'], action: 'SCROLL_PARAGRAPH_DOWN', description: 'Scroll to next paragraph' },
   { keys: ['{'], action: 'SCROLL_PARAGRAPH_UP', description: 'Scroll to prev paragraph' },
 
@@ -119,6 +124,7 @@ const NORMAL_BINDINGS: Binding[] = [
   { keys: ['g', 'D'], action: 'GO_DERIVATION_PARENT', description: 'Go to derivation parent' },
   { keys: ['g', 'c'], action: 'SHOW_CONFIDENCE', description: 'Show confidence panel' },
   { keys: ['g', 'e'], action: { type: 'ENTER_EDGE' }, description: 'Enter edge mode' },
+  { keys: ['g', 'E'], action: 'TOGGLE_EDGE_PANEL', description: 'Toggle edge metadata panel' },
   { keys: ['g', 'w'], action: { type: 'ENTER_WITNESS' }, description: 'Enter witness mode' },
   { keys: ['g', 'W'], action: 'GO_TO_WARRANT', description: 'Go to warrant (justification for current node)' },
   { keys: ['g', 'f'], action: 'GO_TO_DECISION', description: 'Go to fusion (dialectical synthesis for current node)' },
@@ -192,6 +198,9 @@ export interface UseKeyHandlerOptions {
   // Analysis quadrant
   onToggleAnalysisQuadrant?: () => void;
 
+  // Edge metadata panel
+  onToggleEdgePanel?: () => void;
+
   // Loss-gradient navigation
   goLowestLoss?: () => void | Promise<void>;
   goHighestLoss?: () => void | Promise<void>;
@@ -244,6 +253,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     onShowHelp,
     onToggleDecisionStream,
     onToggleAnalysisQuadrant,
+    onToggleEdgePanel,
     goLowestLoss,
     goHighestLoss,
     zoomOut,
@@ -299,6 +309,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       SHOW_HELP: () => onShowHelp?.(),
       TOGGLE_DECISION_STREAM: () => onToggleDecisionStream?.(),
       TOGGLE_ANALYSIS_QUADRANT: () => onToggleAnalysisQuadrant?.(),
+      TOGGLE_EDGE_PANEL: () => onToggleEdgePanel?.(),
       // Loss-gradient navigation
       GO_LOWEST_LOSS: () => {
         if (goLowestLoss) {
@@ -352,6 +363,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       onShowHelp,
       onToggleDecisionStream,
       onToggleAnalysisQuadrant,
+      onToggleEdgePanel,
       goLowestLoss,
       goHighestLoss,
       zoomOut,

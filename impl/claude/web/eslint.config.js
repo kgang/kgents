@@ -1,3 +1,6 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
+
 /**
  * ESLint Configuration for AI Agent Development
  *
@@ -47,17 +50,14 @@ export default tseslint.config(
       'test-results/**',
     ],
   },
-
   // =============================================================================
   // Base JavaScript rules
   // =============================================================================
   js.configs.recommended,
-
   // =============================================================================
   // TypeScript rules (strict but not pedantic)
   // =============================================================================
   ...tseslint.configs.recommended,
-
   // =============================================================================
   // React-specific configuration
   // =============================================================================
@@ -211,7 +211,6 @@ export default tseslint.config(
       'prefer-named-capture-group': 'off', // Too pedantic
     },
   },
-
   // =============================================================================
   // Test files - relaxed rules
   // =============================================================================
@@ -251,7 +250,6 @@ export default tseslint.config(
       'no-await-in-loop': 'off',
     },
   },
-
   // =============================================================================
   // E2E test files - even more relaxed
   // =============================================================================
@@ -268,7 +266,6 @@ export default tseslint.config(
       'max-nested-callbacks': 'off',
     },
   },
-
   // =============================================================================
   // Script files - relaxed rules for CLI/build scripts
   // =============================================================================
@@ -282,5 +279,6 @@ export default tseslint.config(
       complexity: 'off',
       'max-depth': 'off',
     },
-  }
+  },
+  storybook.configs["flat/recommended"]
 );

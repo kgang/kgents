@@ -24,23 +24,23 @@ const TYPE_STYLES: Record<
   { bg: string; border: string; icon: string }
 > = {
   success: {
-    bg: 'bg-emerald-500/10',
-    border: 'border-emerald-500/30',
+    bg: 'bg-[rgba(74,107,74,0.1)]', // life-sage with alpha
+    border: 'border-[var(--color-life-sage)]',
     icon: '●',
   },
   info: {
-    bg: 'bg-blue-500/10',
-    border: 'border-blue-500/30',
+    bg: 'bg-[rgba(74,158,255,0.1)]', // status-normal with alpha
+    border: 'border-[var(--status-normal)]',
     icon: '◎',
   },
   warning: {
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500/30',
+    bg: 'bg-[rgba(196,167,125,0.1)]', // glow-spore with alpha
+    border: 'border-[var(--color-glow-spore)]',
     icon: '◇',
   },
   error: {
-    bg: 'bg-red-500/10',
-    border: 'border-red-500/30',
+    bg: 'bg-[rgba(166,93,74,0.1)]', // accent-error with alpha
+    border: 'border-[var(--accent-error)]',
     icon: '◆',
   },
 };

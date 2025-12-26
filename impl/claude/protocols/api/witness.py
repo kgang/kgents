@@ -70,6 +70,25 @@ class MarkListResponse(BaseModel):
     has_more: bool = False
 
 
+class MarkBrowseCategory(BaseModel):
+    """Category of marks for browsing."""
+
+    name: str
+    count: int
+    marks: list[MarkResponse]
+
+
+class MarkBrowseResponse(BaseModel):
+    """Response from marks browse endpoint - grouped by category."""
+
+    today: MarkBrowseCategory
+    decisions: MarkBrowseCategory
+    eurekas: MarkBrowseCategory
+    gotchas: MarkBrowseCategory
+    all_marks: MarkBrowseCategory
+    total: int
+
+
 class RetractRequest(BaseModel):
     """Request body for retracting a mark."""
 
@@ -167,10 +186,11 @@ def create_witness_router() -> "APIRouter | None":
                 if author and m.author != author:
                     continue
 
-                # Today filter
+                # Today filter (use UTC for consistent timezone-aware comparison)
                 if today:
-                    today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-                    if m.timestamp < today_start:
+                    from services.timezone import is_today_utc
+
+                    if not is_today_utc(m.timestamp):
                         continue
 
                 # Grep filter
@@ -184,6 +204,8 @@ def create_witness_router() -> "APIRouter | None":
                     if principle.lower() not in [p.lower() for p in m.principles]:
                         continue
 
+                from services.timezone import to_iso
+
                 marks.append(
                     MarkResponse(
                         id=m.mark_id,
@@ -192,7 +214,7 @@ def create_witness_router() -> "APIRouter | None":
                         principles=m.principles,
                         author=m.author,
                         session_id=getattr(m, "session_id", None),
-                        timestamp=m.timestamp.isoformat(),
+                        timestamp=to_iso(m.timestamp),
                         parent_mark_id=m.parent_mark_id,
                         retracted=getattr(m, "retracted", False),
                         retraction_reason=getattr(m, "retraction_reason", None),
@@ -208,6 +230,158 @@ def create_witness_router() -> "APIRouter | None":
 
         except Exception as e:
             logger.exception("Error listing marks")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.get("/marks/browse", response_model=MarkBrowseResponse)
+    async def browse_marks(
+        limit_per_category: int = Query(default=20, ge=1, le=100),
+    ) -> MarkBrowseResponse:
+        """
+        Browse marks organized by category for FileTree display.
+
+        Categories:
+        - today: Marks from today
+        - decisions: Marks with decision/synthesis reasoning
+        - eurekas: Insights and discoveries (eureka/insight/discovery tags)
+        - gotchas: Traps and warnings (gotcha/warning/trap tags)
+        - all_marks: All recent marks
+
+        This endpoint is designed for the FileTree virtual folder display.
+        """
+        try:
+            from services.providers import get_witness_persistence
+            from services.timezone import is_today_utc, to_iso
+
+            persistence = await get_witness_persistence()
+
+            # Fetch more marks than needed for categorization
+            all_marks_data = await persistence.get_marks(limit=limit_per_category * 5)
+
+            # Categorize marks
+            today_marks: list[MarkResponse] = []
+            decision_marks: list[MarkResponse] = []
+            eureka_marks: list[MarkResponse] = []
+            gotcha_marks: list[MarkResponse] = []
+            all_marks_list: list[MarkResponse] = []
+
+            # Tags that indicate each category
+            eureka_tags = {"eureka", "insight", "discovery", "aha", "breakthrough"}
+            gotcha_tags = {"gotcha", "warning", "trap", "pitfall", "beware", "caution"}
+            decision_tags = {"decision", "synthesis", "resolved", "chose", "dialectic"}
+
+            for m in all_marks_data:
+                mark_response = MarkResponse(
+                    id=m.mark_id,
+                    action=m.action,
+                    reasoning=m.reasoning,
+                    principles=m.principles,
+                    author=m.author,
+                    session_id=getattr(m, "session_id", None),
+                    timestamp=to_iso(m.timestamp),
+                    parent_mark_id=m.parent_mark_id,
+                    retracted=getattr(m, "retracted", False),
+                    retraction_reason=getattr(m, "retraction_reason", None),
+                )
+
+                # Add to all marks (always)
+                if len(all_marks_list) < limit_per_category:
+                    all_marks_list.append(mark_response)
+
+                # Categorize by tags
+                mark_tags_lower = {t.lower() for t in m.tags}
+
+                # Today category
+                if is_today_utc(m.timestamp) and len(today_marks) < limit_per_category:
+                    today_marks.append(mark_response)
+
+                # Decision category (check tags or reasoning contains decision-like words)
+                if mark_tags_lower & decision_tags or (
+                    m.reasoning and any(word in m.reasoning.lower() for word in ["decided", "synthesis", "chose", "resolved"])
+                ):
+                    if len(decision_marks) < limit_per_category:
+                        decision_marks.append(mark_response)
+
+                # Eureka category
+                if mark_tags_lower & eureka_tags or (
+                    m.reasoning and any(word in m.reasoning.lower() for word in ["discovered", "realized", "eureka", "insight"])
+                ):
+                    if len(eureka_marks) < limit_per_category:
+                        eureka_marks.append(mark_response)
+
+                # Gotcha category
+                if mark_tags_lower & gotcha_tags or (
+                    m.reasoning and any(word in m.reasoning.lower() for word in ["gotcha", "warning", "careful", "beware", "trap"])
+                ):
+                    if len(gotcha_marks) < limit_per_category:
+                        gotcha_marks.append(mark_response)
+
+            return MarkBrowseResponse(
+                today=MarkBrowseCategory(
+                    name="Today",
+                    count=len(today_marks),
+                    marks=today_marks,
+                ),
+                decisions=MarkBrowseCategory(
+                    name="Decisions",
+                    count=len(decision_marks),
+                    marks=decision_marks,
+                ),
+                eurekas=MarkBrowseCategory(
+                    name="Eurekas",
+                    count=len(eureka_marks),
+                    marks=eureka_marks,
+                ),
+                gotchas=MarkBrowseCategory(
+                    name="Gotchas",
+                    count=len(gotcha_marks),
+                    marks=gotcha_marks,
+                ),
+                all_marks=MarkBrowseCategory(
+                    name="All Marks",
+                    count=len(all_marks_list),
+                    marks=all_marks_list,
+                ),
+                total=len(all_marks_data),
+            )
+
+        except Exception as e:
+            logger.exception("Error browsing marks")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.get("/marks/{mark_id}", response_model=MarkResponse)
+    async def get_mark(mark_id: str) -> MarkResponse:
+        """
+        Get a single mark by ID.
+
+        Returns the full mark details including reasoning and principles.
+        """
+        try:
+            from services.providers import get_witness_persistence
+            from services.timezone import to_iso
+
+            persistence = await get_witness_persistence()
+            mark = await persistence.get_mark(mark_id)
+
+            if not mark:
+                raise HTTPException(status_code=404, detail=f"Mark not found: {mark_id}")
+
+            return MarkResponse(
+                id=mark.mark_id,
+                action=mark.action,
+                reasoning=mark.reasoning,
+                principles=mark.principles,
+                author=mark.author,
+                session_id=getattr(mark, "session_id", None),
+                timestamp=to_iso(mark.timestamp),
+                parent_mark_id=mark.parent_mark_id,
+                retracted=getattr(mark, "retracted", False),
+                retraction_reason=getattr(mark, "retraction_reason", None),
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Error getting mark")
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.post("/marks", response_model=MarkResponse)
@@ -236,6 +410,8 @@ def create_witness_router() -> "APIRouter | None":
 
             # Publish to WitnessSynergyBus for real-time SSE streaming
             # "The proof IS the decision. The mark IS the witness."
+            from services.timezone import to_iso
+
             bus = get_synergy_bus()
             await bus.publish(
                 WitnessTopics.MARK_CREATED,
@@ -245,7 +421,7 @@ def create_witness_router() -> "APIRouter | None":
                     "reasoning": result.reasoning,
                     "principles": result.principles,
                     "author": result.author,
-                    "timestamp": result.timestamp.isoformat(),
+                    "timestamp": to_iso(result.timestamp),
                     "parent_mark_id": result.parent_mark_id,
                     "type": "mark",  # Event type for frontend
                 },
@@ -259,7 +435,7 @@ def create_witness_router() -> "APIRouter | None":
                 principles=result.principles,
                 author=result.author,
                 session_id=getattr(result, "session_id", None),
-                timestamp=result.timestamp.isoformat(),
+                timestamp=to_iso(result.timestamp),
                 parent_mark_id=result.parent_mark_id,
             )
 
@@ -352,9 +528,11 @@ def create_witness_router() -> "APIRouter | None":
         """
         import uuid
 
+        from services.timezone import to_iso, utc_now
+
         decision = DialecticDecisionResponse(
             id=str(uuid.uuid4()),
-            timestamp=datetime.now().isoformat(),
+            timestamp=to_iso(utc_now()),
             thesis=DialecticPosition(
                 author="kent",
                 content=request.thesis_content,
@@ -389,7 +567,11 @@ def create_witness_router() -> "APIRouter | None":
             """Generate SSE events from WitnessSynergyBus subscription."""
             from typing import Any
 
-            from services.witness.bus import WitnessTopics, get_synergy_bus
+            from services.witness.bus import (
+                WitnessTopics,
+                get_event_type_for_topic,
+                get_synergy_bus,
+            )
 
             # Send initial connection event
             yield f"event: connected\ndata: {json.dumps({'status': 'connected', 'type': 'connected'})}\n\n"
@@ -412,30 +594,22 @@ def create_witness_router() -> "APIRouter | None":
                             timeout=30.0,
                         )
 
-                        # Determine event type from topic
-                        event_type = "mark"
-                        if "kblock" in topic:
-                            event_type = "kblock"
-                        elif "crystal" in topic:
-                            event_type = "crystal"
-                        elif "thought" in topic:
-                            event_type = "thought"
-                        elif "trail" in topic:
-                            event_type = "trail"
-                        elif "sovereign" in topic:
-                            event_type = "sovereign"
-                        elif "spec" in topic:
-                            event_type = "spec"
+                        # Type-safe event type lookup (fails loud in dev)
+                        event_type_enum = get_event_type_for_topic(topic)
+                        event_type = event_type_enum.value
 
-                        # Ensure event has type field for frontend
+                        # Ensure event has type and topic fields for frontend
                         if isinstance(event, dict):
                             event["type"] = event_type
+                            event["topic"] = topic  # Include for debugging/transparency
 
                         yield f"event: {event_type}\ndata: {json.dumps(event)}\n\n"
 
                     except asyncio.TimeoutError:
                         # Heartbeat on timeout
-                        yield f"event: heartbeat\ndata: {json.dumps({'type': 'heartbeat', 'time': datetime.now().isoformat()})}\n\n"
+                        from services.timezone import to_iso, utc_now
+
+                        yield f"event: heartbeat\ndata: {json.dumps({'type': 'heartbeat', 'time': to_iso(utc_now())})}\n\n"
 
             except asyncio.CancelledError:
                 yield f"event: disconnected\ndata: {json.dumps({'status': 'disconnected'})}\n\n"

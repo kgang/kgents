@@ -35,12 +35,14 @@ from .parsers import (
     parse_dialectical_response,
     parse_epistemic_response,
     parse_generative_response,
+    parse_constitutional_response,
 )
 from .prompts import (
     CATEGORICAL_PROMPT,
     DIALECTICAL_PROMPT,
     EPISTEMIC_PROMPT,
     GENERATIVE_PROMPT,
+    CONSTITUTIONAL_PROMPT,
 )
 
 if TYPE_CHECKING:
@@ -50,6 +52,7 @@ if TYPE_CHECKING:
         DialecticalReport,
         EpistemicReport,
         GenerativeReport,
+        ConstitutionalReport,
     )
 
 logger = logging.getLogger(__name__)
@@ -348,9 +351,77 @@ class GenerativeAnalyzer:
             )
 
 
+# =============================================================================
+# Constitutional Analyzer
+# =============================================================================
+
+
+class ConstitutionalAnalyzer:
+    """
+    LLM-backed constitutional analysis agent.
+
+    Verifies alignment with the 7 kgents principles.
+
+    Usage:
+        >>> analyzer = ConstitutionalAnalyzer(llm_client)
+        >>> report = await analyzer.analyze("spec/protocols/witness.md")
+        >>> print(f"Aligned: {report.is_aligned}, Score: {report.alignment_score:.2f}")
+    """
+
+    def __init__(self, llm: "LLMClient"):
+        """
+        Initialize with LLM client.
+
+        Args:
+            llm: LLMClient instance from agents.k.soul
+        """
+        self.llm = llm
+
+    async def analyze(self, spec_content: str, target: str) -> "ConstitutionalReport":
+        """
+        Perform constitutional analysis on spec content.
+
+        Args:
+            spec_content: Full text of the specification
+            target: Path or identifier of the spec
+
+        Returns:
+            ConstitutionalReport with alignment scores and violations
+        """
+        try:
+            # Build prompt
+            prompt = CONSTITUTIONAL_PROMPT.format(spec_content=spec_content)
+
+            # Call LLM
+            logger.debug(f"Constitutional analysis of {target}")
+            response = await self.llm.generate(
+                system="You are a constitutional analyst evaluating specifications against the 7 kgents principles. Return only valid JSON.",
+                user=prompt,
+                max_tokens=4000,
+            )
+
+            # Parse response (extract text from LLMResponse)
+            return parse_constitutional_response(response.text, target)
+
+        except Exception as e:
+            logger.error(f"Constitutional analysis error for {target}: {e}")
+            # Return error report
+            from agents.operad.domains.analysis import ConstitutionalReport
+            from services.witness.mark import ConstitutionalAlignment
+
+            return ConstitutionalReport(
+                target=target,
+                alignment=ConstitutionalAlignment.neutral(),
+                violations=("All principles",),
+                remediation_suggestions=(f"LLM error: {e}",),
+                summary=f"LLM error: {e}",
+            )
+
+
 __all__ = [
     "CategoricalAnalyzer",
     "EpistemicAnalyzer",
     "DialecticalAnalyzer",
     "GenerativeAnalyzer",
+    "ConstitutionalAnalyzer",
 ]

@@ -50,6 +50,7 @@ from .llm_agents import (
     DialecticalAnalyzer,
     EpistemicAnalyzer,
     GenerativeAnalyzer,
+    ConstitutionalAnalyzer,
 )
 
 if TYPE_CHECKING:
@@ -59,6 +60,7 @@ if TYPE_CHECKING:
         DialecticalReport,
         EpistemicReport,
         GenerativeReport,
+        ConstitutionalReport,
     )
 
 logger = logging.getLogger(__name__)
@@ -139,6 +141,7 @@ class AnalysisService:
         self.epistemic = EpistemicAnalyzer(llm)
         self.dialectical = DialecticalAnalyzer(llm)
         self.generative = GenerativeAnalyzer(llm)
+        self.constitutional = ConstitutionalAnalyzer(llm)
 
     async def analyze_categorical(self, spec_path: str) -> "CategoricalReport":
         """
@@ -279,6 +282,32 @@ class AnalysisService:
                     passed=False,
                 ),
                 minimal_kernel=(),
+                summary=f"Error: {e}",
+            )
+
+    async def analyze_constitutional(self, spec_path: str) -> "ConstitutionalReport":
+        """
+        Perform constitutional analysis (alignment with 7 principles).
+
+        Args:
+            spec_path: Path to specification file
+
+        Returns:
+            ConstitutionalReport with alignment scores and violations
+        """
+        try:
+            spec_content = _load_spec_content(spec_path)
+            return await self.constitutional.analyze(spec_content, spec_path)
+        except Exception as e:
+            logger.error(f"Constitutional analysis failed for {spec_path}: {e}")
+            from agents.operad.domains.analysis import ConstitutionalReport
+            from services.witness.mark import ConstitutionalAlignment
+
+            return ConstitutionalReport(
+                target=spec_path,
+                alignment=ConstitutionalAlignment.neutral(),
+                violations=("All principles",),
+                remediation_suggestions=(f"Error: {e}",),
                 summary=f"Error: {e}",
             )
 

@@ -4,7 +4,8 @@ Sovereign REST API: File management and collections for sovereign entities.
 Provides:
 - GET    /api/sovereign/entities        - List all entities
 - GET    /api/sovereign/entity          - Get entity with metadata
-- POST   /api/sovereign/entity          - Upload/ingest new entity
+- POST   /api/sovereign/entity          - Upload/ingest new entity (JSON)
+- POST   /api/sovereign/upload          - Upload file (multipart/form-data)
 - PUT    /api/sovereign/entity/rename   - Rename entity
 - DELETE /api/sovereign/entity          - Delete entity
 - GET    /api/sovereign/entity/references - Get references to entity
@@ -32,7 +33,7 @@ import uuid
 from typing import Any
 
 try:
-    from fastapi import APIRouter, HTTPException, Query, Response
+    from fastapi import APIRouter, HTTPException, Query, Response, UploadFile, File
     from fastapi.responses import JSONResponse, StreamingResponse
     from pydantic import BaseModel, Field
 
@@ -42,6 +43,8 @@ except ImportError:
     APIRouter = None  # type: ignore
     HTTPException = None  # type: ignore
     JSONResponse = None  # type: ignore
+    UploadFile = None  # type: ignore
+    File = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -278,11 +281,15 @@ def create_sovereign_router() -> APIRouter | None:
     @router.post("/entity", response_model=EntityUploadResponse)
     async def upload_entity(request: EntityUploadRequest) -> EntityUploadResponse:
         """Upload/ingest a new entity."""
-        from services.providers import get_sovereign_store
+        from services.providers import get_sovereign_store, get_witness_persistence
         from services.sovereign.ingest import Ingestor
         from services.sovereign.types import IngestEvent
 
         store = await get_sovereign_store()
+
+        # Get witness persistence for proper mark creation
+        # (Law 1: No Entity Without Witness)
+        witness = await get_witness_persistence()
 
         # Create ingest event
         event = IngestEvent.from_content(
@@ -291,8 +298,53 @@ def create_sovereign_router() -> APIRouter | None:
             source=request.source,
         )
 
-        # Ingest
-        ingestor = Ingestor(store, witness=None)
+        # Ingest with witness for proper birth marks
+        ingestor = Ingestor(store, witness=witness)
+        result = await ingestor.ingest(event, author="api")
+
+        return EntityUploadResponse(
+            path=result.path,
+            version=result.version,
+            ingest_mark_id=result.ingest_mark_id,
+            edge_count=result.edge_count,
+        )
+
+    @router.post("/upload", response_model=EntityUploadResponse)
+    async def upload_file(
+        file: UploadFile = File(...),
+        path: str | None = Query(default=None, description="Target path (defaults to uploads/{filename})"),
+    ) -> EntityUploadResponse:
+        """
+        Upload a file to the sovereign store.
+
+        Accepts multipart/form-data file upload.
+        If path is not provided, uses the filename in uploads/ directory.
+        """
+        from services.providers import get_sovereign_store, get_witness_persistence
+        from services.sovereign.ingest import Ingestor
+        from services.sovereign.types import IngestEvent
+
+        store = await get_sovereign_store()
+
+        # Get witness persistence for proper mark creation
+        # (Law 1: No Entity Without Witness)
+        witness = await get_witness_persistence()
+
+        # Read file content
+        content = await file.read()
+
+        # Determine target path
+        target_path = path if path else f"uploads/{file.filename}"
+
+        # Create ingest event
+        event = IngestEvent.from_content(
+            content=content,
+            claimed_path=target_path,
+            source="upload",
+        )
+
+        # Ingest with witness for proper birth marks
+        ingestor = Ingestor(store, witness=witness)
         result = await ingestor.ingest(event, author="api")
 
         return EntityUploadResponse(

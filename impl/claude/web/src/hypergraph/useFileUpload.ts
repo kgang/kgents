@@ -10,9 +10,10 @@
  */
 
 import { useCallback, useRef, useState, useEffect } from 'react';
-import { sovereignApi } from '../api/client';
+import { sovereignApi, kblocksApi } from '../api/client';
 import { useGraphNode, isValidFilePath } from './useGraphNode';
 import { useWitnessStream } from '../hooks/useWitnessStream';
+import { isZeroSeedPath, extractKBlockId, kblockToGraphNode } from './kblockToGraphNode';
 import type { GraphNode } from './state/types';
 import type { UploadedFile } from './FileExplorer';
 
@@ -83,6 +84,53 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
   // IMPORTANT: Depend on graphNode.loadNode (stable), not graphNode (object recreated each render)
   const loadNode = useCallback(
     async (path: string): Promise<GraphNode | null> => {
+      // Handle Zero Seed K-Block paths (zero-seed/axioms/A1, etc.)
+      // These are valid paths that bypass the normal file path validation
+      if (isZeroSeedPath(path)) {
+        const kblockId = extractKBlockId(path);
+        if (!kblockId) {
+          console.warn('[useFileUpload] Invalid Zero Seed path (no K-Block ID):', path);
+          return null;
+        }
+
+        // Check local cache first
+        const localNode = localFilesRef.current.get(path);
+        if (localNode) {
+          console.info('[useFileUpload] Loading Zero Seed from cache:', path);
+          return localNode;
+        }
+
+        try {
+          console.info('[useFileUpload] Loading Zero Seed K-Block:', kblockId);
+          const kblock = await kblocksApi.getById(kblockId);
+          const node = kblockToGraphNode(kblock, path);
+
+          // Cache it for future use
+          localFilesRef.current.set(path, node);
+          console.info('[useFileUpload] Zero Seed K-Block loaded:', {
+            path,
+            title: node.title,
+            layer: kblock.layer,
+            kind: kblock.kind,
+            contentLength: node.content?.length,
+          });
+
+          return node;
+        } catch (err) {
+          console.error('[useFileUpload] Failed to load Zero Seed K-Block:', kblockId, err);
+          // Return a stub node so navigation still works
+          return {
+            path,
+            title: kblockId,
+            kind: 'spec',
+            confidence: 0,
+            outgoingEdges: [],
+            incomingEdges: [],
+            content: `# ${kblockId}\n\n*Error loading K-Block. The Zero Seed may not be initialized.*\n\nRun Genesis to create the foundational axioms.`,
+          };
+        }
+      }
+
       // Validate path BEFORE any processing to prevent infinite loops
       if (!isValidFilePath(path)) {
         console.warn('[useFileUpload] Invalid path (edge label or malformed), skipping:', path);

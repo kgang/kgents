@@ -195,6 +195,9 @@ class DocumentDetailResponse(BaseModel):
     analysis_mark_id: str | None = None
     error: str | None = None
 
+    # Extra context (e.g., Zero Seed K-Block metadata)
+    extra: dict[str, Any] | None = None
+
 
 class PreviewResponse(BaseModel):
     """Rendered preview (read-only)."""
@@ -478,6 +481,76 @@ async def _run_analysis(path: str, store: "Any") -> None:
             )
         except Exception as bus_error:
             logger.error(f"Failed to emit analysis.failed event: {bus_error}")
+
+
+async def _get_kblock_as_document(path: str) -> "DocumentDetailResponse":
+    """
+    Convert a Zero Seed K-Block to DocumentDetailResponse format.
+
+    Handles paths like: zero-seed/axioms/kb_xxx, zero-seed/values/kb_xxx
+    """
+    from services.providers import get_postgres_zero_seed_storage
+
+    # Extract K-Block ID from path (last segment)
+    parts = path.split("/")
+    if len(parts) < 3:
+        raise HTTPException(status_code=400, detail=f"Invalid Zero Seed path: {path}")
+
+    kblock_id = parts[-1]
+    if not kblock_id.startswith("kb_"):
+        raise HTTPException(status_code=400, detail=f"Invalid K-Block ID: {kblock_id}")
+
+    # Get K-Block from storage
+    storage = await get_postgres_zero_seed_storage()
+    kblock = await storage.get_node(kblock_id)
+
+    if not kblock:
+        raise HTTPException(status_code=404, detail=f"K-Block not found: {kblock_id}")
+
+    # Map layer to Zero Seed kind
+    layer_kinds = {
+        1: "axiom",
+        2: "value",
+        3: "goal",
+        4: "spec",
+        5: "action",
+        6: "reflection",
+        7: "representation",
+    }
+    kind = layer_kinds.get(kblock.zero_seed_layer or 0, "node")
+
+    # Build response in DocumentDetailResponse format
+    return DocumentDetailResponse(
+        success=True,
+        path=path,
+        title=kblock.path.split(".")[-1] if kblock.path else kblock_id,
+        status=DocumentStatus.STABLE,  # K-Blocks are foundational
+        version=1,
+        content=kblock.content,
+        content_hash=kblock.content_hash if hasattr(kblock, "content_hash") else "",
+        word_count=len(kblock.content.split()) if kblock.content else 0,
+        heading_count=kblock.content.count("#") if kblock.content else 0,
+        claims=[],  # K-Blocks don't have claims in the spec sense
+        discovered_refs=[],
+        implementations=[],
+        tests=[],
+        spec_refs=[],
+        anticipated=[],
+        placeholder_paths=[],
+        uploaded_at=kblock.created_at.isoformat() if hasattr(kblock, "created_at") else None,
+        analyzed_at=None,
+        analysis_mark_id=None,
+        error=None,
+        # Add extra context for Zero Seed
+        extra={
+            "zero_seed": True,
+            "layer": kblock.zero_seed_layer,
+            "kind": kind,
+            "confidence": kblock.confidence if hasattr(kblock, "confidence") else 1.0,
+            "lineage": kblock.lineage if hasattr(kblock, "lineage") else [],
+            "has_proof": kblock.has_proof if hasattr(kblock, "has_proof") else False,
+        },
+    )
 
 
 # =============================================================================
@@ -830,8 +903,13 @@ def create_director_router() -> APIRouter | None:
         Get document detail with full analysis.
 
         Returns content, analysis results, and evidence.
+        For Zero Seed K-Block paths, delegates to K-Blocks API.
         """
         from services.providers import get_sovereign_store
+
+        # Handle Zero Seed K-Block paths (zero-seed/axioms/kb_xxx, zero-seed/values/kb_xxx, etc.)
+        if path.startswith("zero-seed/"):
+            return await _get_kblock_as_document(path)
 
         store = await get_sovereign_store()
 

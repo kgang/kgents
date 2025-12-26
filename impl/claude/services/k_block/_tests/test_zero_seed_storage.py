@@ -51,9 +51,9 @@ def test_create_value_with_lineage(storage):
         lineage=[axiom_id],
     )
 
-    assert kblock._layer == 2
-    assert len(kblock._lineage) == 1
-    assert kblock._lineage[0] == axiom_id
+    assert kblock.zero_seed_layer == 2
+    assert len(kblock.lineage) == 1
+    assert kblock.lineage[0] == axiom_id
     assert len(storage) == 2
 
 
