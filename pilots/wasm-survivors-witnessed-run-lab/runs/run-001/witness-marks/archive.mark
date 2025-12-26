@@ -1,0 +1,7 @@
+{
+  "mark_id": "wm-run001-archive",
+  "timestamp": "2025-12-26T18:00:00Z",
+  "stage": "archive",
+  "action": "Initial generation of wasm-survivors pilot (no prior impl to archive)",
+  "principle": "generative"
+}
