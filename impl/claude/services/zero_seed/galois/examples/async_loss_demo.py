@@ -11,16 +11,15 @@ Run with:
 import asyncio
 
 from agents.k.llm import create_llm_client, has_llm_credentials
-from services.zero_seed import EdgeKind, ZeroEdge, ZeroNode, generate_node_id
+from services.zero_seed import EdgeKind, Proof, ZeroEdge, ZeroNode, generate_node_id
 from services.zero_seed.galois.cross_layer import compute_cross_layer_loss_async
 from services.zero_seed.galois.galois_loss import (
     LossCache,
     compute_galois_loss_async,
 )
-from services.witness.mark import Proof
 
 
-async def demo_basic_loss():
+async def demo_basic_loss() -> None:
     """Demo 1: Basic async loss computation."""
     print("\n" + "=" * 70)
     print("DEMO 1: Basic Async Loss Computation")
@@ -49,7 +48,7 @@ async def demo_basic_loss():
         use_cache=True,
     )
 
-    print(f"\nResult:")
+    print("\nResult:")
     print(f"  Loss: {result.loss:.4f}")
     print(f"  Method: {result.method}")
     print(f"  Metric: {result.metric_name}")
@@ -68,7 +67,7 @@ async def demo_basic_loss():
     print(f"  Interpretation: {interpretation}")
 
 
-async def demo_caching():
+async def demo_caching() -> None:
     """Demo 2: Caching to avoid redundant LLM calls."""
     print("\n" + "=" * 70)
     print("DEMO 2: Caching Behavior")
@@ -109,7 +108,7 @@ async def demo_caching():
     print("\n✓ Cache working correctly!")
 
 
-async def demo_fallback():
+async def demo_fallback() -> None:
     """Demo 3: Fallback to fast metrics when LLM unavailable."""
     print("\n" + "=" * 70)
     print("DEMO 3: Fallback to Fast Metrics")
@@ -131,7 +130,7 @@ async def demo_fallback():
         use_cache=False,
     )
 
-    print(f"\nResult:")
+    print("\nResult:")
     print(f"  Loss: {result.loss:.4f}")
     print(f"  Method: {result.method}")
     print(f"  Metric: {result.metric_name}")
@@ -141,7 +140,7 @@ async def demo_fallback():
     print("\n✓ Fallback working correctly!")
 
 
-async def demo_cross_layer_loss():
+async def demo_cross_layer_loss() -> None:
     """Demo 4: Cross-layer loss computation with LLM."""
     print("\n" + "=" * 70)
     print("DEMO 4: Cross-Layer Loss Computation")
@@ -194,7 +193,7 @@ async def demo_cross_layer_loss():
         use_llm=llm is not None,
     )
 
-    print(f"\nResult:")
+    print("\nResult:")
     print(f"  Layer Delta: {result.layer_delta}")
     print(f"  Total Loss: {result.total_loss:.4f}")
     print(f"  Explanation: {result.explanation}")
@@ -210,7 +209,7 @@ async def demo_cross_layer_loss():
         print("\n✗ High loss - semantic jump is too large")
 
 
-async def demo_batch_processing():
+async def demo_batch_processing() -> None:
     """Demo 5: Batch processing with shared cache."""
     print("\n" + "=" * 70)
     print("DEMO 5: Batch Processing with Shared Cache")
@@ -251,7 +250,7 @@ async def demo_batch_processing():
     print("\n✓ Batch processing complete!")
 
 
-async def main():
+async def main() -> None:
     """Run all demos."""
     print("\n" + "=" * 70)
     print("GALOIS ASYNC LLM LOSS COMPUTATION DEMO")

@@ -17,11 +17,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from services.k_block.zero_seed_storage import ZeroSeedStorage
     from services.witness.persistence import WitnessPersistence
+
+# Type alias for storage - accepts any duck-typed storage with _kblocks
+ZeroSeedStorageProtocol = Any  # TODO: Create proper Protocol
 
 
 # =============================================================================
@@ -91,7 +93,7 @@ class TimelineService:
 
     def __init__(
         self,
-        storage: ZeroSeedStorage,
+        storage: ZeroSeedStorageProtocol,
         witness: WitnessPersistence | None = None,
     ):
         """
@@ -306,9 +308,7 @@ class TimelineService:
             distribution[layer] = distribution.get(layer, 0) + 1
         return distribution
 
-    def _detect_breakthroughs(
-        self, points: list[CoherencePoint]
-    ) -> list[BreakthroughMoment]:
+    def _detect_breakthroughs(self, points: list[CoherencePoint]) -> list[BreakthroughMoment]:
         """
         Detect significant coherence jumps (breakthroughs).
 
@@ -324,9 +324,7 @@ class TimelineService:
             return []
 
         # Calculate deltas
-        deltas = [
-            points[i].score - points[i - 1].score for i in range(1, len(points))
-        ]
+        deltas = [points[i].score - points[i - 1].score for i in range(1, len(points))]
 
         # Calculate average absolute delta
         avg_delta = sum(abs(d) for d in deltas) / len(deltas) if deltas else 0

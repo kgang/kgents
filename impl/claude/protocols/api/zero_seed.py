@@ -83,9 +83,7 @@ class NodeLoss(BaseModel):
     node_id: str = Field(..., description="Node ID")
     loss: float = Field(..., description="Total Galois loss")
     components: GaloisLossComponents = Field(..., description="Loss component breakdown")
-    health_status: str = Field(
-        ..., description="Health status: healthy, warning, critical"
-    )
+    health_status: str = Field(..., description="Health status: healthy, warning, critical")
 
 
 class ZeroNode(BaseModel):
@@ -135,9 +133,7 @@ class ToulminProof(BaseModel):
         default="empirical",
         description="Evidence tier: categorical, empirical, aesthetic, somatic",
     )
-    principles: list[str] = Field(
-        default_factory=list, description="Referenced principles"
-    )
+    principles: list[str] = Field(default_factory=list, description="Referenced principles")
 
 
 class GhostAlternative(BaseModel):
@@ -154,15 +150,11 @@ class ProofQuality(BaseModel):
 
     node_id: str = Field(..., description="Node ID")
     proof: ToulminProof = Field(..., description="Toulmin proof structure")
-    coherence_score: float = Field(
-        ..., ge=0.0, le=1.0, description="1 - galois_loss"
-    )
+    coherence_score: float = Field(..., ge=0.0, le=1.0, description="1 - galois_loss")
     warrant_strength: float = Field(..., ge=0.0, le=1.0, description="Warrant quality")
     backing_coverage: float = Field(..., ge=0.0, le=1.0, description="Backing quality")
     rebuttal_count: int = Field(..., ge=0, description="Number of rebuttals")
-    quality_tier: str = Field(
-        ..., description="Quality tier: strong, moderate, weak"
-    )
+    quality_tier: str = Field(..., description="Quality tier: strong, moderate, weak")
     ghost_alternatives: list[GhostAlternative] = Field(
         default_factory=list, description="AI-suggested alternatives"
     )
@@ -203,9 +195,7 @@ class GraphHealth(BaseModel):
     healthy_count: int = Field(..., ge=0, description="Healthy node count")
     warning_count: int = Field(..., ge=0, description="Warning node count")
     critical_count: int = Field(..., ge=0, description="Critical node count")
-    contradictions: list[Contradiction] = Field(
-        default_factory=list, description="Contradictions"
-    )
+    contradictions: list[Contradiction] = Field(default_factory=list, description="Contradictions")
     instability_indicators: list[InstabilityIndicator] = Field(
         default_factory=list, description="Instability indicators"
     )
@@ -223,9 +213,7 @@ class TelescopeState(BaseModel):
     focal_point: str | None = Field(None, description="Focused node ID")
     show_loss: bool = Field(..., description="Show loss visualization")
     show_gradient: bool = Field(..., description="Show gradient vectors")
-    loss_threshold: float = Field(
-        ..., ge=0.0, le=1.0, description="Loss visibility threshold"
-    )
+    loss_threshold: float = Field(..., ge=0.0, le=1.0, description="Loss visibility threshold")
     visible_layers: list[int] = Field(..., description="Visible layers")
     preferred_layer: int = Field(..., ge=1, le=7, description="Preferred layer")
 
@@ -243,9 +231,7 @@ class NavigationSuggestion(BaseModel):
     """Navigation suggestion."""
 
     target: str = Field(..., description="Target node ID")
-    action: str = Field(
-        ..., description="Action: focus, follow_gradient, investigate"
-    )
+    action: str = Field(..., description="Action: focus, follow_gradient, investigate")
     value_score: float = Field(..., ge=0.0, le=1.0, description="Value score")
     reasoning: str = Field(..., description="Why this suggestion")
 
@@ -272,24 +258,16 @@ class AxiomExplorerResponse(BaseModel):
     losses: list[NodeLoss] = Field(..., description="Loss assessments")
     total_axiom_count: int = Field(..., ge=0, description="Total axiom count")
     total_value_count: int = Field(..., ge=0, description="Total value count")
-    fixed_points: list[str] = Field(
-        ..., description="Fixed-point axiom node IDs (loss < 0.01)"
-    )
+    fixed_points: list[str] = Field(..., description="Fixed-point axiom node IDs (loss < 0.01)")
 
 
 class ProofDashboardResponse(BaseModel):
     """Response for proof quality dashboard (L3-L4)."""
 
     proofs: list[ProofQuality] = Field(..., description="Proof quality assessments")
-    average_coherence: float = Field(
-        ..., ge=0.0, le=1.0, description="Average coherence"
-    )
-    by_quality_tier: dict[str, int] = Field(
-        ..., description="Count by quality tier"
-    )
-    needs_improvement: list[str] = Field(
-        ..., description="Node IDs needing improvement"
-    )
+    average_coherence: float = Field(..., ge=0.0, le=1.0, description="Average coherence")
+    by_quality_tier: dict[str, int] = Field(..., description="Count by quality tier")
+    needs_improvement: list[str] = Field(..., description="Node IDs needing improvement")
 
 
 class GraphHealthResponse(BaseModel):
@@ -304,16 +282,10 @@ class TelescopeResponse(BaseModel):
     """Response for telescope navigation."""
 
     state: TelescopeState = Field(..., description="Current telescope state")
-    gradients: dict[str, GradientVector] = Field(
-        ..., description="Gradient vectors by node ID"
-    )
-    suggestions: list[NavigationSuggestion] = Field(
-        ..., description="Navigation suggestions"
-    )
+    gradients: dict[str, GradientVector] = Field(..., description="Gradient vectors by node ID")
+    suggestions: list[NavigationSuggestion] = Field(..., description="Navigation suggestions")
     visible_nodes: list[ZeroNode] = Field(..., description="Visible nodes")
-    policy_arrows: list[PolicyArrow] = Field(
-        default_factory=list, description="Policy arrows"
-    )
+    policy_arrows: list[PolicyArrow] = Field(default_factory=list, description="Policy arrows")
 
 
 class NavigateRequest(BaseModel):
@@ -356,15 +328,22 @@ class UpdateNodeRequest(BaseModel):
     tags: list[str] | None = Field(None, description="Updated tags")
 
 
+class DiscoverAxiomsRequest(BaseModel):
+    """Request to discover axioms from decision texts."""
+
+    decisions: list[str] = Field(..., description="List of decision/reasoning texts to analyze")
+    min_pattern_occurrences: int = Field(
+        default=2, ge=1, le=10, description="Minimum times a pattern must appear"
+    )
+
+
 class NavigateResponse(BaseModel):
     """Response from navigation action."""
 
     previous: str | None = Field(None, description="Previous focal node ID")
     current: str = Field(..., description="Current focal node ID")
     loss: float = Field(..., ge=0.0, le=1.0, description="Current node loss")
-    gradient: GradientVector | None = Field(
-        None, description="Gradient at current node"
-    )
+    gradient: GradientVector | None = Field(None, description="Gradient at current node")
 
 
 class NodeDetailResponse(BaseModel):
@@ -404,13 +383,9 @@ class AnalysisItem(BaseModel):
 class AnalysisQuadrant(BaseModel):
     """Analysis data for one quadrant."""
 
-    status: str = Field(
-        ..., description="Overall status: pass, issues, unknown"
-    )
+    status: str = Field(..., description="Overall status: pass, issues, unknown")
     summary: str = Field(..., description="Summary text")
-    items: list[AnalysisItem] = Field(
-        default_factory=list, description="Analysis items"
-    )
+    items: list[AnalysisItem] = Field(default_factory=list, description="Analysis items")
 
 
 class NodeAnalysisResponse(BaseModel):
@@ -600,14 +575,11 @@ async def _get_llm_node_analysis(node_id: str) -> NodeAnalysisResponse:
         raise HTTPException(
             status_code=404,
             detail=f"Node content not found: {node_id}. "
-                   f"Real implementation will load from Zero Seed graph."
+            f"Real implementation will load from Zero Seed graph.",
         )
     except Exception as e:
         logger.error(f"LLM analysis failed for {node_id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Analysis failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 
 def _transform_analysis_report(node_id: str, report: Any) -> NodeAnalysisResponse:
@@ -714,12 +686,14 @@ def _transform_analysis_report(node_id: str, report: Any) -> NodeAnalysisRespons
             AnalysisItem(
                 label=f"Tension {i}",
                 value=f"{tension.thesis} ⟷ {tension.antithesis}",
-                status="warning" if tension.classification == ContradictionType.PROBLEMATIC else "pass",
+                status="warning"
+                if tension.classification == ContradictionType.PROBLEMATIC
+                else "pass",
             )
         )
         dialectical_items.append(
             AnalysisItem(
-                label=f"Classification",
+                label="Classification",
                 value=classification,
                 status="info",
             )
@@ -727,7 +701,7 @@ def _transform_analysis_report(node_id: str, report: Any) -> NodeAnalysisRespons
         if tension.synthesis:
             dialectical_items.append(
                 AnalysisItem(
-                    label=f"Synthesis",
+                    label="Synthesis",
                     value=tension.synthesis,
                     status="pass",
                 )
@@ -777,7 +751,7 @@ def _transform_analysis_report(node_id: str, report: Any) -> NodeAnalysisRespons
     )
 
     return NodeAnalysisResponse(
-        node_id=node_id,
+        nodeId=node_id,
         categorical=categorical,
         epistemic=epistemic,
         dialectical=dialectical,
@@ -896,7 +870,8 @@ def create_zero_seed_router() -> APIRouter | None:
 
             # Fixed points are axioms with loss < 0.01
             fixed_points = [
-                axiom.id for axiom in axioms
+                axiom.id
+                for axiom in axioms
                 if any(loss.node_id == axiom.id and loss.loss < 0.01 for loss in losses)
             ]
 
@@ -936,9 +911,7 @@ def create_zero_seed_router() -> APIRouter | None:
     @router.get("/proofs", response_model=ProofDashboardResponse)
     async def get_proof_dashboard(
         layer: int | None = Query(None, ge=3, le=4, description="Filter by layer"),
-        min_coherence: float | None = Query(
-            None, ge=0.0, le=1.0, description="Minimum coherence"
-        ),
+        min_coherence: float | None = Query(None, ge=0.0, le=1.0, description="Minimum coherence"),
     ) -> ProofDashboardResponse:
         """
         Get proof quality dashboard (L3-L4).
@@ -951,18 +924,13 @@ def create_zero_seed_router() -> APIRouter | None:
             Proof quality assessments
         """
         # Mock data - real implementation would compute proof quality via Galois loss
-        proofs = [
-            _create_mock_proof(f"zn-goal-{i:03d}")
-            for i in range(1, 6)
-        ]
+        proofs = [_create_mock_proof(f"zn-goal-{i:03d}") for i in range(1, 6)]
 
         # Filter by min_coherence
         if min_coherence is not None:
             proofs = [p for p in proofs if p.coherence_score >= min_coherence]
 
-        avg_coherence = (
-            sum(p.coherence_score for p in proofs) / len(proofs) if proofs else 0.0
-        )
+        avg_coherence = sum(p.coherence_score for p in proofs) / len(proofs) if proofs else 0.0
 
         by_quality = {
             "strong": sum(1 for p in proofs if p.quality_tier == "strong"),
@@ -1027,10 +995,10 @@ def create_zero_seed_router() -> APIRouter | None:
                         critical_count += 1
 
             # TODO: Detect contradictions using edge analysis
-            contradictions = []
+            contradictions: list[Contradiction] = []
 
             # TODO: Detect instability indicators
-            instability_indicators = []
+            instability_indicators: list[InstabilityIndicator] = []
 
             health = GraphHealth(
                 total_nodes=total_nodes,
@@ -1097,9 +1065,7 @@ def create_zero_seed_router() -> APIRouter | None:
     @router.get("/telescope", response_model=TelescopeResponse)
     async def get_telescope_state(
         focal_point: str | None = Query(None, description="Focal point node ID"),
-        focal_distance: float | None = Query(
-            None, ge=0.0, le=1.0, description="Focal distance"
-        ),
+        focal_distance: float | None = Query(None, ge=0.0, le=1.0, description="Focal distance"),
     ) -> TelescopeResponse:
         """
         Get telescope navigation state.
@@ -1198,8 +1164,7 @@ def create_zero_seed_router() -> APIRouter | None:
 
             # Find potential neighbors (nodes in adjacent layers or same layer)
             neighbors = [
-                n for n in visible_nodes
-                if n.id != node.id and abs(n.layer - node.layer) <= 1
+                n for n in visible_nodes if n.id != node.id and abs(n.layer - node.layer) <= 1
             ]
 
             if not neighbors:
@@ -1239,7 +1204,7 @@ def create_zero_seed_router() -> APIRouter | None:
                 x_diff = neighbor_x - node_x
 
                 # Normalize direction and scale by loss difference
-                distance = (x_diff**2 + layer_diff**2)**0.5
+                distance = (x_diff**2 + layer_diff**2) ** 0.5
                 if distance > 0:
                     x_component = (x_diff / distance) * loss_diff
                     y_component = (layer_diff / distance) * loss_diff
@@ -1266,7 +1231,9 @@ def create_zero_seed_router() -> APIRouter | None:
                 reasoning = f"{node.title} is nearly stable (loss={loss:.3f}) - strong foundation"
             elif loss < 0.3:
                 action = "follow_gradient"
-                reasoning = f"{node.title} has moderate loss (loss={loss:.3f}) - navigate here to improve"
+                reasoning = (
+                    f"{node.title} has moderate loss (loss={loss:.3f}) - navigate here to improve"
+                )
             else:
                 action = "investigate"
                 reasoning = f"{node.title} has high loss (loss={loss:.3f}) - needs attention"
@@ -1308,9 +1275,7 @@ def create_zero_seed_router() -> APIRouter | None:
             previous=None,
             current=request.node_id,
             loss=0.15,
-            gradient=GradientVector(
-                x=-0.2, y=0.1, magnitude=0.22, target_node="zn-axiom-001"
-            ),
+            gradient=GradientVector(x=-0.2, y=0.1, magnitude=0.22, target_node="zn-axiom-001"),
         )
 
     # =========================================================================
@@ -1707,7 +1672,7 @@ def create_zero_seed_router() -> APIRouter | None:
     @router.get("/nodes/{node_id}/analysis", response_model=NodeAnalysisResponse)
     async def get_node_analysis(
         node_id: str,
-        use_llm: bool = Query(False, description="Use LLM-backed analysis (requires API key)")
+        use_llm: bool = Query(False, description="Use LLM-backed analysis (requires API key)"),
     ) -> NodeAnalysisResponse:
         """
         Get four-mode analysis for a Zero Seed node.
@@ -1738,20 +1703,14 @@ def create_zero_seed_router() -> APIRouter | None:
 
         # Categorical: Verify composition laws and fixed points
         categorical_items = [
+            AnalysisItem(label="Identity Law", value="Id >> f = f = f >> Id", status="pass"),
             AnalysisItem(
-                label="Identity Law",
-                value="Id >> f = f = f >> Id",
-                status="pass"
-            ),
-            AnalysisItem(
-                label="Associativity",
-                value="(f >> g) >> h = f >> (g >> h)",
-                status="pass"
+                label="Associativity", value="(f >> g) >> h = f >> (g >> h)", status="pass"
             ),
             AnalysisItem(
                 label="Fixed Point",
                 value="None detected" if "axiom" in node_id else "Self-referential",
-                status="info" if "axiom" in node_id else "warning"
+                status="info" if "axiom" in node_id else "warning",
             ),
         ]
 
@@ -1763,26 +1722,10 @@ def create_zero_seed_router() -> APIRouter | None:
 
         # Epistemic: Analyze justification and grounding
         epistemic_items = [
-            AnalysisItem(
-                label="Layer",
-                value="L4 (Specification)",
-                status="info"
-            ),
-            AnalysisItem(
-                label="Grounding",
-                value="Terminates at axiom A1",
-                status="pass"
-            ),
-            AnalysisItem(
-                label="Evidence Tier",
-                value="Empirical",
-                status="info"
-            ),
-            AnalysisItem(
-                label="Confidence",
-                value="Definitely (0.95)",
-                status="pass"
-            ),
+            AnalysisItem(label="Layer", value="L4 (Specification)", status="info"),
+            AnalysisItem(label="Grounding", value="Terminates at axiom A1", status="pass"),
+            AnalysisItem(label="Evidence Tier", value="Empirical", status="info"),
+            AnalysisItem(label="Confidence", value="Definitely (0.95)", status="pass"),
         ]
 
         epistemic = AnalysisQuadrant(
@@ -1793,25 +1736,11 @@ def create_zero_seed_router() -> APIRouter | None:
 
         # Dialectical: Identify tensions and synthesize
         dialectical_items = [
+            AnalysisItem(label="Tension 1", value="Expressiveness vs Complexity", status="pass"),
+            AnalysisItem(label="Resolution", value="Use compositional primitives", status="pass"),
+            AnalysisItem(label="Tension 2", value="Coverage vs Minimalism", status="pass"),
             AnalysisItem(
-                label="Tension 1",
-                value="Expressiveness vs Complexity",
-                status="pass"
-            ),
-            AnalysisItem(
-                label="Resolution",
-                value="Use compositional primitives",
-                status="pass"
-            ),
-            AnalysisItem(
-                label="Tension 2",
-                value="Coverage vs Minimalism",
-                status="pass"
-            ),
-            AnalysisItem(
-                label="Classification",
-                value="Productive (design-driving)",
-                status="info"
+                label="Classification", value="Productive (design-driving)", status="info"
             ),
         ]
 
@@ -1823,26 +1752,10 @@ def create_zero_seed_router() -> APIRouter | None:
 
         # Generative: Test compression and regeneration
         generative_items = [
-            AnalysisItem(
-                label="Compression Ratio",
-                value="0.67 (good)",
-                status="pass"
-            ),
-            AnalysisItem(
-                label="Minimal Kernel",
-                value="3 axioms",
-                status="info"
-            ),
-            AnalysisItem(
-                label="Regeneration Test",
-                value="Passed",
-                status="pass"
-            ),
-            AnalysisItem(
-                label="Missing Elements",
-                value="None",
-                status="pass"
-            ),
+            AnalysisItem(label="Compression Ratio", value="0.67 (good)", status="pass"),
+            AnalysisItem(label="Minimal Kernel", value="3 axioms", status="info"),
+            AnalysisItem(label="Regeneration Test", value="Passed", status="pass"),
+            AnalysisItem(label="Missing Elements", value="None", status="pass"),
         ]
 
         generative = AnalysisQuadrant(
@@ -1852,12 +1765,371 @@ def create_zero_seed_router() -> APIRouter | None:
         )
 
         return NodeAnalysisResponse(
-            node_id=node_id,
+            nodeId=node_id,
             categorical=categorical,
             epistemic=epistemic,
             dialectical=dialectical,
             generative=generative,
         )
+
+    # =========================================================================
+    # Personal Governance: Axiom Discovery
+    # =========================================================================
+
+    @router.post("/discover-axioms")
+    async def discover_axioms_from_decisions(
+        request: DiscoverAxiomsRequest,
+    ) -> dict[str, Any]:
+        """
+        Discover axioms from decision texts.
+
+        Analyzes decision patterns to find recurring values/principles
+        that qualify as axioms (L < 0.05).
+
+        Args:
+            request: DiscoverAxiomsRequest with decisions and options
+
+        Returns:
+            DiscoveryReport with discovered axioms and metrics
+        """
+        try:
+            from services.zero_seed.axiom_discovery import (
+                AxiomDiscoveryService,
+            )
+
+            service = AxiomDiscoveryService()
+            report = await service.discover_from_text(
+                texts=request.decisions,
+                min_pattern_occurrences=request.min_pattern_occurrences,
+            )
+
+            return report.to_dict()
+
+        except ImportError as e:
+            logger.error(f"Axiom discovery service not available: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail=f"Axiom discovery service not available: {e}",
+            )
+        except ValueError as e:
+            logger.warning(f"Invalid input for axiom discovery: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid input: {e}",
+            )
+        except Exception as e:
+            logger.error(f"Failed to discover axioms: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to discover axioms: {e}",
+            )
+
+    # =========================================================================
+    # Personal Governance: Axiom Validation
+    # =========================================================================
+
+    @router.post("/validate-axiom")
+    async def validate_axiom_candidate(
+        content: str,
+        threshold: float = Query(default=0.05, ge=0.0, le=1.0),
+    ) -> dict[str, Any]:
+        """
+        Validate a single axiom candidate.
+
+        Checks if the content qualifies as a semantic fixed point
+        with L < threshold.
+
+        Args:
+            content: Content to validate
+            threshold: Loss threshold for axiom qualification
+
+        Returns:
+            Validation result with is_axiom, loss, stability
+        """
+        try:
+            from services.zero_seed.axiom_discovery import (
+                AxiomDiscoveryService,
+            )
+
+            service = AxiomDiscoveryService()
+            result = await service.validate_fixed_point(
+                content=content,
+                threshold=threshold,
+            )
+
+            return {
+                "is_axiom": result.is_axiom_candidate,
+                "is_fixed_point": result.is_fixed_point,
+                "loss": result.loss,
+                "stability": result.stability,
+                "iterations": result.iterations,
+                "losses": result.losses,
+            }
+
+        except ImportError as e:
+            logger.error(f"Axiom validation service not available: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail=f"Axiom validation service not available: {e}",
+            )
+        except ValueError as e:
+            logger.warning(f"Invalid input for axiom validation: {e}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid input: {e}",
+            )
+        except Exception as e:
+            logger.error(f"Failed to validate axiom: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to validate axiom: {e}",
+            )
+
+    # =========================================================================
+    # Personal Governance: Constitution
+    # =========================================================================
+
+    # In-memory store for the demo (replace with PostgreSQL in production)
+    _constitution_store: dict[str, Any] = {}
+
+    @router.get("/constitution")
+    async def get_personal_constitution() -> dict[str, Any]:
+        """
+        Get the current personal constitution.
+
+        Returns all axioms with their status and metadata.
+        """
+        try:
+            from services.zero_seed.personal_constitution import (
+                PersonalConstitutionService,
+                get_constitution_store,
+            )
+
+            store = get_constitution_store()
+            constitutions = store.list_all()
+
+            if not constitutions:
+                # Create default constitution
+                service = PersonalConstitutionService()
+                constitution = service.create_constitution("Personal Constitution")
+                store.save(constitution)
+                return constitution.to_dict()
+
+            # Return first constitution (demo mode)
+            return constitutions[0].to_dict()
+
+        except Exception as e:
+            logger.error(f"Failed to get constitution: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to get constitution: {e}",
+            )
+
+    @router.post("/constitution/add")
+    async def add_axiom_to_constitution(
+        content: str,
+        check_contradictions: bool = Query(default=True),
+    ) -> dict[str, Any]:
+        """
+        Add an axiom to the personal constitution.
+
+        First validates the content as an axiom, then adds it
+        to the constitution. Optionally checks for contradictions.
+
+        Args:
+            content: Axiom content to add
+            check_contradictions: Whether to check for contradictions
+
+        Returns:
+            Updated constitution
+        """
+        try:
+            from services.zero_seed.axiom_discovery import (
+                AxiomDiscoveryService,
+                DiscoveredAxiom,
+            )
+            from services.zero_seed.personal_constitution import (
+                PersonalConstitutionService,
+                get_constitution_store,
+            )
+
+            # First validate as axiom
+            discovery_service = AxiomDiscoveryService()
+            result = await discovery_service.validate_fixed_point(content)
+
+            if not result.is_fixed_point or result.loss >= 0.05:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Content does not qualify as axiom (L={result.loss:.3f} >= 0.05)",
+                )
+
+            # Create discovered axiom
+            axiom = DiscoveredAxiom(
+                content=content,
+                loss=result.loss,
+                stability=result.stability,
+                iterations=result.iterations,
+                confidence=1.0 - result.loss,
+            )
+
+            # Get or create constitution
+            store = get_constitution_store()
+            constitutions = store.list_all()
+
+            if not constitutions:
+                service = PersonalConstitutionService()
+                constitution = service.create_constitution("Personal Constitution")
+            else:
+                constitution = constitutions[0]
+
+            # Add axiom
+            service = PersonalConstitutionService()
+            updated = await service.add_axiom(
+                constitution=constitution,
+                axiom=axiom,
+                check_contradictions=check_contradictions,
+            )
+            store.save(updated)
+
+            return updated.to_dict()
+
+        except HTTPException:
+            raise
+        except ValueError as e:
+            logger.warning(f"Invalid axiom: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid axiom: {e}",
+            )
+        except Exception as e:
+            logger.error(f"Failed to add axiom: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to add axiom: {e}",
+            )
+
+    # =========================================================================
+    # Personal Governance: Axiom Retirement
+    # =========================================================================
+
+    @router.post("/constitution/retire")
+    async def retire_axiom_from_constitution(
+        axiom_id: str,
+        reason: str,
+    ) -> dict[str, Any]:
+        """
+        Retire an axiom from the personal constitution.
+
+        The axiom is not deleted but marked as retired with a reason.
+        This honors the amendment process: ceremonial but not burdensome.
+
+        Args:
+            axiom_id: ID of the axiom to retire
+            reason: Reason for retirement (required for ceremony)
+
+        Returns:
+            Updated constitution
+        """
+        try:
+            from services.zero_seed.personal_constitution import (
+                PersonalConstitutionService,
+                get_constitution_store,
+            )
+
+            store = get_constitution_store()
+            constitutions = store.list_all()
+
+            if not constitutions:
+                raise HTTPException(
+                    status_code=404,
+                    detail="No constitution found",
+                )
+
+            constitution = constitutions[0]
+            service = PersonalConstitutionService()
+
+            updated = await service.retire_axiom(
+                constitution=constitution,
+                axiom_id=axiom_id,
+                reason=reason,
+            )
+            store.save(updated)
+
+            return updated.to_dict()
+
+        except HTTPException:
+            raise
+        except ValueError as e:
+            logger.warning(f"Invalid retirement request: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid retirement request: {e}",
+            )
+        except Exception as e:
+            logger.error(f"Failed to retire axiom: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to retire axiom: {e}",
+            )
+
+    # =========================================================================
+    # Personal Governance: Contradiction Detection
+    # =========================================================================
+
+    @router.post("/detect-contradictions")
+    async def detect_constitution_contradictions(
+        tolerance: float = Query(default=0.1, ge=0.0, le=1.0),
+    ) -> dict[str, Any]:
+        """
+        Detect contradictions between axioms in the constitution.
+
+        Uses super-additive loss to identify conflicting axioms:
+        L(A U B) > L(A) + L(B) + tau
+
+        Args:
+            tolerance: Tau tolerance for contradiction detection
+
+        Returns:
+            List of detected contradictions
+        """
+        try:
+            from services.zero_seed.personal_constitution import (
+                PersonalConstitutionService,
+                get_constitution_store,
+            )
+
+            store = get_constitution_store()
+            constitutions = store.list_all()
+
+            if not constitutions:
+                return {
+                    "contradictions": [],
+                    "total_axioms": 0,
+                    "pairs_checked": 0,
+                }
+
+            constitution = constitutions[0]
+            service = PersonalConstitutionService()
+            contradictions = await service.detect_contradictions(
+                constitution=constitution,
+                tolerance=tolerance,
+            )
+
+            active_count = constitution.active_count
+            pairs_checked = (active_count * (active_count - 1)) // 2
+
+            return {
+                "contradictions": [c.to_dict() for c in contradictions],
+                "total_axioms": active_count,
+                "pairs_checked": pairs_checked,
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to detect contradictions: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to detect contradictions: {e}",
+            )
 
     return router
 

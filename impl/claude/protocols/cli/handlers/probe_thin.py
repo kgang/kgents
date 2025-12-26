@@ -80,9 +80,9 @@ def _print_results(results: list[Any], json_output: bool = False) -> None:
     skipped = sum(1 for r in results if r.status == ProbeStatus.SKIPPED)
     errors = sum(1 for r in results if r.status == ProbeStatus.ERROR)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Probe Summary: {passed} passed, {failed} failed, {skipped} skipped, {errors} errors")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     for result in results:
         _print_result(result, json_output=False)
@@ -175,7 +175,10 @@ async def cmd_probe_associativity(args: list[str], json_output: bool = False) ->
         test_input = 3
         pipeline_name = "add_one >> multiply_two >> square"
     else:
-        print(f"Error: Associativity probe not yet implemented for pipeline: {pipeline}", file=sys.stderr)
+        print(
+            f"Error: Associativity probe not yet implemented for pipeline: {pipeline}",
+            file=sys.stderr,
+        )
         print("Supported pipelines: default (test tools)", file=sys.stderr)
         print("Run with no pipeline to use default test tools.", file=sys.stderr)
         return 1
@@ -210,7 +213,7 @@ async def cmd_probe_coherence(args: list[str], json_output: bool = False) -> int
         class TestSheaf:
             name = "test_sheaf"
 
-            async def check_coherence(self, context=None):
+            async def check_coherence(self, context: str | None = None) -> bool:
                 # Test sheaf is always coherent
                 return True
 
@@ -348,7 +351,10 @@ def cmd_probe(args: list[str], ctx: "InvocationContext | None" = None) -> int:
             break
 
     if not probe_type:
-        print("Error: probe type required (identity, associativity, coherence, budget, health)", file=sys.stderr)
+        print(
+            "Error: probe type required (identity, associativity, coherence, budget, health)",
+            file=sys.stderr,
+        )
         _print_help()
         return 1
 

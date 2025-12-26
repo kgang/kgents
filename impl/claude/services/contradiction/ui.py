@@ -23,8 +23,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .detection import ContradictionPair
     from .classification import ClassificationResult, ContradictionType
+    from .detection import ContradictionPair
     from .resolution import ResolutionPrompt, ResolutionStrategy
 
 
@@ -65,7 +65,7 @@ class ContradictionCardUI:
     # Actions (button configurations)
     actions: list[dict[str, Any]]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """Serialize for API/frontend."""
         return {
             "id": self.id,
@@ -125,7 +125,7 @@ class ResolutionDialogUI:
     suggested_option: str  # "SYNTHESIZE", "SCOPE", etc.
     suggestion_reasoning: str
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """Serialize for API/frontend."""
         return {
             "contradiction_id": self.contradiction_id,
@@ -251,13 +251,15 @@ class ContradictionUIGenerator:
         options = []
         for strategy in ResolutionStrategy:
             is_suggested = strategy == prompt.suggested_strategy
-            options.append({
-                "value": strategy.value,
-                "label": strategy.action_verb,
-                "description": strategy.description,
-                "icon": strategy.icon,
-                "suggested": is_suggested,
-            })
+            options.append(
+                {
+                    "value": strategy.value,
+                    "label": strategy.action_verb,
+                    "description": strategy.description,
+                    "icon": strategy.icon,
+                    "suggested": is_suggested,
+                }
+            )
 
         return ResolutionDialogUI(
             contradiction_id=pair.id,
@@ -277,8 +279,8 @@ class ContradictionUIGenerator:
 
     def _format_label(self, kblock: Any) -> str:
         """Format a K-Block label with layer and kind."""
-        layer = getattr(kblock, 'zero_seed_layer', None)
-        kind = getattr(kblock, 'zero_seed_kind', None)
+        layer = getattr(kblock, "zero_seed_layer", None)
+        kind = getattr(kblock, "zero_seed_kind", None)
 
         if layer and kind:
             return f"{kind.title()} (L{layer})"
@@ -292,7 +294,7 @@ class ContradictionUIGenerator:
         """Truncate content for card display."""
         if len(content) <= max_chars:
             return content
-        return content[:max_chars].rsplit(' ', 1)[0] + '...'
+        return content[:max_chars].rsplit(" ", 1)[0] + "..."
 
 
 # Singleton generator for convenience

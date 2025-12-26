@@ -23,15 +23,16 @@ See: plans/zero-seed-genesis-grand-strategy.md (Part VIII)
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .detection import ContradictionPair
-    from .classification import ClassificationResult
     from services.k_block.core.kblock import KBlock
     from services.witness.mark import MarkId
+
+    from .classification import ClassificationResult
+    from .detection import ContradictionPair
 
 
 class ResolutionStrategy(Enum):
@@ -116,9 +117,9 @@ class ResolutionOutcome:
     deferred_until: datetime | None = None  # For IGNORE
     metadata: dict[str, Any] | None = None  # Additional context
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """Serialize for API/storage."""
-        result = {
+        result: dict[str, object] = {
             "strategy": self.strategy.value,
             "resolved_at": self.resolved_at.isoformat(),
             "witness_mark": self.witness_mark,
@@ -154,19 +155,19 @@ class ResolutionPrompt:
     suggested_strategy: ResolutionStrategy
     reasoning: str
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """Serialize for API/frontend."""
         return {
             "contradiction_id": self.pair.id,
             "kblock_a": {
                 "id": self.pair.kblock_a.id,
                 "content": self.pair.kblock_a.content,
-                "layer": getattr(self.pair.kblock_a, 'zero_seed_layer', None),
+                "layer": getattr(self.pair.kblock_a, "zero_seed_layer", None),
             },
             "kblock_b": {
                 "id": self.pair.kblock_b.id,
                 "content": self.pair.kblock_b.content,
-                "layer": getattr(self.pair.kblock_b, 'zero_seed_layer', None),
+                "layer": getattr(self.pair.kblock_b, "zero_seed_layer", None),
             },
             "strength": round(self.pair.strength, 3),
             "classification": self.classification.to_dict(),
@@ -196,7 +197,7 @@ class ResolutionEngine:
     5. Witnesses the resolution
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize resolution engine."""
         pass
 
@@ -231,8 +232,8 @@ class ResolutionEngine:
             case ContradictionType.TENSION:
                 # For tension, suggest TOLERATE if layers are close (same domain)
                 # Otherwise suggest CHOOSE
-                layer_a = getattr(pair.kblock_a, 'zero_seed_layer', 5)
-                layer_b = getattr(pair.kblock_b, 'zero_seed_layer', 5)
+                layer_a = getattr(pair.kblock_a, "zero_seed_layer", 5)
+                layer_b = getattr(pair.kblock_b, "zero_seed_layer", 5)
                 if abs(layer_a - layer_b) <= 1:
                     return ResolutionStrategy.TOLERATE
                 else:
@@ -280,7 +281,9 @@ class ResolutionEngine:
 
         match classification.type:
             case ContradictionType.APPARENT:
-                return f"{base}\n\nSuggestion: Add scope notes to clarify when each statement applies."
+                return (
+                    f"{base}\n\nSuggestion: Add scope notes to clarify when each statement applies."
+                )
             case ContradictionType.PRODUCTIVE:
                 return f"{base}\n\nSuggestion: Try synthesizing these into a higher truth that honors both."
             case ContradictionType.TENSION:
