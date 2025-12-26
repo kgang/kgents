@@ -524,7 +524,7 @@ async def _get_kblock_as_document(path: str) -> "DocumentDetailResponse":
         success=True,
         path=path,
         title=kblock.path.split(".")[-1] if kblock.path else kblock_id,
-        status=DocumentStatus.STABLE,  # K-Blocks are foundational
+        status=DocumentStatus.READY,  # K-Blocks are foundational
         version=1,
         content=kblock.content,
         content_hash=kblock.content_hash if hasattr(kblock, "content_hash") else "",
