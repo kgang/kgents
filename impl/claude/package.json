@@ -1,0 +1,16 @@
+{
+  "name": "@kgents/monorepo",
+  "private": true,
+  "workspaces": [
+    "web",
+    "pilots-web",
+    "shared-primitives"
+  ],
+  "scripts": {
+    "dev:pilots": "pnpm --filter @kgents/pilots-web dev",
+    "dev:web": "pnpm --filter agent-town-web dev",
+    "build:all": "pnpm -r build",
+    "typecheck:all": "pnpm -r typecheck"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

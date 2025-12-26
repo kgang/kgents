@@ -1,0 +1,167 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  benchmark:
+    name: Run performance benchmarks
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: kgents
+          POSTGRES_USER: kgents
+          POSTGRES_PASSWORD: kgents
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
+
+      - name: Install dependencies
+        working-directory: impl/claude
+        run: uv sync
+
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 1
+          done
+
+      - name: Run mark creation benchmarks
+        working-directory: impl/claude
+        env:
+          KGENTS_DATABASE_URL: "postgresql+asyncpg://kgents:kgents@localhost:5432/kgents"
+        run: |
+          uv run pytest -v \
+            --benchmark-only \
+            --benchmark-json=/tmp/mark_benchmark.json \
+            --benchmark-compare=0001 \
+            --benchmark-compare-fail=mean:10% \
+            services/witness/_tests/test_mark_performance.py
+
+      - name: Run trace append benchmarks
+        working-directory: impl/claude
+        env:
+          KGENTS_DATABASE_URL: "postgresql+asyncpg://kgents:kgents@localhost:5432/kgents"
+        run: |
+          uv run pytest -v \
+            --benchmark-only \
+            --benchmark-json=/tmp/trace_benchmark.json \
+            --benchmark-compare=0001 \
+            --benchmark-compare-fail=mean:10% \
+            services/witness/_tests/test_trace_performance.py
+
+      - name: Run Galois loss benchmarks
+        working-directory: impl/claude
+        env:
+          KGENTS_DATABASE_URL: "postgresql+asyncpg://kgents:kgents@localhost:5432/kgents"
+        run: |
+          uv run pytest -v \
+            --benchmark-only \
+            --benchmark-json=/tmp/galois_benchmark.json \
+            --benchmark-compare=0001 \
+            --benchmark-compare-fail=mean:15% \
+            services/zero_seed/galois/_tests/test_galois_performance.py
+
+      - name: Collect benchmark results
+        if: always()
+        run: |
+          echo "=== Mark Creation Benchmarks ===" && \
+          cat /tmp/mark_benchmark.json 2>/dev/null || echo "No mark results" && \
+          echo -e "\n=== Trace Append Benchmarks ===" && \
+          cat /tmp/trace_benchmark.json 2>/dev/null || echo "No trace results" && \
+          echo -e "\n=== Galois Loss Benchmarks ===" && \
+          cat /tmp/galois_benchmark.json 2>/dev/null || echo "No galois results"
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: /tmp/*_benchmark.json
+          if-no-files-found: ignore
+
+      - name: Comment benchmark results on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            const files = [
+              {path: '/tmp/mark_benchmark.json', name: 'Mark Creation'},
+              {path: '/tmp/trace_benchmark.json', name: 'Trace Append'},
+              {path: '/tmp/galois_benchmark.json', name: 'Galois Loss'},
+            ];
+
+            let comment = '## Performance Benchmark Results\n\n';
+
+            for (const file of files) {
+              try {
+                const data = JSON.parse(fs.readFileSync(file.path, 'utf8'));
+                comment += `### ${file.name}\n`;
+
+                if (data.benchmarks && data.benchmarks.length > 0) {
+                  comment += '| Test | Mean (ms) | StdDev | Min | Max |\n';
+                  comment += '|------|----------|--------|-----|-----|\n';
+
+                  for (const bench of data.benchmarks) {
+                    const stats = bench.stats;
+                    const meanMs = (stats.mean * 1000).toFixed(2);
+                    const stddevMs = (stats.stddev * 1000).toFixed(2);
+                    const minMs = (stats.min * 1000).toFixed(2);
+                    const maxMs = (stats.max * 1000).toFixed(2);
+
+                    comment += `| ${bench.name} | ${meanMs} | ${stddevMs} | ${minMs} | ${maxMs} |\n`;
+                  }
+                } else {
+                  comment += `No benchmark data found\n`;
+                }
+                comment += '\n';
+              } catch (e) {
+                comment += `### ${file.name}\nNo results available\n\n`;
+              }
+            }
+
+            comment += '**SLA Targets:**\n';
+            comment += '- Mark creation: < 50ms (p99)\n';
+            comment += '- Trace append: < 5ms (p99)\n';
+            comment += '- Galois loss (fresh): < 5s\n';
+            comment += '- Galois loss (cached): < 500ms\n';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
