@@ -29,7 +29,6 @@ from services.sovereign.ingest import Ingestor
 from services.sovereign.store import SovereignStore
 from services.sovereign.types import IngestEvent
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================

@@ -5,21 +5,21 @@ Run: uv run python -m pytest services/k_block/layers/test_classifier.py -v
 """
 
 import asyncio
-from datetime import datetime, UTC
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 import pytest
 
-from agents.d.crystal import CrystalMeta, Crystal
+from agents.d.crystal import Crystal, CrystalMeta
 from agents.d.crystal.schema import Schema
 from agents.d.galois import GaloisLossComputer
 from services.k_block.layers.classifier import (
-    classify_layer,
-    classify_crystal,
-    get_layer_name,
-    get_layer_confidence,
-    LAYER_THRESHOLDS,
     LAYER_NAMES,
+    LAYER_THRESHOLDS,
+    classify_crystal,
+    classify_layer,
+    get_layer_confidence,
+    get_layer_name,
 )
 
 

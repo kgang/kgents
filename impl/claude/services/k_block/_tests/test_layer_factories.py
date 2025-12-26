@@ -316,3 +316,75 @@ def test_created_by_metadata():
         created_by="user@example.com",
     )
     assert kblock2._created_by == "user@example.com"
+
+
+def test_edge_creation_from_lineage():
+    """Test that edges are created from lineage."""
+    kblock_id = generate_kblock_id()
+    axiom_id = str(generate_kblock_id())
+
+    # Create a value with lineage from axiom
+    kblock = ValueKBlockFactory.create(
+        kblock_id=kblock_id,
+        title="Test Value",
+        content="A value derived from an axiom.",
+        lineage=[axiom_id],
+    )
+
+    # Should have exactly one incoming edge
+    assert hasattr(kblock, "incoming_edges")
+    assert len(kblock.incoming_edges) == 1
+
+    # Edge should be derives_from type
+    edge = kblock.incoming_edges[0]
+    assert edge.source_id == axiom_id
+    assert edge.target_id == kblock_id
+    assert edge.edge_type == "derives_from"
+
+    # No outgoing edges at creation
+    assert hasattr(kblock, "outgoing_edges")
+    assert len(kblock.outgoing_edges) == 0
+
+
+def test_multiple_edges_from_lineage():
+    """Test that multiple lineage parents create multiple edges."""
+    kblock_id = generate_kblock_id()
+    parent1 = str(generate_kblock_id())
+    parent2 = str(generate_kblock_id())
+    parent3 = str(generate_kblock_id())
+
+    # Create a value with multiple parents (unusual but valid)
+    kblock = ValueKBlockFactory.create(
+        kblock_id=kblock_id,
+        title="Multi-Parent Value",
+        content="Derived from multiple axioms.",
+        lineage=[parent1, parent2, parent3],
+    )
+
+    # Should have three incoming edges
+    assert len(kblock.incoming_edges) == 3
+
+    # Each parent should have an edge
+    source_ids = {edge.source_id for edge in kblock.incoming_edges}
+    assert source_ids == {parent1, parent2, parent3}
+
+    # All edges should point to this K-Block
+    for edge in kblock.incoming_edges:
+        assert edge.target_id == kblock_id
+        assert edge.edge_type == "derives_from"
+
+
+def test_axiom_has_no_edges():
+    """Test that axioms (no lineage) have no incoming edges."""
+    kblock_id = generate_kblock_id()
+
+    kblock = AxiomKBlockFactory.create(
+        kblock_id=kblock_id,
+        title="Foundational Axiom",
+        content="The axiom needs no proof.",
+        lineage=[],
+    )
+
+    # No incoming edges for axioms
+    assert len(kblock.incoming_edges) == 0
+    assert len(kblock.outgoing_edges) == 0

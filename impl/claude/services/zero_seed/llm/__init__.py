@@ -30,31 +30,31 @@ See: spec/protocols/zero-seed1/llm.md
 
 from __future__ import annotations
 
-from .types import (
-    Alternative,
-    Axiom,
-    Context,
-    Contradiction,
-    LossAxis,
-    Module,
-    ModularContent,
-    Proof,
-    Style,
-    Theorem,
-    ValidationResult,
-)
 from .budgets import (
     LatencyBudget,
     QualityBudget,
     TokenBudget,
     TokenBudgetExceeded,
 )
-from .restructurer import LLMGaloisRestructurer
 from .operations import (
     AxiomMiner,
     ContradictionDetector,
     ProofValidator,
     TheoremSynthesizer,
+)
+from .restructurer import LLMGaloisRestructurer
+from .types import (
+    Alternative,
+    Axiom,
+    Context,
+    Contradiction,
+    LossAxis,
+    ModularContent,
+    Module,
+    Proof,
+    Style,
+    Theorem,
+    ValidationResult,
 )
 
 __all__ = [

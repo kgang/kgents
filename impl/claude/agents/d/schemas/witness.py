@@ -16,7 +16,6 @@ from typing import Any
 
 from ..crystal import Schema
 
-
 # =============================================================================
 # WitnessMark - The atomic unit of witnessed behavior
 # =============================================================================

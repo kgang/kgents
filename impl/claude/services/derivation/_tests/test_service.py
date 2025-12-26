@@ -21,11 +21,12 @@ Teaching:
 """
 
 import pytest
+
 from agents.d.galois import GaloisLossComputer
 from agents.d.schemas.axiom import AxiomCrystal, ValueCrystal
 from agents.d.schemas.code import FunctionCrystal, ParamInfo
 from agents.d.schemas.proof import GaloisWitnessedProof
-from agents.d.universe import Universe, Backend
+from agents.d.universe import Backend, Universe
 
 from ..service import DerivationService
 

@@ -3,6 +3,7 @@ Tests for budget probes.
 """
 
 import pytest
+
 from services.probe.budget import BudgetProbe
 from services.probe.types import ProbeStatus, ProbeType
 

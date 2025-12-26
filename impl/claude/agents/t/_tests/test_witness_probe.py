@@ -17,6 +17,7 @@ from __future__ import annotations
 import pytest
 
 from agents.poly.types import Agent
+from agents.t.probes.null_probe import NullProbe
 from agents.t.probes.witness_probe import (
     ASSOCIATIVITY_LAW,
     IDENTITY_LAW,
@@ -26,7 +27,6 @@ from agents.t.probes.witness_probe import (
     WitnessProbe,
     witness_probe,
 )
-from agents.t.probes.null_probe import NullProbe
 from agents.t.truth_functor import (
     AnalysisMode,
     ConstitutionalScore,

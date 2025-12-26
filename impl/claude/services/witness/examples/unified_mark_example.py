@@ -8,13 +8,13 @@ Run this to verify the implementation:
 from datetime import datetime, timezone
 
 from services.witness import (
-    Mark,
-    Trace,
-    Stimulus,
-    Response,
-    UmweltSnapshot,
-    Proof,
     EvidenceTier,
+    Mark,
+    Proof,
+    Response,
+    Stimulus,
+    Trace,
+    UmweltSnapshot,
 )
 
 
@@ -117,7 +117,7 @@ def main() -> None:
     )
     assert mark_with_proof.domain == "chat"
     assert mark_with_proof.proof is not None
-    print(f"   ✓ Mark.with_proof() preserves domain")
+    print("   ✓ Mark.with_proof() preserves domain")
 
     # Trace operations
     print("\n8. Testing trace operations...")

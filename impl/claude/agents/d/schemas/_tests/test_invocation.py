@@ -2,11 +2,11 @@
 Tests for LLM Invocation Mark schema.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 import pytest
 
-from agents.d.schemas.invocation import StateChange, LLMInvocationMark
+from agents.d.schemas.invocation import LLMInvocationMark, StateChange
 
 
 def test_state_change_creation():

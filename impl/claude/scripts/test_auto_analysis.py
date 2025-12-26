@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 
 async def test_auto_analysis():
     """Test auto-analysis flow."""
+    from protocols.api.director import _run_analysis
     from services.providers import get_sovereign_store
     from services.sovereign.ingest import Ingestor
     from services.sovereign.types import IngestEvent
-    from protocols.api.director import _run_analysis
 
     logger.info("Starting auto-analysis test")
 
@@ -84,7 +84,7 @@ Tests at: impl/test/test_example.py
     # Check analysis results
     overlay = await store.get_overlay(test_path, "analysis_crystal")
     if overlay:
-        logger.info(f"✓ Analysis crystal created")
+        logger.info("✓ Analysis crystal created")
         logger.info(f"  - Claims: {len(overlay.get('claims', []))}")
         logger.info(f"  - Implementations: {len(overlay.get('implementations', []))}")
         logger.info(f"  - Tests: {len(overlay.get('tests', []))}")

@@ -8,14 +8,15 @@ Verifies:
 - Mark.create() factory
 """
 
-import pytest
 from datetime import datetime, timezone
+
+import pytest
 
 from services.witness import (
     Mark,
     MarkId,
-    Stimulus,
     Response,
+    Stimulus,
     UmweltSnapshot,
     WitnessDomain,
     generate_mark_id,
@@ -84,7 +85,7 @@ class TestMarkImmutability:
 
     def test_with_link_preserves_domain(self) -> None:
         """with_link() preserves domain field."""
-        from services.witness import MarkLink, LinkRelation
+        from services.witness import LinkRelation, MarkLink
 
         mark1 = Mark(origin="test", domain="chat")
         mark2 = Mark(origin="test", domain="chat")
@@ -97,7 +98,7 @@ class TestMarkImmutability:
 
     def test_with_proof_preserves_domain(self) -> None:
         """with_proof() preserves domain field."""
-        from services.witness import Proof, EvidenceTier
+        from services.witness import EvidenceTier, Proof
 
         mark = Mark(origin="test", domain="portal")
         proof = Proof(
@@ -234,7 +235,7 @@ class TestMarkIntegration:
 
     def test_mark_with_all_fields(self) -> None:
         """Can create mark with all fields populated."""
-        from services.witness import Proof, EvidenceTier, NPhase
+        from services.witness import EvidenceTier, NPhase, Proof
 
         mark = Mark(
             id=generate_mark_id(),

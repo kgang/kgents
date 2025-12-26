@@ -5,14 +5,14 @@ Shows how to use frozen dataclass schemas for trail navigation artifacts.
 """
 
 from agents.d.schemas.trail import (
-    Trail,
-    TRAIL_SCHEMA,
-    TrailStep,
-    TRAIL_STEP_SCHEMA,
-    TrailCommitment,
-    TRAIL_COMMITMENT_SCHEMA,
-    TrailAnnotation,
     TRAIL_ANNOTATION_SCHEMA,
+    TRAIL_COMMITMENT_SCHEMA,
+    TRAIL_SCHEMA,
+    TRAIL_STEP_SCHEMA,
+    Trail,
+    TrailAnnotation,
+    TrailCommitment,
+    TrailStep,
 )
 
 

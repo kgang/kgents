@@ -13,9 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from .trust import TrustEvent, TrustLevel, TrustProfile, ToolTrustState
+from .trust import ToolTrustState, TrustEvent, TrustLevel, TrustProfile
 from .trust_manager import TrustManager, TrustStorage
-
 
 # =============================================================================
 # Fixtures

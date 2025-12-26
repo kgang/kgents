@@ -8,14 +8,15 @@ Verifies:
 - Slicing and indexing
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
+
+import pytest
 
 from services.witness import (
     Mark,
-    Trace,
-    Stimulus,
     Response,
+    Stimulus,
+    Trace,
 )
 
 

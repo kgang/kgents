@@ -575,6 +575,181 @@ async def compare_metrics(
     )
 
 
+# -----------------------------------------------------------------------------
+# Bidirectional Entailment Distance (Amendment B)
+# -----------------------------------------------------------------------------
+
+
+@dataclass
+class BidirectionalEntailmentDistance:
+    """
+    Canonical semantic distance via bidirectional entailment.
+
+    d(A, B) = 1 - sqrt(P(A |= B) * P(B |= A))
+
+    Why geometric mean?
+    - Arithmetic mean treats one-way entailment too leniently
+    - Geometric mean gives 0 if either direction fails
+    - Matches intuition: mutual entailment = semantic equivalence
+
+    From Amendment B: "Canonical Semantic Distance"
+    Uses DeBERTa MNLI (already used in NLIContradictionDistance).
+    """
+
+    model: str = "microsoft/deberta-v3-base-mnli-fever-anli"
+    _classifier: object = field(default=None, repr=False)
+
+    @property
+    def name(self) -> str:
+        return f"bidirectional_entailment:{self.model}"
+
+    def _get_classifier(self) -> object:
+        """Lazy load classifier."""
+        if self._classifier is None:
+            try:
+                from transformers import pipeline
+
+                self._classifier = pipeline(
+                    "text-classification",
+                    model=self.model,
+                    top_k=None,
+                )
+            except ImportError:
+                return None
+        return self._classifier
+
+    def _entailment_prob(self, premise: str, hypothesis: str) -> float:
+        """
+        Get P(premise entails hypothesis).
+
+        Returns probability of entailment label from NLI model.
+        """
+        classifier = self._get_classifier()
+        if classifier is None:
+            return 0.5  # Fallback
+
+        try:
+            # NLI expects premise [SEP] hypothesis format
+            result = classifier(f"{premise} [SEP] {hypothesis}")
+
+            # Result is list of dicts with label and score
+            if isinstance(result, list) and len(result) > 0:
+                if isinstance(result[0], list):
+                    # Multiple labels returned
+                    scores = result[0]
+                else:
+                    scores = result
+
+                # Find entailment probability
+                for item in scores:
+                    label = item.get("label", "").upper()
+                    if label == "ENTAILMENT":
+                        return item.get("score", 0.0)
+
+            return 0.0  # No entailment found
+
+        except Exception:
+            return 0.5  # Fallback on error
+
+    def distance(self, text_a: str, text_b: str) -> float:
+        """
+        Bidirectional entailment distance.
+
+        Returns 0 if texts are semantically equivalent.
+        Returns 1 if texts are unrelated or contradictory.
+
+        Formula: d(A, B) = 1 - sqrt(P(A |= B) * P(B |= A))
+        """
+        import math
+
+        if text_a == text_b:
+            return 0.0
+
+        if not text_a.strip() or not text_b.strip():
+            return 1.0
+
+        p_a_entails_b = self._entailment_prob(text_a, text_b)
+        p_b_entails_a = self._entailment_prob(text_b, text_a)
+
+        # Geometric mean (symmetric, penalizes one-way entailment)
+        mutual = math.sqrt(p_a_entails_b * p_b_entails_a)
+
+        return max(0.0, min(1.0, 1.0 - mutual))
+
+
+@dataclass
+class CanonicalSemanticDistance:
+    """
+    Canonical distance with fallback chain.
+
+    Primary: Bidirectional entailment (most principled)
+    Fallback 1: BERTScore (fast, stable)
+    Fallback 2: Cosine embedding (fastest)
+
+    From Amendment B: "Canonical Semantic Distance"
+    """
+
+    _primary: BidirectionalEntailmentDistance | None = field(
+        default=None, repr=False
+    )
+    _bertscore: BERTScoreDistance | None = field(default=None, repr=False)
+    _cosine: CosineEmbeddingDistance | None = field(default=None, repr=False)
+
+    @property
+    def name(self) -> str:
+        return "canonical_semantic"
+
+    def distance(self, text_a: str, text_b: str) -> float:
+        """
+        Compute distance with graceful fallback.
+
+        Tries:
+        1. Bidirectional entailment (most principled)
+        2. BERTScore (balanced precision/recall)
+        3. Cosine embedding (fastest)
+        """
+        # Try NLI-based entailment first
+        try:
+            if self._primary is None:
+                self._primary = BidirectionalEntailmentDistance()
+            return self._primary.distance(text_a, text_b)
+        except Exception:
+            pass
+
+        # Fallback to BERTScore
+        try:
+            if self._bertscore is None:
+                self._bertscore = BERTScoreDistance()
+            return self._bertscore.distance(text_a, text_b)
+        except Exception:
+            pass
+
+        # Ultimate fallback: cosine
+        if self._cosine is None:
+            self._cosine = CosineEmbeddingDistance()
+        return self._cosine.distance(text_a, text_b)
+
+
+def canonical_semantic_distance(text_a: str, text_b: str) -> float:
+    """
+    Compute canonical semantic distance for Galois loss.
+
+    This is the recommended distance function for production use.
+    Falls back gracefully from entailment to BERTScore to cosine.
+    """
+    return CanonicalSemanticDistance().distance(text_a, text_b)
+
+
+def get_canonical_metric() -> CanonicalSemanticDistance:
+    """Get the canonical distance metric with fallback chain."""
+    return CanonicalSemanticDistance()
+
+
+def get_entailment_metric() -> BidirectionalEntailmentDistance:
+    """Get the bidirectional entailment metric."""
+    return BidirectionalEntailmentDistance()
+
+
 __all__ = [
     # Protocol
     "SemanticDistanceMetric",
@@ -585,11 +760,17 @@ __all__ = [
     "LLMJudgeDistance",
     "NLIContradictionDistance",
     "CompositeDistance",
+    # Amendment B: Bidirectional Entailment
+    "BidirectionalEntailmentDistance",
+    "CanonicalSemanticDistance",
+    "canonical_semantic_distance",
     # Factory functions
     "get_default_metric",
     "get_fast_metric",
     "get_accurate_metric",
     "get_contradiction_metric",
+    "get_canonical_metric",
+    "get_entailment_metric",
     # Utilities
     "MetricComparisonResult",
     "compare_metrics",

@@ -44,6 +44,18 @@ See: plans/zero-seed-genesis-grand-strategy.md (Phase 4)
 
 from __future__ import annotations
 
+# Classification
+from .classification import (
+    APPARENT_MAX,
+    PRODUCTIVE_MAX,
+    TENSION_MAX,
+    ClassificationResult,
+    ContradictionClassifier,
+    ContradictionType,
+    classify_contradiction,
+    default_classifier,
+)
+
 # Detection
 from .detection import (
     CONTRADICTION_THRESHOLD,
@@ -51,18 +63,6 @@ from .detection import (
     ContradictionPair,
     default_detector,
     detect_contradiction,
-)
-
-# Classification
-from .classification import (
-    APPARENT_MAX,
-    ClassificationResult,
-    ContradictionClassifier,
-    ContradictionType,
-    PRODUCTIVE_MAX,
-    TENSION_MAX,
-    classify_contradiction,
-    default_classifier,
 )
 
 # Resolution

@@ -25,8 +25,8 @@ Example:
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from agents.d.galois import GaloisLossComputer
     from agents.d.crystal import Crystal
+    from agents.d.galois import GaloisLossComputer
 
 
 # Loss thresholds per layer (from spec/protocols/zero-seed.md)

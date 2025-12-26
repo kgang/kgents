@@ -104,7 +104,7 @@ class BudgetProbe:
         except Exception as e:
             duration_ms = (time.perf_counter() * 1000) - start_ms
             return ProbeResult(
-                name=f"budget:error",
+                name="budget:error",
                 probe_type=ProbeType.BUDGET,
                 status=ProbeStatus.ERROR,
                 details=f"Error checking budget: {e}",

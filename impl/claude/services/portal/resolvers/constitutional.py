@@ -13,8 +13,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ..uri import PortalURI
 from ..resolver import ResolvedResource
+from ..uri import PortalURI
 
 if TYPE_CHECKING:
     from services.chat.reward import PrincipleScore

@@ -26,12 +26,12 @@ See: dp/core/value_agent.py
 See: services/categorical/dp_bridge.py
 """
 
-from dp.jewels.brain import BrainState, BrainAction, BrainFormulation, create_brain_agent
+from dp.jewels.brain import BrainAction, BrainFormulation, BrainState, create_brain_agent
 from dp.jewels.soul import (
-    SoulState,
     SoulAction,
-    SoulFormulation,
     SoulContext,
+    SoulFormulation,
+    SoulState,
     create_soul_agent,
 )
 

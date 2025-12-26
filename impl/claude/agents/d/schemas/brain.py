@@ -10,6 +10,7 @@ Spec: spec/protocols/unified-data-crystal.md
 """
 
 from dataclasses import dataclass
+
 from agents.d.crystal.schema import Schema
 
 __all__ = [

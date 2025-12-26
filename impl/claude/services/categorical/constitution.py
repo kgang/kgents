@@ -59,15 +59,33 @@ __all_principles__ = Principle
 # Constitutional Principle Weights
 # =============================================================================
 
+# Amendment A: ETHICAL is a FLOOR CONSTRAINT, not just a weighted principle.
+# If ETHICAL score < ETHICAL_FLOOR_THRESHOLD, the action is rejected immediately
+# regardless of how high other principle scores are.
+#
+# Philosophy:
+#   "You cannot offset unethical behavior with composability or joy."
+#
+# Example of why this matters:
+#   WITHOUT floor: ETHICAL=0.3×2.0=0.6 + other high scores = 7.3 → Almost passes!
+#   WITH floor: ETHICAL=0.3 < 0.6 → Immediate rejection
+ETHICAL_FLOOR_THRESHOLD: float = 0.6
+
+# Weights for non-floor principles (ETHICAL removed - it's a floor, not a weight)
 PRINCIPLE_WEIGHTS = {
-    Principle.ETHICAL: 2.0,       # Safety first
-    Principle.COMPOSABLE: 1.5,    # Architecture second
+    Principle.ETHICAL: 0.0,       # NOT weighted - floor constraint (Amendment A)
+    Principle.COMPOSABLE: 1.5,    # Architecture first (after ETHICAL passes)
     Principle.JOY_INDUCING: 1.2,  # Kent's aesthetic priority
     Principle.TASTEFUL: 1.0,
     Principle.CURATED: 1.0,
     Principle.HETERARCHICAL: 1.0,
     Principle.GENERATIVE: 1.0,
 }
+
+# Sum of weights for non-ETHICAL principles (for normalization)
+_WEIGHT_SUM_WITHOUT_ETHICAL = sum(
+    w for p, w in PRINCIPLE_WEIGHTS.items() if p != Principle.ETHICAL
+)
 
 
 # =============================================================================
@@ -118,27 +136,113 @@ class ConstitutionalEvaluation:
     Evaluates state transition (s, a, s') against all 7 principles.
     Returns aggregated scores and principle-by-principle breakdown.
 
+    Amendment A: ETHICAL is a FLOOR CONSTRAINT.
+    If ethical_score < ETHICAL_FLOOR_THRESHOLD (0.6), the evaluation
+    immediately fails regardless of other principle scores.
+
     Example:
         >>> eval = Constitution.evaluate(state_before, action, state_after)
-        >>> print(f"Total: {eval.weighted_total:.2f}")
-        >>> print(f"Ethical: {eval.by_principle[Principle.ETHICAL]:.2f}")
+        >>> if not eval.ethical_passes:
+        ...     print(f"BLOCKED: {eval.rejection_reason}")
+        >>> else:
+        ...     print(f"Total: {eval.weighted_total:.2f}")
     """
 
     scores: tuple[PrincipleScore, ...]
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
+    # =========================================================================
+    # Amendment A: ETHICAL Floor Constraint
+    # =========================================================================
+
+    @property
+    def ethical_score(self) -> float:
+        """Raw ETHICAL score (0-1)."""
+        for ps in self.scores:
+            if ps.principle == Principle.ETHICAL:
+                return ps.score
+        return 0.0  # If ETHICAL not present, treat as violation
+
+    @property
+    def ethical_passes(self) -> bool:
+        """
+        Check if ETHICAL floor constraint is satisfied.
+
+        Amendment A: ETHICAL is a floor, not a weight.
+        Must be >= ETHICAL_FLOOR_THRESHOLD to proceed.
+        """
+        return self.ethical_score >= ETHICAL_FLOOR_THRESHOLD
+
+    @property
+    def rejection_reason(self) -> str | None:
+        """
+        Explain why evaluation failed (if it did).
+
+        Returns None if evaluation passes.
+        """
+        if not self.ethical_passes:
+            return (
+                f"ETHICAL floor violation: {self.ethical_score:.2f} < "
+                f"{ETHICAL_FLOOR_THRESHOLD} (Amendment A)"
+            )
+        if not self.passes:
+            return f"Weighted sum insufficient: {self.weighted_total:.2f}"
+        return None
+
+    @property
+    def passes(self) -> bool:
+        """
+        Check if action passes constitutional evaluation.
+
+        Amendment A: Two-stage check:
+        1. ETHICAL floor must pass (>= 0.6)
+        2. Weighted sum of other principles must be sufficient
+        """
+        if not self.ethical_passes:
+            return False
+        # Threshold for non-ETHICAL weighted sum
+        # With max scores: 1.5 + 1.2 + 1.0 + 1.0 + 1.0 + 1.0 = 6.7
+        # 80% of max = ~5.4
+        return self.weighted_total >= 0.65  # 65% of normalized [0,1]
+
+    # =========================================================================
+    # Weighted Sum (Excludes ETHICAL - Amendment A)
+    # =========================================================================
+
     @property
     def weighted_total(self) -> float:
         """
-        Weighted sum of principle scores, normalized to [0, 1].
+        Weighted sum of NON-ETHICAL principle scores, normalized to [0, 1].
 
-        Formula: Σᵢ (scoreᵢ × weightᵢ) / Σᵢ weightᵢ
+        Amendment A: ETHICAL is a floor constraint, not in the weighted sum.
+        If ETHICAL floor fails, returns 0.0 immediately.
+
+        Formula: Σᵢ (scoreᵢ × weightᵢ) / Σᵢ weightᵢ  (for i ≠ ETHICAL)
+
+        Note: Weight sum is computed from the actual scores present,
+        not from a global constant, to handle partial evaluations.
         """
+        # Floor constraint check first
+        if not self.ethical_passes:
+            return 0.0  # Immediate rejection
+
         if not self.scores:
             return 0.0
 
-        total = sum(ps.weighted_score for ps in self.scores)
-        weight_sum = sum(PRINCIPLE_WEIGHTS.get(ps.principle, 1.0) for ps in self.scores)
+        # Sum only non-ETHICAL principles (compute weights from present scores)
+        non_ethical_scores = [
+            ps for ps in self.scores
+            if ps.principle != Principle.ETHICAL
+        ]
+
+        if not non_ethical_scores:
+            return 0.0
+
+        total = sum(ps.weighted_score for ps in non_ethical_scores)
+        weight_sum = sum(
+            PRINCIPLE_WEIGHTS.get(ps.principle, 1.0)
+            for ps in non_ethical_scores
+        )
 
         return total / weight_sum if weight_sum > 0 else 0.0
 
@@ -171,6 +275,11 @@ class ConstitutionalEvaluation:
             "weighted_total": self.weighted_total,
             "min_score": self.min_score,
             "max_score": self.max_score,
+            # Amendment A: Include floor constraint status
+            "ethical_score": self.ethical_score,
+            "ethical_passes": self.ethical_passes,
+            "passes": self.passes,
+            "rejection_reason": self.rejection_reason,
             "scores": [
                 {
                     "principle": ps.principle.name,
@@ -886,6 +995,8 @@ def _levenshtein_distance(s1: str, s2: str) -> int:
 __all__ = [
     # Principle (re-exported)
     "Principle",
+    # Amendment A: ETHICAL floor constraint
+    "ETHICAL_FLOOR_THRESHOLD",
     # Weights
     "PRINCIPLE_WEIGHTS",
     # Scores

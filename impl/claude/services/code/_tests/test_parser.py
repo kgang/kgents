@@ -21,13 +21,12 @@ import pytest
 
 from services.code.parser import (
     PythonFunctionParser,
-    parse_file,
-    extract_imports,
-    extract_calls,
     compute_body_hash,
+    extract_calls,
+    extract_imports,
+    parse_file,
     signature_to_string,
 )
-
 
 # =============================================================================
 # Test Fixtures

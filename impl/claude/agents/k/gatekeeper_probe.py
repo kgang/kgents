@@ -473,7 +473,6 @@ def analyze_tastefulness(content: str, target: str) -> tuple[float, list[Violati
 
     Returns (score, violations).
     """
-    import re
 
     violations: list[Violation] = []
     lines = content.split("\n")
@@ -549,7 +548,6 @@ def analyze_composability(content: str, target: str) -> tuple[float, list[Violat
 
     Returns (score, violations).
     """
-    import re
 
     violations: list[Violation] = []
     lines = content.split("\n")
@@ -600,7 +598,6 @@ def analyze_gratitude(content: str, target: str) -> tuple[float, list[Violation]
 
     Returns (score, violations).
     """
-    import re
 
     violations: list[Violation] = []
     gratitude_signals = 0
@@ -650,7 +647,6 @@ def analyze_gratitude(content: str, target: str) -> tuple[float, list[Violation]
 
 def check_heuristics(content: str, target: str) -> list[Violation]:
     """Run heuristic pattern checks."""
-    import re
 
     violations: list[Violation] = []
     lines = content.split("\n")

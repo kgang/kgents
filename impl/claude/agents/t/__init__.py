@@ -86,41 +86,40 @@ Usage:
 import warnings
 from typing import Any
 
+# New probe implementations
+# Import all remaining probes (dataclass errors fixed)
+from .probes import (
+    ChaosConfig,
+    ChaosProbe,
+    ChaosType,
+    JudgeConfig,
+    JudgeProbe,
+    NullConfig,
+    NullProbe,
+    TrustConfig,
+    TrustProbe,
+)
+
+# Import WitnessProbe for law validation (replacement for law_validator.py)
+from .probes.witness_probe import (
+    ASSOCIATIVITY_LAW,
+    IDENTITY_LAW,
+    WitnessConfig,
+    WitnessProbe,
+    witness_probe,
+)
+
 # TruthFunctor protocol (new DP-native verification)
 from .truth_functor import (
     AnalysisMode,
-    ConstitutionalScore,
-    TruthVerdict,
-    ProbeState,
-    ProbeAction,
-    TraceEntry,
-    PolicyTrace,
-    TruthFunctor,
     ComposedProbe,
-)
-
-# New probe implementations
-from .probes import (
-    NullProbe,
-    NullConfig,
-)
-# Import WitnessProbe for law validation (replacement for law_validator.py)
-from .probes.witness_probe import (
-    WitnessProbe,
-    WitnessConfig,
-    witness_probe,
-    IDENTITY_LAW,
-    ASSOCIATIVITY_LAW,
-)
-# Import all remaining probes (dataclass errors fixed)
-from .probes import (
-    ChaosType,
-    ChaosProbe,
-    ChaosConfig,
-    JudgeProbe,
-    JudgeConfig,
-    TrustProbe,
-    TrustConfig,
+    ConstitutionalScore,
+    PolicyTrace,
+    ProbeAction,
+    ProbeState,
+    TraceEntry,
+    TruthFunctor,
+    TruthVerdict,
 )
 
 # Operad for probe composition
@@ -162,6 +161,7 @@ from .judge import (
 from .latency import (
     LatencyAgent,
 )
+
 # DEPRECATED: law_validator.py removed (2025-12-25)
 # Use WitnessProbe instead - all functionality migrated
 # See: agents.t.probes.WitnessProbe for law validation

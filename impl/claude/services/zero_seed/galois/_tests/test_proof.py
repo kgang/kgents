@@ -31,7 +31,6 @@ from services.zero_seed.galois.proof import (
     select_witness_mode_from_loss,
 )
 
-
 # =============================================================================
 # Evidence Tier Classification Tests
 # =============================================================================

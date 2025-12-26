@@ -3,6 +3,7 @@ Tests for probe types.
 """
 
 import pytest
+
 from services.probe.types import HealthStatus, ProbeResult, ProbeStatus, ProbeType
 
 

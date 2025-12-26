@@ -45,7 +45,6 @@ from services.categorical.dp_bridge import (
     ValueScore,
 )
 
-
 # =============================================================================
 # State Space: Stages of "Hello World" Creation
 # =============================================================================
@@ -423,7 +422,7 @@ async def run_hello_world_dp() -> dict:
                 entry.state_before,
                 action_enum
             )
-            print(f"  Principle scores:")
+            print("  Principle scores:")
             for ps in score.principle_scores:
                 print(f"    {ps.principle.name}: {ps.score:.2f}")
 

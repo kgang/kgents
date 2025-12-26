@@ -3,6 +3,7 @@ Tests for health probes.
 """
 
 import pytest
+
 from services.probe.health import HealthProbe
 from services.probe.types import ProbeStatus, ProbeType
 

@@ -190,7 +190,7 @@ class AssociativityProbe:
         except Exception as e:
             duration_ms = (time.perf_counter() * 1000) - start_ms
             return ProbeResult(
-                name=f"associativity:error",
+                name="associativity:error",
                 probe_type=ProbeType.ASSOCIATIVITY,
                 status=ProbeStatus.ERROR,
                 details=f"Error during associativity check: {e}",

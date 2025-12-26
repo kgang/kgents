@@ -20,7 +20,7 @@ we check if it's been resolved or if the source changed.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from .proof import GaloisWitnessedProof

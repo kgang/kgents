@@ -292,6 +292,14 @@ def create_app(
         app.include_router(witness_router)
         logger.info("Witness API mounted at /api/witness")
 
+    # Daily Lab REST API (Trail-to-Crystal journaling)
+    from .daily_lab import create_daily_lab_router
+
+    daily_lab_router = create_daily_lab_router()
+    if daily_lab_router is not None:
+        app.include_router(daily_lab_router)
+        logger.info("Daily Lab API mounted at /api/witness/daily")
+
     # Constitutional REST API (Phase 1: Constitutional Enforcement)
     from .constitutional import create_constitutional_router
 
@@ -395,6 +403,24 @@ def create_app(
     if edges_router is not None:
         app.include_router(edges_router)
         logger.info("Edges API mounted at /api/edges")
+
+    # === Galois API (Loss, Contradiction, Fixed Point, Layer Assignment) ===
+    from .galois import create_galois_router
+
+    galois_result = create_galois_router()
+    if galois_result is not None:
+        galois_router, layer_router = galois_result
+        app.include_router(galois_router)
+        app.include_router(layer_router)
+        logger.info("Galois API mounted at /api/galois and /api/layer")
+
+    # === Pilots API ===
+    from .pilots import create_pilots_router
+
+    pilots_router = create_pilots_router()
+    if pilots_router is not None:
+        app.include_router(pilots_router)
+        logger.info("Pilots API mounted at /api/pilots")
 
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
@@ -755,6 +781,13 @@ def create_app(
                     "browse": "GET /api/edges/browse",
                     "by_kind": "GET /api/edges/kind/{kind}",
                     "detail": "GET /api/edges/{edge_id}",
+                },
+                "galois": {
+                    "note": "Galois loss computation, contradiction detection, fixed points",
+                    "loss": "POST /api/galois/loss",
+                    "contradiction": "POST /api/galois/contradiction",
+                    "fixed_point": "POST /api/galois/fixed-point",
+                    "layer_assign": "POST /api/layer/assign",
                 },
                 "webhooks": {
                     "stripe": "/webhooks/stripe",

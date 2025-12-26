@@ -17,6 +17,8 @@ Use Universe for typed objects (Crystal, Mark, etc.) with schema awareness.
 """
 
 # Adapters (Dual-Track Architecture)
+# AGENTESE Node (self.data.*)
+from . import node  # noqa: F401 - imported for @node registration side-effect
 from .adapters import TableAdapter
 
 # Backends
@@ -75,15 +77,6 @@ from .router import Backend, BackendStatus, DgentRouter
 from .state_monad import StateMonadFunctor
 from .symbiont import Symbiont
 
-# Auto-Upgrader
-from .upgrader import (
-    AutoUpgrader,
-    DatumStats,
-    UpgradePolicy,
-    migrate_data,
-    verify_migration,
-)
-
 # Universe (schema-aware data management)
 from .universe import (
     Backend as UniverseBackend,
@@ -96,8 +89,14 @@ from .universe import (
     init_universe,
 )
 
-# AGENTESE Node (self.data.*)
-from . import node  # noqa: F401 - imported for @node registration side-effect
+# Auto-Upgrader
+from .upgrader import (
+    AutoUpgrader,
+    DatumStats,
+    UpgradePolicy,
+    migrate_data,
+    verify_migration,
+)
 
 # Core stateful agents (NOT deprecated - actively used)
 from .volatile import VolatileAgent

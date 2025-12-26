@@ -12,7 +12,7 @@ Note: Value computation is intentionally skipped as it's computationally expensi
       for continuous state spaces. This example focuses on the formulation itself.
 """
 
-from dp.jewels.brain import BrainState, BrainAction, BrainFormulation, create_brain_agent
+from dp.jewels.brain import BrainAction, BrainFormulation, BrainState, create_brain_agent
 
 
 def main() -> None:

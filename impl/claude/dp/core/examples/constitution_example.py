@@ -110,9 +110,9 @@ def example_custom_weights():
 
     value_score = const.evaluate("idle", "create_art", "inspired")
 
-    print(f"With custom weights:")
+    print("With custom weights:")
     print(f"  Total score: {value_score.total_score:.3f}")
-    print(f"  Breakdown:")
+    print("  Breakdown:")
     for ps in value_score.principle_scores:
         print(f"    {ps.principle.name}: score={ps.score:.2f}, weight={ps.weight:.1f}, weighted={ps.weighted_score:.2f}")
     print()

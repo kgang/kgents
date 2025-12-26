@@ -3,6 +3,7 @@ Tests for categorical law probes.
 """
 
 import pytest
+
 from services.probe.laws import AssociativityProbe, CoherenceProbe, IdentityProbe
 from services.probe.types import ProbeStatus, ProbeType
 

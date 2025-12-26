@@ -12,8 +12,8 @@ This migration adds tables for K-Block storage:
 K-Blocks represent both regular files and Zero Seed nodes (axioms, values, goals, etc.).
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.

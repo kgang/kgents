@@ -48,7 +48,7 @@ async def demo_persistence():
 
     # Save to database
     await persistence.save_session(session)
-    print(f"   ✅ Saved session to database")
+    print("   ✅ Saved session to database")
 
     session_id = session.id
 
@@ -68,13 +68,13 @@ async def demo_persistence():
     print(f"   ✅ Loaded session: {loaded_session.id if loaded_session else 'FAILED'}")
 
     if loaded_session:
-        print(f"   📊 Session stats:")
+        print("   📊 Session stats:")
         print(f"      - Project: {loaded_session.project_id}")
         print(f"      - Branch: {loaded_session.node.branch_name}")
         print(f"      - Turns: {loaded_session.turn_count}")
         print(f"      - Created: {loaded_session.node.created_at.isoformat()}")
 
-        print(f"\n   💬 Conversation history:")
+        print("\n   💬 Conversation history:")
         for i, turn in enumerate(loaded_session.turns, 1):
             print(f"\n      Turn {i}:")
             print(f"      User: {turn.user_message}")
@@ -100,7 +100,7 @@ async def demo_persistence():
             ],
             artifacts=["persistence_demo.py"],
         )
-        print(f"   💎 Crystallized session summary")
+        print("   💎 Crystallized session summary")
 
         # Load crystal
         crystal = await persistence.load_crystal(loaded_session.id)
@@ -114,9 +114,9 @@ async def demo_persistence():
     print("\n" + "=" * 80)
     print("✅ DEMO COMPLETE: Sessions are persistent!")
     print("=" * 80)
-    print(f"\nDatabase location: ~/.local/share/kgents/membrane.db")
-    print(f"To inspect: sqlite3 ~/.local/share/kgents/membrane.db")
-    print(f"            SELECT * FROM chat_sessions;")
+    print("\nDatabase location: ~/.local/share/kgents/membrane.db")
+    print("To inspect: sqlite3 ~/.local/share/kgents/membrane.db")
+    print("            SELECT * FROM chat_sessions;")
     print("=" * 80)
 
 

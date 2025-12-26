@@ -32,11 +32,12 @@ Integration:
 """
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import Generic, TypeVar, Callable, FrozenSet, Any
 from datetime import datetime
+from enum import Enum, auto
+from typing import Any, Callable, FrozenSet, Generic, TypeVar
 
 # Type variables
 S = TypeVar("S")  # State space of probe

@@ -14,7 +14,6 @@ import pytest
 from services.chat.evidence import TurnResult
 from services.chat.reward import Principle, PrincipleScore, constitutional_reward
 
-
 # =============================================================================
 # PrincipleScore Tests
 # =============================================================================

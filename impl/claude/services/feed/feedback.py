@@ -25,7 +25,6 @@ from typing import Protocol
 
 from services.k_block.core.kblock import KBlock
 
-
 # =============================================================================
 # Feedback Actions
 # =============================================================================

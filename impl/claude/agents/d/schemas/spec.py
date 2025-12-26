@@ -14,8 +14,8 @@ Spec: spec/protocols/zero-seed.md
 from dataclasses import dataclass, field
 from typing import Any
 
-from .proof import GaloisWitnessedProof
 from ..universe import DataclassSchema
+from .proof import GaloisWitnessedProof
 
 __all__ = [
     # Contracts

@@ -47,10 +47,10 @@ Example:
     >>> q = Query(schema="witness.mark", tags=frozenset(["witness"]))
 """
 
-from .datum import Datum
 from .crystal import Crystal, CrystalMeta
-from .schema import Schema
+from .datum import Datum
 from .query import Query
+from .schema import Schema
 from .self_justifying import SelfJustifyingCrystal
 
 __all__ = [

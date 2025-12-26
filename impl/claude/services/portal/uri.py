@@ -17,7 +17,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-
 # Resource type catalog from spec §2.2
 KNOWN_RESOURCE_TYPES = {
     "file",

@@ -104,9 +104,9 @@ class UnifiedQueryService:
 
     def _register_schemas(self) -> None:
         """Register all Crystal schemas with Universe."""
-        from agents.d.schemas.witness import WitnessMark
         from agents.d.schemas.brain import BrainCrystal
         from agents.d.schemas.trail import Trail
+        from agents.d.schemas.witness import WitnessMark
 
         self.universe.register_type("witness.mark", WitnessMark)
         self.universe.register_type("brain.crystal", BrainCrystal)

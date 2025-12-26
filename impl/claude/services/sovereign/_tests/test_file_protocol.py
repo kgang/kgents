@@ -7,14 +7,16 @@ Philosophy:
 See: plans/zero-seed-genesis-grand-strategy.md (Phase 2, Section 5.2)
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
+
 from services.sovereign.integration import (
-    IntegrationService,
-    IntegrationResult,
     DiscoveredEdge,
-    PortalToken,
     IdentifiedConcept,
+    IntegrationResult,
+    IntegrationService,
+    PortalToken,
 )
 
 

@@ -489,7 +489,7 @@ async def _get_kblock_as_document(path: str) -> "DocumentDetailResponse":
 
     Handles paths like: zero-seed/axioms/kb_xxx, zero-seed/values/kb_xxx
     """
-    from services.providers import get_postgres_zero_seed_storage
+    from services.k_block.postgres_zero_seed_storage import get_postgres_zero_seed_storage
 
     # Extract K-Block ID from path (last segment)
     parts = path.split("/")
@@ -583,11 +583,11 @@ def create_director_router() -> APIRouter | None:
 
         See: spec/protocols/document-proxy.md
         """
+        from protocols.agentese.projection.scene import LayoutMode
         from protocols.agentese.projection.tokens_to_scene import (
             detect_sections,
             markdown_to_scene_graph,
         )
-        from protocols.agentese.projection.scene import LayoutMode
 
         # Map layout mode string to enum
         layout_mode_map = {
@@ -1494,8 +1494,8 @@ Existing implementations:
         # await store.rename(path, request.new_path)
 
         # Placeholder implementation - store at new path
-        from services.sovereign.types import IngestEvent
         from services.sovereign.ingest import Ingestor
+        from services.sovereign.types import IngestEvent
 
         event = IngestEvent.from_content(
             content=entity.content,

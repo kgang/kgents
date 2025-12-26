@@ -139,8 +139,8 @@ async def test_transformation():
 
     try:
         from agents.k.llm import create_llm_client
-        from services.analysis import AnalysisService
         from protocols.api.zero_seed import _transform_analysis_report
+        from services.analysis import AnalysisService
 
         # Create service
         llm = create_llm_client()
@@ -152,7 +152,7 @@ async def test_transformation():
         print(f"Running analysis on: {spec_path}")
         report = await service.analyze_full(spec_path)
 
-        print(f"\n✓ Got FullAnalysisReport:")
+        print("\n✓ Got FullAnalysisReport:")
         print(f"  Target: {report.target}")
         print(f"  Categorical: {report.categorical.laws_total} laws, {report.categorical.laws_passed} passed")
         print(f"  Epistemic: Layer {report.epistemic.layer}, Grounded={report.epistemic.is_grounded}")
@@ -162,7 +162,7 @@ async def test_transformation():
         # Transform
         response = _transform_analysis_report("test-node", report)
 
-        print(f"\n✓ Transformed to NodeAnalysisResponse:")
+        print("\n✓ Transformed to NodeAnalysisResponse:")
         print(f"  Node ID: {response.node_id}")
         print(f"  Categorical: {len(response.categorical.items)} items")
         print(f"  Epistemic: {len(response.epistemic.items)} items")

@@ -17,8 +17,9 @@ Testing Strategy:
 - Test edge cases (missing sessions, invalid data)
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 
 from infra.ground import Ground, InfrastructureConfig, ProviderConfig, XDGPaths
 from services.chat import ChatSession

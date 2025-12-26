@@ -33,20 +33,20 @@ from __future__ import annotations
 
 from .director import DocumentDirector, ResolveResult
 from .types import (
-    # Status
-    DocumentStatus,
-    # Placeholders
-    PlaceholderType,
-    # Execution
-    ExecutionPrompt,
     # Analysis
     AnalysisCrystal,
     # Capture
     CaptureResult,
-    TestResults,
     # Events
     DirectorEvent,
+    # Status
+    DocumentStatus,
     DocumentTopics,
+    # Execution
+    ExecutionPrompt,
+    # Placeholders
+    PlaceholderType,
+    TestResults,
 )
 
 __all__ = [

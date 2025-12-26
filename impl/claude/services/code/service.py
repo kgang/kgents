@@ -12,7 +12,7 @@ from __future__ import annotations
 import ast
 import hashlib
 from dataclasses import dataclass, field
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -236,8 +236,9 @@ class CodeService:
 
             # Store in universe (would use proper schema in full impl)
             if universe:
-                from ...agents.d.datum import Datum
                 import json
+
+                from ...agents.d.datum import Datum
 
                 datum = Datum.create(
                     content=json.dumps(
@@ -345,8 +346,8 @@ class CodeService:
         Returns:
             BootstrapResult with created artifact IDs
         """
-        import tempfile
         import os
+        import tempfile
 
         # Write impl to temp file for parsing
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:

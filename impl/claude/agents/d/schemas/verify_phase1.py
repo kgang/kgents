@@ -11,15 +11,15 @@ Run: uv run python agents/d/schemas/verify_phase1.py
 """
 
 from agents.d.schemas import (
-    FunctionCrystal,
-    ParamInfo,
-    KBlockCrystal,
-    GhostFunctionCrystal,
-    GaloisWitnessedProof,
-    KBLOCK_SIZE_HEURISTICS,
     FUNCTION_CRYSTAL_SCHEMA,
-    KBLOCK_CRYSTAL_SCHEMA,
     GHOST_FUNCTION_SCHEMA,
+    KBLOCK_CRYSTAL_SCHEMA,
+    KBLOCK_SIZE_HEURISTICS,
+    FunctionCrystal,
+    GaloisWitnessedProof,
+    GhostFunctionCrystal,
+    KBlockCrystal,
+    ParamInfo,
 )
 
 
@@ -118,7 +118,7 @@ def main():
     print(f"  Boundary type: {kblock.boundary_type}")
     print(f"  Boundary confidence: {kblock.boundary_confidence:.2%}")
     print()
-    print(f"  Size analysis:")
+    print("  Size analysis:")
     print(f"    - Needs split? {kblock.needs_split} (>{KBLOCK_SIZE_HEURISTICS['max_tokens']} tokens)")
     print(f"    - Undersized? {kblock.is_undersized} (<{KBLOCK_SIZE_HEURISTICS['min_tokens']} tokens)")
     print(f"    - Optimal size? {kblock.is_optimal_size} (~{KBLOCK_SIZE_HEURISTICS['target_tokens']} tokens)")
@@ -141,7 +141,7 @@ def main():
         spec_id="spec/protocols/witness.md#validation",
     )
 
-    print(f"  Ghost 1 - Spec-implied:")
+    print("  Ghost 1 - Spec-implied:")
     print(f"    Name: {ghost_spec.suggested_name}")
     print(f"    Location: {ghost_spec.suggested_location}")
     print(f"    Reason: {ghost_spec.ghost_reason}")
@@ -159,7 +159,7 @@ def main():
         expected_behavior="Compute trust score from mark history",
     )
 
-    print(f"  Ghost 2 - Call-referenced:")
+    print("  Ghost 2 - Call-referenced:")
     print(f"    Name: {ghost_call.suggested_name}")
     print(f"    Reason: {ghost_call.ghost_reason}")
     print(f"    Source: {ghost_call.source_id}")

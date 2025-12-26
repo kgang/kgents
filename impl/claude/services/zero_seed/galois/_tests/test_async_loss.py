@@ -192,9 +192,9 @@ async def test_compute_galois_loss_diverse_content():
 @pytest.mark.asyncio
 async def test_cross_layer_loss_with_llm():
     """Test cross-layer loss computation with LLM."""
+    from services.witness.mark import Proof
     from services.zero_seed import EdgeKind, ZeroEdge, ZeroNode, generate_node_id
     from services.zero_seed.galois.cross_layer import compute_cross_layer_loss_async
-    from services.witness.mark import Proof
 
     source = ZeroNode(
         id=generate_node_id(),

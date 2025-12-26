@@ -92,7 +92,7 @@ def main():
     if trace_composed.total_value() > trace_f.total_value():
         improvement = trace_composed.total_value() - trace_f.total_value()
         print(f"✓ Composition adds value: +{improvement:.4f}")
-        print(f"  This is because g provides continuation value from f's next state")
+        print("  This is because g provides continuation value from f's next state")
     else:
         print("✗ Composition did not increase value")
 

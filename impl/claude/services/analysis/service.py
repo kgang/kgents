@@ -47,20 +47,20 @@ from agents.operad.domains.analysis import FullAnalysisReport
 
 from .llm_agents import (
     CategoricalAnalyzer,
+    ConstitutionalAnalyzer,
     DialecticalAnalyzer,
     EpistemicAnalyzer,
     GenerativeAnalyzer,
-    ConstitutionalAnalyzer,
 )
 
 if TYPE_CHECKING:
     from agents.k.soul import LLMClient
     from agents.operad.domains.analysis import (
         CategoricalReport,
+        ConstitutionalReport,
         DialecticalReport,
         EpistemicReport,
         GenerativeReport,
-        ConstitutionalReport,
     )
 
 logger = logging.getLogger(__name__)
@@ -452,7 +452,7 @@ class AnalysisService:
         if epistemic.is_grounded:
             parts.append(f"✓ Epistemic: Grounded at L{epistemic.layer}")
         else:
-            parts.append(f"⚠️ Epistemic: Not properly grounded")
+            parts.append("⚠️ Epistemic: Not properly grounded")
 
         # Dialectical
         if dialectical.problematic_count > 0:

@@ -12,16 +12,15 @@ Validates that personality dynamics work as expected:
 import pytest
 
 from dp.jewels.soul import (
-    SoulState,
     SoulAction,
     SoulContext,
     SoulFormulation,
-    soul_transition,
+    SoulState,
+    create_soul_agent,
     soul_available_actions,
     soul_reward,
-    create_soul_agent,
+    soul_transition,
 )
-
 
 # =============================================================================
 # State Tests

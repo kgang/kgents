@@ -39,24 +39,23 @@ from datetime import datetime, timezone
 from typing import Any, FrozenSet
 
 from services.categorical.dp_bridge import (
-    PolicyTrace,
-    ProblemFormulation,
-    Principle,
-    TraceEntry,
     DPSolver,
+    PolicyTrace,
+    Principle,
+    ProblemFormulation,
+    TraceEntry,
 )
 
 from .analysis import (
     ANALYSIS_OPERAD,
     CategoricalReport,
+    ContradictionType,
     DialecticalReport,
     EpistemicReport,
     FullAnalysisReport,
     GenerativeReport,
-    ContradictionType,
     self_analyze as _self_analyze,
 )
-
 
 # =============================================================================
 # Analysis State for DP Formulation
@@ -179,8 +178,8 @@ def create_analysis_formulation(target: str) -> ProblemFormulation[AnalysisState
         """
         from .analysis import (
             _categorical_analysis,
-            _epistemic_analysis,
             _dialectical_analysis,
+            _epistemic_analysis,
             _generative_analysis,
         )
 
@@ -359,8 +358,8 @@ async def analyze_as_dp_llm(target: str, gamma: float = 0.95) -> tuple[float, Po
     """
     from .analysis import (
         analyze_categorical_llm,
-        analyze_epistemic_llm,
         analyze_dialectical_llm,
+        analyze_epistemic_llm,
         analyze_generative_llm,
     )
 

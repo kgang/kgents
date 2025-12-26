@@ -54,7 +54,7 @@ async def demo_basic():
         use_cache=True,
     )
 
-    print(f"\nResult:")
+    print("\nResult:")
     print(f"  Loss: {result.loss:.4f}")
     print(f"  Method: {result.method}")
     print(f"  Metric: {result.metric_name}")
@@ -138,7 +138,7 @@ async def demo_fallback():
         use_cache=False,
     )
 
-    print(f"\nResult:")
+    print("\nResult:")
     print(f"  Loss: {result.loss:.4f}")
     print(f"  Method: {result.method}")
     print(f"  Metric: {result.metric_name}")

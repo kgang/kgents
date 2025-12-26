@@ -23,7 +23,7 @@ def print_score(domain: str, action: str, score: PrincipleScore):
     print(f"  COMPOSABLE:    {score.composable:.2f}")
     print(f"  HETERARCHICAL: {score.heterarchical:.2f}")
     print(f"  GENERATIVE:    {score.generative:.2f}")
-    print(f"  ---")
+    print("  ---")
     print(f"  WEIGHTED TOTAL: {score.weighted_total():.2f} / 8.7")
 
 

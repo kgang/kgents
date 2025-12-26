@@ -8,12 +8,12 @@ The culmination of the D-gent Crystal Unification:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any, Generic, TypeVar
 
-from .crystal import Crystal, CrystalMeta
 from ..datum import Datum
 from ..schemas.proof import GaloisWitnessedProof
+from .crystal import Crystal, CrystalMeta
 
 T = TypeVar("T")
 

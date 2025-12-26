@@ -47,7 +47,6 @@ from typing import FrozenSet
 from dp.core import Constitution, ValueAgent
 from services.categorical.dp_bridge import Principle
 
-
 # =============================================================================
 # State Definition
 # =============================================================================

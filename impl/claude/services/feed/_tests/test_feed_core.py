@@ -15,7 +15,6 @@ import pytest
 from services.feed.core import Feed, FeedFilter, FeedRanking, FeedSource
 from services.k_block.core.kblock import KBlock, generate_kblock_id
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================

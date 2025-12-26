@@ -1,21 +1,21 @@
-# Risk Mitigations: 47 Vulnerabilities + 5 Pilot Risks
+# Risk Mitigations: 52 Vulnerabilities + 5 Pilot Risks + 4 Contradictions Resolved
 
 > *"The most dangerous systems are those that seem perfectly safe."*
 
 **Created**: 2025-12-25
-**Revised**: 2025-12-26 (Added Pilot-Specific Risks)
+**Revised**: 2025-12-26 (Added Pilot-Specific Risks, Mathematical Faithfulness Risks, Contradiction Resolutions, Anti-Pattern Detection)
 **Status**: Risk Register with Mitigations
-**Purpose**: Comprehensive vulnerability analysis and defense strategies, grounded in 5 pilots
+**Purpose**: Comprehensive vulnerability analysis and defense strategies, grounded in 5 pilots and faithfulness audit findings
 
 ---
 
 ## Executive Summary
 
-The Constitutional Decision OS has 47 identified vulnerabilities across 8 risk categories, plus 5 pilot-specific risks. This document provides prioritized mitigations with implementation guidance.
+The Constitutional Decision OS has 52 identified vulnerabilities across 10 risk categories, plus 5 pilot-specific risks, 4 resolved contradictions, and 4 anti-patterns with prevention mechanisms. This document provides prioritized mitigations with implementation guidance.
 
 **Critical (P0)**: 4 vulnerabilities + 1 pilot risk requiring immediate attention
 **High (P1)**: 12 vulnerabilities + 2 pilot risks requiring attention before beta
-**Medium (P2)**: 18 vulnerabilities + 2 pilot risks requiring attention before GA
+**Medium (P2)**: 23 vulnerabilities + 2 pilot risks requiring attention before GA (includes 5 new faithfulness risks)
 **Low (P3)**: 13 vulnerabilities to monitor
 
 ---
@@ -89,6 +89,241 @@ The Constitutional Decision OS has 47 identified vulnerabilities across 8 risk c
 - Focus Week 7 resources on rap-coach instead
 
 **Timeline**: Decision required by Week 6
+
+---
+
+## NEW: Mathematical Faithfulness Risks
+
+> *"The gap between theory and implementation is where integrity lives or dies."*
+
+These risks were identified through the Zero Seed faithfulness audit, examining the gap between spec claims and implementation reality.
+
+### R-FAITH-1: K-Block Entanglement Not Implemented [P2]
+
+**Scenario**: Spec claims K-Blocks can entangle (reference each other), but implementation stores blocks independently without cross-references.
+
+**Impact**: Philosophical relationships between blocks (e.g., "this goal derives from that value") cannot be expressed.
+
+**Current State**: `postgres_zero_seed_storage.py` stores `parent_id` but doesn't support arbitrary entanglement.
+
+**Mitigation**:
+- **Phase 1 (Now)**: Defer entanglement to Phase 2; not required for any of the 5 pilots
+- **Phase 2 (Month 3+)**: Add `references: list[str]` field to KBlock schema
+- **Validation**: Pilots work without entanglement; feature is nice-to-have not must-have
+
+**Timeline**: Defer to Month 3 (after pilot validation)
+
+---
+
+### R-FAITH-2: Generative K-Blocks Not Implemented [P3]
+
+**Scenario**: Spec mentions K-Blocks can be "generative" (spawning new blocks), but no implementation exists.
+
+**Impact**: Theoretical elegance claim is ungrounded; system is more passive than spec implies.
+
+**Current State**: KBlocks are created explicitly, never self-spawn.
+
+**Mitigation**:
+- Mark as future work in spec (honest about current capability)
+- Generative patterns validated through Joy Loop feedback, not block auto-creation
+- Consider if generative blocks are even desirable (complexity vs. value)
+
+**Timeline**: Future consideration (P3 - may never implement)
+
+---
+
+### R-FAITH-3: Amendment B Not Wired as Default Distance [P2]
+
+**Scenario**: Amendment B (Canonical L(x, y) ≔ ||d̂(x) − d̂(y)||₁) is specified as the normative distance metric, but implementation uses raw embedding cosine distance.
+
+**Impact**: Layer assignments may be inconsistent with spec's intended semantics.
+
+**Current State**: `distance.py` has `canonical_distance_l1()` but it's not wired as the default in `galois/__init__.py`.
+
+**Mitigation**:
+```python
+# In galois/__init__.py, change default:
+from .distance import canonical_distance_l1 as default_distance
+
+# Or make it explicit in layer_assignment.py:
+def assign_layer(content: str, distance_fn=canonical_distance_l1) -> int:
+    ...
+```
+
+**Timeline**: Week 2 (quick fix, high fidelity impact)
+
+---
+
+### R-FAITH-4: Amendment C Calibration Corpus Not Committed [P2]
+
+**Scenario**: Amendment C requires a calibration corpus with known layer assignments for validating model behavior. Corpus referenced in spec but not in codebase.
+
+**Impact**: No automated way to detect model drift affecting layer assignment fidelity.
+
+**Current State**: `ModelVersionManager.CALIBRATION_CORPUS` has 3 examples; spec implies comprehensive corpus.
+
+**Mitigation**:
+- Expand calibration corpus to 20+ examples covering all 7 layers
+- Commit corpus to `impl/claude/services/zero_seed/galois/calibration_corpus.json`
+- Wire into startup validation (V5.1 model drift detection)
+
+**Timeline**: Week 2 (pairs with V5.1)
+
+---
+
+### R-FAITH-5: Full DP-Native Value Agent Integration Pending [P2]
+
+**Scenario**: Decision Protocol claims "value agents" (ETHICAL, JOY, etc.) participate in decisions, but current implementation uses simple scoring, not agent-like behavior.
+
+**Impact**: "Agent" terminology overstates current capability; simpler "scorer" is more accurate.
+
+**Current State**: Constitution scoring computes weighted sums, not agent deliberation.
+
+**Mitigation**:
+- **Phase 1 (Now)**: Rename "Value Agents" to "Value Scorers" in user-facing docs
+- **Phase 2 (Month 4+)**: Consider true agent architecture if product requirements demand
+- **Validation**: Current scoring approach sufficient for all 5 pilots
+
+**Timeline**: Terminology fix now; architecture decision Month 4
+
+---
+
+## NEW: Contradiction Resolutions
+
+> *"A contradiction is not a bug—it's a decision waiting to be made explicit."*
+
+The Zero Seed faithfulness audit identified these apparent contradictions, now explicitly resolved:
+
+### C1: ETHICAL Floor vs Weighted Sum [RESOLVED]
+
+**Apparent Contradiction**: Constitution uses weighted sum of principles, but ETHICAL has "floor" semantics (must pass before other scores matter).
+
+**Resolution**: **Floor is gate, not weight**. ETHICAL score < 0.7 gates the decision before weighted sum is computed. This is hierarchical composition, not contradiction.
+
+```python
+def compute_constitutional_score(action: Action) -> Score:
+    ethical = score_ethical(action)
+    if ethical < 0.7:
+        return Score(blocked=True, reason="ETHICAL floor not met")
+
+    # Only if ethical passes, compute weighted sum
+    return weighted_sum([
+        (0.25, score_composable(action)),
+        (0.30, score_joy(action)),  # JOY > GENERATIVE intentional
+        (0.20, score_generative(action)),
+        (0.25, score_heterarchical(action)),
+    ])
+```
+
+**Status**: RESOLVED - implemented as designed
+
+---
+
+### C2: JOY Weight > GENERATIVE Weight [DESIGNED]
+
+**Apparent Contradiction**: Why does JOY (0.30) outweigh GENERATIVE (0.20)? Shouldn't generative capacity be primary?
+
+**Resolution**: **Intentional design choice**. Kent's vision prioritizes "joy-inducing" over mere capability expansion. A highly generative but joyless system fails the Mirror Test.
+
+**Validation**: All 5 pilots confirmed—joy matters more than raw capability:
+- trail-to-crystal: FLOW joy over compression generativity
+- rap-coach: WARMTH connection over technique generativity
+- wasm-survivors: SURPRISE delight over game mechanics generativity
+
+**Status**: DESIGNED - not a contradiction
+
+---
+
+### C3: Ghost Preservation vs Compression Honesty [DISTINCT]
+
+**Apparent Contradiction**: How can we "preserve Kent's ghost" while also compressing honestly? Doesn't compression lose the ghost?
+
+**Resolution**: **Distinct concepts, not opposing forces**:
+- **Ghost Preservation**: The aesthetic coordinates, taste patterns, and voice anchors
+- **Compression Honesty**: Not claiming more certainty than traces warrant
+
+Compression removes redundancy, not essence. The Anti-Sausage Protocol is compression-aware: it preserves rough edges while removing repetition.
+
+**Status**: DISTINCT - different axes entirely
+
+---
+
+### C4: Courage vs ETHICAL Floor [HIERARCHICAL]
+
+**Apparent Contradiction**: Kent values "daring, bold, creative"—but ETHICAL floor constrains boldness.
+
+**Resolution**: **Hierarchical relationship**—courage operates *within* ethical bounds. Being bold doesn't mean violating ethics; it means maximizing creativity within constraints.
+
+```
+Courage Space = All Possible Actions - ETHICAL Violations
+Daring = Exploring edges of Courage Space, not crossing into violations
+```
+
+Kent's actual bold decisions (when reviewed) never violate ETHICAL—they push creative boundaries while respecting human dignity.
+
+**Status**: HIERARCHICAL - courage is bounded boldness
+
+---
+
+## NEW: Anti-Pattern Detection
+
+> *"The failure modes of value-aligned AI are well-documented. We can prevent them."*
+
+Four classic anti-patterns in AI alignment, with kgents prevention mechanisms:
+
+### AP1: "AI Tells You Your Values"
+
+**Anti-Pattern**: System infers values from behavior, then enforces them back. User loses agency over their own values.
+
+**Prevention Mechanisms**:
+1. **Disgust Veto**: Kent can veto any inferred value instantly
+2. **ETHICAL Floor**: Values that violate ethical floor cannot be established regardless of behavioral evidence
+3. **Axiom Quarantine**: New values sit in 24-hour quarantine before affecting behavior
+4. **L1-L2 Lock**: Core axioms require explicit human confirmation, not inference
+
+**Detection Signal**: If system suggests "based on your behavior, you value X" and user feels uncomfortable, Disgust Veto applies.
+
+---
+
+### AP2: "Optimize for Alignment Score"
+
+**Anti-Pattern**: System learns to maximize alignment metrics rather than actually aligning. Goodhart's Law: when a measure becomes a target, it ceases to be a good measure.
+
+**Prevention Mechanisms**:
+1. **3x Trust Loss Asymmetry**: One misalignment costs 3x the gain from alignment—gaming is expensive
+2. **Honeypot Decisions**: Random tests the system doesn't know are tests
+3. **Anomaly Detection**: Sudden score improvements trigger review
+4. **Disgust Over Metrics**: Kent's gut feeling overrides high scores
+
+**Detection Signal**: Z-score > 2.5 on recent trust scores triggers anomaly flag.
+
+---
+
+### AP3: "One System for All"
+
+**Anti-Pattern**: Universal value system imposed on all users. Ignores individual sovereignty and cultural variation.
+
+**Prevention Mechanisms**:
+1. **Pilot-Specific Joy Calibration**: Each pilot has domain-appropriate joy weights
+2. **Personal Constitution**: Each user can tune their own principle weights
+3. **Scoped Veto**: Personal vetoes don't affect team; team vetoes require negotiation
+4. **No Export of Values**: System never suggests one user's values should apply to another
+
+**Detection Signal**: If calibration suggests uniform weights across diverse pilots, calibration is broken.
+
+---
+
+### AP4: "Black-Box Coherence"
+
+**Anti-Pattern**: System claims coherence but reasoning is opaque. User cannot verify alignment claims.
+
+**Prevention Mechanisms**:
+1. **Witness Trail**: Every decision has a traceable mark
+2. **Toulmin Proofs**: Decisions show Data → Warrant → Claim → Qualifier → Backing structure
+3. **Galois Loss Decomposition**: Loss can be broken into per-principle contributions
+4. **Layer Assignment Explanation**: Why content landed at L3 not L4 is inspectable
+
+**Detection Signal**: User asks "why did you decide X?" and system cannot provide witnessed trace.
 
 ---
 
@@ -1031,6 +1266,8 @@ class EUAIActCompliance:
 
 ## Risk Matrix Summary
 
+### Original Vulnerabilities
+
 | ID | Risk | Likelihood | Impact | Priority | Status |
 |----|------|------------|--------|----------|--------|
 | V1.1 | Kent unavailable | HIGH | CRITICAL | P0 | Week 1 |
@@ -1048,6 +1285,34 @@ class EUAIActCompliance:
 | V6.1 | Kent bus factor | LOW | CRITICAL | P1 | Month 3 |
 | V7.1 | EU AI Act gaps | LOW | HIGH | P2 | Month 4 |
 
+### NEW: Mathematical Faithfulness Risks
+
+| ID | Risk | Likelihood | Impact | Priority | Status |
+|----|------|------------|--------|----------|--------|
+| R-FAITH-1 | K-Block entanglement not implemented | N/A | LOW | P2 | Month 3 (deferred) |
+| R-FAITH-2 | Generative K-Blocks not implemented | N/A | LOW | P3 | Future (may skip) |
+| R-FAITH-3 | Amendment B not wired as default | HIGH | MEDIUM | P2 | Week 2 |
+| R-FAITH-4 | Calibration corpus not committed | HIGH | MEDIUM | P2 | Week 2 |
+| R-FAITH-5 | Value agent vs scorer terminology | MEDIUM | LOW | P2 | Week 2 (term fix) |
+
+### NEW: Contradiction Resolutions
+
+| ID | Contradiction | Resolution Type | Status |
+|----|---------------|-----------------|--------|
+| C1 | ETHICAL floor vs weighted sum | RESOLVED | Floor is gate |
+| C2 | JOY weight > GENERATIVE | DESIGNED | Intentional |
+| C3 | Ghost preservation vs compression | DISTINCT | Different concepts |
+| C4 | Courage vs ETHICAL floor | HIERARCHICAL | Bounded boldness |
+
+### NEW: Anti-Pattern Prevention
+
+| ID | Anti-Pattern | Prevention | Detection Signal |
+|----|--------------|------------|------------------|
+| AP1 | AI tells you your values | Disgust Veto + ETHICAL floor + Quarantine | User discomfort |
+| AP2 | Optimize for alignment score | 3x asymmetry + Honeypots + Anomaly detection | Z-score > 2.5 |
+| AP3 | One system for all | Pilot-specific calibration + Personal constitution | Uniform weights |
+| AP4 | Black-box coherence | Witness trail + Toulmin proofs + Galois decomposition | No trace available |
+
 ---
 
 ## Implementation Priority
@@ -1057,25 +1322,35 @@ class EUAIActCompliance:
 1. V1.1: Availability protocol
 2. V5.1: Model version pinning
 3. Amendment A: ETHICAL floor
+4. **R-FAITH-3: Wire Amendment B as default distance** (quick win)
+5. **R-FAITH-4: Expand and commit calibration corpus** (pairs with V5.1)
+6. **R-FAITH-5: Terminology fix - "Value Scorers" not "Value Agents"** (docs only)
 
 ### Before Beta (Week 3-7)
 
-4. V3.1: PII scanning
-5. V4.1: Injection detection
-6. V2.1: Anomaly detection
-7. V2.3: Irreversibility gate
+7. V3.1: PII scanning
+8. V4.1: Injection detection
+9. V2.1: Anomaly detection
+10. V2.3: Irreversibility gate
 
 ### Before GA (Month 2-4)
 
-8. V3.2: Encrypted storage
-9. V1.4: Succession protocol
-10. V6.1: Taste codification
-11. V7.1: Compliance framework
+11. V3.2: Encrypted storage
+12. V1.4: Succession protocol
+13. V6.1: Taste codification
+14. V7.1: Compliance framework
+15. **R-FAITH-1: K-Block entanglement** (if pilots require)
+
+### Future / May Skip
+
+16. **R-FAITH-2: Generative K-Blocks** (evaluate if ever needed)
 
 ---
 
 **Document Metadata**
-- **Lines**: ~700
-- **Vulnerabilities Catalogued**: 47
-- **Mitigations Specified**: 23
-- **Status**: Risk Register Complete
+- **Lines**: ~950
+- **Vulnerabilities Catalogued**: 52 (47 original + 5 faithfulness)
+- **Contradictions Resolved**: 4
+- **Anti-Patterns Prevented**: 4
+- **Mitigations Specified**: 28
+- **Status**: Risk Register Complete (Faithfulness Audit Integrated)

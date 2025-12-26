@@ -7,8 +7,8 @@ They are code, not database DDL. Frozen dataclasses are the contracts.
 Spec: spec/protocols/unified-data-crystal.md
 """
 
-from dataclasses import dataclass, field, asdict
-from typing import Generic, TypeVar, Callable, Any
+from dataclasses import asdict, dataclass, field
+from typing import Any, Callable, Generic, TypeVar
 
 T = TypeVar("T")
 

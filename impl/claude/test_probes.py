@@ -13,11 +13,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Import directly from module files
-from agents.t.probes.null_probe import NullProbe, NullConfig
-from agents.t.probes.chaos_probe import ChaosProbe, ChaosConfig, ChaosType
-from agents.t.probes.witness_probe import WitnessProbe, WitnessConfig
-from agents.t.probes.judge_probe import JudgeProbe, JudgeConfig, JudgmentCriteria
-from agents.t.probes.trust_probe import TrustProbe, TrustConfig, Proposal, TrustDecision
+from agents.t.probes.chaos_probe import ChaosConfig, ChaosProbe, ChaosType
+from agents.t.probes.judge_probe import JudgeConfig, JudgeProbe, JudgmentCriteria
+from agents.t.probes.null_probe import NullConfig, NullProbe
+from agents.t.probes.trust_probe import Proposal, TrustConfig, TrustDecision, TrustProbe
+from agents.t.probes.witness_probe import WitnessConfig, WitnessProbe
 
 
 async def test_null_probe():

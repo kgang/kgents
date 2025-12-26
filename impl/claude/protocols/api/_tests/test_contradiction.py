@@ -15,9 +15,10 @@ Philosophy:
 
 from __future__ import annotations
 
-import pytest
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 # Skip all tests if FastAPI not available
 pytest.importorskip("fastapi")
@@ -25,7 +26,6 @@ pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient
 
 from protocols.api.app import create_app
-
 
 # =============================================================================
 # Fixtures
@@ -291,7 +291,7 @@ async def test_resolve_contradiction_synthesize(
 
         # Force create a contradiction in global state for testing
         # In real usage, detect would populate this
-        from protocols.api.contradiction import _contradictions, KBlockSummary
+        from protocols.api.contradiction import KBlockSummary, _contradictions
 
         test_contradiction = {
             "id": "contradiction_kb-001_kb-002",
@@ -358,7 +358,7 @@ async def test_resolve_contradiction_synthesize(
 async def test_resolve_contradiction_choose(client, mock_witness):
     """Test CHOOSE resolution strategy."""
     # Seed contradiction
-    from protocols.api.contradiction import _contradictions, ContradictionResponse, KBlockSummary
+    from protocols.api.contradiction import ContradictionResponse, KBlockSummary, _contradictions
 
     _contradictions["test-contradiction"] = ContradictionResponse(
         id="test-contradiction",
@@ -397,7 +397,7 @@ async def test_resolve_contradiction_choose(client, mock_witness):
 @pytest.mark.asyncio
 async def test_resolve_contradiction_invalid_strategy(client, mock_witness):
     """Test resolution with invalid strategy."""
-    from protocols.api.contradiction import _contradictions, ContradictionResponse, KBlockSummary
+    from protocols.api.contradiction import ContradictionResponse, KBlockSummary, _contradictions
 
     _contradictions["test-contradiction"] = ContradictionResponse(
         id="test-contradiction",
@@ -455,11 +455,11 @@ def test_get_stats_empty(client):
 def test_get_stats_with_data(client):
     """Test statistics with contradictions and resolutions."""
     from protocols.api.contradiction import (
+        ContradictionResponse,
+        KBlockSummary,
+        ResolutionResponse,
         _contradictions,
         _resolutions,
-        ContradictionResponse,
-        ResolutionResponse,
-        KBlockSummary,
     )
 
     # Seed test data

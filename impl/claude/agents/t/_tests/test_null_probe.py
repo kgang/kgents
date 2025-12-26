@@ -15,9 +15,10 @@ Tests cover:
 
 from __future__ import annotations
 
-import pytest
 import asyncio
 import time
+
+import pytest
 
 from agents.t.probes.null_probe import NullProbe, NullState, null_probe
 

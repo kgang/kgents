@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
+
 import pytest
 
 from agents.poly.types import Agent
@@ -30,8 +31,12 @@ from agents.t import (
     numeric_equality,
     semantic_equality,
 )
+
 # Legacy MockAgent removed (2025-12-25) - use NullProbe instead
-from agents.t.probes import NullProbe as MockAgent, NullConfig as MockConfig  # Temporary compat for tests
+from agents.t.probes import (  # Temporary compat for tests
+    NullConfig as MockConfig,
+    NullProbe as MockAgent,
+)
 
 
 # Simple identity agent for testing

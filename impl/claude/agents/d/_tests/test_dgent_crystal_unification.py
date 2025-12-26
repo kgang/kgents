@@ -8,13 +8,14 @@ Tests the full stack:
 4. Proof creation
 """
 
-import pytest
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
-from agents.d.universe import Universe, Backend
-from agents.d.galois import GaloisLossComputer
+import pytest
+
 from agents.d.crystal.self_justifying import SelfJustifyingCrystal
+from agents.d.galois import GaloisLossComputer
 from agents.d.schemas.proof import GaloisWitnessedProof
+from agents.d.universe import Backend, Universe
 
 
 @pytest.fixture

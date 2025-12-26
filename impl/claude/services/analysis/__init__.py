@@ -62,13 +62,13 @@ See: spec/theory/analysis-operad.md
 
 from __future__ import annotations
 
-from .service import AnalysisService
 from .ashc_bridge import (
     AnalysisASHCBridge,
     EvidencedAnalysis,
     ModeEvidence,
     analyze_with_evidence,
 )
+from .service import AnalysisService
 
 __all__ = [
     "AnalysisService",

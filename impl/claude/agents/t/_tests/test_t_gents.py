@@ -31,6 +31,7 @@ from agents.t import (
     PredicateAgent,
     not_empty,
 )
+
 # Legacy agents removed (2025-12-25) - tests skip anyway
 # CounterAgent, FixtureAgent, FixtureConfig, MockAgent, MockConfig, SpyAgent
 # Use NullProbe, WitnessProbe instead

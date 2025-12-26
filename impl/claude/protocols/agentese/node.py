@@ -503,7 +503,7 @@ class BaseLogosNode(ABC):
         Captures state before/after, evaluates against Constitution,
         emits TraceEntry with principle scores.
         """
-        from services.categorical import PolicyTrace, TraceEntry, ValueFunction, Principle
+        from services.categorical import PolicyTrace, Principle, TraceEntry, ValueFunction
 
         # Capture state before (use hashable representation)
         state_before_str = f"{self.handle}:{aspect}:{sorted(kwargs.items())}"
@@ -560,7 +560,7 @@ class BaseLogosNode(ABC):
         Override in subclasses to provide custom principle evaluators.
         Default implementation uses neutral scoring.
         """
-        from services.categorical import ValueFunction, Principle
+        from services.categorical import Principle, ValueFunction
 
         # Default: neutral scoring (0.5 for all principles)
         return ValueFunction()

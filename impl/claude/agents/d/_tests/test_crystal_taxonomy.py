@@ -24,18 +24,19 @@ Coverage:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
-from datetime import datetime, UTC, timedelta
 
 # Import all Crystal schemas
 try:
-    from ..schemas.axiom import AxiomCrystal, ValueCrystal, AXIOM_SCHEMA, VALUE_SCHEMA
+    from ..schemas.axiom import AXIOM_SCHEMA, VALUE_SCHEMA, AxiomCrystal, ValueCrystal
 except ImportError:
     AxiomCrystal = None  # type: ignore
     ValueCrystal = None  # type: ignore
 
 try:
-    from ..schemas.prompt import PromptCrystal, PromptParam, InvocationCrystal
+    from ..schemas.prompt import InvocationCrystal, PromptCrystal, PromptParam
 except ImportError:
     PromptCrystal = None  # type: ignore
     PromptParam = None  # type: ignore
@@ -47,20 +48,26 @@ except ImportError:
     SpecCrystal = None  # type: ignore
 
 try:
-    from ..schemas.code import FunctionCrystal, ParamInfo, TestCrystal, FUNCTION_CRYSTAL_SCHEMA, TEST_CRYSTAL_SCHEMA
+    from ..schemas.code import (
+        FUNCTION_CRYSTAL_SCHEMA,
+        TEST_CRYSTAL_SCHEMA,
+        FunctionCrystal,
+        ParamInfo,
+        TestCrystal,
+    )
 except ImportError:
     FunctionCrystal = None  # type: ignore
     ParamInfo = None  # type: ignore
     TestCrystal = None  # type: ignore
 
 try:
-    from ..schemas.kblock import KBlockCrystal, KBLOCK_SIZE_HEURISTICS, KBLOCK_CRYSTAL_SCHEMA
+    from ..schemas.kblock import KBLOCK_CRYSTAL_SCHEMA, KBLOCK_SIZE_HEURISTICS, KBlockCrystal
 except ImportError:
     KBlockCrystal = None  # type: ignore
     KBLOCK_SIZE_HEURISTICS = None  # type: ignore
 
 try:
-    from ..schemas.reflection import ReflectionCrystal, InterpretationCrystal
+    from ..schemas.reflection import InterpretationCrystal, ReflectionCrystal
 except ImportError:
     ReflectionCrystal = None  # type: ignore
     InterpretationCrystal = None  # type: ignore
@@ -72,7 +79,7 @@ except ImportError:
     StateChange = None  # type: ignore
 
 try:
-    from ..schemas.proof import GaloisWitnessedProof, PROOF_SCHEMA
+    from ..schemas.proof import PROOF_SCHEMA, GaloisWitnessedProof
 except ImportError:
     GaloisWitnessedProof = None  # type: ignore
 

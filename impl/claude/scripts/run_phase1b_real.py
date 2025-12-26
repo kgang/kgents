@@ -27,7 +27,6 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 
-
 # =============================================================================
 # Result Types
 # =============================================================================
@@ -386,7 +385,7 @@ async def run_phase_b():
     # Initialize LLM using direct Claude CLI
     try:
         llm = ClaudeCLI(model="claude-sonnet-4-20250514", verbose=True)
-        print(f"✓ Claude CLI initialized (uses claude -p with directory context)")
+        print("✓ Claude CLI initialized (uses claude -p with directory context)")
         print(f"  Path: {llm.claude_path}")
     except Exception as e:
         print(f"❌ Failed to initialize LLM: {e}")

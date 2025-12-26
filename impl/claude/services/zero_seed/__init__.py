@@ -37,12 +37,6 @@ from __future__ import annotations
 
 # Core types
 from .core import (
-    # Type aliases
-    EdgeId,
-    MarkIdType,
-    NodeId,
-    generate_edge_id,
-    generate_node_id,
     # Constants
     AXIOM_KINDS,
     AXIOM_LAYERS,
@@ -51,36 +45,42 @@ from .core import (
     LAYER_DESCRIPTIONS,
     LAYER_NAMES,
     VALUE_KINDS,
-    # Evidence tier
-    EvidenceTier,
-    # Proof (Toulmin)
-    Proof,
-    # Edge kind taxonomy
-    EdgeKind,
-    compose_edge_kinds,
     # Errors
     CompositionError,
+    # Type aliases
+    EdgeId,
+    # Edge kind taxonomy
+    EdgeKind,
+    # Evidence tier
+    EvidenceTier,
     LayerViolationError,
+    MarkIdType,
+    NodeId,
+    # Proof (Toulmin)
+    Proof,
     ProofForbiddenError,
     ProofRequiredError,
     WitnessRequiredError,
-    ZeroSeedError,
     # Core types
     ZeroEdge,
     ZeroNode,
+    ZeroSeedError,
+    compose_edge_kinds,
     # Layer utilities
     compute_layer_from_proof,
-    layer_of,
-    proof_depth,
     # AGENTESE mapping
     context_to_layers,
-    layer_to_context,
-    parse_agentese_path,
+    generate_edge_id,
+    generate_node_id,
     # Layer names
     get_layer_description,
     get_layer_name,
     # Identity
     identity_edge,
+    layer_of,
+    layer_to_context,
+    parse_agentese_path,
+    proof_depth,
 )
 
 # Galois axiomatics: The Galois-grounded minimal kernel
@@ -96,23 +96,24 @@ from .galois.axiomatics import (
     AxiomGovernance,
     AxiomHealth,
     AxiomStatus,
+    # Discovery (3-stage process from axiomatics.md)
+    DiscoveryResult,
     EntityAxiom,
+    GaloisAxiomDiscovery,
     GaloisGround,
     GaloisLaw,
     # Core types
     GaloisLoss,
     LayerType,
+    MirrorTestOracle,
     MorphismAxiom,
     Restructurable,
     compute_layer,
     create_axiom_governance,
     create_axiom_kernel,
     stratify_by_loss,
-    # Discovery (3-stage process from axiomatics.md)
-    DiscoveryResult,
-    GaloisAxiomDiscovery,
-    MirrorTestOracle,
 )
+
 # Note: ZeroNode is imported from core.py, galois.axiomatics has its own ZeroNode
 # that's used internally for axiom discovery. They serve different purposes:
 # - core.ZeroNode: Runtime knowledge graph node with edges and proofs

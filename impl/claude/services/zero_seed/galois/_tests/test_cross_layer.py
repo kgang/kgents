@@ -12,7 +12,14 @@ Test coverage:
 
 import pytest
 
-from services.zero_seed import EdgeKind, Proof, ZeroEdge, ZeroNode, generate_edge_id, generate_node_id
+from services.zero_seed import (
+    EdgeKind,
+    Proof,
+    ZeroEdge,
+    ZeroNode,
+    generate_edge_id,
+    generate_node_id,
+)
 from services.zero_seed.galois.cross_layer import (
     CrossLayerLoss,
     compute_cross_layer_loss,

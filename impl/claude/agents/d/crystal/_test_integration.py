@@ -5,12 +5,12 @@ Verifies the complete lifecycle from raw data to typed crystals.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
-from .datum import Datum
 from .crystal import Crystal
-from .schema import Schema
+from .datum import Datum
 from .query import Query
+from .schema import Schema
 
 
 @dataclass(frozen=True)

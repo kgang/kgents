@@ -18,15 +18,14 @@ import pytest
 from agents.operad.domains.probe import (
     ASSOCIATIVITY_LAW,
     IDENTITY_LAW,
-    NullProbe,
     PROBE_OPERAD,
+    TRACE_PRESERVATION_LAW,
+    NullProbe,
     ProbeProtocol,
     SequentialProbe,
-    TRACE_PRESERVATION_LAW,
 )
 from services.categorical.dp_bridge import PolicyTrace
 from services.probe.types import ProbeResult, ProbeStatus, ProbeType
-
 
 # =============================================================================
 # Test Probes

@@ -284,34 +284,34 @@ class IntegrationService:
             )
 
             # STEP 2: Analyze content for layer assignment (use Galois)
-            logger.info(f"Step 2: Analyzing content for layer assignment")
+            logger.info("Step 2: Analyzing content for layer assignment")
             result.layer, result.galois_loss = await self._assign_layer(content)
 
             # STEP 2b: Extract portal tokens (needed for K-Block creation)
-            logger.info(f"Step 2b: Extracting portal tokens")
+            logger.info("Step 2b: Extracting portal tokens")
             result.portal_tokens = await self._extract_portal_tokens(content)
 
             # STEP 3: Create K-Block (one doc = one K-Block heuristic)
-            logger.info(f"Step 3: Creating K-Block with portal tokens")
+            logger.info("Step 3: Creating K-Block with portal tokens")
             result.kblock_id = await self._create_kblock(
                 destination_path, content, result.layer, result.galois_loss,
                 portal_tokens=result.portal_tokens
             )
 
             # STEP 4: Discover edges (what does this relate to?)
-            logger.info(f"Step 4: Discovering edges")
+            logger.info("Step 4: Discovering edges")
             result.edges = await self._discover_edges(content, destination_path)
 
             # STEP 4b: Persist discovered edges
-            logger.info(f"Step 4b: Persisting edges")
+            logger.info("Step 4b: Persisting edges")
             await self._persist_edges(result.edges, result.witness_mark_id)
 
             # STEP 6: Identify concepts (axioms, constructs)
-            logger.info(f"Step 6: Identifying concepts")
+            logger.info("Step 6: Identifying concepts")
             result.concepts = await self._identify_concepts(content, result.layer)
 
             # STEP 7: Check for contradictions with existing content
-            logger.info(f"Step 7: Checking for contradictions")
+            logger.info("Step 7: Checking for contradictions")
             result.contradictions = await self._find_contradictions(
                 content, destination_path
             )
@@ -321,7 +321,7 @@ class IntegrationService:
             await self._move_file(source_file, self.kgents_root / destination_path)
 
             # STEP 9: Add to cosmos feed
-            logger.info(f"Step 9: Adding to cosmos feed")
+            logger.info("Step 9: Adding to cosmos feed")
             await self._add_to_cosmos(result)
 
             logger.info(f"Integration complete: {source_path} -> {destination_path}")
@@ -751,10 +751,11 @@ class IntegrationService:
 
         # Create a temporary K-Block for the new content
         try:
+            import hashlib
+
             from services.contradiction.detection import ContradictionDetector
             from services.k_block.core.kblock import KBlock as KBlockClass, KBlockId
             from services.zero_seed.galois.galois_loss import GaloisLossComputer
-            import hashlib
 
             # Create temporary K-Block for the new content
             content_hash = hashlib.sha256(content).hexdigest()[:16]
@@ -848,11 +849,12 @@ class IntegrationService:
         MAX_CANDIDATES = 20  # Limit for performance
 
         try:
+            from sqlalchemy import select
+
+            from models.kblock import KBlock as KBlockModel
             from services.k_block.postgres_zero_seed_storage import (
                 get_postgres_zero_seed_storage,
             )
-            from sqlalchemy import select
-            from models.kblock import KBlock as KBlockModel
 
             storage = await get_postgres_zero_seed_storage()
 

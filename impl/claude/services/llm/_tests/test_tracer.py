@@ -17,13 +17,14 @@ Test Categories:
 6. Querying and retrieval
 """
 
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, UTC
 
 from agents.d.galois import GaloisLossComputer
 from agents.d.schemas.llm_trace import LLMInvocationMark, StateChange
-from agents.d.universe import Universe, Backend
-from services.llm.tracer import LLMTracer, LLMTraceContext
+from agents.d.universe import Backend, Universe
+from services.llm.tracer import LLMTraceContext, LLMTracer
 
 
 @pytest.fixture

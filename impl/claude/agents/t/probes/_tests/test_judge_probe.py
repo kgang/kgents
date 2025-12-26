@@ -16,8 +16,9 @@ Tests verify:
 
 from __future__ import annotations
 
-import pytest
 from typing import Any
+
+import pytest
 
 from agents.t.probes.judge_probe import (
     JudgeConfig,
@@ -32,7 +33,6 @@ from agents.t.truth_functor import (
     ConstitutionalScore,
     TruthVerdict,
 )
-
 
 # === Test Fixtures ===
 

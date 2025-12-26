@@ -8,14 +8,14 @@ emerges from value function convergence.
 """
 
 from dp.jewels.soul.formulation import (
-    SoulState,
     SoulAction,
-    SoulFormulation,
     SoulContext,
-    soul_transition,
+    SoulFormulation,
+    SoulState,
+    create_soul_agent,
     soul_available_actions,
     soul_reward,
-    create_soul_agent,
+    soul_transition,
 )
 
 __all__ = [

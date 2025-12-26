@@ -42,7 +42,6 @@ from protocols.agentese.node import (
 from protocols.agentese.registry import node
 
 if TYPE_CHECKING:
-    from bootstrap.umwelt import Umwelt
     from agents.operad.domains.analysis import (
         CategoricalReport,
         DialecticalReport,
@@ -50,6 +49,7 @@ if TYPE_CHECKING:
         FullAnalysisReport,
         GenerativeReport,
     )
+    from bootstrap.umwelt import Umwelt
 
 
 # =============================================================================

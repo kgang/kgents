@@ -2,12 +2,12 @@
 Tests for Layer 6-7 Reflection and Interpretation crystals.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 import pytest
 
 from agents.d.schemas.proof import GaloisWitnessedProof
-from agents.d.schemas.reflection import ReflectionCrystal, InterpretationCrystal
+from agents.d.schemas.reflection import InterpretationCrystal, ReflectionCrystal
 
 
 def test_reflection_crystal_creation():

@@ -121,6 +121,7 @@ from .garden import (
 
 # Phase 5: Semantic Gatekeeper (DP-Native Probe)
 from .gatekeeper_probe import (
+    VIOLATION_PATTERNS,
     GatekeeperProbe,
     Principle,
     Severity,
@@ -128,7 +129,6 @@ from .gatekeeper_probe import (
     ValidationResult,
     ValidationState,
     Violation,
-    VIOLATION_PATTERNS,
     validate_content_probe,
     validate_file_probe,
     violation_to_score,

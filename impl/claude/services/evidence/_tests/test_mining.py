@@ -4,15 +4,16 @@ Tests for evidence mining engine.
 These tests validate the RepositoryMiner can extract patterns from ANY git repository.
 """
 
-import pytest
 from pathlib import Path
 
+import pytest
+
 from services.evidence.mining import (
-    RepositoryMiner,
-    CommitPatternSummary,
-    FileChurnMetric,
     AuthorPattern,
     BugCorrelation,
+    CommitPatternSummary,
+    FileChurnMetric,
+    RepositoryMiner,
     _gini_coefficient,
 )
 

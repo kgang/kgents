@@ -13,9 +13,9 @@ See: brainstorming/tool-use/CLAUDE_CODE_CLI_STRATEGY.md (Phase 1)
 See: spec/principles.md (7 constitutional principles)
 """
 
-from .principles import score_principles
 from .drift import detect_drift
-from .types import AuditResult, DriftItem, PrincipleScores, AuditSeverity
+from .principles import score_principles
+from .types import AuditResult, AuditSeverity, DriftItem, PrincipleScores
 
 __all__ = [
     "AuditResult",

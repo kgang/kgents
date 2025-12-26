@@ -42,13 +42,13 @@ async def test_backend(backend, name: str):
     await backend.store(datum1)
     await backend.store(datum2)
     await backend.store(datum3)
-    print(f"✓ Stored 3 data")
+    print("✓ Stored 3 data")
 
     # Get by ID
     retrieved = await backend.get(datum1.id)
     assert retrieved is not None
     assert retrieved.content == b"Test data 1"
-    print(f"✓ Retrieved datum by ID")
+    print("✓ Retrieved datum by ID")
 
     # Query with author filter
     results = await backend.query(Query(author="kent"))
@@ -79,12 +79,12 @@ async def test_backend(backend, name: str):
     # Delete
     deleted = await backend.delete(datum1.id)
     assert deleted is True
-    print(f"✓ Deleted datum")
+    print("✓ Deleted datum")
 
     # Verify deletion
     retrieved = await backend.get(datum1.id)
     assert retrieved is None
-    print(f"✓ Verified deletion")
+    print("✓ Verified deletion")
 
     # Get stats
     stats = await backend.stats()
@@ -116,8 +116,9 @@ async def main():
 
     # Test Postgres Backend (if available)
     try:
-        from agents.d.universe.backends import PostgresBackend
         import os
+
+        from agents.d.universe.backends import PostgresBackend
 
         url = os.getenv("KGENTS_DATABASE_URL")
         if url and "postgresql" in url:

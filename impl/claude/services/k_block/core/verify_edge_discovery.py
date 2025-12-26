@@ -12,11 +12,10 @@ Usage:
     python3 verify_edge_discovery.py
 """
 
-import sys
-from pathlib import Path
-
 # Direct import to avoid dependency issues
 import importlib.util
+import sys
+from pathlib import Path
 
 spec = importlib.util.spec_from_file_location(
     "edge_discovery",
@@ -57,7 +56,7 @@ def main():
     print("=" * 80)
 
     service = EdgeDiscoveryService(kgents_root=Path.cwd())
-    print(f"✓ EdgeDiscoveryService created")
+    print("✓ EdgeDiscoveryService created")
     print(f"  Available edge kinds: {len(list(EdgeKind))}")
 
     # =========================================================================

@@ -185,12 +185,13 @@ async def async_session_factory(tmp_path):
     Uses in-memory SQLite to avoid PostgreSQL GIN index issues and
     ensure test isolation.
     """
-    from models.base import Base
     from sqlalchemy.ext.asyncio import (
         AsyncSession,
         async_sessionmaker,
         create_async_engine,
     )
+
+    from models.base import Base
 
     # Use SQLite in-memory for these tests (avoids PostgreSQL GIN index issues)
     db_path = tmp_path / "test_zero_seed.db"

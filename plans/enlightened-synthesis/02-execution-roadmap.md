@@ -1,13 +1,13 @@
-# Execution Roadmap: 8-Week Pilot-Grounded Plan
+# Execution Roadmap: 10-Week Pilot-Grounded Plan
 
 > *"Depth over breadth. Ship fast, ship right, ship something that lasts."*
 >
 > *"Every week validates infrastructure THROUGH a pilot, not in isolation."*
 
 **Created**: 2025-12-25
-**Revised**: 2025-12-26 (Pilot-Grounded Edition)
+**Revised**: 2025-12-26 (7-Pilot Expanded Edition)
 **Status**: Ready for Execution
-**Purpose**: Week-by-week implementation plan grounded in 5 pilots
+**Purpose**: Week-by-week implementation plan grounded in 7 pilots across 3 tiers
 
 ---
 
@@ -23,27 +23,93 @@
 
 ---
 
-## Pilot-Grounded Critical Path (REVISED)
+## The 7-Pilot System
+
+### Pilot Tiers
+
+| Tier | Purpose | Pilots |
+|------|---------|--------|
+| **Core** | Validate fundamental infrastructure | trail-to-crystal, zero-seed-governance |
+| **Domain** | Prove domain applicability | wasm-survivors, rap-coach, sprite-lab, disney-portal |
+| **Meta** | Package for external use | categorical-foundation |
+
+### Pilot Validation Matrix
+
+| Pilot | Tier | Core Primitive | Amendment Validated | Mathematical Grounding |
+|-------|------|----------------|---------------------|------------------------|
+| trail-to-crystal | Core | Mark/Trace/Crystal | A (ETHICAL floor) | L < 0.1 for daily coherence |
+| zero-seed-governance | Core | Axiom/Constitution | B (Canonical distance) | L < 0.05 fixed points |
+| wasm-survivors | Domain | Galois Loss | B (Canonical distance) | Real-time drift detection |
+| rap-coach | Domain | Trail, Galois | A, B | Intent/delivery alignment |
+| sprite-lab | Domain | Crystal | C (Value Agents) | Style attractor stability |
+| disney-portal | Domain | ValueCompass | A (ETHICAL floor) | Constitutional tradeoffs |
+| categorical-foundation | Meta | PolyAgent/Operad/Sheaf | All | Law-preserving morphisms |
+
+---
+
+## Implementation Faithfulness Gates
+
+Based on audit findings, these gates MUST be passed before pilot completion:
+
+| Component | Current | Required | Gate Week |
+|-----------|---------|----------|-----------|
+| K-Block Implementation | 80% | 90%+ | Week 4 |
+| Galois Distance | 85% | 95%+ | Week 6 |
+| Value Agents | 85% | 95%+ | Week 8 |
+
+**Gate Enforcement**:
+- Each gate week includes explicit validation tasks
+- Pilot cannot ship if gate not passed
+- Missing implementation must be completed before proceeding
+
+---
+
+## Mathematical Validation Milestones
+
+| Week | Milestone | Validation Method |
+|------|-----------|-------------------|
+| Week 4 | Galois loss produces meaningful values | Run on trail-to-crystal outputs, verify L correlates with coherence |
+| Week 6 | Axiom discovery works | Verify zero-seed outputs produce L < 0.05 fixed points |
+| Week 8 | Categorical laws hold | Validate PolyAgent/Operad laws in isolated package tests |
+| Week 10 | External validation | Open-source package passes external categorical law tests |
+
+---
+
+## Pilot-Grounded Critical Path (10-WEEK)
 
 ```
 Week 1: Core Pipeline (trail-to-crystal primitives)
-    │
-    └──► Week 2: Galois Integration (wasm-survivors drift detection)
-            │
-            └──► Week 3: ValueCompass (disney-portal constitutional scoring)
-                    │
-                    └──► Week 4: Trail Primitive (rap-coach session navigation)
-                            │
-                            └──► Week 5: Crystal Compression (sprite-procedural style crystals)
-                                    │
-                                    └──► Week 6: FIRST PILOT (trail-to-crystal-daily-lab)
-                                            │
-                                            ├──► Week 7: Second Pilot (wasm-survivors OR rap-coach)
-                                            │
-                                            └──► Week 8: Three Pilots Demo
+    |
+    +---> Week 2: Galois Integration (wasm-survivors drift detection)
+            |
+            +---> Week 3: ValueCompass (disney-portal constitutional scoring)
+                    |
+                    +---> Week 4: Trail Primitive (rap-coach session navigation)
+                            |                     [GATE: K-Block 90%+]
+                            |
+                            +---> Week 5: Crystal Compression (sprite-lab style crystals)
+                                    |
+                                    +---> Week 6: FIRST PILOT (trail-to-crystal-daily-lab)
+                                            |     [GATE: Galois 95%+]
+                                            |     [MILESTONE: Galois loss validation]
+                                            |
+                                            +---> Week 7: Second Pilot (wasm-survivors OR rap-coach)
+                                            |
+                                            +---> Week 8: Three Pilots Demo
+                                                    |     [GATE: Value Agents 95%+]
+                                                    |
+                                                    +---> Week 9: Zero Seed Governance Pilot
+                                                            |     [MILESTONE: Axiom discovery validation]
+                                                            |
+                                                            +---> Week 10: Categorical Foundation Package
+                                                                          [MILESTONE: External law validation]
 ```
 
-**Key Difference from Original**: Every week validates infrastructure THROUGH a pilot, not through isolated API testing. The pilots ARE the test suite.
+**Key Difference from Original**:
+- Expanded from 8 to 10 weeks
+- Added Core tier pilot (zero-seed-governance) in Week 9
+- Added Meta tier pilot (categorical-foundation) in Week 10
+- Added explicit gates and mathematical milestones
 
 ---
 
@@ -51,7 +117,7 @@ Week 1: Core Pipeline (trail-to-crystal primitives)
 
 ### Goal
 
-Validate Mark → Trace → Crystal pipeline works with trail-to-crystal requirements.
+Validate Mark -> Trace -> Crystal pipeline works with trail-to-crystal requirements.
 
 ### Pilot Context: trail-to-crystal-daily-lab
 
@@ -76,11 +142,11 @@ From proto-spec:
 
 | Metric | Target | Measurement | Pass? |
 |--------|--------|-------------|-------|
-| Mark latency | < 50ms | `pytest --benchmark services/witness/mark.py` | □ |
-| Trace append latency | < 5ms | `pytest --benchmark services/witness/trace.py` | □ |
-| Witness tests pass | 100% | `uv run pytest services/witness/ -v` | □ |
-| Amendment A implemented | Yes | ETHICAL floor test passes | □ |
-| Kent approves direction | Go | Kent marks PASS in review | □ |
+| Mark latency | < 50ms | `pytest --benchmark services/witness/mark.py` | [] |
+| Trace append latency | < 5ms | `pytest --benchmark services/witness/trace.py` | [] |
+| Witness tests pass | 100% | `uv run pytest services/witness/ -v` | [] |
+| Amendment A implemented | Yes | ETHICAL floor test passes | [] |
+| Kent approves direction | Go | Kent marks PASS in review | [] |
 
 ### No-Go Path
 
@@ -146,11 +212,11 @@ POST /api/layer/assign
 
 | Metric | Target | Measurement | Pass? |
 |--------|--------|-------------|-------|
-| Galois loss API works | 4 endpoints | Integration tests pass | □ |
-| Fresh latency | < 5s | P95 from benchmark | □ |
-| Cached latency | < 500ms | P95 from benchmark | □ |
-| wasm-survivors drift detection | 3/3 scenarios | Kent validates | □ |
-| API test coverage | > 90% | `pytest --cov` | □ |
+| Galois loss API works | 4 endpoints | Integration tests pass | [] |
+| Fresh latency | < 5s | P95 from benchmark | [] |
+| Cached latency | < 500ms | P95 from benchmark | [] |
+| wasm-survivors drift detection | 3/3 scenarios | Kent validates | [] |
+| API test coverage | > 90% | `pytest --cov` | [] |
 
 ### Pivot Trigger
 
@@ -188,11 +254,11 @@ From proto-spec:
 
 | Metric | Target | Measurement | Pass? |
 |--------|--------|-------------|-------|
-| 7-principle scoring works | Yes | Integration tests | □ |
-| ETHICAL floor blocks violations | Yes | Unit test | □ |
-| Tradeoff explanation readable | 4/5 | Kent validates | □ |
-| ValueCompass UI works | Yes | Visual test | □ |
-| disney-portal constitutional | 1 day with 5 decisions scored | Kent validates | □ |
+| 7-principle scoring works | Yes | Integration tests | [] |
+| ETHICAL floor blocks violations | Yes | Unit test | [] |
+| Tradeoff explanation readable | 4/5 | Kent validates | [] |
+| ValueCompass UI works | Yes | Visual test | [] |
+| disney-portal constitutional | 1 day with 5 decisions scored | Kent validates | [] |
 
 ---
 
@@ -208,6 +274,16 @@ From proto-spec:
 - A session trace is immutable; all feedback must attach to a mark
 - L2 Feedback Grounding Law: All critique must reference a mark or trace segment
 
+### Implementation Gate: K-Block 90%+
+
+**Current**: 80% implementation faithfulness
+**Required**: 90%+ before Week 4 exit
+
+**Gap to close**:
+- Complete K-Block postgres storage implementation
+- Verify layer factory tests pass
+- Run `kg audit spec/k-block.md --full`
+
 ### Tasks
 
 | Task | Owner | Deliverable | Duration | Pilot Validation |
@@ -216,27 +292,37 @@ From proto-spec:
 | Navigation API | Claude | GET /api/witness/trail/{session} | 2 hrs | rap-coach |
 | Compression ratio display | Claude | Trail metadata | 1 hr | All pilots |
 | 100+ mark performance test | Claude | Benchmark | 1 hr | rap-coach |
-| Feedback attachment UI | Claude | Mark → Feedback linking | 2 hrs | rap-coach L2 |
+| Feedback attachment UI | Claude | Mark -> Feedback linking | 2 hrs | rap-coach L2 |
+| K-Block gate validation | Claude | 90%+ implementation | 2 hrs | Gate |
 | Review session navigation | Kent | Navigate a 20-mark session | 1 hr | rap-coach |
+
+### Mathematical Milestone: Galois Loss on trail-to-crystal
+
+**Validation**: Run Galois loss computation on trail-to-crystal outputs
+- Input: 5 representative daily traces
+- Expected: L values correlate with perceived coherence
+- Pass criterion: Kent confirms L < 0.1 traces feel coherent
 
 ### Exit Criteria
 
 | Metric | Target | Measurement | Pass? |
 |--------|--------|-------------|-------|
-| Trail navigates 100+ marks | < 100ms | Benchmark | □ |
-| Feedback attaches to mark | Yes | Integration test | □ |
-| Compression ratio displayed | Yes | UI test | □ |
-| rap-coach session navigation | 1 session with 20+ marks | Kent validates | □ |
+| Trail navigates 100+ marks | < 100ms | Benchmark | [] |
+| Feedback attaches to mark | Yes | Integration test | [] |
+| Compression ratio displayed | Yes | UI test | [] |
+| rap-coach session navigation | 1 session with 20+ marks | Kent validates | [] |
+| K-Block implementation | 90%+ | `kg audit` | [] |
+| Galois loss correlates | Kent confirms | 5 trace validation | [] |
 
 ---
 
-## Week 5: Crystal Compression (sprite-procedural style crystals)
+## Week 5: Crystal Compression (sprite-lab style crystals)
 
 ### Goal
 
-Crystal compression works at <10% of trace size, validated through sprite-procedural style crystals.
+Crystal compression works at <10% of trace size, validated through sprite-lab style crystals.
 
-### Pilot Context: sprite-procedural-taste-lab
+### Pilot Context: sprite-procedural-taste-lab (now: sprite-lab)
 
 From proto-spec:
 - Crystals compress the style journey and explain the current attractor
@@ -247,20 +333,20 @@ From proto-spec:
 | Task | Owner | Deliverable | Duration | Pilot Validation |
 |------|-------|-------------|----------|------------------|
 | Crystal compression service | Claude | `services/witness/crystal.py` | 3 hrs | All pilots |
-| Style evolution summary | Claude | Domain-specific crystal | 2 hrs | sprite-procedural L5 |
+| Style evolution summary | Claude | Domain-specific crystal | 2 hrs | sprite-lab L5 |
 | Compression ratio validation | Claude | < 10% of trace | 1 hr | All pilots |
 | Crystal API | Claude | POST /api/witness/crystal | 2 hrs | - |
-| "Why stable" explanation | Claude | Natural language | 2 hrs | sprite-procedural |
-| Review style crystals | Kent | Validate 3 style evolution summaries | 1 hr | sprite-procedural |
+| "Why stable" explanation | Claude | Natural language | 2 hrs | sprite-lab |
+| Review style crystals | Kent | Validate 3 style evolution summaries | 1 hr | sprite-lab |
 
 ### Exit Criteria
 
 | Metric | Target | Measurement | Pass? |
 |--------|--------|-------------|-------|
-| Crystal size | < 10% of trace | Unit test | □ |
-| Crystal is readable standalone | 4/5 | Kent validates | □ |
-| "Why stable" explanation works | Yes | sprite-procedural test | □ |
-| Compression preserves causal rationale | Yes | Kent validates | □ |
+| Crystal size | < 10% of trace | Unit test | [] |
+| Crystal is readable standalone | 4/5 | Kent validates | [] |
+| "Why stable" explanation works | Yes | sprite-lab test | [] |
+| Compression preserves causal rationale | Yes | Kent validates | [] |
 
 ---
 
@@ -277,6 +363,24 @@ From proto-spec:
 - The system can surface at least one honest gap without shaming
 - The day ends with a single, shareable artifact
 
+### Implementation Gate: Galois Distance 95%+
+
+**Current**: 85% implementation faithfulness
+**Required**: 95%+ before Week 6 exit
+
+**Gap to close**:
+- Complete canonical distance implementation
+- Verify fixed point detection works
+- Run `kg audit spec/zero-seed/galois.md --full`
+
+### Mathematical Milestone: Galois Loss Validation
+
+**Validation**: Comprehensive Galois loss testing
+- Run on all Week 4 trail-to-crystal outputs
+- Verify L < 0.1 for coherent days
+- Verify L > 0.3 for fragmented days
+- Document correlation coefficient
+
 ### Tasks
 
 | Task | Owner | Deliverable | Duration | Pilot Validation |
@@ -286,15 +390,16 @@ From proto-spec:
 | End-of-day crystal generation | Claude | Automated or triggered | 2 hrs | trail-to-crystal L1 |
 | Honest gap detection | Claude | Provisional mark surfacing | 2 hrs | trail-to-crystal QA-2 |
 | Shareable artifact export | Claude | Crystal as image/link | 2 hrs | trail-to-crystal |
+| Galois distance gate validation | Claude | 95%+ implementation | 2 hrs | Gate |
 | Full day test | Kent | Use pilot for 1 real day | 3 hrs | trail-to-crystal |
 
 ### Canary Success Criteria (from proto-spec)
 
 | Criterion | Measurement | Pass? |
 |-----------|-------------|-------|
-| User can explain day using crystal + trail | Kent narrates day in < 2 min | □ |
-| System surfaces one honest gap | Gap appears in crystal | □ |
-| Day ends with shareable artifact | Export works | □ |
+| User can explain day using crystal + trail | Kent narrates day in < 2 min | [] |
+| System surfaces one honest gap | Gap appears in crystal | [] |
+| Day ends with shareable artifact | Export works | [] |
 
 ### Definition of Done for First Pilot
 
@@ -302,6 +407,8 @@ From proto-spec:
 2. Kent used it for 1 full real day
 3. No critical bugs in daily workflow
 4. Crystal is shareable externally
+5. Galois distance implementation at 95%+
+6. Galois loss validation documented
 
 ---
 
@@ -337,9 +444,9 @@ Second pilot ships. Run/session crystal works.
 
 | Metric | Target | Pass? |
 |--------|--------|-------|
-| User can describe voice shift via crystal | Yes | □ |
-| User can replay session trace | Yes | □ |
-| System surfaces repair path for high-loss take | Yes | □ |
+| User can describe voice shift via crystal | Yes | [] |
+| User can replay session trace | Yes | [] |
+| System surfaces repair path for high-loss take | Yes | [] |
 
 ---
 
@@ -349,6 +456,23 @@ Second pilot ships. Run/session crystal works.
 
 Three pilots demo-ready. External stakeholders see the vision.
 
+### Implementation Gate: Value Agents 95%+
+
+**Current**: 85% implementation faithfulness
+**Required**: 95%+ before Week 8 exit
+
+**Gap to close**:
+- Complete value agent scoring implementation
+- Verify constitutional integration works
+- Run `kg audit spec/value-agents.md --full`
+
+### Mathematical Milestone: Categorical Law Validation
+
+**Validation**: Pre-validation of categorical package
+- Run isolated tests on PolyAgent morphism laws
+- Verify Operad composition is associative
+- Test Sheaf gluing produces global consistency
+
 ### Tasks
 
 | Task | Owner | Deliverable | Duration |
@@ -356,6 +480,8 @@ Three pilots demo-ready. External stakeholders see the vision.
 | Third pilot quick MVP | Claude | Any of remaining 3 | 4 hrs |
 | Demo script for 3 pilots | Claude | 10-minute walkthrough | 2 hrs |
 | Performance hardening | Claude | No critical bugs | 2 hrs |
+| Value Agents gate validation | Claude | 95%+ implementation | 2 hrs |
+| Categorical law pre-validation | Claude | PolyAgent/Operad tests | 2 hrs |
 | External stakeholder demo | Kent | 2-3 people see demos | 2 hrs |
 | Feedback crystallization | Claude | Witness marks of feedback | 1 hr |
 
@@ -363,10 +489,117 @@ Three pilots demo-ready. External stakeholders see the vision.
 
 | Metric | Target | Pass? |
 |--------|--------|-------|
-| 3 pilots demo-ready | Yes | □ |
-| External stakeholders impressed | 2/3 positive | □ |
-| No critical bugs during demo | Yes | □ |
-| Feedback captured as witness marks | Yes | □ |
+| 3 pilots demo-ready | Yes | [] |
+| External stakeholders impressed | 2/3 positive | [] |
+| No critical bugs during demo | Yes | [] |
+| Feedback captured as witness marks | Yes | [] |
+| Value Agents implementation | 95%+ | [] |
+| Categorical laws validated | All pass | [] |
+
+---
+
+## Week 9: Zero Seed Personal Governance Pilot
+
+### Goal
+
+Zero Seed Governance pilot ships. User can discover axioms and build personal constitution.
+
+### Pilot Context: zero-seed-governance
+
+**New Core Tier Pilot**:
+- Axiom discovery from personal decisions
+- Personal constitution building
+- L < 0.05 fixed point validation for true axioms
+
+### Mathematical Milestone: Axiom Discovery Validation
+
+**Validation**: Verify axiom discovery produces true fixed points
+- Input: 10 personal decisions from Kent
+- Process: Run zero-seed axiom discovery
+- Expected: Discovered axioms have L < 0.05
+- Pass criterion: At least 3 axioms reach fixed point status
+
+### Tasks
+
+| Task | Owner | Deliverable | Duration | Pilot Validation |
+|------|-------|-------------|----------|------------------|
+| Axiom discovery service | Claude | `services/zero_seed/axiom_discovery.py` | 3 hrs | zero-seed-governance |
+| Personal constitution builder | Claude | `services/constitution/personal.py` | 3 hrs | zero-seed-governance |
+| Fixed point validation API | Claude | POST /api/zero-seed/validate-axiom | 2 hrs | zero-seed-governance |
+| Axiom stability visualization | Claude | UI showing fixed point convergence | 2 hrs | zero-seed-governance |
+| Contradiction detection | Claude | Surface axiom conflicts | 2 hrs | zero-seed-governance |
+| Personal governance test | Kent | Discover 3 personal axioms | 2 hrs | zero-seed-governance |
+
+### Exit Criteria
+
+| Metric | Target | Pass? |
+|--------|--------|-------|
+| Axiom discovery works | Yes | [] |
+| Fixed points have L < 0.05 | 3/3 axioms | [] |
+| Personal constitution builds | Yes | [] |
+| Contradiction detection works | Yes | [] |
+| Kent validates personal axioms | Feels true | [] |
+
+### Canary Success Criteria
+
+| Criterion | Measurement | Pass? |
+|-----------|-------------|-------|
+| User can articulate 3 personal axioms | Kent states axioms naturally | [] |
+| Axioms feel stable (not contextual) | Kent confirms fixed point intuition | [] |
+| Constitution feels like "me on my best day" | Mirror Test passes | [] |
+
+---
+
+## Week 10: Categorical Foundation Package
+
+### Goal
+
+Categorical Foundation packages for external use. PolyAgent, Operad, Sheaf as libraries.
+
+### Pilot Context: categorical-foundation
+
+**Meta Tier Pilot**:
+- Package categorical primitives for open-source release
+- Validate laws hold in isolated tests
+- Enable external developers to build with kgents foundations
+
+### Mathematical Milestone: External Law Validation
+
+**Validation**: Laws hold in isolated package
+- PolyAgent: Functor laws, naturality of mode transitions
+- Operad: Associativity of composition, unit laws
+- Sheaf: Gluing preserves local-to-global consistency
+
+### Tasks
+
+| Task | Owner | Deliverable | Duration | Pilot Validation |
+|------|-------|-------------|----------|------------------|
+| Extract PolyAgent to package | Claude | `kgents-categorical/polyagent/` | 3 hrs | categorical-foundation |
+| Extract Operad to package | Claude | `kgents-categorical/operad/` | 3 hrs | categorical-foundation |
+| Extract Sheaf to package | Claude | `kgents-categorical/sheaf/` | 2 hrs | categorical-foundation |
+| Comprehensive law tests | Claude | Categorical law test suite | 3 hrs | categorical-foundation |
+| Documentation | Claude | Usage examples, API docs | 2 hrs | categorical-foundation |
+| Package publication prep | Claude | PyPI-ready package | 1 hr | categorical-foundation |
+| External validation | Kent | Share with 2 external developers | 2 hrs | categorical-foundation |
+
+### Exit Criteria
+
+| Metric | Target | Pass? |
+|--------|--------|-------|
+| PolyAgent laws pass | All functor laws | [] |
+| Operad laws pass | Associativity + unit | [] |
+| Sheaf laws pass | Gluing consistency | [] |
+| Package is installable | pip install works | [] |
+| Documentation complete | 2 external devs understand | [] |
+| External feedback positive | 2/2 positive | [] |
+
+### Canary Success Criteria
+
+| Criterion | Measurement | Pass? |
+|-----------|-------------|-------|
+| External developer can build with package | Working example in < 1 hour | [] |
+| Laws feel natural to external dev | No confusion about categorical structure | [] |
+| Package is "daring, bold, creative" | Kent validates aesthetic | [] |
 
 ---
 
@@ -379,25 +612,15 @@ Three pilots demo-ready. External stakeholders see the vision.
 | 1 | Core pipeline | 0.5 hr | 1 hr | 1.5 hrs |
 | 2 | wasm-survivors | 0.5 hr | 1 hr | 1.5 hrs |
 | 3 | disney-portal | 0.5 hr | 1 hr | 1.5 hrs |
-| 4 | rap-coach | 0.5 hr | 1 hr | 1.5 hrs |
-| 5 | sprite-procedural | 0.5 hr | 1 hr | 1.5 hrs |
+| 4 | rap-coach | 0.5 hr | 1.5 hr | 2 hrs |
+| 5 | sprite-lab | 0.5 hr | 1 hr | 1.5 hrs |
 | 6 | trail-to-crystal (FULL DAY) | 0.5 hr | 3 hrs | 3.5 hrs |
 | 7 | Second pilot | 0.5 hr | 2 hrs | 2.5 hrs |
 | 8 | Demo | 0.5 hr | 2 hrs | 2.5 hrs |
+| 9 | zero-seed-governance | 0.5 hr | 2 hrs | 2.5 hrs |
+| 10 | categorical-foundation | 0.5 hr | 2 hrs | 2.5 hrs |
 
-**Average**: ~2 hrs/week (lighter than original due to pilot focus)
-
----
-
-## Pilot Validation Matrix
-
-| Pilot | Week Validated | Infrastructure Tested | Joy Dimension |
-|-------|----------------|----------------------|---------------|
-| trail-to-crystal | Week 6 (FULL) | Mark/Trace/Crystal | FLOW |
-| wasm-survivors | Week 2, 7 | Galois Loss | FLOW |
-| disney-portal | Week 3 | ValueCompass | WARMTH |
-| rap-coach | Week 4, 7 | Trail, Galois | SURPRISE |
-| sprite-procedural | Week 5 | Crystal | SURPRISE |
+**Average**: ~2.1 hrs/week (slightly more due to expanded scope)
 
 ---
 
@@ -421,6 +644,7 @@ Week 2-5: PRODUCT FOCUS (build and validate with pilots)
 Week 5-6: START WRITING (if novelty confirmed)
 Week 7:   ARXIV PREPRINT (timestamp the idea)
 Week 8+:  WORKSHOP SUBMISSION (if pilots successful)
+Week 10:  OPEN-SOURCE RELEASE (categorical-foundation package)
 ```
 
 ---
@@ -455,11 +679,13 @@ Week 8+:  WORKSHOP SUBMISSION (if pilots successful)
 - [ ] Trail navigates 100+ marks < 100ms
 - [ ] rap-coach session navigation works
 - [ ] Feedback attaches to mark
+- [ ] **GATE: K-Block implementation 90%+**
+- [ ] **MILESTONE: Galois loss correlates with coherence**
 
 ### Week 5
 
 - [ ] Crystal compression < 10%
-- [ ] sprite-procedural style crystals work
+- [ ] sprite-lab style crystals work
 - [ ] "Why stable" explanation works
 
 ### Week 6 (FIRST PILOT)
@@ -468,6 +694,8 @@ Week 8+:  WORKSHOP SUBMISSION (if pilots successful)
 - [ ] Kent uses for 1 full real day
 - [ ] All 3 canary success criteria pass
 - [ ] Crystal is shareable
+- [ ] **GATE: Galois distance implementation 95%+**
+- [ ] **MILESTONE: Galois loss validation documented**
 
 ### Week 7
 
@@ -479,23 +707,46 @@ Week 8+:  WORKSHOP SUBMISSION (if pilots successful)
 - [ ] Three pilots demo-ready
 - [ ] External stakeholders see demos
 - [ ] Feedback crystallized
+- [ ] **GATE: Value Agents implementation 95%+**
+- [ ] **MILESTONE: Categorical laws pre-validated**
+
+### Week 9 (ZERO SEED GOVERNANCE)
+
+- [ ] Axiom discovery service works
+- [ ] Personal constitution builder works
+- [ ] Fixed point validation API works
+- [ ] Kent discovers 3 personal axioms
+- [ ] **MILESTONE: Axiom discovery produces L < 0.05 fixed points**
+
+### Week 10 (CATEGORICAL FOUNDATION)
+
+- [ ] PolyAgent package extracted
+- [ ] Operad package extracted
+- [ ] Sheaf package extracted
+- [ ] All categorical law tests pass
+- [ ] Package is PyPI-ready
+- [ ] External developers validate
+- [ ] **MILESTONE: External categorical law tests pass**
 
 ---
 
 ## Grounding Statement
 
 This roadmap has been restructured based on:
-- **Analysis Operad critique** (Categorical 0.65 → fixed false parallelism)
+- **Analysis Operad critique** (Categorical 0.65 -> fixed false parallelism)
 - **Zero Seed audit** (timeline/scope contradiction resolved)
 - **Pilot Coherence Analysis** (each week validates infrastructure THROUGH a pilot)
+- **7-Pilot System** (Core/Domain/Meta tiers for comprehensive validation)
+- **Implementation Faithfulness Gates** (audit-driven quality gates)
+- **Mathematical Validation Milestones** (explicit grounding checkpoints)
 
 The key insight: **Pilots are the test suite**. Infrastructure that doesn't serve a pilot shouldn't be built.
 
 ---
 
 **Document Metadata**
-- **Lines**: ~450
-- **Status**: Execution Roadmap - Pilot-Grounded
-- **Audited**: 2025-12-26 (Analysis Operad + Zero Seed)
+- **Lines**: ~650
+- **Status**: Execution Roadmap - 7-Pilot Expanded Edition
+- **Audited**: 2025-12-26 (Analysis Operad + Zero Seed + Faithfulness Audit)
 - **Next Action**: Begin Week 1 Core Pipeline
 - **Owner**: Kent Gang + Claude

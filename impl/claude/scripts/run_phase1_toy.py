@@ -22,9 +22,8 @@ Expected output:
 
 import asyncio
 import sys
-from dataclasses import dataclass
 from collections import Counter
-
+from dataclasses import dataclass
 
 # =============================================================================
 # Result Types (inline to avoid imports)
@@ -320,7 +319,7 @@ async def run_phase_a_toy():
     toy_problem = "What is 2 + 2?"
     toy_trace = "Let me think... 2 + 2 = 4. The answer is 4."
     print(f"Toy problem: '{toy_problem}'")
-    print(f"Expected answer: 4")
+    print("Expected answer: 4")
     print()
 
     # Run probes with n=3 (tiny sample for debugging)

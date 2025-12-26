@@ -4,9 +4,10 @@ Tests for Phase 2: Zero Seed Genesis Grand Strategy - Uploads.
 Tests the upload staging, file explorer, integration, and splitting services.
 """
 
-import pytest
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import pytest
 
 
 def test_uploaded_file_creation():
@@ -46,8 +47,8 @@ def test_file_explorer_entry_creation():
 def test_integration_result_creation():
     """Test IntegrationResult dataclass creation."""
     from services.sovereign.integration import (
-        IntegrationResult,
         DiscoveredEdge,
+        IntegrationResult,
         PortalToken,
     )
 
@@ -78,10 +79,10 @@ def test_integration_result_creation():
 def test_split_recommendation_creation():
     """Test SplitRecommendation dataclass creation."""
     from services.sovereign.splitting import (
-        SplitRecommendation,
+        SplitPlan,
         SplitReason,
         SplitReasonType,
-        SplitPlan,
+        SplitRecommendation,
         SplitSection,
     )
 
@@ -244,9 +245,9 @@ async def test_integration_layer_assignment():
 async def test_splitting_contradiction_detection():
     """Test internal contradiction detection."""
     from services.sovereign.splitting import (
+        SplitSection,
         get_splitting_service,
         reset_splitting_service,
-        SplitSection,
     )
 
     reset_splitting_service()

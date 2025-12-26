@@ -14,8 +14,8 @@ This column distinguishes K-Block types:
 - crystal: Crystallized memories/decisions from Witness
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '20251225_1800'

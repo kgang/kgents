@@ -11,14 +11,14 @@ The core insight: Agent composition IS dynamic programming.
 """
 
 from services.categorical.dp_bridge import (
+    DPSolver,
     PolicyTrace,
-    TraceEntry,
     Principle,
     PrincipleScore,
-    ValueScore,
-    ValueFunction,
     ProblemFormulation,
-    DPSolver,
+    TraceEntry,
+    ValueFunction,
+    ValueScore,
 )
 
 __all__ = [

@@ -509,7 +509,7 @@ class AnnotationStore:
         if witness and imported > 0:
             await witness.save_mark(
                 action=f"Bulk imported {imported} annotations",
-                reasoning=f"Imported from external source",
+                reasoning="Imported from external source",
                 tags=["annotation", "bulk-import"],
             )
 

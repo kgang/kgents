@@ -139,6 +139,84 @@ class CreateDialecticDecisionRequest(BaseModel):
 
 
 # =============================================================================
+# Daily Lab / pilots-web API Models (matches @kgents/shared-primitives)
+# =============================================================================
+
+
+class CaptureRequest(BaseModel):
+    """Request body for capturing a daily mark (matches frontend CaptureRequest)."""
+
+    content: str = Field(..., description="What's on your mind?")
+    tag: str | None = Field(None, description="Optional tag: eureka, gotcha, taste, friction, joy, veto")
+    reasoning: str | None = Field(None, description="What made this stand out to you?")
+
+
+class CaptureResponse(BaseModel):
+    """Response after capturing a mark (matches frontend CaptureResponse)."""
+
+    mark_id: str
+    content: str
+    tag: str | None = None
+    timestamp: str
+    warmth_response: str
+
+
+class TrailMark(BaseModel):
+    """Mark data in trail response (matches frontend TrailMark)."""
+
+    mark_id: str
+    content: str
+    tags: list[str] = []
+    timestamp: str
+
+
+class TimeGap(BaseModel):
+    """Time gap between marks (matches frontend TimeGap)."""
+
+    start: str
+    end: str
+    duration_minutes: int
+
+
+class TrailResponse(BaseModel):
+    """Response with trail data (matches frontend TrailResponse)."""
+
+    marks: list[TrailMark]
+    gaps: list[TimeGap]
+    date: str
+
+
+class CrystalModel(BaseModel):
+    """Crystal data (matches frontend Crystal)."""
+
+    crystal_id: str
+    insight: str
+    significance: str
+    disclosure: str
+    level: str  # session, day, week, epoch
+    timestamp: str
+    confidence: float
+    topics: list[str] = []
+    principles: list[str] = []
+
+
+class CompressionHonestyModel(BaseModel):
+    """Compression honesty details (matches frontend CompressionHonesty)."""
+
+    dropped_count: int
+    dropped_tags: list[str]
+    dropped_summaries: list[str]
+    galois_loss: float
+
+
+class CrystallizeResponse(BaseModel):
+    """Response after crystallization (matches frontend CrystallizeResponse)."""
+
+    crystal: CrystalModel
+    honesty: CompressionHonestyModel
+
+
+# =============================================================================
 # Router Factory
 # =============================================================================
 
@@ -628,6 +706,311 @@ def create_witness_router() -> "APIRouter | None":
                 "X-Accel-Buffering": "no",  # Disable nginx buffering
             },
         )
+
+    # =========================================================================
+    # Daily Lab / pilots-web Endpoints (matches @kgents/shared-primitives)
+    # =========================================================================
+    #
+    # These endpoints are designed for the pilots-web frontend and match
+    # the TypeScript API client in pilots-web/src/api/witness.ts
+    #
+    # POST /api/witness/marks - Capture a new mark (CaptureRequest -> CaptureResponse)
+    # GET /api/witness/trail/today - Get today's trail (-> TrailResponse)
+    # POST /api/witness/crystallize - Crystallize day (-> CrystallizeResponse)
+    # GET /api/witness/crystals - Get crystals in range (-> Crystal[])
+    # =========================================================================
+
+    @router.post("/marks/capture", response_model=CaptureResponse)
+    async def capture_mark_daily_lab(request: CaptureRequest) -> CaptureResponse:
+        """
+        Capture a new daily mark (pilots-web compatible endpoint).
+
+        Low-friction mark capture with WARMTH calibration.
+        This endpoint matches the frontend CaptureRequest interface.
+
+        Args:
+            request: Mark capture request with content, optional tag and reasoning
+        """
+        try:
+            from services.witness.daily_lab import (
+                WARMTH_RESPONSES,
+                DailyLab,
+                DailyTag,
+            )
+            from services.witness.trace_store import get_mark_store
+
+            # Get the mark store and create lab
+            store = get_mark_store()
+            lab = DailyLab(mark_store=store)
+
+            # Parse tag if provided
+            tag: DailyTag | None = None
+            if request.tag:
+                try:
+                    tag = DailyTag(request.tag.lower())
+                except ValueError:
+                    valid_tags = [t.value for t in DailyTag]
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid tag: {request.tag}. Valid tags: {valid_tags}",
+                    )
+
+            # Capture the mark using the appropriate method
+            if request.reasoning:
+                daily_mark = lab.capture.with_reasoning(
+                    request.content, request.reasoning, tag
+                )
+            elif tag:
+                daily_mark = lab.capture.tagged(request.content, tag)
+            else:
+                daily_mark = lab.capture.quick(request.content)
+
+            # Build warmth response
+            if tag:
+                warmth = WARMTH_RESPONSES["mark_captured_with_feeling"].format(
+                    tag=tag.value
+                )
+            else:
+                warmth = WARMTH_RESPONSES["mark_captured"]
+
+            return CaptureResponse(
+                mark_id=str(daily_mark.mark.id),
+                content=daily_mark.content,
+                tag=daily_mark.tag.value if daily_mark.tag else None,
+                timestamp=daily_mark.timestamp.isoformat(),
+                warmth_response=warmth,
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Error capturing mark")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.get("/trail/today", response_model=TrailResponse)
+    async def get_today_trail() -> TrailResponse:
+        """
+        Get today's trail of marks (pilots-web compatible endpoint).
+
+        Returns marks for today in chronological order with computed gaps.
+        This endpoint matches the frontend TrailResponse interface.
+        """
+        from datetime import date
+
+        try:
+            from services.witness.daily_lab import DailyLab
+            from services.witness.trace_store import get_mark_store
+
+            # Get the mark store and create lab
+            store = get_mark_store()
+            lab = DailyLab(mark_store=store)
+
+            # Get trail for today
+            position = lab.trail.for_today()
+
+            # Build marks list
+            marks_data: list[TrailMark] = []
+            for mark in position.marks:
+                marks_data.append(
+                    TrailMark(
+                        mark_id=str(mark.id),
+                        content=mark.response.content,
+                        tags=list(mark.tags),
+                        timestamp=mark.timestamp.isoformat(),
+                    )
+                )
+
+            # Calculate gaps (any gap > 30 minutes between marks)
+            gaps_data: list[TimeGap] = []
+            gap_threshold_minutes = 30
+            if len(position.marks) >= 2:
+                sorted_marks = sorted(position.marks, key=lambda m: m.timestamp)
+                for i in range(1, len(sorted_marks)):
+                    prev_mark = sorted_marks[i - 1]
+                    curr_mark = sorted_marks[i]
+                    delta = curr_mark.timestamp - prev_mark.timestamp
+                    diff_minutes = int(delta.total_seconds() / 60)
+                    if diff_minutes >= gap_threshold_minutes:
+                        gaps_data.append(
+                            TimeGap(
+                                start=prev_mark.timestamp.isoformat(),
+                                end=curr_mark.timestamp.isoformat(),
+                                duration_minutes=diff_minutes,
+                            )
+                        )
+
+            return TrailResponse(
+                marks=marks_data,
+                gaps=gaps_data,
+                date=date.today().isoformat(),
+            )
+
+        except Exception as e:
+            logger.exception("Error getting today's trail")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.post("/crystallize", response_model=CrystallizeResponse)
+    async def crystallize_day(
+        date_param: str | None = Query(
+            None, alias="date", description="ISO date (YYYY-MM-DD), defaults to today"
+        ),
+    ) -> CrystallizeResponse:
+        """
+        Create a crystal from the day's marks (pilots-web compatible endpoint).
+
+        Crystallizes marks into a compressed insight with honest disclosure
+        of what was dropped (Amendment G: COMPRESSION_HONESTY).
+
+        Returns 404 if not enough marks exist to crystallize.
+
+        Args:
+            date_param: ISO date string (YYYY-MM-DD), defaults to today
+        """
+        from datetime import date
+
+        try:
+            from services.witness.crystal_store import get_crystal_store
+            from services.witness.daily_lab import DailyLab
+            from services.witness.trace_store import get_mark_store
+
+            # Get stores and create lab
+            mark_store = get_mark_store()
+            crystal_store = get_crystal_store()
+            lab = DailyLab(mark_store=mark_store, crystal_store=crystal_store)
+
+            # Parse target date
+            if date_param:
+                try:
+                    parsed_date = date.fromisoformat(date_param)
+                except ValueError:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid date format: {date_param}. Use ISO format (YYYY-MM-DD)",
+                    )
+            else:
+                parsed_date = date.today()
+
+            # Attempt crystallization
+            crystal = lab.crystallize.crystallize_day(parsed_date)
+
+            if crystal is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Not enough marks to crystallize yet."
+                )
+
+            # Build response matching frontend interfaces
+            crystal_model = CrystalModel(
+                crystal_id=str(crystal.crystal.id),
+                insight=crystal.insight,
+                significance=crystal.significance,
+                disclosure=crystal.disclosure,
+                level=crystal.level.name.lower(),  # session, day, week, epoch
+                timestamp=crystal.crystal.time_range[0].isoformat() if crystal.crystal.time_range else datetime.now().isoformat(),
+                confidence=crystal.crystal.confidence,
+                topics=list(crystal.crystal.topics) if crystal.crystal.topics else [],
+                principles=list(crystal.crystal.principles) if crystal.crystal.principles else [],
+            )
+
+            honesty_model = CompressionHonestyModel(
+                dropped_count=crystal.honesty.dropped_count,
+                dropped_tags=crystal.honesty.dropped_tags,
+                dropped_summaries=crystal.honesty.dropped_summaries,
+                galois_loss=crystal.honesty.galois_loss,
+            )
+
+            return CrystallizeResponse(
+                crystal=crystal_model,
+                honesty=honesty_model,
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Error crystallizing")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.get("/crystals", response_model=list[CrystalModel])
+    async def get_crystals(
+        start: str | None = Query(None, description="Start date (ISO format YYYY-MM-DD)"),
+        end: str | None = Query(None, description="End date (ISO format YYYY-MM-DD)"),
+    ) -> list[CrystalModel]:
+        """
+        Get crystals for a date range (pilots-web compatible endpoint).
+
+        Returns all crystals within the specified date range.
+        If no range is provided, returns recent crystals.
+
+        Args:
+            start: Start date for range (ISO format)
+            end: End date for range (ISO format)
+        """
+        from datetime import date
+
+        try:
+            from services.witness.crystal_store import get_crystal_store
+
+            crystal_store = get_crystal_store()
+
+            # Parse date range
+            if start:
+                try:
+                    start_date = date.fromisoformat(start)
+                except ValueError:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid start date format: {start}. Use ISO format (YYYY-MM-DD)",
+                    )
+            else:
+                # Default to 30 days ago
+                start_date = date.today() - timedelta(days=30)
+
+            if end:
+                try:
+                    end_date = date.fromisoformat(end)
+                except ValueError:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid end date format: {end}. Use ISO format (YYYY-MM-DD)",
+                    )
+            else:
+                end_date = date.today()
+
+            # Get all crystals and filter by date
+            all_crystals = crystal_store.all()
+            start_datetime = datetime.combine(start_date, datetime.min.time())
+            end_datetime = datetime.combine(end_date, datetime.max.time())
+
+            result: list[CrystalModel] = []
+            for crystal in all_crystals:
+                # Check if crystal falls within date range
+                if crystal.time_range:
+                    crystal_time = crystal.time_range[0]
+                    if start_datetime <= crystal_time <= end_datetime:
+                        result.append(
+                            CrystalModel(
+                                crystal_id=str(crystal.id),
+                                insight=crystal.insight,
+                                significance=crystal.significance,
+                                disclosure=crystal.disclosure if hasattr(crystal, 'disclosure') and crystal.disclosure else "",
+                                level=crystal.level.name.lower() if hasattr(crystal, 'level') and crystal.level else "session",
+                                timestamp=crystal_time.isoformat(),
+                                confidence=crystal.confidence,
+                                topics=list(crystal.topics) if crystal.topics else [],
+                                principles=list(crystal.principles) if crystal.principles else [],
+                            )
+                        )
+
+            # Sort by timestamp descending (newest first)
+            result.sort(key=lambda c: c.timestamp, reverse=True)
+
+            return result
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Error getting crystals")
+            raise HTTPException(status_code=500, detail=str(e))
 
     return router
 

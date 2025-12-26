@@ -39,7 +39,7 @@ def main():
         timestamp=datetime(2025, 12, 24, 14, 30, 0, tzinfo=timezone.utc),
     )
 
-    print(f"TraceEntry:")
+    print("TraceEntry:")
     print(f"  State: {entry.state_before} → {entry.state_after}")
     print(f"  Action: {entry.action}")
     print(f"  Value: {entry.value}")
@@ -48,7 +48,7 @@ def main():
 
     mark_dict = trace_entry_to_mark(entry, origin="design_session")
 
-    print(f"Converted to Mark:")
+    print("Converted to Mark:")
     print(f"  Origin: {mark_dict['origin']}")
     print(f"  Stimulus: {mark_dict['stimulus']['content']}")
     print(f"  Response: {mark_dict['response']['content']}")
@@ -111,14 +111,14 @@ def main():
     print("-" * 70)
 
     original_mark = marks[0]  # Use first mark from previous example
-    print(f"Original Mark:")
+    print("Original Mark:")
     print(f"  Action: {original_mark['response']['metadata']['action']}")
     print(f"  Value: {original_mark['response']['metadata']['value']}")
     print()
 
     # Convert to TraceEntry
     recovered_entry = mark_to_trace_entry(original_mark)
-    print(f"Recovered TraceEntry:")
+    print("Recovered TraceEntry:")
     print(f"  Action: {recovered_entry.action}")
     print(f"  Value: {recovered_entry.value}")
     print(f"  State: {recovered_entry.state_before} → {recovered_entry.state_after}")
@@ -126,7 +126,7 @@ def main():
 
     # Convert back to Mark
     round_trip_mark = trace_entry_to_mark(recovered_entry)
-    print(f"Round-trip Mark:")
+    print("Round-trip Mark:")
     print(f"  Action: {round_trip_mark['response']['metadata']['action']}")
     print(f"  Value: {round_trip_mark['response']['metadata']['value']}")
     print()

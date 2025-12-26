@@ -10,12 +10,12 @@ This demonstrates the full lifecycle:
 """
 
 from dataclasses import dataclass
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
-from .datum import Datum
 from .crystal import Crystal
-from .schema import Schema
+from .datum import Datum
 from .query import Query
+from .schema import Schema
 
 
 # Version 1: Initial witness mark
@@ -144,7 +144,7 @@ def demo_query_api() -> None:
     # Query by tags
     q1 = Query(tags=frozenset(["eureka"]))
     matches = [d for d in datums if q1.matches_datum(d)]
-    print(f"Query: tags contain 'eureka'")
+    print("Query: tags contain 'eureka'")
     print(f"Matches: {len(matches)} datums")
     for d in matches:
         print(f"  - {d.data['action']}")
@@ -153,7 +153,7 @@ def demo_query_api() -> None:
     # Query by author
     q2 = Query(author="claude")
     matches = [d for d in datums if q2.matches_datum(d)]
-    print(f"Query: author = 'claude'")
+    print("Query: author = 'claude'")
     print(f"Matches: {len(matches)} datums")
     for d in matches:
         print(f"  - {d.data['action']}")
@@ -165,7 +165,7 @@ def demo_query_api() -> None:
         author="claude",
     )
     matches = [d for d in datums if q3.matches_datum(d)]
-    print(f"Query: tags contain 'eureka' AND author = 'claude'")
+    print("Query: tags contain 'eureka' AND author = 'claude'")
     print(f"Matches: {len(matches)} datums")
     for d in matches:
         print(f"  - {d.data['action']}")

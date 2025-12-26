@@ -38,10 +38,10 @@ from .context import cmd_context, cmd_context_async
 from .crystals import (
     cmd_crystal,
     cmd_crystal_async,
-    cmd_crystals,
-    cmd_crystals_async,
     cmd_crystallize,
     cmd_crystallize_async,
+    cmd_crystals,
+    cmd_crystals_async,
     cmd_expand,
     cmd_expand_async,
 )

@@ -7,7 +7,7 @@
 
 ## Organization
 
-This bibliography is organized thematically, not alphabetically, to help readers find relevant sources for specific topics.
+This bibliography is organized thematically to help readers find relevant sources for specific topics. We've expanded from the original focus on category theory to include dynamic programming, Galois theory, distributed systems, and co-engineering with AI.
 
 ---
 
@@ -60,46 +60,112 @@ This bibliography is organized thematically, not alphabetically, to help readers
 **Johnstone, P.T.** (2002). *Sketches of an Elephant: A Topos Theory Compendium*. Oxford University Press.
 - Massive and comprehensive. Reference for advanced topics.
 
----
+### Polynomial Functors
 
-## Applied Category Theory
+**Spivak, D.I.** (2022). "Polynomial Functors: A General Theory of Interaction." *arXiv:2202.00534*.
+- Modern treatment with emphasis on interfaces and dynamics. Directly relevant to PolyAgent.
 
-**Fong, B. & Spivak, D.I.** (2019). *An Invitation to Applied Category Theory*. Cambridge University Press.
-- Accessible introduction to category theory with applications. Highly recommended starting point.
+**Kock, J.** (2012). "Polynomial Functors and Polynomial Monads." *Mathematical Proceedings of the Cambridge Philosophical Society*, 154(1), 153-192.
+- Mathematical development of polynomial functors.
 
-**Spivak, D.I.** (2014). *Category Theory for the Sciences*. MIT Press.
-- Applies categorical thinking to modeling. Good for building intuition about applications.
-
-**Coecke, B. & Kissinger, A.** (2017). *Picturing Quantum Processes*. Cambridge University Press.
-- Diagrammatic approach to categorical quantum mechanics. Inspirational for visualization.
+**Gambino, N. & Kock, J.** (2013). "Polynomial Functors and Polynomial Monads." *Mathematical Proceedings*, 154(1), 153-192.
+- Further development with applications.
 
 ---
 
-## Type Theory and Proof Theory
+## Galois Theory and Algebra
 
-### Curry-Howard Correspondence
+### Classical Galois Theory
 
-**Sørensen, M.H. & Urzyczyn, P.** (2006). *Lectures on the Curry-Howard Isomorphism*. Elsevier.
-- Comprehensive treatment of the proofs-as-programs correspondence.
+**Artin, E.** (1944). *Galois Theory*. Notre Dame Mathematical Lectures.
+- Classic exposition of the connection between field extensions and group theory.
 
-**Wadler, P.** (2015). "Propositions as Types." *Communications of the ACM*, 58(12), 75-84.
-- Accessible introduction to Curry-Howard. Good starting point.
+**Stewart, I.** (2015). *Galois Theory* (4th ed.). CRC Press.
+- Modern, accessible treatment. Good for building intuition.
 
-### Type Theory
+**Edwards, H.M.** (1984). *Galois Theory*. Springer.
+- Historical approach, tracing Galois's original ideas.
 
-**Martin-Löf, P.** (1984). *Intuitionistic Type Theory*. Bibliopolis.
-- The foundational text on dependent type theory.
+### Galois Connections and Adjunctions
 
-**Univalent Foundations Program** (2013). *Homotopy Type Theory*. Institute for Advanced Study.
-- Modern treatment connecting type theory to homotopy theory. Freely available.
+**Davey, B.A. & Priestley, H.A.** (2002). *Introduction to Lattices and Order* (2nd ed.). Cambridge University Press.
+- Chapter 7 covers Galois connections. Essential for the lattice-theoretic perspective.
 
-### Proof Theory
+**Melton, A., Schmidt, D.A., & Strecker, G.E.** (1986). "Galois Connections and Computer Science Applications." *LNCS 240*, Springer.
+- Applies Galois connections to program analysis. Precedent for our application to prompts.
 
-**Girard, J-Y., Lafont, Y., & Taylor, P.** (1989). *Proofs and Types*. Cambridge University Press.
-- Classic introduction to proof theory from a type-theoretic perspective.
+**Erné, M., Koslowski, J., Melton, A., & Strecker, G.E.** (1993). "A Primer on Galois Connections." *Annals of the New York Academy of Sciences*, 704(1), 103-125.
+- Comprehensive survey of Galois connections with applications.
 
-**Troelstra, A.S. & Schwichtenberg, H.** (2000). *Basic Proof Theory* (2nd ed.). Cambridge University Press.
-- Technical but comprehensive treatment of proof-theoretic methods.
+### Abstract Algebra for CS
+
+**Lawvere, F.W. & Schanuel, S.H.** (2009). *Conceptual Mathematics* (2nd ed.). Cambridge University Press.
+- Category theory for beginners. Builds intuition before formalism.
+
+**Barr, M. & Wells, C.** (1990). *Category Theory for Computing Science*. Prentice Hall.
+- Applies category theory to computer science. Freely available online.
+
+---
+
+## Dynamic Programming and Optimal Control
+
+### Foundations
+
+**Bellman, R.** (1957). *Dynamic Programming*. Princeton University Press.
+- The original. Bellman's insight that optimal solutions have optimal substructure.
+
+**Puterman, M.L.** (2014). *Markov Decision Processes: Discrete Stochastic Dynamic Programming*. Wiley.
+- Comprehensive treatment of MDPs. The reference for formal DP.
+
+**Bertsekas, D.P.** (2012). *Dynamic Programming and Optimal Control* (4th ed.). Athena Scientific.
+- Two-volume comprehensive treatment. Balance of theory and computation.
+
+### Reinforcement Learning
+
+**Sutton, R.S. & Barto, A.G.** (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press.
+- The standard RL textbook. Freely available online.
+
+**Szepesvári, C.** (2010). *Algorithms for Reinforcement Learning*. Morgan & Claypool.
+- Concise, mathematical treatment of RL algorithms.
+
+### DP in AI and Planning
+
+**Russell, S.J. & Norvig, P.** (2020). *Artificial Intelligence: A Modern Approach* (4th ed.). Pearson.
+- Chapters on planning, MDPs, and RL. The standard AI textbook.
+
+**Geffner, H. & Bonet, B.** (2013). "A Concise Introduction to Models and Methods for Automated Planning." *Synthesis Lectures on AI and ML*.
+- Planning as DP. Connections to agent architectures.
+
+---
+
+## Distributed Systems and Coordination
+
+### Foundations
+
+**Lynch, N.A.** (1996). *Distributed Algorithms*. Morgan Kaufmann.
+- The theoretical foundations. Consensus, fault tolerance, impossibility results.
+
+**Tanenbaum, A.S. & Van Steen, M.** (2017). *Distributed Systems* (3rd ed.). Pearson.
+- Practical and theoretical. Good overview of the field.
+
+### Consensus and Coordination
+
+**Lamport, L.** (1998). "The Part-Time Parliament." *ACM Transactions on Computer Systems*, 16(2), 133-169.
+- The Paxos algorithm. Foundation of modern consensus.
+
+**Fischer, M.J., Lynch, N.A., & Paterson, M.S.** (1985). "Impossibility of Distributed Consensus with One Faulty Process." *JACM*, 32(2), 374-382.
+- The FLP impossibility result. Fundamental limit on distributed agreement.
+
+**Brewer, E.** (2012). "CAP Twelve Years Later: How the 'Rules' Have Changed." *IEEE Computer*, 45(2), 23-29.
+- The CAP theorem and its implications. Consistency vs. availability.
+
+### Multi-Agent Systems
+
+**Wooldridge, M.** (2009). *An Introduction to MultiAgent Systems* (2nd ed.). Wiley.
+- Comprehensive introduction to multi-agent systems.
+
+**Shoham, Y. & Leyton-Brown, K.** (2008). *Multiagent Systems: Algorithmic, Game-Theoretic, and Logical Foundations*. Cambridge University Press.
+- Game theory and logic for multi-agent coordination.
 
 ---
 
@@ -147,46 +213,31 @@ This bibliography is organized thematically, not alphabetically, to help readers
 **Conmy, A., et al.** (2023). "Towards Automated Circuit Discovery for Mechanistic Interpretability." *NeurIPS*.
 - Automated methods for finding circuits. Important for scalability.
 
-### Process Reward Models
+### Agent Frameworks
 
-**Lightman, H., et al.** (2023). "Let's Verify Step by Step." *arXiv:2305.20050*.
-- Introduces process supervision. Important for step-level verification.
+**LangChain Team** (2023). "LangChain: Building Applications with LLMs." Documentation and Blog.
+- The dominant chain-based framework. Understanding its patterns is essential.
 
-### Reasoning Evaluation
+**Richards, T.** (2023). "Auto-GPT: An Autonomous GPT-4 Experiment." GitHub Repository.
+- The first widely-used autonomous agent. Pioneered goal-directed loops.
 
-**Turpin, M., et al.** (2023). "Language Models Don't Always Say What They Think: Unfaithful Explanations in Chain-of-Thought Prompting." *NeurIPS*.
-- Shows CoT can be post-hoc rationalization. Important caveat.
-
-**Kadavath, S., et al.** (2022). "Language Models (Mostly) Know What They Know." *arXiv:2207.05221*.
-- Studies model self-knowledge and calibration.
-
-### State of the Art (2024)
-
-**Anthropic** (2024). "Claude 3 Technical Report."
-- Details on current frontier models.
-
-**OpenAI** (2024). "GPT-4 Technical Report."
-- Details on GPT-4 architecture and capabilities.
-
-**DeepMind** (2024). "AlphaProof and AlphaGeometry."
-- Neurosymbolic systems for mathematical reasoning. Important milestone.
+**Moura, J.** (2024). "CrewAI: Framework for Orchestrating Role-Playing AI Agents." GitHub Repository.
+- Role-based multi-agent framework. Example of implicit operadic structure.
 
 ---
 
-## Neurosymbolic AI
+## Applied Category Theory
 
-**Garcez, A., et al.** (2019). "Neural-Symbolic Computing: An Effective Methodology for Principled Integration of Machine Learning and Reasoning." *arXiv:1905.06088*.
-- Survey of neurosymbolic approaches.
+**Fong, B. & Spivak, D.I.** (2019). *An Invitation to Applied Category Theory*. Cambridge University Press.
+- Accessible introduction to category theory with applications. Highly recommended starting point.
 
-**Nye, M., et al.** (2021). "Show Your Work: Scratchpads for Intermediate Computation with Language Models." *arXiv:2112.00114*.
-- Training models to produce intermediate computation. Important for symbolic structure.
+**Spivak, D.I.** (2014). *Category Theory for the Sciences*. MIT Press.
+- Applies categorical thinking to modeling. Good for building intuition about applications.
 
-**Jiang, A., et al.** (2022). "Draft, Sketch, and Prove: Guiding Formal Theorem Provers with Informal Proofs." *ICLR 2023*.
-- Hybrid approach to theorem proving.
+**Coecke, B. & Kissinger, A.** (2017). *Picturing Quantum Processes*. Cambridge University Press.
+- Diagrammatic approach to categorical quantum mechanics. Inspirational for visualization.
 
----
-
-## Categorical Approaches to ML
+### Categorical Approaches to ML
 
 **Shiebler, D., Gavranović, B., & Wilson, P.** (2021). "Category Theory in Machine Learning." *arXiv:2106.07032*.
 - Survey of categorical methods in ML. Good overview.
@@ -202,10 +253,53 @@ This bibliography is organized thematically, not alphabetically, to help readers
 
 ---
 
-## Philosophy of Mind and Reasoning
+## Type Theory and Proof Theory
+
+### Curry-Howard Correspondence
+
+**Sørensen, M.H. & Urzyczyn, P.** (2006). *Lectures on the Curry-Howard Isomorphism*. Elsevier.
+- Comprehensive treatment of the proofs-as-programs correspondence.
+
+**Wadler, P.** (2015). "Propositions as Types." *Communications of the ACM*, 58(12), 75-84.
+- Accessible introduction to Curry-Howard. Good starting point.
+
+### Type Theory
+
+**Martin-Löf, P.** (1984). *Intuitionistic Type Theory*. Bibliopolis.
+- The foundational text on dependent type theory.
+
+**Univalent Foundations Program** (2013). *Homotopy Type Theory*. Institute for Advanced Study.
+- Modern treatment connecting type theory to homotopy theory. Freely available.
+
+### Proof Theory
+
+**Girard, J-Y., Lafont, Y., & Taylor, P.** (1989). *Proofs and Types*. Cambridge University Press.
+- Classic introduction to proof theory from a type-theoretic perspective.
+
+**Troelstra, A.S. & Schwichtenberg, H.** (2000). *Basic Proof Theory* (2nd ed.). Cambridge University Press.
+- Technical but comprehensive treatment of proof-theoretic methods.
+
+---
+
+## Philosophy of Mind and Co-Engineering
+
+### Extended Mind and Embodied Cognition
 
 **Clark, A. & Chalmers, D.** (1998). "The Extended Mind." *Analysis*, 58(1), 7-19.
 - Influential paper on cognition extending beyond the brain. Relevant to external reasoning traces.
+
+**Clark, A.** (2008). *Supersizing the Mind: Embodiment, Action, and Cognitive Extension*. Oxford University Press.
+- Extended treatment of the extended mind thesis.
+
+### Dialectics and Synthesis
+
+**Hegel, G.W.F.** (1807/1977). *Phenomenology of Spirit*. Oxford University Press.
+- The origin of dialectical method. Thesis-antithesis-synthesis.
+
+**Lakoff, G. & Johnson, M.** (1999). *Philosophy in the Flesh*. Basic Books.
+- Embodied cognition and its implications for reasoning.
+
+### Human-AI Collaboration
 
 **Dennett, D.C.** (1991). *Consciousness Explained*. Little, Brown.
 - Multiple drafts model of consciousness. Relevant to multi-agent perspectives.
@@ -215,72 +309,51 @@ This bibliography is organized thematically, not alphabetically, to help readers
 
 ---
 
-## Logic and Formal Methods
+## Information Theory and Complexity
 
-**Gentzen, G.** (1935). "Investigations into Logical Deduction." In *The Collected Papers of Gerhard Gentzen*, North-Holland.
-- Origin of natural deduction and sequent calculus. Foundational.
+### Algorithmic Information Theory
 
-**Prawitz, D.** (1965). *Natural Deduction: A Proof-Theoretical Study*. Almqvist & Wiksell.
-- Comprehensive treatment of natural deduction.
+**Li, M. & Vitányi, P.** (2008). *An Introduction to Kolmogorov Complexity and Its Applications* (3rd ed.). Springer.
+- The standard reference on Kolmogorov complexity.
 
-**Barendregt, H.** (1984). *The Lambda Calculus: Its Syntax and Semantics*. North-Holland.
-- Definitive reference on lambda calculus.
+**Cover, T.M. & Thomas, J.A.** (2006). *Elements of Information Theory* (2nd ed.). Wiley.
+- Classic textbook on information theory. Foundation for understanding loss.
 
----
+### Minimum Description Length
 
-## Polynomial Functors
-
-**Kock, J.** (2012). "Polynomial Functors and Polynomial Monads." *Mathematical Proceedings of the Cambridge Philosophical Society*, 154(1), 153-192.
-- Mathematical development of polynomial functors.
-
-**Gambino, N. & Kock, J.** (2013). "Polynomial Functors and Polynomial Monads." *Mathematical Proceedings of the Cambridge Philosophical Society*, 154(1), 153-192.
-- Further development with applications.
-
-**Spivak, D.I.** (2022). "Polynomial Functors: A General Theory of Interaction." *arXiv:2202.00534*.
-- Modern treatment with emphasis on interfaces and dynamics. Relevant to PolyAgent.
+**Grünwald, P.D.** (2007). *The Minimum Description Length Principle*. MIT Press.
+- MDL as model selection. Connection to Galois loss as compression metric.
 
 ---
 
-## Further Reading by Topic
+## Reading Pathways
 
-### If you want to understand monads deeply:
-1. Wadler (1995) - accessible introduction
-2. Moggi (1991) - the theoretical foundation
-3. Mac Lane, Chapter VI - categorical perspective
+### For Category Theory Beginners
+1. Leinster (2014) or Fong & Spivak (2019) → 2. Awodey (2010) → 3. Mac Lane (1971) as reference
 
-### If you want to understand operads:
-1. Leinster (2004), Chapters 1-2 - accessible introduction
-2. Loday & Vallette (2012), Chapters 1-5 - full treatment
-3. May (1972) - historical origin
+### For Dynamic Programming Focus
+1. Sutton & Barto (2018) → 2. Puterman (2014) → 3. Russell & Norvig (2020) Ch. 17-21
 
-### If you want to understand sheaves:
-1. Mac Lane & Moerdijk (1992), Chapters I-II - standard introduction
-2. Goldblatt (1984), Chapters 1-4 - logical perspective
-3. Johnstone (2002) - comprehensive reference
+### For Galois Theory
+1. Stewart (2015) → 2. Davey & Priestley (2002) Ch. 7 → 3. Melton et al. (1986)
 
-### If you want to understand LLM reasoning:
-1. Wei et al. (2022) - CoT introduction
-2. Wang et al. (2022) - Self-consistency
-3. Yao et al. (2023) - ToT
-4. Olsson et al. (2022) - Mechanistic understanding
+### For LLM Reasoning
+1. Wei et al. (2022) → 2. Wang et al. (2022) and Yao et al. (2023) → 3. Olsson et al. (2022)
 
-### If you want to explore categorical ML:
-1. Fong & Spivak (2019) - Applied category theory
-2. Shiebler et al. (2021) - ML-specific survey
-3. Gavranović (2024) - Deep treatment
+### For Connecting the Domains
+1. Shiebler et al. (2021) for categorical ML → 2. This monograph for the synthesis
 
 ---
 
 ## How to Read This Literature
 
-**For beginners in category theory**:
-Start with Leinster (2014) or Fong & Spivak (2019). Move to Awodey (2010). Use Mac Lane (1971) as reference.
+**Start accessible, go deep**: Begin with introductory texts, use technical references as needed.
 
-**For beginners in LLM reasoning**:
-Start with Wei et al. (2022). Read Wang et al. (2022) and Yao et al. (2023). Then explore mechanistic interpretability via Olsson et al. (2022).
+**Read actively**: When we claim that chain-of-thought is Kleisli composition, check the references. Does Moggi's monad framework actually support this interpretation?
 
-**For connecting the domains**:
-Read Shiebler et al. (2021) for existing categorical approaches to ML. This monograph attempts to extend that work to reasoning specifically.
+**Cross-reference**: The power is in the connections. Bellman's DP + Mac Lane's categories + Spivak's polynomials = our synthesis.
+
+**Contribute**: This bibliography is incomplete. The synthesis of category theory, DP, Galois theory, distributed systems, and AI agents is young. New connections await discovery.
 
 ---
 
@@ -288,5 +361,5 @@ Read Shiebler et al. (2021) for existing categorical approaches to ML. This mono
 
 ---
 
-*Previous: [Chapter 9: Open Problems and Conjectures](./09-open-problems.md)*
+*Previous: [Chapter 20: Open Problems](./20-open-problems.md)*
 *Return to: [Table of Contents](./README.md)*

@@ -24,7 +24,6 @@ from ..boundary import (
     SplitSuggestion,
 )
 
-
 # Fixtures
 
 

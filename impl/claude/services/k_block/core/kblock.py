@@ -18,7 +18,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, NewType, cast
+from typing import TYPE_CHECKING, Any, NewType, Protocol, cast, runtime_checkable
 
 if TYPE_CHECKING:
     from ..views.base import View
@@ -26,6 +26,102 @@ if TYPE_CHECKING:
     from .edge import KBlockEdge
     from .sheaf import KBlockSheaf
     from .verification import SheafVerification
+
+
+# -----------------------------------------------------------------------------
+# Witness Bridge Protocol (K-Block → Witness Integration)
+# -----------------------------------------------------------------------------
+
+
+@runtime_checkable
+class WitnessBridgeProtocol(Protocol):
+    """
+    Protocol for K-Block → Witness bridge.
+
+    This protocol defines the interface for emitting Witness marks when
+    K-Block operations occur. The bridge is OPTIONAL - K-Block works
+    standalone, but when a bridge is configured, bind operations emit marks.
+
+    Philosophy:
+        "The proof IS the decision. The mark IS the witness."
+
+    Usage:
+        The bridge is set at module level via set_witness_bridge().
+        When set, bind() will call emit_bind_mark() to create a Witness mark.
+
+    Example Implementation:
+        >>> class MyBridge:
+        ...     def emit_bind_mark(
+        ...         self,
+        ...         from_block: KBlock,
+        ...         to_block: KBlock,
+        ...         edge: LineageEdge,
+        ...         operation: str,
+        ...     ) -> str | None:
+        ...         mark = Mark(...)
+        ...         store.add(mark)
+        ...         return str(mark.id)
+        ...
+        >>> set_witness_bridge(MyBridge())
+
+    See: spec/protocols/kblock-witness-bridge.md
+    """
+
+    def emit_bind_mark(
+        self,
+        from_block: "KBlock",
+        to_block: "KBlock",
+        edge: "LineageEdge",
+        operation: str,
+    ) -> str | None:
+        """
+        Emit a Witness mark for a bind operation.
+
+        Args:
+            from_block: The source K-Block (self in bind)
+            to_block: The result K-Block (f(self.content))
+            edge: The LineageEdge connecting them
+            operation: Name of the transformation function
+
+        Returns:
+            Mark ID as string if mark was emitted, None otherwise.
+            Returning None is valid (e.g., if mark store is unavailable).
+        """
+        ...
+
+
+# Module-level bridge (set by external configuration)
+_witness_bridge: WitnessBridgeProtocol | None = None
+
+
+def set_witness_bridge(bridge: WitnessBridgeProtocol | None) -> None:
+    """
+    Set the global witness bridge for K-Block operations.
+
+    This allows K-Block bind operations to emit Witness marks for provenance.
+    Pass None to disable witness integration.
+
+    Args:
+        bridge: A WitnessBridgeProtocol implementation, or None to disable.
+
+    Example:
+        >>> from services.k_block.core import set_witness_bridge
+        >>> set_witness_bridge(MyWitnessBridge())
+        >>> # Now bind() will emit marks
+        >>> set_witness_bridge(None)  # Disable
+    """
+    global _witness_bridge
+    _witness_bridge = bridge
+
+
+def get_witness_bridge() -> WitnessBridgeProtocol | None:
+    """
+    Get the current witness bridge, if any.
+
+    Returns:
+        The configured WitnessBridgeProtocol, or None if not configured.
+    """
+    return _witness_bridge
 
 # -----------------------------------------------------------------------------
 # Type Aliases
@@ -121,6 +217,62 @@ class KBlockKind(Enum):
             KBlockKind.CRYSTAL: "time",
         }
         return mapping[self]
+
+
+# -----------------------------------------------------------------------------
+# Content Delta Types
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# Lineage Edge (for monad bind tracking - Amendment D)
+# -----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class LineageEdge:
+    """
+    Edge in the monadic derivation chain.
+
+    Created by bind() to track how K-Blocks derive from each other.
+    This is distinct from KBlockEdge which tracks semantic relationships.
+    LineageEdge tracks the computational derivation path (the bind chain).
+
+    Philosophy:
+        "The proof IS the decision. The mark IS the witness."
+
+    Each bind operation creates one LineageEdge, forming a derivation DAG.
+    The full lineage list in a K-Block tells the story of how it was computed.
+
+    Example:
+        >>> doc = KBlock.pure("content")
+        >>> result = doc >> transform_a >> transform_b
+        >>> # result.lineage contains 2 LineageEdges: doc->a, a->b
+    """
+
+    from_id: str  # Source K-Block ID
+    to_id: str  # Target K-Block ID
+    operation: str  # Name of the transformation function
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize for persistence."""
+        return {
+            "from_id": self.from_id,
+            "to_id": self.to_id,
+            "operation": self.operation,
+            "timestamp": self.timestamp.isoformat(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "LineageEdge":
+        """Deserialize from persistence."""
+        return cls(
+            from_id=data["from_id"],
+            to_id=data["to_id"],
+            operation=data["operation"],
+            timestamp=datetime.fromisoformat(data["timestamp"]),
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -361,6 +513,23 @@ class KBlock:
     # Classification tags for filtering/grouping
     tags: list[str] = field(default_factory=list)
 
+    # -------------------------------------------------------------------------
+    # Monadic Lineage (Amendment D: K-Block Monad with Lineage Threading)
+    # -------------------------------------------------------------------------
+
+    # Bind-chain lineage: tracks the derivation path through bind operations
+    # This is distinct from `lineage` (Zero Seed parent IDs) - this tracks
+    # the computational derivation chain created by >> composition
+    bind_lineage: list["LineageEdge"] = field(default_factory=list)
+
+    # -------------------------------------------------------------------------
+    # Witness Bridge Integration (P2: K-Block ↔ Witness Bridge)
+    # -------------------------------------------------------------------------
+
+    # Generic metadata dict for cross-system integration
+    # May contain: witness_mark_id (when bind() emits a mark)
+    metadata: dict[str, Any] = field(default_factory=dict)
+
     # ---------------------------------------------------------------------
     # Content Operations
     # ---------------------------------------------------------------------
@@ -447,23 +616,140 @@ class KBlock:
         return None
 
     # ---------------------------------------------------------------------
-    # Monad Operations
+    # Monad Operations (Amendment D: K-Block Monad with Lineage Threading)
     # ---------------------------------------------------------------------
+
+    @classmethod
+    def pure(cls, content: str, path: str = "anonymous") -> "KBlock":
+        """
+        Monad return: Lift content into K-Block context.
+
+        Creates a fresh K-Block with no bind_lineage. This is the entry point
+        for the monad - all K-Blocks start here and accumulate lineage through bind.
+
+        Args:
+            content: The content to wrap in a K-Block
+            path: Optional path for the K-Block (default: "anonymous")
+
+        Returns:
+            A new K-Block containing the content with empty bind_lineage
+
+        Example:
+            >>> doc = KBlock.pure("Hello, World!")
+            >>> # Now you can use >> to compose transformations
+            >>> result = doc >> transform_a >> transform_b
+        """
+        return cls(
+            id=generate_kblock_id(),
+            path=path,
+            content=content,
+            base_content=content,
+            bind_lineage=[],
+        )
 
     def bind(self, f: "Callable[[str], KBlock]") -> "KBlock":
         """
-        Monadic bind: chain editing operations.
+        Monadic bind: chain editing operations with lineage threading.
 
-        Takes current content, applies f, returns resulting K-Block.
-        Used for composing edit operations without escaping to cosmos.
+        Takes current content, applies f, returns resulting K-Block with
+        accumulated lineage. This is the core of Amendment D - every bind
+        creates a LineageEdge that tracks the derivation.
+
+        Laws (verified in test_monad_laws.py):
+        - Left identity:  pure(a) >>= f  ===  f(a)          (content equality)
+        - Right identity: m >>= pure     ===  m             (content equality)
+        - Associativity:  (m >>= f) >>= g === m >>= (x -> f(x) >>= g)
 
         Note: The returned K-Block inherits this block's cosmos reference
-        but has fresh state. This is how edit operations chain.
+        and accumulates lineage from both self and the result.
+
+        Witness Integration (P2):
+        When a WitnessBridge is configured via set_witness_bridge(), bind()
+        will emit a Witness mark for provenance tracking. The mark ID is
+        attached to the result K-Block's metadata as 'witness_mark_id'.
+
+        Args:
+            f: A function from str to KBlock (the Kleisli arrow)
+
+        Returns:
+            A new K-Block with:
+            - Content from f(self.content)
+            - Lineage from self + new edge + lineage from result
+            - Cosmos reference from self
+            - Optional witness_mark_id in metadata (if bridge configured)
         """
         result = f(self.content)
+
+        # CREATE LINEAGE EDGE (Amendment D: the missing piece)
+        # This satisfies A4: "The mark IS the witness. Actions leave traces."
+        operation_name = getattr(f, "__name__", "transform")
+        edge = LineageEdge(
+            from_id=self.id,
+            to_id=result.id,
+            operation=operation_name,
+        )
+
+        # WITNESS INTEGRATION (P2: K-Block → Witness Bridge)
+        # Emit a Witness mark if bridge is configured
+        bridge = get_witness_bridge()
+        mark_id: str | None = None
+        if bridge is not None:
+            try:
+                mark_id = bridge.emit_bind_mark(self, result, edge, operation_name)
+            except Exception:
+                # Bridge failures should not break K-Block operations
+                # The bridge is optional; K-Block works standalone
+                pass
+
+        # Thread lineage through composition:
+        # new_lineage = self.bind_lineage + [this_edge] + result.bind_lineage
+        new_lineage = list(self.bind_lineage) + [edge] + list(result.bind_lineage)
+
+        # Create new KBlock with threaded lineage
+        result.bind_lineage = new_lineage
+
+        # Attach witness mark_id to result metadata for provenance
+        if mark_id is not None:
+            # Preserve existing metadata while adding witness_mark_id
+            existing_metadata = getattr(result, "metadata", None) or {}
+            result.metadata = {**existing_metadata, "witness_mark_id": mark_id}
+
         # Transfer cosmos reference
         result._cosmos = self._cosmos
+
         return result
+
+    def __rshift__(self, f: "Callable[[str], KBlock]") -> "KBlock":
+        """
+        Operator >> for bind (Haskell-style >>=).
+
+        Enables clean composition syntax:
+            result = doc >> transform_a >> transform_b
+
+        This is syntactic sugar for:
+            result = doc.bind(transform_a).bind(transform_b)
+        """
+        return self.bind(f)
+
+    def map(self, f: "Callable[[str], str]") -> "KBlock":
+        """
+        Functor map: Apply f to content without changing context.
+
+        map f = bind (pure . f)
+
+        This lifts a pure function (str -> str) into the K-Block monad.
+        The resulting K-Block has a lineage edge but the transformation
+        is applied purely to content.
+
+        Args:
+            f: A pure function from str to str
+
+        Returns:
+            A new K-Block with f applied to content
+        """
+        def lift(x: str) -> KBlock:
+            return KBlock.pure(f(x), path=self.path)
+        return self.bind(lift)
 
     # ---------------------------------------------------------------------
     # State Queries
@@ -633,6 +919,12 @@ class KBlock:
         result["created_by"] = self.created_by
         result["tags"] = self.tags
 
+        # Monadic lineage (Amendment D)
+        result["bind_lineage"] = [edge.to_dict() for edge in self.bind_lineage]
+
+        # Witness bridge integration (P2)
+        result["metadata"] = self.metadata
+
         return result
 
     @classmethod
@@ -668,6 +960,12 @@ class KBlock:
         except ValueError:
             kind = KBlockKind.FILE  # Fallback for unknown kinds
 
+        # Deserialize bind_lineage (Amendment D)
+        bind_lineage = [
+            LineageEdge.from_dict(edge_data)
+            for edge_data in data.get("bind_lineage", [])
+        ]
+
         return cls(
             id=KBlockId(data["id"]),
             path=data["path"],
@@ -694,6 +992,10 @@ class KBlock:
             galois_loss=data.get("galois_loss", 0.0),
             created_by=data.get("created_by"),
             tags=data.get("tags", []),
+            # Monadic lineage (Amendment D)
+            bind_lineage=bind_lineage,
+            # Witness bridge integration (P2)
+            metadata=data.get("metadata", {}),
         )
 
     # ---------------------------------------------------------------------
@@ -711,7 +1013,6 @@ class KBlock:
 
 # Type alias for bind function
 from typing import Callable  # noqa: E402
-
 
 # =============================================================================
 # Unification: KBlock ≅ ZeroNode Isomorphism

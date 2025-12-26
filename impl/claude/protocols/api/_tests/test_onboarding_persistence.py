@@ -5,8 +5,9 @@ Verifies that onboarding sessions are stored in Postgres and survive
 server restarts.
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from models import OnboardingSession
 from models.base import get_async_session

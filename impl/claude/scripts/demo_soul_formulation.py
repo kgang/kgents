@@ -16,9 +16,9 @@ Usage:
 """
 
 from dp.jewels.soul import (
-    SoulState,
     SoulAction,
     SoulContext,
+    SoulState,
     create_soul_agent,
 )
 
@@ -89,8 +89,8 @@ def main():
 
         # Check if state is in agent's space
         if initial not in agent.states:
-            print(f"⚠ Initial state not in agent's space (granularity=2)")
-            print(f"  Using closest state from agent's space instead...")
+            print("⚠ Initial state not in agent's space (granularity=2)")
+            print("  Using closest state from agent's space instead...")
             # Find closest state by comparing trait values
             min_dist = float("inf")
             closest = None
@@ -109,7 +109,7 @@ def main():
             print()
 
         # Display initial state
-        print(f"Initial State:")
+        print("Initial State:")
         print(f"  {format_state(initial)}")
         print()
 
@@ -142,7 +142,7 @@ def main():
 
             state = next_state
 
-        print(f"\nFinal State:")
+        print("\nFinal State:")
         print(f"  {format_state(state)}")
         print(f"  Convergence: {state.attractor_strength:.2%}")
         print(f"  Resonance: {state.resonance_depth:.2%}")

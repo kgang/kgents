@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 
 from ..node import BaseLogosNode, BasicRendering, Observer
-from ..registry import node, get_node_metadata, reset_registry, repopulate_registry
+from ..registry import get_node_metadata, node, repopulate_registry, reset_registry
 from .conftest import create_mock_umwelt
 
 
@@ -173,7 +173,7 @@ class TestValueFunctionCustomization:
 
     def test_custom_value_function_override(self) -> None:
         """Custom ValueFunction can be provided via override."""
-        from services.categorical import ValueFunction, Principle
+        from services.categorical import Principle, ValueFunction
 
         class CustomConstitutionalNode(ConstitutionalTestNode):
             def _get_value_function(self) -> ValueFunction:

@@ -64,7 +64,6 @@ except ImportError:
 from agents.k import DialogueMode
 from services.chat import ChatContext, KgentBridge, create_kgent_bridge
 
-
 # Persistence (NOTE: Requires model converters - API models != domain models)
 # from services.chat.persistence import ChatPersistence
 
@@ -1340,8 +1339,8 @@ def create_chat_router() -> "APIRouter | None":
         Raises:
             HTTPException: If search fails
         """
-        from pathlib import Path
         import fnmatch
+        from pathlib import Path
 
         query = request.get("query", "")
 
@@ -1486,8 +1485,8 @@ def create_chat_router() -> "APIRouter | None":
             HTTPException: If portal tool fails
         """
         try:
-            from services.tooling.tools.portal import PortalTool
             from services.tooling.contracts import PortalRequest
+            from services.tooling.tools.portal import PortalTool
 
             tool = PortalTool()
             result = await tool.invoke(
@@ -1539,8 +1538,8 @@ def create_chat_router() -> "APIRouter | None":
             HTTPException: If portal not found or write fails
         """
         try:
-            from services.tooling.tools.portal import PortalWriteTool
             from services.tooling.contracts import PortalWriteRequest as ToolRequest
+            from services.tooling.tools.portal import PortalWriteTool
 
             tool = PortalWriteTool()
             result = await tool.invoke(

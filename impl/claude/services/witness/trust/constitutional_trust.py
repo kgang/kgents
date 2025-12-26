@@ -35,7 +35,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Protocol, Sequence
 
-from services.witness.crystal import Crystal, ConstitutionalCrystalMeta
+from services.witness.crystal import ConstitutionalCrystalMeta, Crystal
 from services.witness.polynomial import TrustLevel
 
 logger = logging.getLogger("kgents.witness.constitutional_trust")

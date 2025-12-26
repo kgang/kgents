@@ -30,14 +30,13 @@ from typing import Any
 
 from services.categorical.dp_bridge import PolicyTrace, TraceEntry
 from services.witness.mark import (
+    EvidenceTier,
     Mark,
     Proof,
     Response,
     Stimulus,
     UmweltSnapshot,
-    EvidenceTier,
 )
-
 
 # =============================================================================
 # TraceEntry → Mark Conversion

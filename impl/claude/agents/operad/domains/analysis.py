@@ -45,7 +45,6 @@ from agents.operad.core import (
 )
 from agents.poly import PolyAgent, from_function, parallel, sequential
 
-
 # =============================================================================
 # Analysis Report Types
 # =============================================================================
@@ -350,7 +349,7 @@ def _categorical_analysis_structural(spec_path: str) -> CategoricalReport:
                 ),
             ),
             fixed_point=None,
-            summary=f"Structural analysis failed: file not found",
+            summary="Structural analysis failed: file not found",
         )
 
     # Return structural analysis (what holds by construction)
@@ -415,7 +414,7 @@ def _epistemic_analysis_structural(spec_path: str) -> EpistemicReport:
             ),
             grounding=GroundingChain(steps=(), terminates_at_axiom=False),
             bootstrap=None,
-            summary=f"Structural analysis failed: file not found",
+            summary="Structural analysis failed: file not found",
         )
 
     return EpistemicReport(
@@ -459,7 +458,7 @@ def _dialectical_analysis_structural(spec_path: str) -> DialecticalReport:
         return DialecticalReport(
             target=spec_path,
             tensions=(),
-            summary=f"Structural analysis failed: file not found",
+            summary="Structural analysis failed: file not found",
         )
 
     return DialecticalReport(
@@ -495,7 +494,7 @@ def _generative_analysis_structural(spec_path: str) -> GenerativeReport:
                 passed=False,
             ),
             minimal_kernel=(),
-            summary=f"Structural analysis failed: file not found",
+            summary="Structural analysis failed: file not found",
         )
 
     # Actually measure the file
@@ -547,7 +546,7 @@ def _constitutional_analysis_structural(spec_path: str) -> ConstitutionalReport:
             alignment=ConstitutionalAlignment.neutral(),
             violations=("file not found",),
             remediation_suggestions=("Ensure file exists at specified path",),
-            summary=f"Structural analysis failed: file not found",
+            summary="Structural analysis failed: file not found",
         )
 
     # Import ConstitutionalAlignment
@@ -611,8 +610,8 @@ async def analyze_categorical_llm(spec_path: str) -> CategoricalReport:
     Falls back to structural if LLM unavailable.
     """
     try:
-        from services.analysis import AnalysisService
         from agents.k.soul import create_llm_client
+        from services.analysis import AnalysisService
 
         llm = create_llm_client()
         service = AnalysisService(llm)
@@ -634,8 +633,8 @@ async def analyze_categorical_llm(spec_path: str) -> CategoricalReport:
 async def analyze_epistemic_llm(spec_path: str) -> EpistemicReport:
     """LLM-backed epistemic analysis."""
     try:
-        from services.analysis import AnalysisService
         from agents.k.soul import create_llm_client
+        from services.analysis import AnalysisService
 
         llm = create_llm_client()
         service = AnalysisService(llm)
@@ -657,8 +656,8 @@ async def analyze_epistemic_llm(spec_path: str) -> EpistemicReport:
 async def analyze_dialectical_llm(spec_path: str) -> DialecticalReport:
     """LLM-backed dialectical analysis."""
     try:
-        from services.analysis import AnalysisService
         from agents.k.soul import create_llm_client
+        from services.analysis import AnalysisService
 
         llm = create_llm_client()
         service = AnalysisService(llm)
@@ -677,8 +676,8 @@ async def analyze_dialectical_llm(spec_path: str) -> DialecticalReport:
 async def analyze_generative_llm(spec_path: str) -> GenerativeReport:
     """LLM-backed generative analysis."""
     try:
-        from services.analysis import AnalysisService
         from agents.k.soul import create_llm_client
+        from services.analysis import AnalysisService
 
         llm = create_llm_client()
         service = AnalysisService(llm)
@@ -700,8 +699,8 @@ async def analyze_generative_llm(spec_path: str) -> GenerativeReport:
 async def analyze_constitutional_llm(spec_path: str) -> ConstitutionalReport:
     """LLM-backed constitutional analysis."""
     try:
-        from services.analysis import AnalysisService
         from agents.k.soul import create_llm_client
+        from services.analysis import AnalysisService
 
         llm = create_llm_client()
         service = AnalysisService(llm)
@@ -732,8 +731,8 @@ async def analyze_full_llm(spec_path: str) -> FullAnalysisReport:
     - Phase 3: Synthesize results
     """
     try:
-        from services.analysis import AnalysisService
         from agents.k.soul import create_llm_client
+        from services.analysis import AnalysisService
 
         llm = create_llm_client()
         service = AnalysisService(llm)

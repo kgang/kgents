@@ -10,7 +10,7 @@ Every LLM call is witnessed with:
 See: agents/d/schemas/llm_trace.py
 """
 
-from .tracer import LLMTracer, LLMTraceContext
+from .tracer import LLMTraceContext, LLMTracer
 
 __all__ = [
     "LLMTracer",

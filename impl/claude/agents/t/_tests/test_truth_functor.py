@@ -9,17 +9,18 @@ These are the foundational types that all probes build upon.
 
 from __future__ import annotations
 
-import pytest
 from datetime import datetime, timezone
+
+import pytest
 
 from agents.t.truth_functor import (
     AnalysisMode,
     ConstitutionalScore,
-    TruthVerdict,
-    ProbeState,
-    ProbeAction,
-    TraceEntry,
     PolicyTrace,
+    ProbeAction,
+    ProbeState,
+    TraceEntry,
+    TruthVerdict,
 )
 
 

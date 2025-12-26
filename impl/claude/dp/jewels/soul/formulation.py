@@ -867,7 +867,7 @@ def create_soul_agent(
         elif action == SoulAction.SUPPRESS:
             return f"Suppressed traits (attractor weakened to {next_state.attractor_strength:.2f})"
         elif action == SoulAction.MODULATE:
-            return f"Modulated personality (exploring trait space)"
+            return "Modulated personality (exploring trait space)"
         elif action == SoulAction.RESONATE:
             return f"Deepened resonance (depth: {next_state.resonance_depth:.2f})"
         elif action == SoulAction.DRIFT:

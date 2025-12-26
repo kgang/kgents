@@ -22,7 +22,6 @@ from typing import Any, Callable, Literal, Protocol
 
 from services.k_block.core.kblock import KBlock
 
-
 # =============================================================================
 # Protocols
 # =============================================================================

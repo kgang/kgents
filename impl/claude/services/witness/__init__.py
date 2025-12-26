@@ -25,6 +25,12 @@ import os
 
 USE_CRYSTAL_STORAGE = os.getenv("USE_CRYSTAL_STORAGE", "").lower() in ("1", "true", "yes")
 
+# Constitutional Evaluator (Phase 1: Witness as Constitutional Enforcement)
+from .constitutional_evaluator import (
+    BatchConstitutionalEvaluator,
+    ConstitutionalEvaluatorProtocol,
+    MarkConstitutionalEvaluator,
+)
 from .contracts import (
     ActionRecordRequest,
     ActionRecordResponse,
@@ -57,11 +63,9 @@ from .crystal import (
     generate_crystal_id,
 )
 
-# Constitutional Evaluator (Phase 1: Witness as Constitutional Enforcement)
-from .constitutional_evaluator import (
-    BatchConstitutionalEvaluator,
-    ConstitutionalEvaluatorProtocol,
-    MarkConstitutionalEvaluator,
+# Phase 3: Crystal Adapter (WitnessMark → D-gent Crystal)
+from .crystal_adapter import (
+    WitnessCrystalAdapter,
 )
 from .crystal_store import (
     CrystalNotFoundError,
@@ -73,11 +77,6 @@ from .crystal_store import (
     get_crystal_store,
     reset_crystal_store,
     set_crystal_store,
-)
-
-# Phase 3: Crystal Adapter (WitnessMark → D-gent Crystal)
-from .crystal_adapter import (
-    WitnessCrystalAdapter,
 )
 
 # Phase 5: Crystal Trail Visualization
@@ -98,6 +97,23 @@ from .crystallization_node import (
 from .crystallizer import (
     CrystallizationResult,
     Crystallizer,
+)
+
+# Daily Lab (Trail-to-Crystal Pilot)
+from .daily_lab import (
+    WARMTH_PROMPTS,
+    WARMTH_RESPONSES,
+    CompressionHonesty,
+    DailyCrystal,
+    DailyCrystallizer,
+    DailyExport,
+    DailyExporter,
+    DailyLab,
+    DailyMark,
+    DailyMarkCapture,
+    DailyTag,
+    Trail,
+    TrailPosition,
 )
 
 # Evidence Ladder (Phase 1: Witness Assurance Protocol)
@@ -146,6 +162,16 @@ from .grant import (
     reset_grant_store,
 )
 
+# Honesty Module (Amendment G Compliance)
+from .honesty import (
+    DISCLOSURE_TEMPLATES,
+    TAG_FRIENDLY_NAMES,
+    CompressionHonesty as HonestyCompressionHonesty,
+    CrystalHonestyCalculator,
+    get_honesty_calculator,
+    reset_honesty_calculator,
+)
+
 # Phase 4: Integration & Streaming
 from .integration import (
     HandoffContext,
@@ -168,6 +194,20 @@ from .intent import (
     generate_intent_id,
     get_intent_tree,
     reset_intent_tree,
+)
+
+# Kleisli Witness Composition (E1: Writer Monad for kgents)
+from .kleisli import (
+    Witnessed,
+    WitnessedOperationConfig,
+    kleisli_chain,
+    kleisli_compose,
+    kleisli_compose_async,
+    link_marks,
+    merge_witnessed,
+    witness_value,
+    witnessed_operation,
+    witnessed_sync,
 )
 
 # Lesson (renamed from Terrace)
@@ -576,6 +616,17 @@ __all__ = [
     "verify_identity_law",
     # Trace (Immutable Mark Sequence)
     "Trace",
+    # Kleisli Witness Composition (E1: Writer Monad for kgents)
+    "Witnessed",
+    "kleisli_compose",
+    "kleisli_compose_async",
+    "kleisli_chain",
+    "witnessed_operation",
+    "witnessed_sync",
+    "WitnessedOperationConfig",
+    "witness_value",
+    "link_marks",
+    "merge_witnessed",
     # Mark Store
     "CausalityViolation",
     "DuplicateMarkError",
@@ -689,4 +740,25 @@ __all__ = [
     "get_garden_service",
     # Feature Flags
     "USE_CRYSTAL_STORAGE",
+    # Daily Lab (Trail-to-Crystal Pilot)
+    "CompressionHonesty",
+    "DailyCrystal",
+    "DailyCrystallizer",
+    "DailyExport",
+    "DailyExporter",
+    "DailyLab",
+    "DailyMark",
+    "DailyMarkCapture",
+    "DailyTag",
+    "Trail",
+    "TrailPosition",
+    "WARMTH_PROMPTS",
+    "WARMTH_RESPONSES",
+    # Honesty Module (Amendment G Compliance)
+    "HonestyCompressionHonesty",
+    "CrystalHonestyCalculator",
+    "DISCLOSURE_TEMPLATES",
+    "TAG_FRIENDLY_NAMES",
+    "get_honesty_calculator",
+    "reset_honesty_calculator",
 ]

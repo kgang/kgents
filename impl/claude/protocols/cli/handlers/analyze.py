@@ -112,11 +112,11 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
         from agents.operad.domains.analysis import (
             ANALYSIS_OPERAD,
             CategoricalReport,
+            ConstitutionalReport,
             DialecticalReport,
             EpistemicReport,
-            GenerativeReport,
-            ConstitutionalReport,
             FullAnalysisReport,
+            GenerativeReport,
         )
 
         target_str = str(target_path.absolute())
@@ -126,11 +126,11 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
             # Import async LLM-backed functions
             from agents.operad.domains.analysis import (
                 analyze_categorical_llm,
-                analyze_epistemic_llm,
-                analyze_dialectical_llm,
-                analyze_generative_llm,
                 analyze_constitutional_llm,
+                analyze_dialectical_llm,
+                analyze_epistemic_llm,
                 analyze_full_llm,
+                analyze_generative_llm,
             )
 
             # Run requested modes (async)
@@ -176,11 +176,11 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
             # Structural (non-LLM) analysis
             from agents.operad.domains.analysis import (
                 _categorical_analysis,
-                _epistemic_analysis,
-                _dialectical_analysis,
-                _generative_analysis,
                 _constitutional_analysis,
+                _dialectical_analysis,
+                _epistemic_analysis,
                 _full_analysis,
+                _generative_analysis,
             )
 
             print("Running structural analysis (no LLM)...")
@@ -674,6 +674,7 @@ async def _emit_analysis_marks(report: "FullAnalysisReport", target: str, mode: 
     """
     try:
         from pathlib import Path
+
         from protocols.cli.handlers.witness.marks import _create_mark_async
 
         # Extract target filename for brevity
@@ -696,7 +697,7 @@ async def _emit_analysis_marks(report: "FullAnalysisReport", target: str, mode: 
         if report.dialectical.problematic_count > 0:
             findings.append(f"dialectical: {report.dialectical.problematic_count} problematic")
         if not report.generative.is_regenerable:
-            findings.append(f"generative: not regenerable")
+            findings.append("generative: not regenerable")
 
         reasoning = "; ".join(findings) if findings else "All modes passed"
 
@@ -721,7 +722,7 @@ async def _emit_analysis_marks(report: "FullAnalysisReport", target: str, mode: 
             author="analysis_operad",
         )
 
-        print(f"  [Witness mark emitted]")
+        print("  [Witness mark emitted]")
 
     except Exception as e:
         # Don't fail the analysis if mark emission fails

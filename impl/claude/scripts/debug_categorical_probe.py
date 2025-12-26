@@ -18,9 +18,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from agents.k.llm import create_llm_client
 from services.categorical import (
     MonadProbe,
-    SheafDetector,
     Problem,
     ProblemSet,
+    SheafDetector,
 )
 
 

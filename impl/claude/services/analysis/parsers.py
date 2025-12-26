@@ -27,7 +27,7 @@ import json
 import re
 from typing import Any
 
-from agents.operad.core import LawStatus
+from agents.operad.core import LawStatus, LawVerification
 from agents.operad.domains.analysis import (
     BootstrapAnalysis,
     CategoricalReport,
@@ -44,7 +44,6 @@ from agents.operad.domains.analysis import (
     Tension,
     ToulminStructure,
 )
-from agents.operad.core import LawVerification
 
 # =============================================================================
 # JSON Extraction
@@ -375,8 +374,8 @@ def parse_constitutional_response(response: str, target: str) -> "Constitutional
         data = json.loads(json_str)
 
         # Import ConstitutionalAlignment from witness
-        from services.witness.mark import ConstitutionalAlignment
         from agents.operad.domains.analysis import ConstitutionalReport
+        from services.witness.mark import ConstitutionalAlignment
 
         # Build ConstitutionalAlignment
         principle_scores = data.get("principle_scores", {})
@@ -406,8 +405,8 @@ def parse_constitutional_response(response: str, target: str) -> "Constitutional
 
     except (json.JSONDecodeError, KeyError, ValueError) as e:
         # Return error report
-        from services.witness.mark import ConstitutionalAlignment
         from agents.operad.domains.analysis import ConstitutionalReport
+        from services.witness.mark import ConstitutionalAlignment
 
         return ConstitutionalReport(
             target=target,

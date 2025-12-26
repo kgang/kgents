@@ -63,7 +63,6 @@ from typing import Any
 
 from agents.d.schemas.code import ParamInfo
 
-
 # =============================================================================
 # Function Info (Intermediate Structure)
 # =============================================================================

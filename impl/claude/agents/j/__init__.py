@@ -38,6 +38,7 @@ from .factory_integration import (
     get_jit_meta,
     is_jit_agent,
 )
+
 # forge_integration removed 2025-12-25 (Forge API deprecated)
 from .jgent import (
     GeneratedTest,

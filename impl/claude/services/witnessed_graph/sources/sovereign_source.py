@@ -54,43 +54,77 @@ class SovereignSource(ComposableMixin):
         Get edges originating from a path.
 
         Looks up the entity in the store and converts its edges.
+        Also reads overlay edges created via store.add_edge().
 
         Args:
             path: Source path to query
 
         Yields:
-            HyperEdge instances from Sovereign analysis
+            HyperEdge instances from Sovereign analysis and overlay
         """
+        seen_edge_ids: set[str] = set()
+
+        # 1. Get edges from entity (discovered code structure)
         entity = await self._store.get_current(path)
-        if entity is None:
-            return
+        if entity is not None:
+            for edge_dict in entity.edges:
+                edge_type = edge_dict.get("edge_type", "references")
+                target = edge_dict.get("target", "")
+                line_number = edge_dict.get("line_number")
+                context = edge_dict.get("context", "")
 
-        # Get edges from overlay (stored as dicts)
-        for edge_dict in entity.edges:
-            edge_type = edge_dict.get("edge_type", "references")
-            target = edge_dict.get("target", "")
-            line_number = edge_dict.get("line_number")
-            context = edge_dict.get("context", "")
+                if not target:
+                    continue
 
-            if not target:
-                continue
+                edge_id = edge_dict.get("id", f"{path}->{target}")
+                seen_edge_ids.add(edge_id)
 
-            yield HyperEdge(
-                kind=EdgeKind.from_sovereign_type(edge_type),
-                source_path=path,
-                target_path=target,
-                origin=self.origin,
-                context=context if context else None,
-                line_number=line_number,
-            )
+                yield HyperEdge(
+                    kind=EdgeKind.from_sovereign_type(edge_type),
+                    source_path=path,
+                    target_path=target,
+                    origin=self.origin,
+                    context=context if context else None,
+                    line_number=line_number,
+                )
+
+        # 2. Get edges from overlay (manually added via store.add_edge())
+        overlay = await self._store.get_overlay(path, "edges")
+        if overlay is not None:
+            overlay_edges = overlay.get("edges", [])
+            for edge_dict in overlay_edges:
+                # Only outgoing edges from this path
+                if edge_dict.get("direction") != "outgoing":
+                    continue
+
+                edge_id = edge_dict.get("id", "")
+                if edge_id in seen_edge_ids:
+                    continue
+                seen_edge_ids.add(edge_id)
+
+                edge_type = edge_dict.get("type", "references")
+                target = edge_dict.get("target", "")
+                context = edge_dict.get("context", "")
+                mark_id = edge_dict.get("mark_id")
+
+                if not target:
+                    continue
+
+                yield HyperEdge(
+                    kind=EdgeKind.from_sovereign_type(edge_type),
+                    source_path=path,
+                    target_path=target,
+                    origin=self.origin,
+                    context=context if context else None,
+                    mark_id=mark_id,
+                )
 
     async def edges_to(self, path: str) -> AsyncIterator[HyperEdge]:
         """
         Get edges pointing to a path.
 
         Scans all entities looking for edges targeting this path.
-        This is O(n) where n is number of entities - could be optimized
-        with an inverse index.
+        Also reads incoming overlay edges.
 
         Args:
             path: Target path to find edges to
@@ -98,7 +132,40 @@ class SovereignSource(ComposableMixin):
         Yields:
             HyperEdge instances pointing to path
         """
-        # List all entities and check their edges
+        seen_edge_ids: set[str] = set()
+
+        # 1. Get incoming edges from overlay (direct lookup - fast)
+        overlay = await self._store.get_overlay(path, "edges")
+        if overlay is not None:
+            overlay_edges = overlay.get("edges", [])
+            for edge_dict in overlay_edges:
+                # Only incoming edges to this path
+                if edge_dict.get("direction") != "incoming":
+                    continue
+
+                edge_id = edge_dict.get("id", "")
+                if edge_id in seen_edge_ids:
+                    continue
+                seen_edge_ids.add(edge_id)
+
+                edge_type = edge_dict.get("type", "references")
+                source = edge_dict.get("source", "")
+                context = edge_dict.get("context", "")
+                mark_id = edge_dict.get("mark_id")
+
+                if not source:
+                    continue
+
+                yield HyperEdge(
+                    kind=EdgeKind.from_sovereign_type(edge_type),
+                    source_path=source,
+                    target_path=path,
+                    origin=self.origin,
+                    context=context if context else None,
+                    mark_id=mark_id,
+                )
+
+        # 2. List all entities and check their edges (discovered code structure)
         all_paths = await self._store.list_all()
         for entity_path in all_paths:
             entity = await self._store.get_current(entity_path)
@@ -109,6 +176,11 @@ class SovereignSource(ComposableMixin):
                 target = edge_dict.get("target", "")
                 # Check if target matches (exact or prefix match)
                 if target == path or target.endswith(f"/{path}") or path.endswith(target):
+                    edge_id = edge_dict.get("id", f"{entity_path}->{target}")
+                    if edge_id in seen_edge_ids:
+                        continue
+                    seen_edge_ids.add(edge_id)
+
                     edge_type = edge_dict.get("edge_type", "references")
                     line_number = edge_dict.get("line_number")
                     context = edge_dict.get("context", "")

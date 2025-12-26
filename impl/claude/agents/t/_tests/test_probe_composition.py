@@ -16,12 +16,12 @@ from __future__ import annotations
 
 import pytest
 
+from agents.t.probes.null_probe import NullProbe, NullState
 from agents.t.truth_functor import (
     ComposedProbe,
     PolicyTrace,
     TruthVerdict,
 )
-from agents.t.probes.null_probe import NullProbe, NullState
 
 
 class TestSequentialComposition:
@@ -324,7 +324,6 @@ class TestComposedProbeActions:
         composed = p1 >> p2
 
         # Get actions from initial product state
-        from agents.t.probes.null_probe import NullState
         initial_state = (NullState.READY, NullState.READY)
 
         actions = composed.actions(initial_state)
@@ -340,7 +339,6 @@ class TestComposedProbeActions:
 
         composed = p1 | p2
 
-        from agents.t.probes.null_probe import NullState
         initial_state = (NullState.READY, NullState.READY)
 
         actions = composed.actions(initial_state)
@@ -360,7 +358,6 @@ class TestComposedProbeReward:
 
         composed = p1 >> p2
 
-        from agents.t.probes.null_probe import NullState
         from agents.t.truth_functor import ProbeAction
 
         state_before = (NullState.READY, NullState.READY)
@@ -380,7 +377,6 @@ class TestComposedProbeReward:
 
         composed = p1 >> p2
 
-        from agents.t.probes.null_probe import NullState
         from agents.t.truth_functor import ProbeAction
 
         state_before = (NullState.DONE, NullState.READY)
@@ -400,7 +396,6 @@ class TestComposedProbeReward:
 
         composed = p1 | p2
 
-        from agents.t.probes.null_probe import NullState
         from agents.t.truth_functor import ProbeAction
 
         # Both transition

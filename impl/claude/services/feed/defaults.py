@@ -18,7 +18,6 @@ from __future__ import annotations
 
 from services.feed.core import Feed, FeedFilter, FeedRanking, FeedSource
 
-
 # =============================================================================
 # Default Feeds
 # =============================================================================

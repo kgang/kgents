@@ -21,7 +21,6 @@ from typing import Any, Callable
 
 from .crystal import Crystal
 
-
 # =============================================================================
 # Evidence Tier Classification
 # =============================================================================
@@ -175,8 +174,8 @@ def cosine_embedding_distance(a: str, b: str) -> float:
     """
     try:
         # Try to import sentence-transformers
-        from sentence_transformers import SentenceTransformer
         import numpy as np
+        from sentence_transformers import SentenceTransformer
 
         # Use cached model if available (global singleton pattern)
         if not hasattr(cosine_embedding_distance, "_model"):

@@ -33,7 +33,7 @@ import uuid
 from typing import Any
 
 try:
-    from fastapi import APIRouter, HTTPException, Query, Response, UploadFile, File
+    from fastapi import APIRouter, File, HTTPException, Query, Response, UploadFile
     from fastapi.responses import JSONResponse, StreamingResponse
     from pydantic import BaseModel, Field
 

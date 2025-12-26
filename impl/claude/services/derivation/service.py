@@ -52,7 +52,6 @@ if TYPE_CHECKING:
 
 from services.k_block.core.edge import KBlockEdge
 
-
 # =============================================================================
 # Layer Constants (Zero Seed Holarchy)
 # =============================================================================

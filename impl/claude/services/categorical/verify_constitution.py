@@ -32,7 +32,7 @@ print("✓ Principle correctly imported from dp_bridge")
 
 # Verify all 7 principles have weights
 assert len(PRINCIPLE_WEIGHTS) == 7, "Should have 7 principle weights"
-print(f"✓ All 7 principles have weights")
+print("✓ All 7 principles have weights")
 for principle, weight in PRINCIPLE_WEIGHTS.items():
     print(f"  {principle.name}: {weight}")
 print()
@@ -44,7 +44,7 @@ eval = Constitution.evaluate("state", "action", "state_after")
 assert isinstance(eval, ConstitutionalEvaluation)
 assert len(eval.scores) == 7, "Should return scores for all 7 principles"
 assert 0.0 <= eval.weighted_total <= 1.0, "Total should be in [0, 1]"
-print(f"✓ Evaluation complete")
+print("✓ Evaluation complete")
 print(f"  Total score: {eval.weighted_total:.3f}")
 print(f"  Min score: {eval.min_score:.3f}")
 print(f"  Max score: {eval.max_score:.3f}")
@@ -82,37 +82,37 @@ print("-" * 70)
 monad_eval = ProbeRewards.monad_probe_reward("s", "a", "s_", True, True)
 assert monad_eval.by_principle[Principle.COMPOSABLE] == 1.0
 assert monad_eval.by_principle[Principle.ETHICAL] == 1.0
-print(f"✓ MonadProbe (laws satisfied): COMPOSABLE=1.0, ETHICAL=1.0")
+print("✓ MonadProbe (laws satisfied): COMPOSABLE=1.0, ETHICAL=1.0")
 
 monad_eval_fail = ProbeRewards.monad_probe_reward("s", "a", "s_", False, False)
 assert monad_eval_fail.by_principle[Principle.COMPOSABLE] == 0.0
-print(f"✓ MonadProbe (laws violated): COMPOSABLE=0.0")
+print("✓ MonadProbe (laws violated): COMPOSABLE=0.0")
 
 # Sheaf probe
 sheaf_eval = ProbeRewards.sheaf_probe_reward("s", "a", "s_", 1.0, 0)
 assert sheaf_eval.by_principle[Principle.ETHICAL] == 1.0
 assert sheaf_eval.by_principle[Principle.GENERATIVE] == 1.0
 assert sheaf_eval.by_principle[Principle.COMPOSABLE] == 1.0
-print(f"✓ SheafProbe (coherent): ETHICAL=1.0, GENERATIVE=1.0")
+print("✓ SheafProbe (coherent): ETHICAL=1.0, GENERATIVE=1.0")
 
 sheaf_eval_fail = ProbeRewards.sheaf_probe_reward("s", "a", "s_", 0.3, 5)
 assert sheaf_eval_fail.by_principle[Principle.ETHICAL] == 0.3
-print(f"✓ SheafProbe (violations): ETHICAL=0.3")
+print("✓ SheafProbe (violations): ETHICAL=0.3")
 
 # Null probe
 null_eval = ProbeRewards.null_probe_reward("s", "a", "s_")
 assert null_eval.by_principle[Principle.ETHICAL] == 1.0
 assert null_eval.by_principle[Principle.COMPOSABLE] == 1.0
-print(f"✓ NullProbe: ETHICAL=1.0, COMPOSABLE=1.0")
+print("✓ NullProbe: ETHICAL=1.0, COMPOSABLE=1.0")
 
 # Chaos probe
 chaos_eval_survived = ProbeRewards.chaos_probe_reward("s", "a", "s_", survived=True)
 assert chaos_eval_survived.by_principle[Principle.ETHICAL] == 1.0
-print(f"✓ ChaosProbe (survived): ETHICAL=1.0")
+print("✓ ChaosProbe (survived): ETHICAL=1.0")
 
 chaos_eval_failed = ProbeRewards.chaos_probe_reward("s", "a", "s_", survived=False)
 assert chaos_eval_failed.by_principle[Principle.ETHICAL] == 0.5
-print(f"✓ ChaosProbe (failed): ETHICAL=0.5")
+print("✓ ChaosProbe (failed): ETHICAL=0.5")
 print()
 
 # Test 4: Serialization
@@ -122,7 +122,7 @@ eval_dict = eval.to_dict()
 assert "weighted_total" in eval_dict
 assert "scores" in eval_dict
 assert len(eval_dict["scores"]) == 7
-print(f"✓ Serialization works")
+print("✓ Serialization works")
 print(f"  Keys: {list(eval_dict.keys())}")
 print()
 
@@ -141,7 +141,7 @@ high_eval = Constitution.evaluate(
     },
 )
 assert high_eval.satisfies_threshold(0.5), "Should satisfy 0.5 threshold"
-print(f"✓ Threshold checking works")
+print("✓ Threshold checking works")
 print(f"  Min score: {high_eval.min_score:.3f}")
 print(f"  Satisfies 0.5: {high_eval.satisfies_threshold(0.5)}")
 print()

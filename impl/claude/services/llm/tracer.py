@@ -47,12 +47,12 @@ import hashlib
 import logging
 import uuid
 from contextlib import asynccontextmanager
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any, AsyncIterator
 
 from agents.d.galois import GaloisLossComputer
 from agents.d.schemas.llm_trace import LLMInvocationMark, StateChange
-from agents.d.universe import Universe, get_universe, Query
+from agents.d.universe import Query, Universe, get_universe
 
 logger = logging.getLogger(__name__)
 

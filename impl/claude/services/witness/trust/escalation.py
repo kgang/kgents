@@ -21,7 +21,13 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Generic, TypeVar
 
-from agents.t.truth_functor import PolicyTrace, TraceEntry, ProbeState, ProbeAction, ConstitutionalScore
+from agents.t.truth_functor import (
+    ConstitutionalScore,
+    PolicyTrace,
+    ProbeAction,
+    ProbeState,
+    TraceEntry,
+)
 from services.witness.polynomial import TrustLevel
 
 if TYPE_CHECKING:

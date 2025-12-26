@@ -25,7 +25,6 @@ from services.feed.defaults import (
 )
 from services.k_block.core.kblock import KBlock, generate_kblock_id
 
-
 # =============================================================================
 # Default Feeds Tests
 # =============================================================================

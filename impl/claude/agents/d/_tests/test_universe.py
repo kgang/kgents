@@ -5,20 +5,20 @@ The Universe provides a higher-level interface over DgentProtocol for typed obje
 """
 
 import json
-import pytest
 from dataclasses import dataclass
 
+import pytest
+
 from agents.d import (
+    DataclassSchema,
+    Datum,
+    Query,
+    Schema,
     Universe,
+    UniverseStats,
     get_universe,
     init_universe,
-    Schema,
-    DataclassSchema,
-    Query,
-    UniverseStats,
-    Datum,
 )
-
 
 # =============================================================================
 # Test Fixtures

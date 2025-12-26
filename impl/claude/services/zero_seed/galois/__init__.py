@@ -9,11 +9,13 @@ The Galois module implements:
 5. Witness mode triage (SINGLE/SESSION/LAZY)
 6. Ghost alternative generation from loss decomposition
 7. Contradiction detection via super-additive loss
+8. **Difficulty Measure**: Ground-truth D(P) = H(P) × (1 - S(P))
 
 Key Formulas:
 - Axiom = Zero-loss fixed point: L(P) < 0.01
 - Layer = Convergence depth: L_i = min{k : L(R^k(P)) < epsilon}
 - Loss = Semantic distance: L(P) = d(P, C(R(P)))
+- Difficulty = Entropy × Failure: D(P) = H(P) × (1 - S(P))
 - Coherence = 1 - galois_loss(P)
 - Bootstrap: Zero Seed = Fix(R o describe), L(ZS) < 0.15 (85% regenerability)
 
@@ -22,10 +24,17 @@ The Three Axioms (discovered, not stipulated):
 - A2: Morphism Axiom - Composition primacy (L=0.003)
 - G: Galois Ground - The loss function as axiomatic ground (L=0.000)
 
+Difficulty Axioms (D(P) Axiomatization):
+- A_D1: D(P) ∈ [0, ∞) — non-negative
+- A_D2: D(trivial) ≈ 0 — trivial prompts have near-zero difficulty
+- A_D3: D(P₁ ∘ P₂) ≤ D(P₁) + D(P₂) — composition sub-additive
+- A_D4: D(impossible) = ∞ — impossible tasks have infinite difficulty
+
 See: spec/protocols/zero-seed1/axiomatics.md
 See: spec/protocols/zero-seed1/bootstrap.md
 See: spec/protocols/zero-seed1/proof.md
 See: spec/theory/galois-modularization.md
+See: plans/theory-operationalization/02-galois-theory.md (D(P) Axiomatization)
 """
 
 from __future__ import annotations
@@ -43,12 +52,16 @@ from .axiomatics import (
     AxiomGovernance,
     AxiomHealth,
     AxiomStatus,
+    # Discovery (3-stage process from axiomatics.md)
+    DiscoveryResult,
     EntityAxiom,
+    GaloisAxiomDiscovery,
     GaloisGround,
     GaloisLaw,
     # Core types
     GaloisLoss,
     LayerType,
+    MirrorTestOracle,
     MorphismAxiom,
     Restructurable,
     ZeroNode,
@@ -56,20 +69,16 @@ from .axiomatics import (
     create_axiom_governance,
     create_axiom_kernel,
     stratify_by_loss,
-    # Discovery (3-stage process from axiomatics.md)
-    DiscoveryResult,
-    GaloisAxiomDiscovery,
-    MirrorTestOracle,
 )
 
 # Bootstrap: Lawvere fixed point verification
 from .bootstrap import (
+    DEVIATION_CATEGORIES,
     BootstrapMark,
     BootstrapReport,
     BootstrapWindow,
     ConvergenceReport,
     Deviation,
-    DEVIATION_CATEGORIES,
     EdgeKind,
     FixedPointVerification,
     GaloisOperations,
@@ -82,6 +91,56 @@ from .bootstrap import (
     retroactive_witness_bootstrap,
     verify_convergence,
     verify_zero_seed_fixed_point,
+)
+
+# Difficulty Measure (D(P) Axiomatization - Gap Fix)
+from .difficulty import (
+    DEFAULT_CLUSTER_THRESHOLD,
+    DEFAULT_ENTROPY_SAMPLES,
+    DEFAULT_SUCCESS_TRIALS,
+    DifficultyComparison,
+    DifficultyComputer,
+    DifficultyMeasure,
+    compute_shannon_entropy,
+    create_difficulty_measure,
+    estimate_entropy_from_clusters,
+    verify_impossible_singularity,
+    verify_sub_additivity,
+    verify_trivial_grounding,
+)
+
+# Canonical Semantic Distance (Amendment B)
+from .distance import (
+    BidirectionalEntailmentDistance,
+    CanonicalSemanticDistance,
+    canonical_semantic_distance,
+    get_canonical_metric,
+    get_entailment_metric,
+)
+
+# Fixed-Point Detection (Amendment F)
+from .fixed_point import (
+    MAX_STABILITY_ITERATIONS,
+    STABILITY_THRESHOLD,
+    FixedPointMetrics,
+    FixedPointResult,
+    batch_detect_fixed_points,
+    compute_fixed_point_metrics,
+    detect_fixed_point,
+    extract_axioms,
+)
+
+# Layer Assignment (Amendment C)
+from .layer_assignment import (
+    CALIBRATION_CORPUS,
+    LAYER_LOSS_BOUNDS,
+    LAYER_NAMES,
+    MIN_CORPUS_SIZE,
+    LayerAssigner,
+    LayerAssignment,
+    assign_layer_absolute,
+    assign_layer_relative,
+    validate_calibration,
 )
 
 # Proof coherence: Toulmin proofs with Galois loss
@@ -165,4 +224,42 @@ __all__ = [
     # Functions
     "classify_by_loss",
     "select_witness_mode_from_loss",
+    # === Fixed-Point Detection (Amendment F) ===
+    "STABILITY_THRESHOLD",
+    "MAX_STABILITY_ITERATIONS",
+    "FixedPointResult",
+    "FixedPointMetrics",
+    "detect_fixed_point",
+    "extract_axioms",
+    "batch_detect_fixed_points",
+    "compute_fixed_point_metrics",
+    # === Layer Assignment (Amendment C) ===
+    "LAYER_NAMES",
+    "LAYER_LOSS_BOUNDS",
+    "MIN_CORPUS_SIZE",
+    "CALIBRATION_CORPUS",
+    "LayerAssignment",
+    "LayerAssigner",
+    "assign_layer_absolute",
+    "assign_layer_relative",
+    "validate_calibration",
+    # === Canonical Semantic Distance (Amendment B) ===
+    "BidirectionalEntailmentDistance",
+    "CanonicalSemanticDistance",
+    "canonical_semantic_distance",
+    "get_canonical_metric",
+    "get_entailment_metric",
+    # === Difficulty Measure (D(P) Axiomatization) ===
+    "DEFAULT_ENTROPY_SAMPLES",
+    "DEFAULT_SUCCESS_TRIALS",
+    "DEFAULT_CLUSTER_THRESHOLD",
+    "DifficultyMeasure",
+    "DifficultyComparison",
+    "DifficultyComputer",
+    "compute_shannon_entropy",
+    "estimate_entropy_from_clusters",
+    "verify_sub_additivity",
+    "verify_trivial_grounding",
+    "verify_impossible_singularity",
+    "create_difficulty_measure",
 ]

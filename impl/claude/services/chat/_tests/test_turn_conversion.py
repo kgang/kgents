@@ -11,10 +11,8 @@ from datetime import datetime
 
 import pytest
 
-from protocols.api.chat import EvidenceDelta, Message, ToolUse
-from protocols.api.chat import Turn as ApiTurn
-from services.chat.context import LinearityTag
-from services.chat.context import Turn as ServiceTurn
+from protocols.api.chat import EvidenceDelta, Message, ToolUse, Turn as ApiTurn
+from services.chat.context import LinearityTag, Turn as ServiceTurn
 
 
 def test_service_to_api_conversion():

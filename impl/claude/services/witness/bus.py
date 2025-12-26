@@ -134,8 +134,8 @@ class WitnessTopics:
 # =============================================================================
 
 
-from enum import Enum
 import os
+from enum import Enum
 
 
 class WitnessEventType(Enum):
@@ -312,7 +312,7 @@ def _assert_all_topics_mapped() -> None:
 
     if unmapped:
         raise AssertionError(
-            f"Unmapped WitnessTopics found! Add to TOPIC_TO_EVENT_TYPE:\n"
+            "Unmapped WitnessTopics found! Add to TOPIC_TO_EVENT_TYPE:\n"
             + "\n".join(f"  - {t}" for t in unmapped)
         )
 

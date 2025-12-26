@@ -31,9 +31,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .mining import RepositoryMiner
 from .correlation import EvidenceCorrelator
-from .roi import ROICalculator, MonthlyValue
+from .mining import RepositoryMiner
+from .roi import MonthlyValue, ROICalculator
 
 if TYPE_CHECKING:
     from services.witness.persistence import WitnessPersistence

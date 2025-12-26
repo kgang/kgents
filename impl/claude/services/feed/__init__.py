@@ -27,22 +27,38 @@ See: plans/zero-seed-genesis-grand-strategy.md (Part IV)
 See: docs/skills/metaphysical-fullstack.md
 """
 
+from .config import (
+    DEFAULT_CONFIG,
+    FeedConfig,
+    get_feed_config,
+    reset_feed_config,
+)
 from .core import (
     Feed,
+    FeedFeedback,
     FeedFilter,
     FeedRanking,
     FeedSource,
-    FeedFeedback,
 )
 from .defaults import (
-    COSMOS_FEED,
+    AXIOMS_FEED,
     COHERENT_FEED,
     CONTRADICTIONS_FEED,
-    AXIOMS_FEED,
-    HANDWAVY_FEED,
+    COSMOS_FEED,
     DEFAULT_FEEDS,
+    HANDWAVY_FEED,
     get_default_feed,
 )
+from .feedback import (
+    AttentionTracker,
+    AttentionTrackerProtocol,
+    FeedbackAction,
+    FeedbackEvent,
+    FeedbackSystem,
+    InMemoryAttentionTracker,
+    PersistentAttentionTracker,
+)
+from .node import FeedNode
 from .ranking import (
     AttentionScore,
     CoherenceScore,
@@ -51,22 +67,6 @@ from .ranking import (
     compute_feed_score,
     rank_kblocks,
 )
-from .feedback import (
-    FeedbackAction,
-    FeedbackEvent,
-    FeedbackSystem,
-    AttentionTracker,
-    AttentionTrackerProtocol,
-    InMemoryAttentionTracker,
-    PersistentAttentionTracker,
-)
-from .config import (
-    FeedConfig,
-    get_feed_config,
-    reset_feed_config,
-    DEFAULT_CONFIG,
-)
-from .node import FeedNode
 
 __all__ = [
     # AGENTESE Node

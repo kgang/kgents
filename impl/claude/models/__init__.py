@@ -18,6 +18,11 @@ Note: town.py removed 2025-12-21 (extinct).
 """
 
 # Base infrastructure
+# Annotation Service
+from .annotation import SpecAnnotationRow
+
+# ASHC Crown Jewel
+from .ashc import VerifiedLemmaModel
 from .base import (
     Base,
     CausalMixin,
@@ -38,14 +43,14 @@ from .brain import (
     TeachingCrystal,
 )
 
-# Witness Crown Jewel
-from .witness import (
-    WitnessAction,
-    WitnessEscalation,
-    WitnessMark,
-    WitnessThought,
-    WitnessTrust,
-)
+# Feed Feedback
+from .feed_feedback import FeedEngagementStats, FeedInteraction
+
+# Onboarding
+from .onboarding import OnboardingSession
+
+# Sovereign Crown Jewel
+from .sovereign import SovereignCollectionRow, SovereignPlaceholderRow
 
 # Trail Protocol
 from .trail import (
@@ -57,20 +62,14 @@ from .trail import (
     TrailStepRow,
 )
 
-# Annotation Service
-from .annotation import SpecAnnotationRow
-
-# ASHC Crown Jewel
-from .ashc import VerifiedLemmaModel
-
-# Sovereign Crown Jewel
-from .sovereign import SovereignCollectionRow, SovereignPlaceholderRow
-
-# Onboarding
-from .onboarding import OnboardingSession
-
-# Feed Feedback
-from .feed_feedback import FeedEngagementStats, FeedInteraction
+# Witness Crown Jewel
+from .witness import (
+    WitnessAction,
+    WitnessEscalation,
+    WitnessMark,
+    WitnessThought,
+    WitnessTrust,
+)
 
 __all__ = [
     # Base infrastructure

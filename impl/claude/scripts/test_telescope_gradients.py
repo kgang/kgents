@@ -44,7 +44,7 @@ async def test_telescope_gradients():
     response = await telescope_endpoint(focal_point=None, focal_distance=None)
 
     # Verify response structure
-    print(f"\n✅ Telescope State:")
+    print("\n✅ Telescope State:")
     print(f"   - Focal distance: {response.state.focal_distance}")
     print(f"   - Show gradient: {response.state.show_gradient}")
     print(f"   - Visible layers: {response.state.visible_layers}")
@@ -76,7 +76,7 @@ async def test_telescope_gradients():
     print(f"   - Max magnitude: {max_magnitude:.3f}")
 
     # Show sample gradients
-    print(f"\n✅ Sample Gradients:")
+    print("\n✅ Sample Gradients:")
     sample_count = 0
     for node_id, gradient in list(response.gradients.items())[:5]:
         node = next(n for n in response.visible_nodes if n.id == node_id)
@@ -105,7 +105,7 @@ async def test_telescope_gradients():
     else:
         missing = node_ids - gradient_ids
         extra = gradient_ids - node_ids
-        print(f"\n❌ Gradient mismatch:")
+        print("\n❌ Gradient mismatch:")
         if missing:
             print(f"   - Missing gradients for: {missing}")
         if extra:

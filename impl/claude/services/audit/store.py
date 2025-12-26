@@ -31,10 +31,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from models.audit import AuditResultRow
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.audit import AuditResultRow
 from models.base import get_async_session
 
 if TYPE_CHECKING:

@@ -28,8 +28,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from .types import Context, LossAxis, ModularContent, Module, Style
 from .budgets import BudgetManager, QualityBudget, TokenBudget
+from .types import Context, LossAxis, ModularContent, Module, Style
 
 if TYPE_CHECKING:
     from agents.k.llm import LLMClient, LLMResponse

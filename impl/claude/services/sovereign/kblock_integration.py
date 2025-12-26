@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from services.k_block.core.kblock import KBlock
+
     from .store import SovereignStore
 
 

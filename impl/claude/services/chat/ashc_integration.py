@@ -12,13 +12,12 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from protocols.ashc.adaptive import ConfidenceTier
 from services.chat.ashc_bridge import (
     ASHCBridge,
     ASHCChatOutput,
     is_spec_file,
 )
-from protocols.ashc.adaptive import ConfidenceTier
-
 
 # =============================================================================
 # Spec Edit Detection

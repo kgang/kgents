@@ -31,11 +31,11 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
+from models.probe import ProbeResultRow
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.base import get_async_session
-from models.probe import ProbeResultRow
 
 if TYPE_CHECKING:
     from services.probe.types import ProbeResult, ProbeStatus, ProbeType

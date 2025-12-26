@@ -42,8 +42,8 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from agents.i.semantic_field import SemanticField
-    from services.brain.cortex_observer import CortexObserver
     from protocols.cli.instance_db.synapse import Synapse
+    from services.brain.cortex_observer import CortexObserver
 
 
 # =============================================================================

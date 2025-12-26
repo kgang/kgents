@@ -23,22 +23,36 @@ Integration:
 # Core TruthFunctor types (re-export for convenience)
 from ..truth_functor import (
     AnalysisMode,
-    ConstitutionalScore,
-    TruthVerdict,
-    ProbeState,
-    ProbeAction,
-    TraceEntry,
-    PolicyTrace,
-    TruthFunctor,
     ComposedProbe,
+    ConstitutionalScore,
+    PolicyTrace,
+    ProbeAction,
+    ProbeState,
+    TraceEntry,
+    TruthFunctor,
+    TruthVerdict,
+)
+from .chaos_probe import ChaosConfig, ChaosProbe, ChaosType
+from .judge_probe import (
+    JudgeConfig,
+    JudgePhase,
+    JudgeProbe,
+    JudgmentCriteria,
+    JudgmentResult,
+    judge_probe,
 )
 
 # Concrete probe implementations
-from .null_probe import NullProbe, NullConfig, null_probe
-from .witness_probe import WitnessProbe, WitnessConfig, Law, IDENTITY_LAW, ASSOCIATIVITY_LAW, witness_probe
-from .judge_probe import JudgeProbe, JudgeConfig, JudgmentCriteria, JudgmentResult, JudgePhase, judge_probe
-from .trust_probe import TrustProbe, TrustConfig, TrustState, Proposal, TrustDecision, trust_probe
-from .chaos_probe import ChaosProbe, ChaosConfig, ChaosType
+from .null_probe import NullConfig, NullProbe, null_probe
+from .trust_probe import Proposal, TrustConfig, TrustDecision, TrustProbe, TrustState, trust_probe
+from .witness_probe import (
+    ASSOCIATIVITY_LAW,
+    IDENTITY_LAW,
+    Law,
+    WitnessConfig,
+    WitnessProbe,
+    witness_probe,
+)
 
 __all__ = [
     # Core TruthFunctor types

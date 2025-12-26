@@ -53,21 +53,6 @@ __all__ = [
     "SplitSuggestion",
 ]
 
-from .service import (
-    CodeService,
-    UploadResult,
-    SyncResult,
-    BootstrapResult,
-    FunctionInfo,
-)
-from .parser import (
-    PythonFunctionParser,
-    parse_file,
-    extract_imports,
-    extract_calls,
-    compute_body_hash,
-    signature_to_string,
-)
 from .boundary import (
     BoundaryDetector,
     BoundaryStrategy,
@@ -75,4 +60,19 @@ from .boundary import (
     KBlockCandidate,
     MergeSuggestion,
     SplitSuggestion,
+)
+from .parser import (
+    PythonFunctionParser,
+    compute_body_hash,
+    extract_calls,
+    extract_imports,
+    parse_file,
+    signature_to_string,
+)
+from .service import (
+    BootstrapResult,
+    CodeService,
+    FunctionInfo,
+    SyncResult,
+    UploadResult,
 )

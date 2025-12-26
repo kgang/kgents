@@ -38,6 +38,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from agents.operad.core import LawStatus, LawVerification
 from agents.operad.domains.analysis import (
     CategoricalReport,
     ContradictionType,
@@ -53,9 +54,7 @@ from agents.operad.domains.analysis import (
     Tension,
     ToulminStructure,
 )
-from agents.operad.core import LawStatus, LawVerification
 from services.analysis.service import AnalysisService
-
 
 # =============================================================================
 # Fixtures

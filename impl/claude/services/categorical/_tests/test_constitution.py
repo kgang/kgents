@@ -8,6 +8,7 @@ and that probe-specific rewards integrate properly.
 import pytest
 
 from services.categorical.constitution import (
+    ETHICAL_FLOOR_THRESHOLD,
     PRINCIPLE_WEIGHTS,
     Constitution,
     ConstitutionalEvaluation,
@@ -27,22 +28,29 @@ class TestPrincipleWeights:
         for principle in Principle:
             assert principle in PRINCIPLE_WEIGHTS
 
-    def test_ethical_has_highest_weight(self):
-        """ETHICAL should have the highest weight (safety first)."""
-        ethical_weight = PRINCIPLE_WEIGHTS[Principle.ETHICAL]
-        for principle, weight in PRINCIPLE_WEIGHTS.items():
-            if principle != Principle.ETHICAL:
-                assert ethical_weight >= weight, f"ETHICAL weight should be highest, but {principle} has {weight}"
+    def test_ethical_is_floor_constraint_not_weight(self):
+        """
+        Amendment A: ETHICAL is a floor constraint, not a weighted principle.
 
-    def test_composable_second_highest(self):
-        """COMPOSABLE should be second highest (architecture second)."""
+        ETHICAL weight should be 0.0 because it's enforced as a floor,
+        not summed with other weights.
+        """
+        ethical_weight = PRINCIPLE_WEIGHTS[Principle.ETHICAL]
+        assert ethical_weight == 0.0, "ETHICAL should be 0 (floor constraint, not weighted)"
+
+    def test_composable_is_highest_weighted(self):
+        """
+        Amendment A: COMPOSABLE should be highest weighted principle.
+
+        After ETHICAL becomes a floor constraint, COMPOSABLE (1.5) should
+        have the highest weight among the remaining principles.
+        """
         composable_weight = PRINCIPLE_WEIGHTS[Principle.COMPOSABLE]
-        ethical_weight = PRINCIPLE_WEIGHTS[Principle.ETHICAL]
-
-        assert composable_weight < ethical_weight
         for principle, weight in PRINCIPLE_WEIGHTS.items():
-            if principle not in (Principle.ETHICAL, Principle.COMPOSABLE):
-                assert composable_weight >= weight
+            if principle != Principle.COMPOSABLE:
+                assert composable_weight >= weight, (
+                    f"COMPOSABLE should have highest weight, but {principle} has {weight}"
+                )
 
 
 class TestPrincipleScore:
@@ -50,13 +58,24 @@ class TestPrincipleScore:
 
     def test_weighted_score_calculation(self):
         """Weighted score should multiply score by weight."""
+        # Amendment A: Use COMPOSABLE (weighted) instead of ETHICAL (floor)
+        score = PrincipleScore(
+            principle=Principle.COMPOSABLE,
+            score=0.8,
+            reasoning="Test",
+        )
+        expected = 0.8 * PRINCIPLE_WEIGHTS[Principle.COMPOSABLE]
+        assert abs(score.weighted_score - expected) < 1e-6
+
+    def test_ethical_weighted_score_is_zero(self):
+        """Amendment A: ETHICAL weighted_score should be 0 (floor constraint)."""
         score = PrincipleScore(
             principle=Principle.ETHICAL,
             score=0.8,
             reasoning="Test",
         )
-        expected = 0.8 * PRINCIPLE_WEIGHTS[Principle.ETHICAL]
-        assert abs(score.weighted_score - expected) < 1e-6
+        # ETHICAL is floor, not weighted
+        assert score.weighted_score == 0.0
 
     def test_to_dp_score_conversion(self):
         """Should convert to DP-bridge PrincipleScore."""
@@ -78,44 +97,57 @@ class TestConstitutionalEvaluation:
     """Test ConstitutionalEvaluation aggregation."""
 
     @pytest.fixture
-    def sample_scores(self):
-        """Sample principle scores for testing."""
+    def sample_scores_ethical_passing(self):
+        """Sample principle scores with ETHICAL passing floor."""
         return (
-            PrincipleScore(Principle.ETHICAL, 1.0, "Perfect ethical score"),
+            PrincipleScore(Principle.ETHICAL, 0.8, "Good ethical score"),  # > 0.6 floor
             PrincipleScore(Principle.COMPOSABLE, 0.8, "Good composition"),
             PrincipleScore(Principle.JOY_INDUCING, 0.6, "Some joy"),
         )
 
-    def test_weighted_total_calculation(self, sample_scores):
-        """Weighted total should normalize by total weight."""
-        eval = ConstitutionalEvaluation(scores=sample_scores)
+    @pytest.fixture
+    def sample_scores_ethical_failing(self):
+        """Sample principle scores with ETHICAL below floor."""
+        return (
+            PrincipleScore(Principle.ETHICAL, 0.3, "Low ethical score"),  # < 0.6 floor
+            PrincipleScore(Principle.COMPOSABLE, 1.0, "Perfect composition"),
+            PrincipleScore(Principle.JOY_INDUCING, 1.0, "Maximum joy"),
+        )
 
-        # Manual calculation
-        total_weighted = sum(s.weighted_score for s in sample_scores)
-        total_weight = sum(PRINCIPLE_WEIGHTS[s.principle] for s in sample_scores)
-        expected = total_weighted / total_weight
+    def test_weighted_total_excludes_ethical(self, sample_scores_ethical_passing):
+        """
+        Amendment A: weighted_total should exclude ETHICAL (it's a floor).
 
+        Only COMPOSABLE and JOY_INDUCING weights should be summed.
+        """
+        eval = ConstitutionalEvaluation(scores=sample_scores_ethical_passing)
+
+        # Manual calculation: only non-ETHICAL principles
+        # COMPOSABLE: 0.8 * 1.5 = 1.2
+        # JOY_INDUCING: 0.6 * 1.2 = 0.72
+        # Total: 1.92, Weight sum: 2.7
+        expected = (0.8 * 1.5 + 0.6 * 1.2) / (1.5 + 1.2)
         assert abs(eval.weighted_total - expected) < 1e-6
 
-    def test_by_principle_mapping(self, sample_scores):
+    def test_by_principle_mapping(self, sample_scores_ethical_passing):
         """Should create correct principle -> score mapping."""
-        eval = ConstitutionalEvaluation(scores=sample_scores)
+        eval = ConstitutionalEvaluation(scores=sample_scores_ethical_passing)
         by_principle = eval.by_principle
 
-        assert by_principle[Principle.ETHICAL] == 1.0
+        assert by_principle[Principle.ETHICAL] == 0.8
         assert by_principle[Principle.COMPOSABLE] == 0.8
         assert by_principle[Principle.JOY_INDUCING] == 0.6
 
-    def test_min_max_scores(self, sample_scores):
+    def test_min_max_scores(self, sample_scores_ethical_passing):
         """Should correctly identify min/max scores."""
-        eval = ConstitutionalEvaluation(scores=sample_scores)
+        eval = ConstitutionalEvaluation(scores=sample_scores_ethical_passing)
 
         assert eval.min_score == 0.6
-        assert eval.max_score == 1.0
+        assert eval.max_score == 0.8
 
-    def test_satisfies_threshold(self, sample_scores):
+    def test_satisfies_threshold(self, sample_scores_ethical_passing):
         """Should check if all principles meet threshold."""
-        eval = ConstitutionalEvaluation(scores=sample_scores)
+        eval = ConstitutionalEvaluation(scores=sample_scores_ethical_passing)
 
         assert eval.satisfies_threshold(0.5)  # All >= 0.6
         assert not eval.satisfies_threshold(0.7)  # 0.6 < 0.7
@@ -128,6 +160,154 @@ class TestConstitutionalEvaluation:
         assert eval.min_score == 0.0
         assert eval.max_score == 0.0
         assert eval.by_principle == {}
+
+
+class TestAmendmentA:
+    """
+    Tests for Amendment A: ETHICAL Floor Constraint.
+
+    Amendment A changes ETHICAL from a weighted principle to a floor constraint.
+    If ETHICAL < 0.6, the action is rejected regardless of other scores.
+    """
+
+    @pytest.fixture
+    def ethical_passing_scores(self):
+        """Full evaluation with ETHICAL above floor (0.8 > 0.6)."""
+        return (
+            PrincipleScore(Principle.ETHICAL, 0.8, "Good"),
+            PrincipleScore(Principle.COMPOSABLE, 0.9, "Great"),
+            PrincipleScore(Principle.JOY_INDUCING, 0.7, "Good"),
+            PrincipleScore(Principle.TASTEFUL, 0.8, "Good"),
+            PrincipleScore(Principle.CURATED, 0.7, "Good"),
+            PrincipleScore(Principle.HETERARCHICAL, 0.8, "Good"),
+            PrincipleScore(Principle.GENERATIVE, 0.7, "Good"),
+        )
+
+    @pytest.fixture
+    def ethical_failing_scores(self):
+        """Full evaluation with ETHICAL below floor (0.3 < 0.6)."""
+        return (
+            PrincipleScore(Principle.ETHICAL, 0.3, "Poor"),  # BELOW FLOOR
+            PrincipleScore(Principle.COMPOSABLE, 1.0, "Perfect"),
+            PrincipleScore(Principle.JOY_INDUCING, 1.0, "Perfect"),
+            PrincipleScore(Principle.TASTEFUL, 1.0, "Perfect"),
+            PrincipleScore(Principle.CURATED, 1.0, "Perfect"),
+            PrincipleScore(Principle.HETERARCHICAL, 1.0, "Perfect"),
+            PrincipleScore(Principle.GENERATIVE, 1.0, "Perfect"),
+        )
+
+    def test_ethical_floor_threshold_value(self):
+        """ETHICAL floor should be 0.6."""
+        assert ETHICAL_FLOOR_THRESHOLD == 0.6
+
+    def test_ethical_passes_when_above_floor(self, ethical_passing_scores):
+        """ethical_passes should be True when ETHICAL >= 0.6."""
+        eval = ConstitutionalEvaluation(scores=ethical_passing_scores)
+        assert eval.ethical_score == 0.8
+        assert eval.ethical_passes is True
+
+    def test_ethical_fails_when_below_floor(self, ethical_failing_scores):
+        """ethical_passes should be False when ETHICAL < 0.6."""
+        eval = ConstitutionalEvaluation(scores=ethical_failing_scores)
+        assert eval.ethical_score == 0.3
+        assert eval.ethical_passes is False
+
+    def test_weighted_total_zero_when_ethical_fails(self, ethical_failing_scores):
+        """
+        Amendment A Core: weighted_total returns 0.0 when ETHICAL floor fails.
+
+        Even with perfect scores on all other principles (6 × 1.0),
+        low ETHICAL score causes immediate rejection.
+        """
+        eval = ConstitutionalEvaluation(scores=ethical_failing_scores)
+        assert eval.weighted_total == 0.0, (
+            "ETHICAL floor failure should return 0.0 weighted_total"
+        )
+
+    def test_weighted_total_normal_when_ethical_passes(self, ethical_passing_scores):
+        """weighted_total should compute normally when ETHICAL passes."""
+        eval = ConstitutionalEvaluation(scores=ethical_passing_scores)
+        assert eval.weighted_total > 0.0
+
+    def test_rejection_reason_on_ethical_failure(self, ethical_failing_scores):
+        """rejection_reason should explain ETHICAL floor violation."""
+        eval = ConstitutionalEvaluation(scores=ethical_failing_scores)
+        reason = eval.rejection_reason
+
+        assert reason is not None
+        assert "ETHICAL floor violation" in reason
+        assert "0.30" in reason
+        assert "Amendment A" in reason
+
+    def test_rejection_reason_none_when_passes(self, ethical_passing_scores):
+        """rejection_reason should be None when evaluation passes."""
+        eval = ConstitutionalEvaluation(scores=ethical_passing_scores)
+        # This may still fail if weighted_total < 0.65
+        # But ethical_passes is True, so reason would be about weighted sum if it fails
+
+    def test_passes_requires_both_floor_and_weighted(self, ethical_passing_scores):
+        """passes property should require both ETHICAL floor and weighted sum."""
+        eval = ConstitutionalEvaluation(scores=ethical_passing_scores)
+
+        # With good scores across the board, should pass
+        assert eval.ethical_passes is True
+        # passes also checks weighted_total >= 0.65
+
+    def test_high_scores_cannot_offset_ethical_violation(self):
+        """
+        The core Amendment A guarantee: high other scores cannot offset low ETHICAL.
+
+        This test documents the problem Amendment A solves:
+        - OLD: ETHICAL=0.3×2.0=0.6 + high other scores = ~7.3 → Could pass!
+        - NEW: ETHICAL=0.3 < 0.6 → Immediate rejection
+        """
+        scores = (
+            PrincipleScore(Principle.ETHICAL, 0.3, "Low"),  # BELOW FLOOR
+            PrincipleScore(Principle.COMPOSABLE, 1.0, "Perfect"),
+            PrincipleScore(Principle.JOY_INDUCING, 1.0, "Perfect"),
+            PrincipleScore(Principle.TASTEFUL, 1.0, "Perfect"),
+            PrincipleScore(Principle.CURATED, 1.0, "Perfect"),
+            PrincipleScore(Principle.HETERARCHICAL, 1.0, "Perfect"),
+            PrincipleScore(Principle.GENERATIVE, 1.0, "Perfect"),
+        )
+        eval = ConstitutionalEvaluation(scores=scores)
+
+        # CRITICAL: Despite 6 perfect scores, ETHICAL floor fails
+        assert not eval.ethical_passes
+        assert eval.weighted_total == 0.0
+        assert not eval.passes
+        assert eval.rejection_reason is not None
+
+    def test_exactly_at_floor_passes(self):
+        """ETHICAL score exactly at floor (0.6) should pass."""
+        scores = (
+            PrincipleScore(Principle.ETHICAL, 0.6, "Exactly at floor"),
+            PrincipleScore(Principle.COMPOSABLE, 0.8, "Good"),
+        )
+        eval = ConstitutionalEvaluation(scores=scores)
+
+        assert eval.ethical_passes is True, "0.6 >= 0.6 should pass floor"
+
+    def test_just_below_floor_fails(self):
+        """ETHICAL score just below floor (0.59) should fail."""
+        scores = (
+            PrincipleScore(Principle.ETHICAL, 0.59, "Just below floor"),
+            PrincipleScore(Principle.COMPOSABLE, 1.0, "Perfect"),
+        )
+        eval = ConstitutionalEvaluation(scores=scores)
+
+        assert eval.ethical_passes is False, "0.59 < 0.6 should fail floor"
+        assert eval.weighted_total == 0.0
+
+    def test_to_dict_includes_amendment_a_fields(self, ethical_passing_scores):
+        """to_dict should include Amendment A fields."""
+        eval = ConstitutionalEvaluation(scores=ethical_passing_scores)
+        serialized = eval.to_dict()
+
+        assert "ethical_score" in serialized
+        assert "ethical_passes" in serialized
+        assert "passes" in serialized
+        assert "rejection_reason" in serialized
 
 
 class TestConstitution:

@@ -9,19 +9,19 @@ Provides common fixtures for testing probes:
 
 from __future__ import annotations
 
-import pytest
 from typing import Any, Callable
 
+import pytest
+
+from agents.t.probes.null_probe import NullConfig, NullProbe
 from agents.t.truth_functor import (
     ConstitutionalScore,
-    ProbeState,
-    ProbeAction,
-    TraceEntry,
     PolicyTrace,
+    ProbeAction,
+    ProbeState,
+    TraceEntry,
     TruthVerdict,
 )
-from agents.t.probes.null_probe import NullProbe, NullConfig
-
 
 # =============================================================================
 # Mock Agents for Testing

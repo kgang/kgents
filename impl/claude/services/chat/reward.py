@@ -22,9 +22,11 @@ from __future__ import annotations
 from services.chat.evidence import TurnResult
 
 # Import from generalized constitutional module
-from services.constitutional import Principle, PrincipleScore
-from services.constitutional import constitutional_reward as _constitutional_reward
-
+from services.constitutional import (
+    Principle,
+    PrincipleScore,
+    constitutional_reward as _constitutional_reward,
+)
 
 # =============================================================================
 # Re-export Generalized Types

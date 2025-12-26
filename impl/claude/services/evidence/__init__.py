@@ -31,43 +31,43 @@ CLI:
 
 from __future__ import annotations
 
-# Models - frozen dataclasses for type-safe evidence
-from .models import (
-    # Enums
-    CorrelationType,
-    # Mining results
-    CommitPattern,
-    FileChurnMetric,
-    AuthorPattern,
-    BugCorrelation,
-    # Witness correlation
-    MarkCommitLink,
-    DecisionCommitChain,
-    GotchaVsBugCorrelation,
-    # ROI metrics
-    TimeROI,
-    QualityROI,
-    DecisionROI,
-    EvidenceReport,
-)
-
-# Mining - generalizable git archaeology
-from .mining import (
-    RepositoryMiner,
-    CommitPatternSummary,
-)
-
 # Correlation - link witness marks with commits
 from .correlation import (
     EvidenceCorrelator,
 )
 
+# Mining - generalizable git archaeology
+from .mining import (
+    CommitPatternSummary,
+    RepositoryMiner,
+)
+
+# Models - frozen dataclasses for type-safe evidence
+from .models import (
+    AuthorPattern,
+    BugCorrelation,
+    # Mining results
+    CommitPattern,
+    # Enums
+    CorrelationType,
+    DecisionCommitChain,
+    DecisionROI,
+    EvidenceReport,
+    FileChurnMetric,
+    GotchaVsBugCorrelation,
+    # Witness correlation
+    MarkCommitLink,
+    QualityROI,
+    # ROI metrics
+    TimeROI,
+)
+
 # ROI - the key metric
 from .roi import (
-    ROICalculator,
     MonthlyValue,
-    get_monthly_roi,
+    ROICalculator,
     exceeds_target,
+    get_monthly_roi,
 )
 
 __all__ = [

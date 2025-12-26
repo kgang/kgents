@@ -84,7 +84,7 @@ def test_value_computation_with_goal():
     constitution.set_evaluator(
         Principle.COMPOSABLE,
         lambda s, a, ns: 1.0 if ns == "goal" else 0.2,
-        lambda s, a, ns: f"Goal reached!" if ns == "goal" else "Not at goal",
+        lambda s, a, ns: "Goal reached!" if ns == "goal" else "Not at goal",
     )
 
     agent = ValueAgent(

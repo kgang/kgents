@@ -29,14 +29,14 @@ async def test_dp_llm_analysis():
     try:
         value, trace = await analyze_as_dp_llm(test_spec)
 
-        logger.info(f"✓ Analysis complete!")
+        logger.info("✓ Analysis complete!")
         logger.info(f"  Total reward: {value:.3f}")
         logger.info(f"  Trace entries: {len(trace.log)}")
         logger.info("")
 
         # Verify final state
         final_state = trace.value
-        logger.info(f"Final state:")
+        logger.info("Final state:")
         logger.info(f"  Target: {final_state.target}")
         logger.info(f"  Modes applied: {final_state.modes_applied}/4")
         logger.info(f"  Is complete: {final_state.is_complete}")
@@ -46,14 +46,14 @@ async def test_dp_llm_analysis():
         # Check each mode result
         if final_state.categorical_result:
             cat = final_state.categorical_result
-            logger.info(f"Categorical:")
+            logger.info("Categorical:")
             logger.info(f"  Laws: {cat.laws_passed}/{cat.laws_total}")
             logger.info(f"  Summary: {cat.summary[:100]}...")
             logger.info("")
 
         if final_state.epistemic_result:
             epi = final_state.epistemic_result
-            logger.info(f"Epistemic:")
+            logger.info("Epistemic:")
             logger.info(f"  Layer: L{epi.layer}")
             logger.info(f"  Grounded: {epi.is_grounded}")
             logger.info(f"  Summary: {epi.summary[:100]}...")
@@ -61,7 +61,7 @@ async def test_dp_llm_analysis():
 
         if final_state.dialectical_result:
             dia = final_state.dialectical_result
-            logger.info(f"Dialectical:")
+            logger.info("Dialectical:")
             logger.info(f"  Tensions: {len(dia.tensions)}")
             logger.info(f"  Resolved: {dia.resolved_count}")
             logger.info(f"  Summary: {dia.summary[:100]}...")
@@ -69,7 +69,7 @@ async def test_dp_llm_analysis():
 
         if final_state.generative_result:
             gen = final_state.generative_result
-            logger.info(f"Generative:")
+            logger.info("Generative:")
             logger.info(f"  Compression: {gen.compression_ratio:.2f}")
             logger.info(f"  Regenerable: {gen.is_regenerable}")
             logger.info(f"  Summary: {gen.summary[:100]}...")
@@ -99,7 +99,7 @@ async def test_witness_llm_integration():
     try:
         report, marks = await analyze_with_witness_llm(test_spec)
 
-        logger.info(f"✓ Analysis complete!")
+        logger.info("✓ Analysis complete!")
         logger.info(f"  Report valid: {report.is_valid}")
         logger.info(f"  Witness marks: {len(marks)}")
         logger.info("")

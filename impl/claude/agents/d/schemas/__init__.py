@@ -29,58 +29,59 @@ The Crystal Taxonomy:
 """
 
 from .brain import (
-    BrainCrystal,
-    BrainSetting,
     BRAIN_CRYSTAL_SCHEMA,
     BRAIN_SETTING_SCHEMA,
-)
-from .trail import (
-    Trail,
-    TRAIL_SCHEMA,
-    TrailStep,
-    TRAIL_STEP_SCHEMA,
-    TrailCommitment,
-    TRAIL_COMMITMENT_SCHEMA,
-    TrailAnnotation,
-    TRAIL_ANNOTATION_SCHEMA,
-)
-from .witness import (
-    WitnessMark,
-    WITNESS_MARK_SCHEMA,
-    WitnessTrust,
-    WITNESS_TRUST_SCHEMA,
-    WitnessThought,
-    WITNESS_THOUGHT_SCHEMA,
-    WitnessAction,
-    WITNESS_ACTION_SCHEMA,
-    WitnessEscalation,
-    WITNESS_ESCALATION_SCHEMA,
+    BrainCrystal,
+    BrainSetting,
 )
 from .code import (
-    ParamInfo,
-    FunctionCrystal,
     FUNCTION_CRYSTAL_SCHEMA,
-    TestCrystal,
     TEST_CRYSTAL_SCHEMA,
-)
-from .kblock import (
-    KBLOCK_SIZE_HEURISTICS,
-    KBlockCrystal,
-    KBLOCK_CRYSTAL_SCHEMA,
+    FunctionCrystal,
+    ParamInfo,
+    TestCrystal,
 )
 from .ghost import (
-    GhostFunctionCrystal,
     GHOST_FUNCTION_SCHEMA,
+    GhostFunctionCrystal,
+)
+from .kblock import (
+    KBLOCK_CRYSTAL_SCHEMA,
+    KBLOCK_SIZE_HEURISTICS,
+    KBlockCrystal,
 )
 from .proof import (
-    GaloisWitnessedProof,
     PROOF_SCHEMA,
+    GaloisWitnessedProof,
 )
+from .trail import (
+    TRAIL_ANNOTATION_SCHEMA,
+    TRAIL_COMMITMENT_SCHEMA,
+    TRAIL_SCHEMA,
+    TRAIL_STEP_SCHEMA,
+    Trail,
+    TrailAnnotation,
+    TrailCommitment,
+    TrailStep,
+)
+from .witness import (
+    WITNESS_ACTION_SCHEMA,
+    WITNESS_ESCALATION_SCHEMA,
+    WITNESS_MARK_SCHEMA,
+    WITNESS_THOUGHT_SCHEMA,
+    WITNESS_TRUST_SCHEMA,
+    WitnessAction,
+    WitnessEscalation,
+    WitnessMark,
+    WitnessThought,
+    WitnessTrust,
+)
+
 try:
     from .llm_trace import (
-        StateChange,
-        LLMInvocationMark,
         LLM_INVOCATION_SCHEMA,
+        LLMInvocationMark,
+        StateChange,
     )
     _LLM_TRACE_AVAILABLE = True
 except ImportError:
@@ -88,32 +89,32 @@ except ImportError:
 
 try:
     from .invocation import (
-        StateChange,
-        LLMInvocationMark,
-        STATE_CHANGE_SCHEMA,
         LLM_INVOCATION_MARK_SCHEMA,
+        STATE_CHANGE_SCHEMA,
+        LLMInvocationMark,
+        StateChange,
     )
     _INVOCATION_AVAILABLE = True
 except ImportError:
     _INVOCATION_AVAILABLE = False
 from .chat import (
-    ChatSessionCrystal,
-    ChatTurnCrystal,
-    ChatCrystalCrystal,
-    ChatCheckpointCrystal,
+    CHAT_CHECKPOINT_SCHEMA,
+    CHAT_CRYSTAL_SCHEMA,
     CHAT_SESSION_SCHEMA,
     CHAT_TURN_SCHEMA,
-    CHAT_CRYSTAL_SCHEMA,
-    CHAT_CHECKPOINT_SCHEMA,
+    ChatCheckpointCrystal,
+    ChatCrystalCrystal,
+    ChatSessionCrystal,
+    ChatTurnCrystal,
 )
 
 # New schema imports (conditional - will be available when files are created)
 try:
     from .axiom import (
-        AxiomCrystal,
         AXIOM_SCHEMA,
-        ValueCrystal,
         VALUE_SCHEMA,
+        AxiomCrystal,
+        ValueCrystal,
     )
     _AXIOM_AVAILABLE = True
 except ImportError:
@@ -121,11 +122,11 @@ except ImportError:
 
 try:
     from .prompt import (
-        PromptCrystal,
-        PROMPT_CRYSTAL_SCHEMA,
-        PromptParam,
-        InvocationCrystal,
         INVOCATION_CRYSTAL_SCHEMA,
+        PROMPT_CRYSTAL_SCHEMA,
+        InvocationCrystal,
+        PromptCrystal,
+        PromptParam,
     )
     _PROMPT_AVAILABLE = True
 except ImportError:
@@ -133,8 +134,8 @@ except ImportError:
 
 try:
     from .spec import (
-        SpecCrystal,
         SPEC_CRYSTAL_SCHEMA,
+        SpecCrystal,
     )
     _SPEC_AVAILABLE = True
 except ImportError:
@@ -142,10 +143,10 @@ except ImportError:
 
 try:
     from .reflection import (
-        ReflectionCrystal,
+        INTERPRETATION_CRYSTAL_SCHEMA,
         REFLECTION_CRYSTAL_SCHEMA,
         InterpretationCrystal,
-        INTERPRETATION_CRYSTAL_SCHEMA,
+        ReflectionCrystal,
     )
     _REFLECTION_AVAILABLE = True
 except ImportError:

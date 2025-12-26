@@ -21,11 +21,12 @@ See: plans/zero-seed-genesis-grand-strategy.md (Part VIII)
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Any
+
     from services.k_block.core.kblock import KBlock
 
     # GaloisLoss protocol: any object with async compute_loss(content: str) -> float

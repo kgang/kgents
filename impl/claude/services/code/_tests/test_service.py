@@ -2,19 +2,19 @@
 Tests for CodeService - Explicit code sync flows.
 """
 
-import pytest
 import tempfile
 from pathlib import Path
 
-from ..service import (
-    CodeService,
-    SimplePythonParser,
-    FunctionInfo,
-    UploadResult,
-    SyncResult,
-    BootstrapResult,
-)
+import pytest
 
+from ..service import (
+    BootstrapResult,
+    CodeService,
+    FunctionInfo,
+    SimplePythonParser,
+    SyncResult,
+    UploadResult,
+)
 
 # =============================================================================
 # Test Fixtures

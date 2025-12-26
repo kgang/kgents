@@ -186,9 +186,8 @@ class PostgresZeroSeedStorage:
         Returns:
             Deserialized K-Block
         """
-        from services.k_block.core.kblock import KBlock as KBlockClass
-        from services.k_block.core.kblock import IsolationState
         from services.k_block.core.edge import KBlockEdge
+        from services.k_block.core.kblock import IsolationState, KBlock as KBlockClass
 
         return KBlockClass(
             id=KBlockId(db_kblock.id),
@@ -410,6 +409,97 @@ class PostgresZeroSeedStorage:
     def __len__(self) -> int:
         """Return number of stored nodes (memory cache)."""
         return len(self._kblocks)
+
+    async def add_edge(
+        self,
+        source_id: str,
+        target_id: str,
+        edge_type: str,
+        context: str | None = None,
+        confidence: float = 1.0,
+        mark_id: str | None = None,
+    ) -> str:
+        """
+        Add an edge between two K-Blocks.
+
+        Updates both:
+        - Source K-Block's outgoing_edges
+        - Target K-Block's incoming_edges
+
+        Args:
+            source_id: Source K-Block ID
+            target_id: Target K-Block ID
+            edge_type: Type of edge (derives_from, implements, tests, references, contradicts)
+            context: Optional context/justification for the edge
+            confidence: Confidence score [0.0, 1.0]
+            mark_id: Optional witness mark ID
+
+        Returns:
+            The edge ID
+
+        Raises:
+            ValueError: If source or target K-Block not found
+        """
+        import uuid
+        from datetime import datetime, timezone
+
+        from services.k_block.core.edge import KBlockEdge
+
+        # Generate edge ID
+        edge_id = f"edge_{uuid.uuid4().hex[:12]}"
+
+        # Create edge object
+        edge = KBlockEdge(
+            id=edge_id,
+            source_id=source_id,
+            target_id=target_id,
+            edge_type=edge_type,
+            context=context or f"Edge from {source_id[:8]} to {target_id[:8]}",
+            confidence=confidence,
+            mark_id=mark_id,
+            created_at=datetime.now(timezone.utc),
+        )
+
+        async with self._session_factory() as session:
+            # Get source K-Block
+            stmt = select(KBlockModel).where(KBlockModel.id == source_id)
+            result = await session.execute(stmt)
+            source_db = result.scalar_one_or_none()
+
+            if source_db is None:
+                raise ValueError(f"Source K-Block not found: {source_id}")
+
+            # Get target K-Block
+            stmt = select(KBlockModel).where(KBlockModel.id == target_id)
+            result = await session.execute(stmt)
+            target_db = result.scalar_one_or_none()
+
+            if target_db is None:
+                raise ValueError(f"Target K-Block not found: {target_id}")
+
+            # Update source's outgoing_edges
+            outgoing = list(source_db.outgoing_edges or [])
+            outgoing.append(edge.to_dict())
+            source_db.outgoing_edges = outgoing
+
+            # Update target's incoming_edges
+            incoming = list(target_db.incoming_edges or [])
+            incoming.append(edge.to_dict())
+            target_db.incoming_edges = incoming
+
+            await session.commit()
+
+        # Update memory cache if cached
+        if source_id in self._kblocks:
+            self._kblocks[source_id].outgoing_edges.append(edge)
+        if target_id in self._kblocks:
+            self._kblocks[target_id].incoming_edges.append(edge)
+
+        logger.info(
+            f"Added edge {edge_id}: {source_id[:8]}... -> {target_id[:8]}... ({edge_type})"
+        )
+
+        return edge_id
 
 
 # Global storage instance (for backward compatibility)

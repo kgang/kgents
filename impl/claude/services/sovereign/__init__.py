@@ -34,12 +34,32 @@ Heritage:
 See: spec/protocols/inbound-sovereignty.md
 """
 
+from .analysis_reactor import (
+    AnalysisCrystal,
+    AnalysisReactor,
+    analyze_structural,
+    analyze_with_claude,
+    create_analysis_reactor,
+    get_analysis_reactor,
+    init_analysis_reactor,
+    reset_analysis_reactor,
+)
 from .ingest import (
     DiscoveredEdge,
     Ingestor,
     extract_edges,
     ingest_content,
     ingest_file,
+)
+from .integration import (
+    Contradiction,
+    DiscoveredEdge as IntegrationDiscoveredEdge,
+    IdentifiedConcept,
+    IntegrationResult,
+    IntegrationService,
+    PortalToken,
+    get_integration_service,
+    reset_integration_service,
 )
 from .kblock_integration import (
     KBlockIsolationCheck,
@@ -56,6 +76,16 @@ from .provenance import (
     get_provenance_summary,
     verify_provenance_integrity,
 )
+from .splitting import (
+    SplitPlan,
+    SplitReason,
+    SplitReasonType,
+    SplitRecommendation,
+    SplitSection,
+    SplittingService,
+    get_splitting_service,
+    reset_splitting_service,
+)
 from .store import SovereignStore
 from .types import (
     Annotation,
@@ -68,22 +98,6 @@ from .types import (
     SovereignEntity,
     SyncResult,
     SyncStatus,
-)
-from .verification import (
-    Check,
-    VerificationResult,
-    verify_all,
-    verify_integrity,
-)
-from .analysis_reactor import (
-    AnalysisCrystal,
-    AnalysisReactor,
-    analyze_structural,
-    analyze_with_claude,
-    create_analysis_reactor,
-    get_analysis_reactor,
-    init_analysis_reactor,
-    reset_analysis_reactor,
 )
 
 # Phase 2: Zero Seed Genesis Grand Strategy
@@ -98,25 +112,11 @@ from .uploads import (
     reset_file_explorer_service,
     reset_upload_service,
 )
-from .integration import (
-    Contradiction,
-    DiscoveredEdge as IntegrationDiscoveredEdge,
-    IdentifiedConcept,
-    IntegrationResult,
-    IntegrationService,
-    PortalToken,
-    get_integration_service,
-    reset_integration_service,
-)
-from .splitting import (
-    SplitPlan,
-    SplitReason,
-    SplitReasonType,
-    SplitRecommendation,
-    SplitSection,
-    SplittingService,
-    get_splitting_service,
-    reset_splitting_service,
+from .verification import (
+    Check,
+    VerificationResult,
+    verify_all,
+    verify_integrity,
 )
 
 __all__ = [

@@ -44,30 +44,53 @@ from .constitution import (
     compute_galois_loss,
 )
 from .dp_bridge import (
-    # Core types
-    TraceEntry,
+    BellmanMorphism,
+    DPAction,
+    # Solver
+    DPSolver,
+    # Bellman morphism (functor)
+    DPState,
+    MetaDP,
+    OptimalSubstructure,
     # Writer monad
     PolicyTrace,
     # Value function
     PrincipleScore as DPPrincipleScore,
-    ValueScore,
-    ValueFunction,
-    ValueFunctionProtocol,
-    # Bellman morphism (functor)
-    DPState,
-    DPAction,
-    BellmanMorphism,
-    # Optimal substructure (sheaf)
-    SubproblemSolution,
-    OptimalSubstructure,
     # Meta DP
     ProblemFormulation,
-    MetaDP,
-    # Solver
-    DPSolver,
+    # Optimal substructure (sheaf)
+    SubproblemSolution,
+    # Core types
+    TraceEntry,
+    ValueFunction,
+    ValueFunctionProtocol,
+    ValueScore,
 )
 from .middle_invariance import MiddleInvarianceProbe, MiddleInvarianceResult
 from .monad_variators import MonadVariatorProbe, MonadVariatorResult
+
+# Pilot Law Grammar (Amendment G)
+from .pilot_laws import (
+    PILOT_LAWS,
+    LawSchema,
+    LawVerificationReport,
+    LawVerificationResult,
+    PilotLaw,
+    coherence_gate,
+    compression_honesty,
+    courage_preservation,
+    drift_alert,
+    get_all_pilots,
+    get_law_by_name,
+    get_laws_by_pilot,
+    get_laws_by_schema,
+    ghost_preservation,
+    summarize_pilot_laws,
+    verify_all_laws,
+    verify_law,
+    verify_pilot_laws,
+    verify_schema_laws,
+)
 from .probes import (
     AssociativityTestResult,
     # Unified probe runner
@@ -159,4 +182,24 @@ __all__ = [
     "MetaDP",
     # DP Bridge - Solver
     "DPSolver",
+    # Pilot Law Grammar (Amendment G)
+    "LawSchema",
+    "PilotLaw",
+    "LawVerificationResult",
+    "LawVerificationReport",
+    "coherence_gate",
+    "drift_alert",
+    "ghost_preservation",
+    "courage_preservation",
+    "compression_honesty",
+    "PILOT_LAWS",
+    "verify_law",
+    "verify_all_laws",
+    "verify_pilot_laws",
+    "verify_schema_laws",
+    "get_laws_by_pilot",
+    "get_laws_by_schema",
+    "get_all_pilots",
+    "get_law_by_name",
+    "summarize_pilot_laws",
 ]

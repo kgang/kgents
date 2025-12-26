@@ -46,7 +46,7 @@ from typing import TYPE_CHECKING, Any, NewType
 from uuid import uuid4
 
 if TYPE_CHECKING:
-    from .mark import Mark, MarkId, ConstitutionalAlignment
+    from .mark import ConstitutionalAlignment, Mark, MarkId
 
 # =============================================================================
 # Type Aliases
@@ -602,6 +602,7 @@ class Crystal:
     # Provenance (Law 2: never broken)
     source_marks: tuple["MarkId", ...] = ()  # Level 0: direct mark sources
     source_crystals: tuple[CrystalId, ...] = ()  # Level 1+: crystal sources
+    source_kblocks: tuple[str, ...] = ()  # K-Block IDs that contributed to this crystal
 
     # Temporal bounds
     time_range: tuple[datetime, datetime] | None = None  # What period this covers
@@ -666,6 +667,65 @@ class Crystal:
             principles=tuple(principles),
             source_marks=tuple(source_marks),
             source_crystals=(),
+            source_kblocks=(),
+            time_range=time_range,
+            crystallized_at=datetime.now(),
+            topics=frozenset(topics or set()),
+            mood=mood or MoodVector.neutral(),
+            compression_ratio=len(source_marks) if source_marks else 1.0,
+            confidence=confidence,
+            token_estimate=token_estimate,
+            session_id=session_id,
+        )
+
+    @classmethod
+    def from_crystallization_with_kblocks(
+        cls,
+        insight: str,
+        significance: str,
+        principles: list[str],
+        source_marks: list["MarkId"],
+        source_kblocks: list[str],
+        time_range: tuple[datetime, datetime],
+        confidence: float = 0.8,
+        topics: set[str] | None = None,
+        mood: MoodVector | None = None,
+        session_id: str = "",
+    ) -> Crystal:
+        """
+        Create a level-0 (SESSION) crystal with K-Block provenance.
+
+        This extends from_crystallization() to include K-Block IDs that
+        contributed to this crystal. Used when marks originated from
+        K-Block bind operations.
+
+        Args:
+            insight: 1-3 sentences capturing the essence
+            significance: Why this matters going forward
+            principles: Principles that emerged
+            source_marks: List of MarkIds that were crystallized
+            source_kblocks: List of KBlockId strings that contributed
+            time_range: The temporal bounds this crystal covers
+            confidence: Crystallizer's confidence [0, 1]
+            topics: Semantic handles for retrieval
+            mood: Affective signature
+            session_id: Optional session context
+
+        Returns:
+            A level-0 Crystal with K-Block provenance
+        """
+        content_length = len(insight) + len(significance) + sum(len(p) for p in principles)
+        token_estimate = content_length // 4 + 50
+
+        return cls(
+            id=generate_crystal_id(),
+            level=CrystalLevel.SESSION,
+            insight=insight,
+            significance=significance,
+            principles=tuple(principles),
+            source_marks=tuple(source_marks),
+            source_crystals=(),
+            source_kblocks=tuple(source_kblocks),
             time_range=time_range,
             crystallized_at=datetime.now(),
             topics=frozenset(topics or set()),
@@ -707,6 +767,7 @@ class Crystal:
             principles=tuple(principles),
             source_marks=(),
             source_crystals=tuple(source_crystals),
+            source_kblocks=(),
             time_range=None,  # Would be computed from source crystals
             crystallized_at=datetime.now(),
             topics=frozenset(topics or set()),
@@ -732,6 +793,7 @@ class Crystal:
             principles=self.principles,
             source_marks=self.source_marks,
             source_crystals=self.source_crystals,
+            source_kblocks=self.source_kblocks,
             time_range=self.time_range,
             crystallized_at=self.crystallized_at,
             topics=self.topics,
@@ -743,6 +805,14 @@ class Crystal:
             constitutional_meta=meta,
         )
 
+    def has_kblock_provenance(self) -> bool:
+        """Check if this crystal has K-Block provenance."""
+        return len(self.source_kblocks) > 0
+
+    def get_kblock_ids(self) -> tuple[str, ...]:
+        """Get all K-Block IDs that contributed to this crystal."""
+        return self.source_kblocks
+
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -753,6 +823,7 @@ class Crystal:
             "principles": list(self.principles),
             "source_marks": [str(m) for m in self.source_marks],
             "source_crystals": [str(c) for c in self.source_crystals],
+            "source_kblocks": list(self.source_kblocks),
             "time_range": [
                 self.time_range[0].isoformat(),
                 self.time_range[1].isoformat(),
@@ -795,6 +866,7 @@ class Crystal:
             principles=tuple(data.get("principles", [])),
             source_marks=tuple(MarkId(m) for m in data.get("source_marks", [])),
             source_crystals=tuple(CrystalId(c) for c in data.get("source_crystals", [])),
+            source_kblocks=tuple(data.get("source_kblocks", [])),
             time_range=time_range,
             crystallized_at=datetime.fromisoformat(data["crystallized_at"])
             if data.get("crystallized_at")

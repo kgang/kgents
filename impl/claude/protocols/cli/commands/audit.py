@@ -220,8 +220,8 @@ async def _audit_full_async(
 ) -> Any:
     """Run full audit (principles + drift + action items)."""
     _ensure_imports()
-    from services.audit.principles import score_principles_async
     from services.audit.drift import detect_drift_async
+    from services.audit.principles import score_principles_async
 
     # Run both audits
     scores, drift_items = await asyncio.gather(

@@ -21,6 +21,7 @@ from agents.t.truth_functor import (
     ProbeAction,
     ProbeState,
 )
+
 from ..logos import Logos, PlaceholderNode, SimpleRegistry, create_logos
 from ..node import Observer
 

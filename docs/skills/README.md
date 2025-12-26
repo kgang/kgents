@@ -4,7 +4,7 @@ context: self
 
 # Agent Skills Directory
 
-> *"23 skills are necessary and sufficient to build any kgents component."*
+> *"24 skills are necessary and sufficient to build any kgents component."*
 
 **READ SKILLS FIRST.** Every task has a corresponding skill. Before writing code, find the right skill—it will save you hours.
 
@@ -34,6 +34,7 @@ These five skills apply to virtually ANY work you'll do:
 | **Service/Crown Jewel** | `crown-jewel-patterns.md`, `metaphysical-fullstack.md` |
 | **Hypergraph editing** | `hypergraph-editor.md` |
 | **Event-driven feature** | `data-bus-integration.md` |
+| **Regenerating pilots** | `witnessed-regeneration.md`, `witness-for-agents.md` |
 | **Multi-target rendering** | `projection-target.md`, `elastic-ui-patterns.md` |
 | **marimo notebooks** | `marimo-projection.md` |
 | **Writing specs** | `spec-template.md`, `spec-hygiene.md` |
@@ -79,6 +80,7 @@ These five skills apply to virtually ANY work you'll do:
 |-------|---------|
 | [research-protocol](research-protocol.md) | Four-phase experimentation: A (toy) → B (trace) → C (proof) → D (scale) |
 | [cli-strategy-tools](cli-strategy-tools.md) | Five native operations: audit, annotate, experiment, probe, compose |
+| [witnessed-regeneration](witnessed-regeneration.md) | 5-stage pilot regeneration: Archive >> Verify >> Generate >> Validate >> Learn |
 | [plan-file](plan-file.md) | Forest Protocol YAML headers, chunks, status lifecycle |
 | [spec-template](spec-template.md) | Writing generative specs (200-400 lines) |
 | [spec-hygiene](spec-hygiene.md) | 7 bloat patterns to avoid, 5 compression patterns |
@@ -102,7 +104,7 @@ Component = Foundation ∘ Protocol ∘ Architecture ∘ Witness ∘ Process ∘
           ∘ (agentese-path + agentese-node-registration)
           ∘ (crown-jewel-patterns + metaphysical-fullstack + data-bus-integration + hypergraph-editor)
           ∘ (witness-for-agents + derivation-edges)
-          ∘ (research-protocol + cli-strategy-tools + plan-file + spec-template + spec-hygiene)
+          ∘ (research-protocol + cli-strategy-tools + witnessed-regeneration + plan-file + spec-template + spec-hygiene)
           ∘ (projection-target + marimo-projection + test-patterns + elastic-ui-patterns)
 ```
 
@@ -117,4 +119,4 @@ Extended skills archived to `docs/_archive/2025-12-18-consolidation/`. Restore i
 
 ---
 
-*Consolidated: 2025-12-24 | Skills: 23 active | Docs Renaissance Edition*
+*Consolidated: 2025-12-26 | Skills: 24 active | Docs Renaissance Edition*

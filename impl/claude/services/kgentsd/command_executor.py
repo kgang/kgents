@@ -21,8 +21,8 @@ See: plans/rustling-bouncing-seal.md
 from __future__ import annotations
 
 import asyncio
-import io
 import inspect
+import io
 import logging
 import os
 import sys

@@ -17,6 +17,7 @@ from agents.g.catalog_integration import (
     register_tongue,
     update_tongue_metrics,
 )
+
 # forge_integration removed 2025-12-25 (Forge API deprecated)
 from agents.g.fuzzing_integration import (
     # Types

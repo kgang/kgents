@@ -51,14 +51,14 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
+# Legacy imports for teaching/extinction methods (not yet migrated)
+from sqlalchemy import func, select
+
 from agents.d.crystal import Crystal as CrystalWrapper
-from agents.d.schemas.brain import BrainCrystal, BRAIN_CRYSTAL_SCHEMA
+from agents.d.schemas.brain import BRAIN_CRYSTAL_SCHEMA, BrainCrystal
 from agents.d.universe import Query, Universe, get_universe
 from agents.differance.alternatives import get_alternatives
 from agents.differance.integration import DifferanceIntegration
-
-# Legacy imports for teaching/extinction methods (not yet migrated)
-from sqlalchemy import func, select
 from models.brain import ExtinctionEvent, ExtinctionTeaching, TeachingCrystal
 
 if TYPE_CHECKING:

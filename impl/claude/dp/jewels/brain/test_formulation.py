@@ -13,12 +13,11 @@ Validates:
 import pytest
 
 from dp.jewels.brain import (
-    BrainState,
     BrainAction,
     BrainFormulation,
+    BrainState,
     create_brain_agent,
 )
-
 
 # =============================================================================
 # State Tests

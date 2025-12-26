@@ -27,7 +27,6 @@ from pathlib import Path
 
 from services.archaeology.mining import Commit, parse_git_log
 
-
 # ==============================================================================
 # Aggregate Models (simpler than full evidence models)
 # ==============================================================================

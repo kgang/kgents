@@ -17,7 +17,6 @@ import pytest
 
 from services.chat.witness import ChatMark, ChatPolicyTrace
 
-
 # =============================================================================
 # ChatMark Tests
 # =============================================================================

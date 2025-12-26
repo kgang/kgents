@@ -20,9 +20,9 @@ See: dp/core/ (ValueAgent, Constitution, DPSolver)
 """
 
 from dp.jewels.brain.formulation import (
-    BrainState,
     BrainAction,
     BrainFormulation,
+    BrainState,
     create_brain_agent,
 )
 

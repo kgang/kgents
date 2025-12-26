@@ -9,14 +9,13 @@ Run:
 
 import pytest
 
+from protocols.ashc.adaptive import ConfidenceTier
 from services.chat.ashc_bridge import ASHCBridge, is_spec_file
 from services.chat.ashc_integration import (
     detect_spec_edit_in_message,
     infer_confidence_tier_from_message,
     integrate_ashc_into_chat_evidence,
 )
-from protocols.ashc.adaptive import ConfidenceTier
-
 
 # =============================================================================
 # Detection Tests

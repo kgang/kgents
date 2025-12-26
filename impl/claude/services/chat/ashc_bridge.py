@@ -26,7 +26,6 @@ from protocols.ashc.adaptive import BetaPrior, ConfidenceTier, StoppingState
 from protocols.ashc.evidence import ASHCOutput, EvidenceCompiler
 from protocols.ashc.harness import VoidHarness, VoidHarnessConfig
 
-
 # =============================================================================
 # ASHC Output for Chat
 # =============================================================================

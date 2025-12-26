@@ -8,7 +8,7 @@ Spec: spec/protocols/unified-data-crystal.md
 """
 
 from dataclasses import dataclass
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any, Generic, TypeVar
 
 from .datum import Datum

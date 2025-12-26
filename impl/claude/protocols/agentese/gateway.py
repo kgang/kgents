@@ -126,6 +126,13 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (witness): {e}")
 
+        try:
+            from services.witness import (
+                daily_lab as daily_lab_module,  # noqa: F401  # witness.daily_lab.*
+            )
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (daily_lab): {e}")
+
         # === Concept context nodes ===
         try:
             from .contexts import (
@@ -213,8 +220,10 @@ def _import_node_modules() -> None:
 
         # === Void and Concept Nodes (Zero Seed L1-L4) ===
         try:
-            from nodes import void_node  # noqa: F401  # void.*
-            from nodes import concept_node  # noqa: F401  # concept.*
+            from nodes import (
+                concept_node,  # noqa: F401  # concept.*
+                void_node,  # noqa: F401  # void.*
+            )
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (void/concept): {e}")
 
@@ -226,7 +235,9 @@ def _import_node_modules() -> None:
 
         # === Sovereign Store Crown Jewel (concept.sovereign.*) ===
         try:
-            from services.sovereign import node as sovereign_node  # noqa: F401  # concept.sovereign.*
+            from services.sovereign import (
+                node as sovereign_node,  # noqa: F401  # concept.sovereign.*
+            )
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (sovereign): {e}")
 

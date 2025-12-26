@@ -57,6 +57,25 @@ from .gate import (
     GateResult,
 )
 
+# Trust Polynomial Functor (Amendment E)
+from .gradient import (
+    Action as TrustAction,
+    ApprovalRequired,
+    Autonomous,
+    HighImpactOnly,
+    MostApproved,
+    RoutineApproved,
+    TrustLevel as TrustGradientLevel,
+    TrustState,
+    can_execute_autonomously,
+    create_trust_state,
+    high_risk_action,
+    low_risk_action,
+    medium_risk_action,
+    requires_approval,
+    trivial_action,
+)
+
 __all__ = [
     # Gate
     "ActionGate",
@@ -80,4 +99,20 @@ __all__ = [
     "ConfirmationManager",
     "PendingSuggestion",
     "ConfirmationResult",
+    # Trust Polynomial Functor (Amendment E)
+    "TrustGradientLevel",
+    "TrustState",
+    "TrustAction",
+    "can_execute_autonomously",
+    "requires_approval",
+    "create_trust_state",
+    "trivial_action",
+    "low_risk_action",
+    "medium_risk_action",
+    "high_risk_action",
+    "ApprovalRequired",
+    "RoutineApproved",
+    "MostApproved",
+    "HighImpactOnly",
+    "Autonomous",
 ]

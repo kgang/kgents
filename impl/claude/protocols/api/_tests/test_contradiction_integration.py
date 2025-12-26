@@ -14,13 +14,15 @@ Philosophy:
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytest.importorskip("fastapi")
 
+from datetime import UTC, datetime
+
 from fastapi.testclient import TestClient
-from datetime import datetime, UTC
 
 from protocols.api.app import create_app
 
@@ -121,9 +123,9 @@ async def test_full_contradiction_workflow(client, mock_k_block_storage, mock_wi
         if detect_data["total"] == 0:
             # Mock didn't detect contradiction - seed one manually for test
             from protocols.api.contradiction import (
-                _contradictions,
                 ContradictionResponse,
                 KBlockSummary,
+                _contradictions,
             )
 
             _contradictions["contradiction_kb-stateful_kb-stateless"] = (
@@ -241,9 +243,9 @@ async def test_contradiction_not_detected_below_threshold(
 def test_list_contradictions_sorted_by_severity(client):
     """Test that contradictions are sorted by severity (highest first)."""
     from protocols.api.contradiction import (
-        _contradictions,
         ContradictionResponse,
         KBlockSummary,
+        _contradictions,
     )
 
     # Clear and seed multiple contradictions

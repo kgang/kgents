@@ -106,8 +106,8 @@ async def _handle_manifest(args: list[str]) -> int:
         # Import evidence service functions (to be implemented)
         try:
             from services.evidence import (
-                get_evidence_count,
                 get_evidence_by_level,
+                get_evidence_count,
                 get_recent_evidence,
             )
         except ImportError:
@@ -392,7 +392,7 @@ async def _handle_lifecycle_init(args: list[str]) -> int:
         print("Initializing evidence tracking...")
         result = await initialize_evidence_tracking()
 
-        print(f"✓ Evidence tracking initialized")
+        print("✓ Evidence tracking initialized")
         print(f"  Database: {result.database_status}")
         print(f"  Indices: {result.indices_created}")
 
@@ -420,7 +420,7 @@ async def _handle_lifecycle_refresh(args: list[str]) -> int:
         print("Refreshing evidence...")
         result = await refresh_evidence()
 
-        print(f"✓ Evidence refreshed")
+        print("✓ Evidence refreshed")
         print(f"  New evidence: {result.new_evidence_count}")
         print(f"  Updated: {result.updated_count}")
 
@@ -449,7 +449,7 @@ async def _handle_lifecycle_export(args: list[str]) -> int:
         print(f"Exporting evidence to {output_file}...")
         result = await export_evidence(output_file=output_file, format=format_type)
 
-        print(f"✓ Evidence exported")
+        print("✓ Evidence exported")
         print(f"  File: {output_file}")
         print(f"  Evidence count: {result.evidence_count}")
 

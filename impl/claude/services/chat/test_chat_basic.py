@@ -5,9 +5,9 @@ Basic test of chat service implementation.
 Tests the ChatKBlock pattern with K-Block operations.
 """
 
+from services.chat.context import LinearityTag, Turn, WorkingContext
+from services.chat.evidence import BetaPrior, ChatEvidence, TurnResult
 from services.chat.session import ChatSession, ChatState, MergeStrategy
-from services.chat.evidence import ChatEvidence, BetaPrior, TurnResult
-from services.chat.context import WorkingContext, LinearityTag, Turn
 
 
 def test_session_creation():

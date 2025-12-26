@@ -13,7 +13,6 @@ import pytest
 
 from services.constitutional import Domain, Principle, PrincipleScore, constitutional_reward
 
-
 # =============================================================================
 # PrincipleScore Tests (Domain-Agnostic)
 # =============================================================================

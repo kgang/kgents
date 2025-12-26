@@ -45,9 +45,9 @@ from typing import Callable, FrozenSet, Generic, Hashable, TypeVar
 
 from dp.core.constitution import Constitution
 from services.categorical.dp_bridge import (
+    DPSolver,
     PolicyTrace,
     ProblemFormulation,
-    DPSolver,
     TraceEntry,
 )
 

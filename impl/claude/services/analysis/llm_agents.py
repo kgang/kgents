@@ -32,27 +32,27 @@ from typing import TYPE_CHECKING
 
 from .parsers import (
     parse_categorical_response,
+    parse_constitutional_response,
     parse_dialectical_response,
     parse_epistemic_response,
     parse_generative_response,
-    parse_constitutional_response,
 )
 from .prompts import (
     CATEGORICAL_PROMPT,
+    CONSTITUTIONAL_PROMPT,
     DIALECTICAL_PROMPT,
     EPISTEMIC_PROMPT,
     GENERATIVE_PROMPT,
-    CONSTITUTIONAL_PROMPT,
 )
 
 if TYPE_CHECKING:
     from agents.k.soul import LLMClient
     from agents.operad.domains.analysis import (
         CategoricalReport,
+        ConstitutionalReport,
         DialecticalReport,
         EpistemicReport,
         GenerativeReport,
-        ConstitutionalReport,
     )
 
 logger = logging.getLogger(__name__)

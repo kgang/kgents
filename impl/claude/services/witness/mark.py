@@ -907,6 +907,108 @@ class Mark:
             metadata={"agentese_path": path, "aspect": aspect, **kwargs},
         )
 
+    @classmethod
+    def from_kblock_bind(
+        cls,
+        from_kblock_id: str,
+        to_kblock_id: str,
+        from_content: str,
+        to_content: str,
+        operation: str,
+        lineage_edge_dict: dict[str, Any],
+        path: str = "anonymous",
+        umwelt: UmweltSnapshot | None = None,
+    ) -> Mark:
+        """
+        Create Mark from K-Block bind operation.
+
+        This is the primary integration point for K-Block -> Witness.
+        When KBlock.bind() executes, it can emit a mark using this factory.
+
+        Args:
+            from_kblock_id: Source K-Block ID
+            to_kblock_id: Result K-Block ID
+            from_content: Source content (truncated if needed)
+            to_content: Result content (truncated if needed)
+            operation: Name of the transformation function
+            lineage_edge_dict: Serialized LineageEdge
+            path: K-Block path (for context)
+            umwelt: Optional observer context
+
+        Returns:
+            Mark with K-Block provenance in metadata
+
+        Example:
+            >>> mark = Mark.from_kblock_bind(
+            ...     from_kblock_id="kb_abc123",
+            ...     to_kblock_id="kb_def456",
+            ...     from_content="Hello",
+            ...     to_content="HELLO",
+            ...     operation="uppercase",
+            ...     lineage_edge_dict=edge.to_dict(),
+            ... )
+        """
+        return cls(
+            origin="k_block",
+            domain="edit",
+            stimulus=Stimulus(
+                kind="kblock_bind",
+                content=from_content[:500],  # Truncate for storage
+                source=f"kblock:{from_kblock_id}",
+                metadata={
+                    "kblock_id": from_kblock_id,
+                    "path": path,
+                },
+            ),
+            response=Response(
+                kind="kblock_result",
+                content=to_content[:500],  # Truncate for storage
+                success=True,
+                metadata={
+                    "kblock_id": to_kblock_id,
+                    "operation": operation,
+                },
+            ),
+            umwelt=umwelt or UmweltSnapshot.system(),
+            tags=("kblock", "bind", operation),
+            metadata={
+                "kblock_from_id": from_kblock_id,
+                "kblock_to_id": to_kblock_id,
+                "kblock_operation": operation,
+                "kblock_path": path,
+                "lineage_edge": lineage_edge_dict,
+            },
+        )
+
+    def is_kblock_mark(self) -> bool:
+        """Check if this mark originated from a K-Block operation."""
+        return self.origin == "k_block" and "kblock_from_id" in self.metadata
+
+    def get_kblock_lineage(self) -> dict[str, Any] | None:
+        """
+        Extract K-Block lineage edge from metadata.
+
+        Returns:
+            The lineage edge dict if this is a K-Block mark, else None
+        """
+        if not self.is_kblock_mark():
+            return None
+        return self.metadata.get("lineage_edge")
+
+    def get_kblock_ids(self) -> tuple[str, str] | None:
+        """
+        Get the (from_id, to_id) K-Block IDs if this is a K-Block mark.
+
+        Returns:
+            Tuple of (from_kblock_id, to_kblock_id) or None
+        """
+        if not self.is_kblock_mark():
+            return None
+        return (
+            self.metadata.get("kblock_from_id", ""),
+            self.metadata.get("kblock_to_id", ""),
+        )
+
     def with_link(self, link: MarkLink) -> Mark:
         """Return new Mark with added link (immutable pattern)."""
         # Create new frozen instance with updated links

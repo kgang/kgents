@@ -24,7 +24,6 @@ from agents.operad.domains.probe import (
 from services.categorical.dp_bridge import PolicyTrace
 from services.probe.types import ProbeResult, ProbeStatus, ProbeType
 
-
 # =============================================================================
 # Example Probes
 # =============================================================================
@@ -130,7 +129,7 @@ async def demo_parallel():
     print(f"Result: {result.value.name}")
     print(f"Status: {result.value.status.value}")
     print(f"Duration: {result.value.duration_ms}ms (max(5, 50) = 50)")
-    print(f"Both probes ran concurrently")
+    print("Both probes ran concurrently")
     print()
 
 
@@ -261,7 +260,7 @@ async def demo_complex_composition():
 
     result = await witnessed.verify("code", {})
 
-    print(f"Complex pipeline result:")
+    print("Complex pipeline result:")
     print(f"  Name: {result.value.name}")
     print(f"  Status: {result.value.status.value}")
     print(f"  Duration: {result.value.duration_ms}ms")

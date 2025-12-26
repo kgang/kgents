@@ -59,8 +59,12 @@ from .kblock import (
     KBlock,
     KBlockId,
     KBlockKind,
+    LineageEdge,  # Amendment D: Monad lineage tracking
+    WitnessBridgeProtocol,  # P2: K-Block → Witness bridge
     generate_kblock_id,
+    get_witness_bridge,  # P2: K-Block → Witness bridge
     kblock_from_zero_node,
+    set_witness_bridge,  # P2: K-Block → Witness bridge
     zero_node_from_kblock,
 )
 from .polynomial import (
@@ -96,7 +100,11 @@ __all__ = [
     "KBlockEdge",
     "KBlockId",
     "KBlockKind",  # Unification: Kind taxonomy
+    "LineageEdge",  # Amendment D: Monad lineage tracking
+    "WitnessBridgeProtocol",  # P2: K-Block → Witness bridge
     "generate_kblock_id",
+    "get_witness_bridge",  # P2: K-Block → Witness bridge
+    "set_witness_bridge",  # P2: K-Block → Witness bridge
     # Unification: KBlock ≅ ZeroNode isomorphism
     "kblock_from_zero_node",
     "zero_node_from_kblock",

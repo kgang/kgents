@@ -13,9 +13,10 @@ See: protocols/api/portal.py
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 pytest.importorskip("fastapi")
 

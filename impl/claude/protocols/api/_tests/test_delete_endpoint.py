@@ -8,6 +8,7 @@ Verifies that the delete method:
 """
 
 import pytest
+
 from services.sovereign.store import SovereignStore
 
 

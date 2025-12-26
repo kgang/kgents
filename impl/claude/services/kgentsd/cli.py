@@ -408,6 +408,7 @@ def cmd_banish(args: list[str]) -> int:
 
         # Wait for process to exit
         import time
+
         from .daemon import is_process_running, remove_pid_file
 
         for _ in range(50):  # 5 seconds

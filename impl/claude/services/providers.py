@@ -380,6 +380,23 @@ async def get_witness_persistence() -> "WitnessPersistence":
     return WitnessPersistence()
 
 
+async def get_daily_lab():
+    """
+    Get the DailyLab service for Daily Lab Crown Jewel.
+
+    The Daily Lab provides WARMTH-calibrated daily journaling:
+    - Low-friction mark capture
+    - Trail navigation by date
+    - Crystal compression with honesty disclosure
+    - Export to markdown/JSON
+
+    Used by DailyLabNode for witness.daily_lab.* AGENTESE paths.
+    """
+    from services.witness.daily_lab import DailyLab
+
+    return DailyLab()
+
+
 # Alias for nodes that declare dependency as "witness" instead of "witness_persistence"
 async def get_witness() -> "WitnessPersistence":
     """Alias for get_witness_persistence (for nodes declaring 'witness' dependency)."""
@@ -903,6 +920,7 @@ async def setup_providers() -> None:
     container.register("witness_persistence", get_witness_persistence, singleton=True)
     container.register("witness", get_witness, singleton=True)  # Alias for nodes declaring "witness"
     container.register("bus", get_bus, singleton=True)  # WitnessSynergyBus
+    container.register("daily_lab", get_daily_lab, singleton=True)  # Daily Lab (witness.daily_lab.*)
 
     # Document Director Crown Jewel (Spec-to-Code Lifecycle)
     container.register("director", get_director, singleton=True)
@@ -1072,6 +1090,14 @@ async def setup_providers() -> None:
     except ImportError as e:
         logger.warning(f"CodeNode not available: {e}")
 
+    # Daily Lab (Trail-to-Crystal Journaling with WARMTH Calibration)
+    try:
+        from services.witness.daily_lab import DailyLabNode  # noqa: F401
+
+        logger.info("DailyLabNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"DailyLabNode not available: {e}")
+
     # Wire KgentSoul to SoulNode
     try:
         from agents.k.soul import KgentSoul
@@ -1185,6 +1211,8 @@ __all__ = [
     "get_director",
     "get_witness",
     "get_bus",
+    # Daily Lab Crown Jewel
+    "get_daily_lab",
     # Hypergraph Editor Crown Jewel
     "get_editor_service",
     # Explorer Crown Jewel

@@ -598,13 +598,30 @@ Loss: {loss:.2f}
 
                     # Create edge: user's axiom derives_from Zero Seed axiom
                     context = "User's first axiom builds on Zero Seed foundation"
-                    edge_id = await store.add_edge(
-                        from_path=node_id,
-                        to_path=axiom_id,
+
+                    # Create edge in K-Block storage (PostgresZeroSeedStorage)
+                    # This ensures edges are visible via the K-Blocks and Edges APIs
+                    edge_id = await storage.add_edge(
+                        source_id=node_id,
+                        target_id=axiom_id,
                         edge_type="derives_from",
-                        mark_id=None,  # Will update with F2 mark
                         context=context,
+                        confidence=1.0 - loss,  # Use same confidence as K-Block
+                        mark_id=None,  # Will update with F2 mark
                     )
+
+                    # Also create in SovereignStore for overlay system
+                    try:
+                        await store.add_edge(
+                            from_path=node_id,
+                            to_path=axiom_id,
+                            edge_type="derives_from",
+                            mark_id=None,
+                            context=context,
+                        )
+                    except Exception as e:
+                        # Non-critical - K-Block edge is primary storage
+                        logger.debug(f"Sovereign overlay edge creation skipped: {e}")
 
                     # Track first edge for F2 axiom
                     if first_edge_id is None:
@@ -717,9 +734,10 @@ Loss: {loss:.2f}
         Returns:
             Onboarding status
         """
+        from sqlalchemy import select
+
         from models import OnboardingSession
         from models.base import get_async_session
-        from sqlalchemy import select
 
         async with get_async_session() as db:
             if session_id:
@@ -766,9 +784,10 @@ Loss: {loss:.2f}
         """
         from datetime import timedelta
 
+        from sqlalchemy import delete
+
         from models import OnboardingSession
         from models.base import get_async_session
-        from sqlalchemy import delete
 
         cutoff_time = datetime.utcnow() - timedelta(hours=hours)
 
@@ -1079,9 +1098,10 @@ Loss: {loss:.2f}
         Returns:
             FTUEStatusResponse with status of all axioms
         """
+        from sqlalchemy import select
+
         from models import OnboardingSession
         from models.base import get_async_session
-        from sqlalchemy import select
 
         async with get_async_session() as db:
             session: OnboardingSession | None = None

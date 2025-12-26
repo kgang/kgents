@@ -43,7 +43,7 @@ from .contracts import (
     FeedKBlockItem,
     FeedManifestResponse,
 )
-from .defaults import COSMOS_FEED, COHERENT_FEED
+from .defaults import COHERENT_FEED, COSMOS_FEED
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
