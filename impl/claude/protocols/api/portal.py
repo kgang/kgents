@@ -36,7 +36,9 @@ logger = logging.getLogger(__name__)
 class ResolvePortalRequest(BaseModel):
     """Request body for resolving a portal URI."""
 
-    uri: str = Field(..., description="Portal URI to resolve (e.g., 'chat:session-123', 'file:spec/README.md')")
+    uri: str = Field(
+        ..., description="Portal URI to resolve (e.g., 'chat:session-123', 'file:spec/README.md')"
+    )
 
 
 class ResolvedResourceResponse(BaseModel):
@@ -103,6 +105,8 @@ def create_portal_router() -> "APIRouter | None":
             500: Resolution error
         """
         try:
+            from pathlib import Path
+
             from services.portal import (
                 PermissionDenied,
                 PortalResolverRegistry,
@@ -119,7 +123,6 @@ def create_portal_router() -> "APIRouter | None":
                 MarkResolver,
                 TraceResolver,
             )
-            from pathlib import Path
 
             # Parse URI
             try:
@@ -139,8 +142,9 @@ def create_portal_router() -> "APIRouter | None":
 
             # ChatResolver needs session_store (try to get it, but make it optional)
             try:
-                from services.providers import get_chat_session_store
-                session_store = await get_chat_session_store()
+                from services.providers import get_chat_persistence
+
+                session_store = await get_chat_persistence()
                 registry.register(ChatResolver(session_store=session_store))
             except Exception as e:
                 logger.warning(f"Could not register ChatResolver: {e}")
@@ -205,6 +209,8 @@ def create_portal_router() -> "APIRouter | None":
             Health status with registered resolver types
         """
         try:
+            from pathlib import Path
+
             from services.portal import PortalResolverRegistry
             from services.portal.resolvers import (
                 ChatResolver,
@@ -215,7 +221,6 @@ def create_portal_router() -> "APIRouter | None":
                 MarkResolver,
                 TraceResolver,
             )
-            from pathlib import Path
 
             registry = PortalResolverRegistry()
 
@@ -229,26 +234,44 @@ def create_portal_router() -> "APIRouter | None":
                 logger.warning(f"FileResolver registration failed: {e}")
 
             try:
-                from services.providers import get_chat_session_store
-                session_store = await get_chat_session_store()
+                from services.providers import get_chat_persistence
+
+                session_store = await get_chat_persistence()
                 registry.register(ChatResolver(session_store=session_store))
                 registered_types.append("chat")
             except Exception as e:
                 logger.warning(f"ChatResolver registration failed: {e}")
 
             # Register other resolvers
-            for resolver_cls, resource_type in [
-                (MarkResolver, "mark"),
-                (TraceResolver, "trace"),
-                (EvidenceResolver, "evidence"),
-                (ConstitutionalResolver, "constitutional"),
-                (CrystalResolver, "crystal"),
-            ]:
-                try:
-                    registry.register(resolver_cls())
-                    registered_types.append(resource_type)
-                except Exception as e:
-                    logger.warning(f"{resolver_cls.__name__} registration failed: {e}")
+            try:
+                registry.register(MarkResolver())
+                registered_types.append("mark")
+            except Exception as e:
+                logger.warning(f"MarkResolver registration failed: {e}")
+
+            try:
+                registry.register(TraceResolver())
+                registered_types.append("trace")
+            except Exception as e:
+                logger.warning(f"TraceResolver registration failed: {e}")
+
+            try:
+                registry.register(EvidenceResolver())
+                registered_types.append("evidence")
+            except Exception as e:
+                logger.warning(f"EvidenceResolver registration failed: {e}")
+
+            try:
+                registry.register(ConstitutionalResolver())
+                registered_types.append("constitutional")
+            except Exception as e:
+                logger.warning(f"ConstitutionalResolver registration failed: {e}")
+
+            try:
+                registry.register(CrystalResolver())
+                registered_types.append("crystal")
+            except Exception as e:
+                logger.warning(f"CrystalResolver registration failed: {e}")
 
             return {
                 "status": "ok",

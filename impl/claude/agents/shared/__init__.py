@@ -19,13 +19,6 @@ from agents.shared.ast_utils import (
     extract_imports,
     has_unbounded_recursion,
 )
-from agents.shared.fixtures_integration import (
-    make_sample_catalog_entry,
-    make_sample_contract,
-    make_sample_intent,
-    make_sample_source_code,
-    make_simple_agent_code,
-)
 
 __all__ = [
     # AST utilities
@@ -40,10 +33,4 @@ __all__ = [
     "extract_classes",
     "FunctionInfo",
     "ClassInfo",
-    # Test fixtures
-    "make_sample_intent",
-    "make_sample_contract",
-    "make_sample_source_code",
-    "make_simple_agent_code",
-    "make_sample_catalog_entry",
 ]
