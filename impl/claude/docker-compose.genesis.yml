@@ -1,0 +1,86 @@
+# docker-compose.genesis.yml
+#
+# Genesis-specific Docker Compose configuration for kgents
+#
+# This extends the base docker-compose.yml with genesis-specific settings
+# for the Zero Seed Genesis Protocol bootstrap process.
+#
+# Usage:
+#   docker compose -f docker-compose.genesis.yml up -d
+#   docker compose -f docker-compose.genesis.yml down -v
+#
+# The genesis configuration is identical to the base configuration
+# but is kept separate for:
+#   1. Semantic clarity (this is the genesis bootstrap)
+#   2. Future genesis-specific services (e.g., seeding containers)
+#   3. Different environment variables for genesis vs. production
+#
+# Part of: Zero Seed Genesis Grand Strategy (Phase 0)
+# Version: 1.0
+# Date: 2025-12-25
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: kgents-postgres-genesis
+    environment:
+      POSTGRES_USER: kgents
+      POSTGRES_PASSWORD: kgents
+      POSTGRES_DB: kgents
+      # Genesis-specific environment
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - kgents-postgres-genesis-data:/var/lib/postgresql/data
+      # Future: Mount genesis SQL initialization scripts here
+      # - ./scripts/genesis-init.sql:/docker-entrypoint-initdb.d/01-genesis.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kgents -d kgents"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - kgents-genesis
+    restart: unless-stopped
+
+  # Future services for genesis process:
+  #
+  # genesis-seeder:
+  #   image: kgents-genesis-seeder
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.genesis
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   environment:
+  #     DATABASE_URL: postgresql://kgents:kgents@postgres:5432/kgents
+  #   command: python -m services.zero_seed.seed
+  #   networks:
+  #     - kgents-genesis
+  #
+  # This container would:
+  #   1. Wait for postgres to be healthy
+  #   2. Run database migrations
+  #   3. Seed the Zero Seed at t=0
+  #   4. Create the immutable axioms (A1, A2, G)
+  #   5. Store the design laws
+  #   6. Exit with status code
+
+volumes:
+  kgents-postgres-genesis-data:
+    driver: local
+    # Genesis data is ephemeral by design — reset-world.sh destroys it
+    labels:
+      com.kgents.genesis: "true"
+      com.kgents.ephemeral: "true"
+      com.kgents.description: "Zero Seed Genesis Protocol bootstrap data"
+
+networks:
+  kgents-genesis:
+    driver: bridge
+    labels:
+      com.kgents.genesis: "true"
+      com.kgents.description: "Genesis Protocol network"
