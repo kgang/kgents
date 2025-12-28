@@ -54,6 +54,9 @@ export interface TrailResponse {
 
 /**
  * POST /api/witness/daily/crystallize response
+ *
+ * Backend: protocols/api/daily_lab.py:CrystallizeResponse
+ * Frontend: pilots-web/src/api/witness.ts
  */
 export interface CrystallizeResponse {
   crystal_id?: string;
@@ -63,6 +66,21 @@ export interface CrystallizeResponse {
   disclosure: string;
   compression_honesty?: CompressionHonestyResponse;
   success: boolean;
+  /** Warmth message after crystallization */
+  warmth_response?: string;
+}
+
+/**
+ * GET /api/witness/daily/export response
+ *
+ * Backend: protocols/api/daily_lab.py:ExportResponse
+ * Frontend: pilots-web/src/api/witness.ts
+ */
+export interface ExportResponse {
+  content: string;
+  format: 'markdown' | 'json';
+  date: string;
+  warmth_response: string;
 }
 
 /**
