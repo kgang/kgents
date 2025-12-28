@@ -64,9 +64,7 @@ class Schema(Generic[T]):
     contract: type[T]
     """The frozen dataclass type defining the structure."""
 
-    migrations: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = field(
-        default_factory=dict
-    )
+    migrations: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = field(default_factory=dict)
     """Migration functions. Key is source version (v1->v2 is keyed by 1)."""
 
     def parse(self, data: dict[str, Any]) -> T:
@@ -86,10 +84,7 @@ class Schema(Generic[T]):
             TypeError: If data doesn't match contract signature
         """
         # Filter out metadata fields that aren't part of the contract
-        filtered = {
-            k: v for k, v in data.items()
-            if not k.startswith("_")
-        }
+        filtered = {k: v for k, v in data.items() if not k.startswith("_")}
         return self.contract(**filtered)
 
     def upgrade(self, old_version: int, data: dict[str, Any]) -> dict[str, Any]:
@@ -110,9 +105,7 @@ class Schema(Generic[T]):
             ValueError: If old_version > current version
         """
         if old_version > self.version:
-            raise ValueError(
-                f"Cannot downgrade from v{old_version} to v{self.version}"
-            )
+            raise ValueError(f"Cannot downgrade from v{old_version} to v{self.version}")
 
         if old_version == self.version:
             return data
@@ -143,6 +136,34 @@ class Schema(Generic[T]):
             "_schema": self.name,
             "_version": self.version,
         }
+
+    def serialize(self, value: T) -> dict[str, Any]:
+        """
+        Serialize typed value to dictionary (alias for to_dict).
+
+        Implements Universe Schema protocol.
+
+        Args:
+            value: Typed instance of contract
+
+        Returns:
+            Dictionary with data + metadata
+        """
+        return self.to_dict(value)
+
+    def deserialize(self, data: dict[str, Any]) -> T:
+        """
+        Deserialize dictionary to typed value.
+
+        Implements Universe Schema protocol.
+
+        Args:
+            data: Dictionary with data
+
+        Returns:
+            Typed instance of contract
+        """
+        return self.parse(data)
 
     def can_upgrade(self, old_version: int) -> bool:
         """

@@ -444,6 +444,7 @@ class Universe:
 
         # Check if backend supports schema filtering at SQL level
         import inspect
+
         list_sig = inspect.signature(self._active_backend.list)
         if "schema" in list_sig.parameters:
             list_kwargs["schema"] = q.schema
@@ -464,7 +465,8 @@ class Universe:
                     obj_data = json.loads(datum.content.decode("utf-8"))
                     # Inject datum metadata into context for Crystal lookup
                     # This preserves id and created_at for adapters to use
-                    if "context" in obj_data or hasattr(schema, "contract"):
+                    # Only inject context if the object already has one (don't create new)
+                    if "context" in obj_data:
                         context = obj_data.get("context", {})
                         if isinstance(context, dict):
                             context = {
@@ -479,6 +481,43 @@ class Universe:
             results.append(datum)
 
         return results
+
+    async def query_raw(self, q: Query) -> list[Datum]:
+        """
+        Query stored data and return raw Datums.
+
+        Unlike query(), this returns Datum objects directly, preserving
+        their IDs for deletion or other operations.
+
+        Args:
+            q: Query parameters
+
+        Returns:
+            List of Datum objects matching the query
+        """
+        await self._ensure_initialized()
+        assert self._active_backend is not None
+
+        list_kwargs: dict[str, Any] = {
+            "prefix": q.prefix,
+            "after": q.after,
+            "limit": q.limit,
+        }
+
+        # Check if backend supports schema filtering at SQL level
+        import inspect
+
+        list_sig = inspect.signature(self._active_backend.list)
+        if "schema" in list_sig.parameters:
+            list_kwargs["schema"] = q.schema
+
+        data = await self._active_backend.list(**list_kwargs)
+
+        # Only post-filter if backend doesn't support schema filtering
+        if q.schema and "schema" not in list_sig.parameters:
+            data = [d for d in data if d.metadata.get("schema") == q.schema]
+
+        return data
 
     async def delete(self, id: str) -> bool:
         """
@@ -629,9 +668,7 @@ async def init_universe(
     global _universe
     async with _lock:
         if _universe is None:
-            _universe = Universe(
-                namespace=namespace, preferred_backend=backend, galois=galois
-            )
+            _universe = Universe(namespace=namespace, preferred_backend=backend, galois=galois)
         await _universe._ensure_initialized()
         return _universe
 

@@ -36,7 +36,6 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from agents.d.crystal import Crystal as CrystalWrapper
 from agents.d.schemas.chat import (
     CHAT_CHECKPOINT_SCHEMA,
     CHAT_CRYSTAL_SCHEMA,
@@ -165,9 +164,8 @@ class ChatPersistence:
                 # For now, we'll just overwrite by storing with same session_id
                 pass
 
-        # Store session crystal
-        session_crystal = CrystalWrapper.create(session_crystal_data, CHAT_SESSION_SCHEMA)
-        await self.universe.store(session_crystal)
+        # Store session crystal (use schema name for lookup)
+        await self.universe.store(session_crystal_data, schema_name=CHAT_SESSION_SCHEMA.name)
 
         # Delete old turn crystals
         q_turns = Query(schema="chat.turn", limit=10000)
@@ -191,11 +189,12 @@ class ChatPersistence:
                 evidence_delta_json=None,  # Evidence is session-level
                 confidence=None,
                 started_at=turn.started_at.isoformat(),
-                completed_at=turn.completed_at.isoformat() if turn.completed_at else datetime.now().isoformat(),
+                completed_at=turn.completed_at.isoformat()
+                if turn.completed_at
+                else datetime.now().isoformat(),
             )
 
-            turn_crystal = CrystalWrapper.create(turn_crystal_data, CHAT_TURN_SCHEMA)
-            await self.universe.store(turn_crystal)
+            await self.universe.store(turn_crystal_data, schema_name=CHAT_TURN_SCHEMA.name)
 
         # Store checkpoint crystals
         for ckpt in session.checkpoints:
@@ -208,8 +207,9 @@ class ChatPersistence:
                 created_at=ckpt["timestamp"],
             )
 
-            checkpoint_crystal = CrystalWrapper.create(checkpoint_crystal_data, CHAT_CHECKPOINT_SCHEMA)
-            await self.universe.store(checkpoint_crystal)
+            await self.universe.store(
+                checkpoint_crystal_data, schema_name=CHAT_CHECKPOINT_SCHEMA.name
+            )
 
         logger.debug(f"Saved session {session.id} with {session.turn_count} turns to Universe")
 
@@ -249,8 +249,7 @@ class ChatPersistence:
         all_turns = await self.universe.query(q_turns)
 
         turn_crystals = [
-            c for c in all_turns
-            if isinstance(c, ChatTurnCrystal) and c.session_id == session_id
+            c for c in all_turns if isinstance(c, ChatTurnCrystal) and c.session_id == session_id
         ]
 
         # Sort by turn number
@@ -268,7 +267,9 @@ class ChatPersistence:
                 linearity_tag=LinearityTag(turn_crystal.user_linearity),
                 tools_used=json.loads(turn_crystal.tools_json) if turn_crystal.tools_json else [],
                 started_at=datetime.fromisoformat(turn_crystal.started_at),
-                completed_at=datetime.fromisoformat(turn_crystal.completed_at) if turn_crystal.completed_at else None,
+                completed_at=datetime.fromisoformat(turn_crystal.completed_at)
+                if turn_crystal.completed_at
+                else None,
             )
             turns.append(turn)
 
@@ -277,7 +278,8 @@ class ChatPersistence:
         all_checkpoints = await self.universe.query(q_checkpoints)
 
         checkpoint_crystals = [
-            c for c in all_checkpoints
+            c
+            for c in all_checkpoints
             if isinstance(c, ChatCheckpointCrystal) and c.session_id == session_id
         ]
 
@@ -399,34 +401,45 @@ class ChatPersistence:
         """
         deleted_count = 0
 
+        # Helper to check if datum has matching session_id
+        def has_session_id(datum: Any, target_id: str) -> bool:
+            """Check if a datum's content has matching session_id."""
+            try:
+                content = json.loads(datum.content.decode("utf-8"))
+                return content.get("session_id") == target_id
+            except (json.JSONDecodeError, AttributeError):
+                return False
+
         # Delete session crystals
         q = Query(schema="chat.session", limit=1000)
-        all_sessions = await self.universe.query(q)
-        for crystal_obj in all_sessions:
-            if isinstance(crystal_obj, ChatSessionCrystal) and crystal_obj.session_id == session_id:
-                # Need datum_id to delete - Universe should provide this
-                # For now, we'll mark as deleted_count
+        all_sessions = await self.universe.query_raw(q)
+        for datum in all_sessions:
+            if has_session_id(datum, session_id):
+                await self.universe.delete(datum.id)
                 deleted_count += 1
 
         # Delete turn crystals
         q_turns = Query(schema="chat.turn", limit=10000)
-        all_turns = await self.universe.query(q_turns)
-        for crystal_obj in all_turns:
-            if isinstance(crystal_obj, ChatTurnCrystal) and crystal_obj.session_id == session_id:
+        all_turns = await self.universe.query_raw(q_turns)
+        for datum in all_turns:
+            if has_session_id(datum, session_id):
+                await self.universe.delete(datum.id)
                 deleted_count += 1
 
         # Delete checkpoint crystals
         q_checkpoints = Query(schema="chat.checkpoint", limit=1000)
-        all_checkpoints = await self.universe.query(q_checkpoints)
-        for crystal_obj in all_checkpoints:
-            if isinstance(crystal_obj, ChatCheckpointCrystal) and crystal_obj.session_id == session_id:
+        all_checkpoints = await self.universe.query_raw(q_checkpoints)
+        for datum in all_checkpoints:
+            if has_session_id(datum, session_id):
+                await self.universe.delete(datum.id)
                 deleted_count += 1
 
         # Delete crystal crystals
         q_crystals = Query(schema="chat.crystal", limit=1000)
-        all_session_crystals = await self.universe.query(q_crystals)
-        for crystal_obj in all_session_crystals:
-            if isinstance(crystal_obj, ChatCrystalCrystal) and crystal_obj.session_id == session_id:
+        all_session_crystals = await self.universe.query_raw(q_crystals)
+        for datum in all_session_crystals:
+            if has_session_id(datum, session_id):
+                await self.universe.delete(datum.id)
                 deleted_count += 1
 
         deleted = deleted_count > 0
@@ -470,8 +483,7 @@ class ChatPersistence:
             created_at=datetime.now().isoformat(),
         )
 
-        crystal = CrystalWrapper.create(crystal_data, CHAT_CRYSTAL_SCHEMA)
-        await self.universe.store(crystal)
+        await self.universe.store(crystal_data, schema_name=CHAT_CRYSTAL_SCHEMA.name)
 
         logger.info(f"Saved crystal for session {session_id}")
 

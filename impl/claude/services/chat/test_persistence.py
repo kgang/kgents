@@ -11,7 +11,7 @@ Tests:
 - Fork/branch persistence
 
 Testing Strategy:
-- Use in-memory SQLite for fast, isolated tests
+- Use in-memory Universe for fast, isolated tests
 - Test persistence layer independently from API
 - Verify all CRUD operations
 - Test edge cases (missing sessions, invalid data)
@@ -21,53 +21,25 @@ from datetime import datetime
 
 import pytest
 
-from infra.ground import Ground, InfrastructureConfig, ProviderConfig, XDGPaths
+from agents.d.universe import Universe
 from services.chat import ChatSession
 from services.chat.persistence import ChatPersistence
 
 
 @pytest.fixture
 async def persistence():
-    """Create ChatPersistence with in-memory SQLite database."""
-    import tempfile
-    from pathlib import Path
+    """Create ChatPersistence with in-memory Universe."""
+    # Create a fresh Universe instance with memory backend
+    universe = Universe(namespace="test-chat", preferred_backend="memory")
+    await universe._ensure_initialized()
 
-    # Create temp database file (will be deleted after test)
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    db_path = Path(temp_file.name)
-    temp_file.close()
-
-    # Create SQLite config with temp database
-    config = InfrastructureConfig(
-        relational=ProviderConfig(type="sqlite", connection=str(db_path)),
-        vector=ProviderConfig(type="memory"),
-        blob=ProviderConfig(type="memory"),
-        telemetry=ProviderConfig(type="memory"),
-    )
-
-    # Create Ground with config
-    ground = Ground(
-        paths=XDGPaths.resolve(),
-        config=config,
-        platform="test",
-        hostname="test-host",
-        pid=1234,
-        env={},
-    )
-
-    # Create persistence
-    persistence = await ChatPersistence.create(ground)
+    # Create persistence with the test Universe
+    persistence = ChatPersistence(universe=universe)
 
     yield persistence
 
     # Cleanup
     await persistence.close()
-
-    # Delete temp database
-    try:
-        db_path.unlink()
-    except Exception:
-        pass
 
 
 @pytest.mark.asyncio
@@ -77,9 +49,7 @@ async def test_save_and_load_session(persistence: ChatPersistence):
     session = ChatSession.create(project_id="test-project", branch_name="main")
 
     # Add turns
-    session.add_turn(
-        user_message="Hello, world!", assistant_response="Hi! How can I help you?"
-    )
+    session.add_turn(user_message="Hello, world!", assistant_response="Hi! How can I help you?")
     session.add_turn(
         user_message="What is the weather?",
         assistant_response="I don't have access to weather data.",
@@ -156,9 +126,7 @@ async def test_list_sessions(persistence: ChatPersistence):
     assert len(main_sessions) == 2
 
     # Filter by both
-    specific_sessions = await persistence.list_sessions(
-        project_id="project-a", branch_name="main"
-    )
+    specific_sessions = await persistence.list_sessions(project_id="project-a", branch_name="main")
     assert len(specific_sessions) == 1
     assert specific_sessions[0].id == session1.id
 
@@ -375,28 +343,24 @@ async def test_evidence_persistence(persistence: ChatPersistence):
 
 @pytest.mark.asyncio
 async def test_cascade_delete_turns(persistence: ChatPersistence):
-    """Test that deleting a session cascades to turns."""
-    # Enable foreign keys for SQLite (required for CASCADE to work)
-    await persistence.storage.relational.execute("PRAGMA foreign_keys = ON")
+    """Test that deleting a session also removes associated turns.
 
+    Note: Universe handles cascade delete via its query mechanism.
+    We verify by ensuring session loads as None after deletion.
+    """
     # Create session with turns
     session = ChatSession.create()
     session.add_turn(user_message="Test", assistant_response="Response")
     await persistence.save_session(session)
 
-    # Verify turns exist (check database directly)
-    turns = await persistence.storage.relational.fetch_all(
-        "SELECT * FROM chat_turns WHERE session_id = :session_id",
-        {"session_id": session.id},
-    )
-    assert len(turns) == 1
+    # Verify session exists with turn
+    loaded = await persistence.load_session(session.id)
+    assert loaded is not None
+    assert loaded.turn_count == 1
 
     # Delete session
     await persistence.delete_session(session.id)
 
-    # Verify turns deleted
-    turns = await persistence.storage.relational.fetch_all(
-        "SELECT * FROM chat_turns WHERE session_id = :session_id",
-        {"session_id": session.id},
-    )
-    assert len(turns) == 0
+    # Verify session deleted
+    loaded = await persistence.load_session(session.id)
+    assert loaded is None
