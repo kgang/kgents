@@ -1,15 +1,20 @@
 /**
  * Router Configuration for Pilots Web
  *
- * Routes:
- * - /pilots/daily-lab - Daily Lab pilot (Trail to Crystal)
+ * Active Pilots:
+ * - /pilots/wasm-survivors - WASM Survivors Witnessed Run Lab
+ * - /pilots/sprite-procedural-taste-lab - Sprite Procedural Taste Lab
+ * - / - Redirect to wasm-survivors (current focus)
+ *
+ * Pending Pilots (not yet implemented in pilots-web):
+ * - /pilots/daily-lab - Trail to Crystal Daily Lab
  * - /pilots/zero-seed - Zero Seed Personal Governance Lab
- * - / - Redirect to daily-lab (for now)
+ * - /pilots/disney-portal-planner - Disney Portal Planner
  */
 
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { DailyLabPilot } from '@/pilots/daily-lab';
-import { ZeroSeedLabPilot } from '@/pilots/zero-seed';
+import { WASMSurvivors } from '@/pilots/wasm-survivors';
+import { SpriteTasteLab } from '@/pilots/sprite-procedural-taste-lab';
 
 /**
  * Application router
@@ -17,15 +22,15 @@ import { ZeroSeedLabPilot } from '@/pilots/zero-seed';
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/pilots/daily-lab" replace />,
+    element: <Navigate to="/pilots/wasm-survivors" replace />,
   },
   {
-    path: '/pilots/daily-lab',
-    element: <DailyLabPilot />,
+    path: '/pilots/wasm-survivors',
+    element: <WASMSurvivors />,
   },
   {
-    path: '/pilots/zero-seed',
-    element: <ZeroSeedLabPilot />,
+    path: '/pilots/sprite-procedural-taste-lab',
+    element: <SpriteTasteLab />,
   },
 ]);
 
