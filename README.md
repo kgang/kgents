@@ -6,7 +6,7 @@
 
 ## The Central Idea
 
-Here's something that kept us up at night: when you take a complex thought and break it into pieces, how much gets lost?
+When you take a complex thought and break it into pieces, how much gets lost?
 
 Not lost like "oops, forgot a comma." Lost like meaning that evaporates. Nuance that simplifies away. The thing that made the thought *that thought* instead of some other thought.
 

@@ -278,3 +278,7 @@ impl/claude/plans/_epilogues/
 
 # Playwright test artifacts
 impl/claude/web/test-results/
+
+# Pilot runs: all runs are local-only, manually curate what to commit
+# When you want to preserve a run in git, copy it outside runs/ (e.g., CANONICAL_RUN/)
+pilots/*/runs/
