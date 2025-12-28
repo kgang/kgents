@@ -70,19 +70,24 @@ All pilots follow the [Contract Coherence Protocol](./CONTRACT_COHERENCE.md):
 
 ### Witnessed Regeneration
 
-Pilots are designed to be **dropped and regenerated** from specification. The [Witnessed Regeneration Protocol](../spec/protocols/witnessed-regeneration.md) formalizes this as a 5-stage pipeline:
+Pilots are designed to be **dropped and regenerated** from specification. The protocol formalizes this as a 6-stage pipeline:
 
 ```
-Spec → Archive >> Verify >> Generate >> Validate >> Learn → Spec'
+Spec → Archive >> Audit >> Sanity >> Generate >> Validate >> Learn → Spec'
 ```
 
 | Stage | Purpose | Output |
 |-------|---------|--------|
 | **Archive** | Preserve current state | `runs/run-{N}/impl.archived/` |
-| **Verify** | Check contracts are sound | GO/NO-GO decision |
+| **Audit** | Check contracts are sound | GO/NO-GO decision |
+| **Sanity** | Test API endpoints | PASS/FAIL |
 | **Generate** | Create from spec + contracts | Fresh implementation |
 | **Validate** | Test against qualitative assertions | PASS/FAIL |
 | **Learn** | Crystallize insights | Improved prompts for next run |
+
+**Meta-Prompt** (REQUIRED): [pilots/REGENERATE_META.md](./REGENERATE_META.md)
+
+The meta-prompt is the **single source of truth** for regeneration invocation. It derives from three axioms and composes with pilot-specific context. Always use it.
 
 **Skill Guide**: [docs/skills/witnessed-regeneration.md](../docs/skills/witnessed-regeneration.md)
 

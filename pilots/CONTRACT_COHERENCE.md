@@ -191,6 +191,232 @@ Super-additivity signals contradiction. Contract tests prevent this.
 
 ---
 
+## Horizontal Quality Gates (Added 2025-12-26)
+
+These gates apply to ALL pilots. They were discovered during zero-seed run-001 and are now mandatory:
+
+### HQ-1: Request Model Law
+
+All API endpoints accepting complex inputs MUST use Pydantic request models:
+
+```python
+# ❌ WRONG - bare list parameter causes validation errors to leak as objects
+@router.post("/discover")
+async def discover(items: list[str]):
+    ...
+
+# ✅ RIGHT - Pydantic model properly handles JSON body
+class DiscoverRequest(BaseModel):
+    items: list[str]
+
+@router.post("/discover")
+async def discover(request: DiscoverRequest):
+    ...
+```
+
+**Why**: FastAPI treats bare `list[str]` as expecting the body to BE a list, not an object containing a list. This causes 422 errors with `{type, loc, msg}` format that renders as `[object Object]` in React.
+
+### HQ-2: Error Normalization Law
+
+Frontend MUST normalize all API errors before rendering:
+
+```typescript
+function extractErrorMessage(error: unknown, fallback: string): string {
+  const e = error as Record<string, unknown>;
+
+  // String detail (normal error)
+  if (typeof e?.detail === 'string') return e.detail;
+
+  // Array detail (FastAPI validation errors)
+  if (Array.isArray(e?.detail)) {
+    return e.detail.map(i => i.msg).filter(Boolean).join('; ');
+  }
+
+  return fallback;
+}
+```
+
+**Why**: FastAPI returns validation errors as `{detail: [{type, loc, msg}...]}`. Rendering `error.detail` directly causes "Objects are not valid as a React child" crashes.
+
+### HQ-3: Semantic Baseline Law
+
+Universal human values MUST always be acceptable as axiom candidates:
+
+- "love", "courage", "honesty", "compassion", etc. should never be rejected
+- Even if Galois loss > 0.05, these are pre-approved as "baseline values"
+- Maintain a canonical list in `shared-primitives/src/constants/baseline-values.ts`
+
+**Why**: Gatekeeping universal values creates the anti-pattern of "technical gatekeeping" where the system rejects obviously valid beliefs.
+
+### HQ-4: No Demo Data Law
+
+Pilots MUST be self-contained and fully-functional for first-time users!
+You are not creating an experimental prototype, you are making a production, consumer grade experience!
+
+**Why**: Enforces the building of things wanting building.
+
+### HQ-5: Component Wiring Law (Added 2025-12-26)
+
+Generated components MUST be wired into the component tree:
+
+- A file on disk is NOT a feature until it's integrated
+- Every component must be: imported, rendered, connected to props
+- Stage 3.5 (Wire) explicitly audits this before smoke testing
+- Common failure: component generated but never imported into parent
+
+**Why**: Code files that exist but aren't integrated provide zero value to users.
+
+### HQ-6: Core Loop Smoke Test (Added 2025-12-26)
+
+Smoke tests MUST verify core loop advancement, not just compilation:
+
+- Typecheck passing is NECESSARY but NOT SUFFICIENT
+- Integration tests must simulate actual usage (60+ seconds for games)
+- The test must EXECUTE the core loop and verify state changes
+- For games: waves must advance, enemies must spawn, mechanics must function
+- "Tests pass but game doesn't play" is a FAIL condition
+
+**Why**: Runs 005-008 of wasm-survivors compiled successfully but had broken core loops. Static analysis verifies structure; smoke tests must verify behavior.
+
+---
+
+## Universal Implementation Laws (L-IMPL)
+
+These laws apply to ALL pilots generating TypeScript/JavaScript code. They encode debugging wisdom that prevents predictable failures.
+
+> *"The pattern IS the prevention. The before/after IS the proof."*
+
+### L-IMPL-1: Testable Time
+
+> **All time-based logic MUST use simulated time, not Date.now() or performance.now().**
+
+```typescript
+// ✅ RIGHT - Testable: time advances with simulation
+let gameTime = 0;
+
+update(deltaMs: number) {
+  gameTime += deltaMs;  // Always advance, even during pauses
+
+  if (gameTime - waveStartTime > waveTimeLimit) {
+    advanceWave();
+  }
+}
+
+// ❌ WRONG - Tests will fail: real time doesn't advance during simulation
+update(deltaMs: number) {
+  const now = Date.now();
+
+  if (now - waveStartTime > waveTimeLimit) {
+    advanceWave();  // Never triggers: Date.now() advances ~300ms while simulating 60s
+  }
+}
+```
+
+**Rationale**: Tests simulate 60 seconds of gameplay in ~300ms real time. `Date.now()` doesn't advance proportionally. This bug caused wave progression failures in wasm-survivors run-005 and run-006.
+
+**Detection**: `grep -r "Date.now()\|performance.now()" src/ --include="*.ts"` should return 0 matches in game logic.
+
+**Game Loop Note (Added 2025-12-26)**: For game pilots, simulation time != real time. When integration tests simulate 60 seconds of gameplay, the simulation advances rapidly (e.g., 300ms wall-clock time) while game time advances 60,000ms. Code using `Date.now()` will observe ~300ms passing while expecting 60,000ms. Always pass `deltaMs` as a parameter and accumulate it in a `gameTime` variable. This pattern ensures tests can validate wave progression, enemy spawning, and time-based mechanics by controlling the time parameter directly.
+
+### L-IMPL-2: ES Module Patterns
+
+> **Use ES imports exclusively. No CommonJS. No bare require().**
+
+```typescript
+// ✅ RIGHT - ES modules
+import { GameState } from './types';
+import type { Config } from './config';  // Type-only import
+export function createGame() { ... }
+export default GameEngine;
+
+// ❌ WRONG - CommonJS (will fail in modern bundlers)
+const { GameState } = require('./types');
+module.exports = { createGame };
+module.exports.default = GameEngine;
+```
+
+**Rationale**: Modern bundlers (Vite, esbuild) expect ES modules. CommonJS causes build failures and prevents tree-shaking.
+
+### L-IMPL-3: Exhaustive Exports
+
+> **Every function called cross-file MUST be explicitly exported.**
+
+```typescript
+// utils.ts
+// ✅ RIGHT - Exported, callable from other files
+export function calculateDamage(base: number, multiplier: number): number {
+  return base * multiplier;
+}
+
+// ❌ WRONG - Not exported, invisible to other files
+function calculateDamage(base: number, multiplier: number): number {
+  return base * multiplier;
+}
+```
+
+**Detection**: If `grep -r "calculateDamage" src/` finds usage in multiple files but `grep "export.*calculateDamage"` returns nothing, this law is violated.
+
+### L-IMPL-4: Type-Only Imports
+
+> **Use `import type` for imports only used in type annotations.**
+
+```typescript
+// ✅ RIGHT - Explicit type import, no runtime cost, no unused warnings
+import { type GameState, type PlayerState } from './types';
+import { UPGRADES, createPlayer } from './game';
+
+function update(state: GameState): PlayerState { ... }
+
+// ❌ WRONG - May trigger TS6133 "unused variable" if only used as type
+import { GameState, PlayerState, UPGRADES, createPlayer } from './types';
+```
+
+**Rationale**: Run-005 had 32 unused variable errors, most from type-only imports. Explicit `type` keyword eliminates these at source and improves tree-shaking.
+
+### L-IMPL-5: Test Dependencies
+
+> **Test frameworks MUST have all required dependencies in package.json.**
+
+```json
+{
+  "devDependencies": {
+    "vitest": "^1.1.0",
+    "jsdom": "^24.0.0",   // Required for DOM environment
+    "@testing-library/react": "^14.0.0"  // If testing React
+  }
+}
+```
+
+**Rationale**: Run-005 and run-006 both failed initially with "Cannot find dependency jsdom". This is a predictable requirement that should never be missing.
+
+**Detection**: If `vitest.config.ts` contains `environment: 'jsdom'`, then `jsdom` MUST be in devDependencies.
+
+### L-IMPL-6: No Dynamic Require (Added 2025-12-26)
+
+> **All imports MUST be static ES imports at file top. No dynamic require() in ES module contexts.**
+
+```typescript
+// ✅ RIGHT - Static imports at file top
+import { UPGRADES } from './upgrades';
+import { EnemyType } from './types';
+
+function getUpgrade(id: string) {
+  return UPGRADES.find(u => u.id === id);
+}
+
+// ❌ WRONG - Dynamic require in ES module context
+function getUpgrade(id: string) {
+  const { UPGRADES } = require('./upgrades');  // FAILS at runtime!
+  return UPGRADES.find(u => u.id === id);
+}
+```
+
+**Rationale**: Dynamic require statements in ES module contexts cause runtime failures that static analysis (TypeScript, ESLint) cannot detect. The pattern may work in CommonJS but fails silently in ES modules, causing smoke tests to pass compilation but fail execution. Witnessed in wasm-survivors run-009.
+
+**Detection**: `grep -r "require(" src/ --include="*.ts" --include="*.tsx"` should return 0 matches in ES module projects.
+
+---
+
 ## Anti-Patterns
 
 | Anti-Pattern | Symptom | This Protocol Prevents |
@@ -199,6 +425,12 @@ Super-additivity signals contradiction. Contract tests prevent this.
 | **Runtime discovery** | Crashes in production reveal drift | CI-time verification |
 | **Silent degradation** | Frontend shows blank UI, no error | Invariant assertions |
 | **Copy-paste contracts** | Types duplicated, then diverge | Import from shared source |
+| **Bare list parameters** | FastAPI validation errors leak to React | Request model law (HQ-1) |
+| **Raw error rendering** | "Objects are not valid as React child" | Error normalization (HQ-2) |
+| **Strict value thresholds** | "Love" rejected as non-axiom | Semantic baseline (HQ-3) |
+| **Cold start friction** | Users don't know what to do | Demo data law (HQ-4) |
+| **Dynamic require()** | Runtime module failures in ES context | No dynamic require (L-IMPL-6) |
+| **Typecheck-only validation** | Code compiles but core loop broken | Smoke test core loop simulation |
 
 ---
 
