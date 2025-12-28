@@ -481,7 +481,7 @@ def _create_pilot_laws() -> list[PilotLaw]:
         ),
 
         # =====================================================================
-        # wasm-survivors-witnessed-run-lab
+        # wasm-survivors-game
         # =====================================================================
         PilotLaw(
             schema=LawSchema.COHERENCE_GATE,

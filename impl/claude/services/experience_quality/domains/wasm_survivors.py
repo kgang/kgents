@@ -13,7 +13,7 @@ This algebra defines:
 - Three voices: Adversarial (correct), Creative (bold), Advocate (fun)
 - F1-F10 floor checks (the sacred Fun Floor)
 
-See: pilots/wasm-survivors-witnessed-run-lab/PROTO_SPEC.md
+See: pilots/wasm-survivors-game/PROTO_SPEC.md
 See: spec/theory/domains/wasm-survivors-quality.md
 """
 

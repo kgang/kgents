@@ -5,8 +5,8 @@
  * Both game engine and witness layer verify against these definitions.
  *
  * @layer L4 (Specification)
- * @pilot wasm-survivors-witnessed-run-lab
- * @see pilots/wasm-survivors-witnessed-run-lab/PROTO_SPEC.md
+ * @pilot wasm-survivors-game
+ * @see pilots/wasm-survivors-game/PROTO_SPEC.md
  * @see pilots/CONTRACT_COHERENCE.md
  */
 
@@ -76,17 +76,46 @@ export interface Player extends Entity {
 
 /**
  * Enemy types for spawning and difficulty
+ * DD-24: Added 'spitter' for ranged variety
+ * DD-030-4: Added 'colossal_tide' for metamorphosis
  */
-export type EnemyType = 'basic' | 'fast' | 'tank' | 'boss';
+export type EnemyType = 'basic' | 'fast' | 'tank' | 'boss' | 'spitter' | 'colossal_tide';
+
+/**
+ * Metamorphosis lifecycle states (DD-030-2)
+ * Enemies transition through these states based on survival time:
+ * - normal (0-10s): Standard behavior
+ * - pulsing (10-15s): Visual warning, beginning of metamorphosis pressure
+ * - seeking (15-20s): Actively gravitates toward other pulsing enemies
+ * - combining (20s+ with collision): Merging into Colossal
+ */
+export type PulsingState = 'normal' | 'pulsing' | 'seeking' | 'combining';
+
+/**
+ * Enemy behavior states (DD-21: Pattern-Based Enemy Behaviors)
+ */
+export type EnemyBehaviorState = 'chase' | 'telegraph' | 'attack' | 'recovery';
 
 /**
  * Enemy entity
+ * DD-21: Added behavior state fields for pattern-based attacks
+ * DD-030: Added metamorphosis fields for Run 030
  */
 export interface Enemy extends Entity {
   type: EnemyType;
   damage: number;
   xpValue: number;
   color: string;
+  // DD-21: Behavior state machine (combat)
+  behaviorState?: EnemyBehaviorState;
+  stateStartTime?: number;        // Timestamp when current state began
+  attackDirection?: Vector2;      // Locked direction for charge attacks
+  targetPosition?: Vector2;       // Target for current attack
+  // DD-030: Metamorphosis fields
+  survivalTime?: number;          // Time alive since spawn (accumulator)
+  pulsingState?: PulsingState;    // Metamorphosis lifecycle state
+  seekTarget?: string;            // ID of enemy being sought (seeking state)
+  isLinked?: boolean;             // True if linked to a Colossal (visual only)
 }
 
 /**
@@ -165,6 +194,9 @@ export interface GameState {
   totalEnemiesKilled: number;
   score: number;
   gameTime: number;  // L-IMPL-1: Accumulated game time, NOT Date.now()
+  // DD-030: Metamorphosis tracking
+  hasWitnessedFirstMetamorphosis?: boolean;  // For revelation sequence
+  activeColossals?: string[];                 // IDs of currently active Colossals
 }
 
 /**

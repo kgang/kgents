@@ -21,7 +21,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Configuration - adjust per pilot
-const PILOT_NAME = process.env.PILOT_NAME || 'wasm-survivors';
+const PILOT_NAME = process.env.PILOT_NAME || 'wasm-survivors-game';
 const PLAY_DURATION_MS = parseInt(process.env.PLAY_DURATION || '180000'); // 3 minutes default
 const SCREENSHOT_DIR = path.join(__dirname, '..', 'screenshots');
 

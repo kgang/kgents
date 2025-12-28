@@ -5,7 +5,7 @@
  * Used by PLAYER to objectively assess the Fun Floor requirements.
  *
  * Usage:
- *   PILOT_NAME="wasm-survivors" npx playwright test e2e/latency.spec.ts
+ *   PILOT_NAME="wasm-survivors-game" npx playwright test e2e/latency.spec.ts
  *
  * Metrics measured:
  * - Input latency (keypress to response)
@@ -20,7 +20,7 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PILOT_NAME = process.env.PILOT_NAME || 'wasm-survivors';
+const PILOT_NAME = process.env.PILOT_NAME || 'wasm-survivors-game';
 const PILOT_URL = process.env.PILOT_URL || null; // Direct URL takes precedence
 const RESULTS_DIR = path.join(__dirname, '..', 'test-results', 'latency');
 

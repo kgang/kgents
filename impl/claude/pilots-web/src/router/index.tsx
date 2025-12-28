@@ -2,9 +2,9 @@
  * Router Configuration for Pilots Web
  *
  * Active Pilots:
- * - /pilots/wasm-survivors - WASM Survivors Witnessed Run Lab
+ * - /pilots/wasm-survivors-game - WASM Survivors Game
  * - /pilots/sprite-procedural-taste-lab - Sprite Procedural Taste Lab
- * - / - Redirect to wasm-survivors (current focus)
+ * - / - Redirect to wasm-survivors-game (current focus)
  *
  * Pending Pilots (not yet implemented in pilots-web):
  * - /pilots/daily-lab - Trail to Crystal Daily Lab
@@ -13,7 +13,7 @@
  */
 
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { WASMSurvivors } from '@/pilots/wasm-survivors';
+import { WASMSurvivors } from '@/pilots/wasm-survivors-game';
 import { SpriteTasteLab } from '@/pilots/sprite-procedural-taste-lab';
 
 /**
@@ -22,10 +22,10 @@ import { SpriteTasteLab } from '@/pilots/sprite-procedural-taste-lab';
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/pilots/wasm-survivors" replace />,
+    element: <Navigate to="/pilots/wasm-survivors-game" replace />,
   },
   {
-    path: '/pilots/wasm-survivors',
+    path: '/pilots/wasm-survivors-game',
     element: <WASMSurvivors />,
   },
   {
