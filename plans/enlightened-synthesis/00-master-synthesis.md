@@ -98,7 +98,7 @@ The system as a whole operates at **empirical coherence**. This is the L2 (Value
 |------|-------|--------|----------------|---------------|
 | **Core** | **trail-to-crystal-daily-lab** | Productivity | Actions → Days | FLOW |
 | **Core** | **zero-seed-personal-governance-lab** | Personal Constitution | Reflections → Axioms | SURPRISE |
-| **Domain** | **wasm-survivors-witnessed-run-lab** | Gaming | Microseconds → Runs | FLOW |
+| **Domain** | **wasm-survivors-game** | Gaming | Microseconds → Runs | FLOW |
 | **Domain** | **disney-portal-planner** | Consumer Travel | Hours → Days | WARMTH |
 | **Domain** | **rap-coach-flow-lab** | Creative/Coaching | Takes → Sessions | SURPRISE |
 | **Domain** | **sprite-procedural-taste-lab** | Generative Art | Mutations → Epochs | SURPRISE |

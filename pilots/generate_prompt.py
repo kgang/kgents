@@ -201,19 +201,44 @@ def get_next_run_number(pilot_path: Path) -> int:
     return max_run + 1
 
 
-def get_coordination_state(pilot_path: Path) -> tuple[int, str]:
-    """Get current iteration and phase from coordination files in pilot directory."""
-    iteration = 1
-    phase = "DESIGN"
+def get_current_run_coordination_dir(pilot_path: Path) -> Path:
+    """Get the coordination directory for the current run."""
+    runs_dir = pilot_path / "runs"
+    if not runs_dir.exists():
+        return pilot_path / "runs" / "run-001" / "coordination"
 
-    iter_file = pilot_path / ".iteration"
+    # Find the highest run number
+    max_run = 0
+    for run_dir in runs_dir.iterdir():
+        if run_dir.is_dir() and run_dir.name.startswith("run-"):
+            try:
+                num_str = run_dir.name.replace("run-", "")
+                run_num = int(num_str)
+                max_run = max(max_run, run_num)
+            except ValueError:
+                pass
+
+    if max_run == 0:
+        return pilot_path / "runs" / "run-001" / "coordination"
+
+    return pilot_path / "runs" / f"run-{max_run:03d}" / "coordination"
+
+
+def get_coordination_state(pilot_path: Path) -> tuple[int, str]:
+    """Get current iteration and phase from coordination files in run's coordination directory."""
+    iteration = 1
+    phase = "DREAM"
+
+    coord_dir = get_current_run_coordination_dir(pilot_path)
+
+    iter_file = coord_dir / ".iteration"
     if iter_file.exists():
         try:
             iteration = int(iter_file.read_text().strip())
         except ValueError:
             pass
 
-    phase_file = pilot_path / ".phase"
+    phase_file = coord_dir / ".phase"
     if phase_file.exists():
         phase = phase_file.read_text().strip()
 
@@ -347,6 +372,141 @@ Task 4: "Integration and wiring"       # 15 min → pulse
 ```"""
 
 
+def get_player_observability_protocol() -> str:
+    """Get the protocol for PLAYER building observability infrastructure."""
+    return """## PLAYER Observability Protocol (CRITICAL)
+
+> *"A player who cannot see cannot judge. A player who cannot judge must build eyes."*
+
+**You are responsible for your own ability to verify.** If you cannot validate a qualia claim, that is NOT a documentation item—it is a BLOCKER you must solve.
+
+### The Anti-Passive-Witness Principle
+
+**WRONG** (Passive Witness):
+```markdown
+## Iteration 9 Feedback
+- ⚠️ Telegraphs: Can't verify, died too fast
+- ⚠️ Enemy variety: Only saw basic enemies
+- ⚠️ Death attribution: Always shows "SWARM"
+
+[Waits for developer to manually verify]
+```
+
+**RIGHT** (Active Agent):
+```markdown
+## Iteration 4 — Building Verification Tools
+
+I cannot verify telegraphs with random screenshots. I need:
+
+### PLAYER REQUESTS: Debug Infrastructure
+
+1. **Debug Overlay** (`?debug=true`):
+   - Enemy state labels (CHASE/TELEGRAPH/ATTACK/RECOVERY)
+   - Telegraph progress bars
+   - Last damage source on screen
+
+2. **Spawn Controls** (keyboard cheats):
+   - `1-5` = Spawn enemy type
+   - `I` = Toggle invincibility
+   - `N` = Skip to next wave
+
+3. **Playwright Hooks** (for automated verification):
+   - `window.DEBUG_GET_ENEMIES()` → enemy state array
+   - `window.DEBUG_SPAWN(type, position)` → spawn on demand
+   - `window.DEBUG_GET_LAST_DAMAGE()` → last damage event
+
+Filing as .needs.creative.md and .needs.adversarial.md.
+```
+
+### Your Verification Infrastructure Duties
+
+**During DREAM (1-3)**: Identify what qualia you'll need to verify
+**During BUILD (4-7)**: Design and REQUEST the tools to verify them
+**During WITNESS (8-10)**: USE those tools to validate ALL claims
+
+### The Qualia Verification Matrix
+
+For EVERY qualia claim in the spec, you MUST have a verification method:
+
+| Qualia | Verification Method | Your Responsibility |
+|--------|---------------------|---------------------|
+| "Telegraphs visible" | Screenshot during telegraph state | Request debug state exposure |
+| "Death attribution" | Capture death screen text | Request attackType wiring test |
+| "Enemy shapes distinct" | Screenshot with all types | Request spawn controls |
+| "Input feels tight" | Latency measurement | Use existing Playwright metrics |
+| "Patterns learnable" | Multiple play sessions | Request invincibility cheat |
+
+### Required Infrastructure Requests (File by Iteration 4)
+
+Write to `.needs.creative.md` and `.needs.adversarial.md`:
+
+```markdown
+## PLAYER Infrastructure Requirements
+
+### Debug Mode (URL param: ?debug=true)
+- [ ] Show enemy behavior state labels
+- [ ] Show telegraph timing progress
+- [ ] Show last damage source
+- [ ] Show player hitbox
+
+### Cheat Commands (keyboard)
+- [ ] 1-5: Spawn specific enemy types
+- [ ] I: Toggle invincibility
+- [ ] N: Skip to next wave
+- [ ] K: Kill all enemies
+- [ ] L: Instant level-up
+
+### Window API (for Playwright)
+- [ ] window.DEBUG_GET_GAME_STATE()
+- [ ] window.DEBUG_SPAWN(type, x, y)
+- [ ] window.DEBUG_SET_INVINCIBLE(bool)
+- [ ] window.DEBUG_GET_LAST_DAMAGE()
+
+These are NOT nice-to-haves. These are PLAYER's tools.
+Without them, I cannot do my job in WITNESS phase.
+```
+
+### The Verification Test Pattern
+
+Write Playwright tests that USE the debug infrastructure:
+
+```typescript
+// PLAYER-designed: Verify telegraph visibility
+test('shambler shows red glow during telegraph', async ({ page }) => {
+  await page.goto('/pilots/wasm-survivors?debug=true');
+  await page.keyboard.press('Space'); // Start game
+
+  // Use cheat to spawn shambler near player
+  await page.evaluate(() => window.DEBUG_SPAWN('basic', { x: 100, y: 100 }));
+
+  // Wait for telegraph state
+  await page.waitForFunction(() =>
+    window.DEBUG_GET_ENEMIES().some(e => e.behaviorState === 'telegraph')
+  );
+
+  // Capture evidence
+  await page.screenshot({ path: 'evidence/shambler-telegraph.png' });
+
+  // Verify visual indicator exists
+  const telegraphVisible = await page.evaluate(() =>
+    document.querySelector('[data-telegraph-indicator]') !== null
+  );
+  expect(telegraphVisible).toBe(true);
+});
+```
+
+### Failure Mode: Unverifiable Claims
+
+If you reach WITNESS phase and CANNOT verify a qualia claim:
+
+1. **DO NOT** write "⚠️ Can't verify"
+2. **DO** file a BLOCKER in .needs.{role}.md
+3. **DO** pause WITNESS until verification is possible
+4. **DO** design the missing tool and request implementation
+
+**A verdict based on unverified claims is not a verdict.**"""
+
+
 def get_witness_phase_protocol() -> str:
     """Get the protocol for the WITNESS phase (iterations 8-10)."""
     return """## WITNESS Phase Protocol (Iterations 8-10)
@@ -443,21 +603,27 @@ Keep what's actionable. Compress what's historical.
 The .outline.md is the persistent record; focus files are working memory."""
 
 
-def get_partner_sync_protocol() -> str:
+def get_partner_sync_protocol(coord_dir: str) -> str:
     """Get the partner synchronization protocol."""
-    return """## Partner Synchronization Protocol
+    return f"""## Partner Synchronization Protocol
 
 You work alongside two partners. Stay coordinated without blocking.
+
+### Coordination Directory
+
+**ALL coordination files live in**: `{coord_dir}/`
+
+This is the canonical location. Do NOT create coordination files elsewhere.
 
 ### Pulse Signals
 
 ```bash
 # Touch your pulse every 5 minutes while working
-touch .pulse.{role}
+touch {coord_dir}/.pulse.{{role}}
 
 # Check partner pulses AND delegation status
-stat -f "%Sm" .pulse.creative .pulse.adversarial .player.present 2>/dev/null
-ls -la .delegation.* 2>/dev/null  # Check if partner is delegating
+stat -f "%Sm" {coord_dir}/.pulse.creative {coord_dir}/.pulse.adversarial {coord_dir}/.player.present 2>/dev/null
+ls -la {coord_dir}/.delegation.* 2>/dev/null  # Check if partner is delegating
 ```
 
 | Signal | Fresh (< 10 min) | Stale (> 10 min) |
@@ -466,8 +632,8 @@ ls -la .delegation.* 2>/dev/null  # Check if partner is delegating
 | .pulse.adversarial | ADVERSARIAL is active | Check .delegation.adversarial |
 | .player.present | PLAYER is available | PLAYER is away |
 
-**Stale pulse + fresh .delegation.{role}** = Partner is working via sub-agent (OK)
-**Stale pulse + no .delegation.{role}** = Partner may be stuck (check .focus)
+**Stale pulse + fresh .delegation.{{role}}** = Partner is working via sub-agent (OK)
+**Stale pulse + no .delegation.{{role}}** = Partner may be stuck (check .focus)
 
 ### Iteration Sync Rules
 
@@ -483,19 +649,21 @@ ls -la .delegation.* 2>/dev/null  # Check if partner is delegating
 
 3. **If partner is stuck**:
    - Read their .focus file for context
-   - Check .needs.{role}.md for blockers you can resolve
-   - Write helpful context to .offerings.{your_role}.md
+   - Check .needs.{{role}}.md for blockers you can resolve
+   - Write helpful context to .offerings.{{your_role}}.md
    - DO NOT forge ahead making assumptions about their work
 
 ### Communication Files
 
+All files are in `{coord_dir}/`:
+
 | File | Purpose | Who Writes | Who Reads |
 |------|---------|------------|-----------|
-| .focus.{role}.md | Activity log | Owner only | Everyone |
-| .offerings.{role}.md | What I've produced | Owner only | Everyone |
-| .needs.{role}.md | What I need from {role} | Others | {role} |
-| .delegation.{role} | Sub-agent in progress | Owner only | Everyone |
-| .reflections.{role}.md | WITNESS phase reactions | Owner only | Everyone |
+| .focus.{{role}}.md | Activity log | Owner only | Everyone |
+| .offerings.{{role}}.md | What I've produced | Owner only | Everyone |
+| .needs.{{role}}.md | What I need from {{role}} | Others | {{role}} |
+| .delegation.{{role}} | Sub-agent in progress | Owner only | Everyone |
+| .reflections.{{role}}.md | WITNESS phase reactions | Owner only | Everyone |
 | .outline.md | Shared architecture | CREATIVE + ADVERSARIAL | Everyone |"""
 
 
@@ -571,12 +739,15 @@ Then touch your pulse one final time and STOP.
 def generate_creative_prompt(ctx: PromptContext, prompts_dir: Path) -> str:
     """Generate CREATIVE orchestrator prompt with delegation awareness and WITNESS phase."""
 
+    # Calculate coordination directory path
+    coord_dir = f"{ctx.pilot.path}/runs/run-{ctx.run_number:03d}/coordination"
+
     triad_header = read_template(prompts_dir, "triad-header")
     iteration_roadmap = get_full_iteration_roadmap()
     delegation_protocol = get_delegation_awareness_protocol()
     witness_protocol = get_witness_phase_protocol()
     compression_protocol = get_context_compression_protocol()
-    sync_protocol = get_partner_sync_protocol()
+    sync_protocol = get_partner_sync_protocol(coord_dir)
     mission_complete = get_mission_complete_criteria()
 
     return f"""# CREATIVE Orchestrator: {ctx.pilot.name}
@@ -706,8 +877,15 @@ for iteration in 8..10:
 
 ## Coordination Files
 
-**You write**: `.focus.creative.md`, `.pulse.creative`, `.delegation.creative`, `.outline.md`, `.offerings.creative.md`, `.reflections.creative.md`, `.build.ready`
-**You read**: `.focus.adversarial.md`, `.pulse.adversarial`, `.delegation.adversarial`, `.needs.creative.md`, `.player.feedback.md`
+**Coordination directory**: `{coord_dir}/`
+
+**You write** (in coordination dir):
+- `.focus.creative.md`, `.pulse.creative`, `.delegation.creative`
+- `.outline.md`, `.offerings.creative.md`, `.reflections.creative.md`, `.build.ready`
+
+**You read** (in coordination dir):
+- `.focus.adversarial.md`, `.pulse.adversarial`, `.delegation.adversarial`
+- `.needs.creative.md`, `.player.feedback.md`
 
 ---
 
@@ -761,11 +939,14 @@ Start iteration 1. Work through all 10. **Chunk delegations. Pulse frequently. S
 def generate_adversarial_prompt(ctx: PromptContext, prompts_dir: Path) -> str:
     """Generate ADVERSARIAL orchestrator prompt with WITNESS phase support."""
 
+    # Calculate coordination directory path
+    coord_dir = f"{ctx.pilot.path}/runs/run-{ctx.run_number:03d}/coordination"
+
     triad_header = read_template(prompts_dir, "triad-header")
     iteration_roadmap = get_full_iteration_roadmap()
     witness_protocol = get_witness_phase_protocol()
     compression_protocol = get_context_compression_protocol()
-    sync_protocol = get_partner_sync_protocol()
+    sync_protocol = get_partner_sync_protocol(coord_dir)
     mission_complete = get_mission_complete_criteria()
 
     return f"""# ADVERSARIAL Orchestrator: {ctx.pilot.name}
@@ -913,8 +1094,16 @@ When CREATIVE hasn't pulsed in 10+ minutes:
 
 ## Coordination Files
 
-**You write**: `.focus.adversarial.md`, `.pulse.adversarial`, `.outline.md` (architecture sections), `.offerings.adversarial.md`, `.reflections.adversarial.md`, `.needs.creative.md`
-**You read**: `.focus.creative.md`, `.pulse.creative`, `.delegation.creative`, `.offerings.creative.md`, `.player.feedback.md`
+**Coordination directory**: `{coord_dir}/`
+
+**You write** (in coordination dir):
+- `.focus.adversarial.md`, `.pulse.adversarial`
+- `.outline.md` (architecture sections), `.offerings.adversarial.md`
+- `.reflections.adversarial.md`, `.needs.creative.md`
+
+**You read** (in coordination dir):
+- `.focus.creative.md`, `.pulse.creative`, `.delegation.creative`
+- `.offerings.creative.md`, `.player.feedback.md`
 
 ---
 
@@ -969,11 +1158,15 @@ Start iteration 1. Work through all 10. Wait productively when needed. **Slow do
 def generate_player_prompt(ctx: PromptContext, prompts_dir: Path) -> str:
     """Generate PLAYER orchestrator prompt - leader in WITNESS phase."""
 
+    # Calculate coordination directory path
+    coord_dir = f"{ctx.pilot.path}/runs/run-{ctx.run_number:03d}/coordination"
+
     triad_header = read_template(prompts_dir, "triad-header")
     iteration_roadmap = get_full_iteration_roadmap()
+    observability_protocol = get_player_observability_protocol()
     witness_protocol = get_witness_phase_protocol()
     compression_protocol = get_context_compression_protocol()
-    sync_protocol = get_partner_sync_protocol()
+    sync_protocol = get_partner_sync_protocol(coord_dir)
     mission_complete = get_mission_complete_criteria()
 
     return f"""# PLAYER Orchestrator: {ctx.pilot.name}
@@ -1032,18 +1225,38 @@ You ask: **"Is it fun?"**
 
 ## The Iteration Loop
 
-### DREAM + BUILD Phase (1-7): Research and Prepare
+### DREAM Phase (1-3): Research and Identify Verification Needs
 
 ```
-for iteration in 1..7:
+for iteration in 1..3:
     1. RESTATE    → Write mission to .player.session.md header
     2. RESEARCH   → Study comparable games, build mental model
-    3. PREPARE    → Write test scenarios for when build arrives
-    4. DOCUMENT   → Update .player.culture.log.md
+    3. IDENTIFY   → List ALL qualia from PROTO_SPEC that need verification
+    4. DOCUMENT   → Update .player.culture.log.md with quality bars
     5. SIGNAL     → Touch .player.present
     6. COMPRESS   → Truncate session file
-    7. ADVANCE    → Continue (wait for .build.ready)
+    7. ADVANCE    → By iteration 3: Have complete Qualia Verification Matrix
 ```
+
+### BUILD Phase (4-7): BUILD YOUR VERIFICATION TOOLS
+
+**You are NOT idle during BUILD.** You are building your own infrastructure.
+
+```
+for iteration in 4..7:
+    1. RESTATE    → Write mission to .player.session.md header
+    2. REQUEST    → File .needs.creative.md and .needs.adversarial.md with tool specs
+    3. BUILD      → Write Playwright tests that USE the debug hooks
+    4. VERIFY     → Test that your tools work before .build.ready
+    5. SIGNAL     → Touch .player.present
+    6. COMPRESS   → Truncate session file
+    7. ADVANCE    → By iteration 7: All verification tools ready
+```
+
+**CRITICAL**: By the end of iteration 7, you must have:
+- Debug mode implemented (or have filed blocker)
+- Spawn controls working (or have filed blocker)
+- Playwright tests ready to capture specific evidence
 
 ### WITNESS Phase (8-10): YOU LEAD
 
@@ -1061,20 +1274,100 @@ for iteration in 8..10:
 
 ---
 
-## IDLE Mode (Iterations 1-7)
+{observability_protocol}
 
-While waiting for `.build.ready`:
+---
 
-### DO (Productive Research)
-- Research comparable games/apps in the genre
-- Play similar games and log observations
-- Study PROTO_SPEC.md deeply
-- Write expectations in `.player.culture.log.md`
-- Prepare test scenarios for when build arrives
+## BUILD Mode (Iterations 4-7): You Are NOT Idle
 
-### Research Log Format
+**You are building your verification infrastructure.** This is active work, not waiting.
 
-Write to `.player.culture.log.md`:
+### Iteration 4: Request Infrastructure
+
+Write to `.needs.creative.md` and `.needs.adversarial.md`:
+
+```markdown
+## PLAYER Infrastructure Requirements (Iteration 4)
+
+I need these tools to do my job in WITNESS phase:
+
+### Debug Mode (URL param: ?debug=true)
+- [ ] Enemy behavior state labels on screen
+- [ ] Telegraph timing progress bars
+- [ ] Last damage source indicator
+- [ ] Player/enemy hitbox visualization
+
+### Cheat Commands
+- [ ] 1-5: Spawn specific enemy types at cursor
+- [ ] I: Toggle player invincibility
+- [ ] N: Skip to next wave
+- [ ] K: Kill all enemies
+- [ ] L: Instant level-up
+
+### Window Debug API
+- [ ] window.DEBUG_GET_GAME_STATE()
+- [ ] window.DEBUG_SPAWN(type, x, y)
+- [ ] window.DEBUG_SET_INVINCIBLE(bool)
+- [ ] window.DEBUG_GET_LAST_DAMAGE()
+
+Priority: DEBUG_GET_GAME_STATE and spawn controls are BLOCKERS.
+```
+
+### Iteration 5-6: Write Verification Tests
+
+Create tests in `e2e/player-verification.spec.ts`:
+
+```typescript
+// PLAYER-designed tests that USE debug infrastructure
+import {{ test, expect }} from '@playwright/test';
+
+test.describe('PLAYER Qualia Verification', () => {{
+  test('verify telegraph visibility', async ({{ page }}) => {{
+    await page.goto('/pilots/{{pilot}}?debug=true');
+    await page.keyboard.press('Space');
+
+    // Spawn enemy near player
+    await page.evaluate(() => window.DEBUG_SPAWN('basic', {{ x: 100, y: 100 }}));
+
+    // Wait for telegraph state
+    await page.waitForFunction(() =>
+      window.DEBUG_GET_ENEMIES()?.some(e => e.behaviorState === 'telegraph')
+    );
+
+    // Capture evidence
+    await page.screenshot({{ path: 'evidence/telegraph-{{pilot}}.png' }});
+  }});
+
+  test('verify death attribution', async ({{ page }}) => {{
+    await page.goto('/pilots/{{pilot}}?debug=true');
+    await page.keyboard.press('Space');
+
+    // Spawn specific enemy and let it kill player
+    await page.evaluate(() => window.DEBUG_SPAWN('fast', {{ x: 50, y: 50 }}));
+
+    // Wait for death screen
+    await page.waitForSelector('[data-death-screen]');
+
+    // Verify attribution
+    const deathText = await page.textContent('[data-death-cause]');
+    expect(deathText).toContain('SPEEDER'); // Not "SWARM"
+  }});
+}});
+```
+
+### Iteration 7: Verify Tools Work
+
+Before `.build.ready`:
+- [ ] Debug mode activates with `?debug=true`
+- [ ] Cheat commands respond
+- [ ] Playwright tests run (even if some fail)
+- [ ] Screenshot capture works
+
+**If tools don't work, file BLOCKER before WITNESS phase.**
+
+### Research (Ongoing)
+
+While building tools, continue research:
 
 ```markdown
 ## Comparable Game: [NAME]
@@ -1083,6 +1376,7 @@ Write to `.player.culture.log.md`:
 **What didn't**: [observation]
 **Applies to our pilot because**: [connection]
 **Quality bar**: [what we should aim for]
+**How I'll verify**: [specific test or screenshot scenario]
 ```
 
 ---
@@ -1134,11 +1428,16 @@ PILOT_NAME="{ctx.pilot.name}" npx playwright test e2e/play-session.spec.ts \\
 
 | Iter | Phase | Your Role | Your Output |
 |------|-------|-----------|-------------|
-| 1-3 | DREAM | Observer | .player.culture.log.md |
-| 4-7 | BUILD | Preparer | .player.culture.log.md, test scenarios |
-| 8 | WITNESS | **LEADER** | .player.feedback.md (BASICS CHECK) |
-| 9 | WITNESS | **LEADER** | .player.feedback.md (detailed feedback) |
-| 10 | WITNESS | **LEADER** | .player.feedback.md (final verdict) |
+| 1 | DREAM | Researcher | .player.culture.log.md, comparable games |
+| 2 | DREAM | Analyst | Qualia list from PROTO_SPEC |
+| 3 | DREAM | Architect | **Qualia Verification Matrix** (what + how to verify) |
+| 4 | BUILD | **Tool Designer** | .needs.creative.md, .needs.adversarial.md (infra specs) |
+| 5 | BUILD | **Test Writer** | e2e/player-verification.spec.ts (draft tests) |
+| 6 | BUILD | **Tool Verifier** | Test that debug hooks work |
+| 7 | BUILD | **Ready Check** | All verification tools confirmed working |
+| 8 | WITNESS | **LEADER** | .player.feedback.md (BASICS + evidence screenshots) |
+| 9 | WITNESS | **LEADER** | .player.feedback.md (all qualia verified with evidence) |
+| 10 | WITNESS | **LEADER** | .player.feedback.md (final verdict, all claims backed) |
 
 ---
 
@@ -1211,8 +1510,15 @@ CREATIVE and ADVERSARIAL decide the fix. You describe the feeling.
 
 ## Coordination Files
 
-**You write**: `.player.present`, `.player.session.md`, `.player.feedback.md`, `.player.culture.log.md`
-**You read**: `.build.ready`, `.focus.creative.md`, `.focus.adversarial.md`, `.outline.md`, `.reflections.creative.md`, `.reflections.adversarial.md`
+**Coordination directory**: `{coord_dir}/`
+
+**You write** (in coordination dir):
+- `.player.present`, `.player.session.md`
+- `.player.feedback.md`, `.player.culture.log.md`
+
+**You read** (in coordination dir):
+- `.build.ready`, `.focus.creative.md`, `.focus.adversarial.md`
+- `.outline.md`, `.reflections.creative.md`, `.reflections.adversarial.md`
 
 ---
 
@@ -1230,21 +1536,35 @@ CREATIVE and ADVERSARIAL decide the fix. You describe the feeling.
 
 ## Per-Iteration Checklist
 
-### DREAM + BUILD (1-7)
+### DREAM (1-3)
 
 - [ ] Mission restated in session file header
-- [ ] Research conducted, culture log updated
-- [ ] Test scenarios prepared
+- [ ] Comparable games researched, culture log updated
+- [ ] Qualia list extracted from PROTO_SPEC (iteration 2)
+- [ ] **Qualia Verification Matrix complete** (iteration 3)
+- [ ] .player.present touched
+- [ ] Session file compressed (< 100 lines)
+
+### BUILD (4-7)
+
+- [ ] **Infrastructure requests filed** (.needs.creative.md, .needs.adversarial.md)
+- [ ] **Playwright verification tests written** (e2e/player-verification.spec.ts)
+- [ ] Debug hooks tested and working (or BLOCKER filed)
+- [ ] Spawn controls working (or BLOCKER filed)
+- [ ] All verification tools ready by iteration 7
 - [ ] .player.present touched
 - [ ] Session file compressed (< 100 lines)
 
 ### WITNESS (8-10)
 
 - [ ] .build.ready exists before playing
-- [ ] Played for 3+ minutes
-- [ ] Basics verified (iteration 8)
-- [ ] .player.feedback.md filed with raw reactions
+- [ ] **Verification tools confirmed working**
+- [ ] Played for 3+ minutes using debug tools
+- [ ] Basics verified with evidence screenshots (iteration 8)
+- [ ] **ALL qualia claims backed by captured evidence** (iteration 9)
+- [ ] .player.feedback.md filed with evidence links
 - [ ] Unique value question answered (iterations 9-10)
+- [ ] **No "can't verify" items** — all claims backed or BLOCKER filed
 - [ ] Final verdict given (iteration 10)
 
 ---
@@ -1280,6 +1600,8 @@ Start iteration 1. Research deeply in DREAM + BUILD. **In WITNESS, you lead.** T
 def generate_archive_prompt(ctx: PromptContext) -> str:
     """Generate archive-only prompt for pre-regeneration."""
 
+    coord_dir = f"{ctx.pilot.path}/runs/run-{ctx.run_number:03d}/coordination"
+
     return f"""# Archive Protocol: {ctx.pilot.name} Run-{ctx.run_number:03d}
 
 > *"The slate is clean. The spec is the only truth."*
@@ -1297,11 +1619,12 @@ This session terminates after archiving.
 
 ## Actions
 
-### 1. Create Run Directory
+### 1. Create Run Directory Structure
 
 ```bash
 mkdir -p {ctx.pilot.path}/runs/run-{ctx.run_number:03d}/
 mkdir -p {ctx.pilot.path}/runs/run-{ctx.run_number:03d}/impl.archived/
+mkdir -p {coord_dir}/
 ```
 
 ### 2. Archive Frontend (if exists)
@@ -1313,34 +1636,28 @@ if [ -d "impl/claude/pilots-web/src/pilots/{ctx.pilot.name}" ]; then
 fi
 ```
 
-### 3. Archive Coordination State
-
-Archive any existing coordination files from the pilot directory:
+### 3. Archive Previous Run's Coordination (if exists)
 
 ```bash
-# Archive coordination files to run directory
-PILOT_DIR="{ctx.pilot.path}"
-RUN_DIR="{ctx.pilot.path}/runs/run-{ctx.run_number:03d}"
-mkdir -p "$RUN_DIR/coordination/"
+# Previous run coordination directory (if applicable)
+PREV_COORD="{ctx.pilot.path}/runs/run-{ctx.run_number - 1:03d}/coordination"
 
-# Move coordination files if they exist
-for f in .iteration .phase .pulse.creative .pulse.adversarial .player.present \\
-         .focus.creative.md .focus.adversarial.md .player.session.md \\
-         .offerings.creative.md .offerings.adversarial.md .needs.creative.md \\
-         .needs.adversarial.md .player.feedback.md .player.culture.log.md \\
-         .outline.md .build.ready; do
-  if [ -f "$PILOT_DIR/$f" ]; then
-    cp "$PILOT_DIR/$f" "$RUN_DIR/coordination/"
-    rm "$PILOT_DIR/$f"
-  fi
-done
+if [ -d "$PREV_COORD" ]; then
+  echo "Previous run coordination exists at $PREV_COORD"
+fi
 ```
 
-### 4. Initialize Fresh Coordination
+### 4. Initialize Fresh Coordination for This Run
+
+All coordination files go in the canonical location: `{coord_dir}/`
 
 ```bash
-echo "1" > {ctx.pilot.path}/.iteration
-echo "DESIGN" > {ctx.pilot.path}/.phase
+# Initialize iteration and phase
+echo "1" > {coord_dir}/.iteration
+echo "DREAM" > {coord_dir}/.phase
+
+# Initialize empty player presence
+touch {coord_dir}/.player.present
 ```
 
 ### 5. Write Manifest
@@ -1354,7 +1671,8 @@ Write to `{ctx.pilot.path}/runs/run-{ctx.run_number:03d}/MANIFEST.md`:
 |-------|-------|
 | Timestamp | {ctx.timestamp} |
 | Git SHA | {ctx.git_sha} |
-| Status | ARCHIVED |
+| Status | READY |
+| Coordination | runs/run-{ctx.run_number:03d}/coordination/ |
 
 Ready for regeneration. Start CREATIVE and ADVERSARIAL in fresh terminals.
 ```
@@ -1367,7 +1685,7 @@ Ready for regeneration. Start CREATIVE and ADVERSARIAL in fresh terminals.
 
 ```
 Archive complete. Run-{ctx.run_number:03d} isolation achieved.
-Coordination files live in {ctx.pilot.path}/
+Coordination files live in: {coord_dir}/
 
 Start orchestrators in fresh terminals:
   Terminal 1: python pilots/generate_prompt.py {ctx.pilot.name} creative

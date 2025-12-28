@@ -164,7 +164,7 @@ If Week 1 fails:
 
 Galois loss API works, validated through wasm-survivors drift detection scenario.
 
-### Pilot Context: wasm-survivors-witnessed-run-lab
+### Pilot Context: wasm-survivors-game
 
 From proto-spec:
 - Galois loss is the coherence metric for build drift and chaotic deviation

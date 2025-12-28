@@ -125,7 +125,7 @@ If this is true, we have the first principled coherence metric for agent systems
 │ trail-to-crystal-daily-lab  ──────────────────────────────────────────────▶ │
 │   (Proves: Constitution as Reward, Galois Loss, K-Block Monad)              │
 │                                                                             │
-│ wasm-survivors-witnessed-run-lab  ────────────────────────────────────────▶ │
+│ wasm-survivors-game  ────────────────────────────────────────────────────▶ │
 │   (Proves: Real-time Galois Loss, Heterarchical Leadership)                 │
 │                                                                             │
 │ disney-portal-planner  ───────────────────────────────────────────────────▶ │

@@ -1,26 +1,26 @@
 # WASM Survivors Quality Algebra
 
-> *"The run is the proof. The build is the claim. The ghost is the road not taken."*
+> *"The run is the proof. The build is the claim. The hive is the witness. The ghost is the road not taken."*
 
-**Version**: 1.0
+**Version**: 2.0 (Enlightened Edition)
 **Status**: Draft
 **Date**: 2025-12-27
 **Parent**: `spec/theory/experience-quality-operad.md`
-**Pilot**: `pilots/wasm-survivors-witnessed-run-lab/PROTO_SPEC.md`
+**Pilot**: `pilots/wasm-survivors-game/PROTO_SPEC.md`
 
 ---
 
 ## Abstract
 
-This document defines the **WASM Survivors Quality Algebra** — a domain-specific instantiation of the Experience Quality Operad for the WASM Survivors game. It maps the abstract Tetrad (Contrast, Arc, Voice, Floor) to concrete game mechanics and measurements.
+This document defines the **WASM Survivors Quality Algebra** — a domain-specific instantiation of the Experience Quality Operad for the WASM Survivors game (Enlightened Edition). It maps the abstract Tetrad (Contrast, Arc, Voice, Floor) to concrete game mechanics and measurements, including the hive mind metamorphosis system.
 
 ---
 
-## Part I: Contrast Dimensions (C1-C7)
+## Part I: Contrast Dimensions (C1-C10)
 
 ### Definition
 
-WASM Survivors contrast is measured across seven dimensions, each tracking variance over time:
+WASM Survivors contrast is measured across ten dimensions (seven core + three hive-specific), each tracking variance over time:
 
 ```python
 WASM_CONTRAST_DIMS = (
@@ -51,7 +51,7 @@ WASM_CONTRAST_DIMS = (
     ContrastDimension(
         name="anticipation",
         description="C5: Tension oscillation (calm <-> dread)",
-        measurement_hint="Track silence_duration before boss/elite",
+        measurement_hint="Track silence_duration before boss/elite/colossal",
         curve_key="anticipation_curve",
     ),
     ContrastDimension(
@@ -65,6 +65,25 @@ WASM_CONTRAST_DIMS = (
         description="C7: Choice oscillation (exploration <-> commitment)",
         measurement_hint="Track build_diversity_index over waves",
         curve_key="identity_curve",
+    ),
+    # NEW: Hive-specific contrast dimensions (C8-C10)
+    ContrastDimension(
+        name="metamorphosis_pressure",
+        description="C8: Urgency oscillation (safe <-> imminent metamorphosis)",
+        measurement_hint="Track max(enemy_survival_time) / metamorphosis_threshold",
+        curve_key="metamorphosis_pressure_curve",
+    ),
+    ContrastDimension(
+        name="hive_intelligence",
+        description="C9: Adaptation oscillation (naive hive <-> adapted hive)",
+        measurement_hint="Track hive_adaptation_score over time",
+        curve_key="hive_intelligence_curve",
+    ),
+    ContrastDimension(
+        name="colossal_threat",
+        description="C10: Boss oscillation (no colossals <-> colossal active)",
+        measurement_hint="Track colossal_count * colossal_health_fraction",
+        curve_key="colossal_threat_curve",
     ),
 )
 ```
@@ -109,7 +128,7 @@ CONTRAST_TARGET = 0.6  # Ideal contrast level
 
 ### Definition
 
-WASM Survivors uses the standard five-phase emotional arc:
+WASM Survivors uses an expanded seven-phase emotional arc (five standard + two hive-specific):
 
 ```python
 WASM_ARC_PHASES = (
@@ -124,14 +143,24 @@ WASM_ARC_PHASES = (
         triggers=("kill_streak > 10", "combo_active", "health > 0.5"),
     ),
     PhaseDefinition(
+        name="revelation",  # NEW: Hive revelation moment
+        description="'WHAT WAS THAT?' — First metamorphosis witnessed",
+        triggers=("first_metamorphosis_witnessed", "wave >= 2"),
+    ),
+    PhaseDefinition(
         name="crisis",
         description="'Oh no, maybe not' — Tension peak",
-        triggers=("health < 0.3", "surrounded", "boss_active"),
+        triggers=("health < 0.3", "surrounded", "colossal_active"),
+    ),
+    PhaseDefinition(
+        name="metamorphosis_dread",  # NEW: Pre-metamorphosis tension
+        description="'They're about to combine...' — Pulsing enemies threaten",
+        triggers=("pulsing_enemy_count > 2", "max_enemy_survival > 15s"),
     ),
     PhaseDefinition(
         name="triumph",
         description="'I DID IT!' — Victory moment",
-        triggers=("boss_defeated", "wave_survived_at_critical"),
+        triggers=("colossal_defeated", "wave_survived_at_critical"),
     ),
     PhaseDefinition(
         name="grief",
@@ -141,13 +170,19 @@ WASM_ARC_PHASES = (
 )
 
 WASM_ARC_TRANSITIONS = (
-    ("hope", "flow"),      # Natural progression
-    ("flow", "crisis"),    # Challenge ramp
-    ("crisis", "triumph"), # Successful survival
-    ("crisis", "grief"),   # Death
-    ("triumph", "hope"),   # Reset for next challenge
-    ("hope", "crisis"),    # Sudden threat (boss spawn)
-    ("flow", "hope"),      # Lull after intensity
+    ("hope", "flow"),              # Natural progression
+    ("hope", "revelation"),        # First metamorphosis witnessed
+    ("flow", "crisis"),            # Challenge ramp
+    ("flow", "metamorphosis_dread"), # Pulsing enemies accumulate
+    ("revelation", "flow"),        # Understanding gained, back to zone
+    ("revelation", "crisis"),      # First metamorphosis + immediate danger
+    ("metamorphosis_dread", "crisis"), # Metamorphosis happens
+    ("metamorphosis_dread", "flow"),   # Successfully prevented
+    ("crisis", "triumph"),         # Successful survival
+    ("crisis", "grief"),           # Death
+    ("triumph", "hope"),           # Reset for next challenge
+    ("hope", "crisis"),            # Sudden threat (colossal spawn)
+    ("flow", "hope"),              # Lull after intensity
 )
 ```
 
@@ -158,22 +193,34 @@ def detect_phase(game_state: GameState) -> EmotionalPhase:
     """
     Classify current game state into emotional phase.
 
-    Priority: grief > crisis > triumph > flow > hope
+    Priority: grief > crisis > metamorphosis_dread > revelation > triumph > flow > hope
     """
     if game_state.is_dead:
         return EmotionalPhase.GRIEF
 
-    if game_state.boss_just_defeated:
+    if game_state.colossal_just_defeated:
         return EmotionalPhase.TRIUMPH
 
-    # Crisis detection
+    # Crisis detection (includes colossal active)
     is_crisis = (
         game_state.health_fraction < 0.3
         or game_state.threat_count > 20
-        or game_state.boss_active
+        or game_state.colossal_active
     )
     if is_crisis:
         return EmotionalPhase.CRISIS
+
+    # Metamorphosis dread: pulsing enemies accumulating
+    is_metamorphosis_dread = (
+        game_state.pulsing_enemy_count > 2
+        or game_state.max_enemy_survival_time > 15.0
+    )
+    if is_metamorphosis_dread:
+        return EmotionalPhase.METAMORPHOSIS_DREAD
+
+    # Revelation: first metamorphosis witnessed this run
+    if game_state.first_metamorphosis_witnessed and not game_state.revelation_processed:
+        return EmotionalPhase.REVELATION
 
     # Flow detection
     is_flow = (
@@ -257,14 +304,15 @@ def check_adversarial(run: RunTrace, spec: Spec) -> VoiceVerdict:
 
 ---
 
-## Part IV: Floor Checks (F1-F10)
+## Part IV: Floor Checks (F1-F14)
 
 ### The Fun Floor
 
-From PROTO_SPEC, these are non-negotiable:
+From PROTO_SPEC (Enlightened Edition), these are non-negotiable:
 
 ```python
 WASM_FLOOR_CHECKS = (
+    # Core gameplay floor (F1-F10)
     FloorCheckDefinition(
         name="input_latency",
         threshold=16.0,
@@ -334,6 +382,35 @@ WASM_FLOOR_CHECKS = (
         comparison="==",
         unit="bool",
         description="F10: Always know your health. Bar, not number.",
+    ),
+    # NEW: Hive/Metamorphosis floor (F11-F14)
+    FloorCheckDefinition(
+        name="pulsing_visible",
+        threshold=1.0,
+        comparison="==",
+        unit="bool",
+        description="F11: Metamorphosis timer is ALWAYS readable (visual, not numeric).",
+    ),
+    FloorCheckDefinition(
+        name="colossal_telegraphs",
+        threshold=1.0,
+        comparison="==",
+        unit="bool",
+        description="F12: Every Colossal attack has long, readable wind-up.",
+    ),
+    FloorCheckDefinition(
+        name="hive_awareness",
+        threshold=1.0,
+        comparison="==",
+        unit="bool",
+        description="F13: HUD shows hive intelligence level (subtle indicator).",
+    ),
+    FloorCheckDefinition(
+        name="revelation_moment",
+        threshold=1.0,
+        comparison=">=",
+        unit="count",
+        description="F14: First metamorphosis produces audible 'WHAT WAS THAT' reaction.",
     ),
 )
 ```
@@ -531,6 +608,143 @@ def compute_juice_multiplier(wave: int, combo: int, stakes: float) -> float:
     return wave_factor * combo_factor * stakes_factor
 ```
 
+### 5.6 Metamorphosis Pressure Calculation (M1)
+
+```python
+def compute_metamorphosis_pressure(enemies: list[Enemy]) -> float:
+    """
+    Compute metamorphosis pressure from enemy survival times.
+
+    Returns 0.0-1.0 where 1.0 = imminent metamorphosis.
+    """
+    if not enemies:
+        return 0.0
+
+    METAMORPHOSIS_THRESHOLD = 20.0  # seconds
+
+    # Find max survival time among all enemies
+    max_survival = max(e.survival_time for e in enemies)
+
+    # Pressure = normalized survival time
+    pressure = max_survival / METAMORPHOSIS_THRESHOLD
+
+    # Boost if multiple pulsing enemies (synergy effect)
+    pulsing_count = sum(1 for e in enemies if e.survival_time > 10.0)
+    synergy_bonus = min(0.3, pulsing_count * 0.05)
+
+    return min(1.0, pressure + synergy_bonus)
+```
+
+### 5.7 Hive Intelligence Estimation (H1)
+
+```python
+@dataclass
+class HiveIntelligence:
+    """Hive mind adaptation state."""
+
+    pattern_learned: float      # 0-1: How well hive knows player patterns
+    dodge_adaptation: float     # 0-1: Adjustment to player's dodge direction
+    priority_awareness: float   # 0-1: How well hive protects key enemies
+    overall: float              # Weighted combination
+
+
+def estimate_hive_intelligence(
+    run_history: RunTrace,
+    window_size: int = 30,  # seconds
+) -> HiveIntelligence:
+    """
+    Estimate hive intelligence from recent player behavior.
+
+    The hive learns within a run, resets between runs (H2).
+    """
+    recent_events = run_history.events_in_last(window_size)
+
+    # Pattern learning: based on dodge consistency
+    dodge_directions = [e.dodge_direction for e in recent_events if e.type == "dodge"]
+    if dodge_directions:
+        # High consistency = hive can predict
+        direction_variance = compute_variance(dodge_directions)
+        pattern_learned = 1.0 - min(1.0, direction_variance * 2)
+    else:
+        pattern_learned = 0.0
+
+    # Dodge adaptation: based on successful vs failed attacks
+    attacks = [e for e in recent_events if e.type == "enemy_attack"]
+    if attacks:
+        hit_rate = sum(1 for a in attacks if a.hit_player) / len(attacks)
+        dodge_adaptation = hit_rate
+    else:
+        dodge_adaptation = 0.0
+
+    # Priority awareness: based on how well key enemies survive
+    mutant_survival = run_history.mutant_average_survival_time
+    non_mutant_survival = run_history.non_mutant_average_survival_time
+    if non_mutant_survival > 0:
+        priority_awareness = min(1.0, mutant_survival / non_mutant_survival - 1.0)
+    else:
+        priority_awareness = 0.0
+
+    overall = pattern_learned * 0.4 + dodge_adaptation * 0.4 + priority_awareness * 0.2
+
+    return HiveIntelligence(
+        pattern_learned=pattern_learned,
+        dodge_adaptation=dodge_adaptation,
+        priority_awareness=priority_awareness,
+        overall=overall,
+    )
+```
+
+### 5.8 Colossal Danger Classification (C1)
+
+```python
+@dataclass
+class ColossalThreat:
+    """Threat assessment for active Colossals."""
+
+    colossal_type: str          # TIDE, RAMPAGE, ARTILLERY, FORTRESS, LEGION
+    health_fraction: float      # 0-1
+    mutant_stack: int           # Number of mutants that formed it
+    distance_to_player: float   # Units
+    threat_level: float         # 0-1 normalized threat
+
+
+def assess_colossal_threat(colossal: Colossal, player: Player) -> ColossalThreat:
+    """
+    Assess threat level of a Colossal.
+
+    Threat = type_danger * health * mutant_stack / distance
+    """
+    TYPE_DANGER = {
+        "TIDE": 0.6,      # Slow but unstoppable
+        "RAMPAGE": 0.9,   # Fast and deadly
+        "ARTILLERY": 0.7, # Dangerous at range
+        "FORTRESS": 0.5,  # Static, can be avoided
+        "LEGION": 0.8,    # Overwhelming numbers
+    }
+
+    base_danger = TYPE_DANGER.get(colossal.colossal_type, 0.5)
+
+    # Health: higher health = more threat
+    health_factor = colossal.health_fraction
+
+    # Mutant stack: more mutants = faster, more dangerous
+    stack_factor = 1.0 + (colossal.mutant_stack * 0.15)
+
+    # Distance: closer = more threat (inverse relationship)
+    distance = max(1.0, colossal.distance_to(player))
+    distance_factor = 10.0 / distance  # Max at distance 10
+
+    threat_level = min(1.0, base_danger * health_factor * stack_factor * distance_factor)
+
+    return ColossalThreat(
+        colossal_type=colossal.colossal_type,
+        health_fraction=colossal.health_fraction,
+        mutant_stack=colossal.mutant_stack,
+        distance_to_player=distance,
+        threat_level=threat_level,
+    )
+```
+
 ---
 
 ## Part VI: Complete Algebra Definition
@@ -618,17 +832,18 @@ class WASMWitnessLayer:
                 self.quality_buffer.write(quality)
 ```
 
-### 7.2 Crystal Compression
+### 7.2 Crystal Compression (Enlightened Edition)
 
 ```python
 async def crystallize_run(trace: RunTrace) -> RunCrystal:
     """
     Compress a run trace into a crystal.
 
-    The crystal is a proof of the run's meaning.
+    The crystal is a proof of the run's meaning—now including hive data.
     """
-    # Find pivots (major build shifts)
+    # Find pivots (major build shifts + metamorphosis moments)
     pivots = find_pivots(trace)
+    metamorphosis_pivots = find_metamorphosis_pivots(trace)
 
     # Record ghosts (unchosen paths)
     ghosts = extract_ghosts(trace)
@@ -636,18 +851,53 @@ async def crystallize_run(trace: RunTrace) -> RunCrystal:
     # Compute final weights
     weights = compute_final_weights(trace)
 
+    # Hive data (NEW)
+    hive_data = HiveCrystalData(
+        metamorphosis_count=trace.metamorphosis_count,
+        colossals_spawned=[c.colossal_type for c in trace.colossals_spawned],
+        colossals_defeated=[c.colossal_type for c in trace.colossals_defeated],
+        hive_intelligence_peak=trace.max_hive_intelligence,
+        closest_call=find_closest_metamorphosis_call(trace),
+        death_by_colossal=trace.death_cause_type == "colossal",
+        killing_colossal_type=trace.killing_colossal_type if trace.death_by_colossal else None,
+    )
+
     # Generate claim (one-sentence description)
-    claim = generate_claim(pivots, weights, ghosts)
+    claim = generate_claim(pivots, weights, ghosts, hive_data)
 
     return RunCrystal(
         run_id=trace.run_id,
         claim=claim,
-        pivots=pivots,
+        pivots=pivots + metamorphosis_pivots,
         ghosts=ghosts,
         weights=weights,
+        hive_data=hive_data,
         compression_ratio=len(trace.marks) / (len(pivots) + 1),
         shareable=True,
     )
+
+
+@dataclass
+class HiveCrystalData:
+    """Hive-specific data stored in run crystal."""
+
+    metamorphosis_count: int
+    colossals_spawned: list[str]
+    colossals_defeated: list[str]
+    hive_intelligence_peak: float
+    closest_call: ClosestCallData | None
+    death_by_colossal: bool
+    killing_colossal_type: str | None
+
+
+@dataclass
+class ClosestCallData:
+    """The metamorphosis that almost happened."""
+
+    enemy_types: list[str]
+    max_survival_time: float
+    wave: int
+    prevented_by: str  # "player_kill", "wave_end", etc.
 ```
 
 ---
@@ -655,7 +905,7 @@ async def crystallize_run(trace: RunTrace) -> RunCrystal:
 ## Cross-References
 
 - `spec/theory/experience-quality-operad.md` — Parent operad specification
-- `pilots/wasm-survivors-witnessed-run-lab/PROTO_SPEC.md` — Pilot specification
+- `pilots/wasm-survivors-game/PROTO_SPEC.md` — Pilot specification
 - `impl/claude/services/experience_quality/` — Implementation
 - `impl/claude/services/witness/` — Witness infrastructure
 

@@ -30,7 +30,7 @@ Every pilot turns ordinary activity—playing a game, practicing freestyle, desi
 |-------|--------|-----------------|------|
 | **[Trail to Crystal](./trail-to-crystal-daily-lab/PROTO_SPEC.md)** | Daily action logging | *Honest gaps over concealment. Witness, not surveillance.* | Core |
 | **[Zero Seed Governance](./zero-seed-personal-governance-lab/PROTO_SPEC.md)** | Personal constitution | *Your axioms are not what you think. Galois loss reveals them.* | Core |
-| **[Wasm Survivors](./wasm-survivors-witnessed-run-lab/PROTO_SPEC.md)** | Arcade roguelike | *Failure is the clearest signal. Chaos is structure when witnessed.* | Domain |
+| **[Wasm Survivors](./wasm-survivors-game/PROTO_SPEC.md)** | Arcade roguelike | *Failure is the clearest signal. Chaos is structure when witnessed.* | Domain |
 | **[Rap Coach](./rap-coach-flow-lab/PROTO_SPEC.md)** | Freestyle practice | *The rough voice, not the polished one. Witness, never judge.* | Domain |
 | **[Sprite Lab](./sprite-procedural-taste-lab/PROTO_SPEC.md)** | Procedural pixel art | *Artist's chaos over algorithmic cleanliness. Wild branches thrive.* | Domain |
 | **[Disney Portal](./disney-portal-planner/PROTO_SPEC.md)** | Trip planning | *Days should feel earned. Planning is adventure, not spreadsheet labor.* | Domain |

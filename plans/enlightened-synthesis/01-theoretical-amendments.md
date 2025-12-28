@@ -1350,7 +1350,7 @@ PILOT_LAWS = [
         galois_loss=0.15,
     ),
 
-    # wasm-survivors-witnessed-run-lab
+    # wasm-survivors-game
     PilotLaw(
         schema=LawSchema.COHERENCE_GATE,
         pilot="wasm-survivors",

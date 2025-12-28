@@ -31,7 +31,7 @@ All pilots share the same spine: **Mark → Trace → Crystal**
 |------|-------|--------|--------|
 | **Core** | trail-to-crystal-daily-lab | Personal productivity | ✅ VALIDATED |
 | **Core** | zero-seed-personal-governance-lab | Personal constitution | READY |
-| **Domain** | wasm-survivors-witnessed-run-lab | Game development | READY |
+| **Domain** | wasm-survivors-game | Game development | READY |
 | **Domain** | disney-portal-planner | Travel/memory | READY |
 | **Domain** | rap-coach-flow-lab | Creative flow | READY |
 | **Domain** | sprite-procedural-taste-lab | Generative art | READY |
@@ -110,7 +110,7 @@ Use witnessed-regeneration to generate the remaining 6 pilots:
 | Pilot | Priority | Agent Task |
 |-------|----------|------------|
 | zero-seed-personal-governance-lab | HIGH | Axiom discovery + living constitution |
-| wasm-survivors-witnessed-run-lab | MEDIUM | Drift detection, validates Galois |
+| wasm-survivors-game | MEDIUM | Drift detection, validates Galois |
 | rap-coach-flow-lab | MEDIUM | Courage preservation, validates Joy |
 | sprite-procedural-taste-lab | MEDIUM | Style evolution tracking |
 | disney-portal-planner | LOW | Memory crystallization |

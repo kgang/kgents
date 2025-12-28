@@ -43,7 +43,7 @@
 |-------|--------|-------|
 | trail-to-crystal-daily-lab | ✅ VALIDATED | 2 generations via witnessed-regeneration |
 | zero-seed-personal-governance-lab | 🔄 IN PROGRESS | Being executed by separate agent |
-| wasm-survivors-witnessed-run-lab | READY | Validates Galois drift detection |
+| wasm-survivors-game | READY | Validates Galois drift detection |
 | rap-coach-flow-lab | READY | Validates Joy/Courage preservation |
 | sprite-procedural-taste-lab | READY | Style evolution tracking |
 | disney-portal-planner | READY | Memory crystallization |

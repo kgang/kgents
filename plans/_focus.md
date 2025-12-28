@@ -13,6 +13,9 @@
 ## KENT's WISHES
 * kgents is a metatheory, meta-system for agent asystems
 * Full production readiness. No more boilerplate, demo-ware, or performative work.
+* Maximize token use
+* Create more specs and plans
+
 Fully realize:
 * kgents/spec/theory/agent-dp.md
 * kgents/spec/theory/analysis-operad.md
@@ -27,16 +30,6 @@ Fully realize:
 * Whenever you write a prompt, it'll always be executed with /hydrate
 * Being/having fun is free :)
 
-## Kent's QUOTEs
-  "An agent is a thing that justifies its behavior."
-  "The proof IS the decision."
-  "Ethics is part of the beauty."
-  "Don't waste good work, like you wouldn't waste food."
-  "What is my best day like? I don't think I care."
-  "Moderate Koons appreciator. Vehement Hirst hater."
-  "Vim and iterm as primitives—not IDE heaviness, but with self-learning baked in"
-  "The file is a lie. There is only the graph."
-  "Stop documenting agents. Become the agent."
 ---
 
 **Constraints**:

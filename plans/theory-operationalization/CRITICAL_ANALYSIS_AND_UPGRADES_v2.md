@@ -280,7 +280,7 @@ def _resolve_binding_conflicts(self, conflicts: list[BindingConflict],
 |------|-------|------------|------|--------|
 | **Core** | trail-to-crystal-daily-lab | A, G | 6 | SHIP |
 | **Core** | zero-seed-governance-lab | B, F, G | 9 | NEXT |
-| **Domain** | wasm-survivors-witnessed-run-lab | B, G | 7 | ACTIVE |
+| **Domain** | wasm-survivors-game | B, G | 7 | ACTIVE |
 | **Domain** | disney-portal-planner | A, G | 8 | ACTIVE |
 | **Domain** | rap-coach-flow-lab | A, B, E, G | 7 | ACTIVE |
 | **Domain** | sprite-procedural-taste-lab | C, F, G | 8 | ACTIVE |

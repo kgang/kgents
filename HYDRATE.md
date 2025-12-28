@@ -124,7 +124,7 @@ kg witness crystallize                 # Marks → Session crystal
 | Pilot | Domain | Joy | Status |
 |-------|--------|-----|--------|
 | **trail-to-crystal-daily-lab** | Productivity | FLOW | Week 6 (FIRST) |
-| wasm-survivors-witnessed-run-lab | Gaming | FLOW | Week 7 |
+| wasm-survivors-game | Gaming | FLOW | Week 7 |
 | disney-portal-planner | Consumer | WARMTH | Week 8 |
 | rap-coach-flow-lab | Creative | SURPRISE | Week 7 |
 | sprite-procedural-taste-lab | Generative | SURPRISE | Week 8 |

@@ -175,7 +175,7 @@ class DailyLab:
 
 ---
 
-## Pilot 2: wasm-survivors-witnessed-run-lab
+## Pilot 2: wasm-survivors-game
 
 ### Theory Validation
 
