@@ -160,6 +160,7 @@ class MarkResult:
     timestamp: datetime
     datum_id: str | None = None
     parent_mark_id: str | None = None
+    domain: str | None = None  # Domain for pilot/feature filtering
 
 
 @dataclass
@@ -734,6 +735,7 @@ class WitnessPersistence:
         session_id: str | None = None,
         repository_path: str | None = None,
         parent_mark_id: str | None = None,
+        domain: str | None = None,
     ) -> "MarkResult":
         """
         Save a mark to Universe storage.
@@ -754,6 +756,7 @@ class WitnessPersistence:
             session_id: Optional session context
             repository_path: Optional repository context
             parent_mark_id: Optional parent mark for causal lineage
+            domain: Domain for pilot/feature filtering (e.g., 'disney-portal-planner')
 
         Evidence Tags:
             - spec:{path}     — Links mark to a spec
@@ -788,6 +791,7 @@ class WitnessPersistence:
             tags=tuple(tags or []),
             principles=tuple(principles or []),
             parent_mark_id=parent_mark_id,
+            domain=domain,
             context=context,
         )
 
@@ -804,6 +808,7 @@ class WitnessPersistence:
             timestamp=datetime.now(UTC),
             datum_id=mark_id,
             parent_mark_id=parent_mark_id,
+            domain=domain,
         )
 
         logger.debug(f"Saved mark {mark_id} by {author}")
@@ -817,6 +822,7 @@ class WitnessPersistence:
         since: datetime | None = None,
         tags: list[str] | None = None,
         tag_prefix: str | None = None,
+        domain: str | None = None,
     ) -> list["MarkResult"]:
         """
         Get recent marks with optional filters.
@@ -830,6 +836,7 @@ class WitnessPersistence:
             since: Filter by created_at > since
             tags: Filter by exact tag match (any of these tags)
             tag_prefix: Filter by tag prefix (e.g., "spec:" for all spec-related)
+            domain: Filter by domain (e.g., 'disney-portal-planner')
 
         Returns:
             List of MarkResult objects, newest first
@@ -854,6 +861,10 @@ class WitnessPersistence:
             if session_id and wm.context.get("session_id") != session_id:
                 continue
 
+            # Apply domain filter
+            if domain and wm.domain != domain:
+                continue
+
             # Apply tag filters
             mark_tags = list(wm.tags)
             if tags and not any(t in mark_tags for t in tags):
@@ -865,9 +876,7 @@ class WitnessPersistence:
             datum_id = wm.context.get("id", f"mark-{id(wm)}")  # Fallback to object id
             created_at = wm.context.get("created_at")
             timestamp = (
-                datetime.fromtimestamp(created_at, tz=UTC)
-                if created_at
-                else datetime.now(UTC)
+                datetime.fromtimestamp(created_at, tz=UTC) if created_at else datetime.now(UTC)
             )
 
             marks.append(
@@ -881,6 +890,7 @@ class WitnessPersistence:
                     timestamp=timestamp,
                     datum_id=datum_id,
                     parent_mark_id=wm.parent_mark_id,
+                    domain=wm.domain,
                 )
             )
 
@@ -911,6 +921,7 @@ class WitnessPersistence:
             timestamp=datetime.now(UTC),  # TODO: extract from datum
             datum_id=mark_id,
             parent_mark_id=witness_mark.parent_mark_id,
+            domain=witness_mark.domain,
         )
 
     async def get_mark_tree(

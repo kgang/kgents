@@ -38,6 +38,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 from .crystal import Crystal, CrystalId, CrystalLevel, MoodVector
 from .mark import Mark, MarkId
+from .trace_store import MarkStore
 
 if TYPE_CHECKING:
     from agents.k.soul import BudgetTier, KgentSoul
@@ -183,18 +184,28 @@ class Crystallizer:
         - Graceful degradation to templates
     """
 
-    def __init__(self, soul: SoulProtocol | None = None) -> None:
+    def __init__(
+        self,
+        soul: SoulProtocol | None = None,
+        mark_store: MarkStore | None = None,
+    ) -> None:
         """
         Initialize the Crystallizer.
 
         Args:
             soul: K-gent Soul for LLM access. If None, will use template fallback.
+            mark_store: MarkStore for sealing marks. If None, marks won't be sealed.
         """
         self._soul = soul
+        self._mark_store = mark_store
 
     def set_soul(self, soul: SoulProtocol) -> None:
         """Set the Soul for LLM access (for late binding/testing)."""
         self._soul = soul
+
+    def set_mark_store(self, mark_store: MarkStore) -> None:
+        """Set the MarkStore for sealing marks (for late binding/testing)."""
+        self._mark_store = mark_store
 
     @property
     def has_llm(self) -> bool:
@@ -209,6 +220,7 @@ class Crystallizer:
         self,
         marks: list[Mark],
         session_id: str = "",
+        seal_marks: bool = True,
     ) -> Crystal:
         """
         Crystallize marks into a level-0 (SESSION) crystal.
@@ -217,10 +229,12 @@ class Crystallizer:
         1. Formats marks for LLM context
         2. Invokes K-gent with crystallization prompt
         3. Parses response and creates Crystal
+        4. Seals source marks (if mark_store is available and seal_marks=True)
 
         Args:
             marks: List of marks to crystallize (should be from same session)
             session_id: Optional session identifier
+            seal_marks: Whether to seal marks after crystallization (default True)
 
         Returns:
             A level-0 Crystal containing the crystallized insight
@@ -244,7 +258,7 @@ class Crystallizer:
         mood = MoodVector.from_marks(marks)
 
         # Create crystal
-        return Crystal.from_crystallization(
+        crystal = Crystal.from_crystallization(
             insight=result.insight,
             significance=result.significance,
             principles=result.principles,
@@ -255,6 +269,14 @@ class Crystallizer:
             mood=mood,
             session_id=session_id,
         )
+
+        # Seal marks if mark_store is available
+        if seal_marks and self._mark_store is not None:
+            mark_ids = [str(m.id) for m in marks]
+            sealed_count = self._mark_store.seal_marks(mark_ids, str(crystal.id))
+            logger.info(f"Sealed {sealed_count} marks with crystal {crystal.id}")
+
+        return crystal
 
     async def crystallize_crystals(
         self,

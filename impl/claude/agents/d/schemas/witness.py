@@ -61,6 +61,9 @@ class WitnessMark:
     parent_mark_id: str | None = None
     """Parent mark for causal lineage."""
 
+    domain: str | None = None
+    """Domain for pilot/feature filtering (e.g., 'disney-portal-planner', 'daily-lab')."""
+
     context: dict[str, Any] = field(default_factory=dict)
     """Additional context metadata."""
 
@@ -73,6 +76,7 @@ class WitnessMark:
             "tags": list(self.tags),
             "principles": list(self.principles),
             "parent_mark_id": self.parent_mark_id,
+            "domain": self.domain,
             "context": self.context,
         }
 
@@ -86,13 +90,14 @@ class WitnessMark:
             tags=tuple(data.get("tags", [])),
             principles=tuple(data.get("principles", [])),
             parent_mark_id=data.get("parent_mark_id"),
+            domain=data.get("domain"),
             context=data.get("context", {}),
         )
 
 
 WITNESS_MARK_SCHEMA = Schema(
     name="witness.mark",
-    version=1,
+    version=2,  # v2: added domain field for pilot/feature filtering
     contract=WitnessMark,
 )
 

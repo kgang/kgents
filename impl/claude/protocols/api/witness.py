@@ -45,6 +45,9 @@ class CreateMarkRequest(BaseModel):
     principles: list[str] = Field(default_factory=list, description="Constitutional principles")
     author: str = Field(default="kent", description="kent | claude | system")
     parent_mark_id: str | None = Field(None, description="Parent mark for lineage")
+    domain: str | None = Field(
+        None, description="Domain for pilot/feature filtering (e.g., 'disney-portal-planner')"
+    )
 
 
 class MarkResponse(BaseModel):
@@ -60,6 +63,7 @@ class MarkResponse(BaseModel):
     parent_mark_id: str | None = None
     retracted: bool = False
     retraction_reason: str | None = None
+    domain: str | None = None  # Domain for pilot/feature filtering
 
 
 class MarkListResponse(BaseModel):
@@ -147,7 +151,9 @@ class CaptureRequest(BaseModel):
     """Request body for capturing a daily mark (matches frontend CaptureRequest)."""
 
     content: str = Field(..., description="What's on your mind?")
-    tag: str | None = Field(None, description="Optional tag: eureka, gotcha, taste, friction, joy, veto")
+    tag: str | None = Field(
+        None, description="Optional tag: eureka, gotcha, taste, friction, joy, veto"
+    )
     reasoning: str | None = Field(None, description="What made this stand out to you?")
 
 
@@ -236,6 +242,9 @@ def create_witness_router() -> "APIRouter | None":
         today: bool = Query(default=False),
         grep: str | None = Query(default=None),
         principle: str | None = Query(default=None),
+        domain: str | None = Query(
+            default=None, description="Filter by domain (e.g., 'disney-portal-planner')"
+        ),
     ) -> MarkListResponse:
         """
         List marks with optional filters.
@@ -247,6 +256,7 @@ def create_witness_router() -> "APIRouter | None":
             today: Only show marks from today
             grep: Search text in action/reasoning
             principle: Filter by principle tag
+            domain: Filter by domain (e.g., 'disney-portal-planner')
         """
         try:
             from services.providers import get_witness_persistence
@@ -255,7 +265,7 @@ def create_witness_router() -> "APIRouter | None":
 
             # Get more than needed to support filtering
             fetch_limit = limit * 5 if grep or principle else limit + offset + 1
-            marks_data = await persistence.get_marks(limit=fetch_limit)
+            marks_data = await persistence.get_marks(limit=fetch_limit, domain=domain)
 
             # Apply filters
             marks = []
@@ -296,6 +306,7 @@ def create_witness_router() -> "APIRouter | None":
                         parent_mark_id=m.parent_mark_id,
                         retracted=getattr(m, "retracted", False),
                         retraction_reason=getattr(m, "retraction_reason", None),
+                        domain=m.domain,
                     )
                 )
 
@@ -374,21 +385,33 @@ def create_witness_router() -> "APIRouter | None":
 
                 # Decision category (check tags or reasoning contains decision-like words)
                 if mark_tags_lower & decision_tags or (
-                    m.reasoning and any(word in m.reasoning.lower() for word in ["decided", "synthesis", "chose", "resolved"])
+                    m.reasoning
+                    and any(
+                        word in m.reasoning.lower()
+                        for word in ["decided", "synthesis", "chose", "resolved"]
+                    )
                 ):
                     if len(decision_marks) < limit_per_category:
                         decision_marks.append(mark_response)
 
                 # Eureka category
                 if mark_tags_lower & eureka_tags or (
-                    m.reasoning and any(word in m.reasoning.lower() for word in ["discovered", "realized", "eureka", "insight"])
+                    m.reasoning
+                    and any(
+                        word in m.reasoning.lower()
+                        for word in ["discovered", "realized", "eureka", "insight"]
+                    )
                 ):
                     if len(eureka_marks) < limit_per_category:
                         eureka_marks.append(mark_response)
 
                 # Gotcha category
                 if mark_tags_lower & gotcha_tags or (
-                    m.reasoning and any(word in m.reasoning.lower() for word in ["gotcha", "warning", "careful", "beware", "trap"])
+                    m.reasoning
+                    and any(
+                        word in m.reasoning.lower()
+                        for word in ["gotcha", "warning", "careful", "beware", "trap"]
+                    )
                 ):
                     if len(gotcha_marks) < limit_per_category:
                         gotcha_marks.append(mark_response)
@@ -454,6 +477,7 @@ def create_witness_router() -> "APIRouter | None":
                 parent_mark_id=mark.parent_mark_id,
                 retracted=getattr(mark, "retracted", False),
                 retraction_reason=getattr(mark, "retraction_reason", None),
+                domain=mark.domain,
             )
 
         except HTTPException:
@@ -484,6 +508,7 @@ def create_witness_router() -> "APIRouter | None":
                 principles=request.principles,
                 author=request.author,
                 parent_mark_id=request.parent_mark_id,
+                domain=request.domain,
             )
 
             # Publish to WitnessSynergyBus for real-time SSE streaming
@@ -501,6 +526,7 @@ def create_witness_router() -> "APIRouter | None":
                     "author": result.author,
                     "timestamp": to_iso(result.timestamp),
                     "parent_mark_id": result.parent_mark_id,
+                    "domain": result.domain,
                     "type": "mark",  # Event type for frontend
                 },
             )
@@ -515,6 +541,7 @@ def create_witness_router() -> "APIRouter | None":
                 session_id=getattr(result, "session_id", None),
                 timestamp=to_iso(result.timestamp),
                 parent_mark_id=result.parent_mark_id,
+                domain=result.domain,
             )
 
         except Exception as e:
@@ -575,7 +602,8 @@ def create_witness_router() -> "APIRouter | None":
             try:
                 since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
                 decisions = [
-                    d for d in decisions
+                    d
+                    for d in decisions
                     if datetime.fromisoformat(d.timestamp.replace("Z", "+00:00")) >= since_dt
                 ]
             except ValueError:
@@ -584,10 +612,7 @@ def create_witness_router() -> "APIRouter | None":
         # Filter by tags
         if tags:
             tag_list = [t.strip().lower() for t in tags.split(",")]
-            decisions = [
-                d for d in decisions
-                if any(t.lower() in tag_list for t in d.tags)
-            ]
+            decisions = [d for d in decisions if any(t.lower() in tag_list for t in d.tags)]
 
         # Sort by timestamp descending (newest first)
         decisions.sort(key=lambda d: d.timestamp, reverse=True)
@@ -757,9 +782,7 @@ def create_witness_router() -> "APIRouter | None":
 
             # Capture the mark using the appropriate method
             if request.reasoning:
-                daily_mark = lab.capture.with_reasoning(
-                    request.content, request.reasoning, tag
-                )
+                daily_mark = lab.capture.with_reasoning(request.content, request.reasoning, tag)
             elif tag:
                 daily_mark = lab.capture.tagged(request.content, tag)
             else:
@@ -767,9 +790,7 @@ def create_witness_router() -> "APIRouter | None":
 
             # Build warmth response
             if tag:
-                warmth = WARMTH_RESPONSES["mark_captured_with_feeling"].format(
-                    tag=tag.value
-                )
+                warmth = WARMTH_RESPONSES["mark_captured_with_feeling"].format(tag=tag.value)
             else:
                 warmth = WARMTH_RESPONSES["mark_captured"]
 
@@ -894,10 +915,7 @@ def create_witness_router() -> "APIRouter | None":
             crystal = lab.crystallize.crystallize_day(parsed_date)
 
             if crystal is None:
-                raise HTTPException(
-                    status_code=404,
-                    detail="Not enough marks to crystallize yet."
-                )
+                raise HTTPException(status_code=404, detail="Not enough marks to crystallize yet.")
 
             # Build response matching frontend interfaces
             crystal_model = CrystalModel(
@@ -906,7 +924,9 @@ def create_witness_router() -> "APIRouter | None":
                 significance=crystal.significance,
                 disclosure=crystal.disclosure,
                 level=crystal.level.name.lower(),  # session, day, week, epoch
-                timestamp=crystal.crystal.time_range[0].isoformat() if crystal.crystal.time_range else datetime.now().isoformat(),
+                timestamp=crystal.crystal.time_range[0].isoformat()
+                if crystal.crystal.time_range
+                else datetime.now().isoformat(),
                 confidence=crystal.crystal.confidence,
                 topics=list(crystal.crystal.topics) if crystal.crystal.topics else [],
                 principles=list(crystal.crystal.principles) if crystal.crystal.principles else [],
@@ -992,8 +1012,12 @@ def create_witness_router() -> "APIRouter | None":
                                 crystal_id=str(crystal.id),
                                 insight=crystal.insight,
                                 significance=crystal.significance,
-                                disclosure=crystal.disclosure if hasattr(crystal, 'disclosure') and crystal.disclosure else "",
-                                level=crystal.level.name.lower() if hasattr(crystal, 'level') and crystal.level else "session",
+                                disclosure=crystal.disclosure
+                                if hasattr(crystal, "disclosure") and crystal.disclosure
+                                else "",
+                                level=crystal.level.name.lower()
+                                if hasattr(crystal, "level") and crystal.level
+                                else "session",
                                 timestamp=crystal_time.isoformat(),
                                 confidence=crystal.confidence,
                                 topics=list(crystal.topics) if crystal.topics else [],

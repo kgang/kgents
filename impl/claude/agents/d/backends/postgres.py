@@ -39,11 +39,14 @@ CREATE TABLE IF NOT EXISTS data (
     causal_parent TEXT REFERENCES data(id) ON DELETE SET NULL,
     metadata JSONB DEFAULT '{}'::jsonb
 );
-
-CREATE INDEX IF NOT EXISTS idx_data_created ON data(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_data_parent ON data(causal_parent) WHERE causal_parent IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_data_id_prefix ON data(id text_pattern_ops);
 """
+
+# Index creation separated - handled specially to avoid blocking
+INDEX_SCHEMAS: list[str] = [
+    "CREATE INDEX IF NOT EXISTS idx_data_created ON data(created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_data_parent ON data(causal_parent) WHERE causal_parent IS NOT NULL",
+    "CREATE INDEX IF NOT EXISTS idx_data_id_prefix ON data(id text_pattern_ops)",
+]
 
 
 class PostgresBackend(BaseDgent):
@@ -122,10 +125,32 @@ class PostgresBackend(BaseDgent):
                 return
 
             async with pool.acquire() as conn:
-                # Execute each statement separately (asyncpg doesn't support multi-statement)
+                # Create table first
                 statements = [s.strip() for s in SCHEMA.split(";") if s.strip()]
                 for stmt in statements:
                     await conn.execute(stmt)
+
+                # Create indexes with timeout to avoid blocking on lock conflicts
+                # Index creation can fail if there's a concurrent lock - that's OK,
+                # indexes will be created on next startup when locks are available
+                for index_stmt in INDEX_SCHEMAS:
+                    try:
+                        await asyncio.wait_for(
+                            conn.execute(index_stmt),
+                            timeout=5.0,  # 5 second timeout per index
+                        )
+                    except asyncio.TimeoutError:
+                        # Log but don't fail - index creation will retry next time
+                        import logging
+
+                        logging.getLogger(__name__).warning(
+                            f"Index creation timed out (likely lock contention): {index_stmt[:50]}..."
+                        )
+                    except Exception as e:
+                        # Ignore other errors (e.g., if index already exists)
+                        import logging
+
+                        logging.getLogger(__name__).debug(f"Index creation note: {e}")
 
             self._initialized = True
 

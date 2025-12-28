@@ -303,12 +303,22 @@ class WitnessMark(TimestampMixin, Base):
     # Repository context
     repository_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
+    # Domain for pilot/feature filtering (e.g., "disney-portal-planner", "daily-lab")
+    # Enables ANY pilot to tag and filter its marks without schema changes
+    domain: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+
+    # Crystal sealing (for proof philosophy - sealed marks are immutable proof)
+    sealed_by_crystal_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    sealed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     __table_args__ = (  # type: ignore[assignment]
         Index("idx_witness_marks_recent", "created_at"),
         Index("idx_witness_marks_author", "author"),
         Index("idx_witness_marks_session", "session_id"),
         Index("idx_witness_marks_tags", "tags", postgresql_using="gin"),
         Index("idx_witness_marks_principles", "principles", postgresql_using="gin"),
+        Index("idx_witness_marks_sealed", "sealed_by_crystal_id"),
+        Index("idx_witness_marks_domain", "domain"),
     )
 
 

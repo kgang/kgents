@@ -116,9 +116,17 @@ class MarkQuery:
     links_to: MarkId | None = None
     links_from: MarkId | None = None
 
+    # Domain filter (for pilot/feature filtering, e.g., "disney-portal-planner")
+    domain: str | None = None
+
     # Limit and offset for pagination
     limit: int | None = None
     offset: int = 0
+
+    # Sealed filter (for crystal sealing)
+    include_sealed: bool = True  # By default, include sealed marks
+    only_sealed: bool = False  # If True, only return sealed marks
+    only_unsealed: bool = False  # If True, only return unsealed marks
 
     def matches(self, node: Mark, store: MarkStore) -> bool:
         """Check if a trace node matches this query."""
@@ -158,6 +166,18 @@ class MarkQuery:
                 for link in node.links
             ):
                 return False
+
+        # Domain filter (for pilot/feature filtering)
+        if self.domain and node.domain != self.domain:
+            return False
+
+        # Sealed filters
+        if not self.include_sealed and node.is_sealed:
+            return False
+        if self.only_sealed and not node.is_sealed:
+            return False
+        if self.only_unsealed and node.is_sealed:
+            return False
 
         return True
 
@@ -372,6 +392,86 @@ class MarkStore:
         """Get all traces in a specific Walk."""
         trace_ids = self._walk_index.get(walk_id, [])
         return [self._nodes[tid] for tid in trace_ids]
+
+    # =========================================================================
+    # Crystal Sealing
+    # =========================================================================
+
+    def seal_marks(self, mark_ids: list[str], crystal_id: str) -> int:
+        """
+        Seal marks by associating them with a crystal.
+
+        Sealed marks are immutable proof - they cannot be modified after sealing.
+        This operation is idempotent: calling twice with the same marks does nothing
+        for already-sealed marks.
+
+        Args:
+            mark_ids: List of mark IDs to seal
+            crystal_id: The crystal ID that is sealing these marks
+
+        Returns:
+            Count of marks that were newly sealed (excludes already-sealed marks)
+
+        Note:
+            This method creates new Mark instances with sealed fields set,
+            replacing the original marks in the store. This maintains immutability
+            while allowing the sealed state to be recorded.
+        """
+        from datetime import datetime, timezone
+
+        sealed_count = 0
+        seal_time = datetime.now(timezone.utc)
+
+        for mark_id_str in mark_ids:
+            mark_id = MarkId(mark_id_str)
+            node = self.get(mark_id)
+
+            if node is None:
+                logger.warning(f"Mark {mark_id} not found, skipping seal")
+                continue
+
+            # Skip already-sealed marks (idempotent)
+            if node.is_sealed:
+                logger.debug(f"Mark {mark_id} already sealed by {node.sealed_by_crystal_id}")
+                continue
+
+            # Create new sealed mark (immutable pattern)
+            # Note: We use object.__setattr__ to work around frozen dataclass
+            # In practice, we replace the mark in the store
+            sealed_mark = Mark(
+                id=node.id,
+                origin=node.origin,
+                domain=node.domain,
+                stimulus=node.stimulus,
+                response=node.response,
+                umwelt=node.umwelt,
+                links=node.links,
+                timestamp=node.timestamp,
+                phase=node.phase,
+                walk_id=node.walk_id,
+                proof=node.proof,
+                constitutional=node.constitutional,
+                tags=node.tags,
+                metadata=node.metadata,
+                sealed_by_crystal_id=crystal_id,
+                sealed_at=seal_time,
+            )
+
+            # Replace in store (maintains timeline order)
+            self._nodes[mark_id] = sealed_mark
+            sealed_count += 1
+            logger.debug(f"Sealed mark {mark_id} with crystal {crystal_id}")
+
+        logger.info(f"Sealed {sealed_count} marks with crystal {crystal_id}")
+        return sealed_count
+
+    def get_sealed_marks(self, crystal_id: str) -> list[Mark]:
+        """Get all marks sealed by a specific crystal."""
+        return [node for node in self.all() if node.sealed_by_crystal_id == crystal_id]
+
+    def get_unsealed_marks(self) -> list[Mark]:
+        """Get all marks that have not been sealed."""
+        return [node for node in self.all() if not node.is_sealed]
 
     # =========================================================================
     # Validation

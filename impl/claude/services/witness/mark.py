@@ -218,6 +218,7 @@ class ConstitutionalAlignment:
         status = "✓" if self.is_compliant else f"✗({self.violation_count})"
         return f"ConstitutionalAlignment(total={self.weighted_total:.2f}, {status})"
 
+
 # Backwards compatibility aliases (remove after migration complete)
 MarkId = MarkId
 
@@ -856,6 +857,15 @@ class Mark:
     tags: tuple[str, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    # Crystal sealing (for proof philosophy - sealed marks are immutable proof)
+    sealed_by_crystal_id: str | None = None
+    sealed_at: datetime | None = None
+
+    @property
+    def is_sealed(self) -> bool:
+        """Check if this mark has been sealed by a crystal."""
+        return self.sealed_by_crystal_id is not None
+
     def __post_init__(self) -> None:
         """Validate causal links (Law 2 check deferred to store)."""
         # Note: We can't fully validate Law 2 here because we don't have
@@ -871,14 +881,25 @@ class Mark:
         origin: str = "witness",
         trust_level: int = 0,
         phase: NPhase | None = None,
+        domain: WitnessDomain = "system",
     ) -> Mark:
         """
         Create Mark from Witness Thought pattern.
 
         This is the primary upgrade path from the existing Thought type.
+
+        Args:
+            content: The thought content
+            source: Where the thought came from
+            tags: Classification tags
+            origin: Jewel or agent that emitted the mark
+            trust_level: Trust level of the observer
+            phase: N-Phase workflow phase
+            domain: Domain for pilot/feature filtering (e.g., 'disney-portal-planner')
         """
         return cls(
             origin=origin,
+            domain=domain,
             stimulus=Stimulus.from_event(source, f"Event from {source}", source),
             response=Response.thought(content, tags),
             umwelt=UmweltSnapshot.witness(trust_level),
@@ -895,11 +916,24 @@ class Mark:
         origin: str = "logos",
         umwelt: UmweltSnapshot | None = None,
         phase: NPhase | None = None,
+        domain: WitnessDomain = "system",
         **kwargs: Any,
     ) -> Mark:
-        """Create Mark from AGENTESE invocation."""
+        """
+        Create Mark from AGENTESE invocation.
+
+        Args:
+            path: AGENTESE path (e.g., 'world.house.manifest')
+            aspect: Aspect of the invocation
+            response_content: Content of the response
+            origin: Jewel or agent that emitted the mark
+            umwelt: Observer context
+            phase: N-Phase workflow phase
+            domain: Domain for pilot/feature filtering (e.g., 'disney-portal-planner')
+        """
         return cls(
             origin=origin,
+            domain=domain,
             stimulus=Stimulus.from_agentese(path, aspect, **kwargs),
             response=Response.projection(f"{path}.{aspect}"),
             umwelt=umwelt or UmweltSnapshot.system(),
@@ -1027,6 +1061,8 @@ class Mark:
             constitutional=self.constitutional,
             tags=self.tags,
             metadata=self.metadata,
+            sealed_by_crystal_id=self.sealed_by_crystal_id,
+            sealed_at=self.sealed_at,
         )
 
     def with_proof(self, proof: Proof) -> Mark:
@@ -1046,6 +1082,8 @@ class Mark:
             constitutional=self.constitutional,
             tags=self.tags,
             metadata=self.metadata,
+            sealed_by_crystal_id=self.sealed_by_crystal_id,
+            sealed_at=self.sealed_at,
         )
 
     def with_constitutional(self, constitutional: ConstitutionalAlignment) -> Mark:
@@ -1075,6 +1113,8 @@ class Mark:
             constitutional=constitutional,
             tags=self.tags,
             metadata=self.metadata,
+            sealed_by_crystal_id=self.sealed_by_crystal_id,
+            sealed_at=self.sealed_at,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -1094,6 +1134,8 @@ class Mark:
             "constitutional": self.constitutional.to_dict() if self.constitutional else None,
             "tags": list(self.tags),
             "metadata": self.metadata,
+            "sealed_by_crystal_id": self.sealed_by_crystal_id,
+            "sealed_at": self.sealed_at.isoformat() if self.sealed_at else None,
         }
 
     @classmethod
@@ -1106,6 +1148,11 @@ class Mark:
             if data.get("constitutional")
             else None
         )
+
+        # Parse sealed_at if present
+        sealed_at = None
+        if data.get("sealed_at"):
+            sealed_at = datetime.fromisoformat(data["sealed_at"])
 
         return cls(
             id=MarkId(data["id"]),
@@ -1122,6 +1169,8 @@ class Mark:
             constitutional=constitutional,
             tags=tuple(data.get("tags", [])),
             metadata=data.get("metadata", {}),
+            sealed_by_crystal_id=data.get("sealed_by_crystal_id"),
+            sealed_at=sealed_at,
         )
 
     def to_trace_entry(self) -> TraceEntry:
@@ -1164,7 +1213,9 @@ class Mark:
             state_after=state_after,
             value=value,
             rationale=rationale,
-            timestamp=self.timestamp if self.timestamp.tzinfo else self.timestamp.replace(tzinfo=timezone.utc),
+            timestamp=self.timestamp
+            if self.timestamp.tzinfo
+            else self.timestamp.replace(tzinfo=timezone.utc),
         )
 
     @classmethod
