@@ -11,7 +11,7 @@
  * @see pilots/wasm-survivors-game/runs/run-030/coordination/.outline.md
  */
 
-import type { Enemy, Vector2, Player } from '@kgents/shared-primitives';
+import type { Enemy, Vector2, Player } from '../types';
 // Re-export TIDE_CONFIG for physics and rendering use
 export { TIDE_CONFIG } from './metamorphosis';
 
@@ -214,6 +214,8 @@ export function performFission(colossal: Enemy, wave: number): Enemy[] {
       damage: COLOSSAL_CONFIG.SHAMBLER_DAMAGE,
       xpValue: COLOSSAL_CONFIG.SHAMBLER_XP,
       color: '#FF3366',
+      speed: 80, // Shambler speed
+      coordinationState: 'idle',
       behaviorState: 'chase',
       stateStartTime: 0,
       survivalTime: 0,

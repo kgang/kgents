@@ -1,10 +1,10 @@
 /**
- * WASM Survivors - Physics System
+ * Hornet Siege - Physics System
  *
  * Handles position updates, velocity, and collision detection.
  * Budget: < 5ms for physics, < 3ms for collisions
  *
- * @see pilots/wasm-survivors-game/.outline.md
+ * @see pilots/wasm-survivors-game/PROTO_SPEC.md
  */
 
 import type {
@@ -13,9 +13,9 @@ import type {
   Enemy,
   Projectile,
   EnemyType,
-} from '@kgents/shared-primitives';
+} from '../types';
 import type { ActiveUpgrades } from './upgrades';
-import { updateEnemyBehavior, getEnemyMovement, type TelegraphData, getEnemyTelegraph } from './enemies';
+import { updateBeeBehavior, getBeeMovement, type TelegraphData, getBeeTelegraph } from './enemies';
 
 // =============================================================================
 // Constants
@@ -28,8 +28,9 @@ export const ARENA_PADDING = 20;
 
 // Physics constants
 const ENEMY_CHASE_SPEED_FACTOR = 0.5; // Enemies move toward player (increased for challenge)
-const PROJECTILE_SPEED = 400;
-const AUTO_ATTACK_COOLDOWN = 500; // ms between attacks
+// DD-36: Player projectiles removed - Mandible Reaver melee only
+// Enemy projectile speed remains for bee attacks
+const ENEMY_PROJECTILE_SPEED = 400;
 
 // =============================================================================
 // Types
@@ -44,8 +45,8 @@ export interface PhysicsResult {
 export interface CollisionEvent {
   type: 'enemy_killed' | 'player_hit' | 'xp_collected';
   position: Vector2;
-  // DD-21: Track which attack type caused the hit
-  attackType?: 'lunge' | 'charge' | 'stomp' | 'projectile' | 'combo';
+  // DD-21: Track which attack type caused the hit (bee attacks)
+  attackType?: 'swarm' | 'sting' | 'block' | 'sticky' | 'combo';
   enemyType?: EnemyType;
   xpValue?: number;
   damage?: number;
@@ -76,13 +77,14 @@ export function updatePhysics(
   let playerY = state.player.position.y + playerVelocity.y * dt;
 
   // Clamp player to arena bounds
+  const playerRadius = state.player.radius ?? 15;
   playerX = Math.max(
-    ARENA_PADDING + state.player.radius,
-    Math.min(ARENA_WIDTH - ARENA_PADDING - state.player.radius, playerX)
+    ARENA_PADDING + playerRadius,
+    Math.min(ARENA_WIDTH - ARENA_PADDING - playerRadius, playerX)
   );
   playerY = Math.max(
-    ARENA_PADDING + state.player.radius,
-    Math.min(ARENA_HEIGHT - ARENA_PADDING - state.player.radius, playerY)
+    ARENA_PADDING + playerRadius,
+    Math.min(ARENA_HEIGHT - ARENA_PADDING - playerRadius, playerY)
   );
 
   // DD-15: Slow Field - get active upgrades for slow field check
@@ -99,8 +101,8 @@ export function updatePhysics(
   const updatedEnemies = state.enemies.map((enemy) => {
     const playerPos = { x: playerX, y: playerY };
 
-    // DD-21: Update behavior state machine
-    const behaviorResult = updateEnemyBehavior(enemy, playerPos, state.gameTime, deltaTime);
+    // DD-21: Update behavior state machine (Bee FSM)
+    const behaviorResult = updateBeeBehavior(enemy, playerPos, state.gameTime, deltaTime);
     let updatedEnemy = behaviorResult.enemy;
     enemyDamageDealt += behaviorResult.damageDealt;
 
@@ -108,14 +110,14 @@ export function updatePhysics(
     enemyProjectiles.push(...behaviorResult.projectiles);
 
     // Collect telegraph data for rendering
-    const telegraph = getEnemyTelegraph(updatedEnemy, state.gameTime);
+    const telegraph = getBeeTelegraph(updatedEnemy, state.gameTime);
     if (telegraph) {
       telegraphs.push(telegraph);
     }
 
     // DD-21: Get movement based on current behavior state
     const baseSpeed = getEnemySpeed(enemy.type);
-    const movement = getEnemyMovement(updatedEnemy, playerPos, baseSpeed, deltaTime);
+    const movement = getBeeMovement(updatedEnemy, playerPos, baseSpeed, deltaTime);
 
     // DD-15: Slow Field - reduce enemy speed if within slow radius
     const dx = playerPos.x - updatedEnemy.position.x;
@@ -186,76 +188,9 @@ export function updatePhysics(
       );
     });
 
-  // Auto-attack: spawn projectiles toward nearest enemy
-  let newProjectiles = updatedProjectiles;
-  const timeSinceLastAttack = state.gameTime % (AUTO_ATTACK_COOLDOWN / state.player.attackSpeed);
-
-  if (
-    timeSinceLastAttack < deltaTime &&
-    updatedEnemies.length > 0
-  ) {
-    // Find nearest enemy
-    let nearestEnemy: Enemy | null = null;
-    let nearestDistance = Infinity;
-
-    for (const enemy of updatedEnemies) {
-      const dx = enemy.position.x - playerX;
-      const dy = enemy.position.y - playerY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      if (distance < nearestDistance && distance <= state.player.attackRange) {
-        nearestDistance = distance;
-        nearestEnemy = enemy;
-      }
-    }
-
-    if (nearestEnemy) {
-      const dx = nearestEnemy.position.x - playerX;
-      const dy = nearestEnemy.position.y - playerY;
-
-      // DD-6: Check for pierce upgrade (now reads from activeUpgrades)
-      const pierceCount = activeUpgrades?.pierceCount ?? 0;
-      const hasPierce = pierceCount > 0;
-
-      // DD-11: Multishot - fire multiple projectiles in a spread
-      const multishotCount = activeUpgrades?.multishotCount ?? 1;
-      const multishotSpread = activeUpgrades?.multishotSpread ?? 0;
-
-      // Calculate base angle to target
-      const baseAngle = Math.atan2(dy, dx);
-
-      for (let i = 0; i < multishotCount; i++) {
-        // Calculate angle offset for this projectile
-        const angleOffset = multishotCount === 1
-          ? 0
-          : ((i - (multishotCount - 1) / 2) * multishotSpread * Math.PI) / 180;
-        const angle = baseAngle + angleOffset;
-
-        const projectile: Projectile = {
-          id: `proj-${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${i}`,
-          position: { x: playerX, y: playerY },
-          velocity: {
-            x: Math.cos(angle) * PROJECTILE_SPEED,
-            y: Math.sin(angle) * PROJECTILE_SPEED,
-          },
-          radius: 5,
-          health: 1,
-          maxHealth: 1,
-          ownerId: state.player.id,
-          damage: state.player.damage,
-          lifetime: 2000, // 2 seconds
-          color: hasPierce ? '#88DDFF' : (multishotCount > 1 ? '#FF3366' : '#00D4FF'),
-          pierceRemaining: pierceCount,
-          hitEnemies: [],
-        };
-
-        newProjectiles = [...newProjectiles, projectile];
-      }
-    }
-  }
-
-  // DD-21: Include enemy projectiles
-  const allProjectiles = [...newProjectiles, ...enemyProjectiles];
+  // DD-36: Auto-attack REMOVED - Player uses Mandible Reaver melee only
+  // Enemy projectiles still exist for enemy attacks
+  const allProjectiles = [...updatedProjectiles, ...enemyProjectiles];
 
   return {
     state: {
@@ -349,24 +284,23 @@ export function checkCollisions(state: GameState): CollisionResult {
             const dy = nearestChainTarget.position.y - enemy.position.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            chainProjectiles.push({
+            const chainProjectile: Projectile = {
               id: `chain-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
               position: { ...enemy.position },
               velocity: {
-                x: (dx / dist) * PROJECTILE_SPEED,
-                y: (dy / dist) * PROJECTILE_SPEED,
+                x: (dx / dist) * ENEMY_PROJECTILE_SPEED,
+                y: (dy / dist) * ENEMY_PROJECTILE_SPEED,
               },
               radius: 5,
               health: 1,
-              maxHealth: 1,
               ownerId: projectile.ownerId,
               damage: projectile.damage,
               lifetime: 1000,
               color: '#8844FF', // Purple for chain
               pierceRemaining: 0,
-              hitEnemies: Array.from(hitEnemies),
-              chainBounces: projChainBounces - 1,
-            } as Projectile & { chainBounces: number });
+              hitEnemies: new Set(hitEnemies),
+            };
+            chainProjectiles.push(chainProjectile);
           }
         }
 
@@ -376,7 +310,7 @@ export function checkCollisions(state: GameState): CollisionResult {
           // Projectile continues through (update hit list and pierce count)
           remainingProjectiles = remainingProjectiles.map((p) =>
             p.id === projectile.id
-              ? { ...p, pierceRemaining: pierceRemaining - 1, hitEnemies: Array.from(hitEnemies) }
+              ? { ...p, pierceRemaining: pierceRemaining - 1, hitEnemies: new Set(hitEnemies) }
               : p
           );
           // Continue checking other enemies (don't break)
@@ -396,17 +330,23 @@ export function checkCollisions(state: GameState): CollisionResult {
   for (const enemy of remainingEnemies) {
     const isAttacking = enemy.behaviorState === 'attack';
 
-    if (circleCollision(state.player, enemy) && isAttacking) {
+    // Create player collision object with default radius
+    const playerCollider = {
+      position: state.player.position,
+      radius: state.player.radius ?? 15,
+    };
+
+    if (circleCollision(playerCollider, enemy) && isAttacking) {
       events.push({
         type: 'player_hit',
         position: enemy.position,
         enemyType: enemy.type,
         damage: enemy.damage,
-        // DD-21: Track that this was an attack, not just contact
-        attackType: enemy.type === 'basic' ? 'lunge'
-          : enemy.type === 'fast' ? 'charge'
-          : enemy.type === 'tank' ? 'stomp'
-          : enemy.type === 'spitter' ? 'projectile'
+        // DD-21: Track that this was a bee attack
+        attackType: enemy.type === 'worker' ? 'swarm'
+          : enemy.type === 'scout' ? 'sting'
+          : enemy.type === 'guard' ? 'block'
+          : enemy.type === 'propolis' ? 'sticky'
           : 'combo',
       });
 
@@ -416,7 +356,7 @@ export function checkCollisions(state: GameState): CollisionResult {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance > 0) {
-        const pushDistance = state.player.radius + enemy.radius + 5;
+        const pushDistance = (state.player.radius ?? 15) + enemy.radius + 5;
         remainingEnemies = remainingEnemies.map((e) =>
           e.id === enemy.id
             ? {
@@ -460,23 +400,23 @@ function circleCollision(
 }
 
 /**
- * Get base speed for enemy type
- * DD-24: Added spitter with moderate speed
+ * Get base speed for bee type
+ * Per PROTO_SPEC S6: Bee Taxonomy
  */
 function getEnemySpeed(type: EnemyType): number {
   switch (type) {
-    case 'basic':
-      return 100;
-    case 'fast':
-      return 180;
-    case 'spitter':  // DD-24: Ranged enemy, moderate speed
-      return 80;
-    case 'tank':
-      return 50;
-    case 'boss':
-      return 40;
+    case 'worker':
+      return 80;     // Swarms, moderate speed
+    case 'scout':
+      return 120;    // Fast alerters
+    case 'propolis':
+      return 50;     // Ranged, stays back
+    case 'guard':
+      return 40;     // Slow defenders
+    case 'royal':
+      return 60;     // Elite, deliberate
     default:
-      return 100;
+      return 80;
   }
 }
 
@@ -485,7 +425,6 @@ function getEnemySpeed(type: EnemyType): number {
  */
 export function createInitialPlayer(): GameState['player'] {
   return {
-    id: 'player-1',
     position: { x: ARENA_WIDTH / 2, y: ARENA_HEIGHT / 2 },
     velocity: { x: 0, y: 0 },
     radius: 15,
@@ -495,11 +434,16 @@ export function createInitialPlayer(): GameState['player'] {
     xp: 0,
     xpToNextLevel: 100,
     upgrades: [],
-    synergies: [],
-    damage: 7,        // Reduced from 10 for balance
+    damage: 7,
     attackSpeed: 1,
     moveSpeed: 200,
-    attackRange: 150,  // Reduced from 250 for balance
+    attackRange: 150,
+    attackCooldown: 500,
+    lastAttackTime: 0,
+    dashCooldown: 1000,
+    lastDashTime: 0,
+    invincible: false,
+    invincibilityEndTime: 0,
   };
 }
 
@@ -508,15 +452,56 @@ export function createInitialPlayer(): GameState['player'] {
  */
 export function createInitialGameState(): GameState {
   return {
+    // Core state
     status: 'menu',
-    player: createInitialPlayer(),
-    enemies: [],
-    projectiles: [],
+    gameTime: 0,
     wave: 0,
     waveTimer: 0,
     waveEnemiesRemaining: 0,
-    totalEnemiesKilled: 0,
+
+    // Entities
+    player: createInitialPlayer(),
+    enemies: [],
+    projectiles: [],
+    particles: [],
+    xpOrbs: [],
+
+    // Stats
     score: 0,
-    gameTime: 0,
+    totalEnemiesKilled: 0,
+    killCount: 0,
+    comboCount: 0,
+    lastKillTime: 0,
+
+    // Visual effects
+    screenShake: null,
+
+    // THE BALL system
+    activeFormation: null,
+    ballPhase: null,
+    ballsFormed: 0,
+    colonyCoordination: 0,
+
+    // Emotional system
+    contrastState: {
+      enemyDensity: 0,
+      playerHealthPercent: 1,
+      killsPerSecond: 0,
+      timeSinceLastKill: 0,
+      coordinationLevel: 0,
+    },
+    currentMood: 'flow',
+
+    // Upgrades
+    upgradeChoices: null,
+    activeUpgrades: {
+      upgrades: [],
+      damageMultiplier: 1,
+      attackSpeedMultiplier: 1,
+      moveSpeedMultiplier: 1,
+      pierceCount: 0,
+      orbitActive: false,
+      orbitDamage: 0,
+    },
   };
 }

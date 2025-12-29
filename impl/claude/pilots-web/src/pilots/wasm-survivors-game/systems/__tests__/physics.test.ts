@@ -16,7 +16,7 @@ import {
   createInitialGameState,
   createInitialPlayer,
 } from '../physics';
-import type { Enemy, Projectile } from '@kgents/shared-primitives';
+import type { Enemy, Projectile } from '../../types';
 
 function createTestEnemy(x: number, y: number, overrides?: Partial<Enemy>): Enemy {
   return {
@@ -28,7 +28,10 @@ function createTestEnemy(x: number, y: number, overrides?: Partial<Enemy>): Enem
     health: 50,
     maxHealth: 50,
     damage: 10,
+    speed: 100,
     xpValue: 10,
+    survivalTime: 0,
+    coordinationState: 'idle',
     color: '#F87171',
     behaviorState: 'chase',
     stateStartTime: 0,
@@ -43,7 +46,6 @@ function createTestProjectile(x: number, y: number, vx: number, vy: number): Pro
     velocity: { x: vx, y: vy },
     radius: 5,
     health: 1,
-    maxHealth: 1,
     ownerId: 'player-1',
     damage: 10,
     lifetime: 2000,
@@ -167,7 +169,7 @@ describe('Physics System', () => {
       // Projectile with pierce starting at first enemy
       const pierceProj = createTestProjectile(200, 300, 100, 0);
       (pierceProj as any).pierceRemaining = 2;
-      (pierceProj as any).hitEnemies = [];
+      (pierceProj as any).hitEnemies = new Set<string>();
       state.projectiles = [pierceProj];
 
       const { state: afterCollision, events } = checkCollisions(state);

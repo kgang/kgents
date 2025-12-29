@@ -24,19 +24,15 @@ import type {
   GamePrincipleWeights,
   SkillMetrics,
   CrystalSegment,
-} from '@kgents/shared-primitives';
+  WitnessContext,
+} from '../types';
+
+// Re-export types that other files may need
+export type { WitnessContext, GameCrystal };
 
 // =============================================================================
 // Types
 // =============================================================================
-
-export interface WitnessContext {
-  runId: string;
-  marks: WitnessMark[];
-  ghosts: Ghost[];
-  startTime: number;
-  pendingIntents: Map<string, IntentMark>;
-}
 
 export interface MarkEvent {
   type:
@@ -47,9 +43,11 @@ export interface MarkEvent {
     | 'wave_completed'
     | 'run_ended'
     | 'clutch_survived'
-    | 'first_metamorphosis'; // DD-030: First colossal revelation
+    | 'first_metamorphosis'  // DD-030: First colossal revelation
+    | 'ball_forming'         // Run 036: THE BALL starts forming
+    | 'ball_escaped';        // Run 036: Player escaped THE BALL
   gameTime: number;
-  context: BuildContext;
+  context: BuildContext | (BuildContext & { escapeCount?: number });
 
   // Type-specific fields
   wave?: number;
@@ -389,23 +387,31 @@ function detectEmotion(mark: WitnessMark): CrystalSegment['emotion'] {
 }
 
 /**
- * Generate narrative for a segment
+ * Generate narrative for a segment.
+ *
+ * CREATIVE-IDENTITY: Narratives should reflect the hornet's swagger and dark humor.
+ * This is a magnificent bastard hunting, not a survivor surviving.
  */
 function generateSegmentNarrative(segment: CrystalSegment): string {
   const [startWave, endWave] = segment.waves;
-  const keyMoment = segment.keyMoments[0] || 'progressed steadily';
+  const keyMoment = segment.keyMoments[0] || 'the hunt continued';
 
   switch (segment.emotion) {
     case 'hope':
-      return `Waves ${startWave}-${endWave}: The journey began with promise. ${keyMoment}.`;
+      // Early game: Swagger, not hope
+      return `Waves ${startWave}-${endWave}: The hunt began. ${keyMoment}. "40 per minute. I can do better."`;
     case 'flow':
-      return `Waves ${startWave}-${endWave}: Found rhythm in the chaos. ${keyMoment}.`;
+      // Mid game: In the zone, dark humor
+      return `Waves ${startWave}-${endWave}: The rhythm was perfect. ${keyMoment}. Evolution made this moment.`;
     case 'crisis':
-      return `Waves ${startWave}-${endWave}: Survival on the edge. ${keyMoment}.`;
+      // Late game: Still defiant
+      return `Waves ${startWave}-${endWave}: They were learning. How adorable. ${keyMoment}.`;
     case 'triumph':
-      return `Waves ${startWave}-${endWave}: Victory earned through persistence. ${keyMoment}.`;
+      // Rare victory moment
+      return `Waves ${startWave}-${endWave}: A massacre worthy of song. ${keyMoment}.`;
     case 'grief':
-      return `Waves ${startWave}-${endWave}: The end came. ${keyMoment}.`;
+      // Death: Acceptance, not grief
+      return `Waves ${startWave}-${endWave}: The colony earned this. ${keyMoment}. Respect.`;
     default:
       return `Waves ${startWave}-${endWave}: ${keyMoment}.`;
   }
@@ -464,48 +470,123 @@ function calculateDriftHistory(
 }
 
 /**
- * Generate a title for the run
+ * Generate a title for the run.
+ *
+ * CREATIVE-IDENTITY: Use personality-aware titles with swagger.
+ * The hornet is a MAGNIFICENT BASTARD, not a generic survivor.
  */
 function generateTitle(trace: Trace, weights: GamePrincipleWeights): string {
   const wave = trace.finalContext.wave;
+  const kills = trace.finalContext.enemiesKilled;
   const dominant = Object.entries(weights).sort((a, b) => b[1] - a[1])[0][0];
 
-  const titleParts: Record<string, string> = {
-    aggression: 'The Relentless',
-    defense: 'The Steadfast',
-    mobility: 'The Swift',
-    precision: 'The Precise',
-    synergy: 'The Harmonious',
-  };
+  // Personality-aware titles based on wave reached
+  if (wave >= 10) {
+    // Late game - legendary status
+    const legendaryTitles: Record<string, string> = {
+      aggression: 'The Reaper',
+      defense: 'The Unbroken',
+      mobility: 'The Phantom',
+      precision: 'The Executioner',
+      synergy: 'The Maestro',
+    };
+    return `${legendaryTitles[dominant] || 'The Legend'} (Wave ${wave})`;
+  }
 
-  return `${titleParts[dominant] || 'The Survivor'} (Wave ${wave})`;
+  if (wave >= 7) {
+    // Crisis phase - respectable titles
+    const respectedTitles: Record<string, string> = {
+      aggression: 'The Relentless',
+      defense: 'The Steadfast',
+      mobility: 'The Swift',
+      precision: 'The Precise',
+      synergy: 'The Harmonious',
+    };
+    return `${respectedTitles[dominant] || 'The Hunter'} (Wave ${wave})`;
+  }
+
+  if (wave >= 4) {
+    // Flow phase - developing titles
+    return `The Hunt (Wave ${wave})`;
+  }
+
+  // Early death - brief titles
+  if (kills >= 25) {
+    return `A Brief Hunt (Wave ${wave})`;
+  }
+  return `The Beginning (Wave ${wave})`;
 }
 
 /**
- * Generate the claim (one-sentence proof)
+ * Generate the claim (one-sentence proof).
+ *
+ * CREATIVE-IDENTITY: The claim should have swagger, not just stats.
+ * The hornet doesn't "survive" - they HUNT until the colony wins.
  */
 function generateClaim(trace: Trace, weights: GamePrincipleWeights): string {
   const wave = trace.finalContext.wave;
   const kills = trace.finalContext.enemiesKilled;
   const dominant = Object.entries(weights).sort((a, b) => b[1] - a[1])[0][0];
 
-  const styleDescriptions: Record<string, string> = {
-    aggression: 'aggressive efficiency',
-    defense: 'careful persistence',
-    mobility: 'swift maneuvering',
-    precision: 'calculated strikes',
-    synergy: 'synergistic builds',
+  // Personality-aware style descriptions with swagger
+  const swaggerDescriptions: Record<string, string> = {
+    aggression: 'relentless fury',
+    defense: 'unbreakable will',
+    mobility: 'predatory grace',
+    precision: 'surgical precision',
+    synergy: 'perfect harmony',
   };
 
-  return `Survived ${wave} waves and eliminated ${kills} enemies through ${styleDescriptions[dominant] || 'pure determination'}.`;
+  // Wave-appropriate opening
+  let opening: string;
+  if (wave >= 10) {
+    opening = `Hunted ${kills} souls across ${wave} waves`;
+  } else if (wave >= 7) {
+    opening = `Claimed ${kills} kills through ${wave} waves`;
+  } else if (wave >= 4) {
+    opening = `Took ${kills} with them in ${wave} waves`;
+  } else {
+    opening = `${kills} kills in a brief ${wave}-wave hunt`;
+  }
+
+  // Closing with personality
+  const style = swaggerDescriptions[dominant] || 'sheer determination';
+  const closing = wave >= 7
+    ? `through ${style}. The colony earned this.`
+    : `with ${style}.`;
+
+  return `${opening} ${closing}`;
 }
 
 /**
- * Create Twitter-sized shareable text
+ * Create Twitter-sized shareable text.
+ *
+ * CREATIVE-IDENTITY: The share text should be quotable with swagger.
  */
 function createShareableText(trace: Trace, claim: string): string {
   const wave = trace.finalContext.wave;
-  return `WASM Survivors: ${claim} #WASMSurvivors #Wave${wave}`.slice(0, 280);
+  const kills = trace.finalContext.enemiesKilled;
+
+  // Different formats based on achievement level
+  if (wave >= 10) {
+    return `"The colony always wins. ...Respect."
+
+${kills} kills. Wave ${wave}. A magnificent end.
+
+#HornetSiege #TheColonyAlwaysWins`.slice(0, 280);
+  }
+
+  if (wave >= 7) {
+    return `${claim}
+
+"They earned it."
+
+#HornetSiege #Wave${wave}`.slice(0, 280);
+  }
+
+  return `${claim}
+
+#HornetSiege #WASMSurvivors`.slice(0, 280);
 }
 
 /**

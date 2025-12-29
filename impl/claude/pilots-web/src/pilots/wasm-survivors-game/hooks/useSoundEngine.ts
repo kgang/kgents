@@ -1,20 +1,69 @@
 /**
- * WASM Survivors - Sound Engine Hook
+ * WASM Survivors - Sound Engine Hook (ASMR Audio Transformation)
  *
- * React hook for integrating the sound engine into game components.
+ * React hook for integrating the ASMR audio system into game components.
  * Handles initialization and provides memoized sound triggers.
  *
- * @see systems/sound.ts
+ * Run 036 TRANSFORMATION:
+ * - Replaced playKill() with layered 3-sound ASMR crunch
+ * - Added TRUE SILENCE support during THE BALL formation
+ * - Added spatial audio based on enemy position (stereo panning)
+ * - Multi-kill escalation with pitch/volume ramping
+ * - Graze sound on near-miss events
+ *
+ * "Every kill should sound like biting into a perfect apple."
+ *
+ * @see systems/audio.ts
  */
 
 import { useCallback, useEffect, useRef } from 'react';
+import type { EnemyType, KillTier, BallPhaseType, Mood, Vector2 } from '../types';
+import {
+  initAudio,
+  resumeAudio,
+  setMasterVolume,
+  setSpatialConfig,
+  playLayeredKillSound,
+  playDamageSound,
+  playDashSound,
+  playXPSound,
+  playLevelUpSound,
+  playGrazeSound,
+  playBallPhaseAudio,
+  updateCoordinationBuzz,
+  stopBuzz,
+  stopAmbient,
+  stopAllAudio,
+  setMoodAmbient,
+  playDeathSound,
+  playHoneyDripSound,
+  playFreezeFrameSound,
+  getAudioState,
+  // Debug exports
+  DEBUG_GET_AUDIO_STATE,
+  DEBUG_GET_AUDIO_LEVEL,
+  DEBUG_GET_AUDIO_LOG,
+  DEBUG_CLEAR_AUDIO_LOG,
+} from '../systems/audio';
+// Legacy sound engine for non-ASMR sounds
 import { getSoundEngine, type SoundEngine, type SoundId, type SoundOptions } from '../systems/sound';
 
 export interface UseSoundEngineResult {
-  /** Play a sound effect */
+  /** Play a sound effect (legacy interface) */
   play: (sound: SoundId, options?: SoundOptions) => void;
-  /** Play kill sound with pitch variation based on enemy type (DD-24: added spitter, DD-030-4: added colossal_tide) */
-  playKill: (enemyType: 'basic' | 'fast' | 'tank' | 'boss' | 'spitter' | 'colossal_tide') => void;
+  /**
+   * Play LAYERED kill sound with ASMR crunch (Run 036 Transformation)
+   * @param enemyType - The bee type for sound configuration
+   * @param tier - Kill tier (single/multi/massacre) for audio escalation
+   * @param comboCount - Consecutive kill count for pitch/volume ramping
+   * @param position - Enemy position for spatial audio (stereo panning)
+   */
+  playKill: (
+    enemyType: EnemyType,
+    tier?: KillTier,
+    comboCount?: number,
+    position?: Vector2
+  ) => void;
   /** Play damage sound */
   playDamage: () => void;
   /** Play level up fanfare */
@@ -25,84 +74,263 @@ export interface UseSoundEngineResult {
   playWave: () => void;
   /** Play dash whoosh */
   playDash: () => void;
+  /** Play XP collection sound */
+  playXP: () => void;
+  /**
+   * Play graze sound (near-miss reward)
+   * @param chainCount - Number of consecutive grazes for pitch escalation
+   */
+  playGraze: (chainCount?: number) => void;
+  /**
+   * Set TRUE SILENCE for THE BALL formation
+   * @param enabled - When true, stops ALL audio for maximum dread
+   */
+  setTrueSilence: (enabled: boolean) => void;
+  /**
+   * Update spatial audio config (call each frame with player position)
+   */
+  updateSpatialConfig: (playerPosition: Vector2, listenerRange?: number) => void;
+  /**
+   * Play THE BALL phase audio
+   * @param phase - Ball phase type (forming/sphere/silence/constrict/death)
+   */
+  playBallPhase: (phase: BallPhaseType) => void;
+  /**
+   * Update coordination buzz volume (for THE BALL formation)
+   * @param level - Coordination level (0-10)
+   */
+  updateBuzz: (level: number) => void;
+  /**
+   * Set mood-based ambient audio
+   */
+  setMood: (mood: Mood) => void;
+  /** Play death sound (dignified, not punishing) */
+  playDeath: () => void;
+  /** Play honey drip sound (propolis death effect) */
+  playHoneyDrip: () => void;
+  /** Play freeze frame sound (time-stop impact) */
+  playFreezeFrame: (type: 'significant' | 'multi' | 'critical' | 'massacre') => void;
   /** Mute all sounds */
   mute: () => void;
   /** Unmute sounds */
   unmute: () => void;
   /** Check if muted */
   isMuted: boolean;
+  /** Check if in TRUE SILENCE mode */
+  isSilent: boolean;
 }
 
 /**
- * Hook to use the sound engine in React components
+ * Hook to use the ASMR audio system in React components
  *
- * The sound engine is lazily initialized on first sound play
- * (requires user interaction due to autoplay policies).
+ * Run 036 TRANSFORMATION: Now uses layered audio.ts for ASMR-quality sounds.
+ * Legacy sound.ts is still available for non-ASMR sounds.
+ *
+ * Initialization happens on first user interaction (autoplay policy).
+ *
+ * "Every kill should sound like biting into a perfect apple."
  */
 export function useSoundEngine(): UseSoundEngineResult {
-  const engineRef = useRef<SoundEngine | null>(null);
+  // Legacy engine for sounds not yet in audio.ts
+  const legacyEngineRef = useRef<SoundEngine | null>(null);
   const mutedRef = useRef<boolean>(false);
+  const silentRef = useRef<boolean>(false);
+  const audioInitializedRef = useRef<boolean>(false);
 
-  // Initialize engine ref on mount
+  // Initialize both audio systems on mount
   useEffect(() => {
-    engineRef.current = getSoundEngine();
+    // Legacy engine for backward compatibility
+    legacyEngineRef.current = getSoundEngine();
+
+    // Initialize ASMR audio system
+    audioInitializedRef.current = initAudio();
+
+    // Expose debug API for Playwright testing
+    if (typeof window !== 'undefined') {
+      (window as unknown as Record<string, unknown>).DEBUG_GET_AUDIO_STATE = DEBUG_GET_AUDIO_STATE;
+      (window as unknown as Record<string, unknown>).DEBUG_GET_AUDIO_LEVEL = DEBUG_GET_AUDIO_LEVEL;
+      (window as unknown as Record<string, unknown>).DEBUG_GET_AUDIO_LOG = DEBUG_GET_AUDIO_LOG;
+      (window as unknown as Record<string, unknown>).DEBUG_CLEAR_AUDIO_LOG = DEBUG_CLEAR_AUDIO_LOG;
+    }
+
+    // Cleanup
+    return () => {
+      stopAllAudio();
+    };
   }, []);
 
+  // Resume audio on user interaction (autoplay policy)
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      if (audioInitializedRef.current) {
+        resumeAudio();
+      }
+    };
+
+    window.addEventListener('click', handleUserInteraction, { once: true });
+    window.addEventListener('keydown', handleUserInteraction, { once: true });
+
+    return () => {
+      window.removeEventListener('click', handleUserInteraction);
+      window.removeEventListener('keydown', handleUserInteraction);
+    };
+  }, []);
+
+  // Legacy play for sounds not in audio.ts
   const play = useCallback((sound: SoundId, options?: SoundOptions) => {
-    engineRef.current?.play(sound, options);
+    if (mutedRef.current || silentRef.current) return;
+    legacyEngineRef.current?.play(sound, options);
   }, []);
 
-  const playKill = useCallback((enemyType: 'basic' | 'fast' | 'tank' | 'boss' | 'spitter' | 'colossal_tide') => {
-    // Vary pitch based on enemy type for variety (DD-24: added spitter, DD-030-4: added colossal_tide)
-    const pitchMap: Record<string, number> = {
-      basic: 1.0,
-      fast: 1.2,
-      tank: 0.7,
-      boss: 0.5,
-      spitter: 1.1,
-      colossal_tide: 0.4,  // Very deep rumble for THE TIDE
-    };
-    const volumeMap: Record<string, number> = {
-      basic: 0.8,
-      fast: 0.7,
-      tank: 1.0,
-      boss: 1.0,
-      spitter: 0.9,
-      colossal_tide: 1.0,  // Full volume for THE TIDE death
-    };
-    engineRef.current?.play('kill', {
-      pitch: pitchMap[enemyType],
-      volume: volumeMap[enemyType],
-    });
+  /**
+   * ASMR Kill Sound (Run 036 Transformation)
+   *
+   * THREE layers create ASMR satisfaction:
+   * - Layer 1: CRUNCH (initial impact, noise-based)
+   * - Layer 2: SNAP/SHELL (high-freq attack transient)
+   * - Layer 3: DECAY/THUD (low-freq sustain)
+   *
+   * Plus: spatial audio, multi-kill escalation, pitch variation
+   */
+  const playKill = useCallback((
+    enemyType: EnemyType,
+    tier: KillTier = 'single',
+    comboCount: number = 1,
+    position?: Vector2
+  ) => {
+    if (mutedRef.current || silentRef.current) return;
+    playLayeredKillSound(enemyType, tier, comboCount, position);
   }, []);
 
   const playDamage = useCallback(() => {
-    engineRef.current?.play('damage');
+    if (mutedRef.current || silentRef.current) return;
+    playDamageSound();
   }, []);
 
   const playLevelUp = useCallback(() => {
-    engineRef.current?.play('levelup');
+    if (mutedRef.current || silentRef.current) return;
+    playLevelUpSound();
   }, []);
 
+  // Legacy synergy sound (not yet in audio.ts)
   const playSynergy = useCallback(() => {
-    engineRef.current?.play('synergy');
+    if (mutedRef.current || silentRef.current) return;
+    legacyEngineRef.current?.play('synergy');
   }, []);
 
+  // Legacy wave sound (not yet in audio.ts)
   const playWave = useCallback(() => {
-    engineRef.current?.play('wave');
+    if (mutedRef.current || silentRef.current) return;
+    legacyEngineRef.current?.play('wave');
   }, []);
 
   const playDash = useCallback(() => {
-    engineRef.current?.play('dash');
+    if (mutedRef.current || silentRef.current) return;
+    playDashSound();
+  }, []);
+
+  const playXP = useCallback(() => {
+    if (mutedRef.current || silentRef.current) return;
+    playXPSound();
+  }, []);
+
+  /**
+   * Graze sound (near-miss reward)
+   * Pitch increases with chain count for satisfying escalation.
+   */
+  const playGraze = useCallback((chainCount: number = 1) => {
+    if (mutedRef.current || silentRef.current) return;
+    playGrazeSound(chainCount);
+  }, []);
+
+  /**
+   * TRUE SILENCE for THE BALL formation
+   *
+   * "Silence should be terrifying."
+   *
+   * When enabled, stops ALL audio - no ambient, no buzz, nothing.
+   * The absence of sound creates physical dread.
+   */
+  const setTrueSilence = useCallback((enabled: boolean) => {
+    silentRef.current = enabled;
+    if (enabled) {
+      stopBuzz();
+      stopAmbient();
+    }
+  }, []);
+
+  /**
+   * Update spatial audio config
+   * Call each frame with player position for stereo panning.
+   */
+  const updateSpatialConfig = useCallback((playerPosition: Vector2, listenerRange: number = 600) => {
+    setSpatialConfig({ playerPosition, listenerRange });
+  }, []);
+
+  /**
+   * THE BALL phase audio
+   * Each phase has distinct audio treatment:
+   * - forming: buzz crescendo
+   * - sphere: peak buzz
+   * - silence: TRUE SILENCE (dread)
+   * - constrict: bass drop + cooking crackle
+   * - death: sizzle + respect pulse
+   */
+  const playBallPhase = useCallback((phase: BallPhaseType) => {
+    if (mutedRef.current) return;
+    playBallPhaseAudio(phase);
+    // TRUE SILENCE is handled inside playBallPhaseAudio for 'silence' phase
+  }, []);
+
+  /**
+   * Update coordination buzz (for THE BALL formation)
+   */
+  const updateBuzz = useCallback((level: number) => {
+    if (mutedRef.current || silentRef.current) return;
+    updateCoordinationBuzz(level);
+  }, []);
+
+  /**
+   * Set mood-based ambient audio
+   */
+  const setMood = useCallback((mood: Mood) => {
+    if (mutedRef.current || silentRef.current) return;
+    setMoodAmbient(mood);
+  }, []);
+
+  /**
+   * Death sound (dignified, not punishing)
+   */
+  const playDeath = useCallback(() => {
+    if (mutedRef.current) return; // Play even in silence (death overrides)
+    playDeathSound();
+  }, []);
+
+  /**
+   * Honey drip sound (propolis death effect)
+   */
+  const playHoneyDrip = useCallback(() => {
+    if (mutedRef.current || silentRef.current) return;
+    playHoneyDripSound();
+  }, []);
+
+  /**
+   * Freeze frame sound (time-stop impact)
+   */
+  const playFreezeFrame = useCallback((type: 'significant' | 'multi' | 'critical' | 'massacre') => {
+    if (mutedRef.current || silentRef.current) return;
+    playFreezeFrameSound(type);
   }, []);
 
   const mute = useCallback(() => {
-    engineRef.current?.mute();
+    legacyEngineRef.current?.mute();
+    setMasterVolume(0);
     mutedRef.current = true;
   }, []);
 
   const unmute = useCallback(() => {
-    engineRef.current?.unmute();
+    legacyEngineRef.current?.unmute();
+    setMasterVolume(0.5);
     mutedRef.current = false;
   }, []);
 
@@ -114,9 +342,20 @@ export function useSoundEngine(): UseSoundEngineResult {
     playSynergy,
     playWave,
     playDash,
+    playXP,
+    playGraze,
+    setTrueSilence,
+    updateSpatialConfig,
+    playBallPhase,
+    updateBuzz,
+    setMood,
+    playDeath,
+    playHoneyDrip,
+    playFreezeFrame,
     mute,
     unmute,
     isMuted: mutedRef.current,
+    isSilent: getAudioState().isSilent,
   };
 }
 

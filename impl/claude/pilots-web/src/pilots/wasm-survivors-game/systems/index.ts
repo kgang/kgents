@@ -64,15 +64,15 @@ export {
   type ActiveUpgrades,
 } from './upgrades';
 
-// DD-21: Enemy behavior system
+// DD-21: Bee behavior system (PROTO_SPEC S6: Bee Taxonomy)
 export {
-  ENEMY_BEHAVIORS,
-  updateEnemyBehavior,
-  getEnemyTelegraph,
-  getEnemyMovement,
-  isEnemyVulnerable,
-  isEnemyAttacking,
-  type EnemyBehaviorConfig,
+  BEE_BEHAVIORS,
+  updateBeeBehavior,
+  getBeeTelegraph,
+  getBeeMovement,
+  isBeeVulnerable,
+  isBeeAttacking,
+  type BeeBehaviorConfig,
   type TelegraphData,
 } from './enemies';
 
@@ -274,3 +274,123 @@ export {
   type UseAdaptationPreferencesResult,
   type UseAdaptationNotificationsResult,
 } from './witness-adaptive-bridge';
+
+// Run 036: New Abilities System (61 composable abilities)
+export {
+  ABILITY_POOL,
+  getAbility,
+  getAbilitiesByCategory,
+  getRiskRewardAbilities,
+  getKeystoneAbilities,
+  createInitialAbilities,
+  addAbility,
+  generateAbilityChoices,
+  hasAbility,
+  getAbilityLevel,
+  type AbilityId,
+  type AbilityCategory,
+  type Ability,
+  type AbilityMechanic,
+  type AbilityCurse,
+  type CurseEffect,
+  type ActiveAbilities as NewActiveAbilities,
+  type ComputedEffects,
+  type RiskLevel,
+  type SkillDemand,
+  type ComboPotential,
+} from './abilities';
+
+// Run 036: Mandible Reaver Melee System
+export {
+  MANDIBLE_REAVER_CONFIG,
+  createInitialMeleeState,
+  canAttack,
+  startAttack,
+  isInAttackArc,
+  findTargetsInArc,
+  calculateMeleeDamage,
+  updateMeleeAttack,
+  getModifiedConfig,
+  getMultishotDirections,
+  getArcRenderPoints,
+  getAttackProgress,
+  type MandibleReaverConfig,
+  type MeleeAttackState,
+  type MeleeUpdateResult,
+  type MeleeHit,
+  type MeleeEvent,
+  type MeleeEventType,
+  type MeleeTarget,
+} from './melee';
+
+// Run 036: Hornet-Native Combo Discovery System (27 combos)
+export {
+  COMBO_POOL,
+  getCombo,
+  getCombosByTier,
+  createInitialComboState,
+  applyComboDiscovery,
+  activateCombo,
+  trackAbilityOrder,
+  checkForCombos,
+  checkDeathCombos,
+  getPossibleCombos,
+  getComboHint,
+  type Combo,
+  type ComboTier,
+  type ComboEffect,
+  type ComboState,
+  type ComboDiscovery,
+  type ComboCheckResult,
+  type AlmostCombo,
+  type SpecialCondition,
+} from './combos';
+
+// Run 036: Apex Strike Dash System (Predator Hunt)
+export {
+  // Config
+  APEX_CONFIG,
+  // State factory
+  createInitialApexState,
+  // Phase checks
+  canApex,
+  canChain,
+  isVulnerable,
+  isUnstoppable,
+  isStriking,
+  isLocking,
+  isInGripMoment,
+  // Phase transitions
+  initiateLock,
+  updateLockDirection,
+  executeStrike,
+  onStrikeHit,
+  onStrikeMiss,
+  attemptChain,
+  // Hit detection
+  checkStrikeHit,
+  // Update loop
+  updateApexStrike,
+  getStrikeVelocity,
+  // Progress getters
+  getBloodlustPercent,
+  getBloodlustDamageMultiplier,
+  getCooldownProgress,
+  getChainWindowProgress,
+  getLockProgress,
+  getStrikeProgress,
+  // Visual helpers
+  getBloodlustColor,
+  getStrikeTrailPoints,
+  getAimIndicatorEnd,
+  // Input helpers
+  getAimFromInput,
+  // Types
+  type ApexPhase,
+  type ApexStrikeState,
+  type ApexStrikeConfig,
+  type ApexEvent,
+  type StrikeHitResult,
+  type ApexUpdateResult,
+  type ApexTarget,
+} from './apex-strike';

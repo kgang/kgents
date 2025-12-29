@@ -22,7 +22,15 @@
 // =============================================================================
 
 // DD-16: Added bassDrop and heartbeat for clutch moments
-export type SoundId = 'kill' | 'damage' | 'levelup' | 'synergy' | 'wave' | 'dash' | 'bassDrop' | 'heartbeat';
+// NEW: Added alarmPheromone and ballForming for JUICE Appendix E
+// Graze: Sharp tick sound for near-miss, pitch increases with chain
+// Apex Strike: charge, swing, hit, miss, powerup sounds
+export type SoundId =
+  | 'kill' | 'damage' | 'levelup' | 'synergy' | 'wave' | 'dash'
+  | 'bassDrop' | 'heartbeat'
+  | 'alarmPheromone' | 'ballForming' | 'ballSilence' | 'massacre'
+  | 'graze'
+  | 'charge' | 'swing' | 'hit' | 'miss' | 'powerup';
 
 export interface SoundEngine {
   play(sound: SoundId, options?: SoundOptions): void;
@@ -117,6 +125,22 @@ export function createSoundEngine(): SoundEngine {
           break;
         case 'heartbeat':
           playHeartbeatSound(ctx, master, volume);
+          break;
+        // NEW: Appendix E JUICE audio cues
+        case 'alarmPheromone':
+          playAlarmPheromoneSound(ctx, master, volume);
+          break;
+        case 'ballForming':
+          playBallFormingSound(ctx, master, volume);
+          break;
+        case 'ballSilence':
+          playBallSilenceSound(ctx, master, volume);
+          break;
+        case 'massacre':
+          playMassacreSound(ctx, master, volume);
+          break;
+        case 'graze':
+          playGrazeSound(ctx, master, volume, pitch);
           break;
       }
     },
@@ -522,6 +546,281 @@ function playHeartbeatThump(
 
   osc.start(startTime);
   osc.stop(startTime + duration);
+}
+
+// =============================================================================
+// NEW: Appendix E JUICE Audio Cues
+// =============================================================================
+
+/**
+ * Alarm Pheromone Sound: Rising frequency sweep
+ * "freqStart: 400Hz -> freqEnd: 2000Hz over 300ms"
+ * Plays when scouts alert the colony
+ */
+function playAlarmPheromoneSound(
+  ctx: AudioContext,
+  output: GainNode,
+  volume: number
+) {
+  const now = ctx.currentTime;
+  const duration = 0.3; // 300ms
+
+  // Rising frequency sweep (400Hz -> 2000Hz)
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(400, now);
+  osc.frequency.exponentialRampToValueAtTime(2000, now + duration);
+
+  // Second oscillator for richness
+  const osc2 = ctx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(450, now);
+  osc2.frequency.exponentialRampToValueAtTime(2200, now + duration);
+
+  // Band-pass filter for bee-like buzz quality
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(800, now);
+  filter.frequency.exponentialRampToValueAtTime(1500, now + duration);
+  filter.Q.value = 2;
+
+  // Gain envelope - urgent attack
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(volume * 0.4, now + 0.02);
+  gain.gain.setValueAtTime(volume * 0.4, now + duration * 0.7);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  const gain2 = ctx.createGain();
+  gain2.gain.setValueAtTime(volume * 0.2, now);
+  gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  // Connect
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(output);
+
+  osc2.connect(gain2);
+  gain2.connect(output);
+
+  osc.start(now);
+  osc2.start(now);
+  osc.stop(now + duration);
+  osc2.stop(now + duration);
+}
+
+/**
+ * Ball Forming Sound: Building buzz crescendo
+ * "buzzVolume: 0.3 -> buzzPeak: 1.0"
+ * Creates mounting dread as THE BALL forms
+ */
+function playBallFormingSound(
+  ctx: AudioContext,
+  output: GainNode,
+  volume: number
+) {
+  const now = ctx.currentTime;
+  const duration = 2.0; // Long crescendo
+
+  // Multi-layered buzz
+  const frequencies = [150, 180, 210]; // Chord of buzzes
+  const oscillators: OscillatorNode[] = [];
+  const gains: GainNode[] = [];
+
+  frequencies.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, now);
+    // Slight pitch rise for tension
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.2, now + duration);
+
+    // Tremolo for vibration feel
+    const tremolo = ctx.createGain();
+    const tremoloOsc = ctx.createOscillator();
+    tremoloOsc.type = 'sine';
+    tremoloOsc.frequency.value = 30 + i * 5; // Different rates
+
+    tremoloOsc.connect(tremolo.gain);
+    tremolo.gain.setValueAtTime(0.7, now);
+
+    const gain = ctx.createGain();
+    // Crescendo from quiet to loud
+    gain.gain.setValueAtTime(volume * 0.1, now);
+    gain.gain.linearRampToValueAtTime(volume * 0.3, now + duration);
+
+    osc.connect(tremolo);
+    tremolo.connect(gain);
+    gain.connect(output);
+
+    tremoloOsc.start(now);
+    tremoloOsc.stop(now + duration);
+    osc.start(now);
+    osc.stop(now + duration);
+
+    oscillators.push(osc);
+    gains.push(gain);
+  });
+}
+
+/**
+ * Ball Silence Sound: Sudden cut to eerie low drone
+ * "silenceDuration: 3000ms of dread"
+ * The moment before THE BALL constricts
+ */
+function playBallSilenceSound(
+  ctx: AudioContext,
+  output: GainNode,
+  volume: number
+) {
+  const now = ctx.currentTime;
+  const duration = 3.0; // 3 seconds of dread
+
+  // Very low sub-bass drone
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = 30; // Sub-bass rumble
+
+  // Subtle tremolo for unease
+  const tremoloOsc = ctx.createOscillator();
+  tremoloOsc.type = 'sine';
+  tremoloOsc.frequency.value = 2; // Slow pulse
+
+  const tremoloGain = ctx.createGain();
+  tremoloOsc.connect(tremoloGain.gain);
+  tremoloGain.gain.setValueAtTime(0.8, now);
+
+  // Very quiet - this is about absence
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(volume * 0.15, now);
+  gain.gain.setValueAtTime(volume * 0.15, now + duration * 0.8);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  osc.connect(tremoloGain);
+  tremoloGain.connect(gain);
+  gain.connect(output);
+
+  tremoloOsc.start(now);
+  osc.start(now);
+  tremoloOsc.stop(now + duration);
+  osc.stop(now + duration);
+}
+
+/**
+ * Massacre Sound: Powerful multi-layer impact
+ * Plays on 5+ simultaneous kills - "DOPAMINE HIT"
+ */
+function playMassacreSound(
+  ctx: AudioContext,
+  output: GainNode,
+  volume: number
+) {
+  const now = ctx.currentTime;
+  const duration = 0.4;
+
+  // Low bass punch
+  const bassOsc = ctx.createOscillator();
+  bassOsc.type = 'sine';
+  bassOsc.frequency.setValueAtTime(80, now);
+  bassOsc.frequency.exponentialRampToValueAtTime(40, now + duration);
+
+  const bassGain = ctx.createGain();
+  bassGain.gain.setValueAtTime(volume * 0.7, now);
+  bassGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  // Distorted impact
+  const distortion = ctx.createWaveShaper();
+  distortion.curve = makeDistortionCurve(80);
+
+  // White noise burst for crunch
+  const bufferSize = ctx.sampleRate * 0.1;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  }
+
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(volume * 0.3, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+  // High shimmer (reward sound)
+  const shimmerOsc = ctx.createOscillator();
+  shimmerOsc.type = 'sine';
+  shimmerOsc.frequency.value = 1200;
+
+  const shimmerGain = ctx.createGain();
+  shimmerGain.gain.setValueAtTime(0, now);
+  shimmerGain.gain.linearRampToValueAtTime(volume * 0.15, now + 0.05);
+  shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+  // Connect
+  bassOsc.connect(distortion);
+  distortion.connect(bassGain);
+  bassGain.connect(output);
+
+  noise.connect(noiseGain);
+  noiseGain.connect(output);
+
+  shimmerOsc.connect(shimmerGain);
+  shimmerGain.connect(output);
+
+  bassOsc.start(now);
+  noise.start(now);
+  shimmerOsc.start(now);
+
+  bassOsc.stop(now + duration);
+  noise.stop(now + 0.1);
+  shimmerOsc.stop(now + 0.3);
+}
+
+/**
+ * Graze Sound: Sharp tick for near-miss
+ * Duration: ~50ms
+ * Pitch increases with chain count for satisfying escalation
+ */
+function playGrazeSound(
+  ctx: AudioContext,
+  output: GainNode,
+  volume: number,
+  pitch: number
+) {
+  const now = ctx.currentTime;
+  const duration = 0.05; // Very short tick
+
+  // High sine oscillator for sharp tick
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(1600 * pitch, now);
+  osc.frequency.exponentialRampToValueAtTime(1200 * pitch, now + duration);
+
+  // Second harmonic for richness
+  const osc2 = ctx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(2400 * pitch, now);
+  osc2.frequency.exponentialRampToValueAtTime(1800 * pitch, now + duration);
+
+  // Gain envelope - sharp attack, quick decay
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(volume * 0.35, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  const gain2 = ctx.createGain();
+  gain2.gain.setValueAtTime(volume * 0.15, now);
+  gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  // Connect
+  osc.connect(gain);
+  osc2.connect(gain2);
+  gain.connect(output);
+  gain2.connect(output);
+
+  osc.start(now);
+  osc2.start(now);
+  osc.stop(now + duration);
+  osc2.stop(now + duration);
 }
 
 // =============================================================================

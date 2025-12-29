@@ -23,7 +23,7 @@ import type {
   BuildContext,
   GamePrincipleWeights,
   SkillMetrics,
-} from '@kgents/shared-primitives';
+} from '../types';
 import type { UpgradeType, VerbUpgrade } from './upgrades';
 
 // =============================================================================

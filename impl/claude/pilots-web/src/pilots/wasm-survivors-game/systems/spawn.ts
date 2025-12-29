@@ -1,32 +1,34 @@
 /**
- * WASM Survivors - Spawn System
+ * Hornet Siege - Spawn System (Bee Colony)
  *
- * Handles enemy spawning with wave-based difficulty progression.
+ * Handles bee spawning with wave-based difficulty progression.
+ * Aligned to PROTO_SPEC S6 (Bee Taxonomy).
  * Budget: < 1ms per frame
  *
- * @see pilots/wasm-survivors-game/.outline.md
+ * @see pilots/wasm-survivors-game/PROTO_SPEC.md
  */
 
-import type { GameState, Enemy, EnemyType, Vector2 } from '@kgents/shared-primitives';
-import { ARENA_WIDTH, ARENA_HEIGHT } from './physics';
+import type { Enemy, EnemyType, Vector2, CoordinationState } from '../types';
+import { COLORS, ARENA_WIDTH, ARENA_HEIGHT } from '../types';
 
 // =============================================================================
-// Constants
+// Bee Colony Configuration
 // =============================================================================
 
-// Wave configuration
+// Wave configuration (per PROTO_SPEC Appendix F)
+// TUNED: Faster spawns so THE BALL can actually form!
 const WAVE_DURATION = 30000; // 30 seconds per wave
-const SPAWN_INTERVAL_MIN = 300; // minimum spawn interval
+const SPAWN_INTERVAL_MIN = 200; // minimum spawn interval (was 300 - now faster!)
 
-// Color palette from design docs
-// DD-24: Added spitter with distinct purple color
-const ENEMY_COLORS: Record<EnemyType, string> = {
-  basic: '#FF3366', // Corrupted Red (Shambler)
-  fast: '#FF6699', // Lighter red for fast (Rusher)
-  tank: '#CC2952', // Darker red for tank
-  boss: '#FF0044', // Bright red for boss
-  spitter: '#AA44FF', // Purple for ranged (DD-24)
-  colossal_tide: '#880000', // Deep crimson for THE TIDE (DD-030-4)
+// Bee colors from types.ts COLORS constant
+// Exported for use in rendering and tests
+// Note: Uses BeeType (not full EnemyType) since we only spawn bees
+export const BEE_COLORS: Record<import('../types').BeeType, string> = {
+  worker: COLORS.worker,     // #F4D03F - Yellow swarmers
+  scout: COLORS.scout,       // #F39C12 - Orange alerters
+  guard: COLORS.guard,       // #E74C3C - Red defenders
+  propolis: COLORS.propolis, // #9B59B6 - Purple sticky
+  royal: COLORS.royal,       // #3498DB - Blue elite
 };
 
 // =============================================================================
@@ -39,11 +41,21 @@ export interface SpawnResult {
   newEnemies: Enemy[];
 }
 
+// GameState stub for this module (to avoid circular imports)
+interface GameState {
+  status: string;
+  wave: number;
+  waveTimer: number;
+  gameTime: number;
+  enemies: Enemy[];
+  waveEnemiesRemaining?: number;
+}
+
 interface WaveConfig {
   baseEnemies: number;
   spawnRate: number; // spawns per second
   enemyTypes: { type: EnemyType; weight: number }[];
-  bossWave: boolean;
+  royalWave: boolean; // Was "bossWave" - now uses bee terminology
 }
 
 // =============================================================================
@@ -52,48 +64,59 @@ interface WaveConfig {
 
 /**
  * Get configuration for a specific wave
+ * Per PROTO_SPEC Appendix F: Enemy Introduction
+ *
+ * Wave 1: Workers only (learn basics)
+ * Wave 3: Scouts (coordination preview)
+ * Wave 5: Guards (tanky, prioritization)
+ * Wave 7: Propolis (ranged, dodging)
+ * Wave 9+: Royal Guards + THE BALL
  */
 function getWaveConfig(wave: number): WaveConfig {
-  // Every 5 waves is a boss wave
-  const isBossWave = wave > 0 && wave % 5 === 0;
+  // Every 5 waves from wave 9 is a royal wave
+  const isRoyalWave = wave >= 9 && wave % 5 === 4;
 
-  // Base enemy count increases with wave
-  const baseEnemies = 10 + wave * 5;
+  // TUNED: Higher base enemy count so THE BALL can form
+  // Was: 5 + wave * 3, capped at 25
+  // Now: 8 + wave * 3, capped at 30 (more bees = more likely to form BALL)
+  const baseEnemies = Math.min(8 + wave * 3, 30);
 
-  // Spawn rate increases (more enemies per second)
-  const spawnRate = Math.min(1 + wave * 0.2, 5); // caps at 5/sec
+  // TUNED: Faster spawn rate so bees accumulate
+  // Was: 1 + wave * 0.15, capped at 4
+  // Now: 1.5 + wave * 0.2, capped at 5 (faster spawning!)
+  const spawnRate = Math.min(1.5 + wave * 0.2, 5);
 
-  // Enemy type distribution evolves
+  // Bee type distribution evolves per PROTO_SPEC S6
   const enemyTypes: { type: EnemyType; weight: number }[] = [];
 
-  // Always have basic enemies
-  enemyTypes.push({ type: 'basic', weight: Math.max(50 - wave * 5, 20) });
+  // Wave 1+: Workers always present (basic swarmers)
+  enemyTypes.push({ type: 'worker', weight: Math.max(60 - wave * 5, 25) });
 
-  // Fast enemies appear from wave 2
-  if (wave >= 2) {
-    enemyTypes.push({ type: 'fast', weight: Math.min(wave * 5, 30) });
-  }
-
-  // DD-24: Spitter enemies appear from wave 3
+  // Wave 3+: Scouts appear (fast, trigger alarm pheromones)
   if (wave >= 3) {
-    enemyTypes.push({ type: 'spitter', weight: Math.min((wave - 2) * 3, 15) });
+    enemyTypes.push({ type: 'scout', weight: Math.min((wave - 2) * 5, 25) });
   }
 
-  // Tank enemies appear from wave 4
-  if (wave >= 4) {
-    enemyTypes.push({ type: 'tank', weight: Math.min((wave - 3) * 5, 25) });
+  // Wave 5+: Guards appear (tanky, block player)
+  if (wave >= 5) {
+    enemyTypes.push({ type: 'guard', weight: Math.min((wave - 4) * 4, 20) });
   }
 
-  // Boss on boss waves
-  if (isBossWave) {
-    enemyTypes.push({ type: 'boss', weight: 10 });
+  // Wave 7+: Propolis appear (ranged, slows player with sticky attacks)
+  if (wave >= 7) {
+    enemyTypes.push({ type: 'propolis', weight: Math.min((wave - 6) * 3, 15) });
+  }
+
+  // Wave 9+: Royal Guards on royal waves (elite, complex patterns)
+  if (isRoyalWave) {
+    enemyTypes.push({ type: 'royal', weight: 10 });
   }
 
   return {
     baseEnemies,
     spawnRate,
     enemyTypes,
-    bossWave: isBossWave,
+    royalWave: isRoyalWave,
   };
 }
 
@@ -109,7 +132,7 @@ function selectEnemyType(config: WaveConfig): EnemyType {
     if (random <= 0) return type;
   }
 
-  return 'basic';
+  return 'worker';
 }
 
 // =============================================================================
@@ -117,18 +140,18 @@ function selectEnemyType(config: WaveConfig): EnemyType {
 // =============================================================================
 
 /**
- * Create an enemy of the specified type
- * DD-030: Now initializes metamorphosis fields (survivalTime, pulsingState)
+ * Create a bee enemy of the specified type
+ * Per PROTO_SPEC S6 (Bee Taxonomy)
  */
 function createEnemy(type: EnemyType, position: Vector2, wave: number): Enemy {
-  const baseStats = getEnemyBaseStats(type);
+  const baseStats = getBeeBaseStats(type);
 
-  // Scale with wave
+  // Scale with wave (colony gets stronger over time)
   const healthMultiplier = 1 + wave * 0.1;
   const damageMultiplier = 1 + wave * 0.05;
 
   return {
-    id: `enemy-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: `bee-${type}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     type,
     position,
     velocity: { x: 0, y: 0 },
@@ -136,38 +159,48 @@ function createEnemy(type: EnemyType, position: Vector2, wave: number): Enemy {
     health: Math.floor(baseStats.health * healthMultiplier),
     maxHealth: Math.floor(baseStats.health * healthMultiplier),
     damage: Math.floor(baseStats.damage * damageMultiplier),
+    speed: baseStats.speed,
     xpValue: baseStats.xpValue,
-    color: ENEMY_COLORS[type],
-    // DD-030: Metamorphosis fields
     survivalTime: 0,
-    pulsingState: 'normal',
+    coordinationState: 'idle' as CoordinationState,
   };
 }
 
 /**
- * Get base stats for enemy type
+ * Get base stats for bee type
+ * Per PROTO_SPEC S6 (Bee Taxonomy)
  */
-function getEnemyBaseStats(type: EnemyType): {
+function getBeeBaseStats(type: EnemyType): {
   health: number;
   damage: number;
   radius: number;
+  speed: number;
   xpValue: number;
 } {
+  // TUNED: Slightly higher HP so bees survive long enough to form THE BALL
   switch (type) {
-    case 'basic':
-      return { health: 20, damage: 10, radius: 12, xpValue: 10 };
-    case 'fast':
-      return { health: 10, damage: 8, radius: 8, xpValue: 15 };
-    case 'spitter':  // DD-24: Spitter stats
-      return { health: 15, damage: 15, radius: 10, xpValue: 20 };
-    case 'tank':
-      return { health: 80, damage: 20, radius: 20, xpValue: 30 };
-    case 'boss':
-      return { health: 300, damage: 30, radius: 35, xpValue: 100 };
-    case 'colossal_tide':  // DD-030-4: THE TIDE stats (created via metamorphosis, not spawn)
-      return { health: 100, damage: 25, radius: 36, xpValue: 200 };
+    case 'worker':
+      // Swarms toward player, basic kiting enemy
+      // HP: 15 -> 22 (survives an extra hit)
+      return { health: 22, damage: 8, radius: 10, speed: 80, xpValue: 10 };
+    case 'scout':
+      // Fast, alerts others via pheromones, priority target
+      // HP: 10 -> 15 (still fragile but not instant-kill)
+      return { health: 15, damage: 5, radius: 8, speed: 120, xpValue: 15 };
+    case 'guard':
+      // Slow, high HP, blocks player movement
+      // HP: 60 -> 80 (tankier, creates obstacles)
+      return { health: 80, damage: 15, radius: 18, speed: 40, xpValue: 25 };
+    case 'propolis':
+      // Ranged sticky attacks, slows player
+      // HP: 20 -> 30 (survives to do its job)
+      return { health: 30, damage: 10, radius: 12, speed: 50, xpValue: 20 };
+    case 'royal':
+      // Elite queen's guard, complex patterns, THE BALL anchor
+      // HP: 200 -> 250 (proper miniboss)
+      return { health: 250, damage: 25, radius: 30, speed: 60, xpValue: 100 };
     default:
-      return { health: 20, damage: 10, radius: 12, xpValue: 10 };
+      return { health: 22, damage: 8, radius: 10, speed: 80, xpValue: 10 };
   }
 }
 

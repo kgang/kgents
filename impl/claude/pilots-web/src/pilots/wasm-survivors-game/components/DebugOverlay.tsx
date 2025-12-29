@@ -210,13 +210,13 @@ function TelegraphIndicators({ telegraphs }: { telegraphs: DebugTelegraph[] }) {
                 style={{
                   width: `${tel.progress * 100}%`,
                   backgroundColor:
-                    tel.type === 'stomp'
+                    tel.type === 'block'    // Guard block attack (red)
                       ? '#ef4444'
-                      : tel.type === 'charge'
+                      : tel.type === 'sting'  // Scout sting attack (orange)
                         ? '#f97316'
-                        : tel.type === 'projectile'
+                        : tel.type === 'sticky'  // Propolis ranged attack (purple)
                           ? '#a855f7'
-                          : '#eab308',
+                          : '#eab308',  // Swarm/combo (yellow)
                 }}
               />
             </div>
@@ -225,8 +225,8 @@ function TelegraphIndicators({ telegraphs }: { telegraphs: DebugTelegraph[] }) {
             </div>
           </div>
 
-          {/* Radius circle for stomp attacks */}
-          {tel.type === 'stomp' && tel.radius && (
+          {/* Radius circle for block attacks (guard's AoE) */}
+          {tel.type === 'block' && tel.radius && (
             <div
               className="absolute rounded-full border-2 border-dashed pointer-events-none"
               style={{
@@ -241,8 +241,8 @@ function TelegraphIndicators({ telegraphs }: { telegraphs: DebugTelegraph[] }) {
             />
           )}
 
-          {/* Direction line for charge attacks */}
-          {tel.type === 'charge' && tel.direction && (
+          {/* Direction line for sting attacks (scout's dash) */}
+          {tel.type === 'sting' && tel.direction && (
             <svg
               className="absolute pointer-events-none"
               style={{
@@ -274,8 +274,8 @@ function TelegraphIndicators({ telegraphs }: { telegraphs: DebugTelegraph[] }) {
             </svg>
           )}
 
-          {/* Direction line for projectile (aim) attacks */}
-          {tel.type === 'projectile' && tel.direction && (
+          {/* Direction line for sticky (propolis ranged) attacks */}
+          {tel.type === 'sticky' && tel.direction && (
             <svg
               className="absolute pointer-events-none"
               style={{

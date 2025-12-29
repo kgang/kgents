@@ -16,7 +16,7 @@
  * @see pilots/wasm-survivors-game/runs/run-030/coordination/.outline.md
  */
 
-import type { Enemy, PulsingState, Vector2 } from '@kgents/shared-primitives';
+import type { Enemy, PulsingState, Vector2 } from '../types';
 
 // =============================================================================
 // Configuration (DD-030-1)
@@ -263,6 +263,8 @@ export function createColossalTide(combiningEnemies: Enemy[]): Enemy {
     damage: TIDE_CONFIG.damage,
     xpValue: TIDE_CONFIG.xpValue,
     color: TIDE_CONFIG.color,
+    speed: 40, // Colossal is slow but inexorable
+    coordinationState: 'idle',
     behaviorState: 'chase',
     stateStartTime: 0,
     survivalTime: 0,

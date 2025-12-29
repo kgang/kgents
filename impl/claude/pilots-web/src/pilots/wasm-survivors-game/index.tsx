@@ -15,7 +15,7 @@
  */
 
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import type { GameState, Ghost, GameCrystal, EnemyType, Vector2 } from '@kgents/shared-primitives';
+import type { GameState, EnemyType, Vector2, Ghost, GameCrystal, Trace } from './types';
 import { useGameLoop } from './hooks/useGameLoop';
 import { useInput } from './hooks/useInput';
 import { useSoundEngine } from './hooks/useSoundEngine';
@@ -31,11 +31,14 @@ import { CrystalView } from './components/CrystalView';
 import { DeathOverlay, type DeathInfo } from './components/DeathOverlay';
 import { CrystallizationOverlay } from './components/CrystallizationOverlay';
 import { DebugOverlay } from './components/DebugOverlay';
+import { VoiceLineOverlay, ArcPhaseIndicator, ContrastIndicator } from './components/VoiceLineOverlay';
 import { ARENA_WIDTH, ARENA_HEIGHT } from './systems/physics';
 import { COLORS } from './systems/juice';
-import { applyUpgrade as applyVerbUpgrade, type UpgradeType, createInitialActiveUpgrades, type ActiveUpgrades, generateUpgradeChoices } from './systems/upgrades';
-import { ENEMY_BEHAVIORS, type TelegraphData } from './systems/enemies';
+import { applyUpgrade as applyVerbUpgrade, type UpgradeType, createInitialActiveUpgrades, type ActiveUpgrades, getGhostSummary, ARCHETYPES } from './systems/upgrades';
+import { generateAbilityChoices, type AbilityId } from './systems/abilities';
+import { BEE_BEHAVIORS, type TelegraphData } from './systems/enemies';
 import type { AttackType } from './components/DeathOverlay';
+import type { VoiceLine, ArcPhase, EmotionalState } from './systems/contrast';
 
 // =============================================================================
 // Types
@@ -63,6 +66,14 @@ export function WASMSurvivors() {
   // Debug API: Telegraph state for debug visualization
   const [telegraphs, setTelegraphs] = useState<TelegraphData[]>([]);
 
+  // Part VI: Emotional state (arc, contrasts, voice lines)
+  const [currentVoiceLine, setCurrentVoiceLine] = useState<VoiceLine | null>(null);
+  const [arcPhase, setArcPhase] = useState<ArcPhase>('POWER');
+  const [emotionalState, setEmotionalState] = useState<EmotionalState | null>(null);
+
+  // Run 036: Melee attack state for visual rendering
+  const [meleeState, setMeleeState] = useState<import('./systems/melee').MeleeAttackState | null>(null);
+
   // Debug API: Invincibility state (managed separately from game state)
   const invincibleRef = useRef<boolean>(false);
 
@@ -82,7 +93,9 @@ export function WASMSurvivors() {
   const juiceSystem = useMemo(() => createJuiceSystem(), []);
 
   // Input handling
-  const inputRef = useInput();
+  // Note: clearFrameFlags and updateSpaceHoldDuration are available from useInput
+  // but currently the game loop clears flags inline. Could be refactored.
+  const { inputRef } = useInput();
 
   // Sound engine (DD-5)
   const soundEngine = useSoundEngine();
@@ -124,14 +137,26 @@ export function WASMSurvivors() {
     }
 
     // DD-21: Determine attack type based on enemy behavior state
-    const killerType = nearestEnemy?.type ?? 'basic';
+    // Map old types to bee types for display
+    const rawType = nearestEnemy?.type ?? 'worker';
+    const killerType = rawType as EnemyType;
     let attackType: AttackType = 'contact'; // Default to contact damage
 
     if (nearestEnemy?.behaviorState === 'attack') {
       // Enemy was in attack state - use their specific attack type
-      const behavior = ENEMY_BEHAVIORS[killerType];
+      const behavior = BEE_BEHAVIORS[killerType];
       if (behavior) {
-        attackType = behavior.attackType as AttackType;
+        // DD-21: Map bee behavior attack types to DeathOverlay AttackType
+        // AttackType is: 'swarm' | 'sting' | 'block' | 'sticky' | 'combo' | 'contact'
+        const attackMap: Record<string, AttackType> = {
+          swarm: 'swarm',
+          sting: 'sting',
+          block: 'block',
+          sticky: 'sticky',
+          combo: 'combo',
+          elite: 'combo', // Royal bees use combo attacks
+        };
+        attackType = attackMap[behavior.attackType] ?? 'contact';
       }
     }
 
@@ -151,7 +176,7 @@ export function WASMSurvivors() {
 
     // Create crystal from witness context
     const ctx = witnessContextRef.current;
-    const trace = {
+    const trace: Trace = {
       runId: ctx.runId,
       startTime: ctx.startTime,
       endTime: Date.now(),
@@ -161,7 +186,7 @@ export function WASMSurvivors() {
         health: finalState.player.health,
         maxHealth: finalState.player.maxHealth,
         upgrades: finalState.player.upgrades,
-        synergies: finalState.player.synergies,
+        synergies: finalState.player.synergies ?? [],
         xp: finalState.player.xp,
         enemiesKilled: finalState.totalEnemiesKilled,
       },
@@ -190,10 +215,19 @@ export function WASMSurvivors() {
     soundEngine.playWave();
   }, [soundEngine]);
 
-  // Sound callbacks (DD-5, DD-24: added spitter, DD-030-4: added colossal_tide)
-  const handleEnemyKilled = useCallback((enemyType: 'basic' | 'fast' | 'tank' | 'boss' | 'spitter' | 'colossal_tide') => {
-    soundEngine.playKill(enemyType);
-  }, [soundEngine]);
+  // Run 036: ASMR Audio - Sound callbacks with layered kill sounds
+  // THREE layers: CRUNCH + SNAP + DECAY with spatial audio and multi-kill escalation
+  const handleEnemyKilled = useCallback((
+    enemyType: import('./types').EnemyType,
+    tier: import('./types').KillTier,
+    comboCount: number,
+    position: import('./types').Vector2
+  ) => {
+    // Update spatial config with player position for stereo panning
+    soundEngine.updateSpatialConfig(gameState.player.position);
+    // Play layered ASMR kill sound
+    soundEngine.playKill(enemyType, tier, comboCount, position);
+  }, [soundEngine, gameState.player.position]);
 
   const handlePlayerDamaged = useCallback(() => {
     soundEngine.playDamage();
@@ -202,6 +236,28 @@ export function WASMSurvivors() {
   // Debug API: Telegraph update callback
   const handleTelegraphsUpdate = useCallback((newTelegraphs: TelegraphData[]) => {
     setTelegraphs(newTelegraphs);
+  }, []);
+
+  // Part VI: Voice line callback
+  const handleVoiceLine = useCallback((line: VoiceLine) => {
+    setCurrentVoiceLine(line);
+  }, []);
+
+  // Part VI: Phase transition callback
+  const handlePhaseTransition = useCallback((phase: ArcPhase) => {
+    setArcPhase(phase);
+  }, []);
+
+  // Part VI: Emotional state update callback
+  const handleEmotionalStateUpdate = useCallback((state: EmotionalState) => {
+    setEmotionalState(state);
+    // Also update arc phase from state
+    setArcPhase(state.arc.currentPhase);
+  }, []);
+
+  // Run 036: Melee state update callback
+  const handleMeleeStateUpdate = useCallback((state: import('./systems/melee').MeleeAttackState) => {
+    setMeleeState(state);
   }, []);
 
   // Game loop
@@ -216,6 +272,10 @@ export function WASMSurvivors() {
       onEnemyKilled: handleEnemyKilled,
       onPlayerDamaged: handlePlayerDamaged,
       onTelegraphsUpdate: handleTelegraphsUpdate,
+      onVoiceLine: handleVoiceLine,
+      onPhaseTransition: handlePhaseTransition,
+      onEmotionalStateUpdate: handleEmotionalStateUpdate,
+      onMeleeStateUpdate: handleMeleeStateUpdate,
     },
     juiceSystem
   );
@@ -225,7 +285,8 @@ export function WASMSurvivors() {
     // Reset everything
     resetSpawner();
     const freshState = createInitialGameState();
-    const startedState = startWave({ ...freshState, status: 'playing', wave: 1 });
+    // Note: startWave uses a local stub GameState type, so we cast back to full GameState
+    const startedState = startWave({ ...freshState, status: 'playing', wave: 1 }) as unknown as GameState;
 
     // Reset witness context
     witnessContextRef.current = {
@@ -242,6 +303,10 @@ export function WASMSurvivors() {
     setGameState(startedState);
     setPhase('playing');
     setCrystal(null);
+    // Reset emotional state for new run
+    setCurrentVoiceLine(null);
+    setArcPhase('POWER');
+    setEmotionalState(null);
     gameLoop.setState(startedState);  // Sync game loop state with started state
     gameLoop.start();
   }, [gameLoop]);
@@ -259,7 +324,7 @@ export function WASMSurvivors() {
           health: gameState.player.health,
           maxHealth: gameState.player.maxHealth,
           upgrades: gameState.player.upgrades,
-          synergies: gameState.player.synergies,
+          synergies: gameState.player.synergies ?? [],
           xp: gameState.player.xp,
           enemiesKilled: gameState.totalEnemiesKilled,
         },
@@ -267,10 +332,14 @@ export function WASMSurvivors() {
       };
       witnessContextRef.current.ghosts.push(ghost);
 
-      // Apply verb upgrade (DD-6)
+      // Apply verb upgrade (DD-6) - pass unchosen upgrades for ghost tracking
+      const unchosenUpgrades = alternatives as UpgradeType[];
       const { active: newActiveUpgrades, newSynergies } = applyVerbUpgrade(
         activeUpgradesRef.current,
-        upgradeId as UpgradeType
+        upgradeId as UpgradeType,
+        unchosenUpgrades,
+        gameState.gameTime,
+        gameState.wave
       );
       activeUpgradesRef.current = newActiveUpgrades;
 
@@ -281,9 +350,9 @@ export function WASMSurvivors() {
         player: {
           ...gameState.player,
           upgrades: [...gameState.player.upgrades, upgradeId],
-          synergies: [...gameState.player.synergies, ...newSynergies.map(s => s.id)],
+          synergies: [...(gameState.player.synergies ?? []), ...newSynergies.map(s => s.id)],
           // DD-6: Store active upgrade effects on player for physics system
-          activeUpgrades: newActiveUpgrades,
+          activeUpgrades: newActiveUpgrades as unknown as Record<string, unknown>,
         },
       };
 
@@ -322,23 +391,34 @@ export function WASMSurvivors() {
   // =============================================================================
 
   // Debug: Spawn an enemy at a position
+  // Bee-themed types: worker, scout, guard, propolis, royal
   const handleDebugSpawn = useCallback((type: EnemyType, position: Vector2) => {
-    // DD-030: Include metamorphosis fields and colossal_tide support
-    const isColossal = type === 'colossal_tide';
+    // Enemy stats based on bee type
+    type EnemyStats = { radius: number; health: number; damage: number; xpValue: number; color: string };
+    const enemyStats: Partial<Record<EnemyType, EnemyStats>> = {
+      worker: { radius: 12, health: 20, damage: 10, xpValue: 10, color: '#F4D03F' },
+      scout: { radius: 8, health: 10, damage: 8, xpValue: 15, color: '#F39C12' },
+      guard: { radius: 20, health: 80, damage: 20, xpValue: 30, color: '#E74C3C' },
+      propolis: { radius: 10, health: 15, damage: 15, xpValue: 20, color: '#9B59B6' },
+      royal: { radius: 35, health: 300, damage: 30, xpValue: 100, color: '#3498DB' },
+    };
+    const defaultStats: EnemyStats = { radius: 12, health: 20, damage: 10, xpValue: 10, color: '#F4D03F' };
+    const stats = enemyStats[type] ?? defaultStats;
     const enemy = {
       id: `debug-enemy-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       type,
       position: { x: position.x, y: position.y },
       velocity: { x: 0, y: 0 },
-      radius: isColossal ? 36 : type === 'boss' ? 35 : type === 'tank' ? 20 : type === 'fast' ? 8 : type === 'spitter' ? 10 : 12,
-      health: isColossal ? 100 : type === 'boss' ? 300 : type === 'tank' ? 80 : type === 'fast' ? 10 : type === 'spitter' ? 15 : 20,
-      maxHealth: isColossal ? 100 : type === 'boss' ? 300 : type === 'tank' ? 80 : type === 'fast' ? 10 : type === 'spitter' ? 15 : 20,
-      damage: isColossal ? 25 : type === 'boss' ? 30 : type === 'tank' ? 20 : type === 'fast' ? 8 : type === 'spitter' ? 15 : 10,
-      xpValue: isColossal ? 200 : type === 'boss' ? 100 : type === 'tank' ? 30 : type === 'fast' ? 15 : type === 'spitter' ? 20 : 10,
-      color: isColossal ? '#880000' : type === 'boss' ? '#FF0044' : type === 'tank' ? '#CC2952' : type === 'fast' ? '#FF6699' : type === 'spitter' ? '#AA44FF' : '#FF3366',
+      radius: stats.radius,
+      health: stats.health,
+      maxHealth: stats.health,
+      damage: stats.damage,
+      speed: type === 'scout' ? 120 : type === 'guard' ? 60 : 80, // Bee speeds
+      xpValue: stats.xpValue,
+      color: stats.color,
       behaviorState: 'chase' as const,
-      // DD-030: Metamorphosis fields
       survivalTime: 0,
+      coordinationState: 'idle' as const,
       pulsingState: 'normal' as const,
     };
 
@@ -400,13 +480,17 @@ export function WASMSurvivors() {
     gameLoop.setState(newState);
   }, [gameState, gameLoop]);
 
-  // Debug: Trigger level up
+  // Debug: Trigger level up (uses same ability system as normal level up)
   const handleDebugLevelUp = useCallback(() => {
     const newLevel = gameState.player.level + 1;
-    const choices = generateUpgradeChoices(
-      gameState.player.upgrades as UpgradeType[],
-      3
-    ).map(u => u.id);
+    // Use the new abilities system - same as normal level up
+    const ownedAbilities = gameState.player.upgrades as AbilityId[];
+    const mockAbilities = {
+      owned: ownedAbilities,
+      levels: {} as Record<AbilityId, number>,
+      computed: {} as any, // Not needed for choice generation
+    };
+    const choices = generateAbilityChoices(mockAbilities, 3);
 
     const newState: GameState = {
       ...gameState,
@@ -431,11 +515,14 @@ export function WASMSurvivors() {
   useDebugAPI({
     gameState,
     telegraphs,
+    emotionalState,  // Part VI: Emotional state for debug
+    ballState: gameLoop.getBallState(),  // Run 036: THE BALL state
     onSpawnEnemy: handleDebugSpawn,
     onSetInvincible: handleDebugSetInvincible,
     onSkipWave: handleDebugSkipWave,
     onKillAllEnemies: handleDebugKillAllEnemies,
     onLevelUp: handleDebugLevelUp,
+    onForceBall: gameLoop.forceBall,  // Run 036: Force THE BALL
   });
 
   return (
@@ -466,6 +553,18 @@ export function WASMSurvivors() {
               <span style={{ color: COLORS.xp }}>
                 Score: {gameState.score}
               </span>
+              {/* DD-7: Show dominant archetype in HUD */}
+              {activeUpgradesRef.current.buildIdentity.dominantArchetype && (
+                <span
+                  className="px-2 py-0.5 rounded text-xs font-medium"
+                  style={{
+                    backgroundColor: `${ARCHETYPES[activeUpgradesRef.current.buildIdentity.dominantArchetype].color}33`,
+                    color: ARCHETYPES[activeUpgradesRef.current.buildIdentity.dominantArchetype].color,
+                  }}
+                >
+                  {ARCHETYPES[activeUpgradesRef.current.buildIdentity.dominantArchetype].name}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -482,13 +581,40 @@ export function WASMSurvivors() {
             <GameCanvas
               gameState={gameState}
               juiceSystem={juiceSystem}
+              ballState={gameLoop.getBallState()}
+              meleeState={meleeState ?? undefined}
+              apexState={gameLoop.getApexState()}
+              chargePercent={Math.min(1, (inputRef.current?.spaceHoldDuration ?? 0) / 500)}
             />
+
+            {/* Part VI: Voice line overlay */}
+            <VoiceLineOverlay
+              voiceLine={currentVoiceLine}
+              arcPhase={arcPhase}
+              onComplete={() => setCurrentVoiceLine(null)}
+            />
+
+            {/* Part VI: Arc phase indicator (appears after first phase change) */}
+            {emotionalState && (
+              <ArcPhaseIndicator
+                phase={arcPhase}
+                phasesVisited={emotionalState.arc.phasesVisited}
+              />
+            )}
+
+            {/* Part VI: Contrast progress indicator */}
+            {emotionalState && (
+              <ContrastIndicator
+                contrastsVisited={emotionalState.contrast.contrastsVisited}
+              />
+            )}
 
             {phase === 'upgrade' && upgradeState && (
               <UpgradeUI
                 level={upgradeState.level}
                 choices={upgradeState.choices}
-                currentUpgrades={gameState.player.upgrades}
+                currentAbilities={gameState.player.upgrades as import('./systems/abilities').AbilityId[]}
+                comboState={gameState.comboState}
                 recentGhosts={witnessContextRef.current.ghosts.slice(-3)}
                 onSelect={handleUpgradeSelect}
               />
@@ -502,6 +628,10 @@ export function WASMSurvivors() {
             <GameCanvas
               gameState={gameState}
               juiceSystem={juiceSystem}
+              ballState={gameLoop.getBallState()}
+              meleeState={meleeState ?? undefined}
+              apexState={gameLoop.getApexState()}
+              chargePercent={0}
             />
             <CrystallizationOverlay
               deathPosition={gameState.player.position}
@@ -516,6 +646,7 @@ export function WASMSurvivors() {
         {phase === 'gameover' && deathInfo && (
           <DeathOverlay
             death={deathInfo}
+            ghostSummary={getGhostSummary(activeUpgradesRef.current.buildIdentity)}
             onPlayAgain={handleStartGame}
             onViewCrystal={handleViewCrystal}
           />
@@ -542,7 +673,7 @@ export function WASMSurvivors() {
       {/* Footer */}
       <footer className="border-t border-gray-800 bg-gray-900/50">
         <div className="max-w-4xl mx-auto px-4 py-2 text-center text-gray-600 text-xs">
-          WASD to move | Auto-attack nearest enemy | Level up to choose upgrades
+          WASD to move | Mandible Strike attacks nearest enemy | Level up to choose abilities
         </div>
       </footer>
 
@@ -593,7 +724,7 @@ function MenuScreen({ onStart }: { onStart: () => void }) {
 
       <div className="mt-8 text-gray-500 text-sm">
         <p>Press SPACE or ENTER to start</p>
-        <p className="mt-1 text-gray-600">WASD to move | Auto-attack enabled</p>
+        <p className="mt-1 text-gray-600">WASD to move | Mandible Strike enabled</p>
       </div>
     </div>
   );

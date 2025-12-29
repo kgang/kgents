@@ -1,18 +1,19 @@
 /**
  * WASM Survivors - Upgrade UI (DD-6)
  *
- * Level-up pause screen with verb-based upgrade choices.
+ * Level-up pause screen with verb-based ability choices.
  * Implements DD-2: Ghost as Honor - shows unchosen alternatives with neutral language.
  * Implements DD-5: Fun Floor - level-up = pause + fanfare.
- * Implements DD-6: Upgrades are Verbs - each upgrade changes how you play.
+ * Implements DD-6: Upgrades are Verbs - each ability changes how you play.
  *
  * @see pilots/wasm-survivors-game/.outline.md
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import type { Ghost } from '@kgents/shared-primitives';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { Ghost } from '../types';
 import { COLORS } from '../systems/juice';
-import { getUpgrade, type VerbUpgrade, type UpgradeType } from '../systems/upgrades';
+import { getAbility, type Ability, type AbilityId, type AbilityCategory } from '../systems/abilities';
+import { checkForCombos, createInitialComboState, type Combo, type ComboState } from '../systems/combos';
 
 // =============================================================================
 // Types
@@ -21,10 +22,21 @@ import { getUpgrade, type VerbUpgrade, type UpgradeType } from '../systems/upgra
 interface UpgradeUIProps {
   level: number;
   choices: string[];
-  currentUpgrades: string[];
+  currentAbilities: AbilityId[];
+  comboState?: ComboState;
   recentGhosts: Ghost[];
   onSelect: (upgradeId: string, alternatives: string[]) => void;
 }
+
+/**
+ * Combo tier badge colors
+ */
+const COMBO_TIER_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  obvious: { bg: '#4488FF33', text: '#4488FF', label: 'COMBO!' },
+  common: { bg: '#FF880033', text: '#FF8800', label: 'COMBO!' },
+  rare: { bg: '#9944FF33', text: '#9944FF', label: 'RARE COMBO!' },
+  legendary: { bg: '#FFD70033', text: '#FFD700', label: 'LEGENDARY!' },
+};
 
 // =============================================================================
 // Component
@@ -33,12 +45,78 @@ interface UpgradeUIProps {
 export function UpgradeUI({
   level,
   choices,
-  currentUpgrades,
+  currentAbilities,
+  comboState,
   recentGhosts,
   onSelect,
 }: UpgradeUIProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [showGhosts, setShowGhosts] = useState(false);
+  const [newComboAnnouncement, setNewComboAnnouncement] = useState<Combo | null>(null);
+
+  // Check which upgrades would discover combos
+  const comboCompletions = useMemo(() => {
+    const completions: Record<string, Combo[]> = {};
+    for (const id of choices) {
+      // Simulate adding this ability
+      const simulatedOwned = [...currentAbilities, id as AbilityId];
+      const mockAbilities = {
+        owned: simulatedOwned,
+        levels: {} as Record<AbilityId, number>,
+        computed: {
+          // Damage
+          damageMultiplier: 1,
+          flatDamage: 0,
+          lowHpBonusDamage: 0,
+          highHpBonusDamage: 0,
+          poisonDamage: 0,
+          doubleHitChance: 0,
+          // Speed
+          attackSpeedBonus: 0,
+          speedMultiplier: 1,
+          // Defense
+          maxHpBonus: 0,
+          damageReduction: 0,
+          hpPerSecond: 0,
+          lifestealPercent: 0,
+          lowHpDefenseBonus: 0,
+          hasRevive: false,
+          // Special
+          critChance: 0,
+          critDamageMultiplier: 2.0,
+          executeThreshold: 0,
+          hasFullArc: false,
+          hasChainKill: false,
+          killStreakDamage: 0,
+          // Status flags
+          hasRiskReward: false,
+          hasDoubleHit: false,
+          hasExecution: false,
+          // Skill-gated ability flags
+          hasGrazeFrenzy: false,
+          hasThermalMomentum: false,
+          hasExecutionChain: false,
+          hasGlassCannonMastery: false,
+          hasVenomArchitect: false,
+          // Legacy compatibility
+          diveSpeedMultiplier: 1,
+          hoverAttackSpeedBonus: 0,
+          bleedEnabled: false,
+          bleedDamage: 0,
+          venomEnabled: false,
+          venomType: 'none' as const,
+          heatReduction: 0,
+          activeFrenzyStacks: 0,
+          isHollowCarapace: false,
+          isBerserker: false,
+        },
+      };
+      const tempState = comboState || createInitialComboState();
+      const { newCombos } = checkForCombos(mockAbilities, tempState);
+      completions[id] = newCombos;
+    }
+    return completions;
+  }, [choices, currentAbilities, comboState]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -69,34 +147,48 @@ export function UpgradeUI({
       if (index >= choices.length) return;
 
       setSelectedIndex(index);
+      const selectedId = choices[index];
 
-      // Delay to show selection animation
-      setTimeout(() => {
-        const selectedId = choices[index];
-        const alternatives = choices.filter((_, i) => i !== index);
-        onSelect(selectedId, alternatives);
-      }, 300);
+      // Check if this triggers a combo
+      const completedCombos = comboCompletions[selectedId];
+      if (completedCombos && completedCombos.length > 0) {
+        // Show the first (most significant) combo
+        setNewComboAnnouncement(completedCombos[0]);
+        // Show combo announcement, then complete selection
+        setTimeout(() => {
+          setNewComboAnnouncement(null);
+          const alternatives = choices.filter((_, i) => i !== index);
+          onSelect(selectedId, alternatives);
+        }, 1200); // Longer delay for combo announcement
+      } else {
+        // Normal selection delay
+        setTimeout(() => {
+          const alternatives = choices.filter((_, i) => i !== index);
+          onSelect(selectedId, alternatives);
+        }, 300);
+      }
     },
-    [choices, onSelect]
+    [choices, onSelect, comboCompletions]
   );
 
-  // Get upgrade details for each choice
+  // Get ability details for each choice
   const upgradeOptions = choices.map((id) => {
-    const upgrade = getUpgrade(id as UpgradeType);
-    if (!upgrade) {
-      // Fallback for legacy upgrades
+    const ability = getAbility(id as AbilityId);
+    if (!ability) {
+      // Fallback for unknown abilities
       return {
         id,
         name: id.replace(/_/g, ' '),
-        description: 'Unknown upgrade',
-        verb: 'do',
+        description: 'Unknown ability',
+        verb: 'Use',
         icon: '?',
         color: '#888888',
-        isVerb: false,
-      } as VerbUpgrade & { isVerb: boolean };
+        category: 'special' as AbilityCategory,
+        comboPotential: 'low' as const,
+        effect: {},
+      } as Ability;
     }
-
-    return { ...upgrade, isVerb: true };
+    return ability;
   });
 
   return (
@@ -118,68 +210,138 @@ export function UpgradeUI({
 
         {/* Upgrade Cards */}
         <div className="grid grid-cols-3 gap-4 mb-8">
-          {upgradeOptions.map((upgrade, index) => (
-            <button
-              key={upgrade.id}
-              onClick={() => handleSelect(index)}
-              disabled={selectedIndex !== null}
-              className={`
-                relative p-6 rounded-xl border-2 transition-all duration-200
-                ${
-                  selectedIndex === index
-                    ? 'border-yellow-400 bg-yellow-400/20 scale-105'
-                    : selectedIndex !== null
-                      ? 'opacity-50 border-gray-700 bg-gray-900'
-                      : 'border-gray-700 bg-gray-900 hover:border-gray-500 hover:bg-gray-800'
-                }
-              `}
-              style={{
-                borderColor:
-                  selectedIndex === index ? COLORS.xp : undefined,
-              }}
-            >
-              {/* Keyboard hint */}
-              <div className="absolute top-2 left-2 w-6 h-6 rounded bg-gray-800 text-gray-400 text-sm flex items-center justify-center">
-                {index + 1}
-              </div>
+          {upgradeOptions.map((upgrade, index) => {
+            const completingCombos = comboCompletions[upgrade.id] || [];
+            const hasComboGlow = completingCombos.length > 0;
+            const firstCombo = completingCombos[0];
 
-              {/* Verb tag - DD-6 */}
-              {'verb' in upgrade && upgrade.verb && (
-                <div
-                  className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium uppercase tracking-wider"
-                  style={{ backgroundColor: `${upgrade.color}33`, color: upgrade.color }}
-                >
-                  {upgrade.verb}
-                </div>
-              )}
-
-              {/* Icon */}
-              <div
-                className="text-4xl mb-4"
-                style={{ color: upgrade.color }}
+            return (
+              <button
+                key={upgrade.id}
+                onClick={() => handleSelect(index)}
+                disabled={selectedIndex !== null}
+                className={`
+                  relative p-6 rounded-xl border-2 transition-all duration-200
+                  ${
+                    selectedIndex === index
+                      ? 'border-yellow-400 bg-yellow-400/20 scale-105'
+                      : selectedIndex !== null
+                        ? 'opacity-50 border-gray-700 bg-gray-900'
+                        : hasComboGlow
+                          ? 'border-orange-500 bg-gray-900 hover:bg-gray-800 combo-glow'
+                          : 'border-gray-700 bg-gray-900 hover:border-gray-500 hover:bg-gray-800'
+                  }
+                `}
+                style={{
+                  borderColor:
+                    selectedIndex === index ? COLORS.xp : hasComboGlow ? '#FF8800' : undefined,
+                  boxShadow: hasComboGlow && selectedIndex === null
+                    ? '0 0 20px rgba(255, 136, 0, 0.4), 0 0 40px rgba(255, 136, 0, 0.2)'
+                    : undefined,
+                }}
               >
-                {upgrade.icon}
-              </div>
-
-              {/* Name */}
-              <div className="text-xl font-bold text-white mb-2">
-                {upgrade.name}
-              </div>
-
-              {/* Description */}
-              <div className="text-gray-400 text-sm mb-4">
-                {upgrade.description}
-              </div>
-
-              {/* Already owned indicator */}
-              {currentUpgrades.includes(upgrade.id) && (
-                <div className="text-xs text-yellow-500">
-                  ⬆ UPGRADED
+                {/* Keyboard hint */}
+                <div className="absolute top-2 left-2 w-6 h-6 rounded bg-gray-800 text-gray-400 text-sm flex items-center justify-center">
+                  {index + 1}
                 </div>
-              )}
-            </button>
-          ))}
+
+                {/* Verb tag */}
+                {upgrade.verb && (
+                  <div
+                    className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium uppercase tracking-wider"
+                    style={{ backgroundColor: `${upgrade.color}33`, color: upgrade.color }}
+                  >
+                    {upgrade.verb}
+                  </div>
+                )}
+
+                {/* Combo completion indicator */}
+                {firstCombo && (
+                  <div
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse"
+                    style={{
+                      backgroundColor: COMBO_TIER_STYLES[firstCombo.tier].bg,
+                      color: COMBO_TIER_STYLES[firstCombo.tier].text,
+                      border: `1px solid ${COMBO_TIER_STYLES[firstCombo.tier].text}`,
+                    }}
+                  >
+                    {COMBO_TIER_STYLES[firstCombo.tier].label}
+                  </div>
+                )}
+
+                {/* Icon */}
+                <div
+                  className="text-4xl mb-4"
+                  style={{ color: upgrade.color }}
+                >
+                  {upgrade.icon}
+                </div>
+
+                {/* Name */}
+                <div className="text-xl font-bold text-white mb-2">
+                  {upgrade.name}
+                </div>
+
+                {/* Description */}
+                <div className="text-gray-400 text-sm mb-2">
+                  {upgrade.description}
+                </div>
+
+                {/* Combo preview */}
+                {firstCombo && (
+                  <div
+                    className="text-xs mt-2 px-2 py-1 rounded"
+                    style={{
+                      backgroundColor: COMBO_TIER_STYLES[firstCombo.tier].bg,
+                      color: COMBO_TIER_STYLES[firstCombo.tier].text,
+                    }}
+                  >
+                    + {firstCombo.name}: {firstCombo.description}
+                  </div>
+                )}
+
+                {/* Risk/Reward indicator */}
+                {upgrade.isRiskReward && (
+                  <div className="flex gap-1 mt-2 flex-wrap justify-center">
+                    <span
+                      className="text-xs px-1.5 py-0.5 rounded"
+                      style={{
+                        backgroundColor: '#FF000022',
+                        color: '#FF4444',
+                      }}
+                    >
+                      RISK/REWARD
+                    </span>
+                  </div>
+                )}
+
+                {/* Already owned indicator (stacking) */}
+                {currentAbilities.includes(upgrade.id) && (
+                  <div className="text-xs text-yellow-500 mt-2">
+                    + STACKING
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
+
+        {/* Combo announcement overlay */}
+        {newComboAnnouncement && (
+          <div className="fixed inset-0 flex items-center justify-center z-60 pointer-events-none">
+            <div
+              className="text-center animate-combo-burst"
+              style={{ color: COMBO_TIER_STYLES[newComboAnnouncement.tier].text }}
+            >
+              <div className="text-5xl font-black mb-2 tracking-wider">
+                {newComboAnnouncement.announcement}
+              </div>
+              <div className="text-2xl font-medium opacity-80">
+                {newComboAnnouncement.description}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Ghost Preview Section (DD-2: Ghost as Honor) */}
         {showGhosts && recentGhosts.length > 0 && (
@@ -198,10 +360,10 @@ export function UpgradeUI({
                   style={{ color: COLORS.ghost }}
                 >
                   <span className="text-gray-500">Level {ghost.context.wave}:</span>
-                  <span>Chose {formatUpgradeName(ghost.chosen)}</span>
+                  <span>Chose {formatAbilityName(ghost.chosen)}</span>
                   <span className="text-gray-600">|</span>
                   <span className="text-gray-500">
-                    Alternative: {ghost.unchosen.map(formatUpgradeName).join(', ')}
+                    Alternative: {ghost.unchosen.map(formatAbilityName).join(', ')}
                   </span>
                 </div>
               ))}
@@ -234,6 +396,23 @@ export function UpgradeUI({
         .animate-fade-in {
           animation: fade-in 0.3s ease-out;
         }
+        @keyframes combo-burst {
+          0% { opacity: 0; transform: scale(0.5); }
+          20% { opacity: 1; transform: scale(1.1); }
+          40% { transform: scale(1); }
+          80% { opacity: 1; }
+          100% { opacity: 0; transform: scale(1.05); }
+        }
+        .animate-combo-burst {
+          animation: combo-burst 1.2s ease-out forwards;
+        }
+        @keyframes combo-glow-pulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(255, 136, 0, 0.4), 0 0 40px rgba(255, 136, 0, 0.2); }
+          50% { box-shadow: 0 0 30px rgba(255, 136, 0, 0.6), 0 0 60px rgba(255, 136, 0, 0.3); }
+        }
+        .combo-glow {
+          animation: combo-glow-pulse 1.5s ease-in-out infinite;
+        }
       `}</style>
     </div>
   );
@@ -243,9 +422,9 @@ export function UpgradeUI({
 // Helpers
 // =============================================================================
 
-function formatUpgradeName(id: string): string {
-  const upgrade = getUpgrade(id as UpgradeType);
-  return upgrade?.name || id.replace(/_/g, ' ');
+function formatAbilityName(id: string): string {
+  const ability = getAbility(id as AbilityId);
+  return ability?.name || id.replace(/_/g, ' ');
 }
 
 export default UpgradeUI;

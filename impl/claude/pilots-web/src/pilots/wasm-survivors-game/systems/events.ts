@@ -22,7 +22,7 @@ import type {
   BuildContext,
   WitnessMark,
   SkillMetrics,
-} from '@kgents/shared-primitives';
+} from '../types';
 import type { UpgradeType, Synergy } from './upgrades';
 
 // =============================================================================

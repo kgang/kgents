@@ -27,7 +27,7 @@ import {
   getColossals,
 } from '../colossal';
 import { TIDE_CONFIG } from '../metamorphosis';
-import type { Enemy, Vector2 } from '@kgents/shared-primitives';
+import type { Enemy, Vector2 } from '../../types';
 
 // =============================================================================
 // Test Helpers
@@ -43,12 +43,14 @@ function createTestColossal(overrides?: Partial<Enemy>): Enemy {
     health: TIDE_CONFIG.health,
     maxHealth: TIDE_CONFIG.maxHealth,
     damage: TIDE_CONFIG.damage,
+    speed: 50,  // Slow (inexorable)
     xpValue: TIDE_CONFIG.xpValue,
     color: TIDE_CONFIG.color,
     behaviorState: 'chase',
     stateStartTime: 0,
     survivalTime: 0,
     pulsingState: 'normal',
+    coordinationState: 'idle',
     ...overrides,
   };
 }
@@ -56,19 +58,21 @@ function createTestColossal(overrides?: Partial<Enemy>): Enemy {
 function createTestEnemy(overrides?: Partial<Enemy>): Enemy {
   return {
     id: `test-enemy-${Math.random().toString(36).slice(2)}`,
-    type: 'basic',
+    type: 'worker',  // Use bee-themed type
     position: { x: 100, y: 100 },
     velocity: { x: 0, y: 0 },
     radius: 12,
     health: 20,
     maxHealth: 20,
     damage: 10,
+    speed: 100,
     xpValue: 10,
     color: '#FF3366',
     behaviorState: 'chase',
     stateStartTime: 0,
     survivalTime: 0,
     pulsingState: 'normal',
+    coordinationState: 'idle',
     ...overrides,
   };
 }

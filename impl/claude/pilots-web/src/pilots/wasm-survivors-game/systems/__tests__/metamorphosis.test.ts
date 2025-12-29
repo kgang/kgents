@@ -21,7 +21,7 @@ import {
   createColossalTide,
   resetNearbyTimers,
 } from '../metamorphosis';
-import type { Enemy } from '@kgents/shared-primitives';
+import type { Enemy } from '../../types';
 
 // =============================================================================
 // Test Helpers
@@ -37,11 +37,13 @@ function createTestEnemy(overrides?: Partial<Enemy>): Enemy {
     health: 20,
     maxHealth: 20,
     damage: 10,
+    speed: 100,
     xpValue: 10,
     color: '#FF3366',
     behaviorState: 'chase',
     stateStartTime: 0,
     survivalTime: 0,
+    coordinationState: 'idle',
     pulsingState: 'normal',
     ...overrides,
   };

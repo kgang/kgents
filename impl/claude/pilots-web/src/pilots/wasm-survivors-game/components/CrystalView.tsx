@@ -14,7 +14,7 @@ import type {
   CrystalSegment,
   GamePrincipleWeights,
   Ghost,
-} from '@kgents/shared-primitives';
+} from '../types';
 import { COLORS } from '../systems/juice';
 
 // =============================================================================

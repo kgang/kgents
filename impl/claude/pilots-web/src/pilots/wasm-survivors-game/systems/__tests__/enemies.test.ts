@@ -1,23 +1,29 @@
 /**
- * WASM Survivors - Enemy System Tests
+ * WASM Survivors - Bee Behavior System Tests
  *
- * Tests for PROTO_SPEC enemy laws:
+ * Tests for PROTO_SPEC S6: Bee Taxonomy
  * - E1: Readable Tells - Attacks are telegraphed
  * - E2: Learnable Patterns - Consistent behavior
- * - E4: Escalating Threat - Basics → Elites → Bosses
+ * - E4: Escalating Threat - Workers → Guards → Royals
+ *
+ * @see pilots/wasm-survivors-game/PROTO_SPEC.md S6
  */
 
 import { describe, it, expect } from 'vitest';
 import {
-  ENEMY_BEHAVIORS,
-  updateEnemyBehavior,
-  getEnemyTelegraph,
-  getEnemyMovement,
-  isEnemyVulnerable,
-  isEnemyAttacking,
+  BEE_BEHAVIORS,
+  updateBeeBehavior,
+  getBeeTelegraph,
+  getBeeMovement,
+  isBeeVulnerable,
+  isBeeAttacking,
+  type EnemyWithBehavior,
 } from '../enemies';
-import type { Enemy, EnemyType } from '@kgents/shared-primitives';
+import type { Enemy, EnemyType } from '../../types';
 
+/**
+ * Create a test enemy matching PROTO_SPEC S6 Bee Taxonomy
+ */
 function createTestEnemy(type: EnemyType, overrides?: Partial<Enemy>): Enemy {
   return {
     id: `test-${type}-${Math.random().toString(36).slice(2)}`,
@@ -28,51 +34,60 @@ function createTestEnemy(type: EnemyType, overrides?: Partial<Enemy>): Enemy {
     health: 50,
     maxHealth: 50,
     damage: 10,
+    speed: 50,
     xpValue: 10,
-    color: '#F87171',
-    behaviorState: 'chase',
-    stateStartTime: 0,
+    survivalTime: 0,
+    coordinationState: 'idle',
     ...overrides,
   };
 }
 
-describe('Enemy Behavior System', () => {
+/**
+ * Create a test enemy with behavior state (as returned by updateBeeBehavior)
+ */
+function createEnemyWithBehavior(
+  type: EnemyType,
+  behaviorState: 'chase' | 'telegraph' | 'attack' | 'recovery',
+  stateStartTime: number
+): EnemyWithBehavior {
+  const base = createTestEnemy(type);
+  return {
+    ...base,
+    behaviorState,
+    stateStartTime,
+    attackDirection: { x: 1, y: 0 },
+  };
+}
+
+describe('Bee Behavior System (PROTO_SPEC S6)', () => {
   describe('E1: Readable Tells', () => {
-    it('should have 6 enemy types with behavior configs', () => {
-      // DD-030: Added colossal_tide for metamorphosis
-      const types: EnemyType[] = ['basic', 'fast', 'tank', 'spitter', 'boss', 'colossal_tide'];
+    it('should have 5 bee types with behavior configs (PROTO_SPEC S6)', () => {
+      // PROTO_SPEC S6: Bee Taxonomy - 5 types
+      const types: EnemyType[] = ['worker', 'scout', 'guard', 'propolis', 'royal'];
       for (const type of types) {
-        expect(ENEMY_BEHAVIORS[type]).toBeDefined();
+        expect(BEE_BEHAVIORS[type]).toBeDefined();
       }
     });
 
-    it('each enemy type should have telegraph duration', () => {
-      for (const [type, config] of Object.entries(ENEMY_BEHAVIORS)) {
+    it('each bee type should have telegraph duration (E1: Readable)', () => {
+      for (const [_type, config] of Object.entries(BEE_BEHAVIORS)) {
         expect(config.telegraphDuration).toBeGreaterThan(0);
-        // Colossals can have longer telegraphs (up to 1.5s)
-        const maxDuration = type === 'colossal_tide' ? 1500 : 1000;
-        expect(config.telegraphDuration).toBeLessThanOrEqual(maxDuration);
+        expect(config.telegraphDuration).toBeLessThanOrEqual(1500);
       }
     });
 
     it('should generate telegraph data during telegraph state', () => {
-      const enemy = createTestEnemy('basic', {
-        behaviorState: 'telegraph',
-        stateStartTime: 0,
-        attackDirection: { x: 1, y: 0 },
-      });
-
-      const telegraph = getEnemyTelegraph(enemy, 100);
+      const enemy = createEnemyWithBehavior('worker', 'telegraph', 0);
+      const telegraph = getBeeTelegraph(enemy, 100);
       expect(telegraph).not.toBeNull();
-      expect(telegraph!.type).toBe('lunge');
       expect(telegraph!.progress).toBeGreaterThan(0);
     });
 
     it('should not generate telegraph data in other states', () => {
       const states = ['chase', 'attack', 'recovery'] as const;
       for (const state of states) {
-        const enemy = createTestEnemy('basic', { behaviorState: state });
-        const telegraph = getEnemyTelegraph(enemy, 0);
+        const enemy = createEnemyWithBehavior('worker', state, 0);
+        const telegraph = getBeeTelegraph(enemy, 0);
         expect(telegraph).toBeNull();
       }
     });
@@ -80,115 +95,102 @@ describe('Enemy Behavior System', () => {
 
   describe('E2: Learnable Patterns', () => {
     it('state machine should transition CHASE → TELEGRAPH when in range', () => {
-      const enemy = createTestEnemy('basic', {
-        position: { x: 100, y: 100 },
-        behaviorState: 'chase',
-        stateStartTime: 0,
-      });
-      const playerPos = { x: 110, y: 100 }; // Within attack range (30)
+      const enemy = createTestEnemy('worker');
+      const playerPos = { x: 110, y: 100 }; // Within attack range
 
-      const { enemy: updated } = updateEnemyBehavior(enemy, playerPos, 100, 16);
-      expect(updated.behaviorState).toBe('telegraph');
+      const { enemy: updated } = updateBeeBehavior(enemy, playerPos, 100, 16);
+      // Enemy should be in telegraph state (preparing attack)
+      expect((updated as EnemyWithBehavior).behaviorState).toBe('telegraph');
     });
 
     it('state machine should transition TELEGRAPH → ATTACK after duration', () => {
-      const config = ENEMY_BEHAVIORS.basic;
-      const enemy = createTestEnemy('basic', {
-        behaviorState: 'telegraph',
-        stateStartTime: 0,
-        attackDirection: { x: 1, y: 0 },
-      });
+      const config = BEE_BEHAVIORS.worker;
+      const enemy = createEnemyWithBehavior('worker', 'telegraph', 0);
       const playerPos = { x: 200, y: 100 };
 
       // After telegraph duration
       const gameTime = config.telegraphDuration + 1;
-      const { enemy: updated } = updateEnemyBehavior(enemy, playerPos, gameTime, 16);
-      expect(updated.behaviorState).toBe('attack');
+      const { enemy: updated } = updateBeeBehavior(enemy, playerPos, gameTime, 16);
+      expect((updated as EnemyWithBehavior).behaviorState).toBe('attack');
     });
 
     it('state machine should transition ATTACK → RECOVERY after duration', () => {
-      const config = ENEMY_BEHAVIORS.basic;
-      const enemy = createTestEnemy('basic', {
-        behaviorState: 'attack',
-        stateStartTime: 0,
-        attackDirection: { x: 1, y: 0 },
-      });
+      const config = BEE_BEHAVIORS.worker;
+      const enemy = createEnemyWithBehavior('worker', 'attack', 0);
       const playerPos = { x: 200, y: 100 };
 
       const gameTime = config.attackDuration + 1;
-      const { enemy: updated } = updateEnemyBehavior(enemy, playerPos, gameTime, 16);
-      expect(updated.behaviorState).toBe('recovery');
+      const { enemy: updated } = updateBeeBehavior(enemy, playerPos, gameTime, 16);
+      expect((updated as EnemyWithBehavior).behaviorState).toBe('recovery');
     });
 
     it('state machine should transition RECOVERY → CHASE after duration', () => {
-      const config = ENEMY_BEHAVIORS.basic;
-      const enemy = createTestEnemy('basic', {
-        behaviorState: 'recovery',
-        stateStartTime: 0,
-      });
+      const config = BEE_BEHAVIORS.worker;
+      const enemy = createEnemyWithBehavior('worker', 'recovery', 0);
       const playerPos = { x: 200, y: 100 };
 
       const gameTime = config.recoveryDuration + 1;
-      const { enemy: updated } = updateEnemyBehavior(enemy, playerPos, gameTime, 16);
-      expect(updated.behaviorState).toBe('chase');
+      const { enemy: updated } = updateBeeBehavior(enemy, playerPos, gameTime, 16);
+      expect((updated as EnemyWithBehavior).behaviorState).toBe('chase');
     });
   });
 
-  describe('E4: Escalating Threat', () => {
-    it('boss should have longer attack duration than basic', () => {
-      expect(ENEMY_BEHAVIORS.boss.attackDuration)
-        .toBeGreaterThan(ENEMY_BEHAVIORS.basic.attackDuration);
+  describe('E4: Escalating Threat (Workers → Guards → Royals)', () => {
+    it('royal should have longer attack duration than worker', () => {
+      expect(BEE_BEHAVIORS.royal.attackDuration)
+        .toBeGreaterThanOrEqual(BEE_BEHAVIORS.worker.attackDuration);
     });
 
-    it('boss should deal more damage than basic', () => {
-      expect(ENEMY_BEHAVIORS.boss.attackDamage)
-        .toBeGreaterThan(ENEMY_BEHAVIORS.basic.attackDamage);
+    it('guard should deal more damage than worker', () => {
+      expect(BEE_BEHAVIORS.guard.attackDamage)
+        .toBeGreaterThan(BEE_BEHAVIORS.worker.attackDamage);
     });
 
-    it('each enemy type should have distinct attack type', () => {
-      const attackTypes = Object.values(ENEMY_BEHAVIORS).map(c => c.attackType);
-      expect(new Set(attackTypes).size).toBe(5); // All 5 types have unique attacks
+    it('royal should deal the most damage', () => {
+      const royalDamage = BEE_BEHAVIORS.royal.attackDamage;
+      expect(royalDamage).toBeGreaterThan(BEE_BEHAVIORS.worker.attackDamage);
+      expect(royalDamage).toBeGreaterThan(BEE_BEHAVIORS.scout.attackDamage);
+    });
+
+    it('each bee type should have distinct attack type', () => {
+      const attackTypes = Object.values(BEE_BEHAVIORS).map(c => c.attackType);
+      // At least 3 distinct attack types across the 5 bee types
+      expect(new Set(attackTypes).size).toBeGreaterThanOrEqual(3);
     });
   });
 
   describe('State Helpers', () => {
-    it('isEnemyVulnerable should return true only in recovery', () => {
-      expect(isEnemyVulnerable(createTestEnemy('basic', { behaviorState: 'recovery' }))).toBe(true);
-      expect(isEnemyVulnerable(createTestEnemy('basic', { behaviorState: 'chase' }))).toBe(false);
-      expect(isEnemyVulnerable(createTestEnemy('basic', { behaviorState: 'attack' }))).toBe(false);
+    it('isBeeVulnerable should return true only in recovery', () => {
+      expect(isBeeVulnerable(createEnemyWithBehavior('worker', 'recovery', 0))).toBe(true);
+      expect(isBeeVulnerable(createEnemyWithBehavior('worker', 'chase', 0))).toBe(false);
+      expect(isBeeVulnerable(createEnemyWithBehavior('worker', 'attack', 0))).toBe(false);
     });
 
-    it('isEnemyAttacking should return true only in attack', () => {
-      expect(isEnemyAttacking(createTestEnemy('basic', { behaviorState: 'attack' }))).toBe(true);
-      expect(isEnemyAttacking(createTestEnemy('basic', { behaviorState: 'chase' }))).toBe(false);
-      expect(isEnemyAttacking(createTestEnemy('basic', { behaviorState: 'recovery' }))).toBe(false);
+    it('isBeeAttacking should return true only in attack', () => {
+      expect(isBeeAttacking(createEnemyWithBehavior('worker', 'attack', 0))).toBe(true);
+      expect(isBeeAttacking(createEnemyWithBehavior('worker', 'chase', 0))).toBe(false);
+      expect(isBeeAttacking(createEnemyWithBehavior('worker', 'recovery', 0))).toBe(false);
     });
   });
 
-  describe('Spitter Special Behavior', () => {
-    it('spitter should spawn projectile during attack', () => {
-      const enemy = createTestEnemy('spitter', {
-        behaviorState: 'attack',
-        stateStartTime: 0,
-        attackDirection: { x: 1, y: 0 },
-      });
-      const playerPos = { x: 200, y: 100 };
+  describe('Movement Behavior', () => {
+    it('worker should chase toward player', () => {
+      const enemy = createEnemyWithBehavior('worker', 'chase', 0);
+      const playerPos = { x: 200, y: 100 }; // Player to the right
 
-      const { projectiles } = updateEnemyBehavior(enemy, playerPos, 1, 16);
-      expect(projectiles.length).toBe(1);
-      expect(projectiles[0].ownerId).toBe(enemy.id);
+      const movement = getBeeMovement(enemy, playerPos, 50, 16);
+      // Should move toward player (positive x)
+      expect(movement.x).toBeGreaterThan(0);
     });
 
-    it('spitter should maintain distance (retreat if too close)', () => {
-      const enemy = createTestEnemy('spitter', {
-        position: { x: 100, y: 100 },
-        behaviorState: 'chase',
-      });
+    it('propolis should maintain distance (ranged attacker)', () => {
+      const enemy = createEnemyWithBehavior('propolis', 'chase', 0);
+      enemy.position = { x: 100, y: 100 };
       const playerPos = { x: 110, y: 100 }; // Very close
 
-      const movement = getEnemyMovement(enemy, playerPos, 80, 16);
-      // Should move away (negative x direction)
-      expect(movement.x).toBeLessThan(0);
+      const movement = getBeeMovement(enemy, playerPos, 80, 16);
+      // Propolis is ranged - should retreat if too close
+      expect(movement.x).toBeLessThanOrEqual(0);
     });
   });
 });

@@ -23,7 +23,7 @@ import type {
   GameState,
   SkillMetrics,
   GamePrincipleWeights,
-} from '@kgents/shared-primitives';
+} from '../types';
 import type { UpgradeType } from './upgrades';
 
 // =============================================================================
@@ -509,7 +509,7 @@ export function calculateAdaptationInputs(
     skillMetrics: {
       damageEfficiency: 0.5,
       dodgeRate: gameState.player.health / gameState.player.maxHealth,
-      buildFocus: gameState.player.synergies.length > 0 ? 0.7 : 0.3,
+      buildFocus: (gameState.player.synergies?.length ?? 0) > 0 ? 0.7 : 0.3,
       riskTolerance: 0.5,
       estimate: avgSkill,
     },

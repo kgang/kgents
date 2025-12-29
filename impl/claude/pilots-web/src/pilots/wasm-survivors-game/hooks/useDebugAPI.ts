@@ -16,32 +16,57 @@
  * - DEBUG_KILL_ALL_ENEMIES() - clear enemies
  * - DEBUG_LEVEL_UP() - trigger level up
  *
+ * Audio Debug Functions (since Playwright can't "hear"):
+ * - DEBUG_GET_AUDIO_STATE() - context state, isEnabled, masterVolume, activeSounds
+ * - DEBUG_GET_AUDIO_LEVEL() - current output level (0-255)
+ * - DEBUG_GET_AUDIO_LOG() - last 50 audio events with timestamps
+ * - DEBUG_CLEAR_AUDIO_LOG() - clear the audio event log
+ *
+ * Emotional/Contrast Debug Functions (Part VI: Arc Grammar):
+ * - DEBUG_GET_EMOTIONAL_STATE() - arc phase, contrasts visited, voice lines
+ *
  * @see pilots/wasm-survivors-game/PROTO_SPEC.md
  */
 
 import { useEffect, useRef, useCallback } from 'react';
-import type { GameState, Enemy, EnemyType, Vector2 } from '@kgents/shared-primitives';
+import type { GameState, Enemy, EnemyType, Vector2 } from '../types';
 import type {
   DebugEnemy,
   DebugPlayer,
   DebugDamageEvent,
   DebugTelegraph,
   DebugGameState,
+  DebugEmotionalState,
 } from '../../../lib/debug-types';
 import type { TelegraphData } from '../systems/enemies';
+import type { EmotionalState, VoiceLine } from '../systems/contrast';
+
+// Audio debug functions
+import {
+  DEBUG_GET_AUDIO_STATE,
+  DEBUG_GET_AUDIO_LEVEL,
+  DEBUG_GET_AUDIO_LOG,
+  DEBUG_CLEAR_AUDIO_LOG,
+} from '../systems/audio';
 
 // =============================================================================
 // Types
 // =============================================================================
 
+// Import BallState for debug exposure
+import type { BallState } from '../systems/formation';
+
 export interface DebugAPIConfig {
   gameState: GameState;
   telegraphs: TelegraphData[];
+  emotionalState: EmotionalState | null;  // Part VI: Emotional state for debug
+  ballState?: BallState | null;  // Run 036: THE BALL formation state
   onSpawnEnemy: (type: EnemyType, position: Vector2) => void;
   onSetInvincible: (invincible: boolean) => void;
   onSkipWave: () => void;
   onKillAllEnemies: () => void;
   onLevelUp: () => void;
+  onForceBall?: () => void;  // Run 036: Force THE BALL to start forming
 }
 
 export interface UseDebugAPIResult {
@@ -61,11 +86,14 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
   const {
     gameState,
     telegraphs,
+    emotionalState,
+    ballState,
     onSpawnEnemy,
     onSetInvincible,
     onSkipWave,
     onKillAllEnemies,
     onLevelUp,
+    onForceBall,
   } = config;
 
   // Check if debug mode is enabled via URL parameter
@@ -99,7 +127,7 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
       behaviorState: enemy.behaviorState ?? 'chase',
       telegraphProgress: telegraph?.progress,
       survivalTime: enemy.survivalTime,     // DD-030: Metamorphosis timer
-      pulsingState: enemy.pulsingState,     // DD-030: Lifecycle state
+      pulsingState: enemy.pulsingState ?? 'normal',
     };
   }, []);
 
@@ -116,8 +144,10 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
 
   // Convert telegraph data to debug telegraph
   const toDebugTelegraph = useCallback((telegraph: TelegraphData): DebugTelegraph => {
-    // Map telegraph type to attack type
-    const attackType = telegraph.type === 'aim' ? 'projectile' as const : telegraph.type;
+    // Map bee telegraph types to debug attack types
+    // Bee types: 'swarm' | 'sting' | 'block' | 'sticky' | 'elite'
+    // Debug types: 'swarm' | 'sting' | 'block' | 'sticky' | 'combo' | 'elite'
+    const attackType = telegraph.type as DebugTelegraph['type'];
     return {
       enemyId: telegraph.enemyId,
       type: attackType,
@@ -163,12 +193,71 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
     return telegraphs.map(toDebugTelegraph);
   }, [telegraphs, toDebugTelegraph]);
 
+  // Get THE BALL state (Run 036: Signature mechanic)
+  const getDebugBallState = useCallback(() => {
+    if (!ballState) return null;
+    return {
+      phase: ballState.phase,
+      phaseProgress: ballState.phaseProgress,
+      center: { ...ballState.center },
+      currentRadius: ballState.currentRadius,
+      gapAngle: ballState.gapAngle * (180 / Math.PI), // Convert to degrees for readability
+      gapSize: ballState.gapSize * (180 / Math.PI),   // Convert to degrees
+      temperature: ballState.temperature,
+      beesInFormation: ballState.formationBeeIds.length,
+      escapeCount: ballState.escapeCount,
+    };
+  }, [ballState]);
+
+  // Get emotional state (Part VI: Arc Grammar)
+  const getDebugEmotionalState = useCallback((): DebugEmotionalState | null => {
+    if (!emotionalState) return null;
+
+    // Extract active dimensions from the Map (dimensions where either pole visited)
+    const activeDimensions: string[] = [];
+    emotionalState.contrast.dimensions.forEach((dim, name) => {
+      if (dim.visitedA || dim.visitedB) {
+        activeDimensions.push(name);
+      }
+    });
+
+    // Extract contrast history from transitions
+    const contrastHistory = emotionalState.contrast.transitionHistory.map(
+      (t) => `${t.dimension}: ${t.from} -> ${t.to}`
+    );
+
+    // Get last contrast time from most recent transition
+    const lastContrastTime = emotionalState.contrast.transitionHistory.length > 0
+      ? emotionalState.contrast.transitionHistory[emotionalState.contrast.transitionHistory.length - 1].gameTime
+      : 0;
+
+    return {
+      arc: {
+        currentPhase: emotionalState.arc.currentPhase,
+        phasesVisited: [...emotionalState.arc.phasesVisited],
+        phaseStartTime: emotionalState.arc.phaseStartTime,
+        closureType: emotionalState.arc.closureType,
+      },
+      contrast: {
+        activeDimensions,
+        contrastsVisited: emotionalState.contrast.contrastsVisited,
+        contrastHistory,
+        lastContrastTime,
+      },
+      currentVoiceLine: emotionalState.voiceLines.lastShown
+        ? { text: emotionalState.voiceLines.lastShown.text, type: emotionalState.voiceLines.lastShown.trigger }
+        : null,
+      voiceLineHistory: emotionalState.voiceLines.queue.map((l: VoiceLine) => l.text),
+    };
+  }, [emotionalState]);
+
   // Spawn enemy
   const debugSpawn = useCallback((type: string, position: { x: number; y: number }) => {
-    const validTypes: EnemyType[] = ['basic', 'fast', 'tank', 'boss', 'spitter', 'colossal_tide'];
+    // Bee enemy types: worker, scout, guard, propolis, royal
+    const validTypes: EnemyType[] = ['worker', 'scout', 'guard', 'propolis', 'royal'];
     const enemyType = validTypes.includes(type as EnemyType)
       ? (type as EnemyType)
-      : 'basic';
+      : 'worker';  // Default to worker (basic bee)
     onSpawnEnemy(enemyType, { x: position.x, y: position.y });
   }, [onSpawnEnemy]);
 
@@ -194,6 +283,21 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
     window.DEBUG_KILL_ALL_ENEMIES = onKillAllEnemies;
     window.DEBUG_LEVEL_UP = onLevelUp;
 
+    // Audio debug functions (since Playwright can't "hear")
+    window.DEBUG_GET_AUDIO_STATE = DEBUG_GET_AUDIO_STATE;
+    window.DEBUG_GET_AUDIO_LEVEL = DEBUG_GET_AUDIO_LEVEL;
+    window.DEBUG_GET_AUDIO_LOG = DEBUG_GET_AUDIO_LOG;
+    window.DEBUG_CLEAR_AUDIO_LOG = DEBUG_CLEAR_AUDIO_LOG;
+
+    // Emotional/Contrast debug functions (Part VI: Arc Grammar)
+    window.DEBUG_GET_EMOTIONAL_STATE = getDebugEmotionalState;
+
+    // THE BALL debug functions (Run 036: Signature mechanic)
+    window.DEBUG_GET_BALL_STATE = getDebugBallState;
+    if (onForceBall) {
+      window.DEBUG_FORCE_BALL = onForceBall;
+    }
+
     // Log debug mode activation
     console.log('[DEBUG API] Debug mode activated. Available functions:');
     console.log('  - DEBUG_GET_GAME_STATE()');
@@ -206,6 +310,16 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
     console.log('  - DEBUG_SKIP_WAVE()');
     console.log('  - DEBUG_KILL_ALL_ENEMIES()');
     console.log('  - DEBUG_LEVEL_UP()');
+    console.log('  Audio debugging:');
+    console.log('  - DEBUG_GET_AUDIO_STATE()');
+    console.log('  - DEBUG_GET_AUDIO_LEVEL()');
+    console.log('  - DEBUG_GET_AUDIO_LOG()');
+    console.log('  - DEBUG_CLEAR_AUDIO_LOG()');
+    console.log('  Emotional/Contrast debugging:');
+    console.log('  - DEBUG_GET_EMOTIONAL_STATE()');
+    console.log('  THE BALL debugging:');
+    console.log('  - DEBUG_GET_BALL_STATE()');
+    console.log('  - DEBUG_FORCE_BALL() - Force THE BALL to start forming');
 
     // Cleanup on unmount
     return () => {
@@ -219,6 +333,16 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
       delete window.DEBUG_SKIP_WAVE;
       delete window.DEBUG_KILL_ALL_ENEMIES;
       delete window.DEBUG_LEVEL_UP;
+      // Audio debug functions
+      delete window.DEBUG_GET_AUDIO_STATE;
+      delete window.DEBUG_GET_AUDIO_LEVEL;
+      delete window.DEBUG_GET_AUDIO_LOG;
+      delete window.DEBUG_CLEAR_AUDIO_LOG;
+      // Emotional/Contrast debug functions
+      delete window.DEBUG_GET_EMOTIONAL_STATE;
+      // THE BALL debug functions
+      delete window.DEBUG_GET_BALL_STATE;
+      delete window.DEBUG_FORCE_BALL;
     };
   }, [
     isDebugMode,
@@ -227,11 +351,14 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
     getDebugPlayer,
     getLastDamage,
     getDebugTelegraphs,
+    getDebugEmotionalState,
+    getDebugBallState,
     debugSpawn,
     debugSetInvincible,
     onSkipWave,
     onKillAllEnemies,
     onLevelUp,
+    onForceBall,
   ]);
 
   return {
