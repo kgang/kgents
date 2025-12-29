@@ -341,7 +341,6 @@ class TestPilotLawsRegistry:
             "trail-to-crystal",
             "wasm-survivors",
             "disney-portal",
-            "rap-coach",
             "sprite-procedural",
         }
         for pilot in expected_pilots:
@@ -716,23 +715,6 @@ class TestIntegration:
         }
 
         report = verify_pilot_laws("wasm-survivors", context)
-
-        # Should have at least some passing laws
-        assert report.pass_count > 0
-
-    def test_rap_coach_laws(self):
-        """Test rap-coach pilot laws."""
-        context = {
-            "intent_declared": True,
-            "ghosts_preserved": True,
-            "risk_level": 0.8,
-            "penalty_applied": 0.0,
-            "current_loss": 0.2,
-            "threshold": 0.5,
-            "surfaced": True,
-        }
-
-        report = verify_pilot_laws("rap-coach", context)
 
         # Should have at least some passing laws
         assert report.pass_count > 0

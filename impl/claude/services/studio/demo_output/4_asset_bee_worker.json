@@ -1,0 +1,31 @@
+{
+  "id": "asset-bf5a77e9314f",
+  "type": "sprite",
+  "name": "bee_worker",
+  "quality_score": 0.86,
+  "content": null,
+  "metadata": {
+    "spec": {
+      "dimensions": [
+        32,
+        32
+      ],
+      "color_palette": [
+        "#FF4500",
+        "#FF2D2D",
+        "#FFD700",
+        "#0A0A0A",
+        "#E8E8E8"
+      ],
+      "art_style": "Sharp geometric silhouette with minimal organic curves. Angular body segments separated by thin black gaps. Crystalline wing structure. Pulsing corruption veins in danger red. High contrast pixel art with clean edges and deliberate asymmetry.",
+      "composition": "Three-quarter view facing right. Body occupies 24x20 pixels centered. Wings extend to fill remaining space. Head slightly oversized (8x8 pixels) for arcade readability. Stinger prominent and threatening.",
+      "prompt_for_generator": "32x32 pixel art sprite of an angular robotic bee enemy, geometric body segments in corrupted orange (#FF4500), pulsing red veins (#FF2D2D), crystalline transparent wings, sharp black outlines, three-quarter view facing right, video game enemy, high contrast, clean pixel art, no anti-aliasing, dark background",
+      "technical_notes": "Export with transparent background. Ensure 1:1 pixel mapping. Corruption veins should use danger red for animation frames. Wing transparency at 70% opacity.",
+      "_creative_direction": "Transform the 'basic worker bee' into a corrupted geometric war-drone\u2014angular, crystalline, with pulsing red corruption veins that suggest inevitable metamorphosis into something worse.",
+      "_justification": "The vision demands 'biological dread' and 'geometric arcade aesthetic.' A cute fuzzy bee betrays the 'magnificent bastard's swan song' tone. This corrupted drone embodies the hornet's knowledge that even workers are weapons in this beautiful catastrophe."
+    },
+    "creative_direction": "Transform the 'basic worker bee' into a corrupted geometric war-drone\u2014angular, crystalline, with pulsing red corruption veins that suggest inevitable metamorphosis into something worse.",
+    "justification": "The vision demands 'biological dread' and 'geometric arcade aesthetic.' A cute fuzzy bee betrays the 'magnificent bastard's swan song' tone. This corrupted drone embodies the hornet's knowledge that even workers are weapons in this beautiful catastrophe.",
+    "refinement_count": 0
+  }
+}

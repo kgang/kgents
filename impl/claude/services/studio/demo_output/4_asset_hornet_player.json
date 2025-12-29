@@ -1,0 +1,31 @@
+{
+  "id": "asset-06575692974b",
+  "type": "sprite",
+  "name": "hornet_player",
+  "quality_score": 0.9,
+  "content": null,
+  "metadata": {
+    "spec": {
+      "dimensions": [
+        64,
+        64
+      ],
+      "color_palette": [
+        "#00D9FF",
+        "#0099CC",
+        "#FFFFFF",
+        "#0A0A0A",
+        "#E8E8E8"
+      ],
+      "art_style": "Geometric minimalism with crystalline edges. Sharp triangular body segments, faceted compound eyes that catch light, wings rendered as transparent geometric planes with subtle electric blue energy veins. No rounded edges\u2014everything is intentionally angular and weaponized.",
+      "composition": "Centered in frame with slight forward lean suggesting momentum. Body occupies roughly 80% of vertical space. Head-thorax-abdomen as three distinct triangular segments decreasing in size. Wings extend beyond body silhouette to create dramatic negative space.",
+      "prompt_for_generator": "Geometric crystalline wasp sprite, 64x64 pixels, sharp angular triangular body segments, electric blue (#00D9FF) energy conduits glowing through translucent exoskeleton, faceted compound eyes reflecting light, wings as transparent geometric planes with subtle blue veins, minimal color palette of electric blue white and black, starfighter meets insect aesthetic, no rounded edges, aggressive forward-leaning pose, pixel art style with clean geometric shapes",
+      "technical_notes": "PNG-32 with alpha channel for wing transparency effects. Ensure electric blue energy conduits read clearly at 64px scale. Wings should have subtle transparency gradients but maintain sharp geometric edges.",
+      "_creative_direction": "The hornet becomes a crystalline geometric wasp\u2014sharp triangular body with exposed energy conduits, wings that fracture light, and a stance that suggests controlled violence about to unfold.",
+      "_justification": "Rather than literal biological accuracy, we lean into 'geometric arcade aesthetic with biological undertones'\u2014the hornet is weaponized geometry that happens to be alive. The angular silhouette reads as both insect and starfighter, embodying the 'magnificent bastard' who knows this is their final dance."
+    },
+    "creative_direction": "The hornet becomes a crystalline geometric wasp\u2014sharp triangular body with exposed energy conduits, wings that fracture light, and a stance that suggests controlled violence about to unfold.",
+    "justification": "Rather than literal biological accuracy, we lean into 'geometric arcade aesthetic with biological undertones'\u2014the hornet is weaponized geometry that happens to be alive. The angular silhouette reads as both insect and starfighter, embodying the 'magnificent bastard' who knows this is their final dance.",
+    "refinement_count": 0
+  }
+}

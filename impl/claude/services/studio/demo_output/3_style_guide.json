@@ -1,0 +1,80 @@
+{
+  "rules": [
+    {
+      "category": "color",
+      "rule": "Use electric blue (#00D9FF) for player/ally elements, corrupted red/orange (#FF4500) for threats, and gold (#FFD700) sparingly for moments of triumph or revelation.",
+      "rationale": "High contrast between player and enemy creates visual clarity in the chaos. Gold becomes precious by scarcity\u2014reserved for crystalline moments of understanding."
+    },
+    {
+      "category": "color",
+      "rule": "Background must be true black (#0A0A0A) with foreground at 91% white (#E8E8E8). No grays between 20% and 85%.",
+      "rationale": "Eliminates muddy middle ground. Forces decisive contrast that mirrors the binary nature of survival\u2014you're either in the light or consumed by darkness."
+    },
+    {
+      "category": "typography",
+      "rule": "Headers use Space Grotesk at 1.414x scale increments. Body text is Inter. Code is JetBrains Mono. Never mix fonts within a component.",
+      "rationale": "Geometric precision in headers suggests architectural confidence. Clean separation of concerns\u2014each typeface has its domain and doesn't trespass."
+    },
+    {
+      "category": "typography",
+      "rule": "Line height is exactly 1.5x for body text, 1.2x for headers. Letter spacing is -0.02em for headers, 0em for body.",
+      "rationale": "Tight headers suggest urgency and precision. Relaxed body text allows for sustained reading during longer expositions."
+    },
+    {
+      "category": "motion",
+      "rule": "All animations use cubic-bezier(0.16, 1, 0.3, 1) with 240ms entrance, 180ms exit, 360ms emphasis. No bouncing, elastic, or 'playful' easing.",
+      "rationale": "Motion feels inevitable rather than bouncy. Quick exits suggest efficiency; longer emphasis creates weight for important moments."
+    },
+    {
+      "category": "motion",
+      "rule": "Static is default. Only animate on state change, never for decoration. Loading states pulse once per 2 seconds maximum.",
+      "rationale": "Motion is earned through meaning. Constant animation dilutes impact and suggests nervous energy rather than confident control."
+    },
+    {
+      "category": "tone",
+      "rule": "Interface copy is laconic\u2014never more than 7 words for buttons, 15 words for descriptions. Favor active voice and concrete nouns.",
+      "rationale": "Mirrors the war correspondent voice\u2014efficient, precise, no wasted words when documenting a beautiful catastrophe in progress."
+    },
+    {
+      "category": "tone",
+      "rule": "Error messages acknowledge failure without apology. Success messages are understated. Use 'terminated', 'crystallized', 'manifested' over 'deleted', 'saved', 'created'.",
+      "rationale": "Language choices reinforce the geometric/biological duality. Technical precision with biological undertones creates the magnificent bastard aesthetic."
+    },
+    {
+      "category": "iconography",
+      "rule": "Icons are outlined, 1.5px stroke, 2px corner radius, fitting 24px grid. Favor geometric shapes over organic curves.",
+      "rationale": "Geometric forms suggest systematic thinking and architectural precision\u2014the hornet's methodical approach to constructing inevitable spectacle."
+    },
+    {
+      "category": "iconography",
+      "rule": "Player-related icons trend angular/crystalline. Enemy-related icons trend organic/corrupted. Neutral icons are perfect geometric primitives.",
+      "rationale": "Visual language that reinforces the core tension: geometric precision (player) versus biological corruption (threat)."
+    }
+  ],
+  "examples": [
+    {
+      "title": "Button States",
+      "description": "How interactive elements reflect the vision's confident precision",
+      "do": "Primary button: electric blue background, 'Crystallize' label, 240ms cubic-bezier entrance on hover with 2px geometric border",
+      "dont": "Rounded button with bounce animation, 'Please click me!' label in cheerful green with drop shadow"
+    },
+    {
+      "title": "Error Handling",
+      "description": "How failure is acknowledged with dignity rather than apology",
+      "do": "Connection terminated. Retry protocol initiated. [geometric retry icon]",
+      "dont": "Oops! Sorry about that! Something went wrong. Please try again! \ud83d\ude05 [bouncing emoji]"
+    },
+    {
+      "title": "Data Visualization",
+      "description": "How information displays maintain the geometric/biological tension",
+      "do": "Progress bars as crystalline formations growing left-to-right. Threat indicators as pulsing organic shapes in corrupted orange.",
+      "dont": "Cheerful rainbow progress bars with smiley faces and gentle curved edges in pastel colors"
+    },
+    {
+      "title": "Loading States",
+      "description": "How waiting feels purposeful rather than anxious",
+      "do": "Single geometric shape materializing through opacity shift every 2 seconds with 'Manifesting...' label",
+      "dont": "Three bouncing dots with 'Loading, please wait!' and spinners rotating constantly"
+    }
+  ]
+}

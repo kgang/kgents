@@ -74,15 +74,6 @@ PILOTS: list[PilotManifest] = [
         primitives=["planner", "portal", "warmth"],
         joy_dimension="WARMTH",
     ),
-    PilotManifest(
-        id="rap-coach",
-        name="Rap Coach Flow Lab",
-        description="Find your flow state in freestyle",
-        status="coming_soon",
-        route="/rap-coach",
-        primitives=["flow", "rhythm", "feedback"],
-        joy_dimension="SURPRISE",
-    ),
 ]
 
 

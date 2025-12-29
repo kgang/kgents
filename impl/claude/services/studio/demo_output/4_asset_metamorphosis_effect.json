@@ -1,0 +1,53 @@
+{
+  "id": "asset-68a7cb667464",
+  "type": "animation",
+  "name": "metamorphosis_effect",
+  "quality_score": 0.875,
+  "content": null,
+  "metadata": {
+    "spec": {
+      "frame_count": 8,
+      "fps": 6,
+      "states": [
+        {
+          "name": "metamorphosis_pulse",
+          "frames": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "loop": true
+        }
+      ],
+      "timing_notes": "Breathing rhythm aligned with cubic-bezier(0.16, 1, 0.3, 1) - inhale (frames 0-3) builds tension geometrically, exhale (frames 4-7) releases with biological urgency",
+      "keyframe_descriptions": [
+        "frame 0: Thin hexagonal wireframe in #00D9FF, 16px diameter, sharp vertices",
+        "frame 1: Hexagon expands to 24px, inner triangle appears, brightness +20%",
+        "frame 2: Sacred geometry emerges - hexagon + triangle + central dot, 32px diameter",
+        "frame 3: Peak crystalline form - multiple nested shapes, maximum #00D9FF intensity",
+        "frame 4: Color corruption begins - outer edges shift to #FF4500, geometry wavers",
+        "frame 5: Biological takeover - shapes become organic, pulsing with #FF4500 dominance",
+        "frame 6: Cellular division aesthetic - form splits/multiplies, orange overwhelms blue",
+        "frame 7: Return to frame 0 but with subtle orange 'stain' - the corruption spreads"
+      ],
+      "composition": "Centered mandala with high contrast against dark background, designed to read clearly at 64x64 while maintaining geometric precision",
+      "color_palette": [
+        "#00D9FF",
+        "#FF4500",
+        "#0A0A0A",
+        "#E8E8E8"
+      ],
+      "technical_notes": "Alpha channel for clean compositing over gameplay, ensure geometric edges remain crisp at target resolution",
+      "_creative_direction": "Transform metamorphosis from mere gameplay mechanic into crystalline harbinger of inevitable doom\u2014a geometric mandala that breathes with biological dread, pulsing from electric clarity to corrupted emergence.",
+      "_justification": "Rather than a simple glow, this creates a visual language of transformation that embodies the vision's core insight: magnificent catastrophe through geometric precision. The mandala form suggests both cellular division and arcane ritual, while the color transition from player-blue to enemy-orange visualizes the corruption process itself."
+    },
+    "creative_direction": "Transform metamorphosis from mere gameplay mechanic into crystalline harbinger of inevitable doom\u2014a geometric mandala that breathes with biological dread, pulsing from electric clarity to corrupted emergence.",
+    "justification": "Rather than a simple glow, this creates a visual language of transformation that embodies the vision's core insight: magnificent catastrophe through geometric precision. The mandala form suggests both cellular division and arcane ritual, while the color transition from player-blue to enemy-orange visualizes the corruption process itself.",
+    "refinement_count": 0
+  }
+}

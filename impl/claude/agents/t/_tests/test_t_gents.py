@@ -18,6 +18,13 @@ from __future__ import annotations
 import asyncio
 import time
 
+# Legacy agents removed (2025-12-25) - tests skip anyway
+# CounterAgent, FixtureAgent, FixtureConfig, MockAgent, MockConfig, SpyAgent
+# Use NullProbe, WitnessProbe instead
+# Type stubs for skipped tests (mypy compliance)
+# These classes no longer exist but tests using them are skipped
+from typing import TYPE_CHECKING
+
 import pytest
 
 from agents.t import (
@@ -32,13 +39,67 @@ from agents.t import (
     not_empty,
 )
 
-# Legacy agents removed (2025-12-25) - tests skip anyway
-# CounterAgent, FixtureAgent, FixtureConfig, MockAgent, MockConfig, SpyAgent
-# Use NullProbe, WitnessProbe instead
+if TYPE_CHECKING:
+    from typing import Any, Generic, TypeVar
+
+    T = TypeVar("T")
+    U = TypeVar("U")
+
+    class MockConfig:
+        def __init__(self, output: Any) -> None: ...
+
+    class MockAgent(Generic[T, U]):
+        call_count: int
+        __is_test__: bool
+
+        def __init__(self, config: MockConfig) -> None: ...
+        async def invoke(self, input: T) -> U: ...
+        def __rshift__(self, other: Any) -> Any: ...
+
+    class FixtureConfig:
+        def __init__(
+            self,
+            fixtures: dict[str, str],
+            default: str = ...,
+            strict: bool = ...,
+        ) -> None: ...
+
+    class FixtureAgent(Generic[T, U]):
+        lookup_count: int
+        __is_test__: bool
+
+        def __init__(self, config: FixtureConfig) -> None: ...
+        async def invoke(self, input: T) -> U: ...
+
+    class SpyAgent(Generic[T]):
+        history: list[T]
+        __is_test__: bool
+
+        def __init__(self, label: str = ...) -> None: ...
+        async def invoke(self, input: T) -> T: ...
+        def assert_captured(self, item: T) -> None: ...
+        def assert_count(self, count: int) -> None: ...
+        def assert_not_empty(self) -> None: ...
+        def last(self) -> T: ...
+        def reset(self) -> None: ...
+        def __rshift__(self, other: Any) -> Any: ...
+
+    class CounterAgent(Generic[T]):
+        count: int
+        __is_test__: bool
+
+        def __init__(self, label: str = ...) -> None: ...
+        async def invoke(self, input: T) -> T: ...
+        def assert_count(self, count: int) -> None: ...
+        def reset(self) -> None: ...
+        def __rshift__(self, other: Any) -> Any: ...
+
 
 # Skip all tests that use deprecated compat layer agents
 # These agents are deprecated in favor of TruthFunctor probes
-DEPRECATED_REASON = "Legacy T-gent agents deprecated. Use TruthFunctor probes (NullProbe, WitnessProbe) instead."
+DEPRECATED_REASON = (
+    "Legacy T-gent agents deprecated. Use TruthFunctor probes (NullProbe, WitnessProbe) instead."
+)
 
 
 @pytest.mark.skip(reason=DEPRECATED_REASON)

@@ -1,0 +1,84 @@
+{
+  "pattern_count": 13,
+  "patterns": [
+    {
+      "name": "predator-to-prey-inversion",
+      "description": "A fundamental visual transformation where the player starts as a visually dominant predator and gradually becomes visually marked as prey. The camera perspective shifts from following the player's movement to pulling back to show encirclement. Visual threat indicators that initially mark enemies begin marking the player. The predator's confident animations and glowing power-ups are contrasted against the forming sphere of coordination around them.",
+      "confidence": 0.95,
+      "focus": "visual"
+    },
+    {
+      "name": "coordination-visualization-language",
+      "description": "A progressive visual language that makes bee coordination increasingly visible and threatening. Individual bees display normal colors, but coordinating bees emit orange particle trails and wing vibrations. Formation phases are marked by heat shimmer and bass thrum audio, culminating in a visually spectacular sphere with visible gaps that close over time. The visual progression from scattered defense to military precision is telegraphed through pheromone trails, harmonic buzzing, and gravitational movement patterns.",
+      "confidence": 0.92,
+      "focus": "visual"
+    },
+    {
+      "name": "power-fantasy-to-dread-progression",
+      "description": "Visual design that supports emotional oscillation from power fantasy to existential dread. Early waves show satisfying kill feedback with screen shake, particle fountains, and combo counters. As waves progress, the same visual elements that showed dominance (glowing upgrades, trail particles) become inadequate against coordinated formations. The most powerful visual state occurs 30-60 seconds before inevitable death, creating a visual irony where maximum power display precedes failure.",
+      "confidence": 0.9,
+      "focus": "visual"
+    },
+    {
+      "name": "upgrade-transformation-visibility",
+      "description": "A visual system where player upgrades create immediate and cumulative visual transformation. Each upgrade visibly changes the player sprite, creating a progression from basic hornet to war machine appearance. By wave 10, the visual difference should be dramatic. Upgrades also modify animations - more confident idle poses, aggressive attack stances, swagger in movement. The visual transformation serves both power fantasy and tragic irony as the most magnificent appearance precedes inevitable doom.",
+      "confidence": 0.88,
+      "focus": "visual"
+    },
+    {
+      "name": "silence-before-storm-pattern",
+      "description": "A critical visual and audio design pattern where the most dramatic moments are preceded by calculated emptiness. THE BALL formation is preceded by 2-4 seconds of near-silence, with only wingbeat audio remaining. Visual effects clear from the screen, leaving just the player and the forming sphere. This creates maximum contrast before the loudest, most visually intense moment (death). The pattern applies to multiple scales - brief pauses before impacts, screen clearing before major formations.",
+      "confidence": 0.94,
+      "focus": "visual"
+    },
+    {
+      "name": "heat-death-spectacle",
+      "description": "The signature visual moment designed specifically for streaming and social sharing. THE HEAT BALL formation uses a precisely choreographed visual sequence: sphere formation with visible gaps, camera pull-back to show full encirclement, temperature indicator rising, constriction phase with tightening sphere, final gap closure with white flash and cooking sound. This sequence prioritizes visual drama and clip-worthiness over pure gameplay function, making it the marketing hook of the entire visual design.",
+      "confidence": 0.93,
+      "focus": "visual"
+    },
+    {
+      "name": "hornet-swagger-personality",
+      "description": "A visual personality system that gives the hornet character distinct swagger and attitude through animation rather than dialogue. Early run animations show alert, aggressive stances. Late run animations display confident surveying of kills, satisfying snap attacks, and brief pauses as if savoring multi-kills. Even at low HP, the hornet maintains defiant posture rather than cowering. Death animations show acceptance rather than despair, maintaining the 'magnificent bastard' character who knows the score.",
+      "confidence": 0.87,
+      "focus": "visual"
+    },
+    {
+      "name": "palette-constraint-system",
+      "description": "A technical color management approach that enforces visual coherence through strict palette limitations. Each sprite sheet is limited to 64 total colors, with specific budgets: 8 colors for player, 8 per enemy type, 16 for effects, 16 for UI. This constraint forces visual unity while enabling accessibility features through semantic color roles. The system includes automated validation that blocks merges if color budgets are exceeded, ensuring disciplined visual design.",
+      "confidence": 0.91,
+      "focus": "visual"
+    },
+    {
+      "name": "procedural-placeholder-fallback",
+      "description": "A comprehensive fallback visual system where every art asset has a functionally equivalent procedural placeholder. Players are orange hexagons with direction indicators, different bee types use distinct geometric shapes (circles, pentagons, hexagons) with color coding and patterns like stripes. This creates a complete parallel visual language that maintains gameplay functionality while assets are in development, with seamless hot-swapping between placeholder and final art.",
+      "confidence": 0.86,
+      "focus": "visual"
+    },
+    {
+      "name": "asset-optimization-hierarchy",
+      "description": "A structured approach to visual asset optimization that prioritizes performance while maintaining quality. Critical assets (player, basic enemies, core effects) must load under 2MB total in under 3 seconds on 3G. Lazy-loading triggers at specific game events - elite enemies at wave 3, boss assets on first spawn, metamorphosis assets when pulsing begins. Each asset type has specific optimization targets: player atlas under 200KB, enemy atlas under 300KB, using pngquant and oxipng compression.",
+      "confidence": 0.89,
+      "focus": "visual"
+    },
+    {
+      "name": "accessibility-first-contrast",
+      "description": "Visual design that prioritizes accessibility compliance as a foundational constraint rather than an afterthought. All text must meet WCAG AA contrast ratios (4.5:1), interactive elements need 3:1 minimum. Color palettes include dedicated variants for deuteranopia and protanopia, using blue vs orange and cyan vs yellow distinctions. Health states use distinct hues rather than just saturation changes. Metamorphosis effects rely on brightness and animation patterns, not just color shifts.",
+      "confidence": 0.92,
+      "focus": "visual"
+    },
+    {
+      "name": "kill-feedback-maximization",
+      "description": "An intense focus on making every kill feel devastating through layered visual feedback. Each kill triggers impact frames (2-3 frame freeze), distinct chitin crack sounds per bee type, directional scatter physics, golden XP particle bursts that vacuum toward player, and combo counters. Multi-kills escalate to screen shake, bass drops, slowmo, and 'MASSACRE' text. The visual language prioritizes visceral satisfaction and dopamine triggers over realistic portrayal.",
+      "confidence": 0.94,
+      "focus": "visual"
+    },
+    {
+      "name": "death-as-interaction-ritual",
+      "description": "A transformation of the death experience from passive observation to active participation through visual ritual design. During the crystallization overlay showing fracture lines and golden accents, UI elements appear asking 'What do you preserve?' The player makes legacy choices over 5-10 seconds while the crystal solidifies with their decisions embedded. This visual ritual maintains agency even in failure, turning death into a pivot point rather than an ending.",
+      "confidence": 0.88,
+      "focus": "visual"
+    }
+  ],
+  "sources_analyzed": 4
+}

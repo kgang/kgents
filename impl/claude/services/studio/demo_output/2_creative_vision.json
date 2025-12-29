@@ -1,0 +1,31 @@
+{
+  "core_insight": "A magnificent bastard's swan song\u2014the visual language of a hornet who knows the score, transforming power fantasy into inevitable spectacle through geometric precision and biological dread.",
+  "color_palette": {
+    "primary": "#00D9FF",
+    "secondary": "#FF4500",
+    "accent": "#FFD700"
+  },
+  "typography": {
+    "heading": "Space Grotesk",
+    "body": "Inter",
+    "mono": "JetBrains Mono"
+  },
+  "motion": {
+    "timing": "cubic-bezier(0.16, 1, 0.3, 1)",
+    "easing": "ease-out"
+  },
+  "tone": {
+    "voice": "Laconic war correspondent documenting a beautiful catastrophe",
+    "personality": "Confident, fatalistic, darkly humorous, respectfully merciless",
+    "keywords": [
+      "precision",
+      "inevitable",
+      "magnificent",
+      "swagger",
+      "spectacle",
+      "ritual",
+      "geometric",
+      "crystalline"
+    ]
+  }
+}

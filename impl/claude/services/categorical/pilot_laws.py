@@ -479,7 +479,6 @@ def _create_pilot_laws() -> list[PilotLaw]:
             description="All crystals must disclose what was dropped",
             predicate=compression_honesty,
         ),
-
         # =====================================================================
         # wasm-survivors-game
         # =====================================================================
@@ -518,7 +517,6 @@ def _create_pilot_laws() -> list[PilotLaw]:
             description="Proof compression honest about lost detail",
             predicate=compression_honesty,
         ),
-
         # =====================================================================
         # disney-portal-daily-witness-lab
         # =====================================================================
@@ -543,46 +541,6 @@ def _create_pilot_laws() -> list[PilotLaw]:
             description="Crystals remain legible even to future selves",
             predicate=lambda is_legible=True, **kw: bool(is_legible),
         ),
-
-        # =====================================================================
-        # rap-coach-flow-lab
-        # =====================================================================
-        PilotLaw(
-            schema=LawSchema.COHERENCE_GATE,
-            pilot="rap-coach",
-            name="L1 Intent Declaration Law",
-            description="Every session begins with declared intent",
-            predicate=lambda intent_declared=False, **kw: intent_declared,
-        ),
-        PilotLaw(
-            schema=LawSchema.GHOST_PRESERVATION,
-            pilot="rap-coach",
-            name="L3 Voice Continuity Law",
-            description="Voice choices preserved for style tracing",
-            predicate=ghost_preservation,
-        ),
-        PilotLaw(
-            schema=LawSchema.COURAGE_PRESERVATION,
-            pilot="rap-coach",
-            name="L4 Courage Preservation Law",
-            description="High-risk takes are protected from negative weighting",
-            predicate=courage_preservation,
-        ),
-        PilotLaw(
-            schema=LawSchema.DRIFT_ALERT,
-            pilot="rap-coach",
-            name="L5 Repair Path Law",
-            description="If intent/delivery drift, surface repair path",
-            predicate=drift_alert,
-        ),
-        PilotLaw(
-            schema=LawSchema.COMPRESSION_HONESTY,
-            pilot="rap-coach",
-            name="L6 Session Compression Law",
-            description="Flow session summaries disclose omitted takes",
-            predicate=compression_honesty,
-        ),
-
         # =====================================================================
         # sprite-procedural-taste-lab
         # =====================================================================

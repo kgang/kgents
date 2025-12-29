@@ -1,0 +1,19 @@
+{
+  "id": "asset-758fb494b6ec",
+  "type": "writing",
+  "name": "death_screen_flavor",
+  "quality_score": 0.925,
+  "content": "**CONTACT LOST**\n\n*Wave 47. Metamorphosis cascade initiated 0.7 seconds before extraction.*\n\n*The geometry held. The timing did not.*\n\n*Another hornet will take the pattern.*\n\n---\n\n**[PRESS ANY KEY TO REINITIALIZE]**",
+  "metadata": {
+    "spec": {
+      "content": "**CONTACT LOST**\n\n*Wave 47. Metamorphosis cascade initiated 0.7 seconds before extraction.*\n\n*The geometry held. The timing did not.*\n\n*Another hornet will take the pattern.*\n\n---\n\n**[PRESS ANY KEY TO REINITIALIZE]**",
+      "voice_notes": "Clinical military brevity meets fatalistic acceptance. No false comfort\u2014just the acknowledgment that they came close to something magnificent and that the pattern itself endures.",
+      "word_count": 32,
+      "_creative_direction": "Death as a war correspondent's field report\u2014clinical precision meets inevitable beauty, acknowledging the player's magnificent failure without consolation.",
+      "_justification": "The 'laconic war correspondent' voice transforms typical game-over encouragement into something more honest and compelling. Rather than hollow 'try again!' cheerfulness, we offer the respect of witnessing their precise failure while implying the inevitable pull back into the spectacle."
+    },
+    "creative_direction": "Death as a war correspondent's field report\u2014clinical precision meets inevitable beauty, acknowledging the player's magnificent failure without consolation.",
+    "justification": "The 'laconic war correspondent' voice transforms typical game-over encouragement into something more honest and compelling. Rather than hollow 'try again!' cheerfulness, we offer the respect of witnessing their precise failure while implying the inevitable pull back into the spectacle.",
+    "refinement_count": 0
+  }
+}

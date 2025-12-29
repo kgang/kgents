@@ -22,7 +22,6 @@ from __future__ import annotations
 from .measurement import chain_arc_coverage, cosine_distance, experience_vector
 from .types import ExperienceQuality
 
-
 # =============================================================================
 # Sequential Composition (>>)
 # =============================================================================
@@ -93,7 +92,7 @@ def parallel_compose(
 
     When experiences A and B happen at the same time (layered):
     - Contrast: Maximum of both (dominant track)
-    - Arc: Weighted mean (both contribute)
+    - Arc: Product (strict associativity, floor gate compatible)
     - Voice: Adversarial AND, Creative OR, Advocate AND
     - Floor: Both must pass
 
@@ -101,7 +100,7 @@ def parallel_compose(
     background + foreground experiences.
 
     Laws:
-    - Associativity: (A || B) || C = A || (B || C)
+    - Associativity: (A || B) || C = A || (B || C) [STRICT with product]
     - Commutativity: A || B = B || A
     - Floor gate: If either floor fails, result floor fails
     """
@@ -112,8 +111,12 @@ def parallel_compose(
     # Contrast: dominant track wins (max)
     combined_contrast = max(q_a.contrast, q_b.contrast)
 
-    # Arc: weighted mean (equal weight for now)
-    combined_arc = (q_a.arc_coverage + q_b.arc_coverage) / 2
+    # Arc: product composition (strictly associative)
+    # NOTE: Product composition ensures strict associativity
+    # while preserving floor gate semantics (0 × x = 0).
+    # See: spec/theory/experience-quality-operad.md
+    # Evidence: brainstorming/empirical-refinement-v2/discoveries/02-associativity-fix.md
+    combined_arc = q_a.arc_coverage * q_b.arc_coverage
 
     return ExperienceQuality(
         contrast=combined_contrast,
@@ -170,12 +173,8 @@ def nested_compose(
     inner_weight = 1.0 - outer_weight
 
     # Continuous metrics: weighted combination
-    combined_contrast = (
-        outer_weight * q_outer.contrast + inner_weight * q_inner.contrast
-    )
-    combined_arc = (
-        outer_weight * q_outer.arc_coverage + inner_weight * q_inner.arc_coverage
-    )
+    combined_contrast = outer_weight * q_outer.contrast + inner_weight * q_inner.contrast
+    combined_arc = outer_weight * q_outer.arc_coverage + inner_weight * q_inner.arc_coverage
 
     return ExperienceQuality(
         contrast=combined_contrast,
@@ -333,11 +332,7 @@ def verify_floor_gate(
         par = parallel_compose(a, b)
         nested_result = nested_compose(a, b)
 
-        return (
-            seq.overall == 0.0
-            and par.overall == 0.0
-            and nested_result.overall == 0.0
-        )
+        return seq.overall == 0.0 and par.overall == 0.0 and nested_result.overall == 0.0
 
     return True
 

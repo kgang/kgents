@@ -1,0 +1,19 @@
+{
+  "id": "asset-739c733fcc6c",
+  "type": "writing",
+  "name": "colossal_names",
+  "quality_score": 1.0,
+  "content": "{\n  \"THE_TIDE\": {\n    \"epithet\": \"THE TIDE\",\n    \"tagline\": \"Convergence is inevitable.\",\n    \"war_name\": \"The Blue Reckoning\"\n  },\n  \"THE_RAMPAGE\": {\n    \"epithet\": \"THE RAMPAGE\", \n    \"tagline\": \"Velocity without mercy.\",\n    \"war_name\": \"The Crimson Stampede\"\n  },\n  \"THE_ARTILLERY\": {\n    \"epithet\": \"THE ARTILLERY\",\n    \"tagline\": \"Distance is an illusion.\",\n    \"war_name\": \"The Golden Bombardment\"\n  },\n  \"THE_FORTRESS\": {\n    \"epithet\": \"THE_FORTRESS\",\n    \"tagline\": \"Immovable. Implacable. Inevitable.\",\n    \"war_name\": \"The Obsidian Bastion\"\n  },\n  \"THE_LEGION\": {\n    \"epithet\": \"THE_LEGION\",\n    \"tagline\": \"Unity perfected, chaos incarnate.\",\n    \"war_name\": \"The Prismatic Swarm\"\n  }\n}",
+  "metadata": {
+    "spec": {
+      "content": "{\n  \"THE_TIDE\": {\n    \"epithet\": \"THE TIDE\",\n    \"tagline\": \"Convergence is inevitable.\",\n    \"war_name\": \"The Blue Reckoning\"\n  },\n  \"THE_RAMPAGE\": {\n    \"epithet\": \"THE RAMPAGE\", \n    \"tagline\": \"Velocity without mercy.\",\n    \"war_name\": \"The Crimson Stampede\"\n  },\n  \"THE_ARTILLERY\": {\n    \"epithet\": \"THE ARTILLERY\",\n    \"tagline\": \"Distance is an illusion.\",\n    \"war_name\": \"The Golden Bombardment\"\n  },\n  \"THE_FORTRESS\": {\n    \"epithet\": \"THE_FORTRESS\",\n    \"tagline\": \"Immovable. Implacable. Inevitable.\",\n    \"war_name\": \"The Obsidian Bastion\"\n  },\n  \"THE_LEGION\": {\n    \"epithet\": \"THE_LEGION\",\n    \"tagline\": \"Unity perfected, chaos incarnate.\",\n    \"war_name\": \"The Prismatic Swarm\"\n  }\n}",
+      "voice_notes": "Each tagline uses the laconic, fatalistic tone of a war correspondent. Short declarative sentences that feel like battlefield observations rather than threatening boasts. The 'war names' add poetic weight while maintaining geometric/crystalline language from the vision.",
+      "word_count": 42,
+      "_creative_direction": "Transform generic boss names into mythic epithets that read like war dispatches\u2014each Colossal becomes a force of nature documented by our laconic correspondent.",
+      "_justification": "The vision calls for 'magnificent bastard's swan song' and 'war correspondent documenting a beautiful catastrophe.' These aren't just enemy names\u2014they're battlefield poetry that captures the ritual nature of inevitable doom while maintaining the geometric precision of arcade naming conventions."
+    },
+    "creative_direction": "Transform generic boss names into mythic epithets that read like war dispatches\u2014each Colossal becomes a force of nature documented by our laconic correspondent.",
+    "justification": "The vision calls for 'magnificent bastard's swan song' and 'war correspondent documenting a beautiful catastrophe.' These aren't just enemy names\u2014they're battlefield poetry that captures the ritual nature of inevitable doom while maintaining the geometric precision of arcade naming conventions.",
+    "refinement_count": 0
+  }
+}
