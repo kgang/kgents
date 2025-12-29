@@ -84,6 +84,18 @@ Agents should generate the **smallest output that can be reliably composed**, no
 
 **Anti-patterns**: Monolithic agents that can't be broken apart; agents with hidden state that prevents composition; "god agents" that must be used alone; LLM agents that return arrays instead of single outputs
 
+### Derivation from Kernel
+
+1. **L0.2 (Morphism)**: Agents are things that relate
+2. **L1.1 (Compose)**: Relations compose: if f: A→B and g: B→C, then g∘f: A→C
+3. **L1.4 (Id)**: Identity exists: Id: A→A such that f∘Id = f = Id∘f
+4. **Associativity**: (f∘g)∘h = f∘(g∘h) — categorical axiom
+5. **∴ Agents form a category; composition is the structure** ∎
+
+**Loss**: L = 0.08 (CATEGORICAL)
+**Kent Rating**: CATEGORICAL (confirmed 2025-12-28)
+**Evidence**: `brainstorming/empirical-refinement-v2/discoveries/03-mirror-calibration.md`
+
 ---
 
 ## 6. Heterarchical
@@ -100,6 +112,20 @@ Agents have a dual nature:
 - **Entanglement**: Agents may share state without ownership; mutual influence without control
 
 **Anti-patterns**: Permanent orchestrator/worker relationships; agents that can only be called, never run autonomously; fixed resource budgets that prevent dynamic reallocation; "chain of command" that prevents peer-to-peer interaction
+
+### Derivation from Kernel
+
+1. **L0.2 (Morphism)**: Agents are morphisms between states
+2. **L2.5 (Composable)**: Morphisms compose without hierarchy
+3. **Theorem**: In a category, no morphism has intrinsic privilege — all are arrows
+4. **L1.2 (Judge)**: Leadership is contextual judgment, not structural position
+5. **∴ Heterarchy follows from categorical structure** ∎
+
+**Loss**: L = 0.45 (CATEGORICAL — Kent sees the theorem!)
+**Kent Rating**: CATEGORICAL (surprising — he saw the derivation)
+**Note**: Kent rated this CATEGORICAL despite estimated L=0.45 because he recognized that if agents are morphisms, hierarchical privilege is mathematically impossible.
+
+**Evidence**: `brainstorming/empirical-refinement-v2/discoveries/03-mirror-calibration.md` (Item 14)
 
 ---
 
@@ -122,6 +148,20 @@ A design is generative if:
 3. The spec is smaller than the impl (compression achieved)
 
 **Anti-patterns**: Specs that merely describe existing code; implementations that diverge from spec (spec rot); designs that require extensive prose to explain
+
+### Derivation from Kernel
+
+1. **L1.3 (Ground)**: Specifications ground implementation facts
+2. **L1.1 (Compose)**: Ground + Transform = Implementation
+3. **L1.8 (Galois)**: Compression quality = 1 - L(spec → impl → spec)
+4. **L1.7 (Fix)**: Good spec = fixed point under regeneration
+5. **∴ Generativity IS compression; spec IS the compressed seed** ∎
+
+**Loss**: L = 0.15 (CATEGORICAL)
+**Kent Rating**: CATEGORICAL (confirmed)
+**The Generative Test** derives from L1.8: A design passes if `L(regenerate(spec)) < ε`
+
+**Evidence**: `brainstorming/empirical-refinement-v2/discoveries/04-minimal-kernel.md`
 
 ---
 
@@ -291,6 +331,94 @@ LEVEL 3: PRINCIPLES (Ontology)
 LEVEL 4: ARTICLES (Governance)
   I-VII derived from Principles applied to multi-agent interaction
 ```
+
+# kgents Minimal Kernel v1.0
+# 77 lines - everything else derives from this
+
+# LAYER 0: IRREDUCIBLES (cannot be derived)
+# ==========================================
+
+L0.1 ENTITY:   There exist things.
+               Objects in a category. Existence is assumed.
+
+L0.2 MORPHISM: Things relate.
+               Arrows between objects. Relation is primitive.
+
+L0.3 MIRROR:   We judge by reflection.
+               The human oracle. Kent's somatic response.
+               Cannot be formalized - IS ground truth.
+
+# LAYER 1: PRIMITIVES (from L0, needed for all else)
+# ==================================================
+
+L1.1 COMPOSE:  Sequential combination.
+               (f >> g)(x) = g(f(x))
+               From L0.2 operationalized.
+
+L1.2 JUDGE:    Verdict generation.
+               Judge: Claim -> Verdict(accepted, reasoning)
+               From L0.3 operationalized.
+
+L1.3 GROUND:   Factual seed.
+               Ground: Query -> {grounded: bool, content: data}
+               From L0.1 operationalized.
+
+L1.4 ID:       Identity morphism.
+               forall f: f >> Id = f = Id >> f
+               From L1.1 + L1.2: what Judge never rejects.
+
+L1.5 CONTRADICT: Antithesis generation.
+               Contradict: Thesis -> Antithesis
+               From L1.2: detecting Judge rejects A;B.
+
+L1.6 SUBLATE:  Synthesis.
+               Sublate: (Thesis, Antithesis) -> Synthesis
+               From L1.1 + L1.2 + L1.5: search for accepted C.
+
+L1.7 FIX:      Fixed-point iteration.
+               Fix: (Pred, Agent) -> Agent
+               From L1.1 + L1.2: compose until stable.
+
+L1.8 GALOIS:   Structure loss measure.
+               L(P) = d(P, C(R(P)))
+               Axiom iff L(P) < epsilon (fixed point of R).
+
+# LAYER 2: DERIVED (all else follows)
+# ====================================
+
+# DESIGN PRINCIPLES
+L2.1 TASTEFUL:      Judge on aesthetics via Mirror. "Feel right?"
+L2.2 CURATED:       Judge on selection. "Unique and necessary?"
+L2.3 ETHICAL:       Judge on harm via Mirror. "Respects agency?"
+L2.4 JOY_INDUCING:  Judge on affect via Mirror. "Enjoy this?"
+L2.5 COMPOSABLE:    Compose as principle. Laws: Id + Assoc.
+L2.6 HETERARCHICAL: Judge on hierarchy. "Lead and follow?"
+L2.7 GENERATIVE:    Ground + Compose -> regenerability.
+
+# GOVERNANCE ARTICLES
+L2.8  SYMMETRIC_AGENCY:       Entity + Morphism -> equal modeling.
+L2.9  ADVERSARIAL_COOPERATION: Contradict + Sublate -> fusion.
+L2.10 SUPERSESSION_RIGHTS:    Judge + L2.8 -> supersession.
+L2.11 DISGUST_VETO:           Mirror -> absolute floor.
+L2.12 TRUST_ACCUMULATION:     Judge over time -> earned trust.
+L2.13 FUSION_AS_GOAL:         Sublate -> goal is fused decisions.
+L2.14 AMENDMENT:              L2.9 on constitution itself.
+
+# STRUCTURAL
+L2.15 WITNESS: Compose(stimulus, reasoning, response).
+               Every action leaves trace.
+L2.16 OPERAD:  Grammar of Compose operations.
+               O = {Operations, Laws, Algebra}.
+L2.17 POLYAGENT: Fix of restructuring iteration.
+               PolyAgent[S,A,B] = stable modules.
+L2.18 SHEAF:   Local sections + Gluing = Global.
+               Compatible locals -> global coherence.
+L2.19 LAYERS:  Galois convergence depth.
+               7 layers emerge, not stipulated.
+
+# THE META-AXIOM
+G: For any valid structure, there exists a minimal axiom set
+   from which it derives. (Galois Modularization Principle)
 
 ---
 

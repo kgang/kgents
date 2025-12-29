@@ -1,382 +1,543 @@
 # Hornet Siege: The Colony Always Wins
 
-Status: proto-spec (Enlightened Edition — Market-Informed)
+**Status**: Enlightened Proto-Spec v2.1 (Radical Transformation Edition)
+**Version**: 2.1.0
+**Date**: 2025-12-28
+**Derivation**: Zero Seed + Experience Quality Operad + Run 034 Analysis + Brainstorming Synthesis
 
 > *"You are the apex predator. You are nature's perfect killing machine. And you will lose."*
 
 ---
 
-## Design Philosophy: Principled Differentiation
+## ⚡ THE RADICAL TRANSFORMATION MANDATE ⚡
 
-> *"In a genre of 900+ games, being 'good' is death. Being 'different' is survival."*
+> *"Do not maintain. Do not polish. TRANSFORM."*
 
-This spec is informed by market analysis revealing:
-- **900+ survivors-likes** exist; only **1 hit in 2024** (Deep Rock Survivor)
-- **Villain games succeed when FUN** (Carrion, Dungeon Keeper), not just thematic
-- **THE BALL must be clip-worthy** — streamability is survival
-- **Progress velocity matters** — each death must teach, not just punish
-- **Dark humor helps** — villain games with personality outperform serious ones
+### The Prime Directive
 
-**The Core Bet**: Tragedy + Power Fantasy + Real Biology + Dark Humor = Cult Classic
+**Whatever exists is not good enough.** Your job is not to preserve the current state—it is to **radically upgrade it** until it makes players gasp.
 
----
+Every session, ask:
+1. **What would make this 10x better?** (Not 10% better. 10x.)
+2. **What would make someone clip this?** (Shareability = quality)
+3. **What would make a streamer lose their mind?** (Spectacle matters)
+4. **What would I brag about building?** (Pride = signal)
 
-## Lore: The War That Never Ends
+### The Anti-Maintenance Principle
 
-**The Truth of Hornets**: Japanese giant hornets (*Vespa mandarinia*) are evolution's perfect raiders. A single hornet can kill 40 bees per minute. Their mandibles slice through chitin like paper. Their venom dissolves flesh. In the wild, a small squad of hornets can massacre 30,000 bees in hours.
+| ❌ DON'T | ✅ DO |
+|----------|-------|
+| "Fix the bug" | "Redesign the system so the bug category is impossible" |
+| "Polish the animation" | "Make the animation so good it becomes a meme" |
+| "Balance the numbers" | "Find the numbers that create *moments*" |
+| "Add the feature" | "Add the feature that makes players say 'holy shit'" |
+| "Match the spec" | "Exceed the spec so dramatically that the spec needs updating" |
 
-**The Truth of Bees**: European honey bees are defenseless against hornets. They die in droves. But Japanese honey bees have evolved the impossible: *collective defense through sacrifice*. When a hornet enters, hundreds of bees form a "hot defensive bee ball"—they surround the invader and vibrate their flight muscles, raising the temperature to 47°C (117°F). The hornet cooks alive. The bees survive (barely). The colony persists.
+### The Transformation Test
 
-**The Tragedy You Play**: You are a hornet. You raid to feed your larvae—it's what evolution made you for. The bees defend their civilization—it's what evolution made them for. Neither side is evil. Both are necessary. And in this game, the bees always figure it out.
+Before committing ANY work, ask:
 
-*You are playing out the tragedy of the invader who was born to conquer but destined to fall.*
+> *"If I showed this to someone who saw yesterday's build, would they say 'whoa, what happened?' or would they say 'looks the same'?"*
 
-**The Meta-Message**: Sometimes the invader IS the monster. Sometimes overwhelming power isn't enough. Sometimes the colony adapts faster than the apex predator can kill.
+**If "looks the same" → you haven't transformed enough. Keep pushing.**
 
----
+### Specific Transformation Targets
 
-## Personality Tag
+| System | Current State | Transformation Goal |
+|--------|---------------|---------------------|
+| **Kills** | Functional | Every kill should feel like a **dopamine hit** |
+| **THE BALL** | Threatening | THE BALL should be **clip-worthy spectacle** |
+| **Death** | Game over | Death should feel like **completing a journey** |
+| **Upgrades** | Choices | Upgrades should create **"oh shit" synergy moments** |
+| **Movement** | Responsive | Movement should feel like **being a predator** |
+| **Sound** | Present | Sound should create **ASMR-level satisfaction** |
 
-*This pilot believes tragedy can be beautiful, that playing the monster teaches empathy, and that sometimes the most honest story is one where you lose. Every upgrade makes you more powerful. Every wave makes the colony smarter. The ending is written. The journey is yours.*
+### The Courage Clause
 
-**But also**: The hornet has *attitude*. Dark humor. Swagger before the fall. You're not a sad protagonist—you're a magnificent bastard who knows they're doomed and hunts anyway.
+**You have permission to:**
+- Delete code that isn't working
+- Rewrite systems from scratch
+- Ignore "how it was done before"
+- Break things in pursuit of better things
+- Propose wild ideas
+- Ship something audacious
 
----
+**You do NOT have permission to:**
+- Ship something mediocre
+- Preserve bad code out of politeness
+- Add features without juice
+- Call something "done" when it's merely "functional"
+- Be conservative when boldness is needed
 
-## The Seven Contrasts (Emotional Architecture)
+### The Quality Floor (Non-Negotiable)
 
-> *"Great games oscillate. Flat games flatline."*
+A feature is **NOT DONE** until:
+- [ ] It would impress a stranger in 5 seconds
+- [ ] It has screen shake, particles, or audio feedback
+- [ ] It creates a "moment" (not just a "function")
+- [ ] You would be proud to show it
+- [ ] It exceeds what a generic game would do
 
-The emotional core of Hornet Siege is **violent oscillation** between opposing states. Each contrast is a design law.
+### Voice Anchor
 
-### Contrast 1: God of Death ↔ Cornered Prey
-
-| God of Death State | Cornered Prey State |
-|-------------------|---------------------|
-| Mowing through waves effortlessly | THE BALL is forming, nowhere to run |
-| Abilities chaining, combos flowing | Cooldowns empty, health critical |
-| "I am unstoppable" | "Oh god oh god oh god" |
-| Screen shake, bass drops, XP fountains | Screen tunnels, heartbeat audio, time slows |
-
-**Law GD-1**: Every siege MUST visit both extremes. A run that's all-power or all-panic fails.
-**Law GD-2**: The transition should be *sudden*. You don't gradually become prey. You realize it.
-
-### Contrast 2: Speed ↔ Stillness
-
-| Speed | Stillness |
-|-------|-----------|
-| Combat: 60fps chaos, everything moving | Level-up: World frozen, choices presented |
-| Strafing runs through swarms | The moment before THE BALL closes |
-| Combo chains, no time to think | Amber memory reflection, all the time |
-
-**Law SS-1**: Combat never pauses except for level-up and death.
-**Law SS-2**: Stillness is *earned* through violence. Pause = you killed enough to evolve.
-
-### Contrast 3: Massacre ↔ Respect
-
-| Massacre | Respect |
-|----------|---------|
-| Early waves: bees scatter like leaves | Late waves: military precision, they KNOW you |
-| "These are just bugs" | "These are soldiers defending their home" |
-| Kill count climbing | Kill count stops mattering—formations are what count |
-
-**Law MR-1**: Wave 1-3 must feel like slaughter. Wave 8+ must feel like war.
-**Law MR-2**: The shift should produce the "they're COORDINATING" moment by wave 3.
-
-### Contrast 4: Hubris ↔ Humility
-
-| Hubris | Humility |
-|--------|----------|
-| "One more upgrade and I'm invincible" | "I had every upgrade and I still lost" |
-| Maxed-out hornet, glowing with power | Same hornet, cooked alive in THE BALL |
-| "This run, I'll beat my record" | "The colony always wins. And it should." |
-
-**Law HH-1**: The most powerful-feeling moment should be 30-60s before death.
-**Law HH-2**: Death should feel *inevitable in retrospect*, not unfair.
-
-### Contrast 5: Noise ↔ Silence
-
-| Noise | Silence |
-|-------|---------|
-| Kill sounds, combo pings, pheromone alerts | 2-4 seconds of nothing before THE BALL closes |
-| Urgent music escalating | Music drops out, just your wingbeats |
-| Screen full of particles | Screen clears—just you and the forming sphere |
-
-**Law NS-1**: THE BALL must be preceded by *ominous silence*.
-**Law NS-2**: The loudest moment (death) follows the quietest moment (formation complete).
-
-### Contrast 6: Predator ↔ Prey (Role Reversal)
-
-| Predator | Prey |
-|----------|------|
-| You choose where to strike | They choose where you can't go |
-| Bees flee from your path | Bees herd you toward THE BALL |
-| Camera follows your movement | Camera pulls back—you're being surrounded |
-| Red threat indicators ON THEM | Red threat indicators ON YOU |
-
-**Law PP-1**: The predator/prey reversal should be *felt*, not just stated.
-**Law PP-2**: Visual language must flip. What marked threats becomes what marks YOU.
-
-### Contrast 7: Learning ↔ Knowing
-
-| Learning | Knowing |
-|----------|---------|
-| Run 1: "What's happening?" | Run 10: "I know exactly how I'll die" |
-| Surprised by first formation | Anticipating formation before it forms |
-| Reacting to the colony | Predicting the colony (and losing anyway) |
-
-**Law LK-1**: Mastery should be visible. Run 10 looks different than Run 1.
-**Law LK-2**: Knowing doesn't save you. The colony knows you're knowing.
+> *"Daring, bold, creative, opinionated but not gaudy."*
+>
+> This is not a request. This is the **minimum standard**.
 
 ---
 
-## Core Pillars
+## Meta-Principles: Specification as Possibility Space
 
-### 1. Predator Movement
+> *"The spec defines what CAN be generated, not what MUST be generated."*
 
-> *"You are the fastest thing in this hive. It won't save you."*
+This specification is **generative**, not prescriptive. It defines:
+- **Axioms** (L < 0.10): Fixed points that MUST hold across all regenerations
+- **Values** (L < 0.35): Derived but stable principles that SHOULD hold
+- **Specifications** (L < 0.70): Implementation choices that MAY diverge
+- **Tuning** (L ≥ 0.70): Parameters that WILL vary between runs
 
-You move like a hornet—bursts of terrifying speed, sharp pivots, aerial dominance. The bees can't catch you. They don't need to. They just need to surround you.
-
-**Movement Laws:**
-- **M1 Predator Response**: < 16ms input-to-movement. You're a hornet—you move NOW.
-- **M2 Never Trapped (Until THE BALL)**: Player can always move. Damage slows but never stops—until the colony coordinates.
-- **M3 Speed Superiority**: Base speed outruns any individual bee. Upgrades make you untouchable—individually.
-- **M4 Swarm Reads**: Bee formations are telegraphed. Skilled players read the patterns; unskilled players get surrounded.
-- **M5 Momentum Feel**: Movement has *weight*. Starting fast, stopping sharp. Not floaty.
-
-### 2. Predator Upgrades
-
-> *"Each upgrade makes you more deadly. None of them make you immortal."*
-
-**Upgrade Design Laws:**
-- **U1 Predator Verbs**: Upgrades change *how you kill*, not just *how much*. "Mandibles pierce through multiple bees" > "+10% damage".
-- **U2 Raid Identity**: By wave 5, the player should know their hunting style. "I'm playing venom-spray" or "I'm going fear-aura".
-- **U3 Synergy Moments**: 2+ upgrades combine for devastating combos. Pheromone Mark + Death Throes = chain panic.
-- **U4 Meaningful Choice**: Every level-up presents a real decision. Glass cannon or sustained assault?
-- **U5 Visual Transformation**: Upgrades visibly transform you. Wave 10 hornet looks like a war machine compared to wave 1.
-- **U6 Swagger Scaling**: More upgrades = more attitude in animations. Confident idle, aggressive attack poses.
-
-**Hornet Upgrade Archetypes**:
-
-| Archetype | Fantasy | Example Upgrades |
-|-----------|---------|------------------|
-| **Executioner** | Maximum damage per strike | Mandible Crush, Venom Injection, Critical Sting |
-| **Survivor** | Outlast the swarm | Exoskeleton, Regeneration, Honey Drain |
-| **Skirmisher** | Never stop moving | Wing Burst, Hit-and-Run, Evasion |
-| **Terror** | Break their will | Fear Aura, Death Throes, Panic Spray |
-| **Assassin** | Precision elimination | Pierce, Marked for Death, Silent Strike |
-| **Berserker** | Overwhelming offense | Stinger Volley, Frenzy, Blood Rage |
-
-### 3. The Colony Defense
-
-> *"Every bee is a question. The colony is the answer you can't solve."*
-
-Bees are not HP bags—they're members of a civilization fighting for survival. Individually weak, they become unstoppable through coordination.
-
-**Enemy Design Laws:**
-- **E1 Readable Patterns**: Every bee attack is telegraphed. Wing positions, pheromone trails, formation shifts.
-- **E2 Learnable Behaviors**: Bee types are consistent. Worker Bees swarm. Guard Bees hold. Scout Bees alert.
-- **E3 Distinct Silhouettes**: Know the bee type instantly. Golden workers, red guards, silver scouts.
-- **E4 Escalating Coordination**: Early waves are chaos. Late waves are military precision.
-- **E5 Fair Deaths**: Every death is attributable. "I died because I let them form THE BALL."
-- **E6 Civilization Feel**: Bees should feel like they're *protecting something*, not just attacking.
-
-**Bee Types**:
-
-| Type | Behavior | Teaches | Defensive Formation |
-|------|----------|---------|---------------------|
-| **Worker Bee** | Swarms toward player | Basic kiting | THE SWARM (overwhelming numbers) |
-| **Scout Bee** | Fast, alerts others | Priority targeting | THE HIVEMIND (perfect coordination) |
-| **Guard Bee** | Slow, high HP, blocks paths | Prioritization | THE COMB (defensive structure) |
-| **Propolis Bee** | Ranged sticky attacks | Projectile dodging | THE PROPOLIS BARRAGE (area denial) |
-| **Royal Guard** | Elite defender, complex patterns | Boss mechanics | THE HEAT BALL (the famous defense) |
+**The Generative Test**: Delete the implementation. Regenerate from spec. The result is *isomorphic* but not *identical* to the original.
 
 ---
 
-### 4. The Coordination System
+## Part I: The Axiom Layer (L < 0.10 — Fixed Points)
 
-> *"Kill them fast, or watch them become a superorganism."*
+> *"These survive radical restructuring. Everything else is derived."*
 
-**Core Rule**: Bees that survive long enough begin coordinating. They spread alarm pheromones, form defensive patterns, and eventually create **Defensive Formations**—coordinated bee structures with capabilities no individual bee could achieve.
+### A1: PLAYER AGENCY (L = 0.02)
+**Statement**: The player's choices must determine outcomes.
+**Derivation**: L0.2 (Morphism) — actions are arrows that compose into consequences.
+**Test**: For any outcome O, there exists a traceable decision chain D₁ → D₂ → ... → Dₙ → O.
 
-| Survival Time | What Happens | Visual |
-|---------------|--------------|--------|
-| 0-10s | Individual behavior, scattered defense | Normal bee colors |
-| 10-15s | **Alarm pheromones spreading**—bees seeking each other | Orange particle trails |
-| 15-20s | **Defensive patterns forming**—organized movement | Wing vibrations visible |
-| 20s+ | **FORMATION COMPLETE** if 2+ coordinating bees connect | Heat shimmer, bass thrum |
+**Implications**:
+- No RNG deaths without player-influenced probability
+- Every death attributable to player decisions
+- Skill ceiling is infinite (perfect play extends survival)
 
-**Coordination Laws:**
-- **C1 Predictable Timer**: Players must be able to learn the coordination window
-- **C2 Visual Warning**: Coordinating bees are OBVIOUS—pheromone trails, wing vibrations
-- **C3 Interruptible**: Killing ANY coordinating bee disrupts nearby bees' formation
-- **C4 Escapable**: Formations can be fled from. Powerful but not omniscient.
-- **C5 Soloable**: Every formation can be defeated with skill. The skill ceiling is infinite.
-- **C6 Dread Buildup**: Coordination visuals should feel like *doom approaching*, not just "enemy spawning"
+### A2: ATTRIBUTABLE OUTCOMES (L = 0.05)
+**Statement**: Every outcome must trace to an identifiable cause.
+**Derivation**: L1.5 (Contradict) — unattributable outcomes contradict agency.
+**Test**: Player can articulate cause of death within 2 seconds.
 
-**Mutant Variants**: Some bees have **Enhanced Coordination** (glowing outline). Enhanced bees that participate in formation-building make the resulting formation **faster and tighter**. Kill enhanced bees first, or the formation will be devastating.
+**Implications**:
+- "THE BALL got me because I let scouts coordinate" ✓
+- "I just died randomly" ✗
+- Death screen shows causal chain
+
+### A3: VISIBLE MASTERY (L = 0.08)
+**Statement**: Skill development must be externally observable.
+**Derivation**: L1.7 (Fix) — learning is iteration toward fixed point.
+**Test**: Run 10 looks different from Run 1. Metrics improve.
+
+**Implications**:
+- Skill metrics tracked and displayed
+- "I'm getting better" is provable, not just felt
+- Mastery has visible markers (escapes, chains, dodges)
+
+### A4: COMPOSITIONAL EXPERIENCE (L = 0.03)
+**Statement**: Moments compose algebraically into arcs.
+**Derivation**: L1.1 (Compose) — (moment >> moment) >> session = moment >> (moment >> session).
+**Test**: Experience quality obeys associativity.
+
+**Implications**:
+- Micro-decisions build into macro-strategy
+- Upgrade choices compose into build identity
+- Runs compose into player skill trajectory
 
 ---
 
-### 5. THE HEAT BALL — The Clip-Worthy Moment
+## Part II: The Value Layer (L < 0.35 — Derived but Stable)
 
-> *"When THE BALL forms, streamers should scream. Viewers should clip. This is the signature."*
+> *"These emerge from axioms applied to game design. They're robust but not immutable."*
 
-THE HEAT BALL is not just a formation—it's the **marketing hook**, the **clip moment**, the **thing people tell their friends about**. It must be:
+### V1: CONTRAST (L = 0.15)
+**Statement**: Experiences must oscillate between poles.
+**Derivation**: A4 (Composition) + Hardy's aesthetic criterion.
 
-1. **Visually Spectacular**: The most dramatic thing in the game
-2. **Audibly Terrifying**: The sound design must make you feel the heat
-3. **Mechanically Fair**: You can escape—barely—with perfect play
-4. **Emotionally Devastating**: When it closes, you KNOW
-
-**THE BALL Laws:**
-
-- **TB-1 Encirclement Phase**: Bees form a visible sphere. Gaps exist. You can dash through.
-- **TB-2 Constriction Phase**: Sphere tightens. Gaps shrink. Temperature indicator rises.
-- **TB-3 Heat Death Phase**: At 47°C, instant death. Screen whites out. Cooking sound.
-- **TB-4 The Silence Before**: 2-4 seconds of near-silence before final constriction.
-- **TB-5 Camera Pull**: Camera pulls back to show the full sphere. You see yourself surrounded.
-- **TB-6 Escape Window**: Skilled players can dash through the final gap. Timing is frame-tight.
-- **TB-7 Audio Escalation**: Wing-buzz crescendo → Silence → Single bass note → Death sound
-
-**Visual Sequence**:
-
+**Specification**:
 ```
-1. FORMING (10s):     Bees gathering, orange glow, player still fighting
-2. SPHERE (5s):       Visible sphere, gaps closing, temperature rising
-3. SILENCE (3s):      Audio drops. Just wingbeats. Player realizes.
-4. CONSTRICTION (2s): Sphere tightens. One gap remains. Time slows.
-5. DEATH (instant):   Gap closes. White flash. Cooking crackle. Done.
+Contrast: (PoleA, PoleB) → Oscillation
+Quality degrades without oscillation.
+Flat experiences violate A4 (monotone composition).
 ```
 
-**The "OH NO" Indicator**: When THE BALL begins forming, a distinct visual + audio cue must trigger that makes experienced players say "oh no" out loud. This is the clip moment.
+### V2: ARC (L = 0.18)
+**Statement**: Experiences must traverse phases toward definite closure.
+**Derivation**: A4 (Composition) + narrative coherence.
+
+**Specification**:
+```
+Arc: Phase[] → Closure
+Valid arcs have: at least one peak, at least one valley, definite ending.
+Fade-outs violate A2 (closure is attributable).
+```
+
+### V3: DIGNITY (L = 0.22)
+**Statement**: Endings must feel meaningful, not arbitrary.
+**Derivation**: A2 (Attribution) + affective quality.
+
+**Specification**:
+```
+Dignity: Ending → {meaningful, arbitrary}
+"They earned it" = meaningful.
+"What happened?" = arbitrary (violates A2).
+```
+
+### V4: JUICE (L = 0.28)
+**Statement**: Actions must feel impactful through feedback.
+**Derivation**: A1 (Agency) requires felt consequence.
+
+**Specification**:
+```
+Juice: Action → Feedback
+No silent actions. Every input produces output.
+Feedback delay < 16ms (predator response time).
+```
+
+### V5: WITNESSED (L = 0.32)
+**Statement**: The system should feel like a collaborator, not a judge.
+**Derivation**: L0.3 (Mirror) + ethical principle.
+
+**Specification**:
+```
+Witnessed: System → {collaborator, surveiller}
+"The colony learned from me" = witnessed.
+"The game is tracking me" = surveilled (violates ethical floor).
+```
 
 ---
 
-### 6. Colony Intelligence
+## Part III: The Specification Layer (L < 0.70 — Implementation Choices)
 
-> *"They're not just defending. They're learning."*
+> *"These are ONE instantiation of the axioms. Other instantiations are valid."*
 
-**Collective Memory**: The colony shares information across all active bees.
+### S1: THE COLLECTIVE THREAT (L = 0.45)
 
-| Behavior | Description |
-|----------|-------------|
-| **Pattern Propagation** | If one bee learns your dodge pattern, ALL bees adjust |
-| **Sacrifice Awareness** | When one bee dies, others coordinate faster |
-| **Formation Priority** | When a Formation exists, loose bees become reinforcements |
-| **Death Knowledge** | The colony remembers which tactics killed YOU—uses them more |
+**Current Instantiation**: THE HEAT BALL — bees surround and cook the hornet.
 
-**Colony Laws:**
-- **H1 Fair Learning**: Colony learns from its successes, not failures. If you escape, they adapt.
-- **H2 Reset Between Sieges**: Colony intelligence resets each run. No cross-run punishment.
-- **H3 Visible Intelligence**: HUD shows colony coordination level (subtle, not invasive)
-- **H4 Counterplay Exists**: Every colony behavior has a counter. Adaptation is a puzzle.
-- **H5 Complicity**: The colony learns because you TAUGHT it. Your actions create your doom.
+**Abstract Pattern**: A signature mechanic where many weak entities coordinate into an unstoppable force.
 
-**Visual Language of Coordination**:
+**Why This Instantiation**:
+- Real biology (Japanese honey bees vs. giant hornets)
+- Clip-worthy spectacle
+- Teaches the tragedy theme
 
-| State | Visual | Audio |
-|-------|--------|-------|
-| Individual | Normal behavior, scattered | Standard buzzing |
-| Alarm | Pheromone particles, orange glow | Pitch rises |
-| Coordinating | Visible wing vibrations, seeking formation | Harmonic buzz |
-| Pre-Formation | Bodies gravitating together, heat shimmer | Deep thrum begins |
-| Formation Active | All loose bees gain subtle hive glow | Bass undertone |
+**Valid Alternatives** (for future regeneration):
+- THE SWARM: Overwhelm through numbers
+- THE HIVE MIND: Perfect prediction of player movement
+- THE SACRIFICE: Bees that self-destruct to create barriers
+
+**Regeneration Law**: Any collective threat that satisfies A1 (escapable with skill), A2 (readable formation), A3 (visible mastery curve) is valid.
+
+### S2: THE TRAGIC RESOLUTION (L = 0.55)
+
+**Current Instantiation**: The colony always wins. You play the tragedy of the invader.
+
+**Abstract Pattern**: The relationship between player and collective has a definite resolution.
+
+**Why This Instantiation**:
+- Unique in genre (survivors-likes are about victory)
+- Teaches empathy for the "enemy"
+- Dark humor + swagger makes it palatable
+
+**Valid Alternatives**:
+- THE BREAKTHROUGH: Player can achieve pyrrhic victory (kill queen, still die)
+- THE CYCLE: Player becomes part of the colony (transformation ending)
+- THE UNDERSTANDING: Player learns something that changes their approach
+
+**Regeneration Law**: Any resolution that satisfies V3 (dignity) is valid. "You just lose randomly" is not valid.
+
+### S3: THE PREDATOR FANTASY (L = 0.48)
+
+**Current Instantiation**: Japanese giant hornet — apex predator with real biological basis.
+
+**Abstract Pattern**: Player is the overwhelming threat that gradually gets overwhelmed.
+
+**Why This Instantiation**:
+- Real biology creates authentic power fantasy
+- "40 kills per minute" is a real fact
+- Mandibles, venom, flight are real capabilities
+
+**Valid Alternatives**:
+- Any apex predator vs. collective prey (shark vs. fish school, wolf vs. caribou herd)
+- Abstract: "force of nature" vs. "emergent resistance"
+
+### S4: THE SEVEN CONTRASTS (L = 0.52)
+
+**Current Instantiation**:
+
+| Contrast | Pole A | Pole B |
+|----------|--------|--------|
+| **Power** | God of Death | Cornered Prey |
+| **Tempo** | Speed (combat) | Stillness (level-up) |
+| **Stance** | Massacre (early) | Respect (late) |
+| **Humility** | Hubris ("invincible") | Humility ("I still lost") |
+| **Sound** | Noise (combat) | Silence (THE BALL forming) |
+| **Role** | Predator | Prey |
+| **Knowledge** | Learning | Knowing |
+
+**Abstract Pattern**: Emotional oscillation across multiple dimensions.
+
+**Contrast Laws** (derived from V1):
+- **GD-1**: Every run MUST visit both extremes of at least 3 contrasts.
+- **GD-2**: Transitions should be *sudden*, not gradual.
+- **GD-3**: Contrasts compose — you can be "God of Death + Speed + Noise" simultaneously.
+
+### S5: THE UPGRADE SYSTEM (L = 0.58)
+
+**Current Instantiation**: Six archetypes with verb-based upgrades.
+
+| Archetype | Fantasy | Example Verbs |
+|-----------|---------|---------------|
+| **Executioner** | Maximum damage per strike | Crush, Inject, Critical |
+| **Survivor** | Outlast the swarm | Harden, Regenerate, Drain |
+| **Skirmisher** | Never stop moving | Burst, Evade, Hit-and-Run |
+| **Terror** | Break their will | Fear, Panic, Death Throes |
+| **Assassin** | Precision elimination | Pierce, Mark, Silent Strike |
+| **Berserker** | Overwhelming offense | Volley, Frenzy, Blood Rage |
+
+**Upgrade Laws** (derived from A1, A3):
+- **U1**: Upgrades change *how* you act, not just *how much*.
+- **U2**: By wave 5, player should have a nameable identity.
+- **U3**: Synergies exist (1 + 1 > 2 somewhere).
+- **U4**: Every choice is meaningful (no obvious "best").
+
+### S6: THE BEE TAXONOMY (L = 0.55)
+
+**Current Instantiation**:
+
+| Type | Behavior | Teaches | Formation Role |
+|------|----------|---------|----------------|
+| **Worker** | Swarms toward player | Basic kiting | Numbers |
+| **Scout** | Fast, alerts others | Priority targeting | Coordination speed |
+| **Guard** | Slow, high HP, blocks | Prioritization | Structure |
+| **Propolis** | Ranged sticky attacks | Projectile dodging | Area denial |
+| **Royal Guard** | Elite, complex patterns | Boss mechanics | THE BALL anchor |
+
+**Enemy Laws** (derived from A2):
+- **E1**: Every attack is telegraphed.
+- **E2**: Bee types are consistent (learnable).
+- **E3**: Distinct silhouettes (readable).
+- **E4**: Escalating coordination (late > early).
+- **E5**: Fair deaths (attributable).
 
 ---
 
-## Juiciness Laws (Visceral Satisfaction)
+## Part IV: The Tuning Layer (L ≥ 0.70 — Parameters)
 
-> *"Villain games succeed when they're FUN, not just thematic. Carrion won because monster gameplay felt INCREDIBLE."*
+> *"These are arbitrary. Change them freely during development."*
 
-### Kill Feedback (The Crunch)
+### T1: TIMING CONSTANTS
 
-Every kill must feel devastating. This is non-negotiable.
+| Parameter | Current Value | Range | Notes |
+|-----------|---------------|-------|-------|
+| Dash i-frames | 0.12s | 0.08-0.20s | Skill expression window |
+| Dash cooldown | 1.5s | 1.0-2.0s | Rhythm pacing |
+| Dash distance | 80px | 60-120px | Escape distance |
+| Ball forming duration | 10s | 8-15s | Tension building |
+| Ball silence duration | 3s | 2-5s | "Oh no" moment |
+| Ball constrict duration | 2s | 1.5-3s | Escape window |
+| Final gap size | 45° | 30-60° | Difficulty knob |
 
-| Element | Requirement | Reference |
-|---------|-------------|-----------|
-| **Impact Frame** | 2-3 frame freeze on kill | Hades, Vampire Survivors |
-| **Chitin Crack** | Distinct sound per bee type | Satisfying crunch |
-| **Scatter Physics** | Bodies fly based on attack direction | Carrion, Hotline Miami |
-| **XP Burst** | Golden particles + vacuum toward player | Dopamine trigger |
-| **Combo Counter** | Visible number, scales with kills/second | Score chasers love this |
-| **Screen Shake** | Subtle on normal kills, heavy on multi-kills | < 5px, > 15px |
+### T2: ECONOMY CONSTANTS
 
-**Kill Laws:**
-- **K1**: Single kill = crunch + scatter + XP
-- **K2**: Multi-kill (3+) = bigger crunch + screen shake + combo popup
-- **K3**: Massive kill (10+) = bass drop + slowmo + "MASSACRE" text
-- **K4**: Every kill sound is pitched slightly randomly (no repetition fatigue)
+| Parameter | Current Value | Range |
+|-----------|---------------|-------|
+| XP per level base | 10 | 5-20 |
+| XP scaling | 1.5x | 1.3-2.0x |
+| Coordination alarm time | 10s | 8-15s |
+| Coordination complete time | 20s | 15-30s |
 
-### Movement Feedback (The Flow)
+### T3: FEEDBACK CONSTANTS
 
-| Element | Requirement |
-|---------|-------------|
-| **Dash Whoosh** | Audible wind sound on Wing Burst |
-| **Trail Particles** | Subtle motion blur at high speed |
-| **Stop Impact** | Tiny dust puff when stopping from dash |
-| **Near-Miss** | Audio cue when avoiding attack by < 10px |
-| **Cornered Warning** | Heartbeat audio when surrounded |
-
-### Upgrade Feedback (The Power-Up)
-
-| Element | Requirement |
-|---------|-------------|
-| **Selection Sound** | Satisfying "CHUNK" on ability select |
-| **Power Surge** | Brief golden flash on player |
-| **Visual Change** | Immediate visible transformation |
-| **First Use Highlight** | New ability glows until first use |
+| Parameter | Current Value |
+|-----------|---------------|
+| Screen shake (kill) | 3px |
+| Screen shake (multi-kill) | 8px |
+| Screen shake (massacre) | 15px |
+| Hit freeze frames | 2-3 frames |
+| Near-miss threshold | 10px |
 
 ---
 
-## Sound Design Laws
+## Part V: The Polymorphic Quality Algebra
 
-> *"Audio is half the juice. A silent Hornet Siege is half a game."*
+> *"Quality is measurable and composable. Different games instantiate different algebras."*
 
-### Ambient Layers
+### 5.1 Abstract Algebra Interface
 
-| Layer | Description | Dynamic |
-|-------|-------------|---------|
-| **Hive Drone** | Constant low-frequency buzz | Pitch rises with colony coordination |
-| **Your Wings** | Player wingbeat, responsive to movement | Faster when dashing |
-| **Distant Activity** | Bees you can't see are audible | Directional, warns of spawns |
+```typescript
+interface SurvivorsQualityAlgebra {
+  // What two poles does this experience oscillate between?
+  contrastPoles(): [string, string][];
 
-### Event Sounds
+  // What phases does the experience traverse?
+  arcPhases(): ArcPhase[];
 
-| Event | Sound Profile |
-|-------|---------------|
-| **Kill** | Chitin crack, pitched by bee type |
-| **Combo** | Ascending chime sequence |
-| **Level Up** | Evolution "WOMP" + shimmer |
-| **Pheromone Alert** | Organic alarm, rises in pitch |
-| **Formation Forming** | Deep thrum, building |
-| **THE BALL Silence** | All audio drops except wingbeats |
-| **Death** | Cooking crackle, white noise fade |
+  // What voices evaluate quality?
+  voices(): Voice[];
 
-### Music
+  // What aesthetic minimums must be met?
+  floorChecks(): FloorCheck[];
 
-| Phase | Music Style |
-|-------|-------------|
-| **Early Waves** | Driving, aggressive, predator energy |
-| **Mid Waves** | Tension building, drums intensifying |
-| **Late Waves** | Oppressive, inevitable, tragic |
-| **Formation Active** | Music distorts, bees are winning |
-| **Pre-Death** | Silent except heartbeat |
-| **Death Screen** | Somber, beautiful, reflective |
+  // Compose experiences
+  compose(a: Experience, b: Experience): Experience;
+}
+```
+
+### 5.2 Hornet Siege Algebra (Current Instantiation)
+
+```typescript
+const HornetSiegeAlgebra: SurvivorsQualityAlgebra = {
+  contrastPoles: () => [
+    ["god_of_death", "cornered_prey"],
+    ["speed", "stillness"],
+    ["massacre", "respect"],
+    ["hubris", "humility"],
+    ["noise", "silence"],
+    ["predator", "prey"],
+    ["learning", "knowing"],
+  ],
+
+  arcPhases: () => [
+    { name: "POWER", description: "Feeling godlike, kills flowing" },
+    { name: "FLOW", description: "In the zone, combos chaining" },
+    { name: "CRISIS", description: "THE BALL forming, panic rising" },
+    { name: "TRAGEDY", description: "Inevitable end, dignity in death" },
+  ],
+
+  voices: () => [
+    { name: "CREATIVE", approves: (e) => e.hasSwagger && e.feelsBold },
+    { name: "ADVERSARIAL", approves: (e) => e.isFair && e.hasCounterplay },
+    { name: "PLAYER", approves: (e) => e.isJoyful && e.feelsEarned },
+  ],
+
+  floorChecks: () => [
+    // Mechanical floors
+    { name: "input_latency", check: (e) => e.inputLatency < 16 },
+    { name: "feedback_density", check: (e) => e.feedbackDensity > 0.5 },
+    { name: "respawn_time", check: (e) => e.respawnTime < 3000 },
+
+    // Aesthetic floors (NEW)
+    { name: "earned_not_imposed", check: (e) => e.aestheticFeelsEmergent },
+    { name: "meaningful_not_arbitrary", check: (e) => e.endingsHaveCause },
+    { name: "witnessed_not_surveilled", check: (e) => e.systemFeelsCollaborative },
+    { name: "dignity_in_failure", check: (e) => e.deathFeelsLikeJourney },
+  ],
+
+  compose: (a, b) => ({
+    contrasts: Math.max(a.contrasts, b.contrasts),
+    arc: [...a.arcPhases, ...b.arcPhases],
+    floor: a.floor && b.floor,
+    quality: a.floor && b.floor ?
+      (a.contrasts + b.contrasts) / 2 * a.arc.coverage * b.arc.coverage : 0,
+  }),
+};
+```
+
+### 5.3 Quality Equation
+
+```
+Q = F × (C × A × V^(1/n))
+
+where:
+  F = Floor gate (0 or 1) — any floor failure zeros quality
+  C = Contrast score [0, 1] — how much oscillation occurred
+  A = Arc coverage [0, 1] — what fraction of phases were visited
+  V = Voice approval — geometric mean of voice approvals
+  n = number of voices
+```
+
+### 5.4 Aesthetic Floor Checks (NEW)
+
+| Check | Question | Violation Example |
+|-------|----------|-------------------|
+| **F-A1: EARNED_NOT_IMPOSED** | Does the aesthetic feel emergent? | "This bee theme feels forced" |
+| **F-A2: MEANINGFUL_NOT_ARBITRARY** | Do endings have cause? | "I just died for no reason" |
+| **F-A3: WITNESSED_NOT_SURVEILLED** | Does system feel collaborative? | "It's tracking my failures" |
+| **F-A4: DIGNITY_IN_FAILURE** | Does losing feel like completion? | "I failed the test" vs "I completed the journey" |
 
 ---
 
-## The Hornet's Personality (Dark Humor)
+## Part VI: Arc Grammar (Polymorphic)
 
-> *"Villain games with personality outperform serious ones. The hornet should have SWAGGER."*
+> *"Many arc shapes are valid. Tragedy is one option, not the only option."*
 
-The hornet is not a tragic hero. The hornet is a **magnificent bastard** who knows the score and hunts anyway. Dark humor, not grimdark.
+### 6.1 Arc Validity Rules
 
-### Voice Lines (Optional, Text-Based OK)
+Valid arcs satisfy:
+1. **At least ONE peak** (moment of highest engagement)
+2. **At least ONE valley** (moment of lowest engagement)
+3. **Definite closure** (the arc ENDS, not fades)
+4. **Closure is earned** (V3: Dignity)
 
-| Trigger | Line Example |
-|---------|--------------|
+### 6.2 Valid Arc Shapes
+
+| Arc | Phases | When to Use |
+|-----|--------|-------------|
+| **Tragedy** | HOPE → FLOW → CRISIS → DEATH | Current Hornet Siege (inevitable loss) |
+| **Hero's Journey** | STRUGGLE → BREAKTHROUGH → MASTERY → TRANSCENDENCE | If adding victory condition |
+| **Learning Spiral** | CHAOS → PATTERN → CHAOS → PATTERN → UNDERSTANDING | Tutorial-focused runs |
+| **Emotional** | CONNECTION → LOSS → GRIEF → ACCEPTANCE | Story-focused variant |
+| **Comedy of Escalation** | SURPRISE → OVERWHELM → ABSURDITY → LAUGH | Dark humor variant |
+
+### 6.3 Invalid Arc Shapes
+
+| Invalid Arc | Why | Violation |
+|-------------|-----|-----------|
+| **Flat line** | No peaks or valleys | A4 (composition requires change) |
+| **Fade-out** | No definite closure | V3 (dignity requires ending) |
+| **Arbitrary cut** | Closure not earned | A2 (outcomes must be attributable) |
+| **Monotone climb** | No valleys | V1 (contrast requires oscillation) |
+
+### 6.4 Current Arc: The Tragedy
+
+```
+Phase 1: POWER (Wave 1-3)
+  - Player is godlike
+  - Bees scatter
+  - Kills feel effortless
+  - Upgrades feel like becoming unstoppable
+
+Phase 2: FLOW (Wave 4-6)
+  - Combat rhythm established
+  - Combos chaining
+  - Build identity emerging
+  - "I'm playing terror build"
+
+Phase 3: CRISIS (Wave 7-9)
+  - Coordination rising
+  - Formations forming
+  - First BALL encounter
+  - "They're learning..."
+
+Phase 4: TRAGEDY (Wave 10+)
+  - THE BALL forms
+  - Escape attempts
+  - Inevitable death
+  - "They earned it."
+```
+
+---
+
+## Part VII: The Hornet's Personality
+
+> *"The hornet has SWAGGER. Dark humor, not grimdark."*
+
+### 7.1 Character Core
+
+The hornet is not a tragic hero. The hornet is a **magnificent bastard** who knows the score and hunts anyway.
+
+**Character Axioms**:
+- Never begs, never whines, never seems unfairly treated
+- KNOWS what this is and does it anyway
+- Swagger before the fall
+- Respect for the colony in death
+
+### 7.2 Voice Lines (Optional)
+
+| Trigger | Line |
+|---------|------|
 | First kill | "40 per minute. I can do better." |
 | Multi-kill | "Evolution made me for this." |
 | Level up | "Ah. More ways to die magnificently." |
@@ -384,291 +545,346 @@ The hornet is not a tragic hero. The hornet is a **magnificent bastard** who kno
 | THE BALL forming | "Well. Here we go again." |
 | Death | "The colony always wins. ...Respect." |
 
-### Visual Personality
+### 7.3 Animation Personality
 
 | State | Animation |
 |-------|-----------|
-| Idle (early run) | Alert, aggressive stance |
-| Idle (late run) | Confident swagger, surveying kills |
+| Idle (early) | Alert, aggressive stance |
+| Idle (late) | Confident swagger, surveying kills |
 | Idle (low HP) | Still defiant, not cowering |
-| Kill | Satisfying snap animation |
-| Multi-kill | Brief pause, as if savoring |
+| Kill | Satisfying snap |
+| Multi-kill | Brief pause, savoring |
 | Death | Acceptance, not despair |
 
-**Personality Law**: The hornet never begs, never whines, never seems unfairly treated. The hornet KNOWS what this is and does it anyway. That's the character.
-
 ---
 
-## Learning Velocity Mechanics
-
-> *"Progress velocity matters—each death must teach, not just punish."*
-
-### Per-Death Learning
-
-Every death should reveal something. The amber memory system supports this:
-
-| What's Shown | What's Learned |
-|--------------|----------------|
-| Survival time | "I lasted 30s longer this run" |
-| Kill count | "I killed 200 more bees" |
-| Formation that killed | "THE BALL got me—need to watch for encirclement" |
-| Coordination level at death | "Colony was at 8/10 coordination—they're faster than I thought" |
-| "Could have done" hint | "Kill scouts first to delay coordination" |
-
-### Skill Display
-
-| Metric | Visible To Player |
-|--------|-------------------|
-| Personal best time | Yes, on death screen |
-| Personal best kills | Yes, on death screen |
-| "New skill unlocked" | No—skill IS the unlock |
-| "Formation escaped" count | Yes—shows mastery |
-
-**Learning Law**: A player on run 10 should be able to articulate what they learned that they didn't know on run 1.
-
----
-
-## Complicity Mechanics (You Built This Doom)
-
-> *"Loop Hero shows 'build your own doom' works. The player should feel RESPONSIBLE."*
-
-### How You Create Your Death
-
-| Player Action | Colony Response | Complicity |
-|---------------|-----------------|------------|
-| Kill aggressively | Survivors coordinate faster (sacrifice awareness) | "My aggression taught them" |
-| Always dash left | Colony predicts left dashes | "They learned my pattern" |
-| Ignore scouts | Formations form faster | "I let them communicate" |
-| Focus one area | Other areas build formations | "I created a blind spot" |
-
-### Visible Complicity
-
-- **Colony HUD**: Shows what the colony has learned about YOU
-- **Death Screen**: "The colony learned: [your pattern]"
-- **Amber Memory**: Records your playstyle, shows how it led to death
-
-**Complicity Law**: The player should feel "I could have prevented this" not "this was random."
-
----
-
-## Emotional Arc (Refined)
-
-- **E1 Journey Shape**: Sieges traverse POWER → FLOW → CRISIS → TRAGEDY. You feel godlike, then you fall.
-- **E2 One More Siege**: The post-death state must invite immediate retry. "Maybe this time..."
-- **E3 Defeat Clarity**: Failure runs produce *clearer* feedback than victories. You must know *how* they got you.
-- **E4 The Coordination Moment**: Wave 2-3 should deliver the "they're COORDINATING" moment—first formation, first realization that they're a superorganism.
-- **E5 Tragic Stakes**: Late waves should feel like a chess match you can't win—you know they know, they know you know, and the ball is forming.
-- **E6 Catharsis**: Death should feel like release, not frustration. "They earned it."
-
----
-
-## Fun Floor
-
-> *"Below this line, the game isn't worth playing. Above it, we iterate."*
-
-### Must-Haves (non-negotiable)
-
-| Category | Requirement |
-|----------|-------------|
-| **Input** | < 16ms response. Movement feels predatory—*fast*. |
-| **Movement** | Player can always move (until THE BALL). No stun-lock. |
-| **Kill** | Death = chitin crack + scatter + XP burst. Devastating feedback. |
-| **Level-up** | Pause + choice + power surge. Evolution moment. |
-| **Death** | Readable cause. "I died because THE BALL formed" in < 2 seconds. |
-| **Restart** | < 3 seconds from death to new siege. The colony is always waiting. |
-| **Build identity** | By wave 5, player can name their hunting style. |
-| **Synergy** | 2+ abilities combine for emergent power. 1+1 > 2 somewhere. |
-| **Escalation** | Wave 10 is obviously harder than wave 1. Visually, sonically. |
-| **Bee variety** | At least 4 distinct bee types with different behaviors. |
-| **Ability variety** | At least 8 abilities that change hunting style. |
-| **Coordination visible** | Pheromone timer is ALWAYS readable (visual, not numeric). |
-| **Formation telegraphs** | Every Formation attack has long, readable wind-up. |
-| **Colony awareness** | HUD shows colony coordination level (subtle indicator). |
-| **THE BALL clip-worthy** | First-time viewers should gasp. |
-
-### Player Advocate Tests
-
-- **5-Minute Test**: New player understands controls (30s), gets first kill (5s—you're a predator), feels powerful (wave 1), dies to THE BALL (wave 3-5), retries.
-- **Tragedy Test**: Player on run 10 demonstrably plays better—and still loses. The lesson lands.
-- **Build Test**: Two players describe their sieges differently. "I went terror build" vs "I went assassin".
-- **Death Test**: Player can explain every death. "They formed THE BALL" not "I don't know what happened."
-- **Streamer Test**: Someone could entertainingly narrate this. Clear tragedy, readable doom, shareable "THEY GOT ME."
-- **Coordination Test**: First-time player has a visible "they're COORDINATING?" moment.
-- **Priority Test**: Experienced player can explain coordination priority. "Kill the glowing ones to disrupt formation."
-- **Formation Test**: Player can name and describe THE HEAT BALL. "They surround you and cook you."
-- **Clip Test**: THE BALL moment is compelling to watch even without context.
-- **Humor Test**: Player smiles at least once during a run. The hornet has attitude.
-
----
-
-## Qualitative Assertions
-
-- **QA-1** Movement should feel *predatory*. You are faster than anything here.
-- **QA-2** Abilities should feel like *evolutionary weapons*. Each one makes you more lethal.
-- **QA-3** Bees should feel like *a civilization*, not enemies. They're defending their home.
-- **QA-4** Death should feel like *inevitability accepted*, not punishment. "They finally got me."
-- **QA-5** Sieges should feel like *tragedies*. Each one tells the same story differently.
-- **QA-6** Coordination should feel like *doom approaching*. The pheromones are spreading.
-- **QA-7** Formations should feel like *the colony awakening*. Not just enemies—a superorganism.
-- **QA-8** THE BALL should feel like *the end*. When it forms, you know.
-- **QA-9** The hornet should feel like *a character*. Swagger before the fall.
-- **QA-10** Kills should feel *satisfying*. Juice is not optional.
-
----
-
-## Anti-Success (Failure Modes)
-
-This pilot fails if:
-
-**Thematic Failures:**
-- **Villain feels heroic**: Player doesn't realize they're the invader. The tragedy is missed.
-- **Bees feel like obstacles**: Enemies are HP bags, not a defending civilization. No empathy.
-- **Death feels unfair**: "I was robbed" instead of "They outcoordinated me."
-- **Power fantasy unearned**: Player feels godlike but doesn't appreciate the tragedy.
-- **Coordination feels random**: Bees don't feel like they're learning; just spawning harder.
-- **Hornet feels generic**: No personality, no swagger, just a sprite.
-
-**Core Gameplay Failures:**
-- **Stat-stick upgrades**: Choices don't change *how* you hunt, only *numbers*.
-- **HP sponge bees**: Bees are just health bars, not a coordinating defense.
-- **Random death**: Player can't explain why they died.
-- **Movement tax**: Input lag, sluggish response. You're a HORNET.
-- **Build sameness**: Every siege plays the same.
-- **Limp kills**: Kills don't feel satisfying. No crunch, no scatter, no juice.
-
-**Colony Failures:**
-- **Invisible coordination**: Player can't tell when bees are forming. Unfair.
-- **Unfair Formations**: Attacks aren't telegraphed. Frustration, not tragedy.
-- **Colony feels random**: Adaptation doesn't feel personal.
-- **No coordination moment**: First formation passes without the "they're WORKING TOGETHER" reaction.
-- **Formation spam**: Too many formations too fast. Chaos without clarity.
-
-**Clip Failures:**
-- **THE BALL is boring**: Doesn't make viewers react.
-- **No clear "oh no" moment**: Tension doesn't build.
-- **Death is anticlimactic**: No spectacle, no emotional weight.
-
----
-
-## Witness Integration (Amber Memory)
+## Part VIII: Witness Integration (Amber Memory)
 
 > *"Every siege is preserved in amber. The colony remembers, and so do you."*
 
-**During the Siege:**
-- **Coordination Tracking**: Every kill, every escape, every formation formed
-- **Colony Learning**: Visible indicator of colony coordination level
-- **Mutual Recording**: You learn the formations; they learn your patterns
+### 8.1 During the Siege
 
-**Amber Memory** (stored in crystal):
-- What abilities were chosen, how long survived, what formation killed you
-- **Coordination count**: How many formations completed before you fell
-- **Colony coordination level**: How smart the colony got during your siege
-- **Closest call**: The formation you almost prevented
-- Build profile: What hunting style emerged from ability choices
-- Unchosen paths: What abilities were offered but not taken
-- **What the colony learned**: Your patterns, preserved
+- **Invisible**: Zero UI during gameplay. Pure flow.
+- **Recording**: Every kill, escape, formation, decision tracked silently.
+- **Mutual**: You learn the formations; they learn your patterns.
 
-**Death Crystallization**:
-When killed by a formation, the amber memory shows:
-- The formation that killed you (rotating 3D view)
-- The bees that formed it (decomposition view)
-- How long they survived before coordinating (your failure window)
-- What you could have done ("Kill the scouts first next time")
+### 8.2 Amber Memory (Post-Run Crystal)
 
-**Witness Principles:**
-- **Invisible During Play**: Zero UI during gameplay. No live metrics.
-- **Reflection After**: Post-siege amber shows what happened and why.
-- **Never Judgmental**: Memories describe ("aggressive early game") not evaluate.
-- **Optional Depth**: Casual players ignore it. Analysts dig in.
-- **Thematic Synergy**: You're preserved in amber, like the insects you are.
+```typescript
+interface AmberCrystal {
+  // Identity
+  runId: string;
+  timestamp: number;
 
----
+  // Metrics
+  duration: number;
+  killCount: number;
+  wave: number;
 
-## Canary Success Criteria
+  // Cause
+  deathCause: DeathCause;
+  causalChain: string[];  // "Ignored scouts" → "Fast coordination" → "THE BALL"
 
-**Core Gameplay Canaries:**
-- **Retry rate > 80%**: After first death, player starts new siege immediately.
-- **"One more siege" heard**: Playtester says it unprompted.
-- **Build diversity**: 5 distinct viable hunting styles emerge.
-- **Death attribution**: Player names cause of death within 2 seconds.
-- **Predator mastery**: Experienced players survive 2x longer than beginners.
-- **Kill satisfaction**: Player comments on how good kills feel.
+  // Build
+  buildProfile: BuildProfile;
+  archetypeDominant: UpgradeArchetype;
 
-**Colony/Coordination Canaries:**
-- **Coordination moment**: Every new player has a visible reaction to first formation.
-- **Priority learning**: By siege 3, players target coordinating bees first.
-- **Formation respect**: Players audibly react to formation completion. "THE BALL IS FORMING."
-- **Enhanced awareness**: Experienced players mention enhanced bees. "Kill the glowing ones!"
-- **Colony personalization**: Players feel the colony adapting to THEM. "They know I dash left."
-- **Complicity recognition**: Players say "I let them form it" not "it just happened."
+  // Skill (A3: Visible Mastery)
+  skillMetrics: SkillMetrics;
+  improvementFromLast: SkillDelta;
 
-**Thematic Canaries:**
-- **Villain recognition**: Player understands they're the invader within first run.
-- **Bee empathy**: Player expresses some sympathy for the bees. "They're just defending their home."
-- **Tragedy acceptance**: Player accepts inevitable death as appropriate. "They earned it."
-- **Mythology understanding**: Player can explain THE HEAT BALL's real-world basis.
-- **Hornet personality**: Player references the hornet's attitude. "That death line is great."
+  // What the colony learned
+  colonyLearnings: string[];  // "Prefers left dash", "Ignores propolis"
 
-**Streamability Canaries:**
-- **Clip moment**: First-time viewer reacts to THE BALL.
-- **Quotable phrase**: "THE BALL IS FORMING" becomes recognizable.
-- **Shareability**: Player wants to show someone else this game.
+  // Ghosts (unchosen paths)
+  ghosts: Ghost[];
+
+  // Narrative
+  rationale: string;  // AI-generated run summary
+}
+```
+
+### 8.3 Witness Principles
+
+- **Invisible During Play**: Zero metrics visible during combat.
+- **Reflection After**: Amber shows what happened and why.
+- **Never Judgmental**: Describes ("aggressive early"), doesn't evaluate ("bad play").
+- **Optional Depth**: Casuals ignore it. Analysts dig in.
+- **Thematic**: You're preserved in amber, like the insects you are.
 
 ---
 
-## Implementation Phases
+## Part IX: Anti-Patterns (Failure Modes)
 
-### Phase 1: Core Survivors Loop (Current)
-The base game with hornet theme. Must satisfy Fun Floor before proceeding.
-- Movement + kills + juice
-- 4 bee types
-- 4 abilities
-- Basic coordination visual
+### 9.1 Childish Failures
 
-### Phase 2: THE BALL (Priority 1)
-1. Implement THE HEAT BALL with full visual sequence
-2. The Silence Before
-3. Camera pull effect
-4. Cooking death animation
-5. **Validate: Is this clip-worthy?**
+| Symptom | Cause | Axiom Violated |
+|---------|-------|----------------|
+| Hand-holding tutorials | Over-guidance | A1 (agency) |
+| "Good job!" on trivial | Unearned praise | V3 (dignity) |
+| Deaths as "oopsies" | No weight | V3 (dignity) |
+| Power fantasy without cost | No tragedy | V1 (contrast) |
 
-### Phase 3: Coordination System
-1. Implement survival timer on bees
-2. Add pheromone visual state
-3. Create THE SWARM formation
-4. Add coordination trigger and animation
+### 9.2 Annoying Failures
 
-### Phase 4: Full Formation Roster
-1. Implement remaining formations
-2. Add enhanced bee variant system
-3. Create themed coordinated attacks
-4. Balance coordination timers
+| Symptom | Cause | Axiom Violated |
+|---------|-------|----------------|
+| THE BALL without warning | No telegraph | A2 (attribution) |
+| Stat-bump upgrades | No verb change | S5 laws |
+| Death says "You Died!" not WHY | No cause | A2 (attribution) |
+| Looping sound design | No care | V4 (juice) |
 
-### Phase 5: Personality & Polish
-1. Add hornet voice/text lines
-2. Implement swagger animations
-3. Sound design pass
-4. Death screen crystallization
+### 9.3 Offensive Failures
 
-### Phase 6: Witness Integration
-1. Merge colony data into amber memory system
-2. Add formation death rituals
-3. Implement "colony knows you" personalization
+| Symptom | Cause | Axiom Violated |
+|---------|-------|----------------|
+| "Beat your best time!" | Hustle theater | V5 (witnessed) |
+| "You only killed 50 today" | Gap shame | V5 (witnessed) |
+| "We noticed you stopped" | Surveillance | V5 (witnessed) |
+| "Nothing matters" nihilism | Tragedy without dignity | V3 (dignity) |
 
----
+### 9.4 Core Gameplay Failures
 
-## Out of Scope
-
-- Complex witness UI during gameplay (amber memories are post-run only)
-- Victory condition (the colony always wins)
-- Multiplayer balance, long-term meta economy
-- Leaderboards or competitive ranking
-- Meta-progression unlocks (skill is the progression)
-- Cross-run colony memory (colony resets each siege per H2)
+| Symptom | Cause | Axiom Violated |
+|---------|-------|----------------|
+| Random deaths | Unattributable | A2 |
+| Stat-stick upgrades | No identity | A1 |
+| HP sponge enemies | No learning | A3 |
+| Movement lag | No predator feel | V4 |
+| Build sameness | No diversity | S5 |
+| Limp kills | No juice | V4 |
 
 ---
 
-## The Pitch
+## Part X: Regeneration Laws
+
+> *"When diverging from this spec, preserve axioms, respect values, supersede specifications freely."*
+
+### RL-1: Axiom Preservation (MUST)
+
+Any regeneration MUST preserve:
+- A1: Player agency
+- A2: Attributable outcomes
+- A3: Visible mastery
+- A4: Compositional experience
+
+### RL-2: Value Stability (SHOULD)
+
+Any regeneration SHOULD preserve:
+- V1: Contrast (oscillation exists)
+- V2: Arc (phases toward closure)
+- V3: Dignity (meaningful endings)
+- V4: Juice (felt feedback)
+- V5: Witnessed (collaborative feel)
+
+### RL-3: Specification Divergence (MAY)
+
+Any regeneration MAY diverge from:
+- S1: THE BALL (replace with any collective threat)
+- S2: Tragedy (replace with any resolution)
+- S3: Hornet (replace with any predator)
+- S4: Seven Contrasts (replace with N contrasts, N ≥ 3)
+- S5: Upgrade archetypes (replace with any verb-based system)
+- S6: Bee types (replace with any learnable enemy taxonomy)
+
+### RL-4: Explicit Supersession
+
+When diverging, document:
+1. What was superseded
+2. Why (what new insight prompted change)
+3. How axioms are still preserved
+4. What new value is added
+
+---
+
+## Part XI: Multi-Phase Roadmap
+
+> *"From prototype to sellable, jaw-dropping mind journey."*
+
+### Phase 0: Foundation Verification (COMPLETE)
+
+**Goal**: Validate core loop works.
+
+**Exit Criteria**:
+- [x] Player moves responsively (<16ms input lag)
+- [x] Kills feel satisfying (crunch, scatter, XP burst)
+- [x] Upgrades change gameplay (verb-based)
+- [x] Enemies are readable (distinct silhouettes)
+- [x] Basic coordination exists (pheromone visuals)
+
+### Phase 1: THE BALL Perfection (CURRENT)
+
+**Goal**: Make THE BALL clip-worthy.
+
+**Exit Criteria**:
+- [ ] First-time viewer gasps
+- [ ] Escape feels frame-tight but fair
+- [ ] Audio design creates dread (silence before death)
+- [ ] Camera pull shows full sphere
+- [ ] Temperature indicator visible
+- [ ] Death feels *inevitable in retrospect*
+
+**Specific Tasks**:
+1. **Visual polish**: Heat shimmer, bee vibration, temperature glow
+2. **Audio design**: Buzz crescendo → silence → bass note → cooking crackle
+3. **Gap mechanics**: Green escape arc, forgiving but tense
+4. **Camera work**: Pull-back during sphere, focus on gap during constrict
+5. **Skill expression**: Perfect gap escape tracked as achievement
+
+### Phase 2: Contrast Depth (NEXT)
+
+**Goal**: Make every run emotionally varied.
+
+**Exit Criteria**:
+- [ ] Each run visits 3+ contrast poles
+- [ ] "God of Death" → "Cornered Prey" transition is sudden
+- [ ] Silence before THE BALL is palpable
+- [ ] Player describes runs in contrast terms
+
+**Specific Tasks**:
+1. **Contrast tracking**: System monitors which poles have been visited
+2. **Dynamic audio**: Music responds to contrast state
+3. **Visual language**: Color palette shifts with mood
+4. **Narrative beats**: Text appears at contrast transitions
+
+### Phase 3: Build Diversity (WEEK 3-4)
+
+**Goal**: Every run feels like a different hunting style.
+
+**Exit Criteria**:
+- [ ] 6 viable archetypes emerge
+- [ ] Players name their builds ("terror build", "berserker run")
+- [ ] Synergies are discovered, not told
+- [ ] Ghost upgrades create "what if" tension
+
+**Specific Tasks**:
+1. **Synergy tuning**: Ensure 2+ combos per archetype
+2. **Visual identity**: Hornet appearance changes with build
+3. **Verb diversity**: Each upgrade changes HOW, not just HOW MUCH
+4. **Balance pass**: No obviously dominant strategy
+
+### Phase 4: Colony Intelligence (WEEK 5-6)
+
+**Goal**: The colony feels like it's learning YOU.
+
+**Exit Criteria**:
+- [ ] Colony learns patterns within a run
+- [ ] "They know I dash left" feeling emerges
+- [ ] Death screen shows what colony learned
+- [ ] Complicity is felt ("I taught them this")
+
+**Specific Tasks**:
+1. **Pattern tracking**: Colony remembers player behaviors
+2. **Adaptive response**: Formations adjust to player style
+3. **Visible learning**: HUD shows colony coordination level
+4. **Death attribution**: "The colony learned: [your patterns]"
+
+### Phase 5: Personality Polish (WEEK 7-8)
+
+**Goal**: The hornet is a CHARACTER.
+
+**Exit Criteria**:
+- [ ] Players quote the hornet's lines
+- [ ] Swagger is visible in animations
+- [ ] Death feels like "completing a journey", not "failing a test"
+- [ ] Dark humor lands
+
+**Specific Tasks**:
+1. **Voice lines**: Implement text-based personality
+2. **Animation polish**: Confidence in idle, savoring in multi-kill
+3. **Death ritual**: Dignified acceptance animation
+4. **Humor tuning**: Dark but not grimdark
+
+### Phase 6: Witness Integration (WEEK 9-10)
+
+**Goal**: Every run is remembered.
+
+**Exit Criteria**:
+- [ ] Amber crystal captures run essence
+- [ ] Improvement visible across runs
+- [ ] Ghost upgrades create regret/wonder
+- [ ] Run history is browsable
+
+**Specific Tasks**:
+1. **Crystal generation**: Auto-generate run summaries
+2. **Skill delta**: Show improvement from last run
+3. **Ghost display**: "You could have been Berserker"
+4. **History view**: Browse past runs, compare builds
+
+### Phase 7: Streamability (WEEK 11-12)
+
+**Goal**: Streamers want to play this.
+
+**Exit Criteria**:
+- [ ] "THE BALL IS FORMING" becomes a meme
+- [ ] Clips are self-explanatory
+- [ ] Commentary feels natural
+- [ ] Deaths are entertaining, not frustrating
+
+**Specific Tasks**:
+1. **Clip detection**: Auto-identify clip-worthy moments
+2. **Viewer-friendly UI**: Clear for observers
+3. **Tension pacing**: Builds are entertaining to watch
+4. **Death spectacle**: Deaths are dramatic, not anti-climactic
+
+### Phase 8: Market Polish (WEEK 13-16)
+
+**Goal**: Ready for sale.
+
+**Exit Criteria**:
+- [ ] Tutorial teaches without hand-holding
+- [ ] First 5 minutes hook the player
+- [ ] Steam page captures the vibe
+- [ ] Reviews say "I can't stop playing"
+
+**Specific Tasks**:
+1. **Onboarding**: Non-intrusive tutorial
+2. **First run optimization**: Hook in first 5 minutes
+3. **Marketing assets**: Trailer, screenshots, capsule art
+4. **Store page**: Copy that captures tragedy + swagger
+5. **Localization**: Key markets
+6. **Performance**: 60fps on target hardware
+
+---
+
+## Part XII: Success Metrics
+
+### 12.1 Canary Tests (Qualitative)
+
+| Test | Pass Criteria |
+|------|---------------|
+| **5-Minute Test** | New player: controls (30s), first kill (5s), feels powerful (wave 1), dies to THE BALL (wave 3-5), retries |
+| **Tragedy Test** | Run 10 player plays better AND still loses. Lesson lands. |
+| **Build Test** | Two players describe runs differently |
+| **Death Test** | Player names cause of death in <2s |
+| **Streamer Test** | Someone could entertainingly narrate |
+| **Clip Test** | THE BALL is compelling without context |
+| **Humor Test** | Player smiles at least once per run |
+| **Dignity Test** | Player says "they earned it", not "that was BS" |
+
+### 12.2 Quantitative Metrics
+
+| Metric | Target |
+|--------|--------|
+| Retry rate | >80% after first death |
+| Session length | >15 minutes average |
+| Return rate | >40% day-2 retention |
+| Build diversity | 6 distinct viable builds |
+| Death attribution time | <2 seconds |
+| Skill improvement | 2x survival time by run 10 |
+
+### 12.3 Anti-Metrics (What NOT to Optimize)
+
+| Anti-Metric | Why |
+|-------------|-----|
+| Time-to-first-death | Longer isn't better; tension is |
+| Maximum kill count | High score isn't the point |
+| Session count per day | Quality > quantity |
+| Upgrade collection % | Diversity > completionism |
+
+---
+
+## Part XIII: The Pitch
 
 > *"A survivors-like where you play the monster. You're a Japanese giant hornet raiding a bee colony—nature's perfect predator against nature's most coordinated defense. Your mandibles can kill 40 bees per minute. It won't be enough.*
 >
@@ -678,19 +894,400 @@ The base game with hornet theme. Must satisfy Fun Floor before proceeding.
 
 ---
 
-## The Mirror Test
+## Part XIV: The Mirror Test
 
 > *"Does this feel like Kent on his best day?"*
 
-**Daring**: You play the villain. You lose. That's the point.
-**Bold**: THE HEAT BALL as core mechanic—the real defense, the real tragedy.
-**Creative**: A survivors-like where survival isn't the goal—understanding is.
-**Opinionated**: The bees ALWAYS win. This is a tragedy you play through.
-**Not gaudy**: Every system serves the core truth: the colony adapts faster than you can kill.
-**Joyful**: Kills feel INCREDIBLE. The hornet has swagger. Dark humor, not grimdark.
+| Quality | Check |
+|---------|-------|
+| **Daring** | You play the villain. You lose. That's the point. |
+| **Bold** | THE HEAT BALL as core mechanic—real biology, real tragedy. |
+| **Creative** | A survivors-like where survival isn't the goal—understanding is. |
+| **Opinionated** | The bees ALWAYS win. This is a tragedy you play through. |
+| **Not gaudy** | Every system serves the core truth. No feature creep. |
+| **Joyful** | Kills feel INCREDIBLE. The hornet has swagger. Dark humor, not grimdark. |
 
 ---
+
+## Appendix A: Galois Stratification Summary
+
+| Layer | Loss Range | Examples | Regeneration Rule |
+|-------|------------|----------|-------------------|
+| **Axiom** | L < 0.10 | A1-A4 (Agency, Attribution, Mastery, Composition) | MUST preserve |
+| **Value** | L < 0.35 | V1-V5 (Contrast, Arc, Dignity, Juice, Witnessed) | SHOULD preserve |
+| **Spec** | L < 0.70 | S1-S6 (THE BALL, Tragedy, Hornet, Contrasts, Upgrades, Bees) | MAY diverge |
+| **Tuning** | L ≥ 0.70 | T1-T3 (Timing, Economy, Feedback constants) | WILL vary |
+
+---
+
+## Appendix B: Experience Quality Equation
+
+```
+Q = F × (C × A × V^(1/n))
+
+where:
+  Q = Total quality score [0, 1]
+  F = Floor gate ∈ {0, 1}
+  C = Contrast coverage [0, 1]
+  A = Arc phase coverage [0, 1]
+  V = Voice approval product
+  n = Number of voices
+
+Floor failures:
+  - input_latency > 16ms → F = 0
+  - feedback_density < 0.5 → F = 0
+  - arbitrary_death = true → F = 0
+  - surveilled_feeling = true → F = 0
+```
+
+---
+
+## Appendix C: Implementation Cross-Reference
+
+| Concept | File | Status |
+|---------|------|--------|
+| Types | `types.ts` | Complete |
+| Formation System | `systems/formation.ts` | Complete |
+| Enemy FSM | `systems/bee-fsm.ts` | Complete |
+| Combat | `systems/combat.ts` | Complete |
+| Upgrades | `systems/upgrades.ts` | Complete |
+| Contrast | `systems/contrast.ts` | In Progress |
+| Witness | `systems/witness.ts` | Complete |
+| Juice | `systems/juice.ts` | Complete |
+| Spawn | `systems/spawn.ts` | Complete |
+| Physics | `systems/physics.ts` | Complete |
+
+---
+
+*"LEGIBLE DOOM is not the axiom. LEGIBLE DOOM is what emerged when we applied the axioms to bees. The axioms are: agency, attribution, mastery, composition. Everything else is derived."*
 
 *"You are the apex predator. You are evolution's perfect killing machine. You will slaughter thousands. And when they form THE BALL, when the heat rises, when you cook alive surrounded by the civilization you tried to destroy—you'll understand.*
 
 *The colony always wins. And it should."*
+
+---
+
+## Appendix D: CONCRETE MECHANICS (Implement These)
+
+> *"No theory. Specific numbers. Build Monday morning."*
+
+### Priority 1: Core Combat Feel (Week 1)
+
+| Mechanic | What It Does | Numbers | Why Fun |
+|----------|--------------|---------|---------|
+| **Venom Stacking** | 3 hits = paralysis | Stack duration: 4s, Freeze: 1.5s | See buildup, trigger payoff |
+| **Bleeding DoT** | Melee causes stacking bleed | 5 DPS × 5 stacks max, 8s duration | Watch enemies bleed out |
+| **Berserker Aura** | +5% damage per nearby enemy | 200px range, 50% max bonus | Swarms make you stronger |
+| **Hover Brake** | Instant stop + i-frames | 0.3s invuln, 3s cooldown | Clutch dodges feel GOOD |
+
+### Priority 2: Risk-Reward Systems (Week 2)
+
+| Mechanic | What It Does | Numbers | Why Fun |
+|----------|--------------|---------|---------|
+| **Execute Threshold** | +50% damage to low-HP enemies | Below 25% HP triggers | Setup → payoff |
+| **Revenge Buff** | Getting hit = +25% damage | 3s duration, no cooldown | Aggression rewarded |
+| **Graze Bonus** | Near-miss = meter + chain bonus | 30px graze zone, 5 grazes = +10% damage | Risk-taking rewarded |
+| **Afterimage Dash** | Dashing spawns damage trail | 8 damage per image, 0.1s spawn rate | Speed IS your weapon |
+
+### Priority 3: Enemy Depth (Week 3)
+
+| Mechanic | What It Does | Numbers | Why Fun |
+|----------|--------------|---------|---------|
+| **Pheromone Bomb** | Attract enemies → explode | 300px attract, 2s delay, 40 damage | Set trap, enemies walk in, BOOM |
+| **Wax Barriers** | Builder bees create destructible walls | 60 HP walls, 3s build time | Dynamic terrain puzzle |
+
+---
+
+## Appendix E: JUICE PARAMETERS (Copy-Paste These)
+
+> *"Screen shake, particles, audio. Exact values."*
+
+### Screen Shake
+
+```typescript
+const SHAKE = {
+  workerKill:  { amplitude: 2,  duration: 80,  frequency: 60 },
+  guardKill:   { amplitude: 5,  duration: 150, frequency: 60 },
+  bossKill:    { amplitude: 14, duration: 300, frequency: 60 },
+  playerHit:   { amplitude: 8,  duration: 200, frequency: 60 },
+};
+```
+
+### Freeze Frames
+
+```typescript
+const FREEZE = {
+  significantKill: 2,   // frames (33ms at 60fps)
+  multiKill:       4,   // frames (66ms)
+  criticalHit:     3,   // frames
+};
+```
+
+### Particles
+
+```typescript
+const PARTICLES = {
+  deathSpiral: {
+    count: 25,
+    color: '#FFE066',  // soft yellow pollen
+    spread: 45,        // degrees
+    lifespan: 400,     // ms
+    rotation: 3,       // full rotations during descent
+  },
+  honeyDrip: {
+    count: 15,
+    color: '#F4A300',  // amber
+    gravity: 200,      // px/s²
+    poolFade: 1200,    // ms
+  },
+  damageFlash: {
+    colors: ['#FF6600', '#FF0000'],  // orange → red
+    flashDuration: 100,
+    fadeDuration: 200,
+    fragmentCount: 10,
+    fragmentVelocity: 225,  // px/s
+  },
+};
+```
+
+### Visual Tells
+
+```typescript
+const TELLS = {
+  chargingGlow: {
+    color: '#FFD700',    // gold
+    duration: 500,       // ms pre-attack
+    pulseScale: 1.2,     // max scale
+    pulseRate: 100,      // ms per pulse
+    opacity: [0.4, 0.8], // min → max
+  },
+  formationLines: {
+    color: '#FFD700',
+    opacity: 0.4,
+    width: 1.5,          // px
+    fadeTime: 150,       // ms
+    minBees: 3,          // show only when coordinated
+  },
+  stingerTrail: {
+    color: '#6B2D5B',    // venom purple
+    duration: 300,       // ms linger
+  },
+};
+```
+
+### Audio Cues
+
+```typescript
+const AUDIO = {
+  alarmPheromone: {
+    freqStart: 400,      // Hz
+    freqEnd: 2000,       // Hz
+    duration: 300,       // ms
+  },
+  ballForming: {
+    buzzVolume: 0.3,     // starts quiet
+    buzzPeak: 1.0,       // crescendo
+    silenceDuration: 3000,  // ms of dread
+  },
+};
+```
+
+---
+
+## Appendix F: GENRE-PROVEN TIMINGS
+
+> *"Numbers from Vampire Survivors, Brotato, 20 Minutes Till Dawn."*
+
+### Session Pacing
+
+| Time | What Happens | Difficulty |
+|------|--------------|------------|
+| 0:00-2:00 | Learn mechanics, feel powerful | Gentle |
+| 2:00-5:00 | First synergies available | +40% spawn rate |
+| 5:00-10:00 | Build identity forms | Introduce elites |
+| 10:00-15:00 | Plateau, player feels strong | Maintain pressure |
+| 15:00-18:00 | THE BALL starts forming | 3-phase encounter |
+| 18:00-22:00 | Escape or die | Exponential |
+
+### Upgrade Cadence
+
+| Event | Timing |
+|-------|--------|
+| First upgrade | 20-30 seconds |
+| Subsequent upgrades | Every 35-40 seconds |
+| First synergy possible | Minute 2-3 |
+| Full build realized | Minute 12-15 |
+| Choices per decision | Exactly 3 |
+
+### Spawn Density
+
+| Time | Enemies on Screen |
+|------|-------------------|
+| 0-5 min | 3-5 |
+| 5-10 min | 8-12 |
+| 10-20 min | 15-25 |
+| 20+ min | 30-50 + formations |
+
+### Enemy Introduction
+
+| Wave | New Content |
+|------|-------------|
+| 1 | Workers only (learn basics) |
+| 3 | Scouts (coordination preview) |
+| 5 | Guards (tanky, prioritization) |
+| 7 | Propolis (ranged, dodging) |
+| 9+ | Royal Guards + THE BALL |
+
+### Health/Damage Calibration
+
+| Parameter | Value | Reason |
+|-----------|-------|--------|
+| Player HP | 100 | Nice round number |
+| Damage per hit | 5-15 | Forces dodging (6+ hits to kill) |
+| Healing frequency | Every 2-3 min | Creates scarcity |
+| "Threatened" threshold | <30% HP | Trigger visual/audio warning |
+| THE BALL damage | 20-30 per tick | Forces active escape |
+
+---
+
+## Appendix G: MONDAY MORNING CHECKLIST
+
+> *"What to actually build this week. Build it LOUD."*
+
+### 🔥 TRANSFORMATION MINDSET (Read First)
+
+Before you touch any code, internalize this:
+
+**You are not here to maintain. You are here to make this game INCREDIBLE.**
+
+| Task | Maintenance Mindset ❌ | Transformation Mindset ✅ |
+|------|------------------------|---------------------------|
+| Screen shake | "Add 3px shake" | "Make kills feel like PUNCHES" |
+| Freeze frames | "Pause for 2 frames" | "Create 'time slows when you're badass' moments" |
+| Particles | "Spawn some particles" | "Make death explosions that players want to screenshot" |
+| Venom | "Implement the mechanic" | "Make paralysis so satisfying players SEEK IT" |
+
+### This Week's Tasks (Priority Order)
+
+1. **Screen shake on kills** (2 hours)
+   - Copy SHAKE values from Appendix E
+   - Hook into kill event
+   - Test: Worker kill = subtle, Guard kill = noticeable
+   - **🔥 TRANSFORMATION**: Does multi-kill shake make you feel POWERFUL?
+
+2. **Freeze frames on significant kills** (1 hour)
+   - Copy FREEZE values
+   - Hook into multi-kill detection
+   - Test: 3+ kill feels WEIGHTY
+   - **🔥 TRANSFORMATION**: Does time-stop make you feel like an APEX PREDATOR?
+
+3. **Death spiral animation** (2 hours)
+   - Copy deathSpiral particle config
+   - 3 rotations during 0.6s descent
+   - Pollen burst on impact
+   - **🔥 TRANSFORMATION**: Would someone CLIP this death animation?
+
+4. **Venom stacking system** (3 hours)
+   - 3 stacks = 1.5s paralysis
+   - Visual: color shift per stack
+   - Test: Satisfying freeze payoff
+   - **🔥 TRANSFORMATION**: Does the paralysis moment feel like a TRAP SPRINGING?
+
+5. **Graze detection** (2 hours)
+   - 30px near-miss zone
+   - Cyan spark particle on graze
+   - 5 consecutive grazes = damage buff
+   - **🔥 TRANSFORMATION**: Does grazing feel DANGEROUS and REWARDING?
+
+### NOT This Week
+
+- ❌ Quality equation calculations
+- ❌ Galois loss measurements
+- ❌ Category theory derivations
+- ❌ Polymorphic quality algebras
+- ❌ Regeneration law documentation
+- ❌ Conservative incremental improvements
+- ❌ "Good enough" implementations
+
+### Definition of Done (Transformed)
+
+Each feature is DONE when:
+- [ ] Specific numbers from spec are implemented
+- [ ] Visual/audio feedback is present
+- [ ] Feels good to use (player smiles)
+- [ ] No crashes or obvious bugs
+- [ ] **🔥 You would show this to a friend**
+- [ ] **🔥 It exceeds what you thought possible when you started**
+- [ ] **🔥 Yesterday's build looks BORING compared to today's**
+
+### Transformation Checkpoints
+
+**Every 2 hours, stop and ask:**
+
+1. "Am I building something BOLD or something SAFE?"
+2. "Would this make Kent say 'holy shit' or 'that's fine'?"
+3. "Is this 10x better or 10% better?"
+4. "Would I be PROUD to demo this?"
+
+**If any answer is the conservative option → PIVOT. Push harder.**
+
+### The Transformation Failures to Avoid
+
+| Failure Mode | What It Looks Like | The Fix |
+|--------------|-------------------|---------|
+| **Timid shake** | 1-2px shake that's barely visible | DOUBLE IT. Then double it again. |
+| **Weak particles** | 5 particles that fade instantly | 25 particles, longer trails, brighter colors |
+| **Silent kills** | No audio feedback | Add CRUNCH. Add SPLAT. Layer sounds. |
+| **Boring upgrades** | "+10% damage" text | Show the damage HAPPENING. Enemies EXPLODE. |
+| **Limp death** | Sprite disappears | SPIRAL. SCATTER. HONEY DRIP. DRAMA. |
+
+### The Ultimate Question
+
+At the end of each session:
+
+> *"If a stranger played this for 30 seconds, would they want to play for 30 minutes?"*
+
+**If NO → you haven't transformed enough. Tomorrow, go harder.**
+
+---
+
+## Appendix H: LOCKED vs OPEN
+
+> *"What you can change freely vs. what needs approval."*
+
+### LOCKED (Do Not Change Without Discussion)
+
+| Item | Why Locked |
+|------|------------|
+| THE BALL is the final threat | Core identity |
+| Player always loses | Tragedy theme |
+| Hornet is a predator, not victim | Character core |
+| Arc is 4 phases (Power→Flow→Crisis→Tragedy) | Tested structure |
+| Death is dignified, not punishing | Ethical floor |
+
+### OPEN (Change Freely)
+
+| Item | Guidance |
+|------|----------|
+| Timing constants | See Appendix F ranges |
+| Visual polish | See Appendix E values |
+| Audio design | Experiment within vibe |
+| Bee variants | Add/remove as needed |
+| Upgrade archetypes | Must stay verb-based |
+| Particle counts | Optimize for performance |
+| Screen shake amounts | Tune to feel |
+
+### The Rule
+
+If you want to change a LOCKED item:
+1. Stop coding
+2. Open an issue
+3. Discuss with Kent
+4. Get explicit approval
+
+If it's OPEN: just change it and note in commit.
+
+---
+
+**Filed**: 2025-12-28
+**Compression**: This spec is generative. Delete the implementation. Regenerate. The result is isomorphic.

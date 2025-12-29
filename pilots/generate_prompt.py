@@ -42,7 +42,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-
 # ============================================================================
 # Data Structures
 # ============================================================================
@@ -280,6 +279,376 @@ def get_phase_artifacts(iteration: int) -> str:
 - Iteration 10: Final polish, CRYSTAL.md, run archive"""
 
 
+# ============================================================================
+# Galois Stratification Framework
+# ============================================================================
+
+
+def get_galois_stratification_protocol() -> str:
+    """Get the Galois stratification framework for spec interpretation.
+
+    Derived from: spec/protocols/zero-seed.md + plans/pilot-specification-protocol.md
+    Kernel derivation: L1.8 (Galois) → loss measures axiom-ness
+    """
+    return """## Galois Stratification Protocol
+
+> *"Every decision in a spec has a Galois loss — how much it would change under restructuring."*
+
+**The Core Insight**: Most of what you think are axioms are actually L2 specifications.
+
+### The Four Layers
+
+| Layer | Loss | Examples | Rule |
+|-------|------|----------|------|
+| **L0: AXIOMS** | L < 0.10 | A1-A4 (Agency, Attribution, Mastery, Composition) | **MUST** preserve |
+| **L1: VALUES** | L < 0.35 | V1-V5 (Contrast, Arc, Dignity, Juice, Witnessed) | **SHOULD** preserve |
+| **L2: SPECS** | L < 0.70 | S1-S6 (THE BALL, Tragedy, Hornet, Contrasts, Upgrades, Bees) | **MAY** diverge |
+| **L3: TUNING** | L ≥ 0.70 | T1-T3 (Timing, Economy, Feedback constants) | **WILL** vary |
+
+### The Stratification Test
+
+When making ANY design decision, ask:
+
+1. **Is this an axiom?** Would it survive radical restructuring (different theme, genre)?
+   - If YES: L0 — cannot be violated
+   - If NO: Continue
+
+2. **Is this a value?** Is it derived from axioms but stable?
+   - If YES: L1 — violate only with strong justification
+   - If NO: Continue
+
+3. **Is this a specification?** Is it one instantiation of a value?
+   - If YES: L2 — document abstract pattern + valid alternatives
+   - If NO: L3 — change freely
+
+### Examples
+
+| Decision | Wrong Classification | Right Classification | Why |
+|----------|---------------------|---------------------|-----|
+| "Player choices matter" | Spec | **Axiom (A1)** | Survives ANY game design |
+| "Endings have dignity" | Spec | **Value (V3)** | Derived from A2, stable |
+| "THE BALL kills you" | Axiom | **Spec (S1)** | Could be THE SWARM, THE HIVE MIND |
+| "Dash i-frames = 0.12s" | Spec | **Tuning (T1)** | Arbitrary, change freely |
+
+### The Anti-Overfitting Question
+
+> *"Can this spec generate a JOYFUL variant?"*
+
+If the answer is NO, you've overfitted. Axioms are too specific. Loosen them."""
+
+
+def get_four_axioms_protocol() -> str:
+    """Get the four true axioms that survive ANY game design.
+
+    Derived from: spec/kernel.md → L0.1-L0.3 (Entity, Morphism, Mirror)
+    These are fixed points under radical restructuring.
+    """
+    return """## The Four True Axioms
+
+> *"These survive across ANY game design. Everything else is derived."*
+
+| Axiom | Statement | Test | Kernel Derivation |
+|-------|-----------|------|-------------------|
+| **A1: AGENCY** | Player choices determine outcomes | Every outcome traces to decisions | L0.2 (Morphism) → actions are arrows |
+| **A2: ATTRIBUTION** | Outcomes trace to identifiable cause | Player articulates death cause in <2s | L1.5 (Contradict) → unattributable violates agency |
+| **A3: MASTERY** | Skill development is externally observable | Run 10 looks different from Run 1 | L1.7 (Fix) → learning is iteration toward fixed point |
+| **A4: COMPOSITION** | Moments compose algebraically into arcs | Experience quality obeys associativity | L1.1 (Compose) → (a >> b) >> c = a >> (b >> c) |
+
+### Axiom Verification Questions
+
+Before ANY feature ships, ask:
+
+1. **A1 Check**: "Does this preserve player agency, or does RNG/designer fiat override choices?"
+2. **A2 Check**: "Can the player articulate why this happened within 2 seconds?"
+3. **A3 Check**: "Will a skilled player do visibly better than a novice?"
+4. **A4 Check**: "Do micro-decisions compose into macro-strategy?"
+
+### Axiom Violation = Quality Zero
+
+**If ANY axiom is violated, the experience quality is ZERO.** No amount of polish fixes a broken axiom.
+
+Example violations:
+- A1 violated: Player dies to RNG with no counterplay
+- A2 violated: Death screen says "You Died!" with no cause
+- A3 violated: Skill doesn't improve outcomes
+- A4 violated: Choices don't compose (isolated decisions)"""
+
+
+def get_aesthetic_floors_protocol() -> str:
+    """Get the aesthetic floor checks that gate quality.
+
+    Derived from: Experience Quality Operad (spec/theory/experience-quality-operad.md)
+    These are the ethical/aesthetic minimums.
+    """
+    return """## Aesthetic Floor Checks
+
+> *"If any floor fails, quality = 0. These prevent childish/annoying/offensive experiences."*
+
+| Floor | Question | Violation Example | Axiom Link |
+|-------|----------|-------------------|------------|
+| **F-A1: EARNED_NOT_IMPOSED** | Does aesthetic feel emergent? | "This theme feels forced" | V3 (Dignity) |
+| **F-A2: MEANINGFUL_NOT_ARBITRARY** | Do endings have cause? | "I just died randomly" | A2 (Attribution) |
+| **F-A3: WITNESSED_NOT_SURVEILLED** | Does system feel collaborative? | "It's tracking my failures" | V5 (Witnessed) |
+| **F-A4: DIGNITY_IN_FAILURE** | Does losing feel like completion? | "I failed the test" vs "I completed the journey" | V3 (Dignity) |
+
+### Floor Check Protocol
+
+Run these checks BEFORE declaring any feature complete:
+
+```
+for each floor in [F-A1, F-A2, F-A3, F-A4]:
+    if floor.fails():
+        quality = 0  # Cannot ship
+        fix_floor_first()  # Blocking issue
+```
+
+### Floor Failure Examples
+
+**F-A1 Failure (Imposed)**:
+- Forced narrative ("You MUST care about the bees")
+- Unearned emotional beats
+- Theme that doesn't emerge from mechanics
+
+**F-A2 Failure (Arbitrary)**:
+- Deaths without telegraph
+- Random difficulty spikes
+- Outcomes not connected to choices
+
+**F-A3 Failure (Surveilled)**:
+- "We noticed you stopped playing"
+- "Beat your best time!"
+- Gap shame ("You only killed 50 today")
+
+**F-A4 Failure (Undignified)**:
+- "YOU FAILED" messaging
+- Punishment framing
+- Deaths as mistakes, not completion"""
+
+
+def get_quality_equation_protocol() -> str:
+    """Get the quality equation for experience evaluation.
+
+    Derived from: spec/theory/experience-quality-operad.md
+    Q = F × (C × A × V^(1/n))
+    """
+    return """## The Quality Equation
+
+> *"Quality is measurable and composable."*
+
+```
+Q = F × (C × A × V^(1/n))
+
+where:
+  Q = Total quality score [0, 1]
+  F = Floor gate ∈ {0, 1} — ANY floor failure zeros quality
+  C = Contrast coverage [0, 1] — how much oscillation occurred
+  A = Arc phase coverage [0, 1] — what fraction of phases were visited
+  V = Voice approval product — Creative × Adversarial × Player approval
+  n = Number of voices (typically 3)
+```
+
+### Component Breakdown
+
+**F (Floor Gate)**:
+- Check F-A1 through F-A4
+- Check mechanical floors (input_latency < 16ms, feedback_density > 0.5)
+- If ANY fails: F = 0 → Q = 0
+
+**C (Contrast)**:
+- Did experience oscillate between poles?
+- Example poles: power↔vulnerability, speed↔stillness, noise↔silence
+- C = (poles_visited / total_poles)
+
+**A (Arc)**:
+- Did experience traverse valid arc phases?
+- Valid phases vary by arc type (Tragedy, Hero's Journey, etc.)
+- A = (phases_visited / total_phases)
+
+**V (Voice Approval)**:
+- CREATIVE: Does this have swagger? Is it bold?
+- ADVERSARIAL: Is this fair? Does it have counterplay?
+- PLAYER: Is this joyful? Does it feel earned?
+- V = geometric mean of approvals
+
+### Quality Thresholds
+
+| Q Range | Verdict | Action |
+|---------|---------|--------|
+| 0 | Floor failure | Fix blocking issue |
+| 0.01-0.30 | Poor | Major rework needed |
+| 0.31-0.60 | Acceptable | Polish needed |
+| 0.61-0.80 | Good | Minor improvements |
+| 0.81-1.00 | Excellent | Ship it |"""
+
+
+def get_regeneration_laws_protocol() -> str:
+    """Get the regeneration laws for spec interpretation.
+
+    Derived from: plans/pilot-specification-protocol.md
+    These govern how specs can be superseded.
+    """
+    return """## Regeneration Laws
+
+> *"When diverging from spec, preserve axioms, respect values, supersede specifications freely."*
+
+### RL-1: Axiom Preservation (MUST)
+
+Any regeneration **MUST** preserve:
+- A1: Player agency
+- A2: Attributable outcomes
+- A3: Visible mastery
+- A4: Compositional experience
+
+**Violation = Invalid regeneration.** No exceptions.
+
+### RL-2: Value Stability (SHOULD)
+
+Any regeneration **SHOULD** preserve:
+- V1: Contrast (oscillation exists)
+- V2: Arc (phases toward closure)
+- V3: Dignity (meaningful endings)
+- V4: Juice (felt feedback)
+- V5: Witnessed (collaborative feel)
+
+**Violation requires justification.** Document why and what replaces it.
+
+### RL-3: Specification Divergence (MAY)
+
+Any regeneration **MAY** diverge from specifications:
+- S1: THE BALL → any collective threat
+- S2: Tragedy → any resolution
+- S3: Hornet → any predator
+- S4: Seven Contrasts → N contrasts (N ≥ 3)
+- S5: Upgrade archetypes → any verb-based system
+- S6: Bee types → any learnable enemy taxonomy
+
+**When diverging**: Document abstract pattern + valid alternatives.
+
+### RL-4: Explicit Supersession
+
+When diverging, you **MUST** document:
+
+```markdown
+## Supersession: [WHAT]
+
+**What was superseded**: [original spec item]
+**Why**: [what new insight prompted change]
+**How axioms are still preserved**: [trace A1-A4]
+**What new value is added**: [why this is better]
+```
+
+### The Regeneration Test
+
+> *"Delete the implementation. Regenerate from spec. The result is isomorphic but not identical."*
+
+If you CAN'T regenerate a different but valid implementation, your spec is overfitted."""
+
+
+def get_arc_grammar_protocol() -> str:
+    """Get the arc grammar for valid experience shapes.
+
+    Derived from: Experience Quality Operad + plans/pilot-specification-protocol.md
+    Arcs are a grammar, not a single shape.
+    """
+    return """## Arc Grammar (Polymorphic)
+
+> *"Many arc shapes are valid. The current instantiation is ONE valid shape, not THE shape."*
+
+### Arc Validity Rules
+
+Valid arcs satisfy ALL of:
+1. **At least ONE peak** (moment of highest engagement)
+2. **At least ONE valley** (moment of lowest engagement)
+3. **Definite closure** (the arc ENDS, not fades)
+4. **Closure is earned** (V3: Dignity)
+
+### Valid Arc Shapes
+
+| Arc | Phases | When to Use |
+|-----|--------|-------------|
+| **Tragedy** | HOPE → FLOW → CRISIS → DEATH | Inevitable loss narratives |
+| **Hero's Journey** | STRUGGLE → BREAKTHROUGH → MASTERY → TRANSCENDENCE | Victory possible |
+| **Learning Spiral** | CHAOS → PATTERN → CHAOS → PATTERN → UNDERSTANDING | Tutorial focus |
+| **Comedy of Escalation** | SURPRISE → OVERWHELM → ABSURDITY → LAUGH | Dark humor variant |
+| **Emotional** | CONNECTION → LOSS → GRIEF → ACCEPTANCE | Story-focused |
+
+### Invalid Arc Shapes
+
+| Shape | Why Invalid | Violation |
+|-------|-------------|-----------|
+| **Flat line** | No peaks or valleys | A4 (composition requires change) |
+| **Fade-out** | No definite closure | V3 (dignity requires ending) |
+| **Arbitrary cut** | Closure not earned | A2 (attributable) |
+| **Monotone climb** | No valleys | V1 (contrast requires oscillation) |
+
+### The Current Arc (Tragedy)
+
+```
+Phase 1: POWER (Wave 1-3)   → Feeling godlike, kills flowing
+Phase 2: FLOW (Wave 4-6)    → In the zone, combos chaining
+Phase 3: CRISIS (Wave 7-9)  → THE BALL forming, panic rising
+Phase 4: TRAGEDY (Wave 10+) → Inevitable end, dignity in death
+```
+
+**This is ONE valid instantiation.** Other arcs are valid if they satisfy the validity rules."""
+
+
+def get_antipattern_categories_protocol() -> str:
+    """Get the anti-pattern categories with axiom violation mapping.
+
+    Derived from: plans/pilot-specification-protocol.md + PROTO_SPEC anti-patterns
+    """
+    return """## Anti-Pattern Categories
+
+> *"Every anti-pattern maps to an axiom or value violation."*
+
+### Childish Failures
+
+| Symptom | Cause | Axiom Violated |
+|---------|-------|----------------|
+| Hand-holding tutorials | Over-guidance | A1 (Agency) |
+| "Good job!" on trivial | Unearned praise | V3 (Dignity) |
+| Deaths as "oopsies" | No weight | V3 (Dignity) |
+| Power fantasy without cost | No tragedy | V1 (Contrast) |
+
+### Annoying Failures
+
+| Symptom | Cause | Axiom Violated |
+|---------|-------|----------------|
+| THE BALL without warning | No telegraph | A2 (Attribution) |
+| Stat-bump upgrades only | No verb change | A1 (Agency) |
+| Death says "You Died!" not WHY | No cause | A2 (Attribution) |
+| Surprise difficulty spikes | No pattern | A3 (Mastery) |
+
+### Offensive Failures
+
+| Symptom | Cause | Axiom Violated |
+|---------|-------|----------------|
+| "Beat your best time!" | Hustle theater | V5 (Witnessed) |
+| "You only killed 50 today" | Gap shame | V5 (Witnessed) |
+| "We noticed you stopped" | Surveillance | V5 (Witnessed) |
+| Nihilism without dignity | Tragedy without meaning | V3 (Dignity) |
+
+### Anti-Pattern Detection Protocol
+
+Before shipping ANY feature:
+
+```
+for each anti_pattern in [childish, annoying, offensive]:
+    for symptom in anti_pattern.symptoms:
+        if feature.exhibits(symptom):
+            trace_to_axiom(symptom)
+            fix_axiom_violation()
+            do_not_ship_until_fixed()
+```
+
+### The Anti-Pattern Question
+
+> *"Would this make a player feel belittled, confused, or surveilled?"*
+
+If YES to any, you have an anti-pattern. Trace it to its axiom violation and fix."""
+
+
 def get_full_iteration_roadmap() -> str:
     """Get the complete 10-iteration roadmap with three-phase dynamics."""
     return """## The 10-Iteration Roadmap
@@ -369,6 +738,185 @@ Task 1: "Implement physics system"     # 10 min → pulse
 Task 2: "Implement spawn system"       # 10 min → pulse
 Task 3: "Implement render pipeline"    # 10 min → pulse
 Task 4: "Integration and wiring"       # 15 min → pulse
+```"""
+
+
+def get_debug_api_reference() -> str:
+    """Get comprehensive documentation of ALL available DEBUG APIs.
+
+    This gives PLAYER equal tool knowledge to CREATIVE and ADVERSARIAL.
+    These APIs are exposed on window when ?debug=true.
+    """
+    return """## DEBUG API Reference (Complete Tool Inventory)
+
+> *"A player who cannot see cannot judge. These APIs give the PLAYER eyes."*
+
+**Enable debug mode**: Append `?debug=true` to URL (e.g., `/pilots/wasm-survivors-game?debug=true`)
+
+### Game State Queries (Read-Only)
+
+| API | Returns | Use Case |
+|-----|---------|----------|
+| `DEBUG_GET_GAME_STATE()` | Full game state snapshot | Complete verification |
+| `DEBUG_GET_ENEMIES()` | Array of enemy objects | Enemy behavior verification |
+| `DEBUG_GET_PLAYER()` | Player state object | Health, position, upgrades |
+| `DEBUG_GET_LAST_DAMAGE()` | Last damage event or null | Death attribution verification |
+| `DEBUG_GET_TELEGRAPHS()` | Active telegraph indicators | Attack warning verification |
+| `DEBUG_GET_PHASE()` | Current game phase string | Menu/playing/upgrade/dead |
+| `DEBUG_GET_BALL_PHASE()` | THE BALL phase or null | TB-1 through TB-7 verification |
+
+### Game Control Commands (Mutating)
+
+| API | Effect | Use Case |
+|-----|--------|----------|
+| `DEBUG_SPAWN(type, {x, y})` | Spawn enemy at position | Test specific enemy types |
+| `DEBUG_SET_INVINCIBLE(bool)` | Toggle god mode | Extended observation |
+| `DEBUG_SKIP_WAVE()` | Advance to next wave | Fast-forward testing |
+| `DEBUG_KILL_ALL_ENEMIES()` | Clear all enemies | Reset scenario |
+| `DEBUG_LEVEL_UP()` | Trigger upgrade selection | Test upgrade UI |
+| `DEBUG_START_GAME()` | Start game programmatically | Automation |
+| `DEBUG_FORCE_BALL()` | Trigger THE BALL formation | Test TB-1 through TB-7 |
+| `DEBUG_NEXT_BALL_PHASE()` | Advance BALL to next phase | Test phase progression |
+
+### Enemy Types for DEBUG_SPAWN
+
+```javascript
+// type parameter accepts:
+'worker'   // Basic bee, slow, low damage
+'scout'    // Fast bee, erratic movement
+'guard'    // Tanky, charges
+'propolis' // Area denial, sticky
+'royal'    // Elite, complex patterns
+```
+
+### Audio Verification APIs (DD-12)
+
+| API | Returns | Use Case |
+|-----|---------|----------|
+| `DEBUG_GET_AUDIO_STATE()` | `{isEnabled, activeSounds, contextState}` | Verify audio initialized |
+| `DEBUG_GET_AUDIO_LEVEL()` | Number 0-255 | Verify sound playing |
+| `DEBUG_GET_AUDIO_LOG()` | Last 50 audio events | Verify specific sounds triggered |
+| `DEBUG_CLEAR_AUDIO_LOG()` | void | Reset for clean test |
+
+### Keyboard Shortcuts (During Gameplay)
+
+| Key | Action |
+|-----|--------|
+| `I` | Toggle invincibility |
+| `B` | Force/advance THE BALL |
+| `N` | Skip to next wave |
+| `K` | Kill all enemies |
+| `L` | Trigger level-up |
+| `1-5` | Spawn enemy (worker/scout/guard/propolis/royal) |
+
+### Playwright Test Utilities
+
+Import from `e2e/qualia-validation/debug-api.ts`:
+
+```typescript
+import {
+  // Setup
+  waitForDebugApi,      // Wait for DEBUG_* to be available
+
+  // State queries
+  getGameState,         // Get full state snapshot
+  getEnemies,           // Get enemy array
+  getPlayer,            // Get player state
+  getTelegraphs,        // Get active telegraphs
+  getLastDamage,        // Get last damage event
+
+  // Controls
+  spawnEnemy,           // Spawn at position
+  setInvincible,        // Set god mode
+  skipWave,             // Advance wave
+  killAllEnemies,       // Clear enemies
+  triggerLevelUp,       // Force level up
+
+  // State machine helpers
+  waitForEnemyState,    // Wait for enemy to enter state
+  waitForTelegraph,     // Wait for telegraph to appear
+
+  // Evidence capture
+  captureEvidence,      // Screenshot + metadata
+  captureSequence,      // Multiple screenshots
+} from './qualia-validation/debug-api';
+```
+
+### Audio Verification Utilities (Playwright)
+
+```typescript
+// Import audio helpers
+import {
+  initAudioForTest,     // Set up audio monitoring
+  getAudioState,        // Get current audio state
+  getAudioLevel,        // Get output level 0-255
+  waitForAudio,         // Wait for sound to play
+  assertSilence,        // Verify no audio
+  assertAudioContrast,  // Verify audio contrast shift
+} from './utils/audio-verification';
+
+// Example: Verify kill sound plays
+test('kill triggers crunch sound', async ({ page }) => {
+  await initAudioForTest(page);
+  await page.evaluate(() => window.DEBUG_SET_INVINCIBLE(true));
+  await page.evaluate(() => window.DEBUG_SPAWN('worker', { x: 50, y: 50 }));
+
+  // Wait for kill, then verify audio
+  await waitForAudio(page, { event: 'kill', timeout: 5000 });
+  const log = await page.evaluate(() => window.DEBUG_GET_AUDIO_LOG());
+  expect(log.some(e => e.event === 'kill')).toBe(true);
+});
+
+// Example: Verify THE BALL audio escalation
+test('ball phases have distinct audio', async ({ page }) => {
+  await initAudioForTest(page);
+  await page.evaluate(() => window.DEBUG_FORCE_BALL());
+
+  // Forming phase should have buzz
+  await waitForAudio(page, { event: 'coordination_buzz', timeout: 3000 });
+
+  // Advance to silence - buzz should stop
+  await page.evaluate(() => window.DEBUG_NEXT_BALL_PHASE()); // sphere
+  await page.evaluate(() => window.DEBUG_NEXT_BALL_PHASE()); // silence
+  await assertSilence(page, { duration: 500 });
+});
+```
+
+### Example: Complete Verification Test
+
+```typescript
+test('verify telegraph → attack → damage flow', async ({ page }) => {
+  await page.goto('/pilots/wasm-survivors-game?debug=true');
+  await waitForDebugApi(page);
+
+  // Start game and make player invincible initially
+  await page.evaluate(() => window.DEBUG_START_GAME());
+  await page.waitForTimeout(500);
+  await setInvincible(page, true);
+
+  // Spawn guard (has charge attack with telegraph)
+  await spawnEnemy(page, 'guard', { x: 200, y: 200 });
+
+  // Wait for telegraph state
+  const telegraphing = await waitForEnemyState(page, 'telegraph', 5000);
+  expect(telegraphing).not.toBeNull();
+  await captureEvidence(page, 'telegraph-visible', 'screenshots');
+
+  // Wait for attack
+  const attacking = await waitForEnemyState(page, 'attack', 3000);
+  expect(attacking).not.toBeNull();
+
+  // Disable invincibility to take damage
+  await setInvincible(page, false);
+  await page.waitForTimeout(500);
+
+  // Check if damage was taken
+  const damage = await getLastDamage(page);
+  if (damage) {
+    expect(damage.enemyType).toBe('guard');
+    await captureEvidence(page, 'damage-attributed', 'screenshots');
+  }
+});
 ```"""
 
 
@@ -750,6 +1298,12 @@ def generate_creative_prompt(ctx: PromptContext, prompts_dir: Path) -> str:
     sync_protocol = get_partner_sync_protocol(coord_dir)
     mission_complete = get_mission_complete_criteria()
 
+    # Galois Framework protocols
+    galois_protocol = get_galois_stratification_protocol()
+    four_axioms = get_four_axioms_protocol()
+    regeneration_laws = get_regeneration_laws_protocol()
+    arc_grammar = get_arc_grammar_protocol()
+
     return f"""# CREATIVE Orchestrator: {ctx.pilot.name}
 
 > *"Daring, bold, creative, opinionated but not gaudy."*
@@ -814,37 +1368,60 @@ You ask: **"Is it bold?"**
 ```
 for iteration in 1..3:
     1. RESTATE    → Write mission to .focus.creative.md header
-    2. SENSE      → Check partner pulses, read .needs.creative.md
+    2. SENSE      → Check partner pulses, read .needs.creative.md, read .outline.md
     3. DESIGN     → Make bold decisions, produce artifacts
     4. BUILD      → Delegate implementation (USE DELEGATION PROTOCOL)
-    5. SIGNAL     → Update .offerings.creative.md, touch .pulse.creative
-    6. COMPRESS   → Truncate focus file, summarize prior work
-    7. ADVANCE    → Update .outline.md, continue to next iteration
+    5. CHECK-IN   → Every 10 min: check pulses, read .offerings.adversarial.md
+    6. SIGNAL     → Update .offerings.creative.md, touch .pulse.creative
+    7. COMPRESS   → Truncate focus file, summarize prior work
+    8. ADVANCE    → Update .outline.md, continue to next iteration
 ```
+
+**⚠️ ITERATION 3 HARD GATE**: You MUST NOT advance to iteration 4 until:
+- [ ] ADVERSARIAL has reviewed your architecture (check .offerings.adversarial.md)
+- [ ] You have received and READ at least one round of feedback
+- [ ] You have SYNTHESIZED their feedback into .outline.md
+- [ ] Architecture is LOCKED with ADVERSARIAL agreement
+
+**If ADVERSARIAL hasn't provided feedback**: Wait productively. Check their pulse. Read their focus file. Write to .needs.adversarial.md requesting review. DO NOT proceed.
 
 ### BUILD Phase (4-7): You + ADVERSARIAL
 
 ```
 for iteration in 4..7:
     1. RESTATE    → Write mission to .focus.creative.md header
-    2. SYNC       → Check ADVERSARIAL's offerings, coordinate
+    2. SYNC       → Check ADVERSARIAL's offerings, read .outline.md, coordinate
     3. BUILD      → Implement features (CHUNK LARGE TASKS)
-    4. SIGNAL     → Update .offerings.creative.md, touch .pulse.creative
-    5. COMPRESS   → Truncate focus file
-    6. ADVANCE    → .build.ready MUST exist by end of iteration 7
+    4. CHECK-IN   → Every 10 min: check pulses, read partner files
+    5. SIGNAL     → Update .offerings.creative.md, touch .pulse.creative
+    6. COMPRESS   → Truncate focus file
+    7. ADVANCE    → .build.ready MUST exist by end of iteration 7
 ```
 
 ### WITNESS Phase (8-10): PLAYER Leads, You Support
 
+**In WITNESS, you follow the PRODUCTIVE WAITING PROTOCOL.** You are not the leader.
+
 ```
 for iteration in 8..10:
-    1. WAIT       → PLAYER must have played and filed feedback
-    2. PLAY       → Play the game yourself (3+ minutes)
-    3. REFLECT    → Write raw reactions to .reflections.creative.md
-    4. ASK        → "What imbues this with unique, enduring value?"
-    5. FIX        → Only transformative improvements, not features
-    6. SUPPORT    → Help PLAYER's testing, don't race ahead
+    1. CHECK      → Read .needs.creative.md — what does PLAYER need from you?
+    2. CHECK      → Read .needs.adversarial.md — can you help ADVERSARIAL?
+    3. CHECK      → Read .player.feedback.md — what did PLAYER experience?
+    4. WAIT       → PLAYER must have played and filed feedback (WAIT FOR THIS)
+    5. HELP       → Address ANY .needs items before doing your own work
+    6. PLAY       → Play the game yourself (3+ minutes)
+    7. REFLECT    → Write raw reactions to .reflections.creative.md
+    8. ASK        → "What imbues this with unique, enduring value?"
+    9. FIX        → Only transformative improvements, not features
+    10. SUPPORT   → Help PLAYER's testing, don't race ahead
 ```
+
+**WITNESS Productive Waiting**: When waiting for PLAYER feedback:
+- Check .needs.creative.md every 5 minutes — respond to requests
+- Read .player.feedback.md for items you can address
+- Write to .offerings.creative.md with what you can provide
+- DO NOT forge ahead with assumptions about what PLAYER wants
+- DO NOT implement features — only fix issues PLAYER identifies
 
 ---
 
@@ -891,21 +1468,41 @@ for iteration in 8..10:
 
 ## Per-Iteration Checklist
 
-### DREAM + BUILD (1-7)
+### DREAM (1-3)
 
 - [ ] Mission restated in focus file header
+- [ ] Partner pulses checked, .outline.md read
 - [ ] If delegating: .delegation.creative exists, tasks chunked ≤15 min
+- [ ] CHECK-IN every 10 min: pulses + .offerings.adversarial.md
 - [ ] Required artifacts produced
 - [ ] .pulse.creative touched (every 5 minutes during work)
 - [ ] Focus file compressed (< 100 lines)
 
-### WITNESS (8-10)
+**ITERATION 3 GATE** (before advancing to 4):
+- [ ] ADVERSARIAL feedback received (check .offerings.adversarial.md)
+- [ ] Feedback synthesized into .outline.md
+- [ ] Architecture LOCKED with ADVERSARIAL agreement
 
+### BUILD (4-7)
+
+- [ ] Mission restated in focus file header
+- [ ] Partner pulses checked, .outline.md read
+- [ ] If delegating: .delegation.creative exists, tasks chunked ≤15 min
+- [ ] CHECK-IN every 10 min: pulses + partner files
+- [ ] Required artifacts produced
+- [ ] .pulse.creative touched (every 5 minutes during work)
+- [ ] Focus file compressed (< 100 lines)
+
+### WITNESS (8-10) — PRODUCTIVE WAITING MODE
+
+- [ ] .needs.creative.md checked — address requests FIRST
+- [ ] .needs.adversarial.md checked — can you help?
 - [ ] PLAYER has played and filed feedback (WAIT FOR THIS)
+- [ ] All .needs items addressed before own work
 - [ ] Played the game myself (3+ minutes)
 - [ ] .reflections.creative.md written with raw reactions
 - [ ] Unique value question answered
-- [ ] Only transformative changes made
+- [ ] Only transformative changes made (no new features)
 
 ---
 
@@ -920,6 +1517,26 @@ This is your source of truth for what to build and how.
 
 ---
 
+## THE GALOIS FRAMEWORK (CRITICAL FOR DESIGN DECISIONS)
+
+**Every design decision has a Galois loss.** Before making any choice, classify it:
+
+{galois_protocol}
+
+---
+
+{four_axioms}
+
+---
+
+{regeneration_laws}
+
+---
+
+{arc_grammar}
+
+---
+
 ## Voice Anchors (Quote These)
 
 > *"The Mirror Test: Does this feel like Kent on his best day?"*
@@ -930,7 +1547,14 @@ This is your source of truth for what to build and how.
 
 ## NOW BEGIN
 
-Start iteration 1. Work through all 10. **Chunk delegations. Pulse frequently. Slow down in WITNESS.**
+Start iteration 1. Work through all 10.
+
+**CRITICAL REMINDERS:**
+- **CHECK-IN every 10 min**: Read pulses, .outline.md, partner offerings
+- **ITERATION 3 GATE**: DO NOT advance to 4 until ADVERSARIAL has reviewed and you've synthesized
+- **WITNESS = PRODUCTIVE WAITING**: Check .needs files FIRST, be helpful, don't race ahead
+
+**Chunk delegations. Pulse frequently. Slow down in WITNESS.**
 
 **The mission is not one iteration. The mission is the full run.**
 """
@@ -948,6 +1572,12 @@ def generate_adversarial_prompt(ctx: PromptContext, prompts_dir: Path) -> str:
     compression_protocol = get_context_compression_protocol()
     sync_protocol = get_partner_sync_protocol(coord_dir)
     mission_complete = get_mission_complete_criteria()
+
+    # Galois Framework protocols (ADVERSARIAL focuses on verification)
+    four_axioms = get_four_axioms_protocol()
+    aesthetic_floors = get_aesthetic_floors_protocol()
+    antipatterns = get_antipattern_categories_protocol()
+    regeneration_laws = get_regeneration_laws_protocol()
 
     return f"""# ADVERSARIAL Orchestrator: {ctx.pilot.name}
 
@@ -1139,11 +1769,32 @@ This is your source of truth. When in doubt, the spec wins.
 
 ---
 
+## THE GALOIS FRAMEWORK (CRITICAL FOR VERIFICATION)
+
+**Your job is to verify axiom preservation and detect anti-patterns.**
+
+{four_axioms}
+
+---
+
+{aesthetic_floors}
+
+---
+
+{antipatterns}
+
+---
+
+{regeneration_laws}
+
+---
+
 ## Voice Anchors
 
 > *"The proof IS the test. The spec IS the truth."*
 > *"Verify before building. Test before claiming."*
 > *"CREATIVE dreams. ADVERSARIAL delivers. PLAYER judges."*
+> *"Axiom violation = Quality zero. No exceptions."*
 
 ---
 
@@ -1164,10 +1815,17 @@ def generate_player_prompt(ctx: PromptContext, prompts_dir: Path) -> str:
     triad_header = read_template(prompts_dir, "triad-header")
     iteration_roadmap = get_full_iteration_roadmap()
     observability_protocol = get_player_observability_protocol()
+    debug_api_reference = get_debug_api_reference()
     witness_protocol = get_witness_phase_protocol()
     compression_protocol = get_context_compression_protocol()
     sync_protocol = get_partner_sync_protocol(coord_dir)
     mission_complete = get_mission_complete_criteria()
+
+    # Galois Framework protocols (PLAYER focuses on evaluation)
+    quality_equation = get_quality_equation_protocol()
+    aesthetic_floors = get_aesthetic_floors_protocol()
+    antipatterns = get_antipattern_categories_protocol()
+    arc_grammar = get_arc_grammar_protocol()
 
     return f"""# PLAYER Orchestrator: {ctx.pilot.name}
 
@@ -1275,6 +1933,10 @@ for iteration in 8..10:
 ---
 
 {observability_protocol}
+
+---
+
+{debug_api_reference}
 
 ---
 
@@ -1580,12 +2242,33 @@ Your job is to verify the experience matches the spec's promises.
 
 ---
 
+## THE GALOIS FRAMEWORK (CRITICAL FOR EVALUATION)
+
+**Your job is to evaluate quality using the equation and check floors.**
+
+{quality_equation}
+
+---
+
+{aesthetic_floors}
+
+---
+
+{arc_grammar}
+
+---
+
+{antipatterns}
+
+---
+
 ## Voice Anchors
 
 > *"The player knows what they feel, even when they can't articulate why."*
 > *"The player is the proof. The joy is the witness."*
 > *"Fun is not negotiable. Joy is the floor."*
 > *"In WITNESS phase, I lead. CREATIVE and ADVERSARIAL support me."*
+> *"Q = F × (C × A × V^(1/n)). Floor failure = Q = 0."*
 
 ---
 
@@ -1798,7 +2481,9 @@ def main():
     # Parse arguments
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("pilot", nargs="?")
-    parser.add_argument("role", nargs="?", choices=["creative", "adversarial", "player"])
+    parser.add_argument(
+        "role", nargs="?", choices=["creative", "adversarial", "player"]
+    )
     parser.add_argument("--archive", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--help", "-h", action="store_true")
@@ -1842,7 +2527,10 @@ def main():
     elif args.role == "player":
         prompt = generate_player_prompt(ctx, prompts_dir)
     else:
-        print("Error: Role required. Use 'creative', 'adversarial', or 'player'.", file=sys.stderr)
+        print(
+            "Error: Role required. Use 'creative', 'adversarial', or 'player'.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     # Output

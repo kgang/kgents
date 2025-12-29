@@ -452,7 +452,7 @@ def parallel_compose(
 
     return ExperienceQuality(
         contrast=max(q_a.contrast, q_b.contrast),
-        arc_coverage=(q_a.arc_coverage + q_b.arc_coverage) / 2,
+        arc_coverage=q_a.arc_coverage * q_b.arc_coverage,
         voice_verdicts=tuple(
             q_a.voice_verdicts[i] and q_b.voice_verdicts[i]
             for i in range(len(q_a.voice_verdicts))
@@ -460,6 +460,9 @@ def parallel_compose(
         floor_passed=q_a.floor_passed and q_b.floor_passed,
         algebra_name=q_a.algebra_name,
     )
+    # NOTE: Product composition ensures strict associativity
+    # while preserving floor gate semantics (0 × x = 0).
+    # See: brainstorming/empirical-refinement-v2/discoveries/02-associativity-fix.md
 ```
 
 ### 2.3 Nested Composition (A[B])
@@ -539,7 +542,7 @@ EXPERIENCE_QUALITY_OPERAD = Operad(
         Law(
             "assoc_par",
             "(A || B) || C = A || (B || C)",
-            "Parallel composition is associative",
+            "Parallel composition is strictly associative (product semantics for arc)",
         ),
 
         # COMMUTATIVITY

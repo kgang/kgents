@@ -215,13 +215,22 @@ where:
 **Evidence Tier Mapping**:
 ```python
 def classify_tier_by_loss(loss: float) -> EvidenceTier:
-    if loss < 0.1:
-        return EvidenceTier.CATEGORICAL    # Logical necessity
-    elif loss < 0.3:
-        return EvidenceTier.EMPIRICAL      # Data-driven
-    elif loss < 0.5:
+    """
+    Kent-calibrated thresholds (2025-12-28).
+
+    Kent sees more as CATEGORICAL than structural analysis predicts
+    because he can identify derivation paths in prose.
+
+    Evidence: brainstorming/empirical-refinement-v2/discoveries/03-mirror-calibration.md
+    Correlation: ρ = 0.8346
+    """
+    if loss < 0.45:
+        return EvidenceTier.CATEGORICAL    # Kent sees derivation paths
+    elif loss < 0.38:
+        return EvidenceTier.EMPIRICAL      # Measurable, testable
+    elif loss < 0.65:
         return EvidenceTier.AESTHETIC      # Taste-based
-    elif loss < 0.7:
+    elif loss < 0.70:
         return EvidenceTier.SOMATIC        # Gut feeling
     else:
         return EvidenceTier.CHAOTIC        # Incoherent
@@ -356,6 +365,23 @@ class LayerStratifiedLoss:
             case 7:  # Representation
                 return await self._representation_loss(node)  # Loss = meta-blindness
 ```
+
+### 2.5 Threshold Calibration (Kent-Calibrated)
+
+The tier thresholds were empirically calibrated against Kent's epistemology on 2025-12-28.
+
+| Tier | Theory Threshold | Kent's Actual | Δ |
+|------|-----------------|---------------|---|
+| CATEGORICAL | L < 0.10 | L < 0.45 | +0.35 |
+| EMPIRICAL | L < 0.30 | L < 0.38 | +0.08 |
+| AESTHETIC | L < 0.50 | L < 0.65 | +0.15 |
+| SOMATIC | L < 0.70 | L < 0.70 | 0 |
+
+**Key Insight**: Kent's CATEGORICAL zone is larger than structural analysis predicts because he can see derivation paths in prose that heuristics miss. For example, he rated "Heterarchy" as CATEGORICAL because he sees the theorem: if agents are morphisms, no morphism has intrinsic privilege.
+
+**Correlation**: ρ = 0.8346 (Spearman)
+
+**Evidence**: `brainstorming/empirical-refinement-v2/discoveries/03-mirror-calibration.md`
 
 ---
 

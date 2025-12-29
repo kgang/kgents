@@ -146,6 +146,55 @@ This pilot instantiates the Experience Quality Operad via `DAILY_LAB_QUALITY_ALG
 
 **Domain Spec**: `spec/theory/domains/daily-lab-quality.md`
 
+## Kernel Derivation
+
+> *"Every law traces to the 77-line kernel."*
+
+All 9 laws derive from `spec/kernel.md`:
+
+| Law | Tier | L | Kernel Derivation |
+|-----|------|---|-------------------|
+| **L1 Day Closure** | CATEGORICAL | 0.12 | L1.7 (Fix): Day = fixed point of mark accumulation |
+| **L2 Intent First** | CATEGORICAL | 0.15 | L1.2 (Judge): Actions without intent fail judgment |
+| **L3 Noise Quarantine** | EMPIRICAL | 0.22 | L1.8 (Galois): High-loss marks are unstable |
+| **L4 Compression Honesty** | CATEGORICAL | 0.18 | L1.8 (Galois): Crystal = argmin L(representation) |
+| **L5 Provenance** | CATEGORICAL | 0.08 | L0.2 (Morphism): Output morphism traces to input |
+| **L6 Contract Coherence** | CATEGORICAL | 0.10 | L1.4 (Id): Single source = identity preserved |
+| **L7 Request Model** | EMPIRICAL | 0.25 | L1.1 (Compose): Typed composition requires typed interfaces |
+| **L8 Error Normalization** | EMPIRICAL | 0.28 | L1.6 (Sublate): Errors synthesize to strings |
+| **L9 Trail Continuity** | CATEGORICAL | 0.12 | L1.1 (Compose): Days compose into trails |
+
+### Derivation Proofs
+
+**L1 Day Closure** <- L1.7 (Fix)
+> A day is complete only when a crystal is produced.
+
+The crystal IS the fixed point: iterate mark accumulation until stable (crystal generated). Without closure, the day never reaches fixed point—it's incomplete.
+
+**L5 Provenance** <- L0.2 (Morphism)
+> Every crystal statement must link to at least one mark.
+
+If morphisms are arrows between objects (L0.2), then crystal statements are outputs that must trace to inputs (marks). No orphan claims = no arrows from nowhere.
+
+**L9 Trail Continuity** <- L1.1 (Compose)
+> Past days remain navigable; today is the leading edge.
+
+Days compose via `>>`: Day_1 >> Day_2 >> ... >> Today. Composition is the backbone of trails. Breaking continuity breaks composition.
+
+### Quality Composition
+
+Quality compounds **multiplicatively** (not via averaging) for strict associativity:
+
+```
+Q(mark_1 >> mark_2) = Q(mark_1) * Q(mark_2)
+```
+
+**Laws satisfied**:
+- Strictly associative: `(a * b) * c = a * (b * c)`
+- Floor gate preserved: `0 * x = 0` (any zero-quality mark zeros the result)
+
+**Evidence**: `brainstorming/empirical-refinement-v2/discoveries/02-associativity-fix.md`
+
 ## Canary Success Criteria
 
 - A user can explain their day **using only the crystal and trail**: "I spent the morning on deep work, drifted after lunch, and closed strong. The gap was rest, not distraction."
