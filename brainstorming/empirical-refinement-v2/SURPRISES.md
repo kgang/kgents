@@ -84,6 +84,30 @@ Each surprise follows this structure:
 
 ---
 
+### Surprise 6: Kent's Epistemology is MORE FORMAL 🪞
+
+**Expected**: Kent's felt thresholds would match theory within ±0.1
+**Actual**: Correlation ρ = 0.83 (excellent!), but CATEGORICAL threshold is 0.45 vs theory's 0.10
+**Delta**: Kent's CATEGORICAL zone is 4.5x larger than theory predicted
+**Insight**: Kent sees more things as "provable" than structural analysis suggests. He classified Heterarchy as CATEGORICAL (formally derivable from category theory) when it was estimated as AESTHETIC (taste).
+**Action**: Recalibrate thresholds to match Kent's actual epistemology, OR recognize that formality isn't just structural—it's about seeing derivation paths.
+
+**Why this matters**: The human oracle is MORE precise than expected, not less. Kent can see formal structure where the heuristic sees only prose.
+
+---
+
+### Surprise 7: 70% Exact Match on First Try 🎯
+
+**Expected**: Given the heuristic nature of loss estimation, maybe 50% exact matches
+**Actual**: 14/20 (70%) exact tier matches, only 1 item off by 2+ tiers
+**Delta**: Better calibration than anticipated
+**Insight**: Even a crude loss proxy (structural complexity + formality + reproducibility) captures epistemological tiers surprisingly well.
+**Action**: The loss function IS directionally correct. Refinement needed, not replacement.
+
+**Why this matters**: The theory works. Kent's gut and the math align.
+
+---
+
 ## The Best Kind of Surprise
 
 1. **Theory-breaking**: r = 0.2 when we predicted r > 0.6
@@ -96,8 +120,10 @@ Each surprise follows this structure:
 *"If you're not surprised, you're not learning."*
 
 **Discovery Summary**:
-- 5 genuine surprises captured
-- 1 critical bug found with fix proposed
-- 1 claim fully confirmed
-- 1 claim partially confirmed
+- 7 genuine surprises captured
+- 1 critical bug found with fix proposed (associativity)
+- 1 claim fully confirmed (77-line kernel)
+- 2 claims partially confirmed (Galois r=0.56, Mirror ρ=0.83)
+- 1 claim falsified (associativity)
+- Kent's epistemology is MORE FORMAL than expected
 - The failures taught us more than the successes
