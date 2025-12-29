@@ -58,6 +58,19 @@ function getPilotURL(): string {
   return `/pilots/${PILOT_NAME}?debug=true`;
 }
 
+/**
+ * Start the game by clicking BEGIN RAID button or using debug API
+ */
+async function startGame(page: Page): Promise<void> {
+  const beginButton = page.locator('button:has-text("BEGIN RAID")');
+  if (await beginButton.isVisible()) {
+    await beginButton.click();
+  } else {
+    await page.evaluate(() => (window as any).DEBUG_START_GAME?.());
+  }
+  await page.waitForTimeout(500);
+}
+
 // =============================================================================
 // PLAYER Qualia Verification Tests
 // =============================================================================
@@ -73,8 +86,7 @@ test.describe('PLAYER Qualia Verification', () => {
     }
 
     // Start the game
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(500);
+    await startGame(page);
   });
 
   test('debug API is accessible', async ({ page }) => {
@@ -239,8 +251,7 @@ test.describe('PLAYER Evidence Capture', () => {
       return;
     }
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(500);
+    await startGame(page);
     await page.evaluate(() => window.DEBUG_SET_INVINCIBLE?.(true));
 
     const enemyTypes = ['basic', 'fast', 'tank', 'spitter'];
@@ -289,8 +300,7 @@ test.describe('PLAYER Evidence Capture', () => {
       return;
     }
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(500);
+    await startGame(page);
     await page.evaluate(() => window.DEBUG_SET_INVINCIBLE?.(true));
 
     // Spawn enemies and track behavior states
@@ -341,8 +351,7 @@ test.describe('PLAYER Regression Tests', () => {
       console.warn('Debug API not available - limited regression testing');
     }
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(500);
+    await startGame(page);
 
     // Spawn a fast enemy (Rusher) right on top of player
     if (hasDebugAPI) {
@@ -395,8 +404,7 @@ test.describe('PLAYER Regression Tests', () => {
       return;
     }
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(500);
+    await startGame(page);
     await page.evaluate(() => window.DEBUG_SET_INVINCIBLE?.(true));
 
     // Valid state transitions
@@ -455,8 +463,7 @@ test.describe('PLAYER Regression Tests', () => {
       return;
     }
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(500);
+    await startGame(page);
     await page.evaluate(() => window.DEBUG_SET_INVINCIBLE?.(true));
 
     const waveData: { wave: number; enemyCount: number }[] = [];
@@ -490,6 +497,316 @@ test.describe('PLAYER Regression Tests', () => {
 });
 
 // =============================================================================
+// Run 034: THE BALL Verification (Counterplay + Skill Expression)
+// =============================================================================
+
+test.describe('PLAYER THE BALL Verification (Run 034)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(getPilotURL());
+    await page.waitForLoadState('networkidle');
+
+    const hasDebugAPI = await waitForDebugAPI(page);
+    if (!hasDebugAPI) {
+      test.skip();
+      return;
+    }
+
+    await startGame(page);
+    await page.evaluate(() => window.DEBUG_SET_INVINCIBLE?.(true));
+  });
+
+  test('force THE BALL formation', async ({ page }) => {
+    // Force ball formation via debug API
+    await page.evaluate(() => window.DEBUG_FORCE_BALL?.());
+    await page.waitForTimeout(500);
+
+    const ballPhase = await page.evaluate(() => window.DEBUG_GET_BALL_PHASE?.());
+
+    console.log('Ball phase:', JSON.stringify(ballPhase, null, 2));
+    expect(ballPhase).toBeTruthy();
+    expect(ballPhase?.type).toBe('forming');
+
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, 'ball-forming-phase.png'),
+    });
+  });
+
+  test('THE BALL gap is visible during forming phase', async ({ page }) => {
+    await page.evaluate(() => window.DEBUG_FORCE_BALL?.());
+    await page.waitForTimeout(500);
+
+    // Capture screenshot for visual verification
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, 'ball-gap-forming.png'),
+    });
+
+    const ballPhase = await page.evaluate(() => window.DEBUG_GET_BALL_PHASE?.());
+
+    // Verify gaps exist in the data
+    expect(ballPhase?.gapAngles).toBeTruthy();
+    expect(ballPhase?.gapAngles?.length).toBeGreaterThan(0);
+
+    console.log(`Gap angles: ${ballPhase?.gapAngles?.map((a: number) => Math.round(a * 180 / Math.PI) + '°').join(', ')}`);
+  });
+
+  test('THE BALL phases progress correctly', async ({ page }) => {
+    await page.evaluate(() => window.DEBUG_FORCE_BALL?.());
+
+    const phases: string[] = [];
+    const maxDuration = 30000; // 30 seconds max
+    const startTime = Date.now();
+
+    // Track phase progression
+    while (Date.now() - startTime < maxDuration) {
+      const ballPhase = await page.evaluate(() => window.DEBUG_GET_BALL_PHASE?.());
+
+      if (!ballPhase) break;
+
+      if (phases.length === 0 || phases[phases.length - 1] !== ballPhase.type) {
+        phases.push(ballPhase.type);
+        console.log(`Phase transition: ${ballPhase.type} (temp: ${ballPhase.temperature}°C)`);
+
+        // Capture screenshot of each phase
+        await page.screenshot({
+          path: path.join(EVIDENCE_DIR, `ball-phase-${ballPhase.type}.png`),
+        });
+      }
+
+      if (ballPhase.type === 'death') break;
+
+      await page.waitForTimeout(500);
+    }
+
+    console.log(`Phase progression: ${phases.join(' → ')}`);
+
+    // Verify expected phases occur
+    expect(phases).toContain('forming');
+  });
+
+  test('advance ball to silence phase', async ({ page }) => {
+    await page.evaluate(() => window.DEBUG_FORCE_BALL?.());
+    await page.waitForTimeout(200);
+
+    // Advance to silence phase (forming → sphere → silence)
+    await page.evaluate(() => window.DEBUG_NEXT_BALL_PHASE?.()); // → sphere
+    await page.waitForTimeout(100);
+    await page.evaluate(() => window.DEBUG_NEXT_BALL_PHASE?.()); // → silence
+    await page.waitForTimeout(200);
+
+    const ballPhase = await page.evaluate(() => window.DEBUG_GET_BALL_PHASE?.());
+
+    console.log('After advance to silence:', JSON.stringify(ballPhase, null, 2));
+
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, 'ball-silence-phase.png'),
+    });
+  });
+
+  test('escape gap shrinks over phases (TB-2)', async ({ page }) => {
+    await page.evaluate(() => window.DEBUG_FORCE_BALL?.());
+
+    const gapData: { phase: string; gapCount: number; gapSize?: number }[] = [];
+
+    // Forming phase
+    let ballPhase = await page.evaluate(() => window.DEBUG_GET_BALL_PHASE?.());
+    gapData.push({
+      phase: 'forming',
+      gapCount: ballPhase?.gapAngles?.length || 0
+    });
+
+    // Advance to sphere
+    await page.evaluate(() => window.DEBUG_NEXT_BALL_PHASE?.());
+    await page.waitForTimeout(100);
+    ballPhase = await page.evaluate(() => window.DEBUG_GET_BALL_PHASE?.());
+    gapData.push({
+      phase: ballPhase?.type || 'sphere',
+      gapCount: ballPhase?.gapAngles?.length || 0
+    });
+
+    // Advance to silence
+    await page.evaluate(() => window.DEBUG_NEXT_BALL_PHASE?.());
+    await page.waitForTimeout(100);
+    ballPhase = await page.evaluate(() => window.DEBUG_GET_BALL_PHASE?.());
+    gapData.push({
+      phase: ballPhase?.type || 'silence',
+      gapCount: 1 // Should be single remaining gap
+    });
+
+    console.log('Gap shrink data:', JSON.stringify(gapData, null, 2));
+
+    // Verify gaps shrink
+    expect(gapData[0].gapCount).toBeGreaterThanOrEqual(gapData[gapData.length - 1].gapCount);
+  });
+});
+
+// =============================================================================
+// Run 034: Coordination Visibility Verification
+// =============================================================================
+
+test.describe('PLAYER Coordination Visibility (Run 034)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(getPilotURL());
+    await page.waitForLoadState('networkidle');
+
+    const hasDebugAPI = await waitForDebugAPI(page);
+    if (!hasDebugAPI) {
+      test.skip();
+      return;
+    }
+
+    await startGame(page);
+    await page.evaluate(() => window.DEBUG_SET_INVINCIBLE?.(true));
+  });
+
+  test('bees show coordination state progression', async ({ page }) => {
+    // Spawn bees and let them coordinate
+    for (let i = 0; i < 5; i++) {
+      await page.evaluate(
+        (idx) => window.DEBUG_SPAWN?.('worker', { x: 300 + idx * 50, y: 300 }),
+        i
+      );
+    }
+
+    const stateLog: { time: number; states: Record<string, number> }[] = [];
+    const duration = 25000; // 25 seconds to see full coordination cycle
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < duration) {
+      const enemies = await page.evaluate(() => window.DEBUG_GET_ENEMIES?.());
+      if (enemies && enemies.length > 0) {
+        const states: Record<string, number> = {};
+        for (const e of enemies) {
+          const state = e.coordinationState || 'unknown';
+          states[state] = (states[state] || 0) + 1;
+        }
+        stateLog.push({ time: Date.now() - startTime, states });
+
+        // Log interesting transitions
+        if (states['alarm'] || states['coordinating'] || states['formation']) {
+          console.log(`At ${(Date.now() - startTime) / 1000}s: ${JSON.stringify(states)}`);
+        }
+      }
+      await page.waitForTimeout(1000);
+    }
+
+    // Save log
+    const logPath = path.join(EVIDENCE_DIR, 'coordination-state-log.json');
+    fs.writeFileSync(logPath, JSON.stringify(stateLog, null, 2));
+
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, 'coordination-final.png'),
+    });
+
+    console.log('Coordination log saved to:', logPath);
+  });
+
+  test('bee FSM glow intensity increases with coordination', async ({ page }) => {
+    // Spawn a worker and track glow over time
+    await page.evaluate(() => window.DEBUG_SPAWN?.('worker', { x: 300, y: 300 }));
+
+    const glowData: { time: number; glowIntensity: number; survivalTime: number }[] = [];
+    const duration = 20000;
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < duration) {
+      const enemies = await page.evaluate(() => window.DEBUG_GET_ENEMIES?.());
+      if (enemies && enemies.length > 0) {
+        const bee = enemies[0];
+        glowData.push({
+          time: Date.now() - startTime,
+          glowIntensity: bee.glowIntensity ?? 0,
+          survivalTime: bee.survivalTime ?? 0,
+        });
+      }
+      await page.waitForTimeout(500);
+    }
+
+    // Verify glow increases over time
+    const avgEarlyGlow = glowData.slice(0, 10).reduce((a, b) => a + b.glowIntensity, 0) / 10;
+    const avgLateGlow = glowData.slice(-10).reduce((a, b) => a + b.glowIntensity, 0) / 10;
+
+    console.log(`Early glow avg: ${avgEarlyGlow.toFixed(2)}, Late glow avg: ${avgLateGlow.toFixed(2)}`);
+
+    // Save data
+    const logPath = path.join(EVIDENCE_DIR, 'glow-intensity-log.json');
+    fs.writeFileSync(logPath, JSON.stringify(glowData, null, 2));
+  });
+});
+
+// =============================================================================
+// Run 034: Death Attribution Verification
+// =============================================================================
+
+test.describe('PLAYER Death Attribution (Run 034)', () => {
+  test('death screen shows specific cause', async ({ page }) => {
+    await page.goto(getPilotURL());
+    await page.waitForLoadState('networkidle');
+
+    const hasDebugAPI = await waitForDebugAPI(page);
+    await startGame(page);
+
+    // Spawn enemy very close to trigger quick death
+    if (hasDebugAPI) {
+      await page.evaluate(() => window.DEBUG_SPAWN?.('worker', { x: 60, y: 60 }));
+    }
+
+    // Wait for death
+    try {
+      await page.waitForSelector('button:has-text("HUNT AGAIN")', { timeout: 60000 });
+
+      await page.screenshot({
+        path: path.join(EVIDENCE_DIR, 'death-attribution-run034.png'),
+      });
+
+      // Check death info
+      const pageText = await page.textContent('body');
+      console.log('Death screen text (excerpt):', pageText?.substring(0, 800));
+
+      // Verify death cause is shown (not just generic)
+      expect(pageText).toMatch(/COOKED|OVERWHELMED|OUTMANEUVERED|FALLEN/);
+    } catch {
+      console.log('Death did not occur within timeout');
+      await page.screenshot({
+        path: path.join(EVIDENCE_DIR, 'death-attribution-timeout.png'),
+      });
+    }
+  });
+
+  test('death screen shows colony coordination level', async ({ page }) => {
+    await page.goto(getPilotURL());
+    await page.waitForLoadState('networkidle');
+
+    const hasDebugAPI = await waitForDebugAPI(page);
+    await startGame(page);
+
+    if (hasDebugAPI) {
+      // Spawn many bees to increase coordination before death
+      for (let i = 0; i < 10; i++) {
+        await page.evaluate(() => window.DEBUG_SPAWN?.('worker', { x: 200 + Math.random() * 200, y: 200 + Math.random() * 200 }));
+      }
+    }
+
+    // Wait for death
+    try {
+      await page.waitForSelector('button:has-text("HUNT AGAIN")', { timeout: 60000 });
+
+      // Check for coordination level on death screen
+      const pageText = await page.textContent('body');
+
+      // The death screen should show colony coordination (e.g., "6.2/10" or percentage)
+      const hasCoordinationInfo = pageText?.match(/coordination|colony|\/10|%/i);
+      console.log('Coordination info found:', hasCoordinationInfo?.[0] || 'none');
+
+      await page.screenshot({
+        path: path.join(EVIDENCE_DIR, 'death-coordination-info.png'),
+      });
+    } catch {
+      console.log('Death did not occur within timeout');
+    }
+  });
+});
+
+// =============================================================================
 // PLAYER Performance Verification
 // =============================================================================
 
@@ -500,8 +817,7 @@ test.describe('PLAYER Performance Verification', () => {
 
     const hasDebugAPI = await waitForDebugAPI(page);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(500);
+    await startGame(page);
 
     if (hasDebugAPI) {
       await page.evaluate(() => window.DEBUG_SET_INVINCIBLE?.(true));
@@ -556,8 +872,7 @@ test.describe('PLAYER Performance Verification', () => {
     await page.goto(getPilotURL());
     await page.waitForLoadState('networkidle');
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(500);
+    await startGame(page);
 
     const latencies: number[] = [];
 

@@ -86,8 +86,14 @@ test.describe('PLAYER Play Session', () => {
       path: path.join(SCREENSHOT_DIR, `${PILOT_NAME}-start-${Date.now()}.png`),
     });
 
-    // Start the game (most games use Space to start)
-    await page.keyboard.press('Space');
+    // Start the game - click BEGIN RAID button or use debug API
+    const beginButton = page.locator('button:has-text("BEGIN RAID")');
+    if (await beginButton.isVisible()) {
+      await beginButton.click();
+    } else {
+      // Fallback: try debug API if button not visible
+      await page.evaluate(() => (window as any).DEBUG_START_GAME?.());
+    }
     await page.waitForTimeout(500);
 
     // Play the game
@@ -134,7 +140,13 @@ test.describe('PLAYER Play Session', () => {
     // This test specifically captures video for review
     // Run with: npx playwright test --grep "capture gameplay video" --video=on
 
-    await page.keyboard.press('Space');
+    // Start the game - click BEGIN RAID button
+    const beginButton = page.locator('button:has-text("BEGIN RAID")');
+    if (await beginButton.isVisible()) {
+      await beginButton.click();
+    } else {
+      await page.evaluate(() => (window as any).DEBUG_START_GAME?.());
+    }
 
     // Play for configured duration
     await simulateRandomInputs(page, PLAY_DURATION_MS);
@@ -146,7 +158,13 @@ test.describe('PLAYER Play Session', () => {
   test('capture key moments', async ({ page }) => {
     // This test captures screenshots at key moments
 
-    await page.keyboard.press('Space');
+    // Start the game - click BEGIN RAID button
+    const beginButton = page.locator('button:has-text("BEGIN RAID")');
+    if (await beginButton.isVisible()) {
+      await beginButton.click();
+    } else {
+      await page.evaluate(() => (window as any).DEBUG_START_GAME?.());
+    }
     await page.waitForTimeout(1000);
 
     // Capture at regular intervals
@@ -168,8 +186,13 @@ test.describe('PLAYER Metrics', () => {
     await page.goto(`/pilots/${PILOT_NAME}`);
     await page.waitForLoadState('networkidle');
 
-    // Start the game
-    await page.keyboard.press('Space');
+    // Start the game - click BEGIN RAID button
+    const beginButton = page.locator('button:has-text("BEGIN RAID")');
+    if (await beginButton.isVisible()) {
+      await beginButton.click();
+    } else {
+      await page.evaluate(() => (window as any).DEBUG_START_GAME?.());
+    }
     await page.waitForTimeout(500);
 
     // Measure latency for multiple inputs
@@ -209,7 +232,13 @@ test.describe('PLAYER Metrics', () => {
     await page.goto(`/pilots/${PILOT_NAME}`);
     await page.waitForLoadState('networkidle');
 
-    await page.keyboard.press('Space');
+    // Start the game - click BEGIN RAID button
+    const beginButton = page.locator('button:has-text("BEGIN RAID")');
+    if (await beginButton.isVisible()) {
+      await beginButton.click();
+    } else {
+      await page.evaluate(() => (window as any).DEBUG_START_GAME?.());
+    }
     await page.waitForTimeout(500);
 
     // Measure frame rate over 5 seconds

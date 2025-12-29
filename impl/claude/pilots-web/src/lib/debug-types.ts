@@ -49,10 +49,11 @@ export interface DebugDamageEvent {
 
 /**
  * Debug representation of an active telegraph
+ * Attack types are bee-themed (Run 033+)
  */
 export interface DebugTelegraph {
   enemyId: string;
-  type: 'lunge' | 'charge' | 'stomp' | 'projectile' | 'combo';
+  type: 'swarm' | 'sting' | 'block' | 'sticky' | 'combo' | 'elite';
   progress: number; // 0-1
   position: { x: number; y: number };
   radius?: number;
@@ -70,6 +71,65 @@ export interface DebugGameState {
   player: DebugPlayer;
   telegraphs: DebugTelegraph[];
   lastDamage: DebugDamageEvent | null;
+}
+
+// =============================================================================
+// Audio Debug Types (since Playwright can't "hear")
+// =============================================================================
+
+/**
+ * Audio log entry for tracking audio events
+ */
+export interface DebugAudioLogEntry {
+  time: number;
+  event: string;
+  params: Record<string, unknown>;
+}
+
+/**
+ * Audio system state snapshot
+ */
+export interface DebugAudioState {
+  contextState: string;
+  isEnabled: boolean;
+  masterVolume: number;
+  activeSoundCount: number;
+  sampleRate: number | null;
+  analyserConnected: boolean;
+}
+
+// =============================================================================
+// Emotional/Contrast Debug Types (Part VI: Arc Grammar)
+// =============================================================================
+
+/**
+ * Debug representation of arc state
+ */
+export interface DebugArcState {
+  currentPhase: 'POWER' | 'FLOW' | 'CRISIS' | 'TRAGEDY';
+  phasesVisited: string[];
+  phaseStartTime: number;
+  closureType: string | null;
+}
+
+/**
+ * Debug representation of contrast state
+ */
+export interface DebugContrastState {
+  activeDimensions: string[];
+  contrastsVisited: number;
+  contrastHistory: string[];
+  lastContrastTime: number;
+}
+
+/**
+ * Debug representation of the emotional state
+ */
+export interface DebugEmotionalState {
+  arc: DebugArcState;
+  contrast: DebugContrastState;
+  currentVoiceLine: { text: string; type: string } | null;
+  voiceLineHistory: string[];
 }
 
 // =============================================================================
@@ -100,6 +160,42 @@ export interface DebugAPI {
   DEBUG_KILL_ALL_ENEMIES: () => void;
   /** Trigger level up */
   DEBUG_LEVEL_UP: () => void;
+
+  // Audio debug functions (since Playwright can't "hear")
+  /** Get audio system state (context state, isEnabled, masterVolume, activeSounds) */
+  DEBUG_GET_AUDIO_STATE: () => DebugAudioState;
+  /** Get current audio output level (0-255 scale from AnalyserNode) */
+  DEBUG_GET_AUDIO_LEVEL: () => number;
+  /** Get last 50 audio events with timestamps */
+  DEBUG_GET_AUDIO_LOG: () => DebugAudioLogEntry[];
+  /** Clear the audio event log */
+  DEBUG_CLEAR_AUDIO_LOG: () => void;
+
+  // Emotional/Contrast debug functions (Part VI: Arc Grammar)
+  /** Get emotional state (arc phase, contrasts visited, voice lines) */
+  DEBUG_GET_EMOTIONAL_STATE: () => DebugEmotionalState | null;
+
+  // THE BALL debug functions (Run 036: Signature mechanic)
+  /** Get THE BALL formation state */
+  DEBUG_GET_BALL_STATE: () => DebugBallState | null;
+  /** Force THE BALL to start forming (bypasses normal triggers) */
+  DEBUG_FORCE_BALL: () => void;
+}
+
+// =============================================================================
+// THE BALL Debug Types
+// =============================================================================
+
+export interface DebugBallState {
+  phase: 'inactive' | 'forming' | 'silence' | 'constrict' | 'cooking' | 'dissipating';
+  phaseProgress: number;
+  center: { x: number; y: number };
+  currentRadius: number;
+  gapAngle: number;       // degrees
+  gapSize: number;        // degrees
+  temperature: number;    // 0-100
+  beesInFormation: number;
+  escapeCount: number;
 }
 
 // =============================================================================
