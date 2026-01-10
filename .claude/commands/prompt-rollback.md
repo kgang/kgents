@@ -1,3 +1,8 @@
+---
+description: Rollback CLAUDE.md prompt to a previous checkpoint
+argument-hint: <checkpoint_id>
+---
+
 Rollback the prompt to a previous checkpoint.
 
 Usage: /prompt-rollback <checkpoint_id>

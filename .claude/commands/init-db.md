@@ -1,3 +1,7 @@
+---
+description: Create all SQLAlchemy model tables in the database
+---
+
 # /init-db - Create Database Tables
 
 Create all SQLAlchemy model tables in the database.

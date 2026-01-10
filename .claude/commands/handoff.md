@@ -1,3 +1,7 @@
+---
+description: Generate a self-contained prompt for seamless session continuation
+---
+
 # /handoff — Session Transfer Protocol
 
 > *"The next Claude should hit the ground running. No archaeology required."*

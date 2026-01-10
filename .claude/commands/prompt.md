@@ -1,3 +1,8 @@
+---
+description: Show the current compiled CLAUDE.md with optional analysis
+argument-hint: [--show-reasoning] [--show-habits]
+---
+
 Show the current compiled CLAUDE.md with optional analysis.
 
 Usage: /prompt [--show-reasoning] [--show-habits]

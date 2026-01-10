@@ -1,3 +1,8 @@
+---
+description: Harden, robustify, and apply defensive engineering to a target
+argument-hint: [module-or-feature]
+---
+
 Harden, robustify, and shore up the specified target. Apply defensive engineering.
 
 ## Target: $ARGUMENTS

@@ -1,3 +1,7 @@
+---
+description: Crystallize a significant moment (breakthrough, decision, insight) into persistent memory
+---
+
 Crystallize a moment into persistent memory.
 
 ## Purpose

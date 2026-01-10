@@ -1,3 +1,8 @@
+---
+description: Audit and report on technical debt in the codebase
+argument-hint: [target-path]
+---
+
 Audit and report on technical debt in the codebase.
 
 ## Target: $ARGUMENTS

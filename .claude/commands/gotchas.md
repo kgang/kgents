@@ -1,3 +1,8 @@
+---
+description: Surface critical gotchas and warnings for the current task context
+argument-hint: [task]
+---
+
 Surface all critical gotchas for current context using Living Docs.
 
 ## Arguments: $ARGUMENTS

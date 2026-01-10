@@ -1,3 +1,8 @@
+---
+description: Collapse remaining phases to UNDERSTAND/ACT/REFLECT when ceremony becomes burden
+argument-hint: [plan-file]
+---
+
 # /compress - Collapse to 3-Phase
 
 When ceremony becomes burden, compress remaining phases to UNDERSTAND → ACT → REFLECT.

@@ -1,3 +1,7 @@
+---
+description: Ground decisions in axioms, construct witnessed proofs, detect contradictions
+---
+
 Zero Seed Protocol: Ground decisions in axioms, construct witnessed proofs, detect contradictions.
 
 > *"The loss IS the difficulty. The fixed point IS the axiom. The proof IS the decision."*

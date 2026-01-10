@@ -1,3 +1,7 @@
+---
+description: Crystallize what just happened and what's next for rapid re-orientation
+---
+
 # /what — Session Status Crystallization
 
 > *"The proof is not in the prose. The proof is in the clarity."*

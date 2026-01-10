@@ -1,3 +1,8 @@
+---
+description: Apply TextGRAD feedback to improve CLAUDE.md prompt
+argument-hint: "<feedback>"
+---
+
 Apply TextGRAD feedback to improve the prompt.
 
 Usage: /prompt-feedback "<feedback>"

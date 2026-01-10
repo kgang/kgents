@@ -1,3 +1,8 @@
+---
+description: Compare implementation against specification to find spec/impl drift
+argument-hint: [target]
+---
+
 Compare implementation against specification. Find spec/impl drift.
 
 ## Target: $ARGUMENTS

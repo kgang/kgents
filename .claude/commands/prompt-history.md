@@ -1,3 +1,8 @@
+---
+description: Show the evolution history of the CLAUDE.md prompt
+argument-hint: [--limit N]
+---
+
 Show the evolution history of the prompt.
 
 Usage: /prompt-history [--limit N]

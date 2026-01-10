@@ -1,3 +1,8 @@
+---
+description: Trace execution path, data flow, or dependency chain for a target
+argument-hint: [target]
+---
+
 Trace the execution path, data flow, or dependency chain for a target.
 
 ## Target: $ARGUMENTS
