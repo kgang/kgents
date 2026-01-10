@@ -56,6 +56,20 @@ from .crown_jewels import (
     register_crown_jewel_paths,
 )
 
+# Derivation Nodes (self.derivation.*, concept.constitution.*, world.kblock.derivation.*)
+from .derivation import (
+    CONSTITUTION_AFFORDANCES,
+    CONSTITUTIONAL_PRINCIPLES,
+    KBLOCK_DERIVATION_AFFORDANCES,
+    SELF_DERIVATION_AFFORDANCES,
+    ConstitutionNode,
+    KBlockDerivationNode,
+    SelfDerivationNode,
+    get_constitution_node,
+    get_kblock_derivation_node,
+    get_self_derivation_node,
+)
+
 # Design context (concept.design.* - Design Language System)
 from .design import (
     DESIGN_AFFORDANCES,

@@ -235,6 +235,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Analysis Operad operations - law verification, grounding, tensions, regenerability
     # ==========================================================================
     "analyze": "protocols.cli.handlers.analyze:cmd_analyze",
+    # ==========================================================================
+    # DEV: Unified development server (frontend + backend)
+    # Runs uvicorn (port 8000) and Vite (port 3000) with hot reload
+    # ==========================================================================
+    "dev": "protocols.cli.handlers.dev:cmd_dev",
 }
 
 
@@ -936,16 +941,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     #
     # These commands bypass daemon AND run synchronously (no asyncio.run()).
     # =========================================================================
-    TUI_COMMANDS = {"dawn", "coffee"}
+    TUI_COMMANDS = {"dawn", "coffee", "dev"}
     TUI_SUBCOMMANDS = {
         "witness": {"dashboard", "dash"},
     }
 
     is_tui_command = command in TUI_COMMANDS
     is_tui_subcommand = (
-        command in TUI_SUBCOMMANDS
-        and command_args
-        and command_args[0] in TUI_SUBCOMMANDS[command]
+        command in TUI_SUBCOMMANDS and command_args and command_args[0] in TUI_SUBCOMMANDS[command]
     )
 
     if is_tui_command or is_tui_subcommand:
@@ -957,6 +960,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 # This avoids going through the async parent handler
                 if command == "witness" and command_args[0] in {"dashboard", "dash"}:
                     from protocols.cli.handlers.witness import cmd_dashboard
+
                     return cmd_dashboard(command_args[1:])
                 # Add other TUI subcommands here as needed
 
@@ -965,6 +969,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if handler:
                 result = handler(command_args)
                 import inspect
+
                 if inspect.iscoroutine(result):
                     print("Error: TUI commands must use synchronous handlers")
                     result.close()
@@ -1001,9 +1006,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # - KGENTS_NO_DAEMON=1 (explicit bypass)
     # - KGENTS_INSIDE_DAEMON is set (already in daemon)
     skip_daemon = (
-        command in TUI_COMMANDS
-        or allow_no_daemon
-        or os.environ.get("KGENTS_INSIDE_DAEMON")
+        command in TUI_COMMANDS or allow_no_daemon or os.environ.get("KGENTS_INSIDE_DAEMON")
     )
 
     if not skip_daemon:

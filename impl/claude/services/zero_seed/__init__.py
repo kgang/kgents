@@ -114,6 +114,12 @@ from .galois.axiomatics import (
     stratify_by_loss,
 )
 
+# Genesis K-Block Factory: Self-describing seed K-Blocks
+from .genesis_kblocks import (
+    GenesisKBlock,
+    GenesisKBlockFactory,
+)
+
 # Note: ZeroNode is imported from core.py, galois.axiomatics has its own ZeroNode
 # that's used internally for axiom discovery. They serve different purposes:
 # - core.ZeroNode: Runtime knowledge graph node with edges and proofs
@@ -196,4 +202,7 @@ __all__ = [
     # Factories
     "create_axiom_kernel",
     "create_axiom_governance",
+    # === Genesis K-Block Factory ===
+    "GenesisKBlock",
+    "GenesisKBlockFactory",
 ]

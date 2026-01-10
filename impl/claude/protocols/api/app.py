@@ -120,6 +120,7 @@ async def _create_lifespan(
     # Shutdown analysis reactor
     try:
         from services.sovereign.analysis_reactor import reset_analysis_reactor
+
         reset_analysis_reactor()
         logger.info("Analysis reactor shutdown")
     except Exception as e:
@@ -421,6 +422,14 @@ def create_app(
     if pilots_router is not None:
         app.include_router(pilots_router)
         logger.info("Pilots API mounted at /api/pilots")
+
+    # === Derivation API (Consumer-First Constitutional Coherence) ===
+    from .derivation import create_derivation_router
+
+    derivation_router = create_derivation_router()
+    if derivation_router is not None:
+        app.include_router(derivation_router)
+        logger.info("Derivation API mounted at /api/derivation")
 
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
@@ -788,6 +797,15 @@ def create_app(
                     "contradiction": "POST /api/galois/contradiction",
                     "fixed_point": "POST /api/galois/fixed-point",
                     "layer_assign": "POST /api/layer/assign",
+                },
+                "derivation": {
+                    "note": "Consumer-first derivation for Constitutional coherence",
+                    "compute": "POST /api/derivation/compute",
+                    "suggest": "POST /api/derivation/suggest",
+                    "ground": "POST /api/derivation/ground",
+                    "downstream": "GET /api/derivation/downstream/{kblock_id}",
+                    "realize": "POST /api/derivation/realize",
+                    "path": "GET /api/derivation/path/{kblock_id}",
                 },
                 "webhooks": {
                     "stripe": "/webhooks/stripe",
