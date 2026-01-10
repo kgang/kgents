@@ -56,113 +56,112 @@ See: spec/theory/experience-quality-operad.md
 """
 
 # Types
-from .types import (
-    # Enums
-    EmotionalPhase,
-    # Contrast
-    ContrastMeasurement,
-    # Arc
-    ArcMeasurement,
-    # Voice
-    VoiceVerdict,
-    VoiceMeasurement,
-    # Floor
-    FloorCheck,
-    FloorMeasurement,
-    # Quality
-    ExperienceQuality,
-    # Containers
-    Experience,
-    Spec,
-    # Quality Algebra (Domain Parameterization)
-    ContrastDimension,
-    PhaseDefinition,
-    VoiceDefinition,
-    FloorCheckDefinition,
-    QualityAlgebra,
-)
-
-# Measurement
-from .measurement import (
-    # Contrast
-    measure_contrast,
-    variance_normalized,
-    # Arc
-    measure_arc,
-    classify_emotional_phase,
-    # Voice
-    check_voice,
-    check_adversarial,
-    check_creative,
-    check_advocate,
-    # Floor
-    check_floor,
-    get_floor_checks_for_domain,
-    # Unified
-    measure_quality,
-    identify_bottleneck,
-    generate_recommendation,
+# Algebras (registry and default definitions)
+from .algebras import (
+    # Default definitions
+    DEFAULT_ALGEBRA,
+    DEFAULT_ARC_PHASES,
+    DEFAULT_CONTRAST_DIMS,
+    DEFAULT_VOICES,
+    all_algebras,
+    clear_registry,
+    get_algebra,
+    get_algebra_or_raise,
+    list_algebras,
     # Utilities
-    cosine_distance,
-    experience_vector,
-    chain_arc_coverage,
+    measure_with_algebra,
+    # Registry functions
+    register_algebra,
+    register_algebra_overwrite,
+    unregister_algebra,
+    validate_experience_against_algebra,
 )
 
 # Composition
 from .composition import (
-    # Core compositions
-    sequential_compose,
-    parallel_compose,
-    nested_compose,
-    # Multi-way
-    sequential_compose_many,
-    parallel_compose_many,
-    nested_compose_many,
     # Identity and zero
     identity,
-    zero,
+    nested_compose,
+    nested_compose_many,
+    parallel_compose,
+    parallel_compose_many,
+    # Core compositions
+    sequential_compose,
+    # Multi-way
+    sequential_compose_many,
+    verify_associativity_parallel,
     # Law verification
     verify_associativity_sequential,
-    verify_associativity_parallel,
     verify_floor_gate,
+    zero,
+)
+
+# Measurement
+from .measurement import (
+    chain_arc_coverage,
+    check_adversarial,
+    check_advocate,
+    check_creative,
+    # Floor
+    check_floor,
+    # Voice
+    check_voice,
+    classify_emotional_phase,
+    # Utilities
+    cosine_distance,
+    experience_vector,
+    generate_recommendation,
+    get_floor_checks_for_domain,
+    identify_bottleneck,
+    # Arc
+    measure_arc,
+    # Contrast
+    measure_contrast,
+    # Unified
+    measure_quality,
+    variance_normalized,
+)
+from .types import (
+    # Arc
+    ArcMeasurement,
+    # Quality Algebra (Domain Parameterization)
+    ContrastDimension,
+    # Contrast
+    ContrastMeasurement,
+    # Enums
+    EmotionalPhase,
+    # Containers
+    Experience,
+    # Quality
+    ExperienceQuality,
+    # Floor
+    FloorCheck,
+    FloorCheckDefinition,
+    FloorMeasurement,
+    PhaseDefinition,
+    QualityAlgebra,
+    Spec,
+    VoiceDefinition,
+    VoiceMeasurement,
+    # Voice
+    VoiceVerdict,
 )
 
 # Witness
 from .witness import (
-    # Types
-    QualityMarkId,
-    QualityCrystalId,
-    generate_quality_mark_id,
-    generate_quality_crystal_id,
-    # Mark
-    QualityMark,
-    QualityMoment,
     # Crystal
     QualityCrystal,
+    QualityCrystalId,
+    # Mark
+    QualityMark,
+    # Types
+    QualityMarkId,
+    QualityMoment,
+    crystallize_quality,
+    generate_quality_crystal_id,
+    generate_quality_mark_id,
     # Functions
     witness_quality,
-    crystallize_quality,
-)
-
-# Algebras (registry and default definitions)
-from .algebras import (
-    # Registry functions
-    register_algebra,
-    register_algebra_overwrite,
-    get_algebra,
-    get_algebra_or_raise,
-    list_algebras,
-    all_algebras,
-    unregister_algebra,
-    clear_registry,
-    # Utilities
-    measure_with_algebra,
-    validate_experience_against_algebra,
-    # Default definitions
-    DEFAULT_ALGEBRA,
-    DEFAULT_CONTRAST_DIMS,
-    DEFAULT_ARC_PHASES,
-    DEFAULT_VOICES,
 )
 
 __all__ = [

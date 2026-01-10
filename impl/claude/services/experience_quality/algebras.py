@@ -30,10 +30,10 @@ from typing import TYPE_CHECKING
 
 from .types import (
     ContrastDimension,
-    PhaseDefinition,
-    VoiceDefinition,
     FloorCheckDefinition,
+    PhaseDefinition,
     QualityAlgebra,
+    VoiceDefinition,
 )
 
 if TYPE_CHECKING:

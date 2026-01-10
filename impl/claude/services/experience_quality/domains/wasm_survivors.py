@@ -19,14 +19,14 @@ See: spec/theory/domains/wasm-survivors-quality.md
 
 from __future__ import annotations
 
+from ..algebras import register_algebra, register_algebra_overwrite
 from ..types import (
     ContrastDimension,
-    PhaseDefinition,
-    VoiceDefinition,
     FloorCheckDefinition,
+    PhaseDefinition,
     QualityAlgebra,
+    VoiceDefinition,
 )
-from ..algebras import register_algebra, register_algebra_overwrite
 
 # =============================================================================
 # C1-C7: Contrast Dimensions
