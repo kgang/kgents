@@ -5,7 +5,15 @@
  * Aligned to PROTO_SPEC S6 (Bee Taxonomy).
  * Budget: < 1ms per frame
  *
+ * Wave Phases:
+ * - Phase 1 (W1-2): LEARNING - Workers only, gentle introduction
+ * - Phase 2 (W3-4): SCOUTS EMERGE - Scouts appear, first coordinated attacks possible
+ * - Phase 3 (W5-6): ESCALATION - Guards join, scouts become more numerous
+ * - Phase 4 (W7-8): FULL SWARM - Propolis adds ranged threat, exponential scaling
+ * - Phase 5 (W9+): ENDGAME - Royal guards, THE BALL, maximum chaos
+ *
  * @see pilots/wasm-survivors-game/PROTO_SPEC.md
+ * @see systems/scouts/ for scout coordination system
  */
 
 import type { Enemy, EnemyType, Vector2, CoordinationState } from '../types';
@@ -15,10 +23,14 @@ import { COLORS, ARENA_WIDTH, ARENA_HEIGHT } from '../types';
 // Bee Colony Configuration
 // =============================================================================
 
-// Wave configuration (per PROTO_SPEC Appendix F)
-// TUNED: Faster spawns so THE BALL can actually form!
-const WAVE_DURATION = 30000; // 30 seconds per wave
-const SPAWN_INTERVAL_MIN = 200; // minimum spawn interval (was 300 - now faster!)
+// Wave timing
+const WAVE_DURATION = 35000; // 35 seconds per wave (slightly longer for scout coordination drama)
+const SPAWN_INTERVAL_MIN = 180; // Minimum spawn interval (faster base rate)
+const SPAWN_INTERVAL_MAX = 800; // Maximum spawn interval (prevents too-slow early waves)
+
+// Scout burst spawning - enables coordinated attacks
+const SCOUT_BURST_CHANCE = 0.15; // 15% chance of burst spawn
+const SCOUT_BURST_COUNT = 3;     // Spawn 3 scouts at once for coordination
 
 // Bee colors from types.ts COLORS constant
 // Exported for use in rendering and tests
@@ -66,54 +78,131 @@ interface WaveConfig {
  * Get configuration for a specific wave
  * Per PROTO_SPEC Appendix F: Enemy Introduction
  *
- * Wave 1: Workers only (learn basics)
- * Wave 3: Scouts (coordination preview)
- * Wave 5: Guards (tanky, prioritization)
- * Wave 7: Propolis (ranged, dodging)
- * Wave 9+: Royal Guards + THE BALL
+ * WAVE BALANCE PHILOSOPHY:
+ * - Early waves: Teach mechanics, build confidence
+ * - Mid waves: Introduce variety, first pressure
+ * - Late waves: Full chaos, test mastery
+ *
+ * SCOUT COORDINATION SUPPORT:
+ * - Wave 3+: Scouts appear with chance of burst spawns
+ * - Wave 4+: Scout weight increases significantly (coordinated attacks shine)
+ * - Burst spawns create instant coordination opportunities
  */
 function getWaveConfig(wave: number): WaveConfig {
   // Every 5 waves from wave 9 is a royal wave
   const isRoyalWave = wave >= 9 && wave % 5 === 4;
 
-  // TUNED: Higher base enemy count so THE BALL can form
-  // Was: 5 + wave * 3, capped at 25
-  // Now: 8 + wave * 3, capped at 30 (more bees = more likely to form BALL)
-  const baseEnemies = Math.min(8 + wave * 3, 30);
+  // ==========================================================================
+  // Base Enemy Count - Smooth progression with distinct phases
+  // ==========================================================================
+  let baseEnemies: number;
 
-  // TUNED: Faster spawn rate so bees accumulate
-  // Was: 1 + wave * 0.15, capped at 4
-  // Now: 1.5 + wave * 0.2, capped at 5 (faster spawning!)
-  const spawnRate = Math.min(1.5 + wave * 0.2, 5);
+  if (wave <= 2) {
+    // Phase 1: LEARNING - Low count, predictable
+    // W1: 10, W2: 14
+    baseEnemies = 6 + wave * 4;
+  } else if (wave <= 4) {
+    // Phase 2: SCOUTS EMERGE - Moderate increase, scouts add variety
+    // W3: 18, W4: 22
+    baseEnemies = 10 + wave * 3;
+  } else if (wave <= 6) {
+    // Phase 3: ESCALATION - Guards join, pressure increases
+    // W5: 28, W6: 34
+    baseEnemies = 13 + wave * 3.5;
+  } else if (wave <= 8) {
+    // Phase 4: FULL SWARM - Exponential growth begins
+    // W7: 45, W8: 58
+    const exponentialBase = 18 + wave * 4;
+    const multiplier = 1 + (wave - 6) * 0.25; // 1.25x at W7, 1.5x at W8
+    baseEnemies = Math.floor(exponentialBase * multiplier);
+  } else {
+    // Phase 5: ENDGAME - Controlled chaos
+    // W9: 72, W10: 86, W11: 100, W12: 115...
+    // Slower growth than before to prevent unplayable late waves
+    const baseGrowth = 50 + (wave - 9) * 14;
+    const softCap = 150; // Soft cap to keep things playable
+    baseEnemies = Math.min(baseGrowth, softCap);
+  }
 
-  // Bee type distribution evolves per PROTO_SPEC S6
+  // Royal waves get extra enemies for the spectacle
+  if (isRoyalWave) {
+    baseEnemies = Math.floor(baseEnemies * 1.2);
+  }
+
+  // ==========================================================================
+  // Spawn Rate - How fast enemies enter the arena
+  // ==========================================================================
+  let spawnRate: number;
+
+  if (wave <= 2) {
+    // Slow and steady - player learns
+    spawnRate = 1.0 + wave * 0.3; // 1.3 - 1.6
+  } else if (wave <= 4) {
+    // Picks up - scouts add urgency
+    spawnRate = 1.8 + (wave - 2) * 0.4; // 2.2 - 2.6
+  } else if (wave <= 6) {
+    // Rapid - swarm feeling
+    spawnRate = 2.8 + (wave - 4) * 0.5; // 3.3 - 3.8
+  } else {
+    // Maximum pressure
+    spawnRate = Math.min(4.0 + (wave - 6) * 0.3, 6.0); // 4.3 - 6.0 (capped)
+  }
+
+  // ==========================================================================
+  // Enemy Type Distribution - The heart of wave variety
+  // ==========================================================================
   const enemyTypes: { type: EnemyType; weight: number }[] = [];
 
-  // Wave 1+: Workers always present (basic swarmers)
-  enemyTypes.push({ type: 'worker', weight: Math.max(60 - wave * 5, 25) });
+  // WORKERS - Always present, backbone of the swarm
+  // Higher weight early, decreases as specialists appear
+  let workerWeight: number;
+  if (wave <= 2) {
+    workerWeight = 100; // Pure workers initially
+  } else if (wave <= 4) {
+    workerWeight = 70 - (wave - 2) * 10; // 60 -> 50
+  } else if (wave <= 6) {
+    workerWeight = 45 - (wave - 4) * 5; // 40 -> 35
+  } else {
+    workerWeight = Math.max(30 - (wave - 6) * 2, 20); // 28 -> 20 (floor)
+  }
+  enemyTypes.push({ type: 'worker', weight: workerWeight });
 
-  // Wave 3+: Scouts appear (fast, trigger alarm pheromones)
+  // SCOUTS - Wave 3+ (enables new coordination system!)
+  // Higher weight at W4+ to enable coordinated attacks (need 3+ for encircle)
   if (wave >= 3) {
-    enemyTypes.push({ type: 'scout', weight: Math.min((wave - 2) * 5, 25) });
+    let scoutWeight: number;
+    if (wave <= 4) {
+      // Introduction phase - some scouts, occasional coordination
+      scoutWeight = 15 + (wave - 2) * 10; // 25 -> 35
+    } else if (wave <= 6) {
+      // Prime coordination phase - lots of scouts
+      scoutWeight = 40 + (wave - 4) * 5; // 45 -> 50
+    } else {
+      // Late game - scouts remain threatening
+      scoutWeight = Math.min(50 + (wave - 6) * 3, 60); // 53 -> 60 (capped)
+    }
+    enemyTypes.push({ type: 'scout', weight: scoutWeight });
   }
 
-  // Wave 5+: Guards appear (tanky, block player)
+  // GUARDS - Wave 5+ (tanky blockers)
   if (wave >= 5) {
-    enemyTypes.push({ type: 'guard', weight: Math.min((wave - 4) * 4, 20) });
+    const guardWeight = Math.min(10 + (wave - 4) * 5, 30); // 15 -> 30 (capped)
+    enemyTypes.push({ type: 'guard', weight: guardWeight });
   }
 
-  // Wave 7+: Propolis appear (ranged, slows player with sticky attacks)
+  // PROPOLIS - Wave 7+ (ranged sticky attacks)
   if (wave >= 7) {
-    enemyTypes.push({ type: 'propolis', weight: Math.min((wave - 6) * 3, 15) });
+    const propolisWeight = Math.min(8 + (wave - 6) * 4, 25); // 12 -> 25 (capped)
+    enemyTypes.push({ type: 'propolis', weight: propolisWeight });
   }
 
-  // Wave 9+: Royal Guards on royal waves (elite, complex patterns)
+  // ROYAL GUARDS - Royal waves only (elite minibosses)
   if (isRoyalWave) {
-    enemyTypes.push({ type: 'royal', weight: 10 });
+    enemyTypes.push({ type: 'royal', weight: 8 }); // Low weight but impactful
   }
 
   return {
-    baseEnemies,
+    baseEnemies: Math.floor(baseEnemies),
     spawnRate,
     enemyTypes,
     royalWave: isRoyalWave,
@@ -150,6 +239,10 @@ function createEnemy(type: EnemyType, position: Vector2, wave: number): Enemy {
   const healthMultiplier = 1 + wave * 0.1;
   const damageMultiplier = 1 + wave * 0.05;
 
+  // Royal Guards get a protective shield (requires 2 hits to kill)
+  // Shield absorbs the first lethal hit, leaving them at 1 HP
+  const shield = type === 'royal' ? 1 : 0;
+
   return {
     id: `bee-${type}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     type,
@@ -163,6 +256,7 @@ function createEnemy(type: EnemyType, position: Vector2, wave: number): Enemy {
     xpValue: baseStats.xpValue,
     survivalTime: 0,
     coordinationState: 'idle' as CoordinationState,
+    shield,
   };
 }
 
@@ -178,29 +272,32 @@ function getBeeBaseStats(type: EnemyType): {
   xpValue: number;
 } {
   // TUNED: Slightly higher HP so bees survive long enough to form THE BALL
+  // XP: +50% boost for faster early leveling
   switch (type) {
     case 'worker':
       // Swarms toward player, basic kiting enemy
       // HP: 15 -> 22 (survives an extra hit)
-      return { health: 22, damage: 8, radius: 10, speed: 80, xpValue: 10 };
+      return { health: 22, damage: 8, radius: 10, speed: 80, xpValue: 15 };  // +50% XP
     case 'scout':
       // Fast, alerts others via pheromones, priority target
       // HP: 10 -> 15 (still fragile but not instant-kill)
-      return { health: 15, damage: 5, radius: 8, speed: 120, xpValue: 15 };
+      return { health: 15, damage: 5, radius: 8, speed: 120, xpValue: 23 };  // +50% XP
     case 'guard':
       // Slow, high HP, blocks player movement
       // HP: 60 -> 80 (tankier, creates obstacles)
-      return { health: 80, damage: 15, radius: 18, speed: 40, xpValue: 25 };
+      // Speed: 40 -> 48 (+20% faster for more pressure)
+      return { health: 80, damage: 15, radius: 18, speed: 48, xpValue: 38 };  // +50% XP
     case 'propolis':
       // Ranged sticky attacks, slows player
       // HP: 20 -> 30 (survives to do its job)
-      return { health: 30, damage: 10, radius: 12, speed: 50, xpValue: 20 };
+      return { health: 30, damage: 10, radius: 12, speed: 50, xpValue: 30 };  // +50% XP
     case 'royal':
       // Elite queen's guard, complex patterns, THE BALL anchor
       // HP: 200 -> 250 (proper miniboss)
-      return { health: 250, damage: 25, radius: 30, speed: 60, xpValue: 100 };
+      // Speed: 60 -> 75 (+25% faster for more pressure)
+      return { health: 250, damage: 25, radius: 30, speed: 75, xpValue: 150 };  // +50% XP
     default:
-      return { health: 22, damage: 8, radius: 10, speed: 80, xpValue: 10 };
+      return { health: 22, damage: 8, radius: 10, speed: 80, xpValue: 15 };  // +50% XP
   }
 }
 
@@ -248,6 +345,10 @@ export function resetSpawner(): void {
 /**
  * Update spawner - handles wave progression and enemy spawning
  * Budget: < 1ms
+ *
+ * Special behaviors:
+ * - Scout burst spawns: W3+ has chance to spawn 3 scouts at once for coordination
+ * - Adaptive pacing: Spawn rate adjusts based on current enemy count
  */
 export function updateSpawner(state: GameState, deltaTime: number): SpawnResult {
   const newEnemies: Enemy[] = [];
@@ -263,27 +364,64 @@ export function updateSpawner(state: GameState, deltaTime: number): SpawnResult 
   const config = getWaveConfig(wave);
 
   // Calculate spawn interval for this wave
+  // Clamp between MIN and MAX for consistent pacing
+  const baseInterval = 1000 / config.spawnRate;
   const spawnInterval = Math.max(
-    1000 / config.spawnRate,
-    SPAWN_INTERVAL_MIN
+    SPAWN_INTERVAL_MIN,
+    Math.min(baseInterval, SPAWN_INTERVAL_MAX)
   );
+
+  // Adaptive pacing: spawn faster if few enemies on screen
+  const enemyCount = state.enemies.length;
+  const adaptiveMultiplier = enemyCount < 5 ? 0.6 : enemyCount < 10 ? 0.8 : 1.0;
+  const effectiveInterval = spawnInterval * adaptiveMultiplier;
 
   // Update wave timer
   const newWaveTimer = state.waveTimer + deltaTime;
 
   // Check if it's time to spawn
   if (
-    state.gameTime - lastSpawnTime >= spawnInterval &&
+    state.gameTime - lastSpawnTime >= effectiveInterval &&
     enemiesSpawnedThisWave < config.baseEnemies
   ) {
-    // Spawn enemy
+    // Determine what to spawn
     const enemyType = selectEnemyType(config);
-    const position = getSpawnPosition();
-    const enemy = createEnemy(enemyType, position, wave);
 
-    newEnemies.push(enemy);
+    // SCOUT BURST SPAWN: Wave 3+, when spawning a scout, chance to spawn a group
+    const shouldBurstSpawn =
+      enemyType === 'scout' &&
+      wave >= 3 &&
+      Math.random() < SCOUT_BURST_CHANCE &&
+      enemiesSpawnedThisWave + SCOUT_BURST_COUNT <= config.baseEnemies;
+
+    if (shouldBurstSpawn) {
+      // Spawn scouts in a cluster near each other for immediate coordination
+      const centerPos = getSpawnPosition();
+      const burstSpread = 40; // pixels apart
+
+      for (let i = 0; i < SCOUT_BURST_COUNT; i++) {
+        const offsetAngle = (i / SCOUT_BURST_COUNT) * Math.PI * 2;
+        const offsetX = Math.cos(offsetAngle) * burstSpread;
+        const offsetY = Math.sin(offsetAngle) * burstSpread;
+
+        const position = {
+          x: centerPos.x + offsetX,
+          y: centerPos.y + offsetY,
+        };
+
+        const enemy = createEnemy('scout', position, wave);
+        newEnemies.push(enemy);
+        enemiesSpawnedThisWave++;
+      }
+    } else {
+      // Normal single spawn
+      const position = getSpawnPosition();
+      const enemy = createEnemy(enemyType, position, wave);
+      newEnemies.push(enemy);
+      enemiesSpawnedThisWave++;
+    }
+
     lastSpawnTime = state.gameTime;
-    enemiesSpawnedThisWave++;
   }
 
   // Check for wave completion

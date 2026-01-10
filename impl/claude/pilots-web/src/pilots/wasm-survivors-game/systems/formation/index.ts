@@ -24,14 +24,13 @@ import type {
   BallUpdateResult,
   BallManagerState,
 } from './types';
-import { BALL_CONFIG, BALL_PHASE_CONFIG, BALL_GAP_CONFIG, BALL_COOKING_CONFIG } from './config';
+import { BALL_CONFIG, BALL_PHASE_CONFIG, BALL_GAP_CONFIG, BALL_COOKING_CONFIG, getGatheringDuration, BALL_LUNGE_CONFIG, getScaledLungeParams, getLungeScaling } from './config';
 import { updateGapRotation, createInitialGapState, interpolateGapSize } from './gap';
 import { updateBallMovement, calculateFormationPositions, isInEscapeGap, interpolateFormingRadius, interpolateConstrictRadius, createInitialGeometryState } from './geometry';
 import { shouldStartBall, calculateTemperature } from './phase';
 import { updateBoundaryCollision } from './boundary';
-import { updateBeeRecruitment, updateOutsidePunches } from './recruitment';
+import { updateBeeRecruitment, updateOutsidePunches, cleanupFormation } from './recruitment';
 import { updateDissipation, getDissipatingRadius } from './dissipation';
-import { BALL_LUNGE_CONFIG } from './config';
 
 // Re-export types
 export type { BallPhase, LegacyBallState as BallState, BallEvent, BallUpdateResult, BallTelegraphData, BallManagerState } from './types';
@@ -40,11 +39,13 @@ export type { BallPhase, LegacyBallState as BallState, BallEvent, BallUpdateResu
 export type { BallEvent as FormationEvent } from './types';
 
 // Re-export config
-export { BALL_CONFIG } from './config';
+export { BALL_CONFIG, BALL_PHASE_CONFIG, BALL_LUNGE_CONFIG, getLungeScaling, getScaledLungeParams, LUNGE_SCALING_BY_TYPE } from './config';
+export type { LungeScalingConfig } from './config';
 
 // Re-export query functions
 export {
   isBallActive,
+  isBallGathering,   // RUN 039: Pre-formation telegraph
   isBallForming,
   isBallInSilence,
   isBallConstricting,
@@ -73,6 +74,9 @@ export { getBallTelegraph, getBallAudioParams, getBallCameraState } from './tele
 // Re-export geometry helpers
 export { calculateFormationPositions, isInEscapeGap } from './geometry';
 
+// Re-export phase helpers (RUN 039: Dynamic cooldown)
+export { getFormationCooldown } from './phase';
+
 // =============================================================================
 // Factory
 // =============================================================================
@@ -82,6 +86,8 @@ export { calculateFormationPositions, isInEscapeGap } from './geometry';
  */
 export function createBallState(ballId: number = 0, tier: 1 | 2 = 1): LegacyBallState {
   const radiusMultiplier = tier === 2 ? BALL_PHASE_CONFIG.secondBallRadiusMultiplier : 1;
+  // Tier 2 (secondary ball) has NO knockback - visual warning only
+  const hasKnockback = tier === 1 ? true : BALL_PHASE_CONFIG.secondBallHasKnockback;
   return {
     phase: 'inactive',
     phaseStartTime: 0,
@@ -100,6 +106,7 @@ export function createBallState(ballId: number = 0, tier: 1 | 2 = 1): LegacyBall
     nextLungeInterval: BALL_LUNGE_CONFIG.intervalMax,
     activeLunge: null,
     lastBoundaryDamageTick: 0,
+    lastNearMissTime: 0,  // RUN 039: Near-miss cooldown
     playerOutsideTime: 0,
     isDissipating: false,
     dissipationStartTime: 0,
@@ -117,6 +124,12 @@ export function createBallState(ballId: number = 0, tier: 1 | 2 = 1): LegacyBall
     // Multi-ball (RUN 041)
     ballTier: tier,
     ballId,
+    hasKnockback,  // Tier 2 balls have no boundary knockback
+    // RUN 042: Ball promotion dynamics
+    wasPromoted: false,
+    promotionTime: 0,
+    // RUN 039: Active outside punch telegraphs
+    activePunches: [],
   };
 }
 
@@ -129,6 +142,44 @@ export function createBallManagerState(): BallManagerState {
     beeCooldowns: new Map(),
     lastBallEndTime: 0,
     nextBallId: 1,
+  };
+}
+
+/**
+ * Promote a tier 2 ball to tier 1
+ *
+ * RUN 042: When the inner ball escapes/disperses, the outer ball "promotes"
+ * to become the new primary threat:
+ * - Gains knockback (boundary now pushes player)
+ * - Constricts faster (1.8x speed)
+ * - Visual changes from dotted yellow to solid colored
+ * - If in gathering/forming phase, may skip ahead
+ */
+export function promoteBall(ball: LegacyBallState, gameTime: number): LegacyBallState {
+  console.log(`[BALL] 🔄 PROMOTING tier 2 ball to tier 1! Phase: ${ball.phase}`);
+
+  // Calculate new radius (shrink to tier 1 size)
+  const newRadius = ball.currentRadius / BALL_PHASE_CONFIG.secondBallRadiusMultiplier;
+
+  // If in gathering phase and config says skip, jump to forming
+  let newPhase = ball.phase;
+  let newPhaseStartTime = ball.phaseStartTime;
+  if (ball.phase === 'gathering' && BALL_PHASE_CONFIG.promotionSkipGatheringPhase) {
+    newPhase = 'forming';
+    newPhaseStartTime = gameTime;
+    console.log('[BALL] Promoted ball skipping gathering, jumping to forming');
+  }
+
+  return {
+    ...ball,
+    ballTier: 1,
+    hasKnockback: true,  // Now has knockback!
+    wasPromoted: true,
+    promotionTime: gameTime,
+    currentRadius: newRadius,
+    phase: newPhase,
+    phaseStartTime: newPhaseStartTime,
+    phaseProgress: newPhase !== ball.phase ? 0 : ball.phaseProgress,
   };
 }
 
@@ -192,6 +243,7 @@ export function forceBallStart(
       Math.random() * (BALL_LUNGE_CONFIG.intervalMax - BALL_LUNGE_CONFIG.intervalMin),
     activeLunge: null,
     lastBoundaryDamageTick: 0,
+    lastNearMissTime: 0,  // RUN 039: Near-miss cooldown
     playerOutsideTime: 0,
     isDissipating: false,
     dissipationStartTime: 0,
@@ -207,6 +259,7 @@ export function forceBallStart(
     // Multi-ball (RUN 041)
     ballTier: currentState.ballTier,
     ballId: currentState.ballId,
+    hasKnockback: currentState.hasKnockback,
   };
 }
 
@@ -235,6 +288,10 @@ export interface BallManagerUpdateResult {
  * Update all balls via the manager
  *
  * RUN 041: Handles multiple balls with bee cooldowns
+ * RUN 040: Added enemySlowFactor to slow formation intervals with bullet time
+ *
+ * @param enemySlowFactor - Multiplier for enemy speed (1.0 = normal, 0.8 = 20% slower)
+ *                          When < 1, formation phases take longer to progress
  */
 export function updateBallManager(
   manager: BallManagerState,
@@ -242,7 +299,8 @@ export function updateBallManager(
   enemies: EnemyRef[],
   gameTime: number,
   deltaTime: number,
-  wave: number
+  wave: number,
+  enemySlowFactor: number = 1.0  // Run 040: Bullet time slowdown
 ): BallManagerUpdateResult {
   const allEvents: BallEvent[] = [];
   const ballResults: BallUpdateResult[] = [];
@@ -275,7 +333,7 @@ export function updateBallManager(
   let lastBallEndTime = manager.lastBallEndTime;
 
   for (const ball of manager.balls) {
-    const result = updateSingleBall(ball, playerPos, enemies, gameTime, deltaTime, wave);
+    const result = updateSingleBall(ball, playerPos, enemies, gameTime, deltaTime, wave, enemySlowFactor);
     ballResults.push(result);
     allEvents.push(...result.events);
     totalDamage += result.damageToPlayer;
@@ -298,7 +356,7 @@ export function updateBallManager(
       for (const beeId of ball.formationBeeIds) {
         newBeeCooldowns.set(beeId, gameTime + BALL_PHASE_CONFIG.beeCooldownAfterDisperse);
       }
-      console.log(`[BALL] Dispersed. ${ball.formationBeeIds.length} bees on cooldown for 4s`);
+      console.log(`[BALL] Dispersed. ${ball.formationBeeIds.length} bees on cooldown for ${BALL_PHASE_CONFIG.beeCooldownAfterDisperse / 1000}s`);
     }
 
     // Keep ball if still active
@@ -320,14 +378,46 @@ export function updateBallManager(
 
   let nextBallId = manager.nextBallId;
 
+  // ==========================================================================
+  // RUN 042: Ball Promotion Logic
+  // When tier 1 ball disperses but tier 2 is still active, promote tier 2
+  // ==========================================================================
+  const tier1Ball = updatedBalls.find(b => b.ballTier === 1);
+  const tier2Ball = updatedBalls.find(b => b.ballTier === 2);
+
+  if (!tier1Ball && tier2Ball) {
+    // Tier 1 gone, tier 2 exists → PROMOTE!
+    const promotedBall = promoteBall(tier2Ball, gameTime);
+
+    // Replace tier 2 with promoted ball in the array
+    const tier2Index = updatedBalls.indexOf(tier2Ball);
+    if (tier2Index >= 0) {
+      updatedBalls[tier2Index] = promotedBall;
+    }
+
+    // Emit promotion event
+    allEvents.push({
+      type: 'ball_forming_started',  // Re-use existing event for now
+      timestamp: gameTime,
+      position: promotedBall.center,
+      data: { reason: 'promoted' as const } as any,
+    });
+  }
+
   // Try to start a new ball (tier 1) if none active
   const hasActiveBall = updatedBalls.some(b => b.phase !== 'inactive');
+
+  // DEBUG: Log every frame to trace ball manager state
+  if (wave >= 7) {
+    console.log(`[BALL-DEBUG] wave=${wave}, updatedBalls.length=${updatedBalls.length}, hasActiveBall=${hasActiveBall}, eligibleEnemies=${eligibleEnemies.length}`);
+  }
+
   if (!hasActiveBall) {
     if (shouldStartBall(eligibleEnemies.length, wave, 'inactive', lastBallEndTime, gameTime, false)) {
       const newBall = startNewBall(nextBallId++, 1, eligibleEnemies, playerPos, gameTime);
       updatedBalls.push(newBall.state);
       allEvents.push(newBall.event);
-      console.log(`[BALL] 🐝 FORMING tier 1! wave: ${wave}, eligible bees: ${eligibleEnemies.length}`);
+      console.log(`[BALL] FORMING tier 1! wave: ${wave}, eligible bees: ${eligibleEnemies.length}`);
     }
   } else if (updatedBalls.length < 2) {
     // Try to start second ball (tier 2) if first is active
@@ -335,11 +425,33 @@ export function updateBallManager(
     const firstBallBees = new Set(updatedBalls[0]?.formationBeeIds ?? []);
     const secondBallEligible = eligibleEnemies.filter(e => !firstBallBees.has(e.id));
 
+    // Debug: Log why second ball might not spawn (every 2s to reduce spam)
+    if (Math.floor(gameTime / 2000) !== Math.floor((gameTime - 16) / 2000)) {
+      const minBees = BALL_PHASE_CONFIG.minBeesForBall + BALL_PHASE_CONFIG.secondBallMinBeesExtra;
+      console.log(`[BALL] 🔍 Second ball check: wave=${wave} (need≥${BALL_PHASE_CONFIG.secondBallMinWave}), eligible=${secondBallEligible.length} (need≥${minBees}), firstBallPhase=${updatedBalls[0]?.phase}`);
+    }
+
     if (shouldStartBall(secondBallEligible.length, wave, 'inactive', lastBallEndTime, gameTime, true)) {
       const newBall = startNewBall(nextBallId++, 2, secondBallEligible, playerPos, gameTime);
       updatedBalls.push(newBall.state);
       allEvents.push(newBall.event);
-      console.log(`[BALL] 🐝🐝 SECOND BALL forming (tier 2)! Bees: ${secondBallEligible.length}`);
+      console.log(`[BALL] SECOND BALL forming (tier 2)! Bees: ${secondBallEligible.length}`);
+    }
+  }
+
+  // ==========================================================================
+  // RUN 042: Dynamic radius enforcement
+  // Outer ball is always notably bigger than inner ball (1.6x multiplier)
+  // This ensures visual hierarchy as the inner ball constricts
+  // ==========================================================================
+  const updatedTier1 = updatedBalls.find(b => b.ballTier === 1);
+  const updatedTier2 = updatedBalls.find(b => b.ballTier === 2);
+
+  if (updatedTier1 && updatedTier2) {
+    // Enforce minimum radius difference (outer = inner * multiplier)
+    const minOuterRadius = updatedTier1.currentRadius * BALL_PHASE_CONFIG.secondBallRadiusMultiplier;
+    if (updatedTier2.currentRadius < minOuterRadius) {
+      updatedTier2.currentRadius = minOuterRadius;
     }
   }
 
@@ -373,9 +485,12 @@ function startNewBall(
   const minBees = tier === 2
     ? BALL_PHASE_CONFIG.minBeesForBall + BALL_PHASE_CONFIG.secondBallMinBeesExtra
     : BALL_PHASE_CONFIG.minBeesForBall;
+  // Tier 2 (secondary ball) has NO knockback - visual warning only
+  const hasKnockback = tier === 1 ? true : BALL_PHASE_CONFIG.secondBallHasKnockback;
 
+  // RUN 039: Start with 'gathering' phase for pre-formation telegraph
   const state: LegacyBallState = {
-    phase: 'forming',
+    phase: 'gathering',  // Start with gathering, not forming
     phaseStartTime: gameTime,
     phaseProgress: 0,
     center: geometryState.center,
@@ -393,6 +508,7 @@ function startNewBall(
       Math.random() * (BALL_LUNGE_CONFIG.intervalMax - BALL_LUNGE_CONFIG.intervalMin),
     activeLunge: null,
     lastBoundaryDamageTick: 0,
+    lastNearMissTime: 0,  // RUN 039: Near-miss cooldown
     playerOutsideTime: 0,
     isDissipating: false,
     dissipationStartTime: 0,
@@ -408,10 +524,16 @@ function startNewBall(
     escapeCount: 0,
     ballTier: tier,
     ballId,
+    hasKnockback,  // Tier 2 balls have no boundary knockback
+    // RUN 042: Ball promotion dynamics
+    wasPromoted: false,
+    promotionTime: 0,
+    // RUN 039: Active outside punch telegraphs
+    activePunches: [],
   };
 
   const event: BallEvent = {
-    type: 'ball_forming_started',
+    type: 'ball_gathering_started',  // New event type
     timestamp: gameTime,
     position: playerPos,
   };
@@ -421,6 +543,7 @@ function startNewBall(
 
 /**
  * Update a single ball (internal - called by manager)
+ * RUN 040: Added enemySlowFactor for bullet time
  */
 function updateSingleBall(
   ballState: LegacyBallState,
@@ -428,7 +551,8 @@ function updateSingleBall(
   enemies: EnemyRef[],
   gameTime: number,
   deltaTime: number,
-  wave: number
+  wave: number,
+  enemySlowFactor: number = 1.0
 ): BallUpdateResult {
   // If inactive, nothing to do
   if (ballState.phase === 'inactive') {
@@ -442,7 +566,8 @@ function updateSingleBall(
   }
 
   // Rest of the update logic (same as before, but without the formation check)
-  return updateBallFormationCore(ballState, playerPos, enemies, gameTime, deltaTime, wave);
+  // RUN 040: Pass enemySlowFactor to core update
+  return updateBallFormationCore(ballState, playerPos, enemies, gameTime, deltaTime, wave, enemySlowFactor);
 }
 
 /**
@@ -485,13 +610,14 @@ export function updateBallFormation(
     const lastBallEndTime = managerState?.lastBallEndTime ?? 0;
 
     if (shouldStartBall(eligibleEnemies.length, wave, ballState.phase, lastBallEndTime, gameTime, false)) {
-      console.log('[BALL] 🐝 FORMING! wave:', wave, 'eligible enemies:', eligibleEnemies.length);
+      // RUN 039: Start with 'gathering' phase - bees travel slowly to positions
+      console.log('[BALL] GATHERING! wave:', wave, 'eligible enemies:', eligibleEnemies.length);
       const gapState = createInitialGapState(gameTime);
       const geometryState = createInitialGeometryState(playerPos);
 
       newState = {
         ...newState,
-        phase: 'forming',
+        phase: 'gathering',  // RUN 039: Start with gathering, not forming
         phaseStartTime: gameTime,
         phaseProgress: 0,
         center: geometryState.center,
@@ -517,7 +643,7 @@ export function updateBallFormation(
       };
 
       events.push({
-        type: 'ball_forming_started',
+        type: 'ball_gathering_started',  // RUN 039: New event type
         timestamp: gameTime,
         position: playerPos,
       });
@@ -532,6 +658,13 @@ export function updateBallFormation(
 
 /**
  * Core ball update logic (used by both single and multi-ball APIs)
+ *
+ * RUN 040: Added enemySlowFactor to slow formation intervals with bullet time.
+ * When enemySlowFactor < 1.0, all timing-based operations slow down:
+ * - Phase progress (gathering, forming, silence, constrict)
+ * - Lunge windup, attack, and return timing
+ * - Gap rotation speed
+ * - Damage tick intervals
  */
 function updateBallFormationCore(
   ballState: LegacyBallState,
@@ -539,12 +672,41 @@ function updateBallFormationCore(
   enemies: EnemyRef[],
   gameTime: number,
   deltaTime: number,
-  _wave: number
+  wave: number,  // RUN 039: Used for wave-scaled gathering duration
+  enemySlowFactor: number = 1.0  // RUN 040: Bullet time slowdown
 ): BallUpdateResult {
   const events: BallEvent[] = [];
   let damageToPlayer = 0;
   let knockback: BallUpdateResult['knockback'] = null;
   let newState = { ...ballState };
+
+  // ==========================================================================
+  // RUN 040: Apply bullet time slowdown to enemy-related timing
+  // When enemies are slowed, their actions take proportionally longer
+  // effectiveDeltaTime = deltaTime * enemySlowFactor (e.g., 16ms * 0.8 = 12.8ms)
+  // ==========================================================================
+  const effectiveDeltaTime = deltaTime * enemySlowFactor;
+
+  // RUN 039: Wave-scaled gathering duration (3.5s at wave 3 → 2s at wave 7+)
+  // RUN 040: Scale by 1/enemySlowFactor (slower enemies = longer durations)
+  const baseGatheringDuration = getGatheringDuration(wave);
+  const gatheringDuration = baseGatheringDuration / enemySlowFactor;
+
+  // ==========================================================================
+  // RUN 039: Clean up dead bees from formation FIRST
+  // This ensures the dissolution check works when bees are killed
+  // ==========================================================================
+
+  const validEnemyIds = new Set(enemies.map(e => e.id));
+  const cleanedFormation = cleanupFormation(
+    {
+      beeIds: newState.formationBeeIds,
+      positions: newState.formationPositions,
+      outsidePunchCooldowns: newState.outsideBeePunchCooldowns,
+    },
+    validEnemyIds
+  );
+  newState.formationBeeIds = cleanedFormation.beeIds;
 
   // RUN 038: Collect all knockback sources, then combine into final position
   const knockbackSources: Array<{
@@ -555,6 +717,7 @@ function updateBallFormationCore(
 
   // ==========================================================================
   // Update Gap Rotation
+  // RUN 040: Use effectiveDeltaTime for slowed gap rotation with bullet time
   // ==========================================================================
 
   const gapState = updateGapRotation(
@@ -567,7 +730,7 @@ function updateBallFormationCore(
       lastSpeedChange: newState.lastSpeedChange,
     },
     gameTime,
-    deltaTime
+    effectiveDeltaTime  // RUN 040: Slowed gap rotation
   );
 
   newState.gapAngle = gapState.angle;
@@ -578,6 +741,7 @@ function updateBallFormationCore(
 
   // ==========================================================================
   // Update Ball Movement
+  // RUN 040: Use effectiveDeltaTime for slowed movement with bullet time
   // ==========================================================================
 
   const geometryState = updateBallMovement(
@@ -588,7 +752,7 @@ function updateBallFormationCore(
       targetPosition: newState.targetPosition,
     },
     playerPos,
-    deltaTime
+    effectiveDeltaTime  // RUN 040: Slowed ball tracking
   );
 
   newState.center = geometryState.center;
@@ -597,7 +761,25 @@ function updateBallFormationCore(
 
   // ==========================================================================
   // Update Lunge Attacks (RUN 037: Slower, more readable)
+  // RUN 040: Lunge timing scaled by enemySlowFactor (bullet time)
+  // RUN 042: Lunge parameters scaled by enemy type (hit radius, damage, windup speed)
   // ==========================================================================
+
+  // RUN 042: Helper to get enemy type from ID
+  const getEnemyType = (beeId: string): string => {
+    const enemy = enemies.find(e => e.id === beeId);
+    return enemy?.type ?? 'worker';
+  };
+
+  // RUN 040: Scale lunge durations by 1/enemySlowFactor (slower enemies = longer lunges)
+  // RUN 042: Also scale by enemy type (elite bees have faster windup)
+  const getEffectiveWindupDuration = (beeType: string): number => {
+    const scaling = getLungeScaling(beeType);
+    const baseWindup = BALL_LUNGE_CONFIG.windupDuration / scaling.windupSpeedMultiplier;
+    return baseWindup / enemySlowFactor;
+  };
+  const effectiveLungeDuration = BALL_LUNGE_CONFIG.attackDuration / enemySlowFactor;
+  const effectiveReturnDuration = BALL_LUNGE_CONFIG.returnDuration / enemySlowFactor;
 
   if (newState.activeLunge) {
     const lunge = newState.activeLunge;
@@ -605,7 +787,12 @@ function updateBallFormationCore(
     if (lunge.phase === 'windup') {
       const windupElapsed = gameTime - lunge.windupStartTime;
 
-      if (windupElapsed >= BALL_LUNGE_CONFIG.windupDuration) {
+      // RUN 042: Use scaled windup duration based on bee type
+      const effectiveWindupDuration = lunge.scaledWindupDuration > 0
+        ? lunge.scaledWindupDuration / enemySlowFactor
+        : getEffectiveWindupDuration(lunge.beeType ?? 'worker');
+
+      if (windupElapsed >= effectiveWindupDuration) {
         newState.activeLunge = {
           ...lunge,
           phase: 'lunge',
@@ -622,14 +809,19 @@ function updateBallFormationCore(
     } else if (lunge.phase === 'lunge') {
       const lungeElapsed = gameTime - lunge.lungeStartTime;
 
-      if (lungeElapsed >= lunge.duration) {
+      if (lungeElapsed >= effectiveLungeDuration) {
         // Check if the bee actually hit the player
         // Bee ends up at targetPos, check distance to player's CURRENT position
         const hitDx = playerPos.x - lunge.targetPos.x;
         const hitDy = playerPos.y - lunge.targetPos.y;
         const hitDist = Math.sqrt(hitDx * hitDx + hitDy * hitDy);
 
-        const didHit = hitDist <= BALL_LUNGE_CONFIG.hitRadius;
+        // RUN 042: Use scaled hit radius (larger for elite bees)
+        const effectiveHitRadius = lunge.scaledHitRadius > 0
+          ? lunge.scaledHitRadius
+          : BALL_LUNGE_CONFIG.hitRadius;
+
+        const didHit = hitDist <= effectiveHitRadius;
 
         if (didHit) {
           // HIT CONFIRMED - Apply knockback in the bee's travel direction
@@ -651,7 +843,12 @@ function updateBallFormationCore(
               force: BALL_LUNGE_CONFIG.knockbackForce,  // 80px - sharp push in travel direction
             });
 
-            damageToPlayer += BALL_LUNGE_CONFIG.damage;
+            // RUN 042: Use scaled damage (higher for elite bees)
+            const effectiveDamage = lunge.scaledDamage > 0
+              ? lunge.scaledDamage
+              : BALL_LUNGE_CONFIG.damage;
+
+            damageToPlayer += effectiveDamage;
 
             events.push({
               type: 'lunge_hit',
@@ -661,7 +858,7 @@ function updateBallFormationCore(
                 knockbackDirection: knockbackDir,
                 knockbackForce: BALL_LUNGE_CONFIG.knockbackForce,
                 lungingBeeId: lunge.beeId,
-                damage: BALL_LUNGE_CONFIG.damage,
+                damage: effectiveDamage,
               },
             });
           }
@@ -683,39 +880,117 @@ function updateBallFormationCore(
       }
     } else if (lunge.phase === 'return') {
       const returnElapsed = gameTime - lunge.lungeStartTime;
-      const returnDuration = BALL_LUNGE_CONFIG.returnDuration;
 
-      if (returnElapsed >= returnDuration) {
+      // RUN 040: Use effective return duration
+      if (returnElapsed >= effectiveReturnDuration) {
+        const completedBeeId = lunge.beeId;
         newState.activeLunge = null;
+
+        // =======================================================================
+        // RUN 039: Chain Lunge Mechanic
+        // RUN 042: Chain lunges also use scaled parameters
+        // =======================================================================
+        // When a lunge completes, there's a 10% chance another bee will immediately lunge.
+        // This creates exciting "flurry" moments that test player reflexes.
+
+        if (Math.random() < BALL_LUNGE_CONFIG.chainLungeChance) {
+          // Find a different bee to chain lunge
+          const eligibleBees = newState.formationBeeIds.filter(id => id !== completedBeeId);
+          if (eligibleBees.length > 0) {
+            const chainBeeId = eligibleBees[Math.floor(Math.random() * eligibleBees.length)];
+            const chainBeePos = newState.formationPositions.get(chainBeeId);
+
+            if (chainBeePos) {
+              // RUN 042: Get enemy type and compute scaled parameters for chain lunge
+              const chainBeeType = getEnemyType(chainBeeId);
+              const chainScaledParams = getScaledLungeParams(chainBeeType);
+
+              const toPlayerDx = playerPos.x - chainBeePos.x;
+              const toPlayerDy = playerPos.y - chainBeePos.y;
+              const toPlayerDist = Math.sqrt(toPlayerDx * toPlayerDx + toPlayerDy * toPlayerDy);
+
+              if (toPlayerDist > 1) {
+                // RUN 039: Chain lunge also uses 120% distance
+                const totalDistance = toPlayerDist * (1 + BALL_LUNGE_CONFIG.overshootPercent);
+                const dirX = toPlayerDx / toPlayerDist;
+                const dirY = toPlayerDy / toPlayerDist;
+                const chainTargetX = chainBeePos.x + dirX * totalDistance;
+                const chainTargetY = chainBeePos.y + dirY * totalDistance;
+
+                // Start chain lunge after brief delay (use windup start offset)
+                // RUN 042: Include scaled parameters
+                newState.activeLunge = {
+                  beeId: chainBeeId,
+                  beeType: chainBeeType,
+                  phase: 'windup',
+                  windupStartTime: gameTime + BALL_LUNGE_CONFIG.chainLungeDelay,
+                  lungeStartTime: 0,
+                  startPos: { ...chainBeePos },
+                  targetPos: { x: chainTargetX, y: chainTargetY },
+                  duration: BALL_LUNGE_CONFIG.attackDuration,
+                  scaledHitRadius: chainScaledParams.hitRadius,
+                  scaledDamage: chainScaledParams.damage,
+                  scaledWindupDuration: chainScaledParams.windupDuration,
+                };
+
+                events.push({
+                  type: 'lunge_windup_started',
+                  timestamp: gameTime,
+                  position: chainBeePos,
+                  data: { lungingBeeId: chainBeeId },
+                });
+
+                // Update last lunge time to prevent immediate regular lunge
+                newState.lastLungeTime = gameTime;
+              }
+            }
+          }
+        }
       }
     }
   }
 
   // Start new lunge if ready
+  // RUN 040: Scale lunge interval by 1/enemySlowFactor (slower enemies = longer between lunges)
+  const effectiveLungeInterval = newState.nextLungeInterval / enemySlowFactor;
   if (newState.phase !== 'inactive' && newState.formationBeeIds.length > 0 && !newState.activeLunge) {
-    if (gameTime - newState.lastLungeTime >= newState.nextLungeInterval) {
+    if (gameTime - newState.lastLungeTime >= effectiveLungeInterval) {
       const lungingBeeId = newState.formationBeeIds[
         Math.floor(Math.random() * newState.formationBeeIds.length)
       ];
 
       const beeFormationPos = newState.formationPositions.get(lungingBeeId);
       if (beeFormationPos) {
+        // RUN 042: Get enemy type and compute scaled parameters
+        const beeType = getEnemyType(lungingBeeId);
+        const scaledParams = getScaledLungeParams(beeType);
+
         const toPlayerDx = playerPos.x - beeFormationPos.x;
         const toPlayerDy = playerPos.y - beeFormationPos.y;
         const toPlayerDist = Math.sqrt(toPlayerDx * toPlayerDx + toPlayerDy * toPlayerDy);
 
         if (toPlayerDist > 1) {
-          const lungeTargetX = playerPos.x + (toPlayerDx / toPlayerDist) * BALL_LUNGE_CONFIG.overshoot;
-          const lungeTargetY = playerPos.y + (toPlayerDy / toPlayerDist) * BALL_LUNGE_CONFIG.overshoot;
+          // RUN 039: Lunge goes 120% of distance (20% overshoot)
+          // This means the bee will pass through the player position
+          const totalDistance = toPlayerDist * (1 + BALL_LUNGE_CONFIG.overshootPercent);
+          const dirX = toPlayerDx / toPlayerDist;
+          const dirY = toPlayerDy / toPlayerDist;
+          const lungeTargetX = beeFormationPos.x + dirX * totalDistance;
+          const lungeTargetY = beeFormationPos.y + dirY * totalDistance;
 
+          // RUN 042: Include bee type and scaled parameters
           newState.activeLunge = {
             beeId: lungingBeeId,
+            beeType: beeType,
             phase: 'windup',
             windupStartTime: gameTime,
             lungeStartTime: 0,
             startPos: { ...beeFormationPos },
             targetPos: { x: lungeTargetX, y: lungeTargetY },
-            duration: BALL_LUNGE_CONFIG.attackDuration,  // 400ms (was 150ms)
+            duration: BALL_LUNGE_CONFIG.attackDuration,  // 400ms
+            scaledHitRadius: scaledParams.hitRadius,
+            scaledDamage: scaledParams.damage,
+            scaledWindupDuration: scaledParams.windupDuration,
           };
 
           events.push({
@@ -735,6 +1010,7 @@ function updateBallFormationCore(
 
   // ==========================================================================
   // Update Boundary Collision (RUN 037: Reduced knockback, RUN 038: Gap exception)
+  // RUN 042: Tier 2 balls have no knockback (visual warning only)
   // ==========================================================================
 
   if (newState.phase !== 'inactive' && !newState.isDissipating) {
@@ -746,7 +1022,9 @@ function updateBallFormationCore(
       newState.gapSize,
       newState.isDissipating,
       newState.lastBoundaryDamageTick,
-      gameTime
+      gameTime,
+      newState.hasKnockback,  // RUN 042: Tier 2 balls have no knockback
+      newState.lastNearMissTime  // RUN 039: Track near-miss cooldown
     );
 
     // RUN 038: Collect all knockback sources - they'll be combined into final position
@@ -761,10 +1039,11 @@ function updateBallFormationCore(
     damageToPlayer += boundaryResult.damageDealt;
     events.push(...boundaryResult.events);
     newState.lastBoundaryDamageTick = boundaryResult.newLastDamageTick;
+    newState.lastNearMissTime = boundaryResult.newLastNearMissTime;  // RUN 039
   }
 
   // ==========================================================================
-  // Update Outside Bee Punches (RUN 037: Reduced knockback)
+  // Update Outside Bee Punches (RUN 039: Telegraph system with dodge window)
   // ==========================================================================
 
   const punchResult = updateOutsidePunches(
@@ -776,7 +1055,8 @@ function updateBallFormationCore(
     enemies,
     playerPos,
     newState.center,
-    gameTime
+    gameTime,
+    newState.activePunches  // RUN 039: Pass active punch states
   );
 
   // RUN 038: Collect punch knockback source
@@ -790,6 +1070,7 @@ function updateBallFormationCore(
 
   events.push(...punchResult.events);
   newState.outsideBeePunchCooldowns = punchResult.formation.outsidePunchCooldowns;
+  newState.activePunches = punchResult.updatedPunches;  // RUN 039: Save updated punch states
 
   // ==========================================================================
   // Combine all knockback sources into single final knockback
@@ -834,6 +1115,28 @@ function updateBallFormationCore(
   );
 
   newState.formationBeeIds = recruitmentResult.beeIds;
+
+  // ==========================================================================
+  // RUN 039: Check if ball should dissolve due to too few bees remaining
+  // (Player killed bees from inside the ball)
+  // ==========================================================================
+
+  if (newState.formationBeeIds.length < BALL_PHASE_CONFIG.minBeesToMaintain) {
+    console.log(`[BALL] Dissolved! Only ${newState.formationBeeIds.length} bees remain (need ${BALL_PHASE_CONFIG.minBeesToMaintain})`);
+
+    events.push({
+      type: 'ball_dispersed',
+      timestamp: gameTime,
+      position: newState.center,
+      data: { reason: 'too_few_bees', remainingBees: newState.formationBeeIds.length },
+    });
+
+    newState = {
+      ...createBallState(newState.ballId, newState.ballTier),
+      escapeCount: newState.escapeCount,
+    };
+    return { state: newState, events, damageToPlayer, knockback, knockbackSources };
+  }
 
   // ==========================================================================
   // Update Dissipation Tracking
@@ -884,13 +1187,63 @@ function updateBallFormationCore(
 
   // ==========================================================================
   // Update Phase State Machine
+  // RUN 040: All phase durations scaled by 1/enemySlowFactor (bullet time)
   // ==========================================================================
 
   const phaseElapsed = gameTime - ballState.phaseStartTime;
 
+  // RUN 042: Promoted balls constrict faster
+  const promotionSpeedMultiplier = ballState.wasPromoted
+    ? BALL_PHASE_CONFIG.promotionConstrictSpeedMultiplier
+    : 1.0;
+
+  // RUN 040: Scale phase durations by 1/enemySlowFactor (slower enemies = longer phases)
+  // RUN 042: Also scale by promotionSpeedMultiplier (promoted balls are faster)
+  const effectiveFormingDuration = BALL_CONFIG.formingDuration / enemySlowFactor / promotionSpeedMultiplier;
+  const effectiveSilenceDuration = BALL_CONFIG.silenceDuration / enemySlowFactor / promotionSpeedMultiplier;
+  const effectiveConstrictDuration = BALL_CONFIG.constrictDuration / enemySlowFactor / promotionSpeedMultiplier;
+  const effectiveCookingInterval = BALL_COOKING_CONFIG.tickInterval / enemySlowFactor;
+
   switch (ballState.phase) {
+    // ========================================================================
+    // RUN 039: Gathering Phase - Pre-formation telegraph
+    // Bees travel slowly to their positions, indicator shows ball location
+    // Duration scales with wave: 3.5s at wave 3 → 2s at wave 7+
+    // RUN 040: Also scaled by enemySlowFactor (already applied to gatheringDuration)
+    // ========================================================================
+    case 'gathering': {
+      const progress = Math.min(1, phaseElapsed / gatheringDuration);
+      newState.phaseProgress = progress;
+
+      // Ball center slowly tracks player during gathering (scaled by slow)
+      const trackingRate = 0.02 * enemySlowFactor;
+      newState.center = {
+        x: newState.center.x + (playerPos.x - newState.center.x) * trackingRate,
+        y: newState.center.y + (playerPos.y - newState.center.y) * trackingRate,
+      };
+
+      // No temperature during gathering (just visual)
+      newState.temperature = 0;
+
+      // Transition to forming when gathering complete
+      if (progress >= 1) {
+        newState.phase = 'forming';
+        newState.phaseStartTime = gameTime;
+        newState.phaseProgress = 0;
+
+        console.log('[BALL] FORMING! Bees have arrived at positions');
+
+        events.push({
+          type: 'ball_forming_started',
+          timestamp: gameTime,
+          position: newState.center,
+        });
+      }
+      break;
+    }
+
     case 'forming': {
-      const progress = Math.min(1, phaseElapsed / BALL_CONFIG.formingDuration);
+      const progress = Math.min(1, phaseElapsed / effectiveFormingDuration);
       newState.phaseProgress = progress;
       newState.currentRadius = interpolateFormingRadius(progress);
       newState.temperature = calculateTemperature('forming', progress, newState.temperature);
@@ -910,7 +1263,7 @@ function updateBallFormationCore(
     }
 
     case 'silence': {
-      const progress = Math.min(1, phaseElapsed / BALL_CONFIG.silenceDuration);
+      const progress = Math.min(1, phaseElapsed / effectiveSilenceDuration);
       newState.phaseProgress = progress;
       newState.temperature = calculateTemperature('silence', progress, newState.temperature);
 
@@ -930,7 +1283,8 @@ function updateBallFormationCore(
     }
 
     case 'constrict': {
-      const progress = Math.min(1, phaseElapsed / BALL_CONFIG.constrictDuration);
+      // RUN 040: Use effective constrict duration for bullet time
+      const progress = Math.min(1, phaseElapsed / effectiveConstrictDuration);
       newState.phaseProgress = progress;
 
       if (!newState.isDissipating) {
@@ -999,7 +1353,8 @@ function updateBallFormationCore(
       newState.center = { ...playerPos };
       newState.currentRadius = BALL_PHASE_CONFIG.finalRadius;
 
-      if (gameTime - ballState.lastDamageTick >= BALL_COOKING_CONFIG.tickInterval) {
+      // RUN 040: Use effective cooking interval for bullet time (slower damage ticks)
+      if (gameTime - ballState.lastDamageTick >= effectiveCookingInterval) {
         damageToPlayer += BALL_COOKING_CONFIG.damagePerTick;
         newState.lastDamageTick = gameTime;
 
@@ -1022,12 +1377,14 @@ function updateBallFormationCore(
   // ==========================================================================
 
   if (newState.phase !== 'inactive') {
+    // RUN 039: Pass gameTime for organic bee oscillation
     const posMap = calculateFormationPositions(
       newState.center,
       newState.currentRadius,
       newState.formationBeeIds.length,
       newState.gapAngle,
-      newState.gapSize
+      newState.gapSize,
+      gameTime  // For oscillation timing
     );
 
     newState.formationPositions = new Map(
@@ -1046,4 +1403,7 @@ function updateBallFormationCore(
 // =============================================================================
 
 // These are exported from the old formation.ts and may be used elsewhere
-export { renderBallFormation } from './render';
+export { renderBallFormation, renderOutsidePunchIndicators, getPunchingBeeIds, getBeeWindupProgress } from './render';
+
+// Re-export OutsidePunchState type for rendering
+export type { OutsidePunchState } from './types';

@@ -50,6 +50,11 @@ export interface UseInputReturn {
    * Only updates if space is currently held.
    */
   updateSpaceHoldDuration: () => void;
+  /**
+   * Reset all input state (all keys released, all flags cleared).
+   * Call this when restarting the game to clear any held keys.
+   */
+  resetInput: () => void;
 }
 
 // =============================================================================
@@ -348,10 +353,30 @@ export function useInput(options: UseInputOptions = {}): UseInputReturn {
     }
   }, []);
 
+  // Reset all input state (call when restarting game)
+  const resetInput = useCallback(() => {
+    inputRef.current = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      dashPressed: false,
+      dashConsumed: false,
+      // Apex Strike reset
+      spaceDown: false,
+      spaceJustPressed: false,
+      spaceJustReleased: false,
+      spaceHoldDuration: 0,
+      spaceDownTimestamp: 0,
+      aimDirection: lastAimRef.current, // Preserve last aim
+    };
+  }, []);
+
   return {
     inputRef,
     clearFrameFlags,
     updateSpaceHoldDuration,
+    resetInput,
   };
 }
 

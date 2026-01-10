@@ -283,7 +283,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     name: 'Berserker',
     fantasy: 'Overwhelming offense',
     coreUpgrades: ['multishot', 'burst', 'frenzy', 'bleed'],
-    color: '#FF6600',
+    color: '#FF3333',  // Pure red for berserker rage (distinct from player orange)
     icon: 'flame',
     killSoundVariant: 'chaos',  // Explosive crackle
   },
@@ -720,7 +720,7 @@ export function getSynergy(id: string): Synergy | undefined {
  */
 export function generateUpgradeChoices(
   ownedUpgrades: UpgradeType[],
-  count: number = 3
+  count: number = 4  // Run 040: Increased from 3 to 4 choices
 ): VerbUpgrade[] {
   // Filter out already owned upgrades
   const available = UPGRADE_POOL.filter((u) => !ownedUpgrades.includes(u.id));

@@ -187,7 +187,8 @@ export interface DebugAPI {
 // =============================================================================
 
 export interface DebugBallState {
-  phase: 'inactive' | 'forming' | 'silence' | 'constrict' | 'cooking' | 'dissipating';
+  // RUN 039: Added 'gathering' phase for pre-formation telegraph
+  phase: 'inactive' | 'gathering' | 'forming' | 'silence' | 'constrict' | 'cooking' | 'dissipating';
   phaseProgress: number;
   center: { x: number; y: number };
   currentRadius: number;

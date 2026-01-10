@@ -14,6 +14,7 @@
  */
 
 import type { GameState, EnemyType, Vector2, Enemy } from '../types';
+import type { AbilityId } from './abilities';
 import { getSoundEngine } from './sound';
 
 // =============================================================================
@@ -50,20 +51,20 @@ export const FREEZE = {
  */
 export const PARTICLES = {
   deathSpiral: {
-    count: 25,           // NOT 5, TWENTY-FIVE
+    count: 12,           // Reduced from 25 to prevent visual soup
     color: '#FFE066',    // soft yellow pollen
     spread: 45,          // degrees
     lifespan: 400,       // ms
     rotation: 3,         // full rotations during descent
   },
   honeyDrip: {
-    count: 15,
+    count: 6,            // Reduced from 15 for clarity
     color: '#F4A300',    // amber
     gravity: 200,        // px/s^2
     poolFade: 1200,      // ms - how long the pool lingers
   },
   damageFlash: {
-    colors: ['#FF6600', '#FF0000'],  // orange -> red
+    colors: ['#FF3333', '#FF0000'],  // pure red -> dark red (danger, not player)
     flashDuration: 100,
     fadeDuration: 200,
     fragmentCount: 10,
@@ -128,7 +129,7 @@ export const APEX_STRIKE = {
       rotationSpeed: 20,   // Full rotations per second
     },
     windDust: {
-      count: 6,
+      count: 3,            // Reduced from 6
       color: '#FFFFFFAA',  // White semi-transparent
       spread: 20,
       lifespan: 200,       // ms
@@ -154,28 +155,37 @@ export const APEX_STRIKE = {
       fadeTime: 100,       // ms
     },
     speedLines: {
-      count: 6,
+      count: 3,            // Reduced from 6
       color: '#FFFFFF',
       length: 40,
       spread: 15,          // Degrees from direction
       lifespan: 80,        // Very quick
     },
     airDisplacement: {
-      count: 10,
+      count: 5,            // Reduced from 10
       color: '#FFFFFF40',  // Very faint
       spread: 60,          // Degrees perpendicular to strike
       velocity: 200,
+    },
+    // DD-038-3: Afterimages - "3 ghostly silhouettes during strike"
+    afterimages: {
+      count: 3,            // Reduced from 5 afterimages during strike
+      spawnInterval: 30,   // ms between spawns
+      fadeTime: 300,       // ms total fade duration
+      startAlpha: 0.7,     // Initial opacity
+      color: '#CC5500',    // Player color (Burnt Amber)
+      scale: 0.9,          // Slightly smaller than player
     },
   },
 
   // Hit effects - IMPACT
   hit: {
-    burstCount: 20,
+    burstCount: 10,           // Reduced from 20, max scales to 15
     burstColor: '#FF6600',    // Impact orange
     burstVelocity: 300,       // Fast burst
     flashDuration: 50,        // ms
     flashColor: '#FFFFFF',
-    chainGlowColor: '#FFD700', // Gold for chain ready
+    chainGlowColor: '#00FF88', // Green for chain ready (distinct from XP)
     chainGlowRadius: 30,
   },
 
@@ -202,12 +212,71 @@ export const APEX_STRIKE = {
 } as const;
 
 /**
+ * Run 039: Bumper-Rail Combo System Parameters
+ * "Bees are not obstacles. Bees are terrain."
+ * Pinball + Tony Hawk grinding + Peggle cascades
+ */
+export const BUMPER_JUICE = {
+  // Bumper hit effect - pinball PING!
+  bumperPing: {
+    count: 6,               // Reduced from 12
+    color: '#FFD700',       // Gold
+    colorAlt: '#FFFFFF',    // White flash
+    spread: 360,            // Full circle
+    lifespan: 250,          // Quick flash ms
+    size: 4,                // Medium sparks
+    velocity: 180,          // Fast burst
+  },
+  // Rail chain lightning effect
+  railLine: {
+    color: '#D4A017',       // Amber lightning (enemy element, not player cyan)
+    colorFlow: '#FFD700',   // Gold when in flow state
+    width: 3,               // Line thickness
+    glowRadius: 8,          // Glow around line
+    fadeTime: 400,          // ms to fade out
+    segmentCount: 5,        // Lightning segments per line
+    jitter: 8,              // Perpendicular jitter px
+  },
+  // Flow state screen effect
+  flowState: {
+    speedLineCount: 12,     // Radial speed lines
+    speedLineColor: '#FFD70040', // Semi-transparent gold
+    chromaticOffset: 3,     // Pixels of color separation
+    vignetteColor: '#FFD70020', // Golden vignette
+    pulseRate: 150,         // ms per pulse
+  },
+  // Combo counter popup
+  comboText: {
+    color: '#FFFFFF',       // White
+    colorFlow: '#FFD700',   // Gold in flow state
+    size: 24,               // Large, readable
+    duration: 800,          // Float duration ms
+    floatSpeed: 60,         // Pixels per second upward
+  },
+  // Charged bee warning
+  chargedBee: {
+    glowColor: '#FF4444',   // Red danger
+    glowRadius: 12,         // Large warning glow
+    pulseRate: 100,         // Fast pulse ms
+    sparkColor: '#FF8800',  // Orange sparks
+    sparkCount: 4,          // Sparks around bee
+  },
+  // Chain break effect
+  chainBreak: {
+    color: '#FF4444',       // Red
+    shatterCount: 8,        // Fragment particles
+    shakeIntensity: 6,      // Screen shake
+    shakeDuration: 150,     // ms
+  },
+} as const;
+
+/**
  * Graze System Parameters
  * "RISK-TAKING REWARDED - Near-miss = sparks + chain bonus"
  */
 export const GRAZE_JUICE = {
   spark: {
-    count: 8,            // Small burst, not overwhelming
+    count: 4,            // Reduced from 8
     color: '#00FFFF',    // Cyan spark
     spread: 180,         // Half-circle degrees
     lifespan: 200,       // Quick flash ms
@@ -258,10 +327,10 @@ export const COLORS = {
   // =================================================================
   // FEEDBACK - Clear visual language
   // =================================================================
-  xp: '#FFD700', // Warning Yellow - bright XP pickups
+  xp: '#FFE066', // Pollen Gold - bright XP pickups (lighter reward yellow)
   health: '#00FF88', // Vitality Green - healing/health
   ghost: '#A0A0B0', // Warm Gray - death/ghost state
-  crisis: '#FF6B00', // Hornet Orange - danger/warning
+  crisis: '#FF3366', // Pinkish Red - danger/warning (distinct from player orange)
 
   // =================================================================
   // EFFECTS - Death should feel VISCERAL
@@ -279,11 +348,76 @@ export const COLORS = {
 // =============================================================================
 
 export const METAMORPHOSIS_COLORS = {
-  pulsing: { start: '#FF6B00', end: '#FF0000' },  // Orange to red
+  pulsing: { start: '#FF3366', end: '#FF0000' },  // Pinkish-red to red (distinct from player)
   threads: '#FF00FF',  // Magenta
   colossal: '#880000',  // Deep crimson
   linked: '#FF666680',  // Semi-transparent red for linked enemies
 };
+
+// =============================================================================
+// ABILITY JUICE PARAMETERS - Visual feedback for all 36 abilities
+// =============================================================================
+
+/**
+ * Ability Juice Context - passed when triggering ability effects
+ */
+export interface AbilityJuiceContext {
+  position: Vector2;
+  targetPosition?: Vector2;
+  targetEnemyId?: string;
+  intensity?: number; // 0-1 for effect strength
+  tintColor?: string;
+  stacks?: number;    // For stackable effects
+}
+
+/**
+ * Ability Juice Parameters - color/timing for each ability category
+ */
+export const ABILITY_JUICE = {
+  // MANDIBLE - Red/Orange melee effects
+  mandible: {
+    bleedColor: '#FF3333',
+    stunFlashColor: '#FFFFFF',
+    crackColor: '#888888',
+    rippleColor: '#4488FF',
+    glintColor: '#FFDD00',
+  },
+  // VENOM - Purple poison effects
+  venom: {
+    poisonColor: '#9933FF',
+    freezeColor: '#6666FF',
+    jitterColor: '#FF6666',
+    slowColor: '#CC66FF',
+  },
+  // WING - Cyan/Blue wind effects
+  wing: {
+    pressureColor: '#88CCFF44',
+    buzzColor: '#FFFF0044',
+    heatColor: '#FF440022',
+    speedColor: '#00FFFF88',  // Cyan for swift wings trail
+    trailColor: '#00FFFFCC', // Brighter cyan for movement trail
+  },
+  // PREDATOR - Yellow/Gold kill effects
+  predator: {
+    markColor: '#FF990033',
+    trophyColor: '#FFD700',
+    explosionColor: '#FF3333',  // Pure red for predator kills
+    speedColor: '#00FF0088',
+  },
+  // PHEROMONE - Orange/Yellow aura effects
+  pheromone: {
+    threatColor: '#FF990022',
+    confusionColor: '#9966FF88',
+    deathColor: '#66008822',
+  },
+  // CHITIN - Grey/Red defensive effects
+  chitin: {
+    spikeColor: '#AAAAAA',
+    shellColor: '#DDAA66',
+    fragmentColor: '#AA8844',
+    burstColor: '#FFD700',
+  },
+} as const;
 
 // Pulsing state for metamorphosis (extends Enemy with optional field)
 export type MetamorphosisPulsingState = 'normal' | 'pulsing' | 'seeking' | 'combining';
@@ -380,6 +514,35 @@ export interface ApexStrikeState {
   chainAvailable: boolean;  // Can chain after hit
   startPosition: Vector2;   // Where lock began
   targetPosition: Vector2;  // Strike target
+  // DD-038-3: Afterimage tracking
+  afterimages: Afterimage[];
+  lastAfterimageTime: number;
+}
+
+/**
+ * DD-038-3: Afterimage
+ * Visual-only ghost silhouettes during apex strike
+ * "5 afterimages during strike, spawn every 30ms, fade over 300ms"
+ */
+export interface Afterimage {
+  id: string;
+  position: Vector2;
+  direction: Vector2;
+  alpha: number;        // Starts at 0.7, fades to 0
+  lifetime: number;     // Remaining lifetime in ms
+  maxLifetime: number;  // 300ms
+  scale: number;        // 1.0 for full size
+}
+
+// Run 038: Screen effect state (color inversion for impact)
+export interface ScreenEffectState {
+  invert: boolean;
+  duration: number;
+  elapsed: number;
+  // Circle effect centered on player
+  centerX: number;
+  centerY: number;
+  radius: number;
 }
 
 export interface JuiceSystem {
@@ -390,9 +553,13 @@ export interface JuiceSystem {
   freeze: FreezeState; // NEW: Freeze frame state
   killTracker: KillTracker; // NEW: Multi-kill tracking
   apexStrike: ApexStrikeState; // Apex Strike visual state
+  screenEffect: ScreenEffectState; // Run 038: Screen effect for impact
+
+  // Reset method - clears all particles and effects for new game
+  reset: () => void;
 
   // Methods
-  emitKill: (position: Vector2, enemyType: EnemyType) => void;
+  emitKill: (position: Vector2, enemyType: EnemyType, statusEffect?: 'poison' | 'burn' | 'venom') => void;
   emitDamage: (position: Vector2, amount: number) => void;
   emitLevelUp: (level: number) => void;
   emitWaveComplete: (wave: number) => void;
@@ -435,6 +602,63 @@ export interface JuiceSystem {
 
   // Bloodlust max effect
   emitBloodlustMax: (position: Vector2) => void;
+
+  // Run 038: Multi-hit combo visual effect (playerPos for circle center)
+  emitMultiHit?: (position: Vector2, hitCount: number, playerPos: Vector2) => void;
+
+  // Run 038: Emit combo counter for batched kills
+  emitCombo?: (position: Vector2, killCount: number) => void;
+
+  // Run 038: Update existing combo counter
+  updateComboCount?: (newCount: number) => void;
+
+  // DD-038-3: Afterimage system methods
+  updateAfterimages: (deltaTime: number) => void;
+  spawnAfterimage: (position: Vector2, direction: Vector2, gameTime: number) => void;
+
+  // =================================================================
+  // POISON DAMAGE SYSTEM - Green floating damage numbers
+  // =================================================================
+  // Emit poison damage tick - green floating number that floats up and fades
+  emitPoisonTick: (position: Vector2, damage: number, stacks: number) => void;
+
+  // =================================================================
+  // RUN 039: BUMPER-RAIL COMBO SYSTEM - "Bees are terrain"
+  // =================================================================
+
+  // Bumper state tracking
+  bumperRail: {
+    chainLength: number;
+    flowActive: boolean;
+    railPoints: Vector2[];
+    railFadeTime: number;
+    lastBumperTime: number;
+  };
+
+  // Bumper hit - pinball PING! with sparkle burst
+  emitBumperPing: (position: Vector2, comboCount: number) => void;
+
+  // Rail chain - lightning line connecting hits
+  updateRailLine: (points: Vector2[], flowActive: boolean) => void;
+
+  // Flow state - screen effects (speed lines, vignette)
+  setFlowState: (active: boolean) => void;
+
+  // Combo text popup - "3x CHAIN!"
+  emitComboChain: (position: Vector2, chainLength: number, flowActive: boolean) => void;
+
+  // Chain break - shatter effect + shake
+  emitChainBreak: (position: Vector2, reason: 'charged' | 'guard' | 'timeout') => void;
+
+  // Charged bee hit - pain flash
+  emitChargedBeeHit: (position: Vector2, damage: number) => void;
+
+  // =================================================================
+  // ABILITY JUICE SYSTEM - Visual feedback for all 36 abilities
+  // =================================================================
+
+  // Main ability juice dispatcher - routes to specific effect based on ability ID
+  emitAbilityJuice: (abilityId: AbilityId, context: AbilityJuiceContext) => void;
 }
 
 // =============================================================================
@@ -924,6 +1148,416 @@ function createApexFuryTextParticle(position: Vector2): Particle {
 }
 
 // =============================================================================
+// ABILITY JUICE EMITTERS - Individual effect functions for each ability
+// =============================================================================
+
+/**
+ * MANDIBLE: Bleed effect - small red tick marks flying off
+ */
+function createBleedParticles(position: Vector2, color: string): Particle[] {
+  const particles: Particle[] = [];
+  for (let i = 0; i < 3; i++) {
+    particles.push({
+      id: `bleed-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+      position: { x: position.x + (Math.random() - 0.5) * 20, y: position.y + (Math.random() - 0.5) * 20 },
+      velocity: { x: (Math.random() - 0.5) * 30, y: -20 - Math.random() * 20 },
+      color,
+      size: 3,
+      lifetime: 500,
+      maxLifetime: 500,
+      alpha: 1,
+      type: 'burst',
+    });
+  }
+  return particles;
+}
+
+/**
+ * MANDIBLE: Stun flash - bright white flash on enemy
+ */
+function createStunFlashParticle(position: Vector2): Particle {
+  return {
+    id: `stun-flash-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: 0, y: 0 },
+    color: ABILITY_JUICE.mandible.stunFlashColor,
+    size: 30,
+    lifetime: 200,
+    maxLifetime: 200,
+    alpha: 0.9,
+    type: 'ring',
+    text: '30',
+  };
+}
+
+/**
+ * MANDIBLE: Armor crack - grey shards flying off
+ */
+function createArmorCrackParticles(position: Vector2): Particle[] {
+  const particles: Particle[] = [];
+  for (let i = 0; i < 4; i++) {
+    const angle = (i / 4) * Math.PI * 2;
+    particles.push({
+      id: `crack-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+      position: { ...position },
+      velocity: { x: Math.cos(angle) * 40, y: Math.sin(angle) * 40 },
+      color: ABILITY_JUICE.mandible.crackColor,
+      size: 4,
+      lifetime: 300,
+      maxLifetime: 300,
+      alpha: 1,
+      type: 'fragment',
+    });
+  }
+  return particles;
+}
+
+/**
+ * MANDIBLE: Knockback ripple - expanding blue ring
+ */
+function createKnockbackRippleParticle(position: Vector2): Particle {
+  return {
+    id: `ripple-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: 0, y: 0 },
+    color: ABILITY_JUICE.mandible.rippleColor,
+    size: 10,
+    lifetime: 300,
+    maxLifetime: 300,
+    alpha: 0.8,
+    type: 'ring',
+    text: '40', // Max size for ring expansion
+  };
+}
+
+/**
+ * MANDIBLE: Sawtooth glint - golden spark on 5th hit
+ */
+function createSawtoothGlintParticle(position: Vector2): Particle {
+  return {
+    id: `glint-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { x: position.x, y: position.y - 10 },
+    velocity: { x: 0, y: -30 },
+    color: ABILITY_JUICE.mandible.glintColor,
+    size: 8,
+    lifetime: 400,
+    maxLifetime: 400,
+    alpha: 1,
+    type: 'burst',
+  };
+}
+
+/**
+ * VENOM: Poison drip - purple drops falling
+ */
+function createPoisonDripParticle(position: Vector2, color: string): Particle {
+  return {
+    id: `poison-drip-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: (Math.random() - 0.5) * 10, y: 20 + Math.random() * 20 },
+    color,
+    size: 5,
+    lifetime: 600,
+    maxLifetime: 600,
+    alpha: 0.9,
+    type: 'drip',
+    gravity: 150,
+  };
+}
+
+/**
+ * VENOM: Freeze flash - purple/blue brief flash
+ */
+function createFreezeFlashParticle(position: Vector2, color: string): Particle {
+  return {
+    id: `freeze-flash-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: 0, y: 0 },
+    color,
+    size: 25,
+    lifetime: 150,
+    maxLifetime: 150,
+    alpha: 0.8,
+    type: 'ring',
+    text: '25',
+  };
+}
+
+/**
+ * VENOM: Jitter effect - erratic small particles
+ */
+function createJitterParticles(position: Vector2): Particle[] {
+  const particles: Particle[] = [];
+  for (let i = 0; i < 4; i++) {
+    particles.push({
+      id: `jitter-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+      position: { x: position.x + (Math.random() - 0.5) * 30, y: position.y + (Math.random() - 0.5) * 30 },
+      velocity: { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100 },
+      color: ABILITY_JUICE.venom.jitterColor,
+      size: 2,
+      lifetime: 100,
+      maxLifetime: 100,
+      alpha: 1,
+      type: 'burst',
+    });
+  }
+  return particles;
+}
+
+/**
+ * WING: Pressure wave - expanding translucent ring
+ */
+function createPressureWaveParticle(position: Vector2): Particle {
+  return {
+    id: `pressure-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: 0, y: 0 },
+    color: ABILITY_JUICE.wing.pressureColor,
+    size: 50,
+    lifetime: 500,
+    maxLifetime: 500,
+    alpha: 0.4,
+    type: 'ring',
+    text: '80', // Expand to 80px
+  };
+}
+
+/**
+ * WING: Buzz ring - yellow vibrating ring
+ */
+function createBuzzRingParticle(position: Vector2): Particle {
+  return {
+    id: `buzz-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: 0, y: 0 },
+    color: ABILITY_JUICE.wing.buzzColor,
+    size: 20,
+    lifetime: 300,
+    maxLifetime: 300,
+    alpha: 0.5,
+    type: 'ring',
+    text: '30',
+  };
+}
+
+/**
+ * WING: Heat shimmer - wavy distortion effect particles
+ */
+function createHeatShimmerParticle(position: Vector2): Particle {
+  return {
+    id: `heat-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { x: position.x + (Math.random() - 0.5) * 20, y: position.y },
+    velocity: { x: 0, y: -10 },
+    color: ABILITY_JUICE.wing.heatColor,
+    size: 15,
+    lifetime: 800,
+    maxLifetime: 800,
+    alpha: 0.3,
+    type: 'burst',
+  };
+}
+
+/**
+ * WING: Speed lines - horizontal motion blur lines
+ */
+function createSpeedLineParticles(position: Vector2): Particle[] {
+  const particles: Particle[] = [];
+  for (let i = 0; i < 3; i++) {
+    particles.push({
+      id: `speed-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+      position: { x: position.x - 20, y: position.y + (i - 1) * 10 },
+      velocity: { x: -60, y: 0 },
+      color: ABILITY_JUICE.wing.speedColor,
+      size: 2,
+      lifetime: 200,
+      maxLifetime: 200,
+      alpha: 0.6,
+      type: 'trail',
+    });
+  }
+  return particles;
+}
+
+/**
+ * PREDATOR: Ground stain - persistent orange mark
+ */
+function createGroundStainParticle(position: Vector2): Particle {
+  return {
+    id: `stain-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: 0, y: 0 },
+    color: ABILITY_JUICE.predator.markColor,
+    size: 30,
+    lifetime: 5000, // Long lasting
+    maxLifetime: 5000,
+    alpha: 0.5,
+    type: 'pool',
+    isPool: true,
+  };
+}
+
+/**
+ * PREDATOR: Trophy flash - golden upward spark
+ */
+function createTrophyFlashParticle(position: Vector2): Particle {
+  return {
+    id: `trophy-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { x: position.x, y: position.y - 20 },
+    velocity: { x: 0, y: -20 },
+    color: ABILITY_JUICE.predator.trophyColor,
+    size: 12,
+    lifetime: 500,
+    maxLifetime: 500,
+    alpha: 1,
+    type: 'burst',
+  };
+}
+
+/**
+ * PREDATOR: Mini explosion - radial particle burst
+ */
+function createMiniExplosionParticles(position: Vector2): Particle[] {
+  const particles: Particle[] = [];
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    particles.push({
+      id: `explosion-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+      position: { ...position },
+      velocity: { x: Math.cos(angle) * 60, y: Math.sin(angle) * 60 },
+      color: ABILITY_JUICE.predator.explosionColor,
+      size: 5,
+      lifetime: 300,
+      maxLifetime: 300,
+      alpha: 1,
+      type: 'burst',
+    });
+  }
+  return particles;
+}
+
+/**
+ * PHEROMONE: Aura glow - soft expanding colored ring
+ */
+function createAuraGlowParticle(position: Vector2, color: string): Particle {
+  return {
+    id: `aura-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: 0, y: 0 },
+    color: color + '22', // Add transparency
+    size: 30,
+    lifetime: 100,
+    maxLifetime: 100,
+    alpha: 0.3,
+    type: 'ring',
+    text: '40',
+  };
+}
+
+/**
+ * PHEROMONE: Confusion swirl - orbiting particles
+ */
+function createConfusionSwirlParticles(position: Vector2): Particle[] {
+  const particles: Particle[] = [];
+  for (let i = 0; i < 5; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    particles.push({
+      id: `swirl-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+      position: { x: position.x + Math.cos(angle) * 20, y: position.y + Math.sin(angle) * 20 },
+      velocity: { x: Math.cos(angle + Math.PI / 2) * 30, y: Math.sin(angle + Math.PI / 2) * 30 },
+      color: ABILITY_JUICE.pheromone.confusionColor,
+      size: 6,
+      lifetime: 1000,
+      maxLifetime: 1000,
+      alpha: 0.7,
+      type: 'apex_wind_dust', // Reuse swirling particle type
+    });
+  }
+  return particles;
+}
+
+/**
+ * PHEROMONE: Seeping effect - slow expanding dark pool
+ */
+function createSeepingParticle(position: Vector2): Particle {
+  return {
+    id: `seep-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: 0, y: 0 },
+    color: ABILITY_JUICE.pheromone.deathColor,
+    size: 40,
+    lifetime: 3000,
+    maxLifetime: 3000,
+    alpha: 0.4,
+    type: 'pool',
+    isPool: true,
+  };
+}
+
+/**
+ * CHITIN: Spike plink - small grey shard flying off
+ */
+function createSpikePlinkParticle(position: Vector2): Particle {
+  return {
+    id: `spike-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: (Math.random() - 0.5) * 40, y: -30 },
+    color: ABILITY_JUICE.chitin.spikeColor,
+    size: 3,
+    lifetime: 300,
+    maxLifetime: 300,
+    alpha: 1,
+    type: 'fragment',
+  };
+}
+
+/**
+ * CHITIN: Shell burst - radial chitin fragments
+ */
+function createShellBurstParticles(position: Vector2): Particle[] {
+  const particles: Particle[] = [];
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    particles.push({
+      id: `shell-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+      position: { ...position },
+      velocity: { x: Math.cos(angle) * 80, y: Math.sin(angle) * 80 },
+      color: ABILITY_JUICE.chitin.shellColor,
+      size: 8,
+      lifetime: 500,
+      maxLifetime: 500,
+      alpha: 1,
+      type: 'fragment',
+    });
+  }
+  return particles;
+}
+
+/**
+ * CHITIN: Shell fragment - single shard flying off
+ */
+function createShellFragmentParticle(position: Vector2): Particle {
+  return {
+    id: `frag-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    position: { ...position },
+    velocity: { x: (Math.random() - 0.5) * 60, y: -40 - Math.random() * 20 },
+    color: ABILITY_JUICE.chitin.fragmentColor,
+    size: 6,
+    lifetime: 600,
+    maxLifetime: 600,
+    alpha: 1,
+    type: 'fragment',
+  };
+}
+
+// =============================================================================
+// Reserved helper functions (suppress unused warnings - will be used when abilities are fully wired)
+// =============================================================================
+
+void createArmorCrackParticles;
+void createSawtoothGlintParticle;
+void createJitterParticles;
+
+// =============================================================================
 // Escalation Engine (S2)
 // =============================================================================
 
@@ -982,6 +1616,15 @@ export function createJuiceSystem(): JuiceSystem {
       framesRemaining: 0,
       type: null as FreezeState['type'],
     },
+    // Run 038: Screen effect (color inversion) for impact moments
+    screenEffect: {
+      invert: false,
+      duration: 0,
+      elapsed: 0,
+      centerX: 0,
+      centerY: 0,
+      radius: 100,
+    },
     // NEW: Kill tracker for multi-kill detection
     killTracker: {
       recentKills: 0,
@@ -999,6 +1642,17 @@ export function createJuiceSystem(): JuiceSystem {
       chainAvailable: false,
       startPosition: { x: 0, y: 0 },
       targetPosition: { x: 0, y: 0 },
+      // DD-038-3: Afterimage state
+      afterimages: [] as Afterimage[],
+      lastAfterimageTime: 0,
+    },
+    // Run 039: Bumper-Rail combo state
+    bumperRail: {
+      chainLength: 0,
+      flowActive: false,
+      railPoints: [] as Vector2[],
+      railFadeTime: 0,
+      lastBumperTime: 0,
     },
   };
 
@@ -1024,8 +1678,90 @@ export function createJuiceSystem(): JuiceSystem {
     get apexStrike() {
       return state.apexStrike;
     },
+    get bumperRail() {
+      return state.bumperRail;
+    },
+    get screenEffect() {
+      return state.screenEffect;
+    },
 
-    emitKill(position: Vector2, enemyType: EnemyType) {
+    /**
+     * Reset juice system state for a new game run
+     * Clears all particles, effects, and visual state to prevent artifacts
+     * from accumulating between games
+     */
+    reset() {
+      // Clear all particles
+      state.particles.length = 0;
+
+      // Reset shake
+      state.shake = {
+        intensity: 0,
+        duration: 0,
+        elapsed: 0,
+        offset: { x: 0, y: 0 },
+      };
+
+      // Reset escalation
+      state.escalation = {
+        wave: 1,
+        combo: 0,
+        comboTimer: 0,
+        healthFraction: 1,
+        multiplier: 1,
+      };
+
+      // Reset clutch moment
+      state.clutch = {
+        active: false,
+        level: null,
+        timeScale: 1.0,
+        zoom: 1.0,
+        remaining: 0,
+        duration: 0,
+      };
+
+      // Reset freeze frames
+      state.freeze = {
+        active: false,
+        framesRemaining: 0,
+        type: null,
+      };
+
+      // Reset screen effect
+      state.screenEffect = {
+        invert: false,
+        duration: 0,
+        elapsed: 0,
+        centerX: 0,
+        centerY: 0,
+        radius: 100,
+      };
+
+      // Reset kill tracker
+      state.killTracker = {
+        recentKills: 0,
+        windowStart: 0,
+        windowDuration: 150,
+        lastKillTime: 0,
+      };
+
+      // Reset apex strike visual state
+      state.apexStrike = {
+        phase: 'none',
+        lockProgress: 0,
+        strikeProgress: 0,
+        direction: { x: 1, y: 0 },
+        bloodlust: 0,
+        chainAvailable: false,
+        startPosition: { x: 0, y: 0 },
+        targetPosition: { x: 0, y: 0 },
+        afterimages: [],
+        lastAfterimageTime: 0,
+      };
+    },
+
+    emitKill(position: Vector2, enemyType: EnemyType, statusEffect?: 'poison' | 'burn' | 'venom') {
       const now = Date.now();
 
       // Track multi-kills
@@ -1107,22 +1843,31 @@ export function createJuiceSystem(): JuiceSystem {
       const baseCount = enemyType === 'royal' ? 24 : enemyType === 'guard' ? 16 : 8;
       const count = Math.floor(baseCount * state.escalation.multiplier);
 
-      // Burst particles
+      // Run 040: Status effect color override for death particles
+      // Poisoned enemies explode GREEN, burned enemies ORANGE, venom enemies PURPLE
+      const statusEffectColors: Record<string, string> = {
+        poison: '#00FF00',  // Bright green
+        burn: '#FF6600',    // Orange/fire
+        venom: '#8B00FF',   // Purple
+      };
+      const particleColor = statusEffect ? statusEffectColors[statusEffect] : COLORS.enemy;
+
+      // Burst particles (with status effect color if applicable)
       const burstParticles = createBurstParticles(
         position,
-        COLORS.enemy,
+        particleColor,
         count,
         state.escalation.multiplier
       );
       state.particles.push(...burstParticles);
 
-      // XP text particle
+      // XP text particle (+50% XP boost)
       const xpValues: Record<import('../types').BeeType, number> = {
-        worker: 10,
-        scout: 15,
-        guard: 30,
-        propolis: 20,
-        royal: 100,
+        worker: 15,
+        scout: 23,
+        guard: 38,
+        propolis: 30,
+        royal: 150,
       };
       // Use bee-type XP or default if legacy type
       const xpBeeType = enemyType as import('../types').BeeType;
@@ -1409,9 +2154,9 @@ export function createJuiceSystem(): JuiceSystem {
         });
       }
 
-      // Play graze sound (if sound engine supports it)
-      const sound = getSoundEngine();
-      sound.play('graze', { pitch: 1.2 + chainCount * 0.05 });
+      // GRAZE SOUND DISABLED - system surface removed
+      // const sound = getSoundEngine();
+      // sound.play('graze', { pitch: 1.2 + chainCount * 0.05 });
     },
 
     // =================================================================
@@ -1437,9 +2182,9 @@ export function createJuiceSystem(): JuiceSystem {
         text: '+10% DAMAGE',
       });
 
-      // Play bonus trigger sound
-      const sound = getSoundEngine();
-      sound.play('graze', { pitch: 1.5, volume: 0.6 });
+      // GRAZE BONUS SOUND DISABLED - system surface removed
+      // const sound = getSoundEngine();
+      // sound.play('graze', { pitch: 1.5, volume: 0.36 });
     },
 
     // =================================================================
@@ -1501,6 +2246,9 @@ export function createJuiceSystem(): JuiceSystem {
       state.apexStrike.direction = { ...direction };
       state.apexStrike.bloodlust = bloodlust;
       state.apexStrike.startPosition = { ...position };
+      // DD-038-3: Reset afterimage state for new strike
+      state.apexStrike.afterimages = [];
+      state.apexStrike.lastAfterimageTime = 0;
 
       // Speed lines trailing behind
       const speedLines = createApexSpeedLineParticles(position, direction);
@@ -1621,6 +2369,138 @@ export function createJuiceSystem(): JuiceSystem {
     },
 
     /**
+     * Run 038: Emit Multi-Hit combo visual effect
+     * Called when apex strike hits 2+ enemies simultaneously
+     * Triggers actual freeze frame + circle inversion centered on player
+     */
+    emitMultiHit(position: Vector2, hitCount: number, playerPos: Vector2) {
+      // Big expanding ring showing the combo
+      state.particles.push({
+        id: `multi-hit-ring-${Date.now()}`,
+        position: { ...position },
+        velocity: { x: 0, y: 0 },
+        color: hitCount >= 3 ? '#FFD700' : '#FF8800', // Gold for 3+, orange for 2
+        size: 60,
+        lifetime: 400,
+        maxLifetime: 400,
+        alpha: 0.8,
+        type: 'ring',
+        text: '60',
+      });
+
+      // TRIGGER ACTUAL FREEZE - this sets timeScale to 0
+      // More enemies = longer freeze (multi for 2-3, massacre for 4+)
+      if (hitCount >= 4) {
+        this.triggerFreeze('massacre');
+      } else {
+        this.triggerFreeze('multi');
+      }
+
+      // Run 038: Circle inversion centered on PLAYER (not hit position)
+      // This creates a "time bubble" effect around the player
+      const effectRadius = 100 + hitCount * 25;
+      state.screenEffect = {
+        invert: true,
+        duration: hitCount >= 4 ? 140 : hitCount >= 3 ? 110 : 80,
+        elapsed: 0,
+        centerX: playerPos.x,  // Center on player, not hit position
+        centerY: playerPos.y,
+        radius: effectRadius,
+      };
+
+      // BIG DRAMATIC text with count
+      const comboText = hitCount >= 3 ? `${hitCount}x CARNAGE!` : 'DOUBLE KILL!';
+      state.particles.push({
+        id: `multi-hit-text-${Date.now()}`,
+        position: { x: position.x, y: position.y - 40 },
+        velocity: { x: 0, y: -60 },
+        color: hitCount >= 3 ? '#FFD700' : '#FF8800',
+        size: hitCount >= 3 ? 28 : 24,  // BIGGER text
+        lifetime: 1200,  // Longer duration
+        maxLifetime: 1200,
+        alpha: 1,
+        type: 'text',
+        text: comboText,
+      });
+
+      // LOTS of impact particles for multi-hit
+      const particleCount = hitCount * 8;  // More particles
+      for (let i = 0; i < particleCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 150 + Math.random() * 250;  // Faster
+        state.particles.push({
+          id: `multi-hit-spark-${Date.now()}-${i}`,
+          position: { ...position },
+          velocity: {
+            x: Math.cos(angle) * speed,
+            y: Math.sin(angle) * speed,
+          },
+          color: hitCount >= 3 ? '#FFD700' : '#FF8800',
+          size: 5 + Math.random() * 5,  // Bigger particles
+          lifetime: 400 + Math.random() * 300,
+          maxLifetime: 700,
+          alpha: 1,
+          type: 'burst',
+        });
+      }
+
+      // STRONG screen shake for multi-hit
+      this.triggerShake(15 + hitCount * 5, 250);  // Much stronger
+
+      // Sound feedback - lower pitch for more IMPACT
+      const sound = getSoundEngine();
+      sound.play('hit', { pitch: 0.3 + hitCount * 0.05, volume: 1.2 });
+    },
+
+    /**
+     * Run 038: Emit combo counter for batched kills
+     * Shows "Nx KILL" text that floats up
+     * Run 038 FIX: Now includes circle inversion effect (moved from emitMultiHit)
+     */
+    emitCombo(position: Vector2, killCount: number) {
+      // Only show for 2+ kills (called from useGameLoop with this check)
+      const comboText = `${killCount}x MULTI-KILL!`;
+      const color = killCount >= 4 ? '#FFD700' : '#FF8800';
+      const size = Math.min(32, 20 + killCount * 2);
+
+      state.particles.push({
+        id: `combo-text-${Date.now()}`,
+        position: { x: position.x, y: position.y - 50 },
+        velocity: { x: 0, y: -30 },
+        color,
+        size,
+        lifetime: 1500,
+        maxLifetime: 1500,
+        alpha: 1,
+        type: 'text',
+        text: comboText,
+      });
+
+      // Run 038 FIX: Circle inversion effect at batch time (moved from emitMultiHit)
+      // This creates the dramatic freeze-frame feel when the combo is revealed
+      const effectRadius = 100 + killCount * 25;
+      state.screenEffect = {
+        invert: true,
+        duration: killCount >= 4 ? 140 : killCount >= 3 ? 110 : 80,
+        elapsed: 0,
+        centerX: position.x,
+        centerY: position.y,
+        radius: effectRadius,
+      };
+
+      // Screen shake scales with combo
+      this.triggerShake(10 + killCount * 3, 200);
+
+      // Sound - use massacre sound for big combos
+      const sound = getSoundEngine();
+      if (killCount >= 5) {
+        sound.play('massacre', { volume: 0.9 });
+      } else {
+        sound.play('kill', { pitch: 0.5 + killCount * 0.1, volume: 1.0 });
+      }
+    },
+
+    /**
      * Emit Apex Miss effects
      * Called when strike misses (punishment feedback)
      */
@@ -1691,6 +2571,862 @@ export function createJuiceSystem(): JuiceSystem {
       sound.play('powerup', { pitch: 0.8 });
       sound.play('bassDrop');
     },
+
+    // =========================================================================
+    // DD-038-3: AFTERIMAGE SYSTEM - "5 ghostly silhouettes during strike"
+    // =========================================================================
+
+    /**
+     * Update all active afterimages (fade and remove expired)
+     * Called every frame during strike phase
+     */
+    updateAfterimages(deltaTime: number) {
+      const config = APEX_STRIKE.strike.afterimages;
+
+      // Update existing afterimages - fade based on remaining lifetime
+      state.apexStrike.afterimages = state.apexStrike.afterimages.filter(img => {
+        img.lifetime -= deltaTime;
+        // Alpha fades linearly from startAlpha to 0
+        img.alpha = (img.lifetime / img.maxLifetime) * config.startAlpha;
+        return img.lifetime > 0;
+      });
+    },
+
+    /**
+     * Spawn a new afterimage at the current position
+     * Respects spawn interval and max count from config
+     */
+    spawnAfterimage(position: Vector2, direction: Vector2, gameTime: number) {
+      const config = APEX_STRIKE.strike.afterimages;
+
+      // Only spawn during strike phase
+      if (state.apexStrike.phase !== 'strike') {
+        return;
+      }
+
+      // Check spawn interval
+      if (gameTime - state.apexStrike.lastAfterimageTime < config.spawnInterval) {
+        return;
+      }
+
+      // Check max count
+      if (state.apexStrike.afterimages.length >= config.count) {
+        return;
+      }
+
+      // Spawn new afterimage
+      state.apexStrike.afterimages.push({
+        id: `afterimage-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        position: { ...position },
+        direction: { ...direction },
+        alpha: config.startAlpha,
+        lifetime: config.fadeTime,
+        maxLifetime: config.fadeTime,
+        scale: config.scale,
+      });
+
+      state.apexStrike.lastAfterimageTime = gameTime;
+    },
+
+    // =================================================================
+    // POISON TICK SYSTEM - Green floating damage numbers
+    // "Poison ticks are satisfying when you SEE the damage"
+    // =================================================================
+    emitPoisonTick(position: Vector2, damage: number, stacks: number) {
+      // Create green damage text particle
+      // Damage number is smaller than regular damage and green colored
+      const poisonColor = '#00FF00';  // Bright green
+
+      // Add slight random offset so multiple ticks don't stack exactly
+      const offsetX = (Math.random() - 0.5) * 20;
+      const offsetY = (Math.random() - 0.5) * 10;
+
+      // Create the damage text particle
+      const damageText = Math.round(damage).toString();
+      state.particles.push({
+        id: `poison-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        position: { x: position.x + offsetX, y: position.y + offsetY - 10 },
+        velocity: { x: 0, y: -60 },  // Float upward (slower than regular damage)
+        color: poisonColor,
+        size: 12 + Math.min(stacks, 5) * 1,  // Size scales slightly with stacks (12-17)
+        lifetime: 600,
+        maxLifetime: 600,
+        alpha: 0.9,
+        type: 'text',
+        text: damageText,
+      });
+
+      // Add small green drip particles for visual flair (1-2 based on stacks)
+      const dripCount = Math.min(1 + Math.floor(stacks / 3), 2);
+      for (let i = 0; i < dripCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 20 + Math.random() * 30;
+        state.particles.push({
+          id: `poison-drip-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+          position: { x: position.x + offsetX, y: position.y + offsetY },
+          velocity: {
+            x: Math.cos(angle) * speed,
+            y: -20 + Math.sin(angle) * speed * 0.5,  // Slight upward bias
+          },
+          color: poisonColor,
+          size: 2 + Math.random() * 2,
+          lifetime: 300,
+          maxLifetime: 300,
+          alpha: 0.7,
+          type: 'burst',
+        });
+      }
+    },
+
+    // =================================================================
+    // RUN 039: BUMPER-RAIL COMBO SYSTEM
+    // "Bees are not obstacles. Bees are terrain."
+    // =================================================================
+
+    /**
+     * Emit bumper ping effect - pinball PING! with sparkle burst
+     */
+    emitBumperPing(position: Vector2, comboCount: number) {
+      const config = BUMPER_JUICE.bumperPing;
+
+      // Scale effect with combo count
+      const comboScale = Math.min(1 + comboCount * 0.1, 1.5);
+
+      // Create sparkle burst
+      for (let i = 0; i < config.count; i++) {
+        const angle = (i / config.count) * Math.PI * 2 + Math.random() * 0.3;
+        const speed = config.velocity * (0.8 + Math.random() * 0.4) * comboScale;
+        const isAlt = Math.random() > 0.7; // 30% white sparkles
+
+        state.particles.push({
+          id: `bumper-${Date.now()}-${i}`,
+          position: { ...position },
+          velocity: {
+            x: Math.cos(angle) * speed,
+            y: Math.sin(angle) * speed,
+          },
+          color: isAlt ? config.colorAlt : config.color,
+          size: config.size * comboScale,
+          lifetime: config.lifespan,
+          maxLifetime: config.lifespan,
+          alpha: 1.0,
+          type: 'burst',
+        });
+      }
+
+      // Update bumper state
+      state.bumperRail.chainLength = comboCount;
+      state.bumperRail.lastBumperTime = Date.now();
+
+      // Play sound (using existing sound engine)
+      const soundEngine = getSoundEngine();
+      if (soundEngine) {
+        // Use kill sound for bumper impact, pitch increases with combo count
+        soundEngine.play('kill', { pitch: 1 + comboCount * 0.1 });
+      }
+
+      // Small screen shake for impact feel
+      const shakeIntensity = 2 + comboCount * 0.5;
+      state.shake.intensity = Math.max(state.shake.intensity, shakeIntensity);
+      state.shake.duration = 80;
+      state.shake.elapsed = 0;
+    },
+
+    /**
+     * Update rail line - lightning trail connecting hit positions
+     */
+    updateRailLine(points: Vector2[], flowActive: boolean) {
+      state.bumperRail.railPoints = [...points];
+      state.bumperRail.flowActive = flowActive;
+      state.bumperRail.railFadeTime = BUMPER_JUICE.railLine.fadeTime;
+
+      // Create lightning particles along the rail
+      if (points.length >= 2) {
+        const config = BUMPER_JUICE.railLine;
+        const color = flowActive ? config.colorFlow : config.color;
+
+        // Add lightning spark at each point
+        for (const point of points) {
+          state.particles.push({
+            id: `rail-spark-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+            position: { ...point },
+            velocity: { x: 0, y: -20 },
+            color,
+            size: 6,
+            lifetime: 150,
+            maxLifetime: 150,
+            alpha: 1.0,
+            type: 'burst',
+          });
+        }
+      }
+    },
+
+    /**
+     * Set flow state - activate/deactivate flow visual effects
+     */
+    setFlowState(active: boolean) {
+      const wasActive = state.bumperRail.flowActive;
+      state.bumperRail.flowActive = active;
+
+      if (active && !wasActive) {
+        // Just activated - emit burst of particles
+        const centerX = 400; // Approximate screen center
+        const centerY = 300;
+        const config = BUMPER_JUICE.flowState;
+
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          state.particles.push({
+            id: `flow-burst-${Date.now()}-${i}`,
+            position: { x: centerX, y: centerY },
+            velocity: {
+              x: Math.cos(angle) * 200,
+              y: Math.sin(angle) * 200,
+            },
+            color: config.speedLineColor,
+            size: 8,
+            lifetime: 400,
+            maxLifetime: 400,
+            alpha: 0.8,
+            type: 'burst',
+          });
+        }
+
+        // Trigger small screen effect
+        state.screenEffect.invert = false;
+        state.screenEffect.duration = 100;
+        state.screenEffect.elapsed = 0;
+      }
+    },
+
+    /**
+     * Emit combo chain text - "3x CHAIN!" popup
+     */
+    emitComboChain(position: Vector2, chainLength: number, flowActive: boolean) {
+      const config = BUMPER_JUICE.comboText;
+      const color = flowActive ? config.colorFlow : config.color;
+
+      // Create floating text particle
+      state.particles.push({
+        id: `chain-text-${Date.now()}`,
+        position: { x: position.x, y: position.y - 30 },
+        velocity: { x: 0, y: -config.floatSpeed },
+        color,
+        size: config.size,
+        lifetime: config.duration,
+        maxLifetime: config.duration,
+        alpha: 1.0,
+        type: 'text',
+        text: `${chainLength}x CHAIN!`,
+      });
+
+      // Add celebration sparkles around the text
+      for (let i = 0; i < 6; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 20 + Math.random() * 20;
+        state.particles.push({
+          id: `chain-sparkle-${Date.now()}-${i}`,
+          position: {
+            x: position.x + Math.cos(angle) * dist,
+            y: position.y - 30 + Math.sin(angle) * dist,
+          },
+          velocity: {
+            x: Math.cos(angle) * 40,
+            y: -50 + Math.sin(angle) * 20,
+          },
+          color: config.colorFlow,
+          size: 3,
+          lifetime: 400,
+          maxLifetime: 400,
+          alpha: 0.9,
+          type: 'burst',
+        });
+      }
+    },
+
+    /**
+     * Emit chain break effect - shatter + shake + sad sound
+     */
+    emitChainBreak(position: Vector2, reason: 'charged' | 'guard' | 'timeout') {
+      const config = BUMPER_JUICE.chainBreak;
+
+      // Screen shake
+      state.shake.intensity = config.shakeIntensity;
+      state.shake.duration = config.shakeDuration;
+      state.shake.elapsed = 0;
+
+      // Shatter particles
+      for (let i = 0; i < config.shatterCount; i++) {
+        const angle = (i / config.shatterCount) * Math.PI * 2;
+        const speed = 100 + Math.random() * 80;
+        state.particles.push({
+          id: `chain-break-${Date.now()}-${i}`,
+          position: { ...position },
+          velocity: {
+            x: Math.cos(angle) * speed,
+            y: Math.sin(angle) * speed,
+          },
+          color: config.color,
+          size: 5,
+          lifetime: 300,
+          maxLifetime: 300,
+          alpha: 1.0,
+          type: 'burst',
+        });
+      }
+
+      // "BREAK!" text based on reason
+      const breakText = reason === 'charged' ? 'SHOCKED!' :
+                        reason === 'guard' ? 'BLOCKED!' : 'TIMEOUT!';
+
+      state.particles.push({
+        id: `break-text-${Date.now()}`,
+        position: { x: position.x, y: position.y - 20 },
+        velocity: { x: 0, y: -40 },
+        color: config.color,
+        size: 18,
+        lifetime: 600,
+        maxLifetime: 600,
+        alpha: 1.0,
+        type: 'text',
+        text: breakText,
+      });
+
+      // Reset bumper state
+      state.bumperRail.chainLength = 0;
+      state.bumperRail.flowActive = false;
+      state.bumperRail.railPoints = [];
+    },
+
+    /**
+     * Emit charged bee hit effect - pain flash + damage
+     */
+    emitChargedBeeHit(position: Vector2, damage: number) {
+      const config = BUMPER_JUICE.chargedBee;
+
+      // Big screen flash
+      state.screenEffect.invert = true;
+      state.screenEffect.duration = 150;
+      state.screenEffect.elapsed = 0;
+      state.screenEffect.centerX = position.x;
+      state.screenEffect.centerY = position.y;
+      state.screenEffect.radius = 200;
+
+      // Screen shake
+      state.shake.intensity = 10;
+      state.shake.duration = 200;
+      state.shake.elapsed = 0;
+
+      // Damage number
+      state.particles.push({
+        id: `charged-damage-${Date.now()}`,
+        position: { x: position.x, y: position.y - 10 },
+        velocity: { x: 0, y: -80 },
+        color: config.glowColor,
+        size: 24,
+        lifetime: 800,
+        maxLifetime: 800,
+        alpha: 1.0,
+        type: 'text',
+        text: `-${Math.round(damage)}`,
+      });
+
+      // Electrical sparks
+      for (let i = 0; i < config.sparkCount * 2; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 150 + Math.random() * 100;
+        state.particles.push({
+          id: `shock-spark-${Date.now()}-${i}`,
+          position: { ...position },
+          velocity: {
+            x: Math.cos(angle) * speed,
+            y: Math.sin(angle) * speed,
+          },
+          color: config.sparkColor,
+          size: 4,
+          lifetime: 200,
+          maxLifetime: 200,
+          alpha: 1.0,
+          type: 'burst',
+        });
+      }
+    },
+
+    // =================================================================
+    // ABILITY JUICE SYSTEM - Visual feedback for all 36 abilities
+    // "Each ability = 5-10% toward godlike" - make them FEEL it
+    // =================================================================
+
+    /**
+     * Main ability juice dispatcher
+     * Routes ability triggers to their specific visual effects
+     */
+    emitAbilityJuice(abilityId: AbilityId, context: AbilityJuiceContext) {
+      const { position, intensity = 1, tintColor, stacks = 1 } = context;
+      void intensity; // Reserved for intensity-scaled effects in future
+      void stacks;    // Reserved for stack-scaled effects in future
+
+      switch (abilityId) {
+        // ===========================================================
+        // DAMAGE (6) - Red/Orange melee effects (formerly MANDIBLE)
+        // ===========================================================
+        case 'sharpened_mandibles':
+          // Orange slash marks - sharpened damage
+          state.particles.push(...createBleedParticles(position, tintColor || ABILITY_JUICE.mandible.bleedColor));
+          break;
+
+        case 'crushing_bite':
+          // Heavy impact burst with shockwave
+          state.particles.push(createKnockbackRippleParticle(position));
+          this.triggerShake(4, 100);
+          break;
+
+        case 'venomous_strike':
+          // Green venom drip
+          state.particles.push(createPoisonDripParticle(position, tintColor || '#88FF00'));
+          break;
+
+        case 'double_strike':
+          // Twin slash effect
+          state.particles.push(...createBleedParticles(position, tintColor || '#FF4488'));
+          state.particles.push(...createBleedParticles(
+            { x: position.x + 10, y: position.y },
+            tintColor || '#FF4488'
+          ));
+          break;
+
+        case 'savage_blow':
+          // Red fire burst on low-HP enemy
+          state.particles.push(...createMiniExplosionParticles(position));
+          this.triggerShake(3, 80);
+          break;
+
+        case 'giant_killer':
+          // Blue crosshair lock effect
+          state.particles.push(createAuraGlowParticle(position, tintColor || '#00AAFF'));
+          break;
+
+        // ===========================================================
+        // SPEED (6) - Cyan/Blue speed effects
+        // ===========================================================
+        case 'quick_strikes':
+        case 'frenzy':
+        case 'hunters_rush':
+        case 'berserker_pace':
+        case 'bullet_time':
+          // Speed boost lines
+          state.particles.push(...createSpeedLineParticles(position));
+          break;
+
+        case 'swift_wings':
+          // Bright cyan wing trail - more visible than generic speed lines
+          for (let i = 0; i < 4; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 20 + Math.random() * 30;
+            state.particles.push({
+              id: `wing-trail-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+              position: { ...position },
+              velocity: { x: Math.cos(angle) * speed - 40, y: Math.sin(angle) * speed },
+              color: ABILITY_JUICE.wing.trailColor,
+              size: 4 + Math.random() * 3,
+              lifetime: 350,
+              maxLifetime: 350,
+              alpha: 0.8,
+              type: 'trail',
+            });
+          }
+          break;
+
+        // ===========================================================
+        // DEFENSE (6) - Green heal / Gold shield effects
+        // ===========================================================
+        case 'thick_carapace':
+        case 'hardened_shell':
+          // Golden shell shimmer
+          state.particles.push(createShellFragmentParticle(position));
+          break;
+
+        case 'regeneration':
+          // Green healing particles rising up
+          for (let i = 0; i < 3; i++) {
+            state.particles.push({
+              id: `regen-${Date.now()}-${i}`,
+              position: { x: position.x + (Math.random() - 0.5) * 20, y: position.y },
+              velocity: { x: (Math.random() - 0.5) * 10, y: -40 - Math.random() * 20 },
+              color: '#66FF66',
+              size: 4,
+              lifetime: 600,
+              maxLifetime: 600,
+              alpha: 0.8,
+              type: 'burst',
+            });
+          }
+          break;
+
+        case 'lifesteal':
+          // Red/crimson health drain particles flowing to player
+          for (let i = 0; i < 4; i++) {
+            const angle = (i / 4) * Math.PI * 2;
+            state.particles.push({
+              id: `lifesteal-${Date.now()}-${i}`,
+              position: { ...position },
+              velocity: { x: Math.cos(angle) * 30, y: Math.sin(angle) * 30 - 20 },
+              color: '#FF3333',
+              size: 5,
+              lifetime: 400,
+              maxLifetime: 400,
+              alpha: 0.9,
+              type: 'burst',
+            });
+          }
+          break;
+
+        case 'last_stand':
+          // Red pulsing defensive aura
+          state.particles.push(createAuraGlowParticle(position, '#FF0000'));
+          this.triggerShake(2, 50);
+          break;
+
+        case 'second_wind':
+          // Golden resurrection burst
+          for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2;
+            state.particles.push({
+              id: `second-wind-${Date.now()}-${i}`,
+              position: { ...position },
+              velocity: { x: Math.cos(angle) * 80, y: Math.sin(angle) * 80 },
+              color: '#FFD700',
+              size: 6,
+              lifetime: 500,
+              maxLifetime: 500,
+              alpha: 1,
+              type: 'burst',
+            });
+          }
+          this.triggerShake(8, 200);
+          this.triggerFreeze('massacre');
+          break;
+
+        // ===========================================================
+        // SPECIAL (6) - Unique powerful effects
+        // ===========================================================
+        case 'critical_sting':
+          // Yellow/white crit flash
+          state.particles.push({
+            id: `crit-${Date.now()}`,
+            position: { ...position },
+            velocity: { x: 0, y: -30 },
+            color: '#FFFF00',
+            size: 12,
+            lifetime: 200,
+            maxLifetime: 200,
+            alpha: 1,
+            type: 'burst',
+          });
+          this.triggerShake(3, 80);
+          break;
+
+        case 'execution':
+          // Red skull / instant kill effect
+          state.particles.push(...createMiniExplosionParticles(position));
+          this.triggerShake(4, 100);
+          break;
+
+        case 'sweeping_arc':
+          // Wide arc slash visual
+          state.particles.push(...createBleedParticles(position, '#FF8800'));
+          break;
+
+        case 'chain_lightning':
+          // Electric blue lightning particles
+          for (let i = 0; i < 6; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 60 + Math.random() * 40;
+            state.particles.push({
+              id: `lightning-${Date.now()}-${i}`,
+              position: { ...position },
+              velocity: { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed },
+              color: '#00FFFF',
+              size: 3,
+              lifetime: 150,
+              maxLifetime: 150,
+              alpha: 1,
+              type: 'burst',
+            });
+          }
+          // Add central flash
+          state.particles.push({
+            id: `lightning-flash-${Date.now()}`,
+            position: { ...position },
+            velocity: { x: 0, y: 0 },
+            color: '#FFFFFF',
+            size: 15,
+            lifetime: 100,
+            maxLifetime: 100,
+            alpha: 0.8,
+            type: 'burst',
+          });
+          break;
+
+        case 'momentum':
+          // Orange momentum buildup particles
+          state.particles.push(...createSpeedLineParticles(position));
+          state.particles.push(createAuraGlowParticle(position, '#FF6600'));
+          break;
+
+        case 'glass_cannon':
+        case 'glass_cannon_mastery':
+          // Red cracked energy
+          state.particles.push(createAuraGlowParticle(position, '#FF3333'));
+          break;
+
+        case 'graze_frenzy':
+          // Purple graze particles
+          state.particles.push(createAuraGlowParticle(position, '#AA00FF'));
+          break;
+
+        case 'thermal_momentum':
+          // Orange/red heat buildup
+          state.particles.push(createHeatShimmerParticle(position));
+          state.particles.push(createAuraGlowParticle(position, '#FF4400'));
+          break;
+
+        case 'execution_chain':
+          // Red chain effect
+          state.particles.push(...createBleedParticles(position, '#CC0000'));
+          break;
+
+        case 'venom_architect':
+          // Green venom explosion
+          for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            state.particles.push({
+              id: `venom-explode-${Date.now()}-${i}`,
+              position: { ...position },
+              velocity: { x: Math.cos(angle) * 70, y: Math.sin(angle) * 70 },
+              color: '#00FF00',
+              size: 5,
+              lifetime: 300,
+              maxLifetime: 300,
+              alpha: 1,
+              type: 'burst',
+            });
+          }
+          this.triggerShake(5, 150);
+          break;
+
+        // ===========================================================
+        // PHEROMONE (9) - Purple poison and debuff effects
+        // ===========================================================
+        case 'trace_venom':
+          // Purple drip - poison applied
+          state.particles.push(createPoisonDripParticle(position, tintColor || ABILITY_JUICE.venom.poisonColor));
+          break;
+
+        case 'paralytic_microdose':
+          // Purple/blue freeze flash
+          state.particles.push(createFreezeFlashParticle(position, tintColor || ABILITY_JUICE.venom.freezeColor));
+          break;
+
+        case 'scissor_grip':
+          // White flash on stun
+          state.particles.push(createStunFlashParticle(position));
+          break;
+
+        // ===========================================================
+        // WING (6) - Blue/White wind effects
+        // ===========================================================
+        case 'draft':
+          // Air disturbance lines - reuse speed lines
+          state.particles.push(...createSpeedLineParticles(position));
+          break;
+
+        case 'buzz_field':
+          // Vibrating yellow circle
+          state.particles.push(createBuzzRingParticle(position));
+          break;
+
+        case 'thermal_wake':
+          // Heat shimmer effect
+          state.particles.push(createHeatShimmerParticle(position));
+          break;
+
+        case 'scatter_dust':
+          // Pollen puff - burst of small particles
+          for (let i = 0; i < 8; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 30 + Math.random() * 40;
+            state.particles.push({
+              id: `dust-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+              position: { ...position },
+              velocity: { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed },
+              color: '#FFEEAA66',
+              size: 4 + Math.random() * 3,
+              lifetime: 400,
+              maxLifetime: 400,
+              alpha: 0.6,
+              type: 'apex_wind_dust',
+            });
+          }
+          break;
+
+        case 'updraft':
+          // Speed boost lines
+          state.particles.push(...createSpeedLineParticles(position));
+          break;
+
+        case 'hover_pressure':
+          // Expanding pressure wave
+          state.particles.push(createPressureWaveParticle(position));
+          break;
+
+        // ===========================================================
+        // PREDATOR (6) - Yellow/Gold kill effects
+        // ===========================================================
+        case 'feeding_efficiency':
+          // Speed boost effect (reuse speed lines)
+          state.particles.push(...createSpeedLineParticles(position));
+          break;
+
+        case 'territorial_mark':
+          // Orange ground stain where enemy died
+          state.particles.push(createGroundStainParticle(position));
+          break;
+
+        case 'trophy_scent':
+          // Golden flash for unique kill
+          state.particles.push(createTrophyFlashParticle(position));
+          // Small celebratory shake
+          this.triggerShake(2, 60);
+          break;
+
+        case 'pack_signal':
+          // Brief hesitation flash on nearby enemies
+          state.particles.push(createStunFlashParticle(position));
+          break;
+
+        case 'corpse_heat':
+          // Warm glow from corpse
+          state.particles.push(createHeatShimmerParticle(position));
+          break;
+
+        case 'clean_kill':
+          // Mini explosion burst
+          state.particles.push(...createMiniExplosionParticles(position));
+          this.triggerShake(4, 100);
+          break;
+
+        // ===========================================================
+        // PHEROMONE (6) - Orange/Yellow aura effects
+        // ===========================================================
+        case 'threat_aura':
+          // Soft orange glow around player
+          state.particles.push(createAuraGlowParticle(position, tintColor || '#FF9900'));
+          break;
+
+        case 'confusion_cloud':
+          // Swirling confusion particles
+          state.particles.push(...createConfusionSwirlParticles(position));
+          break;
+
+        case 'rally_scent':
+          // Trail slow effect - shimmer particles
+          state.particles.push(createHeatShimmerParticle(position));
+          break;
+
+        case 'death_marker':
+          // Dark seeping pool from corpse
+          state.particles.push(createSeepingParticle(position));
+          break;
+
+        case 'aggro_pulse':
+          // Large expanding ring pulse
+          state.particles.push(createPressureWaveParticle(position));
+          this.triggerShake(3, 80);
+          break;
+
+        case 'bitter_taste':
+          // Brief red flash on attacker
+          state.particles.push(createStunFlashParticle(position));
+          break;
+
+        // ===========================================================
+        // CHITIN (6) - Grey/Red defensive effects
+        // ===========================================================
+        case 'barbed_chitin':
+          // Spike plink when enemy touches
+          state.particles.push(createSpikePlinkParticle(position));
+          break;
+
+        case 'ablative_shell':
+          // Shell fragment on first hit
+          state.particles.push(createShellFragmentParticle(position));
+          break;
+
+        case 'heat_retention':
+          // Warm aura when below 50% HP
+          state.particles.push(createHeatShimmerParticle(position));
+          break;
+
+        case 'compound_eyes':
+          // Brief yellow flash indicating telegraph seen
+          state.particles.push(createAuraGlowParticle(position, ABILITY_JUICE.mandible.glintColor));
+          break;
+
+        case 'antenna_sensitivity':
+          // Brief orange pulse when enemy approaches
+          state.particles.push(createAuraGlowParticle(position, '#FF9900'));
+          break;
+
+        case 'molting_burst':
+          // BIG shell burst - dramatic emergency effect
+          state.particles.push(...createShellBurstParticles(position));
+          // Add golden burst for invuln
+          for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            state.particles.push({
+              id: `molt-gold-${Date.now()}-${i}`,
+              position: { ...position },
+              velocity: { x: Math.cos(angle) * 100, y: Math.sin(angle) * 100 },
+              color: ABILITY_JUICE.chitin.burstColor,
+              size: 6,
+              lifetime: 400,
+              maxLifetime: 400,
+              alpha: 1,
+              type: 'burst',
+            });
+          }
+          // Big screen shake for emergency activation
+          this.triggerShake(10, 200);
+          this.triggerFreeze('massacre');
+          break;
+
+        default:
+          // Unknown ability - log for debugging
+          console.warn(`[emitAbilityJuice] Unknown ability: ${abilityId}`);
+      }
+
+      // Scale particle effects with stacks if applicable
+      if (stacks > 1) {
+        // Add extra particles for high stack counts
+        const extraParticles = Math.min(stacks - 1, 3);
+        for (let i = 0; i < extraParticles; i++) {
+          // Add small sparkle particles indicating stack buildup
+          state.particles.push({
+            id: `stack-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+            position: { x: position.x + (Math.random() - 0.5) * 20, y: position.y - 15 },
+            velocity: { x: (Math.random() - 0.5) * 20, y: -30 - Math.random() * 20 },
+            color: tintColor || '#FFFFFF',
+            size: 2,
+            lifetime: 300,
+            maxLifetime: 300,
+            alpha: 0.7,
+            type: 'burst',
+          });
+        }
+      }
+    },
   };
 }
 
@@ -1719,15 +3455,16 @@ export function processJuice(
   // =================================================================
   // NEW: Process freeze frames first - "time slows when you're badass"
   // =================================================================
+  let isFrozen = false;
   if (juice.freeze.active && juice.freeze.framesRemaining > 0) {
     juice.freeze.framesRemaining--;
     if (juice.freeze.framesRemaining <= 0) {
       juice.freeze.active = false;
       juice.freeze.type = null;
     }
-    // During freeze: don't update anything except particles (they look cool frozen)
-    // Return early to freeze the game world
-    return;
+    // During freeze: only update particles (they look cool animating during freeze)
+    // Other systems (shake, clutch) stay frozen
+    isFrozen = true;
   }
 
   // Update particles
@@ -1873,8 +3610,23 @@ export function processJuice(
   juice.particles.length = 0;
   juice.particles.push(...aliveParticles);
 
-  // Update shake
-  if (juice.shake.duration > 0) {
+  // Skip shake/clutch updates during freeze frames (only particles animate during freeze)
+  if (isFrozen) {
+    return;
+  }
+
+  // Update shake with self-healing
+  // SELF-HEALING: If no active shake, force offset to zero to prevent stuck states
+  if (juice.shake.duration <= 0 || juice.shake.intensity <= 0) {
+    // No active shake - ensure offset is zeroed (self-healing)
+    if (juice.shake.offset.x !== 0 || juice.shake.offset.y !== 0) {
+      juice.shake.offset = { x: 0, y: 0 };
+    }
+    juice.shake.intensity = 0;
+    juice.shake.duration = 0;
+    juice.shake.elapsed = 0;
+  } else {
+    // Active shake - update normally
     juice.shake.elapsed += deltaTime;
 
     if (juice.shake.elapsed < juice.shake.duration) {
@@ -1896,7 +3648,7 @@ export function processJuice(
     }
   }
 
-  // DD-16: Update clutch moment
+  // DD-16: Update clutch moment with self-healing
   if (juice.clutch.active) {
     juice.clutch.remaining -= deltaTime;
 
@@ -1917,6 +3669,34 @@ export function processJuice(
         juice.clutch.timeScale = 1.0 - (1.0 - juice.clutch.timeScale) * easeProgress;
         juice.clutch.zoom = 1.0 + (juice.clutch.zoom - 1.0) * easeProgress;
       }
+    }
+  } else {
+    // SELF-HEALING: If clutch is not active, ensure all values are at defaults
+    // This prevents stuck zoom/timeScale states
+    if (juice.clutch.zoom !== 1.0 || juice.clutch.timeScale !== 1.0) {
+      juice.clutch.zoom = 1.0;
+      juice.clutch.timeScale = 1.0;
+      juice.clutch.remaining = 0;
+      juice.clutch.duration = 0;
+      juice.clutch.level = null;
+    }
+  }
+
+  // Update screen effect (circle inversion) with self-healing
+  const screenEffect = juice.screenEffect;
+  if (screenEffect.invert) {
+    screenEffect.elapsed += deltaTime;
+    if (screenEffect.elapsed >= screenEffect.duration) {
+      // Effect finished - reset
+      screenEffect.invert = false;
+      screenEffect.elapsed = 0;
+      screenEffect.duration = 0;
+    }
+  } else {
+    // SELF-HEALING: If not inverting, ensure all values are reset
+    if (screenEffect.elapsed !== 0 || screenEffect.duration !== 0) {
+      screenEffect.elapsed = 0;
+      screenEffect.duration = 0;
     }
   }
 }
@@ -3075,4 +4855,68 @@ export function renderBloodlustAura(
   }
 
   ctx.restore();
+}
+
+// =============================================================================
+// DD-038-3: Afterimage Rendering
+// =============================================================================
+
+/**
+ * Render afterimages during Apex Strike
+ * "5 afterimages during strike - visual only, pure juice"
+ *
+ * @param ctx - Canvas rendering context
+ * @param afterimages - Array of active afterimages
+ * @param playerRadius - Player hitbox/render radius (default 15)
+ */
+export function renderAfterimages(
+  ctx: CanvasRenderingContext2D,
+  afterimages: Afterimage[],
+  playerRadius: number = 15
+): void {
+  const config = APEX_STRIKE.strike.afterimages;
+
+  // Render from oldest to newest (back to front)
+  for (const img of afterimages) {
+    ctx.save();
+    ctx.globalAlpha = img.alpha;
+    ctx.translate(img.position.x, img.position.y);
+
+    // Rotate to face strike direction
+    const angle = Math.atan2(img.direction.y, img.direction.x);
+    ctx.rotate(angle);
+
+    // Draw player silhouette (simple circle for hornet body)
+    const radius = playerRadius * img.scale;
+
+    // Main body
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fillStyle = config.color;
+    ctx.fill();
+
+    // Add subtle glow effect when alpha is higher (fresher afterimages)
+    if (img.alpha > 0.3) {
+      ctx.shadowColor = config.color;
+      ctx.shadowBlur = 10 * (img.alpha / config.startAlpha);
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Add directional "streaks" to show motion
+    if (img.alpha > 0.2) {
+      ctx.beginPath();
+      ctx.moveTo(-radius * 1.5, 0);
+      ctx.lineTo(-radius * 2.5, -radius * 0.3);
+      ctx.lineTo(-radius * 2.5, radius * 0.3);
+      ctx.closePath();
+      ctx.fillStyle = config.color;
+      ctx.globalAlpha = img.alpha * 0.5;
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
 }

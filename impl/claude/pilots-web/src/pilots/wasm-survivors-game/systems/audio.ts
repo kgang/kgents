@@ -18,6 +18,22 @@
  */
 
 import type { EnemyType, KillTier, BallPhaseType, Mood, Vector2 } from '../types';
+import {
+  initProceduralAudio,
+  playProceduralKill,
+  playProceduralDamage,
+  playProceduralXP,
+  playProceduralLevelUp,
+  playProceduralDash,
+  playProceduralGraze,
+  playProceduralEnemyHit,
+  playProceduralDeath,
+  playGoodSound,
+  playBadSound,
+  C_MAJOR_SCALE,
+  GOOD_INTERVALS,
+  BAD_INTERVALS,
+} from './procedural-audio';
 
 // =============================================================================
 // Audio Context Management
@@ -25,7 +41,19 @@ import type { EnemyType, KillTier, BallPhaseType, Mood, Vector2 } from '../types
 
 let audioContext: AudioContext | null = null;
 let masterGain: GainNode | null = null;
+let limiter: DynamicsCompressorNode | null = null;
 let isAudioEnabled = false;
+
+// =============================================================================
+// Procedural Audio Mode
+// =============================================================================
+
+/**
+ * When true, uses C-major procedural audio system.
+ * When false, uses legacy layered audio.
+ * Toggle with setProceduralAudioMode().
+ */
+let useProceduralAudio = true;
 
 // =============================================================================
 // LAYERED KILL SOUND SYSTEM (ASMR Crunch)
@@ -62,85 +90,85 @@ interface KillSoundConfig {
 
 export const KILL_SOUND_LAYERS: Record<EnemyType, KillSoundConfig> = {
   worker: {
-    crunch: { freqRange: [300, 450], type: 'noise', duration: 0.05, volume: 0.4 },
-    snap: { freqRange: [800, 1200], type: 'sine', duration: 0.02, volume: 0.3 },
-    decay: { freqRange: [100, 150], type: 'triangle', duration: 0.12, volume: 0.2 },
+    crunch: { freqRange: [300, 450], type: 'noise', duration: 0.05, volume: 0.32 },
+    snap: { freqRange: [800, 1200], type: 'sine', duration: 0.02, volume: 0.24 },
+    decay: { freqRange: [100, 150], type: 'triangle', duration: 0.12, volume: 0.16 },
     pitchVariation: [0.9, 1.1],
-    masterVolume: 0.5,
+    masterVolume: 0.4,
   },
   scout: {
-    crunch: { freqRange: [350, 500], type: 'noise', duration: 0.04, volume: 0.35 },
-    snap: { freqRange: [900, 1400], type: 'sine', duration: 0.02, volume: 0.35 },
-    decay: { freqRange: [120, 180], type: 'triangle', duration: 0.1, volume: 0.15 },
+    crunch: { freqRange: [350, 500], type: 'noise', duration: 0.04, volume: 0.28 },
+    snap: { freqRange: [900, 1400], type: 'sine', duration: 0.02, volume: 0.28 },
+    decay: { freqRange: [120, 180], type: 'triangle', duration: 0.1, volume: 0.12 },
     pitchVariation: [0.95, 1.15],
-    masterVolume: 0.45,
+    masterVolume: 0.36,
   },
   guard: {
-    crunch: { freqRange: [150, 250], type: 'noise', duration: 0.08, volume: 0.5 },
-    shell: { freqRange: [400, 600], type: 'sawtooth', duration: 0.04, volume: 0.4 },
-    thud: { freqRange: [40, 70], type: 'sine', duration: 0.2, volume: 0.5 },
+    crunch: { freqRange: [150, 250], type: 'noise', duration: 0.08, volume: 0.4 },
+    shell: { freqRange: [400, 600], type: 'sawtooth', duration: 0.04, volume: 0.32 },
+    thud: { freqRange: [40, 70], type: 'sine', duration: 0.2, volume: 0.4 },
     pitchVariation: [0.85, 1.0],
-    masterVolume: 0.7,
+    masterVolume: 0.56,
   },
   propolis: {
-    crunch: { freqRange: [200, 350], type: 'noise', duration: 0.06, volume: 0.4 },
-    splat: { freqRange: [100, 200], type: 'sawtooth', duration: 0.08, volume: 0.35 },
-    drip: { freqRange: [60, 100], type: 'sine', duration: 0.25, volume: 0.3 },
+    crunch: { freqRange: [200, 350], type: 'noise', duration: 0.06, volume: 0.32 },
+    splat: { freqRange: [100, 200], type: 'sawtooth', duration: 0.08, volume: 0.28 },
+    drip: { freqRange: [60, 100], type: 'sine', duration: 0.25, volume: 0.24 },
     pitchVariation: [0.9, 1.05],
-    masterVolume: 0.55,
+    masterVolume: 0.44,
   },
   royal: {
-    crunch: { freqRange: [100, 200], type: 'noise', duration: 0.1, volume: 0.6 },
-    shell: { freqRange: [300, 500], type: 'sawtooth', duration: 0.06, volume: 0.5 },
-    thud: { freqRange: [30, 50], type: 'sine', duration: 0.3, volume: 0.6 },
-    harmonic: { freqRange: [150, 250], type: 'sine', duration: 0.15, volume: 0.3 },
+    crunch: { freqRange: [100, 200], type: 'noise', duration: 0.1, volume: 0.48 },
+    shell: { freqRange: [300, 500], type: 'sawtooth', duration: 0.06, volume: 0.4 },
+    thud: { freqRange: [30, 50], type: 'sine', duration: 0.3, volume: 0.48 },
+    harmonic: { freqRange: [150, 250], type: 'sine', duration: 0.15, volume: 0.24 },
     pitchVariation: [0.8, 0.95],
-    masterVolume: 0.8,
+    masterVolume: 0.64,
   },
   // Legacy type mappings (for backwards compatibility)
   basic: {
-    crunch: { freqRange: [300, 450], type: 'noise', duration: 0.05, volume: 0.4 },
-    snap: { freqRange: [800, 1200], type: 'sine', duration: 0.02, volume: 0.3 },
-    decay: { freqRange: [100, 150], type: 'triangle', duration: 0.12, volume: 0.2 },
+    crunch: { freqRange: [300, 450], type: 'noise', duration: 0.05, volume: 0.32 },
+    snap: { freqRange: [800, 1200], type: 'sine', duration: 0.02, volume: 0.24 },
+    decay: { freqRange: [100, 150], type: 'triangle', duration: 0.12, volume: 0.16 },
     pitchVariation: [0.9, 1.1],
-    masterVolume: 0.5,
+    masterVolume: 0.4,
   },
   fast: {
-    crunch: { freqRange: [350, 500], type: 'noise', duration: 0.04, volume: 0.35 },
-    snap: { freqRange: [900, 1400], type: 'sine', duration: 0.02, volume: 0.35 },
-    decay: { freqRange: [120, 180], type: 'triangle', duration: 0.1, volume: 0.15 },
+    crunch: { freqRange: [350, 500], type: 'noise', duration: 0.04, volume: 0.28 },
+    snap: { freqRange: [900, 1400], type: 'sine', duration: 0.02, volume: 0.28 },
+    decay: { freqRange: [120, 180], type: 'triangle', duration: 0.1, volume: 0.12 },
     pitchVariation: [0.95, 1.15],
-    masterVolume: 0.45,
+    masterVolume: 0.36,
   },
   tank: {
-    crunch: { freqRange: [150, 250], type: 'noise', duration: 0.08, volume: 0.5 },
-    shell: { freqRange: [400, 600], type: 'sawtooth', duration: 0.04, volume: 0.4 },
-    thud: { freqRange: [40, 70], type: 'sine', duration: 0.2, volume: 0.5 },
+    crunch: { freqRange: [150, 250], type: 'noise', duration: 0.08, volume: 0.4 },
+    shell: { freqRange: [400, 600], type: 'sawtooth', duration: 0.04, volume: 0.32 },
+    thud: { freqRange: [40, 70], type: 'sine', duration: 0.2, volume: 0.4 },
     pitchVariation: [0.85, 1.0],
-    masterVolume: 0.7,
+    masterVolume: 0.56,
   },
   boss: {
-    crunch: { freqRange: [100, 200], type: 'noise', duration: 0.1, volume: 0.6 },
-    shell: { freqRange: [300, 500], type: 'sawtooth', duration: 0.06, volume: 0.5 },
-    thud: { freqRange: [30, 50], type: 'sine', duration: 0.3, volume: 0.6 },
-    harmonic: { freqRange: [150, 250], type: 'sine', duration: 0.15, volume: 0.3 },
+    crunch: { freqRange: [100, 200], type: 'noise', duration: 0.1, volume: 0.48 },
+    shell: { freqRange: [300, 500], type: 'sawtooth', duration: 0.06, volume: 0.4 },
+    thud: { freqRange: [30, 50], type: 'sine', duration: 0.3, volume: 0.48 },
+    harmonic: { freqRange: [150, 250], type: 'sine', duration: 0.15, volume: 0.24 },
     pitchVariation: [0.8, 0.95],
-    masterVolume: 0.8,
+    masterVolume: 0.64,
   },
   spitter: {
-    crunch: { freqRange: [200, 350], type: 'noise', duration: 0.06, volume: 0.4 },
-    splat: { freqRange: [100, 200], type: 'sawtooth', duration: 0.08, volume: 0.35 },
-    drip: { freqRange: [60, 100], type: 'sine', duration: 0.25, volume: 0.3 },
+    crunch: { freqRange: [200, 350], type: 'noise', duration: 0.06, volume: 0.32 },
+    splat: { freqRange: [100, 200], type: 'sawtooth', duration: 0.08, volume: 0.28 },
+    drip: { freqRange: [60, 100], type: 'sine', duration: 0.25, volume: 0.24 },
     pitchVariation: [0.9, 1.05],
-    masterVolume: 0.55,
+    masterVolume: 0.44,
   },
   colossal_tide: {
-    crunch: { freqRange: [100, 200], type: 'noise', duration: 0.1, volume: 0.6 },
-    shell: { freqRange: [300, 500], type: 'sawtooth', duration: 0.06, volume: 0.5 },
-    thud: { freqRange: [30, 50], type: 'sine', duration: 0.3, volume: 0.6 },
-    harmonic: { freqRange: [150, 250], type: 'sine', duration: 0.15, volume: 0.3 },
+    crunch: { freqRange: [100, 200], type: 'noise', duration: 0.1, volume: 0.48 },
+    shell: { freqRange: [300, 500], type: 'sawtooth', duration: 0.06, volume: 0.4 },
+    thud: { freqRange: [30, 50], type: 'sine', duration: 0.3, volume: 0.48 },
+    harmonic: { freqRange: [150, 250], type: 'sine', duration: 0.15, volume: 0.24 },
     pitchVariation: [0.8, 0.95],
-    masterVolume: 0.8,
+    masterVolume: 0.64,
   },
 };
 
@@ -160,10 +188,10 @@ export const MULTI_KILL_AUDIO = {
   maxVolume: 1.0,        // Cap at unity
 
   thresholds: {
-    3: { type: 'harmonic' as const, interval: 1.5, volume: 0.2 },
-    5: { type: 'sting' as const, freq: 1200, duration: 0.08, volume: 0.4 },
-    8: { type: 'chord' as const, intervals: [1, 1.25, 1.5], duration: 0.15, volume: 0.5 },
-    10: { type: 'fanfare' as const, notes: [400, 500, 600, 800], duration: 0.3, volume: 0.6 },
+    3: { type: 'harmonic' as const, interval: 1.5, volume: 0.16 },
+    5: { type: 'sting' as const, freq: 1200, duration: 0.08, volume: 0.32 },
+    8: { type: 'chord' as const, intervals: [1, 1.25, 1.5], duration: 0.15, volume: 0.4 },
+    10: { type: 'fanfare' as const, notes: [400, 500, 600, 800], duration: 0.3, volume: 0.48 },
   },
 
   windowMs: 150,  // Kills within 150ms are "consecutive"
@@ -245,7 +273,7 @@ export const BALL_AUDIO_PHASES = {
     // This creates DREAD
   },
   constrict: {
-    bassNote: { freq: 40, attack: 0.1, volume: 0.8, pitchRise: { start: 40, end: 80 } },
+    bassNote: { freq: 40, attack: 0.1, volume: 0.64, pitchRise: { start: 40, end: 80 } },
     crackle: { rate: 8, freqRange: [2000, 4000] as [number, number], volume: 0.3, randomness: 0.5 },
     duration: 2000,
   },
@@ -378,23 +406,51 @@ export function initAudio(): boolean {
     masterGain = audioContext.createGain();
     masterGain.gain.value = 0.5; // Master volume
 
+    // Set up DynamicsCompressorNode as a hard limiter
+    // This prevents audio clipping and ensures consistent max loudness
+    limiter = audioContext.createDynamicsCompressor();
+    limiter.threshold.value = -6;   // Sounds above -6dB get compressed
+    limiter.knee.value = 0;         // Hard limiting (no soft knee)
+    limiter.ratio.value = 20;       // 20:1 - aggressive compression above threshold
+    limiter.attack.value = 0.003;   // 3ms - fast attack to catch peaks
+    limiter.release.value = 0.1;    // 100ms release
+
     // Set up AnalyserNode for level detection (DEBUG)
     analyser = audioContext.createAnalyser();
     analyser.fftSize = 256;
     analyserData = new Uint8Array(analyser.frequencyBinCount);
 
-    // Route: masterGain -> analyser -> destination
-    masterGain.connect(analyser);
+    // Route: masterGain -> limiter -> analyser -> destination
+    masterGain.connect(limiter);
+    limiter.connect(analyser);
     analyser.connect(audioContext.destination);
 
+    // Initialize procedural audio system
+    initProceduralAudio(audioContext, masterGain);
+
     isAudioEnabled = true;
-    logAudioEvent('init', { sampleRate: audioContext.sampleRate });
+    logAudioEvent('init', { sampleRate: audioContext.sampleRate, procedural: useProceduralAudio });
     return true;
   } catch (e) {
     console.warn('Audio initialization failed:', e);
     logAudioEvent('init_failed', { error: String(e) });
     return false;
   }
+}
+
+/**
+ * Toggle between procedural (C major) and legacy layered audio.
+ */
+export function setProceduralAudioMode(enabled: boolean): void {
+  useProceduralAudio = enabled;
+  logAudioEvent('setProceduralAudioMode', { enabled });
+}
+
+/**
+ * Check if procedural audio mode is enabled.
+ */
+export function isProceduralAudioEnabled(): boolean {
+  return useProceduralAudio;
 }
 
 /**
@@ -713,6 +769,15 @@ export function playLayeredKillSound(
 ): void {
   if (!audioContext || !masterGain || !isAudioEnabled) return;
 
+  // Use procedural C-major audio if enabled
+  if (useProceduralAudio) {
+    const tierMult = { single: 0.5, multi: 0.8, massacre: 1.0 }[tier];
+    const intensity = tierMult + Math.min(comboCount * 0.05, 0.3);
+    playProceduralKill(intensity);
+    logAudioEvent('playLayeredKillSound', { enemyType, tier, comboCount, procedural: true });
+    return;
+  }
+
   const ctx = audioContext;
   const config = KILL_SOUND_LAYERS[enemyType];
 
@@ -793,44 +858,141 @@ export function playKillSound(enemyType: EnemyType, tier: KillTier): void {
 }
 
 /**
- * Play damage taken sound.
+ * Play damage taken sound (player takes damage).
+ * Softer approach - thud + subtle dissonance, not harsh bit-crush.
+ * Uses triangle wave for warmth, minor 2nd for tension.
  */
 export function playDamageSound(): void {
   if (!audioContext || !masterGain || !isAudioEnabled) return;
+
+  // Use procedural C-major audio if enabled
+  if (useProceduralAudio) {
+    playProceduralDamage(0.5);
+    logAudioEvent('playDamageSound', { procedural: true });
+    return;
+  }
+
   logAudioEvent('playDamageSound', {});
   trackSoundStart();
 
   const ctx = audioContext;
 
-  // Sharp, attention-grabbing sound
+  // Layer 1: Soft thud (triangle wave, not harsh square)
   const osc = ctx.createOscillator();
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(300, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(200, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.08);
 
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.3, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+  gain.gain.setValueAtTime(0.18, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
 
   osc.connect(gain);
   gain.connect(masterGain);
   osc.start();
-  osc.stop(ctx.currentTime + 0.15);
+  osc.stop(ctx.currentTime + 0.12);
 
-  setTimeout(() => trackSoundEnd(), 150);
+  // Layer 2: Subtle minor 2nd dissonance (16/15 ratio) - tension without harshness
+  const MINOR_2ND = 16 / 15; // ≈ 1.067
+  const osc2 = ctx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(200 * MINOR_2ND, ctx.currentTime); // ~213Hz
+  osc2.frequency.exponentialRampToValueAtTime(80 * MINOR_2ND, ctx.currentTime + 0.08);
+
+  const gain2 = ctx.createGain();
+  gain2.gain.setValueAtTime(0.18 * 0.25, ctx.currentTime); // 25% of main volume
+  gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+
+  osc2.connect(gain2);
+  gain2.connect(masterGain);
+  osc2.start();
+  osc2.stop(ctx.currentTime + 0.12);
+
+  setTimeout(() => trackSoundEnd(), 120);
+}
+
+/**
+ * Play enemy hit sound (player damages enemy, not a kill).
+ * Satisfying impact - quick thud with slight crunch.
+ * Volume scales with damage dealt.
+ */
+export function playEnemyHitSound(damage: number = 10, sourcePosition?: Vector2): void {
+  if (!audioContext || !masterGain || !isAudioEnabled) return;
+
+  // Use procedural C-major audio if enabled
+  if (useProceduralAudio) {
+    playProceduralEnemyHit(damage);
+    logAudioEvent('playEnemyHitSound', { damage, procedural: true });
+    return;
+  }
+
+  logAudioEvent('playEnemyHitSound', { damage, spatial: !!sourcePosition });
+  trackSoundStart();
+
+  const ctx = audioContext;
+
+  // Scale volume based on damage (10-50 damage range -> 0.08-0.15 volume)
+  const volumeScale = Math.min(0.15, 0.08 + (damage / 50) * 0.07);
+
+  // Create spatial audio node
+  const { panner, distanceGain } = createSpatialNode(ctx, sourcePosition);
+  distanceGain.connect(masterGain);
+
+  // Layer 1: Quick impact thud (sine for clean thud)
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(150 + damage * 2, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.04);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(volumeScale, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.06);
+
+  osc.connect(gain);
+  gain.connect(panner);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.06);
+
+  // Layer 2: Subtle crunch (filtered noise for texture)
+  const noise = createWhiteNoise(ctx, 0.03);
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 800 + damage * 10;
+  filter.Q.value = 2;
+
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(volumeScale * 0.4, ctx.currentTime);
+  noiseGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.03);
+
+  noise.connect(filter);
+  filter.connect(noiseGain);
+  noiseGain.connect(panner);
+  noise.start();
+  noise.stop(ctx.currentTime + 0.03);
+
+  setTimeout(() => trackSoundEnd(), 60);
 }
 
 /**
  * Play dash sound (whoosh).
+ * Uses PERFECT 5TH (ratio 3/2 = 1.5) for stable, powerful feel.
  */
 export function playDashSound(): void {
   if (!audioContext || !masterGain || !isAudioEnabled) return;
+
+  // Use procedural C-major audio if enabled
+  if (useProceduralAudio) {
+    playProceduralDash();
+    logAudioEvent('playDashSound', { procedural: true });
+    return;
+  }
+
   logAudioEvent('playDashSound', {});
   trackSoundStart();
 
   const ctx = audioContext;
 
-  // Whoosh = noise + pitch sweep
+  // Layer 1: Main whoosh = pitch sweep
   const osc = ctx.createOscillator();
   osc.type = 'sine';
   osc.frequency.setValueAtTime(200, ctx.currentTime);
@@ -845,20 +1007,45 @@ export function playDashSound(): void {
   osc.start();
   osc.stop(ctx.currentTime + 0.2);
 
+  // Layer 2: Perfect 5th above (3/2 ratio) - adds power and fullness
+  const PERFECT_5TH = 3 / 2; // = 1.5
+  const osc2 = ctx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(200 * PERFECT_5TH, ctx.currentTime); // 300Hz
+  osc2.frequency.exponentialRampToValueAtTime(800 * PERFECT_5TH, ctx.currentTime + 0.15); // 1200Hz
+
+  const gain2 = ctx.createGain();
+  gain2.gain.setValueAtTime(0.15 * 0.3, ctx.currentTime); // 30% of main volume
+  gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+
+  osc2.connect(gain2);
+  gain2.connect(masterGain);
+  osc2.start();
+  osc2.stop(ctx.currentTime + 0.2);
+
   setTimeout(() => trackSoundEnd(), 200);
 }
 
 /**
  * Play XP collection sound (bright chime).
+ * Uses MINOR 7TH (ratio 9/5 = 1.8) for jazzy satisfaction.
  */
 export function playXPSound(): void {
   if (!audioContext || !masterGain || !isAudioEnabled) return;
+
+  // Use procedural C-major audio if enabled
+  if (useProceduralAudio) {
+    playProceduralXP();
+    logAudioEvent('playXPSound', { procedural: true });
+    return;
+  }
+
   logAudioEvent('playXPSound', {});
   trackSoundStart();
 
   const ctx = audioContext;
 
-  // Bright ascending chime
+  // Layer 1: Bright ascending chime
   const osc = ctx.createOscillator();
   osc.type = 'sine';
   osc.frequency.setValueAtTime(800, ctx.currentTime);
@@ -873,28 +1060,57 @@ export function playXPSound(): void {
   osc.start();
   osc.stop(ctx.currentTime + 0.15);
 
+  // Layer 2: Minor 7th above (9/5 ratio) - adds jazzy, satisfying sparkle
+  const MINOR_7TH = 9 / 5; // = 1.8
+  const osc2 = ctx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(800 * MINOR_7TH, ctx.currentTime); // 1440Hz
+  osc2.frequency.exponentialRampToValueAtTime(1200 * MINOR_7TH, ctx.currentTime + 0.1); // 2160Hz
+
+  const gain2 = ctx.createGain();
+  gain2.gain.setValueAtTime(0.1 * 0.4, ctx.currentTime); // 40% of main volume
+  gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+
+  osc2.connect(gain2);
+  gain2.connect(masterGain);
+  osc2.start();
+  osc2.stop(ctx.currentTime + 0.15);
+
   setTimeout(() => trackSoundEnd(), 150);
 }
 
 /**
  * Play level up sound (triumphant).
+ * Uses MINOR 7TH (ratio 9/5 = 1.8) chord stacks for jazzy satisfaction.
+ * Each note in the arpeggio plays with its minor 7th, creating rich chord stacks.
  */
 export function playLevelUpSound(): void {
   if (!audioContext || !masterGain || !isAudioEnabled) return;
+
+  // Use procedural C-major audio if enabled
+  if (useProceduralAudio) {
+    playProceduralLevelUp();
+    logAudioEvent('playLevelUpSound', { procedural: true });
+    return;
+  }
+
   logAudioEvent('playLevelUpSound', {});
   trackSoundStart();
 
   const ctx = audioContext;
+  const MINOR_7TH = 9 / 5; // = 1.8
 
-  // Ascending arpeggio
+  // Ascending arpeggio with minor 7th chord stacks
   const notes = [400, 500, 600, 800];
   notes.forEach((freq, i) => {
+    const startTime = ctx.currentTime + i * 0.08;
+
+    // Layer 1: Root note
     const osc = ctx.createOscillator();
     osc.type = 'sine';
     osc.frequency.value = freq;
 
     const gain = ctx.createGain();
-    const startTime = ctx.currentTime + i * 0.08;
     gain.gain.setValueAtTime(0, startTime);
     gain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
@@ -903,6 +1119,21 @@ export function playLevelUpSound(): void {
     gain.connect(masterGain!);
     osc.start(startTime);
     osc.stop(startTime + 0.2);
+
+    // Layer 2: Minor 7th above - creates jazzy chord stack
+    const osc7th = ctx.createOscillator();
+    osc7th.type = 'sine';
+    osc7th.frequency.value = freq * MINOR_7TH;
+
+    const gain7th = ctx.createGain();
+    gain7th.gain.setValueAtTime(0, startTime);
+    gain7th.gain.linearRampToValueAtTime(0.15 * 0.35, startTime + 0.02); // 35% of root volume
+    gain7th.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+
+    osc7th.connect(gain7th);
+    gain7th.connect(masterGain!);
+    osc7th.start(startTime);
+    osc7th.stop(startTime + 0.2);
   });
 
   setTimeout(() => trackSoundEnd(), 500);
@@ -1136,20 +1367,32 @@ export function playBallPhaseAudio(phase: BallPhaseType): void {
 
 /**
  * Play death sound (dignified, not punishing).
+ * Uses TRITONE (ratio 45/32 ≈ 1.414) for mournful tragedy.
+ * The "devil's interval" creates unstable, tragic dissonance.
  */
 export function playDeathSound(): void {
   if (!audioContext || !masterGain || !isAudioEnabled) return;
+
+  // Use procedural C-major audio if enabled
+  if (useProceduralAudio) {
+    playProceduralDeath();
+    logAudioEvent('playDeathSound', { procedural: true });
+    stopBuzz();
+    return;
+  }
+
   logAudioEvent('playDeathSound', {});
   trackSoundStart();
 
   stopBuzz();
 
   const ctx = audioContext;
+  const TRITONE = 45 / 32; // ≈ 1.414 - the "devil's interval"
 
-  // Pure tone fade
+  // Layer 1: Pure tone fade - A3 mournful but dignified
   const osc = ctx.createOscillator();
   osc.type = 'sine';
-  osc.frequency.value = 220; // A3 - mournful but dignified
+  osc.frequency.value = 220; // A3
 
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0.2, ctx.currentTime);
@@ -1160,6 +1403,20 @@ export function playDeathSound(): void {
   osc.start();
   osc.stop(ctx.currentTime + 2);
 
+  // Layer 2: Tritone above (D#4) - adds mournful, tragic dissonance
+  const oscTritone = ctx.createOscillator();
+  oscTritone.type = 'sine';
+  oscTritone.frequency.value = 220 * TRITONE; // ~311Hz (D#4)
+
+  const gainTritone = ctx.createGain();
+  gainTritone.gain.setValueAtTime(0.2 * 0.25, ctx.currentTime); // 25% of main volume
+  gainTritone.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2);
+
+  oscTritone.connect(gainTritone);
+  gainTritone.connect(masterGain);
+  oscTritone.start();
+  oscTritone.stop(ctx.currentTime + 2);
+
   setTimeout(() => trackSoundEnd(), 2000);
 }
 
@@ -1167,8 +1424,11 @@ export function playDeathSound(): void {
 // Mood-Based Ambient
 // =============================================================================
 
+// Ambient oscillators - base + harmonic layer
 let ambientOsc: OscillatorNode | null = null;
 let ambientGain: GainNode | null = null;
+let ambientHarmonicOsc: OscillatorNode | null = null;
+let ambientHarmonicGain: GainNode | null = null;
 
 /**
  * Stop ambient audio.
@@ -1184,28 +1444,37 @@ export function stopAmbient(): void {
     }
     ambientOsc = null;
     ambientGain = null;
-    trackSoundEnd();
   }
+  if (ambientHarmonicOsc) {
+    try {
+      ambientHarmonicOsc.stop();
+    } catch {
+      // Ignore if already stopped
+    }
+    ambientHarmonicOsc = null;
+    ambientHarmonicGain = null;
+  }
+  trackSoundEnd();
 }
 
 /**
  * Set the mood-based ambient audio.
+ * Uses musical intervals for harmonic richness:
+ * - god: PERFECT 5TH (3/2) - stable, powerful
+ * - crisis: MINOR 2ND (16/15) - tense, dissonant
+ * - tragedy: TRITONE (45/32) - mournful, dread
  */
 export function setMoodAmbient(mood: Mood): void {
   if (!audioContext || !masterGain || !isAudioEnabled) return;
   logAudioEvent('setMoodAmbient', { mood });
 
+  // Musical interval ratios
+  const PERFECT_5TH = 3 / 2;   // = 1.5 - stable, powerful
+  const MINOR_2ND = 16 / 15;   // ≈ 1.067 - tense, dissonant
+  const TRITONE = 45 / 32;     // ≈ 1.414 - unstable, dread
+
   // Stop current ambient
-  if (ambientOsc) {
-    try {
-      ambientOsc.stop();
-    } catch {
-      // Ignore
-    }
-    ambientOsc = null;
-    ambientGain = null;
-    trackSoundEnd();
-  }
+  stopAmbient();
 
   const ctx = audioContext;
 
@@ -1214,41 +1483,75 @@ export function setMoodAmbient(mood: Mood): void {
   ambientGain = ctx.createGain();
   trackSoundStart();
 
+  // Base configuration for each mood
+  let baseFreq: number;
+  let baseVolume: number;
+  let oscType: OscillatorType = 'sine';
+  let harmonicRatio: number | null = null;
+  let harmonicVolume: number = 0;
+
   switch (mood) {
     case 'god':
-      ambientOsc.type = 'sine';
-      ambientOsc.frequency.value = 80;
-      ambientGain.gain.value = 0.02;
+      baseFreq = 80;
+      baseVolume = 0.02;
+      oscType = 'sine';
+      harmonicRatio = PERFECT_5TH;  // Add perfect 5th for power
+      harmonicVolume = baseVolume * 0.4;
       break;
 
     case 'flow':
-      ambientOsc.type = 'sine';
-      ambientOsc.frequency.value = 100;
-      ambientGain.gain.value = 0.03;
+      baseFreq = 100;
+      baseVolume = 0.03;
+      oscType = 'sine';
+      // flow stays clean - no harmonic layer
       break;
 
     case 'crisis':
-      ambientOsc.type = 'sawtooth';
-      ambientOsc.frequency.value = 60;
-      ambientGain.gain.value = 0.04;
+      baseFreq = 60;
+      baseVolume = 0.04;
+      oscType = 'sawtooth';
+      harmonicRatio = MINOR_2ND;  // Add minor 2nd for tension
+      harmonicVolume = baseVolume * 0.35;
       break;
 
     case 'tragedy':
-      ambientOsc.type = 'sine';
-      ambientOsc.frequency.value = 50;
-      ambientGain.gain.value = 0.05;
+      baseFreq = 50;
+      baseVolume = 0.05;
+      oscType = 'sine';
+      harmonicRatio = TRITONE;  // Add tritone for dread
+      harmonicVolume = baseVolume * 0.3;
       break;
 
     case 'prey':
-      ambientOsc.type = 'sine';
-      ambientOsc.frequency.value = 120;
-      ambientGain.gain.value = 0.03;
+      baseFreq = 120;
+      baseVolume = 0.03;
+      oscType = 'sine';
+      // prey stays clean - heightened alertness
       break;
   }
+
+  // Set up base oscillator
+  ambientOsc.type = oscType;
+  ambientOsc.frequency.value = baseFreq;
+  ambientGain.gain.value = baseVolume;
 
   ambientOsc.connect(ambientGain);
   ambientGain.connect(masterGain);
   ambientOsc.start();
+
+  // Add harmonic layer if specified
+  if (harmonicRatio !== null && harmonicVolume > 0) {
+    ambientHarmonicOsc = ctx.createOscillator();
+    ambientHarmonicGain = ctx.createGain();
+
+    ambientHarmonicOsc.type = 'sine';  // Harmonics always sine for subtlety
+    ambientHarmonicOsc.frequency.value = baseFreq * harmonicRatio;
+    ambientHarmonicGain.gain.value = harmonicVolume;
+
+    ambientHarmonicOsc.connect(ambientHarmonicGain);
+    ambientHarmonicGain.connect(masterGain);
+    ambientHarmonicOsc.start();
+  }
 }
 
 /**
@@ -1267,9 +1570,17 @@ export function stopAllAudio(): void {
 /**
  * Play graze sound (near-miss reward).
  * Pitch increases with chain count for escalating satisfaction.
+ * Uses MINOR 7TH (ratio 9/5 = 1.8) for satisfying near-miss sparkle.
  */
 export function playGrazeSound(chainCount: number = 1): void {
   if (!audioContext || !masterGain || !isAudioEnabled) return;
+
+  // Use procedural C-major audio if enabled
+  if (useProceduralAudio) {
+    playProceduralGraze(chainCount);
+    logAudioEvent('playGrazeSound', { chainCount, procedural: true });
+    return;
+  }
 
   const baseFreq = 1000;
   const pitchMult = 1.0 + (chainCount - 1) * 0.05;  // 5% higher per chain
@@ -1279,18 +1590,35 @@ export function playGrazeSound(chainCount: number = 1): void {
   trackSoundStart();
 
   const ctx = audioContext;
+  const MINOR_7TH = 9 / 5; // = 1.8
+
+  // Layer 1: Main graze chime (Run 038: 40% quieter)
   const osc = ctx.createOscillator();
   osc.type = 'sine';
   osc.frequency.value = freq;
 
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.15, ctx.currentTime);
+  gain.gain.setValueAtTime(0.09, ctx.currentTime);  // Was 0.15, now 60% of that
   gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
 
   osc.connect(gain);
   gain.connect(masterGain);
   osc.start();
   osc.stop(ctx.currentTime + 0.08);
+
+  // Layer 2: Minor 7th above - adds jazzy satisfaction sparkle
+  const osc7th = ctx.createOscillator();
+  osc7th.type = 'sine';
+  osc7th.frequency.value = freq * MINOR_7TH; // 1800Hz * pitchMult
+
+  const gain7th = ctx.createGain();
+  gain7th.gain.setValueAtTime(0.09 * 0.4, ctx.currentTime); // 40% of main volume (Run 038: 40% quieter)
+  gain7th.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+
+  osc7th.connect(gain7th);
+  gain7th.connect(masterGain);
+  osc7th.start();
+  osc7th.stop(ctx.currentTime + 0.08);
 
   setTimeout(() => trackSoundEnd(), 80);
 }
@@ -1383,3 +1711,16 @@ export function getAudioState(): AudioState {
     isSilent: buzzOscillators.length === 0 && ambientOsc === null,
   };
 }
+
+// =============================================================================
+// Re-export Procedural Audio System
+// =============================================================================
+
+// Export procedural audio primitives for direct use
+export {
+  playGoodSound,
+  playBadSound,
+  C_MAJOR_SCALE,
+  GOOD_INTERVALS,
+  BAD_INTERVALS,
+};

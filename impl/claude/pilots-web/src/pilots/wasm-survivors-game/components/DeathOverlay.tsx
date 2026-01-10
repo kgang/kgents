@@ -23,7 +23,7 @@
  * @see pilots/wasm-survivors-game/PROTO_SPEC.md (Part VII, V3: Dignity)
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { EnemyType } from '../types';
 import { COLORS } from '../systems/juice';
 import {
@@ -36,6 +36,7 @@ import {
 } from '../systems/upgrades';
 import type { ColonyLearning } from '../systems/colony-memory';
 import type { AxiomGuardReport } from '../systems/axiom-guards';
+import { HornetIcon, SkullIcon, ChartIcon, MaskIcon, GhostIcon, WarningIcon } from './Icons';
 
 // =============================================================================
 // Types
@@ -87,7 +88,6 @@ export interface DeathInfo {
 interface DeathOverlayProps {
   death: DeathInfo;
   onPlayAgain: () => void;
-  onViewCrystal: () => void;
   // V5 WITNESSED: Can also pass these as props for backwards compatibility
   colonyLearnings?: ColonyLearningSummary;
   ghostSummary?: GhostSummary;
@@ -134,6 +134,30 @@ const DIGNITY_VOICE_LINES = [
   'A good death. They earned it.',
   'Tell them I fought well.',
   'A magnificent end.',
+];
+
+// Random bee facts for the death screen
+const BEE_FACTS = [
+  'Honeybees can fly up to 15 miles per hour and visit 50-100 flowers in one trip.',
+  'A single bee colony can contain up to 60,000 bees in peak summer.',
+  'Bees communicate through dance. The "waggle dance" tells others where food is.',
+  'Worker bees are all female. Male bees (drones) exist only to mate with the queen.',
+  'Bees have five eyes - two compound eyes and three simple eyes on top of their head.',
+  'A queen bee can lay up to 2,000 eggs per day during peak season.',
+  'Honey never spoils. Edible honey has been found in 3,000-year-old Egyptian tombs.',
+  'Bees must visit about 2 million flowers to make one pound of honey.',
+  'A bee\'s wings beat 200 times per second, creating their distinctive buzz.',
+  'Bees can recognize human faces and remember them for at least two days.',
+  'The "hot bee ball" defense can raise temperatures to 117°F, cooking attackers alive.',
+  'Honeybees are the only insects that produce food eaten by humans.',
+  'A forager bee will fly roughly 500 miles in her lifetime before her wings give out.',
+  'Bees have been producing honey for at least 150 million years.',
+  'The hexagonal honeycomb is the most efficient shape for storing honey.',
+  'Bees can detect bombs and landmines - they\'re trained by the US military.',
+  'A bee\'s brain is the size of a sesame seed but can count up to four.',
+  'Queen bees can live 3-5 years, while workers live only 6 weeks in summer.',
+  'Bees are responsible for pollinating about 1/3 of all food we eat.',
+  'When a bee stings, it releases pheromones that signal other bees to attack.',
 ];
 
 // Bee-themed enemy names (Run 033+) with legacy type aliases
@@ -248,47 +272,6 @@ function generateDeathNarrative(death: DeathInfo): string {
   return `The colony was ready. Next time, so will I be.`;
 }
 
-/**
- * DD-18 + CREATIVE-IDENTITY: Generate shareable crystal text.
- *
- * The share text should be quotable and have swagger.
- * "The colony always wins" is the catchphrase.
- */
-function generateCrystalShare(death: DeathInfo): string {
-  const buildName = death.upgrades.length > 0
-    ? getBuildIdentity(death.upgrades)
-    : null;
-  const minutes = Math.floor(death.gameTime / 60000);
-  const seconds = Math.floor((death.gameTime % 60000) / 1000);
-  const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-  // Late game - legendary share format
-  if (death.wave >= 8) {
-    return `"The colony always wins. ...Respect."
-
-${death.totalKills} kills | Wave ${death.wave} | ${timeString}
-${buildName ? `Build: ${buildName}` : 'A magnificent hunt.'}
-
-#HornetSiege #TheColonyAlwaysWins`;
-  }
-
-  // Mid game - respectable share format
-  if (death.wave >= 4) {
-    return `Hornet Siege: Wave ${death.wave} | ${death.totalKills} kills | ${timeString}
-
-"${generateDeathNarrative(death)}"
-
-#HornetSiege`;
-  }
-
-  // Early death - brief share
-  return `Hornet Siege: ${death.totalKills} kills in ${timeString}
-
-The hunt continues.
-
-#HornetSiege`;
-}
-
 // =============================================================================
 // Component
 // =============================================================================
@@ -296,32 +279,22 @@ The hunt continues.
 export function DeathOverlay({
   death,
   onPlayAgain,
-  onViewCrystal,
   colonyLearnings: colonyLearningsProp,
   ghostSummary: ghostSummaryProp,
-  axiomReport,
 }: DeathOverlayProps) {
   const [phase, setPhase] = useState<Phase>('flash');
   const [elapsed, setElapsed] = useState(0);
-  const [copied, setCopied] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   // CREATIVE-SPECTACLE: Select a random dignity voice line
   const voiceLine = useMemo(() => {
     return DIGNITY_VOICE_LINES[Math.floor(Math.random() * DIGNITY_VOICE_LINES.length)];
   }, []);
 
-  // DD-18: Share to clipboard
-  const handleShareCrystal = useCallback(async () => {
-    const shareText = generateCrystalShare(death);
-    try {
-      await navigator.clipboard.writeText(shareText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback for older browsers
-      console.log('Share text:', shareText);
-    }
-  }, [death]);
+  // Select a random bee fact
+  const beeFact = useMemo(() => {
+    return BEE_FACTS[Math.floor(Math.random() * BEE_FACTS.length)];
+  }, []);
 
   // DD-18: Get narrative and build
   const narrative = generateDeathNarrative(death);
@@ -371,27 +344,40 @@ export function DeathOverlay({
   const spiralDescent = spiralProgress * SPIRAL_CONFIG.descentDistance;
 
   // Keyboard handler
+  // Allow restart hotkeys after 'rest' phase (don't require waiting for full animation)
+  // Details view toggles with 'D' key
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (phase !== 'done') return;
+      // Allow restart keys after rest phase (~1.5s into death sequence)
+      // This lets players restart faster without skipping the dignity moment
+      const canRestart = ['rest', 'voiceline', 'stats', 'done'].includes(phase);
+      const canViewDetails = phase === 'done';
 
       switch (e.key.toLowerCase()) {
         case 'r':
-          onPlayAgain();
-          break;
-        case 'c':
-          onViewCrystal();
-          break;
         case ' ':
         case 'enter':
-          onPlayAgain();
+          if (canRestart && !showDetails) {
+            e.preventDefault();
+            onPlayAgain();
+          }
+          break;
+        case 'd':
+          if (canViewDetails) {
+            setShowDetails(prev => !prev);
+          }
+          break;
+        case 'escape':
+          if (showDetails) {
+            setShowDetails(false);
+          }
           break;
       }
     };
 
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [phase, onPlayAgain, onViewCrystal]);
+  }, [phase, onPlayAgain, showDetails]);
 
   // CREATIVE-SPECTACLE: Calculate opacity and effects for each phase
   const flashOpacity = phase === 'flash' ? 1 - (elapsed / PHASE_DURATIONS.flash) : 0;
@@ -519,14 +505,14 @@ export function DeathOverlay({
         {/* CREATIVE-SPECTACLE: Dignity voice line (respect, not despair) */}
         {voicelineOpacity > 0 && (
           <div
-            className="text-center mb-12"
+            className="text-center mb-4"
             style={{
               opacity: voicelineOpacity,
-              transform: `translateY(${(1 - voicelineOpacity) * 20}px)`,
+              transform: `translateY(${(1 - voicelineOpacity) * 10}px)`,
             }}
           >
             <div
-              className="text-2xl font-serif italic"
+              className="text-lg font-serif italic"
               style={{ color: '#F4A300' }} // Warm amber
             >
               "{voiceLine}"
@@ -536,298 +522,287 @@ export function DeathOverlay({
 
         {/* Main death text - Changed from "KILLED BY" to "WAVE X REACHED" (dignity) */}
         <div
-          className="text-center mb-8"
+          className="text-center mb-4"
           style={{
             opacity: statsOpacity,
-            transform: `scale(${0.9 + statsOpacity * 0.1})`,
+            transform: `scale(${0.95 + statsOpacity * 0.05})`,
           }}
         >
           {/* CREATIVE-SPECTACLE: Focus on achievement, not failure */}
           <div
-            className="text-5xl font-bold mb-3"
+            className="text-3xl font-bold mb-1"
             style={{ color: COLORS.xp }} // Golden, not red
           >
             WAVE {death.wave} REACHED
           </div>
           {/* A2 (ATTRIBUTION): Show exactly WHAT killed the player */}
           <div
-            className="text-2xl font-semibold mb-2"
+            className="text-lg font-semibold mb-1"
             style={{ color: '#FF6B6B' }} // Red for killer, distinct from golden wave
           >
             {getDeathCauseText(death).title}
           </div>
-          <div className="text-lg text-gray-300">
+          <div className="text-sm text-gray-300">
             {getDeathCauseText(death).description}
           </div>
         </div>
 
-        {/* Stats card */}
+        {/* Stats card - compact honeycomb aesthetic */}
         <div
-          className="bg-gray-900/90 rounded-lg border border-gray-700 p-6 mb-6 min-w-80 max-w-lg"
-          style={{ opacity: statsOpacity, transform: `translateY(${(1 - statsOpacity) * 20}px)` }}
+          className="bg-gradient-to-b from-gray-900/95 to-gray-950/95 rounded-xl border border-amber-800/30 p-4 mb-4 min-w-72 max-w-md shadow-xl shadow-amber-900/20 backdrop-blur-sm"
+          style={{ opacity: statsOpacity, transform: `translateY(${(1 - statsOpacity) * 10}px)` }}
         >
-          <div className="grid grid-cols-2 gap-4 text-center mb-4">
-            <div>
-              <div className="text-gray-500 text-sm">WAVE REACHED</div>
-              <div className="text-2xl font-bold" style={{ color: COLORS.player }}>
+          {/* Stats grid - compact 4-column layout */}
+          <div className="grid grid-cols-4 gap-2 text-center mb-3">
+            <div className="bg-amber-950/30 rounded-lg p-2 border border-amber-800/20">
+              <div className="text-amber-600/80 text-[10px] font-semibold tracking-wider">WAVE</div>
+              <div className="text-xl font-bold" style={{ color: COLORS.player }}>
                 {death.wave}
               </div>
             </div>
-            <div>
-              <div className="text-gray-500 text-sm">SURVIVED</div>
-              <div className="text-2xl font-bold" style={{ color: COLORS.health }}>
+            <div className="bg-amber-950/30 rounded-lg p-2 border border-amber-800/20">
+              <div className="text-amber-600/80 text-[10px] font-semibold tracking-wider">TIME</div>
+              <div className="text-xl font-bold" style={{ color: COLORS.health }}>
                 {timeString}
               </div>
             </div>
-            <div>
-              <div className="text-gray-500 text-sm">KILLS</div>
-              <div className="text-2xl font-bold" style={{ color: COLORS.xp }}>
+            <div className="bg-amber-950/30 rounded-lg p-2 border border-amber-800/20">
+              <div className="text-amber-600/80 text-[10px] font-semibold tracking-wider">KILLS</div>
+              <div className="text-xl font-bold" style={{ color: COLORS.xp }}>
                 {death.totalKills}
               </div>
             </div>
-            <div>
-              <div className="text-gray-500 text-sm">SCORE</div>
-              <div className="text-2xl font-bold text-gray-300">
+            <div className="bg-amber-950/30 rounded-lg p-2 border border-amber-800/20">
+              <div className="text-amber-600/80 text-[10px] font-semibold tracking-wider">SCORE</div>
+              <div className="text-xl font-bold text-amber-100">
                 {death.score}
               </div>
             </div>
           </div>
 
-          {/* DD-18: Build identity */}
+          {/* Build identity - compact */}
           {buildName && (
-            <div className="border-t border-gray-700 pt-4 mt-4 text-center">
-              <div className="text-gray-500 text-sm mb-1">YOUR BUILD</div>
-              <div className="text-xl font-bold" style={{ color: COLORS.xp }}>
-                {buildName}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {death.upgrades.join(' + ')}
+            <div className="border-t border-amber-800/20 pt-2 mt-2 text-center">
+              <div className="text-amber-600/70 text-[10px] font-semibold tracking-wider">BUILD: <span className="text-amber-300 font-bold text-xs">{buildName}</span></div>
+              <div className="text-[10px] text-amber-700/60 mt-0.5">
+                {death.upgrades.join(' • ')}
               </div>
             </div>
           )}
 
-          {/* DD-18: Narrative */}
-          <div className="border-t border-gray-700 pt-4 mt-4">
-            <div className="text-gray-400 italic text-center">
+          {/* Narrative - compact */}
+          <div className="border-t border-amber-800/20 pt-2 mt-2">
+            <div className="text-amber-200/70 italic text-center text-xs leading-relaxed">
               "{narrative}"
             </div>
           </div>
         </div>
 
-        {/* V5 WITNESSED: Colony Learnings Section */}
-        {colonyLearnings && colonyLearnings.learnings.length > 0 && (
-          <div
-            className="bg-gray-900/90 rounded-lg border border-amber-800/50 p-5 mb-4 min-w-80 max-w-lg"
-            style={{ opacity: statsOpacity, transform: `translateY(${(1 - statsOpacity) * 20}px)` }}
-          >
-            <div className="text-center mb-3">
-              <div className="text-amber-400 text-sm font-bold tracking-wider">
-                THE COLONY LEARNED:
+        {/* Bee Fact - compact panel */}
+        <div
+          className="bg-gradient-to-b from-amber-950/60 to-amber-900/40 rounded-lg border border-amber-700/30 p-3 mb-4 max-w-sm backdrop-blur-sm"
+          style={{ opacity: statsOpacity, transform: `translateY(${(1 - statsOpacity) * 15}px)` }}
+        >
+          <div className="flex items-start gap-2">
+            <HornetIcon size={20} color="#FBBF24" />
+            <div>
+              <div className="text-amber-300/80 text-[10px] font-semibold tracking-wider mb-1">
+                DID YOU KNOW?
               </div>
-              <div className="text-gray-500 text-xs mt-1">
-                {colonyLearnings.headline}
+              <div className="text-amber-100/90 text-xs leading-snug">
+                {beeFact}
               </div>
             </div>
-            <div className="space-y-2">
-              {colonyLearnings.learnings.map((learning, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-2 text-sm"
-                >
-                  <span className="text-amber-500 mt-0.5">
-                    {learning.usedAgainst ? '!' : '-'}
-                  </span>
-                  <span className="text-gray-300">
-                    {learning.description}
-                    {learning.usedAgainst && (
-                      <span className="text-amber-600 text-xs ml-2">
-                        (they used this)
-                      </span>
-                    )}
-                  </span>
-                </div>
-              ))}
-            </div>
-            {/* V5: Respect, not accusation */}
-            {colonyLearnings.adaptationLevel >= 6 && (
-              <div className="text-center mt-3 pt-3 border-t border-amber-800/30">
-                <div className="text-amber-500/80 text-xs italic">
-                  "They earned this. ...Respect."
-                </div>
-              </div>
-            )}
-            {/* BALL stats if relevant */}
-            {colonyLearnings.ballsEncountered > 0 && (
-              <div className="text-center mt-3 pt-3 border-t border-amber-800/30">
-                <div className="text-gray-500 text-xs">
-                  THE BALL: {colonyLearnings.ballsEscaped}/{colonyLearnings.ballsEncountered} escaped
-                </div>
-              </div>
-            )}
           </div>
-        )}
+        </div>
 
-        {/* V5 WITNESSED: Ghost Summary Section */}
-        {ghostSummary && ghostSummary.ghostArchetypes.length > 0 && (
-          <div
-            className="bg-gray-900/90 rounded-lg border border-purple-800/50 p-5 mb-6 min-w-80 max-w-lg"
-            style={{ opacity: statsOpacity, transform: `translateY(${(1 - statsOpacity) * 20}px)` }}
-          >
-            <div className="text-center mb-3">
-              <div className="text-purple-400 text-sm font-bold tracking-wider">
-                PATHS NOT TAKEN:
-              </div>
-              <div className="text-gray-500 text-xs mt-1">
-                What if you had chosen differently?
-              </div>
-            </div>
-            <div className="space-y-2">
-              {ghostSummary.ghostArchetypes.slice(0, 2).map((archId) => {
-                const arch = ARCHETYPES[archId];
-                return (
-                  <div
-                    key={archId}
-                    className="flex items-center gap-3 text-sm"
-                  >
-                    <span
-                      className="w-3 h-3 rounded-full opacity-50"
-                      style={{ backgroundColor: arch.color }}
-                    />
-                    <span className="text-gray-400">
-                      You could have been:{' '}
-                      <span className="text-purple-300 font-medium">
-                        {arch.name}
-                      </span>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            {ghostSummary.pivotMoments > 0 && (
-              <div className="text-center mt-3 pt-3 border-t border-purple-800/30">
-                <div className="text-purple-400/70 text-xs">
-                  {ghostSummary.pivotMoments} pivot moment{ghostSummary.pivotMoments > 1 ? 's' : ''} where your path diverged
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Part I: Axiom Guard Report - Four True Axioms Verification */}
-        {axiomReport && (
-          <div
-            className="bg-gray-900/90 rounded-lg border border-cyan-800/50 p-5 mb-6 min-w-80 max-w-lg"
-            style={{ opacity: statsOpacity, transform: `translateY(${(1 - statsOpacity) * 20}px)` }}
-          >
-            <div className="text-center mb-3">
-              <div className="text-cyan-400 text-sm font-bold tracking-wider">
-                AXIOM VERIFICATION
-              </div>
-              <div className="text-gray-500 text-xs mt-1">
-                Quality Score: {(axiomReport.qualityScore * 100).toFixed(0)}%
-              </div>
-            </div>
-
-            {/* Axiom status grid */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {(['A1', 'A2', 'A3', 'A4'] as const).map((axiomId) => {
-                const passed = axiomReport.passed.includes(axiomId);
-                const violation = axiomReport.violations.find(v => v.axiom === axiomId);
-                const axiomNames = {
-                  A1: 'AGENCY',
-                  A2: 'ATTRIBUTION',
-                  A3: 'MASTERY',
-                  A4: 'COMPOSITION',
-                };
-
-                return (
-                  <div
-                    key={axiomId}
-                    className={`p-2 rounded border ${
-                      passed
-                        ? 'border-green-800/50 bg-green-900/20'
-                        : violation?.severity === 'critical'
-                          ? 'border-red-800/50 bg-red-900/20'
-                          : 'border-yellow-800/50 bg-yellow-900/20'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1">
-                      <span className={passed ? 'text-green-400' : violation?.severity === 'critical' ? 'text-red-400' : 'text-yellow-400'}>
-                        {passed ? '[OK]' : violation?.severity === 'critical' ? '[!!]' : '[!]'}
-                      </span>
-                      <span className="text-gray-300 font-medium">
-                        {axiomId}: {axiomNames[axiomId]}
-                      </span>
-                    </div>
-                    {violation && (
-                      <div className="text-gray-500 text-[10px] mt-1 leading-tight">
-                        {violation.message.replace(`${axiomId} `, '').substring(0, 40)}...
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Skill metrics summary if available */}
-            {axiomReport.passed.includes('A3') && (
-              <div className="mt-3 pt-3 border-t border-cyan-800/30">
-                <div className="text-center text-cyan-400/70 text-xs">
-                  Skill metrics verified - mastery observable
-                </div>
-              </div>
-            )}
-
-            {/* Causal chain note if A1 passed */}
-            {axiomReport.passed.includes('A1') && axiomReport.passed.includes('A2') && (
-              <div className="mt-2 text-center">
-                <div className="text-green-400/60 text-[10px]">
-                  Death traceable to player decisions
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Action buttons */}
+        {/* Action buttons - compact styling */}
         <div
           className="flex gap-3 flex-wrap justify-center"
           style={{ opacity: statsOpacity }}
         >
           <button
             onClick={onPlayAgain}
-            className="px-6 py-3 rounded-lg font-bold text-lg transition-all hover:scale-105"
+            className="px-5 py-2 rounded-lg font-bold text-sm transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-amber-500/20 border border-amber-500/50"
             style={{ backgroundColor: COLORS.player, color: '#000' }}
           >
-            PLAY AGAIN (R)
+            HUNT AGAIN
           </button>
           <button
-            onClick={onViewCrystal}
-            className="px-6 py-3 rounded-lg font-bold text-lg transition-all hover:scale-105 bg-gray-700 text-white hover:bg-gray-600"
+            onClick={() => setShowDetails(true)}
+            className="px-5 py-2 rounded-lg font-bold text-sm transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-amber-400/10 bg-gradient-to-b from-gray-800/80 to-gray-900/90 text-gray-200 border border-gray-600/40"
           >
-            VIEW CRYSTAL (C)
-          </button>
-          {/* DD-18: Share button */}
-          <button
-            onClick={handleShareCrystal}
-            className="px-6 py-3 rounded-lg font-bold text-lg transition-all hover:scale-105"
-            style={{
-              backgroundColor: copied ? COLORS.health : COLORS.xp,
-              color: '#000',
-            }}
-          >
-            {copied ? '✓ COPIED!' : 'SHARE'}
+            VIEW DETAILS
           </button>
         </div>
 
-        {/* Hint text */}
+        {/* Compact hint text */}
         <div
-          className="absolute bottom-8 text-gray-600 text-sm"
-          style={{ opacity: statsOpacity }}
+          className="absolute bottom-4 text-amber-700/60 text-xs tracking-wide"
+          style={{ opacity: statsOpacity * 0.8 }}
         >
-          Press SPACE or ENTER to restart quickly
+          R/SPACE: hunt again • D: details
         </div>
       </div>
+
+      {/* Details Modal - Tree/Outline View */}
+      {showDetails && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setShowDetails(false)}
+        >
+          <div
+            className="bg-gradient-to-b from-gray-900 to-gray-950 rounded-xl border border-amber-800/40 p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-amber-100">Run Details</h2>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDetails(false);
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors text-lg font-bold"
+                aria-label="Close details"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Tree View */}
+            <div className="space-y-4 font-mono text-sm">
+
+              {/* Run Overview */}
+              <div className="space-y-1">
+                <div className="text-amber-400 font-bold flex items-center gap-2">
+                  <ChartIcon size={16} color="#FBBF24" />
+                  RUN OVERVIEW
+                </div>
+                <div className="pl-4 border-l-2 border-amber-800/30 space-y-0.5">
+                  <div className="text-gray-300">├─ Wave: <span className="text-amber-200">{death.wave}</span></div>
+                  <div className="text-gray-300">├─ Time: <span className="text-amber-200">{timeString}</span></div>
+                  <div className="text-gray-300">├─ Kills: <span className="text-amber-200">{death.totalKills}</span></div>
+                  <div className="text-gray-300">└─ Score: <span className="text-amber-200">{death.score}</span></div>
+                </div>
+              </div>
+
+              {/* Build Identity */}
+              {buildName && (
+                <div className="space-y-1">
+                  <div className="text-purple-400 font-bold flex items-center gap-2">
+                    <MaskIcon size={16} color="#C084FC" />
+                    BUILD IDENTITY
+                  </div>
+                  <div className="pl-4 border-l-2 border-purple-800/30 space-y-0.5">
+                    <div className="text-gray-300">├─ Archetype: <span className="text-purple-200">{buildName}</span></div>
+                    <div className="text-gray-300">└─ Upgrades:</div>
+                    <div className="pl-4 space-y-0.5">
+                      {death.upgrades.map((upgrade, i) => (
+                        <div key={i} className="text-gray-400">
+                          {i === death.upgrades.length - 1 ? '└─' : '├─'} {upgrade}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Death Cause */}
+              <div className="space-y-1">
+                <div className="text-red-400 font-bold flex items-center gap-2">
+                  <SkullIcon size={16} color="#F87171" />
+                  CAUSE OF DEATH
+                </div>
+                <div className="pl-4 border-l-2 border-red-800/30 space-y-0.5">
+                  <div className="text-gray-300">├─ Enemy: <span className="text-red-200">{ENEMY_NAMES[death.killerType]}</span></div>
+                  {death.attackType && death.attackType !== 'contact' && (
+                    <div className="text-gray-300">├─ Attack: <span className="text-red-200">{ATTACK_NAMES[death.attackType]}</span></div>
+                  )}
+                  <div className="text-gray-300">├─ Damage: <span className="text-red-200">{death.damageDealt}</span></div>
+                  <div className="text-gray-300">└─ Health: <span className="text-red-200">{death.healthBefore} → 0</span></div>
+                </div>
+              </div>
+
+              {/* Ghost Paths - Paths Not Taken */}
+              {ghostSummary && ghostSummary.ghostArchetypes.length > 0 && (
+                <div className="space-y-1">
+                  <div className="text-cyan-400 font-bold flex items-center gap-2">
+                    <GhostIcon size={16} color="#22D3EE" />
+                    PATHS NOT TAKEN
+                  </div>
+                  <div className="pl-4 border-l-2 border-cyan-800/30 space-y-0.5">
+                    {ghostSummary.ghostArchetypes.map((archId, i) => {
+                      const arch = ARCHETYPES[archId];
+                      const isLast = i === ghostSummary.ghostArchetypes.length - 1;
+                      return (
+                        <div key={archId} className="text-gray-300">
+                          {isLast ? '└─' : '├─'}{' '}
+                          <span
+                            className="inline-block w-2 h-2 rounded-full mr-1.5"
+                            style={{ backgroundColor: arch.color }}
+                          />
+                          <span style={{ color: arch.color }}>{arch.name}</span>
+                          <span className="text-gray-500 text-xs ml-2">— {arch.fantasy}</span>
+                        </div>
+                      );
+                    })}
+                    {ghostSummary.pivotMoments > 0 && (
+                      <div className="text-cyan-600/70 text-xs mt-2 italic">
+                        {ghostSummary.pivotMoments} pivot moment{ghostSummary.pivotMoments > 1 ? 's' : ''} where your path diverged
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Colony Learnings */}
+              {colonyLearnings && colonyLearnings.learnings.length > 0 && (
+                <div className="space-y-1">
+                  <div className="text-amber-400 font-bold flex items-center gap-2">
+                    <HornetIcon size={16} color="#FBBF24" />
+                    COLONY LEARNINGS
+                  </div>
+                  <div className="pl-4 border-l-2 border-amber-800/30 space-y-0.5">
+                    {colonyLearnings.learnings.map((learning, i) => {
+                      const isLast = i === colonyLearnings.learnings.length - 1;
+                      return (
+                        <div key={i} className="text-gray-300">
+                          {isLast ? '└─' : '├─'}{' '}
+                          {learning.usedAgainst && <WarningIcon size={12} color="#F59E0B" className="inline-block mr-1" />}
+                          {learning.description}
+                        </div>
+                      );
+                    })}
+                    {colonyLearnings.adaptationLevel >= 6 && (
+                      <div className="text-amber-500/70 text-xs mt-2 italic">
+                        "They earned this. ...Respect."
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+
+            </div>
+
+            {/* Close Button */}
+            <div className="mt-6 pt-4 border-t border-gray-800 flex justify-center">
+              <button
+                onClick={() => setShowDetails(false)}
+                className="px-6 py-2 rounded-lg font-bold text-sm bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors"
+              >
+                CLOSE
+              </button>
+            </div>
+
+            {/* Hint */}
+            <div className="text-center mt-3 text-gray-600 text-xs">
+              Press ESC or click outside to close
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

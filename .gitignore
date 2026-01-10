@@ -282,3 +282,15 @@ impl/claude/web/test-results/
 # Pilot runs: all runs are local-only, manually curate what to commit
 # When you want to preserve a run in git, copy it outside runs/ (e.g., CANONICAL_RUN/)
 pilots/*/runs/
+
+# Backup and temp files (prevent accidental commits)
+*.backup
+*.bak
+*.old
+*.orig
+
+# Archive exports (game saves, zips, etc.)
+*.zip
+
+# Storybook build output (anywhere)
+storybook-static/

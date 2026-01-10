@@ -83,18 +83,36 @@ export function interpolateConstrictRadius(progress: number): number {
   return 150 - (150 - BALL_PHASE_CONFIG.finalRadius) * progress;
 }
 
+// =============================================================================
+// Bee Oscillation Configuration (Run 039: Organic Ball Feel)
+// =============================================================================
+// Bees oscillate in/out from the ball radius for organic, breathing feel
+// Each bee has unique phase offset so they don't all move in sync
+
+const BEE_OSCILLATION = {
+  amplitude: 8,           // How far bees wobble in/out (pixels)
+  frequency: 1.5,         // Oscillation speed (Hz) - cycles per second
+  phaseSpread: Math.PI,   // How much phase offset varies between bees
+};
+
 /**
  * Calculate formation positions for bees in THE BALL
  * Creates positions around the sphere with a gap for escape
+ *
+ * Run 039: Bees now oscillate slightly in/out from the radius
+ * for organic, breathing feel instead of hard-snapping to boundary.
  */
 export function calculateFormationPositions(
   center: Vector2,
   radius: number,
   beeCount: number,
   gapAngle: number,
-  gapSize: number
+  gapSize: number,
+  gameTime: number = Date.now()  // For oscillation timing
 ): Map<number, Vector2> {
   const positions = new Map<number, Vector2>();
+
+  if (beeCount === 0) return positions;
 
   // Calculate available arc (full circle minus gap)
   const availableArc = Math.PI * 2 - gapSize;
@@ -103,11 +121,28 @@ export function calculateFormationPositions(
   // Start from opposite side of gap
   const startAngle = gapAngle + gapSize / 2;
 
+  // Convert gameTime to seconds for oscillation
+  const timeSec = gameTime / 1000;
+
   for (let i = 0; i < beeCount; i++) {
     const angle = startAngle + angleStep * i;
+
+    // =======================================================================
+    // ORGANIC OSCILLATION (Run 039)
+    // =======================================================================
+    // Each bee gets a unique phase offset based on its index
+    // This creates a "breathing" effect where bees aren't perfectly aligned
+    const phaseOffset = (i / beeCount) * BEE_OSCILLATION.phaseSpread + (i * 0.7);
+
+    // Sinusoidal oscillation: radius + amplitude * sin(frequency * time + phase)
+    const oscillation = BEE_OSCILLATION.amplitude *
+      Math.sin(2 * Math.PI * BEE_OSCILLATION.frequency * timeSec + phaseOffset);
+
+    const effectiveRadius = radius + oscillation;
+
     positions.set(i, {
-      x: center.x + Math.cos(angle) * radius,
-      y: center.y + Math.sin(angle) * radius,
+      x: center.x + Math.cos(angle) * effectiveRadius,
+      y: center.y + Math.sin(angle) * effectiveRadius,
     });
   }
 

@@ -1,5 +1,5 @@
 /**
- * WASM Survivors - Melee Attack System (Run 036 Iteration 6)
+ * WASM Survivors - Melee Attack System (Hornet Siege v3)
  *
  * The Mandible Reaver: A bee-themed pseudo-melee arc attack
  *
@@ -16,11 +16,19 @@
  * - Visual: Amber/gold arc with mandible trails
  * - Audio: Heavy crunch/snap like breaking chitin
  *
- * @see pilots/wasm-survivors-game/runs/run-036/coordination/.offerings.creative.md
+ * NEW ABILITY INTEGRATION:
+ * - Serration: Applies bleed on hit
+ * - Scissor Grip: Chance to stun
+ * - Chitin Crack: Armor reduction per hit
+ * - Resonant Strike: Knockback on hit
+ * - Sawtooth: Every Nth hit bonus damage
+ *
+ * @see pilots/wasm-survivors-game/systems/abilities.ts
  */
 
 import type { Vector2 } from '../types';
-import type { ActiveAbilities } from './abilities';
+import type { ActiveAbilities, ComputedEffects } from './abilities';
+import { computeAbilityEffects } from './abilities';
 
 // =============================================================================
 // Types
@@ -102,6 +110,13 @@ export interface MeleeHit {
   position: Vector2;
   isKill: boolean;
   overkillDamage: number;
+
+  // New ability effects applied to this hit
+  appliedBleed: boolean;
+  appliedStun: boolean;
+  appliedArmorReduction: number;
+  appliedKnockback: number;
+  wasSawtoothHit: boolean;
 }
 
 export type MeleeEventType =
@@ -131,6 +146,8 @@ export interface MeleeTarget {
   position: Vector2;
   radius: number;
   health: number;
+  maxHealth?: number;  // For bleed calculation
+  armor?: number;      // For armor reduction
 }
 
 // =============================================================================
@@ -147,8 +164,8 @@ export const MANDIBLE_REAVER_CONFIG: MandibleReaverConfig = {
   range: 60,                  // Close range - you have to GET IN THERE
   activeWindow: 150,          // 150ms - brief window, commit to swing
 
-  // Damage - base is low, abilities scale it
-  baseDamage: 12,
+  // Damage - balanced with apex strike, abilities scale it
+  baseDamage: 18,
   maxTargets: 0,              // Unlimited - crowd clear is the point
 
   // Timing - fast windup, some recovery
@@ -352,35 +369,92 @@ export function findTargetsInArc(
 // =============================================================================
 
 /**
- * Calculate damage for a melee hit
+ * Calculate damage for a melee hit, applying new ability effects
  */
 export function calculateMeleeDamage(
   _baseDamage: number,
-  abilities: ActiveAbilities | null,
-  _target: MeleeTarget,
-  config: MandibleReaverConfig = MANDIBLE_REAVER_CONFIG
-): number {
-  // baseDamage and target reserved for future use (pierce range, target-specific modifiers)
+  computed: ComputedEffects | null,
+  target: MeleeTarget,
+  config: MandibleReaverConfig = MANDIBLE_REAVER_CONFIG,
+  hitCounter: number = 0,
+  killStreak: number = 0  // For momentum ability: current consecutive kills
+): {
+  damage: number;
+  appliedBleed: boolean;
+  appliedStun: boolean;
+  appliedArmorReduction: number;
+  appliedKnockback: number;
+  wasSawtoothHit: boolean;
+} {
   let damage = config.baseDamage;
+  let appliedBleed = false;
+  let appliedStun = false;
+  let appliedArmorReduction = 0;
+  let appliedKnockback = 0;
+  let wasSawtoothHit = false;
 
-  // Apply ability modifiers
-  if (abilities) {
-    damage *= abilities.computed.damageMultiplier;
+  if (computed) {
+    // Base damage multiplier (from legacy compat + trophy scent)
+    damage *= computed.damageMultiplier;
 
-    // Crit chance
-    if (abilities.computed.critChance > 0) {
-      if (Math.random() * 100 < abilities.computed.critChance) {
-        damage *= 2;
+    // MANDIBLE: Serration bleed
+    if (computed.bleedEnabled) {
+      appliedBleed = true;
+      // Bleed damage is applied separately by combat system
+    }
+
+    // MANDIBLE: Scissor Grip stun
+    if (computed.stunChance > 0 && Math.random() < computed.stunChance) {
+      appliedStun = true;
+    }
+
+    // MANDIBLE: Chitin Crack armor reduction
+    if (computed.armorReductionPerHit > 0) {
+      appliedArmorReduction = computed.armorReductionPerHit;
+      // Apply armor reduction bonus to this hit
+      const armorMod = target.armor ? Math.max(0, target.armor - appliedArmorReduction) / 100 : 1;
+      damage *= (1 + (1 - armorMod) * 0.5); // Up to 50% more damage on 0 armor
+    }
+
+    // MANDIBLE: Resonant Strike knockback
+    if (computed.knockbackPx > 0) {
+      appliedKnockback = computed.knockbackPx;
+    }
+
+    // MANDIBLE: Sawtooth every Nth hit bonus
+    if (computed.sawtoothEveryN > 0) {
+      if ((hitCounter + 1) % computed.sawtoothEveryN === 0) {
+        damage *= (1 + computed.sawtoothBonus / 100);
+        wasSawtoothHit = true;
       }
     }
 
-    // Pierce bonus: +20px range per pierce stack (applied elsewhere)
-    // Multishot: 3 arcs at offsets (applied elsewhere)
-    // Chain: Kills spawn "mandible echo" (applied elsewhere)
-    // Venom: Each hit applies stacks (applied elsewhere)
+    // VENOM: Melittin damage amp (if target already poisoned)
+    if (computed.poisonedDamageAmp > 0) {
+      // Combat system tracks which enemies are poisoned
+      // For now, this is applied separately
+    }
+
+    // Legacy: Crit chance (kept for backwards compat)
+    if (computed.critChance > 0 && Math.random() * 100 < computed.critChance) {
+      damage *= computed.critDamageMultiplier;
+    }
+
+    // MOMENTUM: Kill streak damage bonus (+15% per consecutive kill, max 75%)
+    if (computed.killStreakDamage > 0 && killStreak > 0) {
+      const streakBonus = Math.min(killStreak * computed.killStreakDamage, 75) / 100;
+      damage *= (1 + streakBonus);
+    }
   }
 
-  return Math.floor(damage);
+  return {
+    damage: Math.floor(damage),
+    appliedBleed,
+    appliedStun,
+    appliedArmorReduction,
+    appliedKnockback,
+    wasSawtoothHit,
+  };
 }
 
 // =============================================================================
@@ -396,11 +470,17 @@ export function updateMeleeAttack(
   enemies: MeleeTarget[],
   abilities: ActiveAbilities | null,
   currentTime: number,
-  config: MandibleReaverConfig = MANDIBLE_REAVER_CONFIG
-): MeleeUpdateResult {
+  config: MandibleReaverConfig = MANDIBLE_REAVER_CONFIG,
+  hitCounter: number = 0,
+  killStreak: number = 0  // For momentum ability
+): MeleeUpdateResult & { newHitCounter: number } {
   const hits: MeleeHit[] = [];
   const events: MeleeEvent[] = [];
   let newState = { ...currentState, hitEnemyIds: new Set(currentState.hitEnemyIds) };
+  let newHitCounter = hitCounter;
+
+  // Compute effects from abilities
+  const computed = abilities ? computeAbilityEffects(abilities) : null;
 
   // Check phase transitions
   if (currentState.isInWindup && currentTime >= currentState.windupEndTime) {
@@ -447,22 +527,36 @@ export function updateMeleeAttack(
     );
 
     for (const target of targets) {
-      const damage = calculateMeleeDamage(config.baseDamage, abilities, target, config);
-      const isKill = damage >= target.health;
-      const overkill = Math.max(0, damage - target.health);
+      const damageResult = calculateMeleeDamage(
+        config.baseDamage,
+        computed,
+        target,
+        config,
+        newHitCounter,
+        killStreak
+      );
+
+      const isKill = damageResult.damage >= target.health;
+      const overkill = Math.max(0, damageResult.damage - target.health);
 
       hits.push({
         enemyId: target.id,
-        damage,
+        damage: damageResult.damage,
         position: target.position,
         isKill,
         overkillDamage: overkill,
+        appliedBleed: damageResult.appliedBleed,
+        appliedStun: damageResult.appliedStun,
+        appliedArmorReduction: damageResult.appliedArmorReduction,
+        appliedKnockback: damageResult.appliedKnockback,
+        wasSawtoothHit: damageResult.wasSawtoothHit,
       });
 
       // Track hit
       newState.hitEnemyIds.add(target.id);
       newState.enemiesHit++;
-      newState.totalDamageDealt += damage;
+      newState.totalDamageDealt += damageResult.damage;
+      newHitCounter++;
 
       // Hit event
       events.push({
@@ -495,7 +589,7 @@ export function updateMeleeAttack(
     }
   }
 
-  return { hits, events, newState };
+  return { hits, events, newState, newHitCounter };
 }
 
 // =============================================================================
@@ -503,7 +597,7 @@ export function updateMeleeAttack(
 // =============================================================================
 
 /**
- * Apply Pierce bonus to melee (increases range)
+ * Apply ability modifiers to melee config
  */
 export function getModifiedConfig(
   baseConfig: MandibleReaverConfig,
@@ -511,27 +605,24 @@ export function getModifiedConfig(
 ): MandibleReaverConfig {
   if (!abilities) return baseConfig;
 
+  const computed = computeAbilityEffects(abilities);
   const config = { ...baseConfig };
 
-  // DD-36: Apply hornet-native ability modifiers
-
-  // Attack speed bonus reduces cooldown
-  if (abilities.computed.attackSpeedBonus > 0) {
-    config.cooldown = Math.max(200, config.cooldown * (1 - abilities.computed.attackSpeedBonus));
+  // Attack speed bonus reduces cooldown (from legacy compat)
+  if (computed.attackSpeedBonus > 0) {
+    config.cooldown = Math.max(200, config.cooldown * (1 - computed.attackSpeedBonus));
   }
+
+  // Feeding Efficiency: Attack speed bonus is tracked in runtime state
+  // and applied dynamically via abilities.runtime.feedingEfficiency
 
   // Damage multiplier affects base damage
-  if (abilities.computed.damageMultiplier > 1) {
-    config.baseDamage = Math.floor(config.baseDamage * abilities.computed.damageMultiplier);
+  if (computed.damageMultiplier > 1) {
+    config.baseDamage = Math.floor(config.baseDamage * computed.damageMultiplier);
   }
 
-  // Double-hit (serrated mandibles) increases max targets
-  if (abilities.computed.hasDoubleHit) {
-    config.maxTargets = config.maxTargets === 0 ? 0 : config.maxTargets * 2;
-  }
-
-  // Full arc (whirlwind reave) expands arc angle
-  if (abilities.computed.hasFullArc) {
+  // Full arc (legacy compat) expands arc angle
+  if (computed.hasFullArc) {
     config.arcAngle = 360; // Full circle attack
   }
 

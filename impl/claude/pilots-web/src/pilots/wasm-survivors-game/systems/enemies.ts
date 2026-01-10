@@ -82,8 +82,8 @@ export const BEE_BEHAVIORS: Record<EnemyType, BeeBehaviorConfig> = {
       speedMultiplier: 2.0,      // Very fast
     },
     colors: {
-      telegraph: '#F39C12',      // Orange warning
-      attack: '#FF6B00',         // Bright orange
+      telegraph: '#FF3333',      // Pure red warning (danger)
+      attack: '#FF3366',         // Pinkish-red attack (distinct from player)
     },
     pheromoneEmission: 0.3,      // High coordination contribution
     coordinationRole: 'alert',
@@ -130,16 +130,17 @@ export const BEE_BEHAVIORS: Record<EnemyType, BeeBehaviorConfig> = {
 
   royal: {
     // Elite behavior: Complex patterns, THE BALL anchor
-    attackRange: 70,
+    // Run 040: 50% range increase for elite units (70 * 1.5 = 105)
+    attackRange: 105,
     telegraphDuration: 600,
     attackDuration: 400,
     recoveryDuration: 500,
     attackType: 'combo',
     attackDamage: 25,
     attackParams: {
-      distance: 100,
-      radius: 60,
-      projectileSpeed: 180,
+      distance: 120,  // Increased lunge distance
+      radius: 70,     // Larger attack radius
+      projectileSpeed: 200,  // Faster projectiles
     },
     colors: {
       telegraph: '#3498DB',      // Blue warning (royal)
@@ -169,7 +170,7 @@ export const BEE_BEHAVIORS: Record<EnemyType, BeeBehaviorConfig> = {
     attackType: 'sting',
     attackDamage: 5,
     attackParams: { distance: 80, speedMultiplier: 2.0 },
-    colors: { telegraph: '#F39C12', attack: '#FF6B00' },
+    colors: { telegraph: '#FF3333', attack: '#FF3366' },
     pheromoneEmission: 0.3,
     coordinationRole: 'alert',
   },
@@ -198,7 +199,8 @@ export const BEE_BEHAVIORS: Record<EnemyType, BeeBehaviorConfig> = {
     coordinationRole: 'ranged',
   },
   boss: {
-    attackRange: 70,
+    // Run 040: 30% range increase for elite units (70 * 1.3 = 91)
+    attackRange: 91,
     telegraphDuration: 600,
     attackDuration: 400,
     recoveryDuration: 500,
@@ -210,7 +212,8 @@ export const BEE_BEHAVIORS: Record<EnemyType, BeeBehaviorConfig> = {
     coordinationRole: 'elite',
   },
   colossal_tide: {
-    attackRange: 80,
+    // Run 040: 30% range increase for elite units (80 * 1.3 = 104)
+    attackRange: 104,
     telegraphDuration: 700,
     attackDuration: 500,
     recoveryDuration: 600,
@@ -311,12 +314,19 @@ export interface EnemyWithBehavior extends Enemy {
 /**
  * Update bee behavior state machine
  * Returns updated enemy and any spawned projectiles
+ *
+ * @param enemy - The enemy to update
+ * @param playerPos - Current player position
+ * @param gameTime - Current game time in milliseconds
+ * @param deltaTime - Time since last frame in MILLISECONDS (frame-rate independent)
+ * @param enemySlowFactor - Global enemy speed multiplier from abilities (1.0 = normal, 0.8 = 20% slower)
  */
 export function updateBeeBehavior(
   enemy: EnemyWithBehavior,
   playerPos: Vector2,
   gameTime: number,
-  deltaTime: number
+  deltaTime: number,
+  enemySlowFactor: number = 1.0
 ): { enemy: EnemyWithBehavior; projectiles: StickyProjectile[]; damageDealt: number; pheromoneEmitted: number } {
   const config = BEE_BEHAVIORS[enemy.type];
   const projectiles: StickyProjectile[] = [];
@@ -359,15 +369,17 @@ export function updateBeeBehavior(
 
     case 'attack': {
       // Execute attack based on bee type
+      // Note: Attack movement speeds are affected by enemySlowFactor (Bullet Time ability)
       const attackProgress = timeInState / config.attackDuration;
+      const dt = deltaTime / 1000;  // Convert to seconds for velocity calculations
 
       if (config.attackType === 'swarm') {
         // Worker swarm: Quick burst toward target
         if (newEnemy.attackDirection && attackProgress <= 1) {
           const swarmSpeed = (config.attackParams.distance ?? 40) / (config.attackDuration / 1000);
           newEnemy.position = {
-            x: enemy.position.x + newEnemy.attackDirection.x * swarmSpeed * (deltaTime / 1000),
-            y: enemy.position.y + newEnemy.attackDirection.y * swarmSpeed * (deltaTime / 1000),
+            x: enemy.position.x + newEnemy.attackDirection.x * swarmSpeed * enemySlowFactor * dt,
+            y: enemy.position.y + newEnemy.attackDirection.y * swarmSpeed * enemySlowFactor * dt,
           };
         }
       } else if (config.attackType === 'sting') {
@@ -375,8 +387,8 @@ export function updateBeeBehavior(
         if (newEnemy.attackDirection && attackProgress <= 1) {
           const stingSpeed = (config.attackParams.distance ?? 80) / (config.attackDuration / 1000);
           newEnemy.position = {
-            x: enemy.position.x + newEnemy.attackDirection.x * stingSpeed * (deltaTime / 1000),
-            y: enemy.position.y + newEnemy.attackDirection.y * stingSpeed * (deltaTime / 1000),
+            x: enemy.position.x + newEnemy.attackDirection.x * stingSpeed * enemySlowFactor * dt,
+            y: enemy.position.y + newEnemy.attackDirection.y * stingSpeed * enemySlowFactor * dt,
           };
         }
       } else if (config.attackType === 'block') {
@@ -391,14 +403,16 @@ export function updateBeeBehavior(
         }
       } else if (config.attackType === 'sticky') {
         // Propolis: Fire sticky projectile at start of attack phase
+        // Projectile speed is also affected by enemySlowFactor
         if (attackProgress === 0 || (timeInState < deltaTime * 2)) {
           const dir = getDirectionToPlayer(enemy, playerPos);
+          const baseProjectileSpeed = config.attackParams.projectileSpeed ?? 200;
           projectiles.push({
             id: `sticky-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
             position: { ...enemy.position },
             velocity: {
-              x: dir.x * (config.attackParams.projectileSpeed ?? 200),
-              y: dir.y * (config.attackParams.projectileSpeed ?? 200),
+              x: dir.x * baseProjectileSpeed * enemySlowFactor,
+              y: dir.y * baseProjectileSpeed * enemySlowFactor,
             },
             radius: 12,
             ownerId: enemy.id,
@@ -416,8 +430,8 @@ export function updateBeeBehavior(
         if (attackProgress < 0.3 && newEnemy.attackDirection) {
           const chargeSpeed = (config.attackParams.distance ?? 100) / (config.attackDuration * 0.3 / 1000);
           newEnemy.position = {
-            x: enemy.position.x + newEnemy.attackDirection.x * chargeSpeed * (deltaTime / 1000),
-            y: enemy.position.y + newEnemy.attackDirection.y * chargeSpeed * (deltaTime / 1000),
+            x: enemy.position.x + newEnemy.attackDirection.x * chargeSpeed * enemySlowFactor * dt,
+            y: enemy.position.y + newEnemy.attackDirection.y * chargeSpeed * enemySlowFactor * dt,
           };
         } else if (attackProgress >= 0.3 && attackProgress < 0.35) {
           // AOE check

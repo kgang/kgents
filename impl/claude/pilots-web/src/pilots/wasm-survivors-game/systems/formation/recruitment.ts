@@ -57,72 +57,199 @@ export function updateBeeRecruitment(
   };
 }
 
+// =============================================================================
+// RUN 039: Outside Punch Telegraph System
+// =============================================================================
+// Punches now have a visible windup phase, making them dodgeable.
+// State machine: idle → windup (400ms) → punch (100ms) → recovery (200ms) → idle
+//
+// Visual feedback during windup:
+//   - Bee glows orange/red
+//   - Direction line toward player
+//   - Growing exclamation mark "!"
+//   - Filling ring indicator
+//
+// Dodge mechanics:
+//   - Player can move during 400ms windup
+//   - Punch only hits if player is within hitRange (35px) at punch time
+//   - If player moved outside hitRange, punch "whiffs" (no damage)
+
+import type { OutsidePunchState } from './types';
+
 /**
- * Update outside bee punches
- * Non-formation bees can punch player back toward ball center
+ * Update outside punch telegraph state machine
+ * RUN 039: Full telegraph system with dodge window
  */
 export function updateOutsidePunches(
   formation: BallFormationState,
   enemies: EnemyRef[],
   playerPos: Vector2,
   ballCenter: Vector2,
-  gameTime: number
+  gameTime: number,
+  activePunches: OutsidePunchState[] = []
 ): {
   formation: BallFormationState;
   knockback: { direction: Vector2; force: number } | null;
   events: BallEvent[];
+  updatedPunches: OutsidePunchState[];
 } {
   const events: BallEvent[] = [];
   let knockback: { direction: Vector2; force: number } | null = null;
   const newCooldowns = new Map(formation.outsidePunchCooldowns);
+  const updatedPunches: OutsidePunchState[] = [];
 
-  for (const enemy of enemies) {
-    // Skip bees in formation
-    if (formation.beeIds.includes(enemy.id)) continue;
+  // ==========================================================================
+  // Phase 1: Update existing punches through state machine
+  // ==========================================================================
 
-    // Check cooldown
-    const cooldownEnd = newCooldowns.get(enemy.id);
-    if (cooldownEnd !== undefined && gameTime < cooldownEnd) continue;
+  for (const punch of activePunches) {
+    const elapsed = gameTime - punch.phaseStartTime;
 
-    // Check if enemy is close enough to player
-    const dx = playerPos.x - enemy.position.x;
-    const dy = playerPos.y - enemy.position.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (punch.phase === 'windup') {
+      // Windup phase - telegraph is visible, player can dodge
+      if (elapsed >= BALL_OUTSIDE_PUNCH_CONFIG.windupDuration) {
+        // Transition to punch phase
+        // Check if player is still in hit range
+        const enemy = enemies.find(e => e.id === punch.beeId);
+        if (enemy) {
+          const dx = playerPos.x - enemy.position.x;
+          const dy = playerPos.y - enemy.position.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist < BALL_OUTSIDE_PUNCH_CONFIG.range) {
-      // Calculate punch direction (toward ball center)
-      const punchDx = ballCenter.x - playerPos.x;
-      const punchDy = ballCenter.y - playerPos.y;
-      const punchDist = Math.sqrt(punchDx * punchDx + punchDy * punchDy);
+          if (dist <= BALL_OUTSIDE_PUNCH_CONFIG.hitRange) {
+            // HIT! Player didn't dodge in time
+            knockback = {
+              direction: punch.knockbackDir,
+              force: BALL_OUTSIDE_PUNCH_CONFIG.knockbackForce,
+            };
 
-      if (punchDist > 1) {
-        const punchDir: Vector2 = {
-          x: punchDx / punchDist,
-          y: punchDy / punchDist,
-        };
+            events.push({
+              type: 'punch_hit',
+              timestamp: gameTime,
+              position: enemy.position,
+              data: {
+                punchingBeeId: punch.beeId,
+                knockbackDirection: punch.knockbackDir,
+                knockbackForce: BALL_OUTSIDE_PUNCH_CONFIG.knockbackForce,
+                dodged: false,
+              },
+            });
+          } else {
+            // WHIFF! Player dodged successfully
+            events.push({
+              type: 'punch_whiff',
+              timestamp: gameTime,
+              position: enemy.position,
+              data: {
+                punchingBeeId: punch.beeId,
+                dodged: true,
+              },
+            });
+          }
 
-        // Set knockback (RUN 037: 50px)
-        knockback = {
-          direction: punchDir,
-          force: BALL_OUTSIDE_PUNCH_CONFIG.knockbackForce,
-        };
+          // Transition to recovery phase either way
+          updatedPunches.push({
+            ...punch,
+            phase: 'recovery',
+            phaseStartTime: gameTime,
+          });
 
-        events.push({
-          type: 'outside_punch',
-          timestamp: gameTime,
-          position: enemy.position,
-          data: {
-            knockbackDirection: punchDir,
-            knockbackForce: BALL_OUTSIDE_PUNCH_CONFIG.knockbackForce,
-            lungingBeeId: enemy.id,
-          },
+          events.push({
+            type: 'punch_recovery_started',
+            timestamp: gameTime,
+            position: enemy.position,
+            data: { punchingBeeId: punch.beeId },
+          });
+        }
+        // If enemy no longer exists, just drop the punch
+      } else {
+        // Still winding up - keep punch active
+        updatedPunches.push(punch);
+      }
+    } else if (punch.phase === 'punch') {
+      // Quick punch phase (mostly handled above, but for safety)
+      if (elapsed >= BALL_OUTSIDE_PUNCH_CONFIG.punchDuration) {
+        updatedPunches.push({
+          ...punch,
+          phase: 'recovery',
+          phaseStartTime: gameTime,
         });
+      } else {
+        updatedPunches.push(punch);
+      }
+    } else if (punch.phase === 'recovery') {
+      // Recovery phase - bee is cooling down
+      if (elapsed >= BALL_OUTSIDE_PUNCH_CONFIG.recoveryDuration) {
+        // Punch complete - set bee on cooldown
+        newCooldowns.set(punch.beeId, gameTime + BALL_OUTSIDE_PUNCH_CONFIG.cooldown);
+        // Don't add to updatedPunches - punch is done
+      } else {
+        updatedPunches.push(punch);
+      }
+    }
+  }
 
-        // Set cooldown for this bee
-        newCooldowns.set(enemy.id, gameTime + BALL_OUTSIDE_PUNCH_CONFIG.cooldown);
+  // ==========================================================================
+  // Phase 2: Check for new punches to start (if under max active)
+  // ==========================================================================
 
-        // Only one punch per frame
-        break;
+  const currentActiveCount = updatedPunches.filter(p => p.phase !== 'recovery').length;
+
+  if (currentActiveCount < BALL_OUTSIDE_PUNCH_CONFIG.maxActivePunches) {
+    for (const enemy of enemies) {
+      // Skip bees in formation
+      if (formation.beeIds.includes(enemy.id)) continue;
+
+      // Skip bees already punching
+      if (updatedPunches.some(p => p.beeId === enemy.id)) continue;
+
+      // Check cooldown
+      const cooldownEnd = newCooldowns.get(enemy.id);
+      if (cooldownEnd !== undefined && gameTime < cooldownEnd) continue;
+
+      // Check if enemy is close enough to START a punch (detection range)
+      const dx = playerPos.x - enemy.position.x;
+      const dy = playerPos.y - enemy.position.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < BALL_OUTSIDE_PUNCH_CONFIG.detectionRange) {
+        // Calculate knockback direction (toward ball center)
+        const punchDx = ballCenter.x - playerPos.x;
+        const punchDy = ballCenter.y - playerPos.y;
+        const punchDist = Math.sqrt(punchDx * punchDx + punchDy * punchDy);
+
+        if (punchDist > 1) {
+          const knockbackDir: Vector2 = {
+            x: punchDx / punchDist,
+            y: punchDy / punchDist,
+          };
+
+          // Start new punch in windup phase
+          const newPunch: OutsidePunchState = {
+            beeId: enemy.id,
+            phase: 'windup',
+            phaseStartTime: gameTime,
+            startPos: { ...enemy.position },
+            targetPos: { ...playerPos },
+            knockbackDir,
+          };
+
+          updatedPunches.push(newPunch);
+
+          events.push({
+            type: 'punch_windup_started',
+            timestamp: gameTime,
+            position: enemy.position,
+            data: {
+              punchingBeeId: enemy.id,
+              punchPhase: 'windup',
+              windupProgress: 0,
+            },
+          });
+
+          // Only start one new punch per frame for readability
+          break;
+        }
       }
     }
   }
@@ -134,6 +261,7 @@ export function updateOutsidePunches(
     },
     knockback,
     events,
+    updatedPunches,
   };
 }
 

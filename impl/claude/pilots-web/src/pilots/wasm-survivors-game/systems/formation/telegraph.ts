@@ -6,7 +6,7 @@
  */
 
 import type { LegacyBallState, BallTelegraphData, LungePhase } from './types';
-import { BALL_LUNGE_CONFIG } from './config';
+import { BALL_LUNGE_CONFIG, getLungeScaling } from './config';
 
 /**
  * Extract telegraph data from ball state for rendering
@@ -82,6 +82,7 @@ export function getBallTelegraph(
 /**
  * Get lunge progress from legacy activeLunge state
  * RUN 040: Handles new pullback/charge phases
+ * RUN 042: Uses scaled windup duration based on bee type
  */
 function getLungeProgressFromState(
   activeLunge: NonNullable<LegacyBallState['activeLunge']>,
@@ -90,18 +91,35 @@ function getLungeProgressFromState(
   let duration: number;
   let startTime: number;
 
+  // RUN 042: Get scaling factors based on bee type
+  const beeType = activeLunge.beeType ?? 'worker';
+  const scaling = getLungeScaling(beeType);
+
+  // RUN 042: Calculate scaled durations (faster = shorter duration)
+  const scaledPullbackDuration = Math.round(BALL_LUNGE_CONFIG.pullbackDuration / scaling.windupSpeedMultiplier);
+  const scaledChargeDuration = Math.round(BALL_LUNGE_CONFIG.chargeDuration / scaling.windupSpeedMultiplier);
+  const scaledWindupDuration = scaledPullbackDuration + scaledChargeDuration;
+
   switch (activeLunge.phase) {
     case 'pullback':
-      duration = BALL_LUNGE_CONFIG.pullbackDuration;
+      // RUN 042: Use stored scaled duration if available, otherwise compute from type
+      duration = activeLunge.scaledWindupDuration > 0
+        ? Math.round(BALL_LUNGE_CONFIG.pullbackDuration * (activeLunge.scaledWindupDuration / BALL_LUNGE_CONFIG.windupDuration))
+        : scaledPullbackDuration;
       startTime = activeLunge.windupStartTime;
       break;
     case 'charge':
-      duration = BALL_LUNGE_CONFIG.chargeDuration;
+      // RUN 042: Use stored scaled duration if available, otherwise compute from type
+      duration = activeLunge.scaledWindupDuration > 0
+        ? Math.round(BALL_LUNGE_CONFIG.chargeDuration * (activeLunge.scaledWindupDuration / BALL_LUNGE_CONFIG.windupDuration))
+        : scaledChargeDuration;
       startTime = activeLunge.windupStartTime;
       break;
     case 'windup':
-      // Legacy compatibility - treat as pullback
-      duration = BALL_LUNGE_CONFIG.windupDuration;
+      // Legacy compatibility - use stored scaled duration or compute from type
+      duration = activeLunge.scaledWindupDuration > 0
+        ? activeLunge.scaledWindupDuration
+        : scaledWindupDuration;
       startTime = activeLunge.windupStartTime;
       break;
     case 'lunge':
@@ -214,6 +232,15 @@ export function getBallAudioParams(state: LegacyBallState): {
         shouldPlayBass: false,
       };
 
+    // RUN 039: Gathering phase - low ominous buzz building up
+    case 'gathering':
+      return {
+        buzzVolume: 0.15 + state.phaseProgress * 0.15, // 0.15 -> 0.3
+        buzzFreq: 80 + state.phaseProgress * 70, // Low rumble: 80Hz -> 150Hz
+        shouldPlayHeartbeat: false,
+        shouldPlayBass: false,
+      };
+
     case 'forming':
       // Crescendo from 0.3 to 1.0
       return {
@@ -285,9 +312,17 @@ export function getBallCameraState(state: LegacyBallState): {
         transitionSpeed: 0.1,
       };
 
+    // RUN 039: Gathering phase - slight zoom out to show incoming bees
+    case 'gathering':
+      return {
+        targetZoom: 1.0 - state.phaseProgress * 0.1, // Slight pull back (1.0 -> 0.9)
+        focusPoint: state.center,
+        transitionSpeed: 0.01, // Slow transition
+      };
+
     case 'forming':
       // Pull back to show full sphere
-      const formingZoom = 1.0 - state.phaseProgress * 0.3;
+      const formingZoom = 0.9 - state.phaseProgress * 0.2; // Continue from gathering (0.9 -> 0.7)
       return {
         targetZoom: formingZoom,
         focusPoint: state.center,

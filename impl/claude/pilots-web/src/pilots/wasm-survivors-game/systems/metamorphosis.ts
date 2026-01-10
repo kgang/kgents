@@ -44,7 +44,7 @@ export const TIDE_CONFIG = {
   maxHealth: 100,
   speed: 30,            // 0.5x normal (60) - but immune to slow
   color: '#880000',     // Deep crimson
-  xpValue: 200,         // Big reward
+  xpValue: 300,         // Big reward (+50% XP boost)
   damage: 25,
   immuneToSlow: true,
 } as const;

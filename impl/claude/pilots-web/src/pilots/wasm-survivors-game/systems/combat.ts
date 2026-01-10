@@ -69,7 +69,7 @@ export const EXECUTE = {
 export const REVENGE = {
   DAMAGE_BONUS: 0.25,         // +25% damage
   DURATION_MS: 3000,          // 3 seconds
-  COLOR: '#FF6600',           // Orange aura
+  COLOR: '#FF3366',           // Pinkish-red aura (distinct from player orange)
 } as const;
 
 /** Graze Bonus - near-miss rewards */
@@ -77,7 +77,7 @@ export const GRAZE = {
   ZONE_PX: 15,                // 15px near-miss zone (was 30 - now tighter!)
   GRAZES_FOR_BONUS: 5,        // 5 consecutive grazes
   DAMAGE_BONUS: 0.10,         // +10% damage
-  DECAY_TIME_MS: 2000,        // Reset chain after 2s without graze
+  DECAY_TIME_MS: 400,         // Reset chain after 0.4s without graze (Run 038: faster reset)
   COOLDOWN_MS: 500,           // 500ms cooldown per enemy before re-triggering
   SPARK_COLOR: '#00FFFF',     // Cyan spark
 } as const;
@@ -1075,6 +1075,369 @@ export function getVenomArchitectColor(stacks: number): string {
 }
 
 // =============================================================================
+// Status Effect Color System - Visual feedback for status effects
+// =============================================================================
+
+/**
+ * Status effect tint colors - used for visual feedback
+ */
+export const STATUS_TINT = {
+  POISON: '#00FF00',    // Green for poison
+  BURNING: '#FF3333',   // Pure red for burning (distinct from player orange)
+  FROZEN: '#00CCFF',    // Blue for frozen/slow
+  BLEEDING: '#CC0000',  // Red for bleeding
+} as const;
+
+/**
+ * Calculate the tint opacity based on stack count
+ * More stacks = more visible tint
+ * @param stacks - Current number of stacks
+ * @param maxStacks - Maximum possible stacks
+ * @param baseOpacity - Base opacity at 1 stack (default 0.3)
+ */
+export function calculateStatusTintOpacity(
+  stacks: number,
+  maxStacks: number,
+  baseOpacity: number = 0.3
+): number {
+  if (stacks <= 0) return 0;
+  // Scale from baseOpacity at 1 stack to 0.6 at max stacks
+  const normalizedStacks = Math.min(stacks, maxStacks) / maxStacks;
+  return baseOpacity + (0.3 * normalizedStacks);
+}
+
+/**
+ * Get the CSS rgba color string for a status effect
+ * @param hexColor - Hex color (e.g., '#00FF00')
+ * @param opacity - Opacity 0-1
+ */
+export function getStatusTintRgba(hexColor: string, opacity: number): string {
+  // Parse hex color
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
+// =============================================================================
+// Chain Lightning System - Damage chains to nearby enemies on kill
+// =============================================================================
+
+/** Chain Lightning constants */
+export const CHAIN_LIGHTNING = {
+  DEFAULT_RANGE_PX: 100,            // Default range for chain
+  DEFAULT_DAMAGE_PERCENT: 50,       // 50% damage per bounce
+  DEFAULT_MAX_BOUNCES: 3,           // Default max bounces
+  ARC_COLOR: '#4488FF',             // Lightning arc color
+  ARC_SECONDARY_COLOR: '#88CCFF',   // Secondary arc color for glow
+  ARC_DURATION_MS: 150,             // How long the arc visual lasts
+} as const;
+
+/** Lightning arc visual effect */
+export interface LightningArc {
+  id: string;
+  fromPosition: Vector2;
+  toPosition: Vector2;
+  spawnTime: number;
+  damage: number;
+}
+
+/**
+ * Find the nearest enemy within range for chain lightning
+ * @param position - Position to search from
+ * @param enemies - List of enemies to search
+ * @param range - Maximum range in pixels
+ * @param excludeIds - Enemy IDs to exclude (already hit)
+ */
+export function findChainLightningTarget(
+  position: Vector2,
+  enemies: Enemy[],
+  range: number,
+  excludeIds: Set<string>
+): Enemy | null {
+  let nearestEnemy: Enemy | null = null;
+  let nearestDistance = Infinity;
+
+  for (const enemy of enemies) {
+    // Skip excluded enemies
+    if (excludeIds.has(enemy.id)) continue;
+
+    const dx = enemy.position.x - position.x;
+    const dy = enemy.position.y - position.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance <= range && distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestEnemy = enemy;
+    }
+  }
+
+  return nearestEnemy;
+}
+
+/**
+ * Process chain lightning on enemy kill
+ * Returns damage events and lightning arc visuals
+ * @param killedEnemy - The enemy that was killed
+ * @param baseDamage - Original damage dealt
+ * @param enemies - All enemies
+ * @param maxBounces - Maximum number of bounces
+ * @param range - Chain range in pixels
+ * @param damagePercent - Damage percentage per bounce
+ * @param gameTime - Current game time
+ */
+export function processChainLightning(
+  killedEnemy: Enemy,
+  baseDamage: number,
+  enemies: Enemy[],
+  maxBounces: number,
+  range: number = CHAIN_LIGHTNING.DEFAULT_RANGE_PX,
+  damagePercent: number = CHAIN_LIGHTNING.DEFAULT_DAMAGE_PERCENT,
+  gameTime: number = 0
+): {
+  damageEvents: Array<{ enemyId: string; damage: number }>;
+  lightningArcs: LightningArc[];
+} {
+  const damageEvents: Array<{ enemyId: string; damage: number }> = [];
+  const lightningArcs: LightningArc[] = [];
+  const hitEnemies = new Set<string>([killedEnemy.id]);
+
+  let currentPosition = killedEnemy.position;
+  let currentDamage = baseDamage * (damagePercent / 100);
+  let bouncesRemaining = maxBounces;
+
+  while (bouncesRemaining > 0) {
+    // Find nearest enemy within range
+    const target = findChainLightningTarget(
+      currentPosition,
+      enemies,
+      range,
+      hitEnemies
+    );
+
+    if (!target) break;  // No valid target found
+
+    // Create damage event
+    damageEvents.push({
+      enemyId: target.id,
+      damage: Math.floor(currentDamage),
+    });
+
+    // Create lightning arc visual
+    lightningArcs.push({
+      id: `lightning-${gameTime}-${bouncesRemaining}`,
+      fromPosition: { ...currentPosition },
+      toPosition: { ...target.position },
+      spawnTime: gameTime,
+      damage: Math.floor(currentDamage),
+    });
+
+    // Update for next bounce
+    hitEnemies.add(target.id);
+    currentPosition = target.position;
+    currentDamage *= (damagePercent / 100);  // Reduce damage for next bounce
+    bouncesRemaining--;
+  }
+
+  return { damageEvents, lightningArcs };
+}
+
+// =============================================================================
+// Infectious Poison System - Poison spreads on death
+// =============================================================================
+
+/** Infectious Poison constants */
+export const INFECTIOUS_POISON = {
+  DEFAULT_SPREAD_RADIUS_PX: 60,     // Default spread radius
+  DEFAULT_SPREAD_PERCENT: 50,       // Default % of stacks that spread
+  DEFAULT_DPS_PER_STACK: 4,         // Legacy flat DPS (now uses 3% max HP per stack)
+  DEFAULT_MAX_STACKS: 5,            // Default max stacks
+  TICK_INTERVAL_MS: 200,            // Tick every 200ms (5 ticks per second)
+  TINT_COLOR: '#00FF00',            // Green tint
+  TINT_BASE_OPACITY: 0.3,           // Base opacity
+  // NEW: Percent-based damage - 3% of enemy max HP per second per stack
+  // With 5 stacks = 15% max HP per second, kills any enemy in ~6.7 seconds
+} as const;
+
+/** Infectious poison state on an enemy */
+export interface InfectiousPoisonState {
+  stacks: number;
+  maxStacks: number;
+  dpsPerStack: number;
+  lastTickTime: number;
+  isInfectious: boolean;  // Whether this poison spreads on death
+  spreadRadius: number;
+  spreadPercent: number;
+}
+
+/**
+ * Create initial infectious poison state
+ */
+export function createInitialInfectiousPoisonState(): InfectiousPoisonState {
+  return {
+    stacks: 0,
+    maxStacks: INFECTIOUS_POISON.DEFAULT_MAX_STACKS,
+    dpsPerStack: INFECTIOUS_POISON.DEFAULT_DPS_PER_STACK,
+    lastTickTime: 0,
+    isInfectious: false,
+    spreadRadius: INFECTIOUS_POISON.DEFAULT_SPREAD_RADIUS_PX,
+    spreadPercent: INFECTIOUS_POISON.DEFAULT_SPREAD_PERCENT,
+  };
+}
+
+/**
+ * Apply poison stacks to an enemy
+ * @param state - Current poison state (or undefined for new)
+ * @param stacksToAdd - Number of stacks to add
+ * @param isInfectious - Whether this poison is infectious
+ * @param config - Optional configuration overrides
+ */
+export function applyInfectiousPoisonStacks(
+  state: InfectiousPoisonState | undefined,
+  stacksToAdd: number,
+  isInfectious: boolean,
+  config?: {
+    maxStacks?: number;
+    dpsPerStack?: number;
+    spreadRadius?: number;
+    spreadPercent?: number;
+  }
+): InfectiousPoisonState {
+  const currentState = state ?? createInitialInfectiousPoisonState();
+
+  const maxStacks = config?.maxStacks ?? currentState.maxStacks;
+  const newStacks = Math.min(currentState.stacks + stacksToAdd, maxStacks);
+
+  return {
+    stacks: newStacks,
+    maxStacks,
+    dpsPerStack: config?.dpsPerStack ?? currentState.dpsPerStack,
+    lastTickTime: currentState.lastTickTime,
+    isInfectious: isInfectious || currentState.isInfectious,
+    spreadRadius: config?.spreadRadius ?? currentState.spreadRadius,
+    spreadPercent: config?.spreadPercent ?? currentState.spreadPercent,
+  };
+}
+
+/**
+ * Poison damage constants
+ */
+export const POISON_PERCENT_PER_STACK_PER_SECOND = 0.03;  // 3% of max HP per second per stack
+export const POISON_MIN_DPS_PER_STACK = 4;                 // Minimum 4 DPS per stack
+
+/**
+ * Update infectious poison state and calculate damage this frame
+ * @param state - Current poison state
+ * @param gameTime - Current game time in ms
+ * @param enemyMaxHealth - Enemy's max health for percent-based damage calculation
+ *                         If not provided, falls back to flat dpsPerStack damage
+ */
+export function updateInfectiousPoisonState(
+  state: InfectiousPoisonState | undefined,
+  gameTime: number,
+  enemyMaxHealth?: number
+): { state: InfectiousPoisonState; damage: number } {
+  if (!state || state.stacks <= 0) {
+    return { state: createInitialInfectiousPoisonState(), damage: 0 };
+  }
+
+  // Check if we should tick
+  const timeSinceLastTick = gameTime - state.lastTickTime;
+  if (timeSinceLastTick < INFECTIOUS_POISON.TICK_INTERVAL_MS) {
+    return { state, damage: 0 };
+  }
+
+  // Calculate damage for this tick
+  const ticksPerSecond = 1000 / INFECTIOUS_POISON.TICK_INTERVAL_MS;
+
+  let dps: number;
+  if (enemyMaxHealth !== undefined && enemyMaxHealth > 0) {
+    // Percent-based damage: 3% of max HP per second per stack
+    const percentDps = enemyMaxHealth * POISON_PERCENT_PER_STACK_PER_SECOND * state.stacks;
+    // Minimum floor: 4 DPS per stack
+    const minDps = POISON_MIN_DPS_PER_STACK * state.stacks;
+    // Use the higher of the two
+    dps = Math.max(percentDps, minDps);
+  } else {
+    // Fallback: Flat DPS per stack
+    dps = state.dpsPerStack * state.stacks;
+  }
+
+  const damagePerTick = dps / ticksPerSecond;
+
+  return {
+    state: {
+      ...state,
+      lastTickTime: gameTime,
+    },
+    damage: damagePerTick,
+  };
+}
+
+/**
+ * Process poison spread when an enemy dies
+ * @param deadEnemy - The enemy that died
+ * @param poisonState - The poison state on the dead enemy
+ * @param enemies - All enemies
+ */
+export function processInfectiousPoisonSpread(
+  deadEnemy: Enemy,
+  poisonState: InfectiousPoisonState,
+  enemies: Enemy[]
+): Array<{ enemyId: string; stacks: number }> {
+  if (!poisonState.isInfectious || poisonState.stacks <= 0) {
+    return [];
+  }
+
+  const spreadEvents: Array<{ enemyId: string; stacks: number }> = [];
+  const spreadStacks = Math.floor(poisonState.stacks * (poisonState.spreadPercent / 100));
+
+  if (spreadStacks <= 0) return [];
+
+  // Find enemies within spread radius
+  for (const enemy of enemies) {
+    if (enemy.id === deadEnemy.id) continue;
+
+    const dx = enemy.position.x - deadEnemy.position.x;
+    const dy = enemy.position.y - deadEnemy.position.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance <= poisonState.spreadRadius) {
+      spreadEvents.push({
+        enemyId: enemy.id,
+        stacks: spreadStacks,
+      });
+    }
+  }
+
+  return spreadEvents;
+}
+
+/**
+ * Get poison tint color and opacity for rendering
+ * @param state - Current poison state
+ */
+export function getInfectiousPoisonTint(state: InfectiousPoisonState | undefined): {
+  color: string;
+  opacity: number;
+} {
+  if (!state || state.stacks <= 0) {
+    return { color: 'transparent', opacity: 0 };
+  }
+
+  const opacity = calculateStatusTintOpacity(
+    state.stacks,
+    state.maxStacks,
+    INFECTIOUS_POISON.TINT_BASE_OPACITY
+  );
+
+  return {
+    color: INFECTIOUS_POISON.TINT_COLOR,
+    opacity,
+  };
+}
+
+// =============================================================================
 // Export Default
 // =============================================================================
 
@@ -1089,11 +1452,15 @@ export default {
   GRAZE,
   AFTERIMAGE,
   VENOM_ARCHITECT,
+  STATUS_TINT,
+  CHAIN_LIGHTNING,
+  INFECTIOUS_POISON,
   // Factory
   createInitialCombatState,
   createInitialVenomState,
   createInitialBleedState,
   createInitialVenomArchitectState,
+  createInitialInfectiousPoisonState,
   // Systems
   applyVenomStack,
   updateVenomState,
@@ -1119,6 +1486,17 @@ export default {
   endDash,
   spawnAfterimage,
   updateAfterimages,
+  // Status Effect Tinting
+  calculateStatusTintOpacity,
+  getStatusTintRgba,
+  // Chain Lightning
+  findChainLightningTarget,
+  processChainLightning,
+  // Infectious Poison
+  applyInfectiousPoisonStacks,
+  updateInfectiousPoisonState,
+  processInfectiousPoisonSpread,
+  getInfectiousPoisonTint,
   // Damage
   calculateTotalDamageMultiplier,
   calculateFinalDamage,

@@ -298,28 +298,7 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
       window.DEBUG_FORCE_BALL = onForceBall;
     }
 
-    // Log debug mode activation
-    console.log('[DEBUG API] Debug mode activated. Available functions:');
-    console.log('  - DEBUG_GET_GAME_STATE()');
-    console.log('  - DEBUG_GET_ENEMIES()');
-    console.log('  - DEBUG_GET_PLAYER()');
-    console.log('  - DEBUG_GET_LAST_DAMAGE()');
-    console.log('  - DEBUG_GET_TELEGRAPHS()');
-    console.log('  - DEBUG_SPAWN(type, {x, y})');
-    console.log('  - DEBUG_SET_INVINCIBLE(bool)');
-    console.log('  - DEBUG_SKIP_WAVE()');
-    console.log('  - DEBUG_KILL_ALL_ENEMIES()');
-    console.log('  - DEBUG_LEVEL_UP()');
-    console.log('  Audio debugging:');
-    console.log('  - DEBUG_GET_AUDIO_STATE()');
-    console.log('  - DEBUG_GET_AUDIO_LEVEL()');
-    console.log('  - DEBUG_GET_AUDIO_LOG()');
-    console.log('  - DEBUG_CLEAR_AUDIO_LOG()');
-    console.log('  Emotional/Contrast debugging:');
-    console.log('  - DEBUG_GET_EMOTIONAL_STATE()');
-    console.log('  THE BALL debugging:');
-    console.log('  - DEBUG_GET_BALL_STATE()');
-    console.log('  - DEBUG_FORCE_BALL() - Force THE BALL to start forming');
+    // Debug API ready (silent - use DEBUG_* functions in console)
 
     // Cleanup on unmount
     return () => {

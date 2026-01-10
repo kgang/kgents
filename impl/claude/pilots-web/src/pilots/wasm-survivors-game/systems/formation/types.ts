@@ -14,13 +14,16 @@ import type { Vector2 } from '../../types';
 // =============================================================================
 
 /**
- * Main ball phase state machine
- * inactive → forming → silence → constrict → cooking
- *                                    ↓
- *                              dissipating → inactive
+ * Main ball phase state machine (RUN 039: Added 'gathering' pre-phase)
+ * inactive → gathering → forming → silence → constrict → cooking
+ *                                                ↓
+ *                                          dissipating → inactive
+ *
+ * Gathering phase: Shows indicator, bees travel slowly to positions
  */
 export type BallPhase =
   | 'inactive'      // No ball forming
+  | 'gathering'     // NEW: Pre-formation telegraph, bees traveling to positions
   | 'forming'       // 0-6s: Surrounding, crescendo
   | 'silence'       // 6-8s: The "oh no" moment
   | 'constrict'     // 8-10.5s: Closing in, escape window
@@ -39,6 +42,32 @@ export type BallPhase =
  * NOTE: 'windup' is kept for backward compatibility (maps to pullback/charge)
  */
 export type LungePhase = 'idle' | 'windup' | 'pullback' | 'charge' | 'lunge' | 'return';
+
+/**
+ * Outside punch sub-state machine (RUN 039 - telegraph system)
+ * idle → windup (400ms) → punch (100ms) → recovery (200ms) → idle
+ *
+ * - windup: Bee glows, shows intent line toward player (DODGEABLE)
+ * - punch: Quick strike - hits if player still in range
+ * - recovery: Brief cooldown animation before bee can act again
+ */
+export type OutsidePunchPhase = 'idle' | 'windup' | 'punch' | 'recovery';
+
+/**
+ * Individual outside punch state (RUN 039)
+ * Tracks a single bee's punch attack telegraph
+ */
+export interface OutsidePunchState {
+  beeId: string;
+  phase: OutsidePunchPhase;
+  phaseStartTime: number;
+  // Position snapshot at windup start (bee may move slightly)
+  startPos: Vector2;
+  // Target position (player's position when punch started)
+  targetPos: Vector2;
+  // Direction toward ball center (knockback direction)
+  knockbackDir: Vector2;
+}
 
 // =============================================================================
 // State Components (Separated Concerns)
@@ -79,14 +108,21 @@ export interface BallGapState {
 
 /**
  * Lunge attack state
+ *
+ * RUN 042: Added beeType for scaled lunge parameters (hit radius, damage, windup speed)
  */
 export interface BallLungeState {
   phase: LungePhase;
   beeId: string | null;
+  beeType: string | null;    // RUN 042: Enemy type for lunge scaling
   phaseStartTime: number;
   startPos: Vector2;         // Original formation position
   pullbackPos: Vector2;      // Position after pullback (RUN 040)
   targetPos: Vector2;        // Lunge destination (past player)
+  // RUN 042: Scaled parameters (computed at lunge start based on beeType)
+  scaledHitRadius: number;   // Hit radius scaled by bee type
+  scaledDamage: number;      // Damage scaled by bee type
+  scaledWindupDuration: number;  // Windup duration (shorter = more dangerous)
   // Timing
   lastLungeTime: number;
   nextLungeInterval: number;
@@ -108,6 +144,7 @@ export interface BallDamageState {
   temperature: number;
   lastDamageTick: number;
   lastBoundaryDamageTick: number;
+  lastNearMissTime: number;  // RUN 039: Track near-miss cooldown
 }
 
 /**
@@ -174,14 +211,20 @@ export interface LegacyBallState {
   nextLungeInterval: number;
   activeLunge: {
     beeId: string;
+    beeType: string;         // RUN 042: Enemy type for lunge scaling
     phase: LungePhase;
     windupStartTime: number;
     lungeStartTime: number;
     startPos: Vector2;
     targetPos: Vector2;
     duration: number;
+    // RUN 042: Scaled parameters (computed at lunge start based on beeType)
+    scaledHitRadius: number;
+    scaledDamage: number;
+    scaledWindupDuration: number;
   } | null;
   lastBoundaryDamageTick: number;
+  lastNearMissTime: number;  // RUN 039: Track near-miss cooldown
   playerOutsideTime: number;
   isDissipating: boolean;
   dissipationStartTime: number;
@@ -199,6 +242,12 @@ export interface LegacyBallState {
   // Multi-ball dynamics (RUN 041)
   ballTier: 1 | 2;                  // 1 = normal, 2 = larger second ball
   ballId: number;                    // Unique ID for this ball instance
+  hasKnockback: boolean;             // Whether boundary has knockback (false for tier 2)
+  // RUN 042: Ball promotion dynamics
+  wasPromoted: boolean;              // True if this ball was promoted from tier 2 to tier 1
+  promotionTime: number;             // When promotion happened (for speed boost timing)
+  // RUN 039: Active outside punch telegraphs
+  activePunches: OutsidePunchState[];
 }
 
 /**
@@ -221,7 +270,8 @@ export interface BallManagerState {
  * Follows pattern from enemies.ts getBeeTelegraph()
  */
 export interface BallTelegraphData {
-  type: 'forming' | 'silence' | 'constrict' | 'cooking' | 'lunge_windup' | 'lunge_attack' | 'fading' | 'dissipating';
+  // RUN 039: Added 'gathering' for pre-formation telegraph
+  type: 'gathering' | 'forming' | 'silence' | 'constrict' | 'cooking' | 'lunge_windup' | 'lunge_attack' | 'fading' | 'dissipating';
   center: Vector2;
   radius: number;
   gapAngle: number;
@@ -250,6 +300,7 @@ export interface BallTelegraphData {
  */
 export type BallEventType =
   // Phase transitions
+  | 'ball_gathering_started'   // NEW: Pre-formation telegraph
   | 'ball_forming_started'
   | 'ball_silence_started'
   | 'ball_constrict_started'
@@ -271,7 +322,15 @@ export type BallEventType =
   // Damage events
   | 'ball_damage'
   | 'boundary_touch'
-  | 'outside_punch';
+  // RUN 039: Near-miss punishment
+  | 'ball_near_miss'           // Player almost escaped but missed the gap
+  // Outside punch events (RUN 039: Telegraph system)
+  | 'outside_punch'           // Legacy: instant punch (backwards compat)
+  | 'punch_windup_started'    // Bee started winding up (visible telegraph)
+  | 'punch_attack'            // Punch thrown (may hit or whiff)
+  | 'punch_hit'               // Punch connected with player
+  | 'punch_whiff'             // Player dodged the punch
+  | 'punch_recovery_started'; // Bee recovering after punch
 
 /**
  * Event data payload
@@ -283,6 +342,16 @@ export interface BallEventData {
   knockbackDirection?: Vector2;
   knockbackForce?: number;
   lungingBeeId?: string;
+  // RUN 039: Dissolution event data
+  reason?: 'too_few_bees' | 'player_escaped' | 'timeout';
+  remainingBees?: number;
+  // RUN 039: Outside punch telegraph data
+  punchingBeeId?: string;
+  punchPhase?: 'windup' | 'punch' | 'recovery';
+  windupProgress?: number;    // 0-1 progress through windup
+  dodged?: boolean;           // True if player dodged the punch
+  // RUN 039: Near-miss data
+  nearMissDistance?: number;  // How close they were to the gap (0-1, lower = closer)
 }
 
 /**

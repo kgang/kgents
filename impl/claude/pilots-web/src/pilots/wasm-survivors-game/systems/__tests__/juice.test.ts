@@ -252,8 +252,8 @@ describe('APPENDIX E: PARTICLES CONSTANTS', () => {
   });
 
   describe('Damage Flash Particles', () => {
-    it('should have colors orange -> red', () => {
-      expect(PARTICLES.damageFlash.colors).toEqual(['#FF6600', '#FF0000']);
+    it('should have colors pure red -> dark red (danger, distinct from player)', () => {
+      expect(PARTICLES.damageFlash.colors).toEqual(['#FF3333', '#FF0000']);
     });
 
     it('should have flash duration of 100ms', () => {
@@ -559,7 +559,7 @@ describe('JUICE SYSTEM METHODS', () => {
       const fragments = juice.particles.filter(p => p.type === 'fragment');
       const colors = new Set(fragments.map(f => f.color));
 
-      expect(colors.has('#FF6600')).toBe(true);
+      expect(colors.has('#FF3333')).toBe(true);  // Pure red (danger)
       expect(colors.has('#FF0000')).toBe(true);
     });
   });
@@ -1038,30 +1038,30 @@ describe('PROCESS JUICE', () => {
 
 describe('COLOR CONSTANTS', () => {
   describe('Main Colors', () => {
-    it('should have correct player color (Electric Blue)', () => {
-      expect(COLORS.player).toBe('#00D4FF');
+    it('should have correct player color (Burnt Amber)', () => {
+      expect(COLORS.player).toBe('#CC5500');
     });
 
-    it('should have correct enemy color (Corrupted Red)', () => {
-      expect(COLORS.enemy).toBe('#FF3366');
+    it('should have correct enemy color (Worker Amber)', () => {
+      expect(COLORS.enemy).toBe('#D4920A');
     });
 
-    it('should have correct XP color (Golden)', () => {
-      expect(COLORS.xp).toBe('#FFD700');
+    it('should have correct XP color (Pollen Gold - lighter reward yellow)', () => {
+      expect(COLORS.xp).toBe('#FFE066');
     });
 
     it('should have correct health color (Vitality Green)', () => {
       expect(COLORS.health).toBe('#00FF88');
     });
 
-    it('should have correct crisis color (Warning Orange)', () => {
-      expect(COLORS.crisis).toBe('#FF8800');
+    it('should have correct crisis color (Pinkish Red - distinct from player)', () => {
+      expect(COLORS.crisis).toBe('#FF3366');
     });
   });
 
   describe('Metamorphosis Colors', () => {
-    it('should have pulsing orange to red gradient', () => {
-      expect(METAMORPHOSIS_COLORS.pulsing.start).toBe('#FF6B00');
+    it('should have pulsing pinkish-red to red gradient (distinct from player)', () => {
+      expect(METAMORPHOSIS_COLORS.pulsing.start).toBe('#FF3366');
       expect(METAMORPHOSIS_COLORS.pulsing.end).toBe('#FF0000');
     });
 

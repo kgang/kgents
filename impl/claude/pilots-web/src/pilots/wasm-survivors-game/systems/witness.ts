@@ -44,6 +44,7 @@ export interface MarkEvent {
     | 'run_ended'
     | 'clutch_survived'
     | 'first_metamorphosis'  // DD-030: First colossal revelation
+    | 'ball_gathering'       // RUN 039: Bees start gathering for THE BALL
     | 'ball_forming'         // Run 036: THE BALL starts forming
     | 'ball_escaped';        // Run 036: Player escaped THE BALL
   gameTime: number;

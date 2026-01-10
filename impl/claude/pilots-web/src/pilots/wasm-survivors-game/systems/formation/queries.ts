@@ -16,6 +16,13 @@ export function isBallActive(state: LegacyBallState): boolean {
 }
 
 /**
+ * Check if ball is in gathering phase (RUN 039: pre-formation telegraph)
+ */
+export function isBallGathering(state: LegacyBallState): boolean {
+  return state.phase === 'gathering';
+}
+
+/**
  * Check if ball is in forming phase
  */
 export function isBallForming(state: LegacyBallState): boolean {
@@ -200,9 +207,9 @@ export function getTemperatureColor(temperature: number): string {
     const alpha = (temperature - 40) / 20 * 0.3;
     return `rgba(244, 163, 0, ${alpha})`; // #F4A300
   } else if (temperature < 80) {
-    // Orange
+    // Pinkish-red (danger but not crisis yet)
     const alpha = 0.3 + (temperature - 60) / 20 * 0.2;
-    return `rgba(255, 102, 0, ${alpha})`; // #FF6600
+    return `rgba(255, 51, 102, ${alpha})`; // #FF3366 - distinct from player orange
   } else {
     // Red - danger!
     const alpha = 0.5 + (temperature - 80) / 20 * 0.3;

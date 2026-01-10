@@ -1,13 +1,14 @@
 /**
- * WASM Survivors - Simplified Combo System (Run 036 v2)
+ * WASM Survivors - Combo System v3 (Hornet Siege)
  *
- * 12 Combos that are easy to discover and clearly powerful.
- * No hidden requirements, no wiki knowledge needed.
+ * 12 Combos based on the new 36-ability hornet-themed system.
+ * Combos emerge from stacking abilities within and across categories.
  *
  * DESIGN PHILOSOPHY:
  * > "If you have A and B, you get C. Simple."
+ * > Combos reward themed builds: Bleeder, Pressure Zone, Predator Rush, etc.
  *
- * @see pilots/wasm-survivors-game/runs/run-036
+ * @see pilots/wasm-survivors-game/systems/abilities.ts
  */
 
 import type { AbilityId, ActiveAbilities } from './abilities';
@@ -72,193 +73,208 @@ export interface AlmostCombo {
 }
 
 // =============================================================================
-// COMBOS - 12 simple, clear combos
+// COMBOS - 12 combos themed around hornet biology
 // =============================================================================
 
 const ALL_COMBOS: Combo[] = [
-  // DAMAGE COMBOS (4)
+  // ===========================================================================
+  // DAMAGE COMBOS (3) - Pure damage stacking
+  // ===========================================================================
   {
-    id: 'berserker',
-    name: 'BERSERKER',
+    id: 'damage_stack',
+    name: 'DAMAGE STACK',
     tier: 'common',
-    requires: ['crushing_bite', 'frenzy'],
-    description: 'High damage + High speed = Unstoppable',
-    announcement: 'BERSERKER MODE!',
-    color: '#FF4400',
-    icon: '⚔️💨',
+    requires: ['sharpened_mandibles', 'crushing_bite', 'venomous_strike'],
+    description: 'Pure damage + Poison = Everything melts',
+    flavorText: 'They melt before they can scream.',
+    announcement: 'DAMAGE STACK!',
+    color: '#FF3333',
+    icon: 'droplet',
     announceSound: 'fanfare',
+    screenEffect: 'pulse',
+    effect: {
+      damageMultiplier: 1.15,
+      passiveEffect: 'Poison damage increased by 50%',
+    },
+  },
+  {
+    id: 'double_tap',
+    name: 'DOUBLE TAP',
+    tier: 'common',
+    requires: ['double_strike', 'critical_sting', 'quick_strikes'],
+    description: 'Double hit + Crit + Speed = Murder machine',
+    flavorText: 'Hit them again. Just to be sure.',
+    announcement: 'DOUBLE TAP!',
+    color: '#6666FF',
+    icon: 'lock',
+    announceSound: 'fanfare',
+    effect: {
+      passiveEffect: 'Double strikes can both crit independently',
+    },
+  },
+  {
+    id: 'predator_hunt',
+    name: 'PREDATOR HUNT',
+    tier: 'rare',
+    requires: ['feeding_efficiency', 'territorial_mark', 'trophy_scent'],
+    description: 'Kill bonuses + Damage zones + Permanent stacks',
+    flavorText: 'The hunt is all.',
+    announcement: 'PREDATOR HUNT!',
+    color: '#FFAA00',
+    icon: 'saw',
+    announceSound: 'epic',
+    screenEffect: 'shake',
+    effect: {
+      attackSpeedMultiplier: 1.2,
+      passiveEffect: 'Trophy bonuses doubled in territorial zones',
+    },
+  },
+
+  // ===========================================================================
+  // PHEROMONE COMBOS (2) - Debuffs and area control
+  // ===========================================================================
+  {
+    id: 'toxic_cloud',
+    name: 'TOXIC CLOUD',
+    tier: 'common',
+    requires: ['threat_aura', 'confusion_cloud', 'rally_scent'],
+    description: 'Slow + Miss chance + Damage reduction = Safe zone',
+    flavorText: 'Breathe deep. It gets worse.',
+    announcement: 'TOXIC CLOUD!',
+    color: '#88FF00',
+    icon: 'cloud',
+    announceSound: 'fanfare',
+    effect: {
+      passiveEffect: 'Confused enemies also slowed by 15%',
+    },
+  },
+  {
+    id: 'death_zone',
+    name: 'DEATH ZONE',
+    tier: 'rare',
+    requires: ['death_marker', 'aggro_pulse', 'bitter_taste'],
+    description: 'Slow zones + Aggro pull + Counter-damage',
+    flavorText: 'They come to die.',
+    announcement: 'DEATH ZONE!',
+    color: '#9933FF',
+    icon: 'brain',
+    announceSound: 'epic',
+    screenEffect: 'pulse',
+    effect: {
+      passiveEffect: 'Death markers last twice as long',
+    },
+  },
+
+  // ===========================================================================
+  // WING COMBOS (2) - Movement creates effects
+  // ===========================================================================
+  {
+    id: 'pressure_zone',
+    name: 'PRESSURE ZONE',
+    tier: 'common',
+    requires: ['hover_pressure', 'buzz_field', 'threat_aura'],
+    description: 'Proximity damage + stationary damage + enemy debuff',
+    flavorText: 'Stand still. Watch them melt.',
+    announcement: 'PRESSURE ZONE!',
+    color: '#FF9900',
+    icon: 'target',
+    announceSound: 'fanfare',
+    effect: {
+      passiveEffect: 'Aura effects stack: enemies in all 3 zones take 3x damage',
+    },
+  },
+  {
+    id: 'thermal_hunter',
+    name: 'THERMAL HUNTER',
+    tier: 'rare',
+    requires: ['thermal_wake', 'updraft', 'rally_scent'],
+    description: 'Trail slow + kill speed + more trail slow',
+    flavorText: 'Your path is their grave.',
+    announcement: 'THERMAL HUNTER!',
+    color: '#FF8844',  // Bright orange-red for thermal (distinct from player #CC5500)
+    icon: 'flame',
+    announceSound: 'epic',
+    screenEffect: 'flash',
+    effect: {
+      speedMultiplier: 1.2,
+      passiveEffect: 'Trail slow stacks (10% from both sources)',
+    },
+  },
+
+  // ===========================================================================
+  // PREDATOR COMBOS (2) - Kill triggers
+  // ===========================================================================
+  {
+    id: 'apex_predator',
+    name: 'APEX PREDATOR',
+    tier: 'legendary',
+    requires: ['trophy_scent', 'corpse_heat', 'clean_kill', 'territorial_mark'],
+    description: 'Permanent damage + corpse bonus + explosions + damage zones',
+    flavorText: 'The apex of the food chain.',
+    announcement: 'APEX PREDATOR!',
+    color: '#FFDD00',
+    icon: 'crown',
+    announceSound: 'epic',
+    screenEffect: 'shake',
+    effect: {
+      damageMultiplier: 1.3,
+      passiveEffect: 'Clean Kill explosions create territorial marks',
+    },
+  },
+  {
+    id: 'pack_hunter',
+    name: 'PACK HUNTER',
+    tier: 'common',
+    requires: ['pack_signal', 'feeding_efficiency'],
+    description: 'Enemy hesitation + attack speed on kill',
+    flavorText: 'They freeze. You accelerate.',
+    announcement: 'PACK HUNTER!',
+    color: '#FF4444',
+    icon: 'wolf',
+    announceSound: 'fanfare',
+    effect: {
+      attackSpeedMultiplier: 1.15,
+      passiveEffect: 'Hesitation duration doubled on multi-kills',
+    },
+  },
+
+  // ===========================================================================
+  // SURVIVAL COMBO - Defense stacking
+  // ===========================================================================
+  {
+    id: 'fear_aura',
+    name: 'FEAR AURA',
+    tier: 'common',
+    requires: ['threat_aura', 'bitter_taste', 'confusion_cloud'],
+    description: 'Damage reduction + attacker debuff + miss chance',
+    flavorText: 'They fear to approach.',
+    announcement: 'FEAR AURA!',
+    color: '#880088',
+    icon: 'ghost',
+    announceSound: 'fanfare',
+    effect: {
+      passiveEffect: 'Enemies in threat aura have 15% miss chance',
+    },
+  },
+
+  // ===========================================================================
+  // CHITIN COMBOS (1) - Body modifications
+  // ===========================================================================
+  {
+    id: 'living_weapon',
+    name: 'LIVING WEAPON',
+    tier: 'legendary',
+    requires: ['barbed_chitin', 'molting_burst', 'heat_retention', 'compound_eyes'],
+    description: 'Touch damage + emergency burst + low HP speed + better vision',
+    flavorText: 'My body is the weapon.',
+    announcement: 'LIVING WEAPON!',
+    color: '#FF0000',
+    icon: 'diamond',
+    announceSound: 'epic',
     screenEffect: 'shake',
     effect: {
       damageMultiplier: 1.25,
-      attackSpeedMultiplier: 1.25,
-    },
-  },
-  {
-    id: 'assassin',
-    name: 'ASSASSIN',
-    tier: 'common',
-    requires: ['savage_blow', 'execution'],
-    description: 'Execute + Low HP bonus = Delete enemies',
-    announcement: 'ASSASSIN UNLOCKED!',
-    color: '#880000',
-    icon: '🔥⚰️',
-    announceSound: 'fanfare',
-    effect: {
-      passiveEffect: 'Execute threshold raised to 25%',
-    },
-  },
-  {
-    id: 'crit_machine',
-    name: 'CRIT MACHINE',
-    tier: 'rare',
-    requires: ['critical_sting', 'double_strike'],
-    description: 'Double hits can both crit',
-    announcement: 'CRIT MACHINE!',
-    color: '#FFAA00',
-    icon: '💥⚔️',
-    announceSound: 'epic',
-    screenEffect: 'flash',
-    effect: {
-      passiveEffect: 'Each hit of double strike can crit independently',
-    },
-  },
-  {
-    id: 'poison_master',
-    name: 'POISON MASTER',
-    tier: 'common',
-    requires: ['venomous_strike', 'chain_lightning'],
-    description: 'Chain kills spread poison',
-    announcement: 'POISON MASTER!',
-    color: '#88FF00',
-    icon: '☠️⚡',
-    announceSound: 'fanfare',
-    effect: {
-      passiveEffect: 'Chain kills apply poison to targets',
-    },
-  },
-
-  // SPEED COMBOS (3)
-  {
-    id: 'flash',
-    name: 'THE FLASH',
-    tier: 'rare',
-    requires: ['swift_wings', 'quick_strikes', 'berserker_pace'],
-    description: 'Maximum speed everything',
-    announcement: 'SPEED FORCE!',
-    color: '#FFFF00',
-    icon: '⚡🦋🔄',
-    announceSound: 'epic',
-    screenEffect: 'flash',
-    effect: {
-      speedMultiplier: 1.5,
-      attackSpeedMultiplier: 1.5,
-    },
-  },
-  {
-    id: 'blitz',
-    name: 'BLITZ',
-    tier: 'common',
-    requires: ['hunters_rush', 'momentum'],
-    description: 'Rush in, build kill streak faster',
-    announcement: 'BLITZ!',
-    color: '#FF4444',
-    icon: '🏃🚀',
-    announceSound: 'fanfare',
-    effect: {
-      passiveEffect: 'Kill streak builds 2x faster while rushing',
-    },
-  },
-  {
-    id: 'bullet_hell',
-    name: 'BULLET HELL',
-    tier: 'rare',
-    requires: ['bullet_time', 'sweeping_arc'],
-    description: 'Time slows, you hit everything',
-    announcement: 'BULLET HELL!',
-    color: '#9999FF',
-    icon: '⏱️🌀',
-    announceSound: 'epic',
-    effect: {
-      passiveEffect: 'Enemies move 50% slower in your attack range',
-    },
-  },
-
-  // DEFENSE COMBOS (3)
-  {
-    id: 'immortal',
-    name: 'IMMORTAL',
-    tier: 'legendary',
-    requires: ['second_wind', 'lifesteal', 'regeneration'],
-    description: 'You just... don\'t die',
-    announcement: 'IMMORTAL!',
-    color: '#FFDD88',
-    icon: '✨🧛💚',
-    announceSound: 'epic',
-    screenEffect: 'pulse',
-    effect: {
-      healingMultiplier: 2.0,
-      passiveEffect: 'Revive heals to 100% instead of 50%',
-    },
-  },
-  {
-    id: 'tank',
-    name: 'TANK',
-    tier: 'common',
-    requires: ['thick_carapace', 'hardened_shell'],
-    description: 'Maximum toughness',
-    announcement: 'TANK MODE!',
-    color: '#888888',
-    icon: '🛡️🐢',
-    announceSound: 'fanfare',
-    effect: {
-      passiveEffect: 'Take 10% less damage per 50 bonus HP',
-    },
-  },
-  {
-    id: 'comeback',
-    name: 'COMEBACK KING',
-    tier: 'rare',
-    requires: ['last_stand', 'lifesteal'],
-    description: 'Low HP = massive healing',
-    announcement: 'COMEBACK KING!',
-    color: '#880000',
-    icon: '💀🧛',
-    announceSound: 'epic',
-    effect: {
-      passiveEffect: 'Lifesteal doubled when below 30% HP',
-    },
-  },
-
-  // SPECIAL COMBOS (2)
-  {
-    id: 'glass_god',
-    name: 'GLASS GOD',
-    tier: 'legendary',
-    requires: ['glass_cannon', 'critical_sting', 'execution'],
-    description: 'One shot or be one shot',
-    announcement: 'GLASS GOD!',
-    color: '#FF0000',
-    icon: '💎💥⚰️',
-    announceSound: 'epic',
-    screenEffect: 'shake',
-    effect: {
-      damageMultiplier: 1.5,
-      passiveEffect: 'Crits instantly kill non-boss enemies',
-    },
-  },
-  {
-    id: 'reaper',
-    name: 'THE REAPER',
-    tier: 'legendary',
-    requires: ['execution', 'chain_lightning', 'momentum'],
-    description: 'Executions chain indefinitely',
-    announcement: 'REAPER MODE!',
-    color: '#440044',
-    icon: '⚰️⚡🚀',
-    announceSound: 'epic',
-    screenEffect: 'pulse',
-    effect: {
-      unique: 'Execute kills chain to ALL nearby enemies below execute threshold',
+      passiveEffect: 'Barbed Chitin damage doubled when below 50% HP',
     },
   },
 ];

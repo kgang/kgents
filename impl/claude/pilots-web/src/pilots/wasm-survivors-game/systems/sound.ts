@@ -175,8 +175,9 @@ export function createSoundEngine(): SoundEngine {
 // =============================================================================
 
 /**
- * Kill sound: Short pop with white noise burst
+ * Kill sound: Short pop with white noise burst + minor 7th tonal layer
  * Duration: ~80ms
+ * Musical: Minor 7th interval (ratio 9/5 = 1.8) adds jazzy richness
  */
 function playKillSound(
   ctx: AudioContext,
@@ -209,18 +210,52 @@ function playKillSound(
   gain.gain.setValueAtTime(volume * 0.4, now);
   gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-  // Connect
+  // Connect noise path
   noise.connect(filter);
   filter.connect(gain);
   gain.connect(output);
 
+  // Musical: Add minor 7th tonal layer for richness (ratio 9/5 = 1.8)
+  const baseFreq = 200 * pitch;
+  const minor7thFreq = baseFreq * 1.8; // Minor 7th interval
+
+  // Base tone
+  const oscBase = ctx.createOscillator();
+  oscBase.type = 'sine';
+  oscBase.frequency.value = baseFreq;
+
+  // Minor 7th tone
+  const oscMinor7th = ctx.createOscillator();
+  oscMinor7th.type = 'sine';
+  oscMinor7th.frequency.value = minor7thFreq;
+
+  // Tonal gain (quieter than noise, 30% of main volume)
+  const tonalGain = ctx.createGain();
+  tonalGain.gain.setValueAtTime(volume * 0.12, now);
+  tonalGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  const minor7thGain = ctx.createGain();
+  minor7thGain.gain.setValueAtTime(volume * 0.08, now); // Even quieter
+  minor7thGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  oscBase.connect(tonalGain);
+  oscMinor7th.connect(minor7thGain);
+  tonalGain.connect(output);
+  minor7thGain.connect(output);
+
   noise.start(now);
+  oscBase.start(now);
+  oscMinor7th.start(now);
   noise.stop(now + duration);
+  oscBase.stop(now + duration);
+  oscMinor7th.stop(now + duration);
 }
 
 /**
- * Damage sound: Low frequency thump
+ * Damage sound: Soft thump with minor 2nd dissonance
  * Duration: ~100ms
+ * Musical: Minor 2nd interval (ratio 16/15 ~ 1.067) creates tension
+ * Run 038: Reduced distortion and volume for softer feel
  */
 function playDamageSound(
   ctx: AudioContext,
@@ -230,33 +265,55 @@ function playDamageSound(
   const now = ctx.currentTime;
   const duration = 0.1;
 
-  // Low sine oscillator
+  // Low sine oscillator (base 80Hz) - no distortion for cleaner sound
   const osc = ctx.createOscillator();
   osc.type = 'sine';
   osc.frequency.setValueAtTime(80, now);
   osc.frequency.exponentialRampToValueAtTime(40, now + duration);
 
-  // Distortion for punch
-  const distortion = ctx.createWaveShaper();
-  distortion.curve = makeDistortionCurve(50);
+  // Minor 2nd oscillator (85Hz - creates tension without harshness)
+  const oscMinor2nd = ctx.createOscillator();
+  oscMinor2nd.type = 'sine';
+  oscMinor2nd.frequency.setValueAtTime(80 * (16 / 15), now); // ~85.3Hz
+  oscMinor2nd.frequency.exponentialRampToValueAtTime(40 * (16 / 15), now + duration);
 
-  // Gain envelope
+  // Mild distortion (reduced from 50 to 15)
+  const distortion = ctx.createWaveShaper();
+  distortion.curve = makeDistortionCurve(15);
+
+  const distortion2 = ctx.createWaveShaper();
+  distortion2.curve = makeDistortionCurve(15);
+
+  // Gain envelope for main oscillator (reduced from 0.5 to 0.25)
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(volume * 0.5, now);
+  gain.gain.setValueAtTime(volume * 0.25, now);
   gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-  // Connect
+  // Gain envelope for minor 2nd (reduced proportionally)
+  const gainMinor2nd = ctx.createGain();
+  gainMinor2nd.gain.setValueAtTime(volume * 0.1, now);
+  gainMinor2nd.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  // Connect main path
   osc.connect(distortion);
   distortion.connect(gain);
   gain.connect(output);
 
+  // Connect minor 2nd path
+  oscMinor2nd.connect(distortion2);
+  distortion2.connect(gainMinor2nd);
+  gainMinor2nd.connect(output);
+
   osc.start(now);
+  oscMinor2nd.start(now);
   osc.stop(now + duration);
+  oscMinor2nd.stop(now + duration);
 }
 
 /**
- * Level up sound: Ascending arpeggio (C-E-G)
- * Duration: ~300ms
+ * Level up sound: Ascending arpeggio (C-E-G-Bb dominant 7th)
+ * Duration: ~400ms
+ * Musical: C7 chord (dominant 7th) is more satisfying than simple major triad
  */
 function playLevelUpSound(
   ctx: AudioContext,
@@ -264,7 +321,8 @@ function playLevelUpSound(
   volume: number
 ) {
   const now = ctx.currentTime;
-  const notes = [261.63, 329.63, 392.0]; // C4, E4, G4
+  // C4, E4, G4, Bb4 - Dominant 7th chord for satisfying resolution tension
+  const notes = [261.63, 329.63, 392.0, 466.16];
   const noteDuration = 0.08;
   const noteGap = 0.05;
 
@@ -442,9 +500,10 @@ function playDashSound(
 // =============================================================================
 
 /**
- * Bass drop sound: Deep sub-bass with pitch drop
+ * Bass drop sound: Deep sub-bass with pitch drop + tritone dissonance
  * Duration: ~500ms
  * Used for full/medium clutch moments
+ * Musical: Tritone (ratio 45/32 ~ 1.414) adds unstable, dreadful tension
  */
 function playBassDropSound(
   ctx: AudioContext,
@@ -454,17 +513,23 @@ function playBassDropSound(
   const now = ctx.currentTime;
   const duration = 0.5;
 
-  // Deep sub-bass oscillator
+  // Deep sub-bass oscillator (80Hz -> 30Hz)
   const osc = ctx.createOscillator();
   osc.type = 'sine';
   osc.frequency.setValueAtTime(80, now);
   osc.frequency.exponentialRampToValueAtTime(30, now + duration);
 
-  // Second oscillator for harmonic richness
+  // Second oscillator for harmonic richness (octave above)
   const osc2 = ctx.createOscillator();
   osc2.type = 'sine';
   osc2.frequency.setValueAtTime(160, now);
   osc2.frequency.exponentialRampToValueAtTime(60, now + duration);
+
+  // Tritone oscillator (113Hz -> 42Hz) - devil's interval for dread
+  const oscTritone = ctx.createOscillator();
+  oscTritone.type = 'sine';
+  oscTritone.frequency.setValueAtTime(80 * (45 / 32), now); // ~112.5Hz
+  oscTritone.frequency.exponentialRampToValueAtTime(30 * (45 / 32), now + duration); // ~42Hz
 
   // Heavy distortion for impact
   const distortion = ctx.createWaveShaper();
@@ -486,25 +551,39 @@ function playBassDropSound(
   gain2.gain.setValueAtTime(volume * 0.3, now);
   gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-  // Connect
+  // Tritone gain (40% of main for supporting dissonance)
+  const gainTritone = ctx.createGain();
+  gainTritone.gain.setValueAtTime(volume * 0.32, now);
+  gainTritone.gain.exponentialRampToValueAtTime(volume * 0.24, now + 0.05);
+  gainTritone.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  // Connect main path
   osc.connect(distortion);
   distortion.connect(filter);
   filter.connect(gain);
   gain.connect(output);
 
+  // Connect harmonic
   osc2.connect(gain2);
   gain2.connect(output);
 
+  // Connect tritone
+  oscTritone.connect(gainTritone);
+  gainTritone.connect(output);
+
   osc.start(now);
   osc2.start(now);
+  oscTritone.start(now);
   osc.stop(now + duration);
   osc2.stop(now + duration);
+  oscTritone.stop(now + duration);
 }
 
 /**
- * Heartbeat sound: Double thump like a heart
+ * Heartbeat sound: Double thump like a heart with minor 2nd unease
  * Duration: ~400ms
  * Used for critical health state
+ * Musical: Minor 2nd (ratio 16/15 ~ 1.067) offset creates wobble/beating effect
  */
 function playHeartbeatSound(
   ctx: AudioContext,
@@ -528,11 +607,17 @@ function playHeartbeatThump(
 ) {
   const duration = 0.1;
 
-  // Low sine for the thump
+  // Low sine for the thump (base 50Hz)
   const osc = ctx.createOscillator();
   osc.type = 'sine';
   osc.frequency.setValueAtTime(50, startTime);
   osc.frequency.exponentialRampToValueAtTime(30, startTime + duration);
+
+  // Minor 2nd oscillator (53Hz) - slightly offset for beating/wobble
+  const oscMinor2nd = ctx.createOscillator();
+  oscMinor2nd.type = 'sine';
+  oscMinor2nd.frequency.setValueAtTime(50 * (16 / 15), startTime + 0.005); // ~53Hz, slightly delayed
+  oscMinor2nd.frequency.exponentialRampToValueAtTime(30 * (16 / 15), startTime + duration);
 
   // Gain envelope - sharp attack, quick decay
   const gain = ctx.createGain();
@@ -540,12 +625,22 @@ function playHeartbeatThump(
   gain.gain.linearRampToValueAtTime(volume * 0.6, startTime + 0.01);
   gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
+  // Minor 2nd gain (40% of main for unease)
+  const gainMinor2nd = ctx.createGain();
+  gainMinor2nd.gain.setValueAtTime(0, startTime + 0.005);
+  gainMinor2nd.gain.linearRampToValueAtTime(volume * 0.24, startTime + 0.015);
+  gainMinor2nd.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
   // Connect
   osc.connect(gain);
+  oscMinor2nd.connect(gainMinor2nd);
   gain.connect(output);
+  gainMinor2nd.connect(output);
 
   osc.start(startTime);
+  oscMinor2nd.start(startTime + 0.005); // Slight offset for wobble
   osc.stop(startTime + duration);
+  oscMinor2nd.stop(startTime + duration + 0.005);
 }
 
 // =============================================================================
@@ -553,9 +648,10 @@ function playHeartbeatThump(
 // =============================================================================
 
 /**
- * Alarm Pheromone Sound: Rising frequency sweep
+ * Alarm Pheromone Sound: Rising frequency sweep with tritone layer
  * "freqStart: 400Hz -> freqEnd: 2000Hz over 300ms"
  * Plays when scouts alert the colony
+ * Musical: Tritone (ratio 45/32 ~ 1.414) adds unstable, warning tension
  */
 function playAlarmPheromoneSound(
   ctx: AudioContext,
@@ -577,6 +673,12 @@ function playAlarmPheromoneSound(
   osc2.frequency.setValueAtTime(450, now);
   osc2.frequency.exponentialRampToValueAtTime(2200, now + duration);
 
+  // Tritone oscillator (566Hz -> 2828Hz) - devil's interval for warning
+  const oscTritone = ctx.createOscillator();
+  oscTritone.type = 'sine';
+  oscTritone.frequency.setValueAtTime(400 * (45 / 32), now); // ~566Hz
+  oscTritone.frequency.exponentialRampToValueAtTime(2000 * (45 / 32), now + duration); // ~2828Hz
+
   // Band-pass filter for bee-like buzz quality
   const filter = ctx.createBiquadFilter();
   filter.type = 'bandpass';
@@ -595,18 +697,32 @@ function playAlarmPheromoneSound(
   gain2.gain.setValueAtTime(volume * 0.2, now);
   gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-  // Connect
+  // Tritone gain (35% of main for supporting warning dissonance)
+  const gainTritone = ctx.createGain();
+  gainTritone.gain.setValueAtTime(0, now);
+  gainTritone.gain.linearRampToValueAtTime(volume * 0.14, now + 0.02);
+  gainTritone.gain.setValueAtTime(volume * 0.14, now + duration * 0.7);
+  gainTritone.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  // Connect main path
   osc.connect(filter);
   filter.connect(gain);
   gain.connect(output);
 
+  // Connect richness layer
   osc2.connect(gain2);
   gain2.connect(output);
 
+  // Connect tritone layer
+  oscTritone.connect(gainTritone);
+  gainTritone.connect(output);
+
   osc.start(now);
   osc2.start(now);
+  oscTritone.start(now);
   osc.stop(now + duration);
   osc2.stop(now + duration);
+  oscTritone.stop(now + duration);
 }
 
 /**
@@ -706,8 +822,9 @@ function playBallSilenceSound(
 }
 
 /**
- * Massacre Sound: Powerful multi-layer impact
+ * Massacre Sound: Triumphant multi-layer impact with harmonic richness
  * Plays on 5+ simultaneous kills - "DOPAMINE HIT"
+ * Musical: Perfect 5th (3/2 = 1.5) for power + Minor 7th (9/5 = 1.8) for satisfaction
  */
 function playMassacreSound(
   ctx: AudioContext,
@@ -717,15 +834,37 @@ function playMassacreSound(
   const now = ctx.currentTime;
   const duration = 0.4;
 
-  // Low bass punch
+  // Low bass punch (80Hz base)
   const bassOsc = ctx.createOscillator();
   bassOsc.type = 'sine';
   bassOsc.frequency.setValueAtTime(80, now);
   bassOsc.frequency.exponentialRampToValueAtTime(40, now + duration);
 
+  // Perfect 5th layer (120Hz) - stable, powerful
+  const fifthOsc = ctx.createOscillator();
+  fifthOsc.type = 'sine';
+  fifthOsc.frequency.setValueAtTime(80 * 1.5, now); // 120Hz
+  fifthOsc.frequency.exponentialRampToValueAtTime(40 * 1.5, now + duration); // 60Hz
+
+  // Minor 7th layer (144Hz) - jazzy satisfaction
+  const minor7thOsc = ctx.createOscillator();
+  minor7thOsc.type = 'sine';
+  minor7thOsc.frequency.setValueAtTime(80 * 1.8, now); // 144Hz
+  minor7thOsc.frequency.exponentialRampToValueAtTime(40 * 1.8, now + duration); // 72Hz
+
   const bassGain = ctx.createGain();
   bassGain.gain.setValueAtTime(volume * 0.7, now);
   bassGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  // 5th gain (40% of bass for powerful support)
+  const fifthGain = ctx.createGain();
+  fifthGain.gain.setValueAtTime(volume * 0.28, now);
+  fifthGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  // Minor 7th gain (30% of bass for color)
+  const minor7thGain = ctx.createGain();
+  minor7thGain.gain.setValueAtTime(volume * 0.21, now);
+  minor7thGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
   // Distorted impact
   const distortion = ctx.createWaveShaper();
@@ -756,22 +895,36 @@ function playMassacreSound(
   shimmerGain.gain.linearRampToValueAtTime(volume * 0.15, now + 0.05);
   shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
 
-  // Connect
+  // Connect bass path (through distortion)
   bassOsc.connect(distortion);
   distortion.connect(bassGain);
   bassGain.connect(output);
 
+  // Connect harmonic layers (clean, not distorted)
+  fifthOsc.connect(fifthGain);
+  fifthGain.connect(output);
+
+  minor7thOsc.connect(minor7thGain);
+  minor7thGain.connect(output);
+
+  // Connect noise and shimmer
   noise.connect(noiseGain);
   noiseGain.connect(output);
 
   shimmerOsc.connect(shimmerGain);
   shimmerGain.connect(output);
 
+  // Start all oscillators
   bassOsc.start(now);
+  fifthOsc.start(now);
+  minor7thOsc.start(now);
   noise.start(now);
   shimmerOsc.start(now);
 
+  // Stop all oscillators
   bassOsc.stop(now + duration);
+  fifthOsc.stop(now + duration);
+  minor7thOsc.stop(now + duration);
   noise.stop(now + 0.1);
   shimmerOsc.stop(now + 0.3);
 }

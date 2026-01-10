@@ -118,7 +118,35 @@ import {
   createInitialAbilities,
   addAbility,
   generateAbilityChoices,
+  recordKillForTrophyScent,
+  incrementSawtoothCounter,
+  resetRuntimeForWave,
   type AbilityId,
+  // Movement Trail System (Run 043: thermal_wake, rally_scent, draft)
+  type TrailPoint,
+  processMovementTrail,
+  // Passive Aura System (Run 043: hover_pressure, buzz_field, barbed_chitin, threat_aura)
+  processPassiveAuras,
+  type AuraResult,
+  // On-Kill Ability System (Run 044: territorial_mark, death_marker, clean_kill, pack_signal, etc.)
+  type TerritorialMark,
+  type DeathMarker,
+  processOnKill,
+  expireZones,
+  getDeathMarkerSlow,
+  getTerritorialMarkBonus,
+  isNearCorpse,
+  // On-Damaged/Threshold/Periodic Ability System (Run 045)
+  processOnDamaged,
+  processThresholds,
+  processPeriodicEffects,
+  checkConfusionCloudMiss,
+  cleanupExpiredEffects,
+  getBitterTasteDebuff,
+  getThreatAuraReduction,
+  // Apex Strike PREDATOR ability integration (Run 048)
+  computeAbilityEffects,
+  type ComputedEffects,
 } from '../systems/abilities';
 import {
   type MeleeAttackState,
@@ -149,6 +177,7 @@ import {
   canChain,
   initiateLock,
   updateLockDirection,
+  updateCharge,
   executeStrike,
   checkStrikeHit,
   attemptChain,
@@ -157,6 +186,20 @@ import {
   isLocking,
   APEX_CONFIG,
 } from '../systems/apex-strike';
+
+// Run 039: Bumper-Rail Combo System
+// "Bees are not obstacles. Bees are terrain."
+import {
+  type RailChainState,
+  type FlowState,
+  createInitialRailChainState,
+  createInitialFlowState,
+  processBumperHit,
+  hasChainTimedOut,
+  resetChainState,
+  resetFlowState,
+  updateBumperState,
+} from '../systems/bumper-rail';
 
 // =============================================================================
 // Constants
@@ -224,6 +267,7 @@ export interface GameLoopControls {
   // THE BALL debug controls (Run 036)
   forceBall: () => void;
   getBallState: () => BallState;
+  getAllBalls: () => BallState[];  // Run 042: Multi-ball rendering
   // Abilities/Combos controls (Run 036)
   selectAbility: (abilityId: AbilityId) => void;
   getAbilities: () => ActiveAbilities;
@@ -231,6 +275,13 @@ export interface GameLoopControls {
   getMeleeState: () => MeleeAttackState;
   // Apex Strike controls (Run 036: The hornet's predator dash)
   getApexState: () => ApexStrikeState;
+  // Attack speed visualization (Run 039)
+  getAttackCooldownPercent: () => number;
+  getKillStreak: () => number;
+  isDoubleStrikeReady: () => boolean;
+  // Ability zones (territorial marks, death markers)
+  getTerritorialMarks: () => TerritorialMark[];
+  getDeathMarkers: () => DeathMarker[];
 }
 
 // =============================================================================
@@ -287,13 +338,51 @@ export function useGameLoop(
   const comboStateRef = useRef<ComboState>(createInitialComboState());
   const runNumberRef = useRef<number>(1);  // Track run number for combo discovery
 
+  // Attack speed visualization (Run 039: Ability audit)
+  const killStreakRef = useRef<number>(0);  // Current momentum kill streak
+  const lastKillTimeRef = useRef<number>(0);  // Timestamp of last kill (for momentum timeout)
+  const effectiveCooldownRef = useRef<number>(MANDIBLE_REAVER_CONFIG.cooldown);  // Current attack cooldown (ms)
+
+  // Run 044: Lifesteal healing accumulator (applied after hit processing)
+  const lifestealHealingRef = useRef<number>(0);
+
+  // Run 044: Regeneration accumulator (tracks fractional HP for per-second healing)
+  const regenAccumulatorRef = useRef<number>(0);
+
+  // Second Wind revive tracking - only triggers once per run
+  // Note: Second Wind ability removed in bee theme, ref kept for potential future re-implementation
+  const reviveUsedRef = useRef<boolean>(false);
+  // Touch ref to avoid unused error (feature disabled but may return)
+  void reviveUsedRef;
+
+  // Run 040: Double Strike pre-roll - tracks if next attack will be a double strike
+  const nextAttackDoubleStrikeRef = useRef<boolean>(false);
+
   // Apex Strike state (Run 036: The hornet's signature predator dash)
   // "The hornet doesn't dash - it HUNTS. The strike is commitment."
   const apexStrikeRef = useRef<ApexStrikeState>(createInitialApexState());
 
+  // Run 039: Bumper-Rail Combo System
+  // "Bees are not obstacles. Bees are terrain."
+  const railChainRef = useRef<RailChainState>(createInitialRailChainState());
+  const flowStateRef = useRef<FlowState>(createInitialFlowState());
+  // Active bumper boost - applied to velocity during strike
+  const bumperBoostRef = useRef<{
+    speedMultiplier: number;
+    directionNudge: { x: number; y: number };
+  }>({ speedMultiplier: 1.0, directionNudge: { x: 0, y: 0 } });
+
   // Venom Architect state (Special Ability: Infinite venom stacks, explode on venom-kill)
   // Map of enemyId -> VenomArchitectState
   const venomArchitectRef = useRef<Map<string, VenomArchitectState>>(new Map());
+
+  // On-Kill Ability Zones (Run 044: territorial_mark, death_marker, etc.)
+  // "Where enemies die, the ground remembers."
+  const territorialMarksRef = useRef<TerritorialMark[]>([]);
+  const deathMarkersRef = useRef<DeathMarker[]>([]);
+  // Enemy hesitation timers (pack_signal ability)
+  // Map of enemyId -> hesitation end time
+  const enemyHesitationRef = useRef<Map<string, number>>(new Map());
 
   // GRAZE FRENZY state (Run 042: Near-miss stacking mechanic)
   // "Risk is rewarded. Each graze = +5% attack speed, +3% damage. Max 20 stacks. Getting hit resets ALL."
@@ -307,8 +396,8 @@ export function useGameLoop(
     grazedEnemyIds: new Map(),
   });
 
-  // Graze Frenzy constants
-  const GRAZE_FRENZY = {
+  // Graze Frenzy constants (TODO: Wire up when graze_frenzy ability is implemented)
+  const _GRAZE_FRENZY = {
     NEAR_MISS_DISTANCE: 10,      // Pixels - attack must pass within this distance WITHOUT hitting
     ATTACK_SPEED_PER_STACK: 0.05, // +5% attack speed per stack
     DAMAGE_PER_STACK: 0.03,       // +3% damage per stack
@@ -316,6 +405,7 @@ export function useGameLoop(
     DECAY_RATE: 1,                // Stacks lost per second if not grazing
     GRAZE_COOLDOWN: 500,          // ms - cooldown per enemy before they can grant another stack
   };
+  void _GRAZE_FRENZY; // Suppresses unused variable warning - will be used when graze_frenzy is implemented
 
   // THERMAL MOMENTUM state (Run 042: Movement-based heat mechanic)
   // "Build heat while moving. Stop to release a damage pulse."
@@ -341,6 +431,18 @@ export function useGameLoop(
     DECAY_RATE: 300,                // Heat decay per second after release window
     VELOCITY_THRESHOLD: 5,          // Velocity magnitude below this = "stopped"
   };
+
+  // MOVEMENT TRAIL state (Run 043: thermal_wake, rally_scent, draft)
+  // "Your path becomes a weapon. Where you've been slows and pulls enemies."
+  const playerTrailRef = useRef<TrailPoint[]>([]);
+  const lastTrailRecordRef = useRef<number>(0);
+  const TRAIL_RECORD_INTERVAL = 50;  // Record position every 50ms
+  const TRAIL_DURATION = 2000;        // Trail persists for 2 seconds
+
+  // PASSIVE AURA state (Run 043: hover_pressure, buzz_field, barbed_chitin, threat_aura)
+  // Tracks how long player has been stationary for buzz_field ability
+  const stationaryTimeRef = useRef<number>(0);
+  const STATIONARY_VELOCITY_THRESHOLD = 5; // Velocity magnitude below this = "stationary"
 
   // Core game tick - processes one frame
   const tick = useCallback(
@@ -434,8 +536,23 @@ export function useGameLoop(
           playerVelocity.x * playerVelocity.x + playerVelocity.y * playerVelocity.y
         );
         if (magnitude > 0) {
-          playerVelocity.x = (playerVelocity.x / magnitude) * knockbackHandledState.player.moveSpeed;
-          playerVelocity.y = (playerVelocity.y / magnitude) * knockbackHandledState.player.moveSpeed;
+          // Base move speed
+          let effectiveMoveSpeed = knockbackHandledState.player.moveSpeed;
+
+          // Apply updraft speed boost (WING ability: +3% move speed for 1s after kill)
+          const abilities = abilitiesRef.current;
+          if (abilities.runtime.updraftExpiry > knockbackHandledState.gameTime && abilities.runtime.updraftSpeedBonus > 0) {
+            effectiveMoveSpeed *= (1 + abilities.runtime.updraftSpeedBonus / 100);
+          }
+
+          // Apply heat_retention speed boost (CHITIN ability: +5% speed when below 50% HP)
+          if (abilities.runtime.heatRetentionActive) {
+            const computed = computeAbilityEffects(abilities);
+            effectiveMoveSpeed *= (1 + computed.heatRetentionSpeedBonus / 100);
+          }
+
+          playerVelocity.x = (playerVelocity.x / magnitude) * effectiveMoveSpeed;
+          playerVelocity.y = (playerVelocity.y / magnitude) * effectiveMoveSpeed;
         }
       }
 
@@ -479,7 +596,7 @@ export function useGameLoop(
       if (canDoApex && apexInput) {
         const currentApex = apexStrikeRef.current;
         const aimDir = apexInput.aimDirection || { x: 1, y: 0 };
-        const holdDuration = apexInput.spaceHoldDuration ?? 0;
+        // holdDuration tracked internally via updateCharge
 
         // Handle LOCK initiation (space just pressed while ready)
         if (spaceJustPressed && canApex(currentApex)) {
@@ -502,14 +619,23 @@ export function useGameLoop(
 
         // Handle LOCK direction updates (during lock phase)
         if (isLocking(apexStrikeRef.current)) {
+          // Update direction
           const dirResult = updateLockDirection(apexStrikeRef.current, aimDir);
           apexStrikeRef.current = dirResult.state;
 
-          // Calculate charge-based distance (min 60px, max 360px based on hold time)
-          // Full charge at 500ms hold time
-          const chargePercent = Math.min(1, holdDuration / 500);
-          const minDistance = 60;
-          const maxDistance = APEX_CONFIG.strikeDistance;
+          // Update charge level (updates chargeTime and chargeLevel in state)
+          apexStrikeRef.current = updateCharge(
+            apexStrikeRef.current,
+            deltaTime,
+            undefined,  // cursorPos - not used currently
+            undefined,  // wasdInput - direction already handled above
+            APEX_CONFIG
+          );
+
+          // Get charge from state (now properly updated)
+          const chargePercent = apexStrikeRef.current.chargeLevel;
+          const minDistance = APEX_CONFIG.minDistance;
+          const maxDistance = APEX_CONFIG.maxDistance;
           const chargedDistance = minDistance + (maxDistance - minDistance) * chargePercent;
 
           // Update lock visual effects with charge progress
@@ -529,6 +655,16 @@ export function useGameLoop(
             );
             apexStrikeRef.current = strikeResult.state;
 
+            // Run 039: Reset bumper chain for new dash (fresh combo opportunity)
+            railChainRef.current = resetChainState();
+            flowStateRef.current = resetFlowState();
+            bumperBoostRef.current = { speedMultiplier: 1.0, directionNudge: { x: 0, y: 0 } };
+            // Clear hit-during-chain flags on all enemies
+            dashState.enemies = dashState.enemies.map(e => ({
+              ...e,
+              hitDuringCurrentChain: false,
+            }));
+
             // Emit strike events
             for (const event of strikeResult.events) {
               callbacks.onApexEvent?.(event);
@@ -540,6 +676,17 @@ export function useGameLoop(
               aimDir,
               apexStrikeRef.current.bloodlust
             );
+
+            // Trigger scatter_dust ability on dash (WING ability: particles obscure enemy vision)
+            const scatterDustComputed = computeAbilityEffects(abilitiesRef.current);
+            if (scatterDustComputed.scatterDustEnabled) {
+              juiceSystem.emitAbilityJuice?.('scatter_dust', {
+                position: dashState.player.position,
+                intensity: 1.0
+              });
+              // Note: Enemy vision obscuring would be handled by the enemy AI system
+              // based on proximity to the scatter_dust effect
+            }
           }
         }
 
@@ -578,45 +725,396 @@ export function useGameLoop(
           );
           apexStrikeRef.current = hitResult.state;
 
-          // If we hit an enemy, apply damage
-          if (hitResult.hitEnemy) {
+          // Run 038+039: Process ALL hit enemies (multi-hit + bumper-rail unified)
+          if (hitResult.hitEnemies && hitResult.hitEnemies.length > 0) {
             // Emit hit events
             for (const event of hitResult.events) {
               callbacks.onApexEvent?.(event);
             }
 
-            // Emit hit visual effects
+            // Emit single hit visual effect
             juiceSystem.emitApexHit?.(
               dashState.player.position,
               hitResult.damage,
               hitResult.state.canChain
             );
 
-            // A3: Record damage dealt
-            recordDamageDealt(axiomGuardianRef.current, hitResult.damage);
+            // Run 038: Emit multi-hit effect for 2+ simultaneous hits (freeze frame + circle inversion)
+            if (hitResult.hitEnemies.length >= 2 && hitResult.state.multiHitPosition) {
+              juiceSystem.emitMultiHit?.(
+                hitResult.state.multiHitPosition,
+                hitResult.hitEnemies.length,
+                dashState.player.position
+              );
+            }
 
-            // Apply damage to enemy
-            const hitEnemyId = hitResult.hitEnemy.id;
-            const hitEnemyData = dashState.enemies.find(e => e.id === hitEnemyId);
-            const enemyWasKilled = hitEnemyData ? hitEnemyData.health <= hitResult.damage : false;
+            // Run 039: Process bumper-rail for each hit enemy
+            const dashDirection = apexStrikeRef.current.lockDirection || { x: 1, y: 0 };
+            let bumperSpeedBoost = 1.0;
+            let bumperDirectionNudge = { x: 0, y: 0 };
+            let bumperDamageBonus = 0;
+            let chargedBeeDamage = 0;
+
+            for (const hitEnemy of hitResult.hitEnemies) {
+              // Find full enemy object
+              const fullEnemy = dashState.enemies.find(e => e.id === hitEnemy.id);
+              if (!fullEnemy) continue;
+
+
+              // Track previous flow state for change detection
+              const wasFlowActive = flowStateRef.current.active;
+
+              // Process through bumper system
+              const bumperResult = processBumperHit(
+                fullEnemy,
+                railChainRef.current,
+                flowStateRef.current,
+                dashState.player.position,
+                dashDirection,
+                dashState.enemies,
+                dashState.gameTime
+              );
+
+              // Update rail chain and flow state
+              railChainRef.current = bumperResult.newRailState;
+              flowStateRef.current = bumperResult.newFlowState;
+
+              // Emit flow state change juice effect
+              if (flowStateRef.current.active !== wasFlowActive) {
+                juiceSystem.setFlowState?.(flowStateRef.current.active);
+              }
+
+              // Accumulate speed boost and direction nudge
+              if (bumperResult.result.speedBoost > 1.0) {
+                bumperSpeedBoost *= bumperResult.result.speedBoost;
+                // Accumulate direction nudge (last nudge wins, but weighted by chain)
+                const nudge = bumperResult.result.directionNudge;
+                bumperDirectionNudge.x += nudge.x;
+                bumperDirectionNudge.y += nudge.y;
+                juiceSystem.emitBumperPing?.(fullEnemy.position, bumperResult.result.comboCount);
+              }
+
+              // Track charged bee damage (counterplay!)
+              if (bumperResult.result.hitChargedBee) {
+                chargedBeeDamage += bumperResult.result.chargedBeeDamage;
+                juiceSystem.emitChargedBeeHit?.(fullEnemy.position, bumperResult.result.chargedBeeDamage);
+              }
+
+              // Check for chain break
+              if (bumperResult.result.chainBroken) {
+                const breakReason = bumperResult.result.chainBreakReason === 'charged_bee' ? 'charged' :
+                                   bumperResult.result.chainBreakReason === 'guard' ? 'guard' : 'timeout';
+                juiceSystem.emitChainBreak?.(fullEnemy.position, breakReason);
+                railChainRef.current = resetChainState();
+                flowStateRef.current = resetFlowState();
+              }
+
+              // Update enemy's bumper state
+              const enemyIdx = dashState.enemies.findIndex(e => e.id === hitEnemy.id);
+              if (enemyIdx >= 0) {
+                dashState.enemies[enemyIdx] = bumperResult.updatedEnemy;
+              }
+            }
+
+            // Run 039: Store accumulated boost for velocity application
+            // This will be applied to the apex velocity after updateApexStrike
+            bumperBoostRef.current = {
+              speedMultiplier: bumperSpeedBoost,
+              directionNudge: bumperDirectionNudge,
+            };
+
+            // Run 039 FIX: Apply bumper boost DIRECTLY to apex strike momentum!
+            // The boost was being stored in a ref for later, but hitBoostMomentum expires in 120ms
+            // so by the time physics phase applies the boost, momentum is gone.
+            // This applies boost immediately to the apex strike state.
+            if (bumperSpeedBoost > 1.0 && apexStrikeRef.current.hitBoostMomentum > 0) {
+              const normalizedNudge = bumperDirectionNudge.x !== 0 || bumperDirectionNudge.y !== 0
+                ? {
+                    x: bumperDirectionNudge.x / Math.sqrt(bumperDirectionNudge.x ** 2 + bumperDirectionNudge.y ** 2 + 0.001),
+                    y: bumperDirectionNudge.y / Math.sqrt(bumperDirectionNudge.x ** 2 + bumperDirectionNudge.y ** 2 + 0.001),
+                  }
+                : { x: 0, y: 0 };
+
+              // Calculate new direction with nudge (30% influence toward next target)
+              let newDirection = apexStrikeRef.current.hitBoostDirection;
+              if (newDirection && (normalizedNudge.x !== 0 || normalizedNudge.y !== 0)) {
+                const rawX = newDirection.x + normalizedNudge.x * 0.3;
+                const rawY = newDirection.y + normalizedNudge.y * 0.3;
+                const mag = Math.sqrt(rawX * rawX + rawY * rawY);
+                newDirection = mag > 0.01 ? { x: rawX / mag, y: rawY / mag } : newDirection;
+              }
+
+              apexStrikeRef.current = {
+                ...apexStrikeRef.current,
+                // Boost the hit momentum directly (pinball acceleration)
+                hitBoostMomentum: apexStrikeRef.current.hitBoostMomentum * bumperSpeedBoost,
+                // Extend the boost timer so momentum doesn't expire mid-chain (150ms per chain link)
+                hitBoostTimer: Math.min(600, apexStrikeRef.current.hitBoostTimer + 150),
+                // Apply normalized direction (steers toward next target)
+                hitBoostDirection: newDirection,
+              };
+
+              // Reset boost ref since we've applied it directly to momentum
+              // This prevents double-boosting in physics phase
+              bumperBoostRef.current = { speedMultiplier: 1.0, directionNudge: { x: 0, y: 0 } };
+            }
+
+            // Run 039: Emit combo chain visual if chain is active
+            if (railChainRef.current.active && railChainRef.current.chainLength >= 2) {
+              juiceSystem.emitComboChain?.(
+                dashState.player.position,
+                railChainRef.current.chainLength,
+                flowStateRef.current.active
+              );
+
+              // Update rail line visual (lightning trail)
+              if (railChainRef.current.hitPositions.length >= 2) {
+                juiceSystem.updateRailLine?.(
+                  railChainRef.current.hitPositions,
+                  flowStateRef.current.active
+                );
+              }
+            }
+
+            // Apply bumper damage bonus from chain/flow
+            if (railChainRef.current.active) {
+              bumperDamageBonus = railChainRef.current.damageBonus;
+            }
+            if (flowStateRef.current.active) {
+              bumperDamageBonus += (flowStateRef.current.comboMultiplier - 1.0);
+            }
+
+            // Apply charged bee damage to player (counterplay consequence!)
+            if (chargedBeeDamage > 0) {
+              dashState.player.health -= chargedBeeDamage;
+              callbacks.onPlayerDamaged?.(chargedBeeDamage);
+              // Break chain on taking damage - reset all bumper state
+              railChainRef.current = resetChainState();
+              flowStateRef.current = resetFlowState();
+              bumperBoostRef.current = { speedMultiplier: 1.0, directionNudge: { x: 0, y: 0 } };
+              juiceSystem.setFlowState?.(false);
+            }
+
+            // A3: Record total damage dealt
+            const totalDamage = hitResult.damage * hitResult.hitEnemies.length;
+            recordDamageDealt(axiomGuardianRef.current, totalDamage);
+
+            // Apply damage to ALL hit enemies
+            let enemiesKilled = 0;
+            let xpGained = 0;
+
+            // =======================================================================
+            // PREDATOR ABILITY DAMAGE BONUSES (Run 048: Apex Strike Integration)
+            // Applies: trophy_scent, territorial_mark, corpse_heat to apex strike
+            // =======================================================================
+            const playerPos = dashState.player.position;
+            const computed = computeAbilityEffects(abilitiesRef.current);
+
+            // 1. Trophy Scent: +1% permanent damage per unique enemy type killed
+            // Applied via computed.damageMultiplier (base 1.0 + trophy bonus)
+            const trophyScentMultiplier = computed.damageMultiplier;
+
+            // 2. Territorial Mark: +10% damage when attacking in kill zones
+            // Check if player is in any active territorial mark zone
+            const territorialBonus = getTerritorialMarkBonus(
+              playerPos.x,
+              playerPos.y,
+              territorialMarksRef.current,
+              dashState.gameTime
+            );
+            const territorialMultiplier = 1 + (territorialBonus / 100);
+
+            // 3. Corpse Heat: +5% damage when near recent kills
+            // Check if player is near any death marker (corpse location)
+            const nearCorpse = isNearCorpse(
+              playerPos.x,
+              playerPos.y,
+              deathMarkersRef.current,
+              dashState.gameTime,
+              computed.corpseHeatRadius || 20
+            );
+            const corpseHeatMultiplier = nearCorpse ? 1 + (computed.corpseHeatBonus / 100) : 1;
+
+            // =======================================================================
+            // MANDIBLE ABILITY INTEGRATION (Run 049: Apex Strike + Mandible)
+            // Applies the 6 MANDIBLE abilities to apex strike damage:
+            // - sawtooth: every 5th hit +30% damage (applied to base damage)
+            // - chitin_crack: armor reduction per hit (applied per-enemy)
+            // - serration: bleed (handled by combat system via computed.bleedEnabled)
+            // - scissor_grip: stun chance (applied per-enemy below)
+            // - resonant_strike: knockback (applied per-enemy below)
+            // - nectar_sense: mark full HP targets (applied per-enemy below)
+            // =======================================================================
+
+            // MANDIBLE: Sawtooth - increment counter for EACH hit enemy
+            let sawtoothBonusTriggered = false;
+            if (computed.sawtoothEveryN > 0) {
+              for (let i = 0; i < hitResult.hitEnemies.length; i++) {
+                const sawtoothResult = incrementSawtoothCounter(abilitiesRef.current);
+                abilitiesRef.current = sawtoothResult.state;
+                if (sawtoothResult.isBonusHit) {
+                  sawtoothBonusTriggered = true;
+                }
+              }
+            }
+
+            // Apply sawtooth damage bonus if ANY hit triggered it
+            const sawtoothMultiplier = sawtoothBonusTriggered
+              ? 1 + (computed.sawtoothBonus / 100)
+              : 1;
+
+            // Calculate final damage with all PREDATOR + MANDIBLE bonuses
+            // Base damage * trophy_scent * territorial_mark * corpse_heat * sawtooth + bumper bonus
+            const baseDamageWithAbilities = Math.floor(
+              hitResult.damage * trophyScentMultiplier * territorialMultiplier * corpseHeatMultiplier * sawtoothMultiplier
+            );
+            const baseDamage = baseDamageWithAbilities + bumperDamageBonus;
 
             apexState = {
               ...dashState,
               enemies: dashState.enemies.map(e => {
-                if (e.id === hitEnemyId) {
-                  const newHealth = e.health - hitResult.damage;
-                  if (newHealth <= 0) {
-                    // Enemy killed - emit kill events
-                    juiceSystem.emitKill(e.position, e.type);
-                    callbacks.onEnemyKilled?.(e.type, 'single', 1, e.position);
+                const wasHit = hitResult.hitEnemies.some(he => he.id === e.id);
+                if (wasHit) {
+                  // =======================================================================
+                  // VENOM ABILITY EFFECTS (Run 049: Apex Strike Venom Integration)
+                  // melittin_traces: +5% damage to poisoned/slowed enemies
+                  // histamine_burst: +8% damage to slowed enemies (jittery = vulnerable)
+                  // trace_venom: Apply slow stacks on hit
+                  // paralytic_microdose: Chance to freeze on hit
+                  // =======================================================================
+                  let finalDamage = baseDamage;
+                  let updatedEnemy = { ...e };
+
+                  // melittin_traces: +5% damage per stack to enemies with venom-related status
+                  // Enemy is considered "poisoned" if they have slowStacks, poisonStacks, or venomArchitectStacks
+                  const isPoisoned = (e.slowStacks && e.slowStacks > 0) ||
+                                    (e.poisonStacks && e.poisonStacks > 0) ||
+                                    (e.venomArchitectStacks && e.venomArchitectStacks > 0);
+                  if (computed.poisonedDamageAmp > 0 && isPoisoned) {
+                    finalDamage *= (1 + computed.poisonedDamageAmp / 100);
                   }
-                  return { ...e, health: newHealth };
+
+                  // histamine_burst: +8% damage to slowed enemies
+                  // The slow from trace_venom makes enemies "jittery" and vulnerable
+                  if (computed.histamineDamageAmp > 0 && e.slowStacks && e.slowStacks > 0) {
+                    finalDamage *= (1 + computed.histamineDamageAmp / 100);
+                  }
+
+                  // trace_venom: Apply slow stacks on apex strike hit
+                  if (computed.slowPerHit > 0) {
+                    const currentSlowStacks = updatedEnemy.slowStacks || 0;
+                    const newSlowStacks = Math.min(
+                      currentSlowStacks + Math.ceil(computed.slowPerHit),
+                      computed.slowMaxStacks
+                    );
+                    updatedEnemy = { ...updatedEnemy, slowStacks: newSlowStacks };
+                  }
+
+                  // paralytic_microdose: Roll for freeze on apex strike hit
+                  if (computed.freezeChance > 0 && Math.random() < computed.freezeChance) {
+                    // Apply freeze by maxing out slow stacks (visual: frozen blue)
+                    updatedEnemy = {
+                      ...updatedEnemy,
+                      slowStacks: computed.slowMaxStacks || 30,
+                    };
+                    // Emit freeze juice effect
+                    juiceSystem.emitAbilityJuice?.('paralytic_microdose', {
+                      position: e.position,
+                      intensity: 1.0
+                    });
+                  }
+
+                  // =======================================================================
+                  // MANDIBLE ABILITY EFFECTS (Run 049: Apex Strike + Mandible)
+                  // Per-enemy effects for the 6 MANDIBLE abilities
+                  // =======================================================================
+
+                  // MANDIBLE: Chitin Crack - armor reduction per hit (stacking)
+                  // Reduces enemy armor by 5% per hit, increasing damage dealt
+                  if (computed.armorReductionPerHit > 0) {
+                    const enemyArmor = (updatedEnemy as { armor?: number }).armor ?? 0;
+                    const reducedArmor = Math.max(0, enemyArmor - computed.armorReductionPerHit);
+                    // Up to 50% more damage on 0 armor
+                    const armorDamageBonus = 1 + (1 - reducedArmor / 100) * 0.5;
+                    finalDamage *= armorDamageBonus;
+                  }
+
+                  // MANDIBLE: Resonant Strike - knockback (5px)
+                  // Pushes enemy away from player on hit
+                  if (computed.knockbackPx > 0) {
+                    const dx = updatedEnemy.position.x - playerPos.x;
+                    const dy = updatedEnemy.position.y - playerPos.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist > 0) {
+                      const knockbackDir = { x: dx / dist, y: dy / dist };
+                      updatedEnemy = {
+                        ...updatedEnemy,
+                        position: {
+                          x: updatedEnemy.position.x + knockbackDir.x * computed.knockbackPx,
+                          y: updatedEnemy.position.y + knockbackDir.y * computed.knockbackPx,
+                        },
+                      };
+                    }
+                  }
+
+                  // MANDIBLE: Scissor Grip - 10% chance to stun (0.3s)
+                  // Holds enemy still briefly on hit
+                  if (computed.stunChance > 0 && Math.random() < computed.stunChance) {
+                    updatedEnemy = {
+                      ...updatedEnemy,
+                      stunUntil: dashState.gameTime + computed.stunDuration,
+                    } as typeof updatedEnemy & { stunUntil: number };
+                    // Emit stun juice effect
+                    juiceSystem.emitAbilityJuice?.('scissor_grip', {
+                      position: updatedEnemy.position,
+                      intensity: 1.0
+                    });
+                  }
+
+                  // MANDIBLE: Nectar Sense - mark full HP targets for visibility
+                  // Full HP enemies become visible through fog
+                  if (computed.markFullHpTargets && updatedEnemy.health >= (updatedEnemy.maxHealth ?? updatedEnemy.health)) {
+                    updatedEnemy = {
+                      ...updatedEnemy,
+                      nectarMarked: true,
+                    } as typeof updatedEnemy & { nectarMarked: boolean };
+                  }
+
+                  // MANDIBLE: Serration - bleed damage
+                  // Combat system handles bleed ticks via computed.bleedEnabled
+                  // We just need to mark the enemy as bleeding if the ability is active
+                  if (computed.bleedEnabled) {
+                    updatedEnemy = {
+                      ...updatedEnemy,
+                      bleeding: true,
+                      bleedDuration: computed.bleedDuration,
+                      bleedPercent: computed.bleedPercent,
+                    } as typeof updatedEnemy & { bleeding: boolean; bleedDuration: number; bleedPercent: number };
+                  }
+
+                  finalDamage = Math.floor(finalDamage);
+                  const newHealth = updatedEnemy.health - finalDamage;
+                  if (newHealth <= 0) {
+                    enemiesKilled++;
+                    xpGained += e.xpValue ?? 10;  // Grant XP for each kill
+                    juiceSystem.emitKill(e.position, e.type);
+                    callbacks.onEnemyKilled?.(
+                      e.type,
+                      hitResult.hitEnemies.length >= 2 ? 'multi' : 'single',
+                      hitResult.hitEnemies.length,
+                      e.position
+                    );
+                  }
+                  return { ...updatedEnemy, health: newHealth };
                 }
                 return e;
               }).filter(e => e.health > 0),
-              totalEnemiesKilled: enemyWasKilled
-                ? dashState.totalEnemiesKilled + 1
-                : dashState.totalEnemiesKilled,
+              totalEnemiesKilled: dashState.totalEnemiesKilled + enemiesKilled,
+              score: dashState.score + xpGained * 10,  // Add score for kills
+              player: {
+                ...dashState.player,
+                xp: dashState.player.xp + xpGained,  // Grant XP to player
+              },
             };
 
             // Check for bloodlust max
@@ -624,6 +1122,7 @@ export function useGameLoop(
               juiceSystem.emitBloodlustMax?.(dashState.player.position);
             }
           }
+
 
           // Emit trail effect during strike
           if (apexStrikeRef.current.lockDirection) {
@@ -673,10 +1172,49 @@ export function useGameLoop(
       let finalVelocity = { ...playerVelocity };
       const currentApexPhase = apexStrikeRef.current.phase;
 
-      // During STRIKE phase: use apex strike velocity exclusively
-      // apexVelocity is only non-null when actively striking (from updateApexStrike)
-      if (apexVelocity && currentApexPhase === 'strike') {
-        finalVelocity = apexVelocity;
+      // RUN 042: Check stun state using current state (before newState exists)
+      // Note: stunBounce state will be checked again after collision phase when newState is available
+      const currentState = stateRef.current;
+      const isCurrentlyStunned = currentState.player.stunBounce?.active &&
+        currentState.gameTime < (currentState.player.stunBounce?.endTime ?? 0);
+      if (isCurrentlyStunned) {
+        finalVelocity = { x: 0, y: 0 };
+      }
+      // During STRIKE or HIT phase: use apex strike velocity exclusively
+      if (apexVelocity && (currentApexPhase === 'strike' || currentApexPhase === 'hit')) {
+        // Run 039: Apply bumper boost and direction nudge!
+        // Speed multiplier makes you go faster through chains
+        // Direction nudge steers you toward the next target (pinball/rail effect)
+        const boost = bumperBoostRef.current;
+        const boostedSpeed = boost.speedMultiplier;
+        const nudge = boost.directionNudge;
+
+        // Apply speed boost
+        let vx = apexVelocity.x * boostedSpeed;
+        let vy = apexVelocity.y * boostedSpeed;
+
+        // Apply direction nudge (blend toward next target)
+        if (nudge.x !== 0 || nudge.y !== 0) {
+          // Get current velocity magnitude
+          const speed = Math.sqrt(vx * vx + vy * vy);
+          if (speed > 0) {
+            // Normalize current direction
+            const dirX = vx / speed;
+            const dirY = vy / speed;
+            // Apply nudge to direction
+            const newDirX = dirX + nudge.x;
+            const newDirY = dirY + nudge.y;
+            // Renormalize and apply speed
+            const newLen = Math.sqrt(newDirX * newDirX + newDirY * newDirY);
+            if (newLen > 0) {
+              vx = (newDirX / newLen) * speed;
+              vy = (newDirY / newLen) * speed;
+            }
+          }
+        }
+
+        finalVelocity = { x: vx, y: vy };
+
       }
       // During LOCK, HIT, or MISS_RECOVERY phases: player cannot move (zero velocity)
       // This prevents involuntary movement during apex mechanics
@@ -691,6 +1229,142 @@ export function useGameLoop(
       if (physicsResult.telegraphs && physicsResult.telegraphs.length > 0) {
         callbacks.onTelegraphsUpdate?.(physicsResult.telegraphs);
       }
+
+      // Run 039: Update enemy bumper states (charged → recovering → neutral)
+      physicsResult.state.enemies = physicsResult.state.enemies.map(enemy =>
+        updateBumperState(enemy, deltaTime, physicsResult.state.gameTime)
+      );
+
+      // Run 039: Check for bumper chain timeout (silent reset)
+      if (railChainRef.current.active && hasChainTimedOut(railChainRef.current, physicsResult.state.gameTime)) {
+        railChainRef.current = resetChainState();
+        flowStateRef.current = resetFlowState();
+        bumperBoostRef.current = { speedMultiplier: 1.0, directionNudge: { x: 0, y: 0 } };
+        juiceSystem.setFlowState?.(false);
+      }
+
+      // =======================================================================
+      // PHASE 2.5: Movement Trail (Run 043: thermal_wake, rally_scent, draft)
+      // "Your path becomes a weapon. Where you've been slows and pulls enemies."
+      // =======================================================================
+
+      // Record player position for trail every TRAIL_RECORD_INTERVAL ms
+      const playerPos = physicsResult.state.player.position;
+      if (physicsResult.state.gameTime - lastTrailRecordRef.current >= TRAIL_RECORD_INTERVAL) {
+        playerTrailRef.current.push({
+          x: playerPos.x,
+          y: playerPos.y,
+          timestamp: physicsResult.state.gameTime,
+        });
+        lastTrailRecordRef.current = physicsResult.state.gameTime;
+
+        // Prune old trail points (keep only recent trail within duration)
+        playerTrailRef.current = playerTrailRef.current.filter(
+          p => physicsResult.state.gameTime - p.timestamp < TRAIL_DURATION
+        );
+
+        // =======================================================================
+        // SWIFT WINGS TRAIL: Emit cyan trail particles when moving (Run 044)
+        // =======================================================================
+        const hasSwiftWings = abilitiesRef.current?.owned.includes('swift_wings') ?? false;
+        const isMoving = Math.abs(finalVelocity.x) > 0.1 || Math.abs(finalVelocity.y) > 0.1;
+        if (hasSwiftWings && isMoving) {
+          // Emit cyan wing trail particle behind player
+          juiceSystem.emitAbilityJuice?.('swift_wings', {
+            position: { x: playerPos.x, y: playerPos.y },
+            intensity: 0.7
+          });
+        }
+      }
+
+      // Process trail effects on enemies (slow + pull)
+      const trailResult = processMovementTrail(
+        abilitiesRef.current,
+        playerTrailRef.current,
+        physicsResult.state.enemies.map(e => ({
+          id: e.id,
+          x: e.position.x,
+          y: e.position.y,
+        })),
+        physicsResult.state.gameTime,
+        TRAIL_DURATION
+      );
+
+      // Apply trail slow to enemies (stored on enemy for physics to use)
+      // Apply pull directly to enemy position (immediate displacement)
+      physicsResult.state.enemies = physicsResult.state.enemies.map(enemy => {
+        let updatedEnemy = { ...enemy };
+
+        // Apply trail slow percent (used by physics for speed reduction)
+        const slowPercent = trailResult.enemiesToSlow.get(enemy.id);
+        if (slowPercent !== undefined) {
+          updatedEnemy.trailSlowPercent = slowPercent;
+        } else {
+          // Clear slow if not in trail
+          updatedEnemy.trailSlowPercent = undefined;
+        }
+
+        // Apply draft pull (immediate position adjustment)
+        const pullVector = trailResult.enemiesToPull.get(enemy.id);
+        if (pullVector) {
+          updatedEnemy.position = {
+            x: enemy.position.x + pullVector.x,
+            y: enemy.position.y + pullVector.y,
+          };
+        }
+
+        return updatedEnemy;
+      });
+
+      // =======================================================================
+      // ON-KILL ZONE PROCESSING (Run 044)
+      // Expire old zones, apply death marker slow, process hesitation
+      // =======================================================================
+
+      // 1. Expire old territorial marks and death markers
+      const expiredZones = expireZones(
+        territorialMarksRef.current,
+        deathMarkersRef.current,
+        physicsResult.state.gameTime
+      );
+      territorialMarksRef.current = expiredZones.territorialMarks;
+      deathMarkersRef.current = expiredZones.deathMarkers;
+
+      // 2. Clear expired enemy hesitations
+      const hesitationMap = enemyHesitationRef.current;
+      for (const [enemyId, expiry] of hesitationMap.entries()) {
+        if (physicsResult.state.gameTime >= expiry) {
+          hesitationMap.delete(enemyId);
+        }
+      }
+
+      // 3. Apply death marker slow to enemies and check hesitation
+      physicsResult.state.enemies = physicsResult.state.enemies.map(enemy => {
+        let updatedEnemy = { ...enemy };
+
+        // Apply death marker slow (corpse zones slow nearby enemies)
+        const deathMarkerSlow = getDeathMarkerSlow(
+          enemy.position.x,
+          enemy.position.y,
+          deathMarkersRef.current,
+          physicsResult.state.gameTime
+        );
+        if (deathMarkerSlow > 0) {
+          // Combine with any existing slow (trail slow)
+          const existingSlow = updatedEnemy.trailSlowPercent ?? 0;
+          updatedEnemy.trailSlowPercent = existingSlow + deathMarkerSlow;
+        }
+
+        // Check if enemy is hesitating (pack_signal effect)
+        const hesitationExpiry = hesitationMap.get(enemy.id);
+        if (hesitationExpiry !== undefined && physicsResult.state.gameTime < hesitationExpiry) {
+          // Enemy is hesitating - apply 100% slow (freeze in place)
+          updatedEnemy.trailSlowPercent = 100;
+        }
+
+        return updatedEnemy;
+      });
+
       perfMonitor.endSystem('physics');
 
       // =======================================================================
@@ -724,12 +1398,7 @@ export function useGameLoop(
         // Trigger damage sound callback
         callbacks.onPlayerDamaged?.(physicsResult.enemyDamageDealt);
 
-        // GRAZE FRENZY: Reset ALL stacks when player takes damage
-        if (abilitiesRef.current.computed.hasGrazeFrenzy && grazeFrenzyRef.current.stacks > 0) {
-          console.log('[GRAZE FRENZY] Player HIT! Resetting', grazeFrenzyRef.current.stacks, 'stacks to 0');
-          grazeFrenzyRef.current.stacks = 0;
-          grazeFrenzyRef.current.grazedEnemyIds.clear();
-        }
+        // GRAZE FRENZY: System disabled - no reset needed
 
         // Check for game over from attack damage
         if (newState.player.health <= 0) {
@@ -895,6 +1564,9 @@ export function useGameLoop(
                 newState.gameTime
               );
             }
+
+            // Trophy Scent: Track unique enemy types killed for permanent damage bonus
+            abilitiesRef.current = recordKillForTrophyScent(abilitiesRef.current, enemyType);
             break;
           }
 
@@ -906,9 +1578,69 @@ export function useGameLoop(
               break;
             }
 
+            // Run 045: Check confusion cloud miss chance
+            const attackerPos = event.position;
+            if (checkConfusionCloudMiss(attackerPos, abilitiesRef.current, newState.gameTime)) {
+              recordAttackEncounter(axiomGuardianRef.current, true);
+              break;
+            }
+
             // A3: Record attack encounter (not evaded - player took damage)
             recordAttackEncounter(axiomGuardianRef.current, false);
-            const damageAmount = event.damage ?? 10;
+            let damageAmount = event.damage ?? 10;
+
+            // Run 045: Process on-damaged abilities
+            const attackerId = (event as { enemyId?: string }).enemyId ?? null;
+            const onDamagedResult = processOnDamaged(
+              abilitiesRef.current,
+              newState.player.position,
+              attackerId,
+              damageAmount,
+              newState.gameTime,
+              newState.wave
+            );
+            damageAmount = Math.floor(damageAmount * onDamagedResult.damageReduction);
+            if (attackerId) {
+              damageAmount = Math.floor(damageAmount * getBitterTasteDebuff(attackerId, abilitiesRef.current, newState.gameTime));
+            }
+            // Run 048: Apply threat_aura damage reduction
+            // "Enemies within 30px deal 5% less damage"
+            const threatAuraReduction = getThreatAuraReduction(
+              attackerPos,
+              newState.player.position,
+              abilitiesRef.current
+            );
+            damageAmount = Math.floor(damageAmount * threatAuraReduction);
+            abilitiesRef.current = onDamagedResult.updatedAbilities;
+
+            // Emit VFX for on-damaged abilities
+            if (onDamagedResult.damageReduction < 1) {
+              // Ablative shell triggered
+              juiceSystem.emitAbilityJuice?.('ablative_shell', {
+                position: newState.player.position,
+                intensity: 1 - onDamagedResult.damageReduction
+              });
+            }
+            if (onDamagedResult.newConfusionClouds.length > 0) {
+              juiceSystem.emitAbilityJuice?.('confusion_cloud', {
+                position: newState.player.position,
+                intensity: 1.0
+              });
+            }
+            if (onDamagedResult.bitterTasteTargets.length > 0) {
+              juiceSystem.emitAbilityJuice?.('bitter_taste', {
+                position: event.position,
+                intensity: 1.0
+              });
+            }
+            if (threatAuraReduction < 1) {
+              // Threat aura reduced enemy damage
+              juiceSystem.emitAbilityJuice?.('threat_aura', {
+                position: newState.player.position,
+                intensity: 1 - threatAuraReduction
+              });
+            }
+
             recordDamageReceived(axiomGuardianRef.current, damageAmount);
 
             const healthBeforeHit = newState.player.health;
@@ -926,12 +1658,7 @@ export function useGameLoop(
             // Trigger damage sound callback (DD-5)
             callbacks.onPlayerDamaged?.(damageAmount);
 
-            // GRAZE FRENZY: Reset ALL stacks when player takes damage
-            if (abilitiesRef.current.computed.hasGrazeFrenzy && grazeFrenzyRef.current.stacks > 0) {
-              console.log('[GRAZE FRENZY] Player HIT (contact)! Resetting', grazeFrenzyRef.current.stacks, 'stacks to 0');
-              grazeFrenzyRef.current.stacks = 0;
-              grazeFrenzyRef.current.grazedEnemyIds.clear();
-            }
+            // GRAZE FRENZY: System disabled - no reset needed
 
             // DD-16: Check for clutch moment (survived near-death)
             if (newState.player.health > 0) {
@@ -1072,30 +1799,11 @@ export function useGameLoop(
           // Emit juice for paralysis (trap springing!)
           // juiceSystem.emitVenomTrigger?.(event.position);
         } else if (event.type === 'graze') {
-          // RISK-TAKING REWARDED: Emit graze spark particles
-          juiceSystem.emitGrazeSpark(
-            newState.player.position,
-            event.position,
-            event.chainCount
-          );
-
-          // GRAZE FRENZY: Increment stacks on graze (if ability is active)
-          if (abilitiesRef.current.computed.hasGrazeFrenzy) {
-            const gf = grazeFrenzyRef.current;
-            if (gf.stacks < GRAZE_FRENZY.MAX_STACKS) {
-              gf.stacks++;
-              gf.lastGrazeTime = newState.gameTime;
-              console.log('[GRAZE FRENZY] Graze! Stacks:', gf.stacks, '/', GRAZE_FRENZY.MAX_STACKS,
-                '| +' + (gf.stacks * GRAZE_FRENZY.ATTACK_SPEED_PER_STACK * 100).toFixed(0) + '% ATK SPD,',
-                '+' + (gf.stacks * GRAZE_FRENZY.DAMAGE_PER_STACK * 100).toFixed(0) + '% DMG');
-
-              // Trigger graze sound callback
-              callbacks.onGraze?.(gf.stacks);
-            }
-          }
+          // GRAZE SYSTEM: Detection preserved, surface (sound/visuals/bonuses) DISABLED
+          // The underlying graze detection still runs in combat.ts for potential future use
+          // No particles, no sound, no frenzy stacks - silent tracking only
         } else if (event.type === 'graze_bonus_triggered') {
-          // Graze chain complete: +10% DAMAGE bonus ring effect
-          juiceSystem.emitGrazeBonus(newState.player.position);
+          // GRAZE BONUS: Surface disabled (no visual ring effect)
         } else if (event.type === 'hover_brake_activated') {
           // Emit hover brake flash
           // juiceSystem.emitHoverBrake?.(event.position);
@@ -1121,23 +1829,13 @@ export function useGameLoop(
       // Get ability-modified config
       let meleeConfig = getModifiedConfig(MANDIBLE_REAVER_CONFIG, abilitiesRef.current);
 
-      // GRAZE FRENZY: Apply stacking bonuses to attack speed and damage
-      if (abilitiesRef.current.computed.hasGrazeFrenzy && grazeFrenzyRef.current.stacks > 0) {
-        const stacks = grazeFrenzyRef.current.stacks;
-        const attackSpeedBonus = stacks * GRAZE_FRENZY.ATTACK_SPEED_PER_STACK;
-        const damageBonus = stacks * GRAZE_FRENZY.DAMAGE_PER_STACK;
-
-        meleeConfig = {
-          ...meleeConfig,
-          // Reduce cooldown based on attack speed bonus (1 / (1 + bonus))
-          cooldown: Math.max(100, meleeConfig.cooldown / (1 + attackSpeedBonus)),
-          // Increase damage based on damage bonus
-          baseDamage: Math.floor(meleeConfig.baseDamage * (1 + damageBonus)),
-        };
-      }
+      // GRAZE FRENZY: System preserved but bonuses DISABLED
+      // The underlying graze tracking remains for potential future use, but no gameplay bonuses are applied
 
       // Auto-attack: Check if player can start a new attack
-      if (canAttack(meleeStateRef.current, currentTime, meleeConfig)) {
+      // Run 039: Disable melee during apex strike - don't steal bumper combo kills!
+      const isInApexStrike = apexStrikeRef.current.phase !== 'ready';
+      if (!isInApexStrike && canAttack(meleeStateRef.current, currentTime, meleeConfig)) {
         // Get attack direction - ALWAYS toward nearest enemy (even if out of range)
         let attackDir = { x: 1, y: 0 };
 
@@ -1189,7 +1887,9 @@ export function useGameLoop(
           meleeTargets,
           abilitiesRef.current,
           currentTime,
-          meleeConfig
+          meleeConfig,
+          0,  // hitCounter - will be tracked separately
+          killStreakRef.current  // For momentum ability damage bonus
         );
 
         // Apply damage to enemies and handle kills
@@ -1200,10 +1900,15 @@ export function useGameLoop(
           healthPercentBeforeKill: number;  // For execution chain check
         }> = [];
 
-        // Check if player has Venom Architect ability
-        const hasVenomArchitect = abilitiesRef.current?.owned.includes('venom_architect') ?? false;
+        // Check if player has Venom Architect ability (now 'trace_venom' in new system)
+        const hasVenomArchitect = abilitiesRef.current?.owned.includes('trace_venom') ?? false;
 
         for (const hit of meleeResult.hits) {
+          // Sawtooth: Track hit count for every 5th hit bonus damage
+          const sawtoothResult = incrementSawtoothCounter(abilitiesRef.current);
+          abilitiesRef.current = sawtoothResult.state;
+          // Note: sawtoothResult.isBonusHit can be used for visual/audio feedback
+
           meleeModifiedEnemies = meleeModifiedEnemies.map(e => {
             if (e.id === hit.enemyId) {
               const newHealth = e.health - hit.damage;
@@ -1216,6 +1921,46 @@ export function useGameLoop(
                 const currentVenomState = venomArchitectRef.current.get(e.id);
                 const newVenomState = applyVenomArchitectStack(currentVenomState, newState.gameTime);
                 venomArchitectRef.current.set(e.id, newVenomState);
+              }
+
+              // =======================================================================
+              // ON-HIT ABILITY JUICE (Run 044)
+              // =======================================================================
+              const computed = computeAbilityEffects(abilitiesRef.current);
+
+              // Venomous Strike: Green venom drip on poison damage
+              if (computed.poisonDamage > 0) {
+                juiceSystem.emitAbilityJuice?.('venomous_strike', {
+                  position: hit.position,
+                  intensity: 0.6
+                });
+              }
+
+              // Critical Sting: Yellow crit flash (check if this hit was a crit)
+              // Note: We can't easily detect crits here since calculateDamage is in melee.ts
+              // But we can trigger on high damage hits (proxy for crits)
+              if (computed.critChance > 0 && hit.damage > (newState.player.damage * 1.8)) {
+                juiceSystem.emitAbilityJuice?.('critical_sting', {
+                  position: hit.position,
+                  intensity: 1.0
+                });
+              }
+
+              // =======================================================================
+              // LIFESTEAL: Heal player for % of damage dealt
+              // =======================================================================
+              if (computed.lifestealPercent > 0) {
+                const healAmount = Math.floor(hit.damage * (computed.lifestealPercent / 100));
+                if (healAmount > 0) {
+                  // Store healing to apply after the map (we're inside a map so can't modify newState directly)
+                  lifestealHealingRef.current += healAmount;
+
+                  // Emit lifesteal juice - red health orbs from enemy to player
+                  juiceSystem.emitAbilityJuice?.('lifesteal', {
+                    position: hit.position,
+                    intensity: Math.min(healAmount / 5, 1.0)
+                  });
+                }
               }
 
               // Track kills for processing
@@ -1231,6 +1976,25 @@ export function useGameLoop(
           });
         }
 
+        // =======================================================================
+        // LIFESTEAL: Apply accumulated healing from all hits this frame
+        // =======================================================================
+        if (lifestealHealingRef.current > 0) {
+          const maxHealth = newState.player.maxHealth;
+          const newPlayerHealth = Math.min(
+            newState.player.health + lifestealHealingRef.current,
+            maxHealth
+          );
+          newState = {
+            ...newState,
+            player: {
+              ...newState.player,
+              health: newPlayerHealth,
+            },
+          };
+          lifestealHealingRef.current = 0;  // Reset for next frame
+        }
+
         // Remove dead enemies and process kills
         const survivingEnemies = meleeModifiedEnemies.filter(e => e.health > 0);
 
@@ -1238,13 +2002,8 @@ export function useGameLoop(
         for (const kill of meleeKills) {
           const xpValue = kill.enemy.xpValue ?? 10;
 
-          // DD-12: Vampiric - heal on kill (now uses ability lifesteal)
-          const lifestealPercent = abilitiesRef.current?.computed.lifestealPercent ?? 0;
+          // NOTE: Vampiric healing on kill removed - lifesteal now heals on HIT above
           let newHealth = newState.player.health;
-          if (lifestealPercent > 0) {
-            const healAmount = Math.floor(newState.player.maxHealth * (lifestealPercent / 100));
-            newHealth = Math.min(newState.player.maxHealth, newState.player.health + healAmount);
-          }
 
           newState = {
             ...newState,
@@ -1260,6 +2019,37 @@ export function useGameLoop(
           // Trigger juice (DD-5: Fun Floor - kill = particles + sound + XP)
           juiceSystem.emitKill(kill.position, kill.enemy.type);
 
+          // =======================================================================
+          // MOMENTUM: Build kill streak for damage bonus (Run 044)
+          // +15% damage per consecutive kill, max 75% (5 stacks)
+          // Streak resets after 3 seconds without a kill
+          // =======================================================================
+          const momentumComputed = computeAbilityEffects(abilitiesRef.current);
+          if (momentumComputed.killStreakDamage > 0) {
+            const MOMENTUM_TIMEOUT = 3000;  // 3 seconds to maintain streak
+            const MAX_MOMENTUM_STACKS = 5;
+
+            // Check if streak should reset (too long since last kill)
+            const timeSinceLastKill = newState.gameTime - lastKillTimeRef.current;
+            if (timeSinceLastKill > MOMENTUM_TIMEOUT) {
+              killStreakRef.current = 0;
+            }
+
+            // Increment streak (capped)
+            if (killStreakRef.current < MAX_MOMENTUM_STACKS) {
+              killStreakRef.current++;
+
+              // Emit momentum juice - orange aura buildup
+              juiceSystem.emitAbilityJuice?.('momentum', {
+                position: newState.player.position,
+                intensity: killStreakRef.current / MAX_MOMENTUM_STACKS
+              });
+            }
+
+            // Update last kill time
+            lastKillTimeRef.current = newState.gameTime;
+          }
+
           // Trigger kill sound callback (DD-5)
           const recentKills = juiceSystem.killTracker.recentKills;
           const killTier: import("../types").KillTier = recentKills >= 10 ? "massacre" : recentKills >= 3 ? "multi" : "single";
@@ -1274,12 +2064,140 @@ export function useGameLoop(
               newState.gameTime
             );
           }
+
+          // =======================================================================
+          // ON-KILL ABILITY PROCESSING (Run 044)
+          // territorial_mark, death_marker, clean_kill, pack_signal,
+          // feeding_efficiency, updraft, corpse_heat, trophy_scent
+          // =======================================================================
+          const onKillResult = processOnKill(
+            abilitiesRef.current,
+            kill.position,
+            kill.healthPercentBeforeKill >= 100 ? kill.enemy.maxHealth : kill.enemy.maxHealth - kill.enemy.health + 1,
+            kill.enemy.maxHealth,
+            kill.enemy.type,
+            // Convert surviving enemies to OnKillEnemyInfo format
+            survivingEnemies.map(e => ({ id: e.id, x: e.position.x, y: e.position.y })),
+            newState.gameTime
+          );
+
+          // Update abilities state with runtime changes (trophy_scent, feeding_efficiency, updraft, corpse_heat)
+          abilitiesRef.current = onKillResult.updatedAbilities;
+
+          // Add new territorial marks
+          if (onKillResult.newTerritorialMarks.length > 0) {
+            territorialMarksRef.current = [
+              ...territorialMarksRef.current,
+              ...onKillResult.newTerritorialMarks,
+            ];
+          }
+
+          // Add new death markers
+          if (onKillResult.newDeathMarkers.length > 0) {
+            deathMarkersRef.current = [
+              ...deathMarkersRef.current,
+              ...onKillResult.newDeathMarkers,
+            ];
+          }
+
+          // Process clean kill explosions
+          for (const explosion of onKillResult.explosions) {
+            // Find enemies in explosion radius and damage them
+            survivingEnemies.forEach(enemy => {
+              const dx = enemy.position.x - explosion.x;
+              const dy = enemy.position.y - explosion.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist <= explosion.radius) {
+                enemy.health -= explosion.damage;
+                // Emit visual effect for explosion
+                juiceSystem.emitDamage(enemy.position, explosion.damage);
+              }
+            });
+            // Emit ability-specific VFX for clean_kill
+            juiceSystem.emitAbilityJuice?.('clean_kill', {
+              position: { x: explosion.x, y: explosion.y },
+              intensity: 1.0
+            });
+          }
+
+          // Emit VFX for on-kill abilities
+          if (onKillResult.newTerritorialMarks.length > 0) {
+            juiceSystem.emitAbilityJuice?.('territorial_mark', {
+              position: kill.position,
+              intensity: 1.0
+            });
+          }
+          if (onKillResult.newDeathMarkers.length > 0) {
+            juiceSystem.emitAbilityJuice?.('death_marker', {
+              position: kill.position,
+              intensity: 1.0
+            });
+          }
+          if (onKillResult.hesitateEnemyIds.length > 0) {
+            juiceSystem.emitAbilityJuice?.('pack_signal', {
+              position: kill.position,
+              intensity: 1.0
+            });
+          }
+          if (onKillResult.speedBoostPercent > 0) {
+            juiceSystem.emitAbilityJuice?.('updraft', {
+              position: newState.player.position,
+              intensity: 1.0
+            });
+          }
+
+          // Apply pack signal hesitation to nearby enemies
+          for (const enemyId of onKillResult.hesitateEnemyIds) {
+            // Store hesitation end time (0.1s = 100ms)
+            enemyHesitationRef.current.set(enemyId, newState.gameTime + 100);
+          }
+
+          // =======================================================================
+          // CHAIN LIGHTNING: On kill, damage nearest enemy within 100px
+          // =======================================================================
+          const chainComputed = computeAbilityEffects(abilitiesRef.current);
+          if (chainComputed.hasChainKill && survivingEnemies.length > 0) {
+            // Find nearest enemy within chain range (100px)
+            const CHAIN_RANGE = 100;
+            const CHAIN_DAMAGE_PERCENT = 0.5;  // 50% of player damage
+
+            let nearestEnemy: typeof survivingEnemies[0] | null = null;
+            let nearestDist = CHAIN_RANGE;
+
+            for (const enemy of survivingEnemies) {
+              const dx = enemy.position.x - kill.position.x;
+              const dy = enemy.position.y - kill.position.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < nearestDist) {
+                nearestDist = dist;
+                nearestEnemy = enemy;
+              }
+            }
+
+            if (nearestEnemy) {
+              // Deal chain damage
+              const chainDamage = Math.floor(newState.player.damage * CHAIN_DAMAGE_PERCENT);
+              nearestEnemy.health -= chainDamage;
+
+              // Emit chain lightning juice - blue lightning arc
+              juiceSystem.emitAbilityJuice?.('chain_lightning', {
+                position: nearestEnemy.position,
+                intensity: 1.0
+              });
+
+              // Also emit damage numbers
+              juiceSystem.emitDamage(nearestEnemy.position, chainDamage);
+            }
+          }
         }
+
+        // Filter out enemies killed by clean_kill explosions
+        const postExplosionSurvivors = survivingEnemies.filter(e => e.health > 0);
 
         // Update enemies with survivors only
         newState = {
           ...newState,
-          enemies: survivingEnemies,
+          enemies: postExplosionSurvivors,
         };
 
         // Update melee state
@@ -1291,7 +2209,8 @@ export function useGameLoop(
         // 1. Instantly refresh attack cooldown
         // 2. Dash to nearest enemy below 30% HP (within ~50px)
         // =======================================================================
-        const hasExecutionChain = abilitiesRef.current?.computed.hasExecutionChain ?? false;
+        // Note: hasExecutionChain removed in new ability system - feature disabled
+        const hasExecutionChain = false;
         if (hasExecutionChain && meleeKills.length > 0) {
           // Check if any kill was on an enemy below 20% HP
           const executionKill = meleeKills.find(kill => kill.healthPercentBeforeKill < 20);
@@ -1397,10 +2316,259 @@ export function useGameLoop(
       perfMonitor.endSystem('melee');
 
       // =======================================================================
+      // PHASE 3.65: Passive Aura Processing (Run 043)
+      // hover_pressure, buzz_field, barbed_chitin, threat_aura
+      // =======================================================================
+      // "You exist near them and they dissolve."
+
+      // Update stationary time tracking for buzz_field
+      const playerSpeed = Math.sqrt(playerVelocity.x * playerVelocity.x + playerVelocity.y * playerVelocity.y);
+      if (playerSpeed < STATIONARY_VELOCITY_THRESHOLD) {
+        stationaryTimeRef.current += deltaTime;
+      } else {
+        stationaryTimeRef.current = 0;
+      }
+
+      // Process passive auras - apply damage to nearby enemies
+      const auraResult: AuraResult = processPassiveAuras(
+        abilitiesRef.current,
+        newState.player.position,
+        playerVelocity,
+        newState.enemies.map(e => ({
+          id: e.id,
+          position: e.position,
+          x: e.position.x,
+          y: e.position.y,
+        })),
+        deltaTime,
+        stationaryTimeRef.current
+      );
+
+      // Apply aura damage to enemies
+      if (auraResult.enemyDamage.size > 0 || auraResult.enemyDebuffs.size > 0) {
+        let auraModifiedEnemies = [...newState.enemies];
+        const auraKills: Array<{
+          enemy: typeof newState.enemies[0];
+          position: { x: number; y: number };
+        }> = [];
+
+        // Track which aura VFX we've emitted this frame (to avoid spam)
+        let emittedAuraVfx = false;
+
+        for (const [enemyId, damage] of auraResult.enemyDamage) {
+          auraModifiedEnemies = auraModifiedEnemies.map(e => {
+            if (e.id === enemyId) {
+              const newHealth = e.health - damage;
+
+              // Record damage dealt
+              recordDamageDealt(axiomGuardianRef.current, damage);
+
+              // Emit aura VFX at enemy position (once per frame to avoid spam)
+              if (!emittedAuraVfx) {
+                juiceSystem.emitAbilityJuice?.('hover_pressure', {
+                  position: e.position,
+                  intensity: 0.3
+                });
+                emittedAuraVfx = true;
+              }
+
+              // Track kills from aura damage
+              if (newHealth <= 0 && e.health > 0) {
+                auraKills.push({
+                  enemy: e,
+                  position: e.position,
+                });
+              }
+
+              return { ...e, health: newHealth };
+            }
+            return e;
+          });
+        }
+
+        // Emit buzz_field VFX if stationary aura is active (player standing still)
+        if (stationaryTimeRef.current >= 500 && auraResult.enemyDamage.size > 0) {
+          juiceSystem.emitAbilityJuice?.('buzz_field', {
+            position: newState.player.position,
+            intensity: Math.min(1, stationaryTimeRef.current / 2000)
+          });
+        }
+
+        // Process aura kills - grant XP, emit juice
+        for (const auraKill of auraKills) {
+          const xpValue = auraKill.enemy.xpValue ?? 10;
+          newState = {
+            ...newState,
+            player: {
+              ...newState.player,
+              xp: newState.player.xp + xpValue,
+            },
+            totalEnemiesKilled: newState.totalEnemiesKilled + 1,
+            score: newState.score + xpValue * 10,
+          };
+
+          // Trigger kill juice
+          juiceSystem.emitKill(auraKill.position, auraKill.enemy.type);
+
+          // Trigger kill callback
+          const recentKills = juiceSystem.killTracker.recentKills;
+          const killTier: import("../types").KillTier = recentKills >= 10 ? "massacre" : recentKills >= 3 ? "multi" : "single";
+          callbacks.onEnemyKilled?.(auraKill.enemy.type, killTier, recentKills, auraKill.position);
+
+          // Colony intelligence: track kill
+          if (colonyIntelligenceRef.current) {
+            colonyIntelligenceRef.current = onEnemyKill(
+              colonyIntelligenceRef.current,
+              auraKill.position,
+              auraKill.enemy.id,
+              newState.gameTime
+            );
+          }
+        }
+
+        // Remove dead enemies from aura damage
+        const survivingAfterAura = auraModifiedEnemies.filter(e => e.health > 0);
+
+        newState = {
+          ...newState,
+          enemies: survivingAfterAura,
+        };
+
+        // Note: threat_aura debuffs are applied in player_hit event handler
+        // using getThreatAuraReduction() - see Run 048 integration
+      }
+
+      // =======================================================================
+      // REGENERATION: Heal HP per second (Run 044)
+      // =======================================================================
+      const regenComputed = computeAbilityEffects(abilitiesRef.current);
+      if (regenComputed.hpPerSecond > 0 && newState.player.health < newState.player.maxHealth) {
+        // Convert HP/second to HP/frame based on deltaTime
+        const hpPerFrame = regenComputed.hpPerSecond * (deltaTime / 1000);
+
+        // Track accumulated regen to avoid floating point issues
+        if (!regenAccumulatorRef.current) {
+          regenAccumulatorRef.current = 0;
+        }
+        regenAccumulatorRef.current += hpPerFrame;
+
+        // Apply whole HP points when accumulated enough
+        if (regenAccumulatorRef.current >= 1) {
+          const healAmount = Math.floor(regenAccumulatorRef.current);
+          regenAccumulatorRef.current -= healAmount;
+
+          const newPlayerHealth = Math.min(
+            newState.player.health + healAmount,
+            newState.player.maxHealth
+          );
+          newState = {
+            ...newState,
+            player: {
+              ...newState.player,
+              health: newPlayerHealth,
+            },
+          };
+
+          // Emit regeneration juice - green healing sparkles (throttled to every ~1 HP)
+          juiceSystem.emitAbilityJuice?.('regeneration', {
+            position: newState.player.position,
+            intensity: 0.3
+          });
+        }
+      }
+
+      // =======================================================================
+      // PHASE 3.66: Threshold & Periodic Abilities (Run 045)
+      // =======================================================================
+      // Process heat_retention, molting_burst, aggro_pulse
+
+      // Clean up expired confusion clouds and bitter taste debuffs
+      abilitiesRef.current = cleanupExpiredEffects(abilitiesRef.current, newState.gameTime);
+
+      // Process threshold abilities (heat_retention, molting_burst)
+      const thresholdResult = processThresholds(
+        abilitiesRef.current,
+        newState.player.health,
+        newState.player.maxHealth,
+        newState.gameTime
+      );
+      abilitiesRef.current = thresholdResult.updatedAbilities;
+
+      // Handle molting burst trigger
+      if (thresholdResult.moltingBurstTriggered) {
+        // Apply damage burst to enemies in radius
+        newState = {
+          ...newState,
+          enemies: newState.enemies.map(enemy => {
+            const dx = enemy.position.x - newState.player.position.x;
+            const dy = enemy.position.y - newState.player.position.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist <= thresholdResult.moltingBurstRadius) {
+              return { ...enemy, health: enemy.health - thresholdResult.moltingBurstDamage };
+            }
+            return enemy;
+          }),
+        };
+
+        // Grant invulnerability (use existing invincibilityEndTime field)
+        newState = {
+          ...newState,
+          player: {
+            ...newState.player,
+            invincible: true,
+            invincibilityEndTime: newState.gameTime + thresholdResult.moltingBurstInvulnMs,
+          },
+        };
+
+        // Remove dead enemies
+        newState = {
+          ...newState,
+          enemies: newState.enemies.filter(e => e.health > 0),
+        };
+
+        juiceSystem.emitDamage(newState.player.position, thresholdResult.moltingBurstDamage);
+        // Emit ability-specific VFX for molting_burst
+        juiceSystem.emitAbilityJuice?.('molting_burst', {
+          position: newState.player.position,
+          intensity: 1.0
+        });
+        juiceSystem.triggerShake(5, 300);
+      }
+
+      // Process periodic abilities (aggro_pulse)
+      const periodicResult = processPeriodicEffects(
+        abilitiesRef.current,
+        newState.player.position,
+        newState.enemies,
+        newState.gameTime
+      );
+      abilitiesRef.current = periodicResult.updatedAbilities;
+
+      // Apply aggro pulse to enemies (force targeting player)
+      if (periodicResult.aggroPulseTriggered && periodicResult.aggroEnemyIds.length > 0) {
+        const aggroExpiry = newState.gameTime + periodicResult.aggroDurationMs;
+        newState = {
+          ...newState,
+          enemies: newState.enemies.map(enemy => {
+            if (periodicResult.aggroEnemyIds.includes(enemy.id)) {
+              return { ...enemy, aggroUntil: aggroExpiry };
+            }
+            return enemy;
+          }),
+        };
+        // Emit ability-specific VFX for aggro_pulse
+        juiceSystem.emitAbilityJuice?.('aggro_pulse', {
+          position: newState.player.position,
+          intensity: periodicResult.aggroEnemyIds.length / 10 // Scale by affected count
+        });
+      }
+
+      // =======================================================================
       // PHASE 3.7: Thermal Momentum (Run 042: Movement-based heat mechanic)
       // =======================================================================
       // "Build heat while moving. Stop to release a damage pulse."
-      if (abilitiesRef.current.computed.hasThermalMomentum) {
+      // Note: hasThermalMomentum removed in new ability system - feature disabled
+      if (false) { // TODO: Re-enable when thermal momentum ability is added to new system
         const thermal = thermalMomentumRef.current;
         const currentPos = newState.player.position;
 
@@ -1410,9 +2578,11 @@ export function useGameLoop(
 
         if (isMoving) {
           // Player is moving - build heat
-          if (thermal.lastPosition) {
-            const dx = currentPos.x - thermal.lastPosition.x;
-            const dy = currentPos.y - thermal.lastPosition.y;
+          const lastPos = thermal.lastPosition;
+          if (lastPos != null) {
+            // Non-null assertion safe: within null check block
+            const dx = currentPos.x - lastPos!.x;
+            const dy = currentPos.y - lastPos!.y;
             const distanceTraveled = Math.sqrt(dx * dx + dy * dy);
 
             // Add heat based on distance
@@ -1504,8 +2674,8 @@ export function useGameLoop(
       // PHASE 3.7: Venom Architect DOT Processing
       // =======================================================================
       // Process venom damage ticks and handle venom-kill explosions
-      // Only runs if player has the venom_architect ability
-      const hasVenomArchitectAbility = abilitiesRef.current?.owned.includes('venom_architect') ?? false;
+      // Only runs if player has the venom_architect ability (now 'trace_venom' in new system)
+      const hasVenomArchitectAbility = abilitiesRef.current?.owned.includes('trace_venom') ?? false;
 
       if (hasVenomArchitectAbility && venomArchitectRef.current.size > 0) {
         let venomModifiedEnemies = [...newState.enemies];
@@ -1527,6 +2697,9 @@ export function useGameLoop(
           if (venomResult.damage > 0) {
             // Apply venom damage
             const newHealth = enemy.health - venomResult.damage;
+
+            // Emit poison tick juice - green floating damage number (Run 044)
+            juiceSystem.emitPoisonTick(enemy.position, venomResult.damage, venomResult.state.stacks);
 
             // Check if this VENOM damage killed the enemy (not direct attack)
             if (newHealth <= 0 && enemy.health > 0) {
@@ -1581,6 +2754,12 @@ export function useGameLoop(
           // Emit venom explosion juice (purple explosion particles)
           juiceSystem.emitKill(venomKill.position, 'royal'); // Use royal particles for venom explosion
 
+          // Emit venom_architect ability juice for green venom burst
+          juiceSystem.emitAbilityJuice?.('venom_architect', {
+            position: venomKill.position,
+            intensity: Math.min(venomKill.venomStacks / 10, 1.0)
+          });
+
           // Add XP and score for venom kill
           const xpValue = venomKill.enemy.xpValue ?? 10;
           newState = {
@@ -1634,6 +2813,9 @@ export function useGameLoop(
       if (spawnResult.waveComplete) {
         juiceSystem.emitWaveComplete(newState.wave);
         callbacks.onWaveComplete(newState.wave);
+
+        // Reset ability runtime state for new wave (e.g., ablativeShellTriggered)
+        abilitiesRef.current = resetRuntimeForWave(abilitiesRef.current);
 
         emitWitnessMark(witnessContextRef.current, {
           type: 'wave_completed',
@@ -1897,18 +3079,82 @@ export function useGameLoop(
 
       // Run 036: Apply BALL knockback to player (lunge attacks + boundary + outside bee punches)
       // Run 038: Knockback is now ANIMATED - player loses control and slides to destination
+      // RUN 042: Soft clamp - lunge knockback keeps player inside the ball (bounce effect)
       // Multiple knockback sources (e.g., punch + boundary) combine into one slide to final position
       if (ballResult.knockback && !newState.player.knockback) {
         const kb = ballResult.knockback;
+        const isLungeHit = ballResult.knockbackSources.some(s => s.type === 'lunge');
 
         // Calculate knockback destination
-        const newPlayerX = newState.player.position.x + kb.direction.x * kb.force;
-        const newPlayerY = newState.player.position.y + kb.direction.y * kb.force;
+        let newPlayerX = newState.player.position.x + kb.direction.x * kb.force;
+        let newPlayerY = newState.player.position.y + kb.direction.y * kb.force;
+
+        // RUN 042: Soft clamp for lunge hits - keep player bouncing inside the ball
+        // This prevents "clipping" escapes where knockback pushes player out
+        if (isLungeHit && ballResult.state.phase !== 'inactive') {
+          const ballCenter = ballResult.state.center;
+          const ballRadius = ballResult.state.currentRadius;
+          const safeMargin = 20; // Keep player this far inside the ball edge
+
+          // Calculate distance from ball center to knockback destination
+          const dxFromCenter = newPlayerX - ballCenter.x;
+          const dyFromCenter = newPlayerY - ballCenter.y;
+          const distFromCenter = Math.sqrt(dxFromCenter * dxFromCenter + dyFromCenter * dyFromCenter);
+
+          // If destination would be outside ball (or too close to edge), bounce back
+          const maxSafeRadius = ballRadius - safeMargin;
+          if (distFromCenter > maxSafeRadius) {
+            // Reflect/clamp: push toward ball center instead
+            // Calculate direction from center to destination
+            const normX = dxFromCenter / distFromCenter;
+            const normY = dyFromCenter / distFromCenter;
+
+            // Bounce: reflect off the boundary back into the ball
+            // New position is inside ball, offset from center toward original direction
+            const bounceRadius = maxSafeRadius * 0.7; // Bounce to 70% of safe radius
+            newPlayerX = ballCenter.x + normX * bounceRadius;
+            newPlayerY = ballCenter.y + normY * bounceRadius;
+
+            console.log('[BALL] Soft clamp! Player bounced inside ball instead of escaping');
+          }
+
+          // RUN 042: Stun player for 200ms after lunge hit (lose control)
+          const LUNGE_STUN_DURATION = 200;
+          newState = {
+            ...newState,
+            player: {
+              ...newState.player,
+              stunBounce: {
+                active: true,
+                velocity: { x: 0, y: 0 },
+                endTime: newState.gameTime + LUNGE_STUN_DURATION,
+                bounceCount: 0,
+                maxBounces: 0,
+                ballCenter: ballCenter,
+                ballRadius: ballRadius,
+              },
+            },
+          };
+
+          // RUN 042: Reset apex strike charge on lunge hit
+          // Getting hit by a bee lunge interrupts your dash charge
+          if (apexStrikeRef.current.chargeLevel > 0 || apexStrikeRef.current.phase === 'lock') {
+            console.log('[BALL] Lunge hit! Resetting apex charge from', apexStrikeRef.current.chargeLevel.toFixed(2));
+            apexStrikeRef.current = {
+              ...apexStrikeRef.current,
+              phase: 'ready',
+              chargeLevel: 0,
+              chargeTime: 0,
+              lockDirection: null,
+              lockTimer: 0,
+            };
+          }
+        }
 
         // Clamp to arena bounds
         const playerRadius = newState.player.radius ?? 12;
-        const clampedX = Math.max(playerRadius, Math.min(800 - playerRadius, newPlayerX));
-        const clampedY = Math.max(playerRadius, Math.min(600 - playerRadius, newPlayerY));
+        const clampedX = Math.max(playerRadius, Math.min(ARENA_WIDTH - playerRadius, newPlayerX));
+        const clampedY = Math.max(playerRadius, Math.min(ARENA_HEIGHT - playerRadius, newPlayerY));
 
         // Duration based on distance, but compressed (fast slide, not slow drift)
         // ~100-150ms feels punchy - enough to see the movement but not sluggish
@@ -2121,26 +3367,9 @@ export function useGameLoop(
       };
 
       // =======================================================================
-      // PHASE 6.5: Graze Frenzy Stack Decay
+      // PHASE 6.5: Graze Frenzy Stack Decay (DISABLED)
       // =======================================================================
-      // Stacks decay 1 per second if not actively grazing
-      if (abilitiesRef.current.computed.hasGrazeFrenzy) {
-        const gf = grazeFrenzyRef.current;
-        if (gf.stacks > 0) {
-          const timeSinceLastGraze = newState.gameTime - gf.lastGrazeTime;
-          // Decay 1 stack per second (1000ms)
-          const expectedStacks = gf.stacks - Math.floor(timeSinceLastGraze / 1000);
-          const newStacks = Math.max(0, expectedStacks);
-
-          if (newStacks < gf.stacks) {
-            console.log('[GRAZE FRENZY] Stack decay:', gf.stacks, '->', newStacks);
-            gf.stacks = newStacks;
-            if (newStacks === 0) {
-              gf.grazedEnemyIds.clear();
-            }
-          }
-        }
-      }
+      // GRAZE FRENZY: System preserved but surface disabled - no stack tracking needed
 
       // =======================================================================
       // PHASE 7: Process Juice System
@@ -2418,6 +3647,54 @@ export function useGameLoop(
     return apexStrikeRef.current;
   }, []);
 
+  /**
+   * Get all ball states (for multi-ball rendering)
+   */
+  const getAllBalls = useCallback((): BallState[] => {
+    // Return array of all ball states from ball manager
+    return ballManagerRef.current.balls || [ballStateRef.current];
+  }, []);
+
+  /**
+   * Get attack cooldown percent (for UI visualization)
+   */
+  const getAttackCooldownPercent = useCallback((): number => {
+    const melee = meleeStateRef.current;
+    if (!melee.recoveryEndTime || melee.recoveryEndTime === 0) return 1;
+    const now = Date.now();
+    const cooldownStart = melee.recoveryEndTime - effectiveCooldownRef.current;
+    if (now >= melee.recoveryEndTime) return 1;
+    return (now - cooldownStart) / effectiveCooldownRef.current;
+  }, []);
+
+  /**
+   * Get current kill streak count
+   */
+  const getKillStreak = useCallback((): number => {
+    return killStreakRef.current;
+  }, []);
+
+  /**
+   * Check if next attack will be a double strike
+   */
+  const isDoubleStrikeReady = useCallback((): boolean => {
+    return nextAttackDoubleStrikeRef.current;
+  }, []);
+
+  /**
+   * Get current territorial marks (kill zones that grant damage bonus)
+   */
+  const getTerritorialMarks = useCallback((): TerritorialMark[] => {
+    return territorialMarksRef.current;
+  }, []);
+
+  /**
+   * Get current death markers (corpse locations for abilities)
+   */
+  const getDeathMarkers = useCallback((): DeathMarker[] => {
+    return deathMarkersRef.current;
+  }, []);
+
   return {
     start,
     stop,
@@ -2428,11 +3705,17 @@ export function useGameLoop(
     isRunning: isRunningRef.current,
     forceBall,
     getBallState,
+    getAllBalls,
     selectAbility,
     getAbilities,
     getComboState,
     getMeleeState,
     getApexState,
+    getAttackCooldownPercent,
+    getKillStreak,
+    isDoubleStrikeReady,
+    getTerritorialMarks,
+    getDeathMarkers,
   };
 }
 
@@ -2463,10 +3746,24 @@ function buildWitnessContext(state: GameState): {
 function generateUpgradeChoicesForState(state: GameState): string[] {
   // Use the new abilities system (Run 036: simplified abilities)
   const ownedAbilities = state.player.upgrades as AbilityId[];
-  const mockAbilities = {
+  // Create a minimal ActiveAbilities for choice generation
+  const mockAbilities: ActiveAbilities = {
     owned: ownedAbilities,
     levels: {} as Record<AbilityId, number>,
-    computed: {} as any, // Not needed for choice generation
+    computed: {} as ComputedEffects,
+    runtime: {
+      sawtoothCounter: 0,
+      trophyScentKills: 0,
+      updraftSpeedBonus: 0,
+      updraftExpiry: 0,
+      aggroPulseLastTime: 0,
+      moltingBurstUsed: false,
+      ablativeShellUsed: false,
+      confusionClouds: [],
+      deathMarkers: [],
+      bitterTasteDebuffs: new Map(),
+      heatRetentionActive: false,
+    },
   };
   // generateAbilityChoices returns AbilityId[] directly
   return generateAbilityChoices(mockAbilities, 3);

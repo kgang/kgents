@@ -2,22 +2,38 @@
  * THE BALL Formation System - Lunge Attack State Machine
  *
  * RUN 040: Expanded windup with pullback + charge phases
+ * RUN 042: Lunge scaling by enemy tier (hit radius, damage, windup speed)
  *
  * Phases:
- * - PULLBACK (500ms): Bee moves backward at normal speed
- * - CHARGE (350ms): Bee holds position, accelerating/charging visually
+ * - PULLBACK: Bee moves backward at normal speed (duration scales by type)
+ * - CHARGE: Bee holds position, accelerating/charging visually (duration scales by type)
  * - ATTACK (400ms): Bee dashes toward player
  * - RETURN (200ms): Bee returns to formation
  *
- * Total telegraph time: 850ms before attack (highly readable)
+ * Higher tier bees have:
+ * - Larger hit radius (harder to dodge)
+ * - More damage per hit
+ * - SHORTER windup time (less reaction time = more dangerous)
  */
 
 import type { Vector2 } from '../../types';
 import type { BallLungeState, LungePhase, BallEvent, LungeUpdateResult } from './types';
-import { BALL_LUNGE_CONFIG } from './config';
+import { BALL_LUNGE_CONFIG, getScaledLungeParams, getLungeScaling } from './config';
+
+/**
+ * Enemy reference with type information for lunge scaling
+ */
+interface EnemyRef {
+  id: string;
+  position: Vector2;
+  type?: string;
+}
 
 /**
  * Update lunge attack state machine
+ *
+ * RUN 042: Now accepts enemy type information for scaled lunge parameters.
+ * Higher tier enemies have larger hit radius, more damage, and FASTER windup.
  */
 export function updateLungeAttack(
   lunge: BallLungeState,
@@ -25,12 +41,38 @@ export function updateLungeAttack(
   playerPos: Vector2,    // Used for event positions and new lunge target calculation
   formationBeeIds: string[],
   formationPositions: Map<string, Vector2>,
-  gameTime: number
+  gameTime: number,
+  enemies?: EnemyRef[]   // RUN 042: Optional enemy list for type lookup
 ): LungeUpdateResult {
   const events: BallEvent[] = [];
   let knockback: LungeUpdateResult['knockback'] = null;
   let damageDealt = 0;
   const newLunge = { ...lunge };
+
+  // RUN 042: Helper to get enemy type from ID
+  const getEnemyType = (beeId: string): string => {
+    if (!enemies) return 'worker';
+    const enemy = enemies.find(e => e.id === beeId);
+    return enemy?.type ?? 'worker';
+  };
+
+  // RUN 042: Get scaled durations for current lunge
+  // These are computed at lunge start and stored on the lunge state
+  const getScaledPullbackDuration = (): number => {
+    if (newLunge.beeType) {
+      const scaling = getLungeScaling(newLunge.beeType);
+      return Math.round(BALL_LUNGE_CONFIG.pullbackDuration / scaling.windupSpeedMultiplier);
+    }
+    return BALL_LUNGE_CONFIG.pullbackDuration;
+  };
+
+  const getScaledChargeDuration = (): number => {
+    if (newLunge.beeType) {
+      const scaling = getLungeScaling(newLunge.beeType);
+      return Math.round(BALL_LUNGE_CONFIG.chargeDuration / scaling.windupSpeedMultiplier);
+    }
+    return BALL_LUNGE_CONFIG.chargeDuration;
+  };
 
   // Process current lunge phase
   if (newLunge.phase !== 'idle' && newLunge.beeId) {
@@ -39,7 +81,9 @@ export function updateLungeAttack(
     switch (newLunge.phase) {
       case 'pullback': {
         // PULLBACK PHASE: Bee moves backward at normal speed
-        if (elapsed >= BALL_LUNGE_CONFIG.pullbackDuration) {
+        // RUN 042: Duration scales with bee type (faster for elite bees)
+        const pullbackDuration = getScaledPullbackDuration();
+        if (elapsed >= pullbackDuration) {
           // Transition to CHARGE phase
           newLunge.phase = 'charge';
           newLunge.phaseStartTime = gameTime;
@@ -56,7 +100,9 @@ export function updateLungeAttack(
 
       case 'charge': {
         // CHARGE PHASE: Bee holds position, building energy
-        if (elapsed >= BALL_LUNGE_CONFIG.chargeDuration) {
+        // RUN 042: Duration scales with bee type (faster for elite bees)
+        const chargeDuration = getScaledChargeDuration();
+        if (elapsed >= chargeDuration) {
           // Transition to LUNGE phase
           newLunge.phase = 'lunge';
           newLunge.phaseStartTime = gameTime;
@@ -80,7 +126,12 @@ export function updateLungeAttack(
           const hitDy = playerPos.y - newLunge.targetPos.y;
           const hitDist = Math.sqrt(hitDx * hitDx + hitDy * hitDy);
 
-          const didHit = hitDist <= BALL_LUNGE_CONFIG.hitRadius;
+          // RUN 042: Use scaled hit radius (larger for elite bees)
+          const effectiveHitRadius = newLunge.scaledHitRadius > 0
+            ? newLunge.scaledHitRadius
+            : BALL_LUNGE_CONFIG.hitRadius;
+
+          const didHit = hitDist <= effectiveHitRadius;
 
           if (didHit) {
             // HIT CONFIRMED - Apply knockback in the bee's travel direction
@@ -102,7 +153,12 @@ export function updateLungeAttack(
                 force: BALL_LUNGE_CONFIG.knockbackForce,
               };
 
-              damageDealt = BALL_LUNGE_CONFIG.damage;
+              // RUN 042: Use scaled damage (higher for elite bees)
+              const effectiveDamage = newLunge.scaledDamage > 0
+                ? newLunge.scaledDamage
+                : BALL_LUNGE_CONFIG.damage;
+
+              damageDealt = effectiveDamage;
 
               events.push({
                 type: 'lunge_hit',
@@ -112,7 +168,7 @@ export function updateLungeAttack(
                   knockbackDirection: knockbackDir,
                   knockbackForce: BALL_LUNGE_CONFIG.knockbackForce,
                   lungingBeeId: newLunge.beeId,
-                  damage: BALL_LUNGE_CONFIG.damage,
+                  damage: effectiveDamage,
                 },
               });
             }
@@ -139,6 +195,11 @@ export function updateLungeAttack(
           // Return complete - back to idle
           newLunge.phase = 'idle';
           newLunge.beeId = null;
+          newLunge.beeType = null;
+          // Reset scaled values
+          newLunge.scaledHitRadius = 0;
+          newLunge.scaledDamage = 0;
+          newLunge.scaledWindupDuration = 0;
         }
         break;
       }
@@ -156,6 +217,10 @@ export function updateLungeAttack(
       // Find the bee's current position (from formation positions)
       const beeFormationPos = formationPositions.get(lungingBeeId);
       if (beeFormationPos) {
+        // RUN 042: Get enemy type and compute scaled parameters
+        const beeType = getEnemyType(lungingBeeId);
+        const scaledParams = getScaledLungeParams(beeType);
+
         // Calculate lunge direction (toward player)
         const toPlayerDx = playerPos.x - beeFormationPos.x;
         const toPlayerDy = playerPos.y - beeFormationPos.y;
@@ -170,17 +235,24 @@ export function updateLungeAttack(
           const pullbackX = beeFormationPos.x - dirX * BALL_LUNGE_CONFIG.pullbackDistance;
           const pullbackY = beeFormationPos.y - dirY * BALL_LUNGE_CONFIG.pullbackDistance;
 
-          // Calculate lunge target (past player)
-          const lungeTargetX = playerPos.x + dirX * BALL_LUNGE_CONFIG.overshoot;
-          const lungeTargetY = playerPos.y + dirY * BALL_LUNGE_CONFIG.overshoot;
+          // RUN 039: Calculate lunge target as 120% of distance (20% overshoot)
+          const totalDistance = toPlayerDist * (1 + BALL_LUNGE_CONFIG.overshootPercent);
+          const lungeTargetX = beeFormationPos.x + dirX * totalDistance;
+          const lungeTargetY = beeFormationPos.y + dirY * totalDistance;
 
           // Start in PULLBACK phase
           newLunge.phase = 'pullback';
           newLunge.beeId = lungingBeeId;
+          newLunge.beeType = beeType;  // RUN 042: Store bee type for scaling
           newLunge.phaseStartTime = gameTime;
           newLunge.startPos = { ...beeFormationPos };
           newLunge.pullbackPos = { x: pullbackX, y: pullbackY };
           newLunge.targetPos = { x: lungeTargetX, y: lungeTargetY };
+
+          // RUN 042: Store scaled parameters
+          newLunge.scaledHitRadius = scaledParams.hitRadius;
+          newLunge.scaledDamage = scaledParams.damage;
+          newLunge.scaledWindupDuration = scaledParams.windupDuration;
 
           // Emit both pullback event and legacy windup event for compatibility
           events.push({
@@ -211,15 +283,22 @@ export function updateLungeAttack(
 
 /**
  * Create initial lunge state
+ *
+ * RUN 042: Added beeType and scaled parameter fields
  */
 export function createInitialLungeState(gameTime: number): BallLungeState {
   return {
     phase: 'idle',
     beeId: null,
+    beeType: null,              // RUN 042: Enemy type for lunge scaling
     phaseStartTime: 0,
     startPos: { x: 0, y: 0 },
     pullbackPos: { x: 0, y: 0 },
     targetPos: { x: 0, y: 0 },
+    // RUN 042: Scaled parameters (set to 0 when idle)
+    scaledHitRadius: 0,
+    scaledDamage: 0,
+    scaledWindupDuration: 0,
     lastLungeTime: gameTime,
     nextLungeInterval: BALL_LUNGE_CONFIG.intervalMax,
   };
@@ -227,6 +306,8 @@ export function createInitialLungeState(gameTime: number): BallLungeState {
 
 /**
  * Get lunge progress (0-1) for animations
+ *
+ * RUN 042: Uses scaled windup duration when bee type is set
  */
 export function getLungeProgress(
   lunge: BallLungeState,
@@ -239,12 +320,29 @@ export function getLungeProgress(
   const elapsed = gameTime - lunge.phaseStartTime;
   let duration: number;
 
+  // RUN 042: Calculate scaled durations based on bee type
+  const getScaledPullbackDuration = (): number => {
+    if (lunge.beeType) {
+      const scaling = getLungeScaling(lunge.beeType);
+      return Math.round(BALL_LUNGE_CONFIG.pullbackDuration / scaling.windupSpeedMultiplier);
+    }
+    return BALL_LUNGE_CONFIG.pullbackDuration;
+  };
+
+  const getScaledChargeDuration = (): number => {
+    if (lunge.beeType) {
+      const scaling = getLungeScaling(lunge.beeType);
+      return Math.round(BALL_LUNGE_CONFIG.chargeDuration / scaling.windupSpeedMultiplier);
+    }
+    return BALL_LUNGE_CONFIG.chargeDuration;
+  };
+
   switch (lunge.phase) {
     case 'pullback':
-      duration = BALL_LUNGE_CONFIG.pullbackDuration;
+      duration = getScaledPullbackDuration();
       break;
     case 'charge':
-      duration = BALL_LUNGE_CONFIG.chargeDuration;
+      duration = getScaledChargeDuration();
       break;
     case 'lunge':
       duration = BALL_LUNGE_CONFIG.attackDuration;

@@ -64,7 +64,7 @@ export const COLOSSAL_CONFIG = {
   SHAMBLER_HEALTH: 20,
   SHAMBLER_RADIUS: 12,
   SHAMBLER_DAMAGE: 10,
-  SHAMBLER_XP: 10,
+  SHAMBLER_XP: 15,  // +50% XP boost
 } as const;
 
 // =============================================================================

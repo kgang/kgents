@@ -12,13 +12,43 @@ import type { BallCoreState, BallPhase, BallEvent } from './types';
 import { BALL_PHASE_CONFIG } from './config';
 
 /**
+ * Calculate dynamic formation cooldown based on wave
+ *
+ * RUN 039: Cooldown decreases as waves progress
+ * - Waves 1-2: 10s (forgiving early game, THE BALL is new)
+ * - Wave 3-6: Linear decrease from 10s to 0s
+ * - Wave 7+: 0s (relentless late game)
+ */
+export function getFormationCooldown(wave: number): number {
+  const { formationCooldownMax, formationCooldownMin, formationCooldownWaveStart, formationCooldownWaveEnd } = BALL_PHASE_CONFIG;
+
+  // Before wave start: max cooldown
+  if (wave < formationCooldownWaveStart) {
+    return formationCooldownMax;
+  }
+
+  // After wave end: min cooldown
+  if (wave >= formationCooldownWaveEnd) {
+    return formationCooldownMin;
+  }
+
+  // Linear interpolation between waves
+  const progress = (wave - formationCooldownWaveStart) / (formationCooldownWaveEnd - formationCooldownWaveStart);
+  return formationCooldownMax - (formationCooldownMax - formationCooldownMin) * progress;
+}
+
+/**
  * Check if THE BALL should start forming
  *
  * Conditions:
  * - Ball not already active (for this slot)
  * - Enough eligible bees (not on cooldown)
  * - Past minimum wave
- * - Formation cooldown elapsed (2s since last ball ended)
+ * - Formation cooldown elapsed (dynamic based on wave)
+ *
+ * Secondary Ball (tier 2) additional conditions:
+ * - Only from wave 7+ (secondBallMinWave)
+ * - Has lower probability per check (secondBallProbability)
  */
 export function shouldStartBall(
   eligibleEnemyCount: number,
@@ -34,8 +64,12 @@ export function shouldStartBall(
   // Can happen from configured wave+
   if (wave < BALL_PHASE_CONFIG.minWaveForBall) return false;
 
-  // Check formation cooldown (2s between balls)
-  if (gameTime - lastBallEndTime < BALL_PHASE_CONFIG.formationCooldown) return false;
+  // Second ball has additional wave requirement (wave 7+)
+  if (isSecondBall && wave < BALL_PHASE_CONFIG.secondBallMinWave) return false;
+
+  // RUN 039: Dynamic formation cooldown based on wave
+  const cooldown = getFormationCooldown(wave);
+  if (gameTime - lastBallEndTime < cooldown) return false;
 
   // Need enough eligible bees (not on cooldown)
   const minBees = isSecondBall
@@ -54,6 +88,8 @@ export function shouldStartBall(
 
 /**
  * Update phase state machine
+ *
+ * RUN 042: Added speedMultiplier for promoted balls (faster constriction)
  */
 export function updatePhase(
   core: BallCoreState,
@@ -61,7 +97,8 @@ export function updatePhase(
   playerPos: Vector2,
   ballCenter: Vector2,
   ballRadius: number,
-  isInGap: boolean
+  isInGap: boolean,
+  speedMultiplier: number = 1.0  // RUN 042: For promoted balls (1.8x faster)
 ): {
   state: BallCoreState;
   events: BallEvent[];
@@ -69,7 +106,8 @@ export function updatePhase(
   const events: BallEvent[] = [];
   const newCore = { ...core };
 
-  const phaseElapsed = gameTime - core.phaseStartTime;
+  // RUN 042: Apply speed multiplier to elapsed time (faster phases for promoted balls)
+  const phaseElapsed = (gameTime - core.phaseStartTime) * speedMultiplier;
 
   switch (core.phase) {
     case 'inactive':

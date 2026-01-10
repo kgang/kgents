@@ -5,6 +5,7 @@ import path from 'path';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: './',  // Relative paths for itch.io
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

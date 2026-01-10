@@ -173,6 +173,16 @@ export interface Player {
     startTime: number;       // When knockback started (gameTime)
     duration: number;        // How long the slide takes (ms)
   } | null;
+  // RUN 039: Stun bounce state (pinball punishment for near-miss)
+  stunBounce?: {
+    active: boolean;
+    velocity: Vector2;       // Current bounce velocity
+    endTime: number;         // When stun ends (gameTime)
+    bounceCount: number;     // How many times they've bounced
+    maxBounces: number;      // Target bounces (2-3)
+    ballCenter: Vector2;     // Center of the ball (for reflection calculation)
+    ballRadius: number;      // Radius of the ball
+  } | null;
   // Legacy compatibility fields
   id?: string;
   synergies?: string[];
@@ -204,6 +214,82 @@ export interface Enemy {
   // Colossal linking (metamorphosis system)
   isLinked?: boolean;
   seekTarget?: string;
+
+  // ==========================================================================
+  // Status Effect Visual Fields (Run 040: Status Effect Tints)
+  // Used by GameCanvas for color overlay rendering
+  // ==========================================================================
+
+  /** Poison stacks (1-3+): Green tint intensity scales with stacks */
+  poisonStacks?: number;
+
+  /** Burn stacks: Orange/fire tint */
+  burnStacks?: number;
+
+  /** Slow/frozen stacks: Blue/ice tint */
+  slowStacks?: number;
+
+  /** Venom Architect stacks: Purple tint (infinite stacking ability) */
+  venomArchitectStacks?: number;
+
+  // ==========================================================================
+  // Shield System (Royal Guards)
+  // ==========================================================================
+
+  /** Shield count - enemies with shields require multiple hits to kill.
+   * When shield > 0, damage removes a shield instead of killing the enemy.
+   * Visual: Glowing cyan ring around shielded enemies.
+   */
+  shield?: number;
+
+  // ==========================================================================
+  // Catch-Up / Self-Healing System Fields (Run 038)
+  // Prevents enemies from getting stuck far from the action
+  // ==========================================================================
+
+  /** Time spent far from player (ms) - triggers catch-up boost when high */
+  farAwayTime?: number;
+
+  /** Whether enemy is currently in catch-up mode (moving faster) */
+  inCatchUpMode?: boolean;
+
+  // ==========================================================================
+  // Bumper-Rail System (Run 039: Pinball-Surf Enhancement)
+  // Bees transform into environmental elements during apex strike
+  // ==========================================================================
+
+  /**
+   * Bumper state for combo chaining (DD-039)
+   * - 'neutral': Can be bumpered (gold pulse telegraph)
+   * - 'bumpered': Just hit, 100ms grace period
+   * - 'charged': DANGER - hitting deals damage to player (red glow, 2s)
+   * - 'recovering': Cooling down, can't be bumpered (500ms)
+   * - 'locked': In formation, bumper disabled
+   */
+  bumperState?: 'neutral' | 'bumpered' | 'charged' | 'recovering' | 'locked';
+
+  /** Timer for bumper state transitions (ms remaining in current state) */
+  bumperStateTimer?: number;
+
+  /** Time when bumper state last changed (gameTime) */
+  bumperStateChangeTime?: number;
+
+  /** Whether this bee was hit during current apex strike chain */
+  hitDuringCurrentChain?: boolean;
+
+  // ==========================================================================
+  // Movement Trail Effects (Run 043: thermal_wake, rally_scent, draft)
+  // ==========================================================================
+
+  /** Current slow percent from player movement trail (thermal_wake + rally_scent) */
+  trailSlowPercent?: number;
+
+  // ==========================================================================
+  // Aggro System (Run 045: aggro_pulse ability)
+  // ==========================================================================
+
+  /** Time until which this enemy is forced to target the player (gameTime ms) */
+  aggroUntil?: number;
 }
 
 export interface Particle {

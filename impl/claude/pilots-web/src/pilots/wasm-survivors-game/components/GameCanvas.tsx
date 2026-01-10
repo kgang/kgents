@@ -31,14 +31,23 @@ import {
   getEntityPhaseOffset,
   getIntensityColors,
   BREATHING_CONFIGS,
+  renderAfterimages,
 } from '../systems/juice';
 import type { ActiveUpgrades } from '../systems/upgrades';
 import { getBeeTelegraph, BEE_BEHAVIORS } from '../systems/enemies';
 import type { BallState } from '../systems/formation';
+import { renderOutsidePunchIndicators } from '../systems/formation';
 import type { MeleeAttackState } from '../systems/melee';
-import { getArcRenderPoints, getAttackProgress, MANDIBLE_REAVER_CONFIG } from '../systems/melee';
-import type { ApexStrikeState } from '../systems/apex-strike';
-import { APEX_CONFIG, isLocking } from '../systems/apex-strike';
+import { getAttackProgress, MANDIBLE_REAVER_CONFIG } from '../systems/melee';
+import type { ApexStrikeState, GhostAfterimage } from '../systems/apex-strike';
+import { APEX_CONFIG, isLocking, hasStumbleMomentum, getStumbleMomentumProgress, getGhostOpacity } from '../systems/apex-strike';
+
+// =============================================================================
+// Font Constants - Rajdhani gaming font
+// =============================================================================
+
+const GAME_FONT = 'Rajdhani, sans-serif';
+const GAME_FONT_BOLD = `700 `; // prepend to size, e.g., `${GAME_FONT_BOLD}18px ${GAME_FONT}`
 
 // =============================================================================
 // DD-17: Combo Crescendo Tiers
@@ -63,37 +72,139 @@ function getCrescendoState(combo: number): CrescendoState {
 // Types
 // =============================================================================
 
+// Ability zone types (for rendering kill zones)
+interface TerritorialMark {
+  id: string;
+  position: { x: number; y: number };
+  radius: number;
+  expiryTime: number;
+}
+
+interface DeathMarker {
+  id: string;
+  position: { x: number; y: number };
+  expiryTime: number;
+}
+
 interface GameCanvasProps {
   gameState: GameState;
   juiceSystem: JuiceSystem;
-  ballState?: BallState;  // Run 036: THE BALL formation state for rendering
+  ballState?: BallState;  // Run 036: THE BALL formation state for rendering (primary ball)
+  allBalls?: BallState[];  // Run 042: ALL balls for multi-ball rendering
   meleeState?: MeleeAttackState;  // Run 036: Player melee attack state
   apexState?: ApexStrikeState;  // Run 036: Apex Strike state for crosshair rendering
   chargePercent?: number;  // 0-1: How charged the current apex strike is
+  attackCooldownPercent?: number;  // 0-1: Attack cooldown progress (1 = ready)
+  killStreak?: number;  // Current momentum kill streak for UI
+  hasFullArc?: boolean;  // Run 040: Sweeping Arc ability - 360 degree attacks
+  isDoubleStrikeReady?: boolean;  // Run 040: Next attack will be a double strike (show red indicator)
+  territorialMarks?: TerritorialMark[];  // Kill zones that grant damage bonus
+  deathMarkers?: DeathMarker[];  // Corpse locations for abilities
 }
 
 // =============================================================================
 // Component
 // =============================================================================
 
-export function GameCanvas({ gameState, juiceSystem, ballState, meleeState, apexState, chargePercent = 0 }: GameCanvasProps) {
+export function GameCanvas({ gameState, juiceSystem, ballState, allBalls, meleeState, apexState, chargePercent = 0, attackCooldownPercent = 1, killStreak = 0, hasFullArc = false, isDoubleStrikeReady = false, territorialMarks = [], deathMarkers = [] }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Main render function
+  // RUN 039 FIX: Store rapidly-changing props in refs to prevent animation loop restarts
+  // When useCallback dependencies change, the render callback is recreated, which triggers
+  // the useEffect to cancel/restart the animation frame - this causes visual blinking.
+  // By using refs, the render callback stays stable and the animation loop runs smoothly.
+  const gameStateRef = useRef(gameState);
+  const ballStateRef = useRef(ballState);
+  const allBallsRef = useRef(allBalls);  // Run 042: Multi-ball rendering
+  const meleeStateRef = useRef(meleeState);
+  const apexStateRef = useRef(apexState);
+  const chargePercentRef = useRef(chargePercent);
+  const attackCooldownPercentRef = useRef(attackCooldownPercent);
+  const killStreakRef = useRef(killStreak);
+  const hasFullArcRef = useRef(hasFullArc);
+  const isDoubleStrikeReadyRef = useRef(isDoubleStrikeReady);
+  const territorialMarksRef = useRef(territorialMarks);
+  const deathMarkersRef = useRef(deathMarkers);
+
+  // Update refs when props change (runs every render but doesn't trigger animation restart)
+  gameStateRef.current = gameState;
+  ballStateRef.current = ballState;
+  allBallsRef.current = allBalls;  // Run 042: Multi-ball rendering
+  meleeStateRef.current = meleeState;
+  apexStateRef.current = apexState;
+  chargePercentRef.current = chargePercent;
+  attackCooldownPercentRef.current = attackCooldownPercent;
+  killStreakRef.current = killStreak;
+  hasFullArcRef.current = hasFullArc;
+  isDoubleStrikeReadyRef.current = isDoubleStrikeReady;
+  territorialMarksRef.current = territorialMarks;
+  deathMarkersRef.current = deathMarkers;
+
+  // Track attack timing for smooth cooldown visualization
+  const lastAttackEndTimeRef = useRef<number>(0);
+  const wasAttackingRef = useRef<boolean>(false);
+
+  // Run 040: Smooth target direction interpolation (prevents jarring snaps between enemies)
+  const smoothTargetDirectionRef = useRef<{ x: number; y: number }>({ x: 1, y: 0 });
+  const DIRECTION_LERP_SPEED = 0.15;  // How fast to interpolate (0-1, higher = faster)
+
+  // Run 038: Smooth XP bar animation
+  const displayedXpRef = useRef<number>(0);
+  const lastXpToNextLevelRef = useRef<number>(gameState.player.xpToNextLevel);
+
+  // Main render function - uses refs for stability, only depends on juiceSystem (stable)
   const render = useCallback(() => {
+    // Read current values from refs
+    const gameState = gameStateRef.current;
+    const ballState = ballStateRef.current;
+    const meleeState = meleeStateRef.current;
+    const apexState = apexStateRef.current;
+    const chargePercent = chargePercentRef.current;
+    // Note: attackCooldownPercent and killStreak refs exist but cooldown is calculated internally
+    // and killStreak rendering is currently disabled (see commented renderKillStreak call)
+    const hasFullArc = hasFullArcRef.current;
+    const isDoubleStrikeReady = isDoubleStrikeReadyRef.current;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Apply screen shake
-    const shakeOffset = juiceSystem.shake.offset;
+    // Run 038: Smooth XP bar animation - lerp toward actual XP
+    // Reset displayed XP if xpToNextLevel changed (level up occurred)
+    if (lastXpToNextLevelRef.current !== gameState.player.xpToNextLevel) {
+      displayedXpRef.current = gameState.player.xp; // Snap to new value on level up
+      lastXpToNextLevelRef.current = gameState.player.xpToNextLevel;
+    } else {
+      // Smoothly lerp toward actual XP (faster when far, slower when close)
+      const targetXp = gameState.player.xp;
+      const diff = targetXp - displayedXpRef.current;
+      const lerpSpeed = 0.15; // 15% per frame for smooth animation
+      displayedXpRef.current += diff * lerpSpeed;
+      // Snap when very close to avoid endless tiny movements
+      if (Math.abs(diff) < 0.5) {
+        displayedXpRef.current = targetXp;
+      }
+    }
 
-    // DD-16: Clutch moment zoom
+    // SELF-HEALING: Reset canvas transform to identity at frame start
+    // This prevents accumulated transform errors from corrupting the display
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // Apply screen shake (with safety clamp to prevent extreme offsets)
+    const rawShakeOffset = juiceSystem.shake.offset;
+    const MAX_SHAKE = 50; // Maximum shake offset in pixels
+    const shakeOffset = {
+      x: Math.max(-MAX_SHAKE, Math.min(MAX_SHAKE, rawShakeOffset.x || 0)),
+      y: Math.max(-MAX_SHAKE, Math.min(MAX_SHAKE, rawShakeOffset.y || 0)),
+    };
+
+    // DD-16: Clutch moment zoom (with safety bounds)
     const clutch = juiceSystem.clutch;
-    const isClutchActive = clutch.active && clutch.zoom > 1;
+    const MAX_ZOOM = 2.0; // Maximum zoom to prevent extreme distortion
+    const safeZoom = Math.max(1, Math.min(MAX_ZOOM, clutch.zoom || 1));
+    const isClutchActive = clutch.active && safeZoom > 1;
 
     // Clear canvas
     ctx.save();
@@ -102,15 +213,20 @@ export function GameCanvas({ gameState, juiceSystem, ballState, meleeState, apex
     if (isClutchActive) {
       const playerX = gameState.player.position.x;
       const playerY = gameState.player.position.y;
-      const zoom = clutch.zoom;
 
-      // Translate to player, scale, translate back
+      // Translate to player, scale, translate back (using safe zoom value)
       ctx.translate(playerX, playerY);
-      ctx.scale(zoom, zoom);
+      ctx.scale(safeZoom, safeZoom);
       ctx.translate(-playerX, -playerY);
     }
 
     ctx.translate(shakeOffset.x, shakeOffset.y);
+
+    // Run 038: Circular screen inversion effect for multi-hit impact
+    // We'll apply this AFTER drawing the game content, as a circle overlay
+    // Note: Screen effect state is updated in processJuice, we just read it here
+    const screenEffect = juiceSystem.screenEffect;
+    const shouldApplyCircleInversion = screenEffect.invert && screenEffect.elapsed < screenEffect.duration;
 
     // DD-29-2: Screen intensity colors based on wave and health
     const healthFraction = gameState.player.health / gameState.player.maxHealth;
@@ -134,6 +250,69 @@ export function GameCanvas({ gameState, juiceSystem, ballState, meleeState, apex
     // Render projectiles (under everything)
     renderProjectiles(ctx, gameState);
 
+    // ==========================================================================
+    // ABILITY ZONES - Territorial marks and death markers (render under enemies)
+    // ==========================================================================
+    const currentMarks = territorialMarksRef.current;
+    const currentDeathMarkers = deathMarkersRef.current;
+
+    // Territorial Marks - dark brown stain with damage bonus indicator
+    for (const mark of currentMarks) {
+      const timeLeft = mark.expiryTime - gameState.gameTime;
+      const alpha = Math.min(0.6, timeLeft / 2000); // Fade as expiring
+
+      // Brown stain (like dried blood/territory marker)
+      const markGradient = ctx.createRadialGradient(
+        mark.position.x, mark.position.y, 0,
+        mark.position.x, mark.position.y, mark.radius
+      );
+      markGradient.addColorStop(0, `rgba(80, 40, 20, ${alpha * 0.8})`);
+      markGradient.addColorStop(0.6, `rgba(60, 30, 15, ${alpha * 0.5})`);
+      markGradient.addColorStop(1, 'rgba(60, 30, 15, 0)');
+      ctx.fillStyle = markGradient;
+      ctx.beginPath();
+      ctx.arc(mark.position.x, mark.position.y, mark.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pulsing edge to show it's a damage zone
+      const pulse = 0.3 + 0.2 * Math.sin(gameState.gameTime / 200);
+      ctx.strokeStyle = `rgba(255, 100, 50, ${alpha * pulse})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(mark.position.x, mark.position.y, mark.radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Death Markers - corpse locations (darker stain, slower pulse)
+    for (const marker of currentDeathMarkers) {
+      const timeLeft = marker.expiryTime - gameState.gameTime;
+      const alpha = Math.min(0.5, timeLeft / 3000);
+      const markerRadius = 15; // Default death marker radius
+
+      // Dark corpse stain
+      const deathGradient = ctx.createRadialGradient(
+        marker.position.x, marker.position.y, 0,
+        marker.position.x, marker.position.y, markerRadius
+      );
+      deathGradient.addColorStop(0, `rgba(40, 20, 10, ${alpha * 0.7})`);
+      deathGradient.addColorStop(0.7, `rgba(30, 15, 5, ${alpha * 0.4})`);
+      deathGradient.addColorStop(1, 'rgba(30, 15, 5, 0)');
+      ctx.fillStyle = deathGradient;
+      ctx.beginPath();
+      ctx.arc(marker.position.x, marker.position.y, markerRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Small X mark at center
+      ctx.strokeStyle = `rgba(100, 50, 25, ${alpha * 0.6})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(marker.position.x - 4, marker.position.y - 4);
+      ctx.lineTo(marker.position.x + 4, marker.position.y + 4);
+      ctx.moveTo(marker.position.x + 4, marker.position.y - 4);
+      ctx.lineTo(marker.position.x - 4, marker.position.y + 4);
+      ctx.stroke();
+    }
+
     // Render enemies
     renderEnemies(ctx, gameState);
 
@@ -141,21 +320,118 @@ export function GameCanvas({ gameState, juiceSystem, ballState, meleeState, apex
     renderAttackEffects(ctx, gameState);
 
     // Run 036: Render THE BALL formation (on top of enemies)
-    if (ballState && ballState.phase !== 'inactive') {
-      renderBall(ctx, ballState, gameState.gameTime, gameState.enemies);
+    // Run 042: Render ALL balls (multi-ball support)
+    const ballsToRender = allBallsRef.current ?? (ballState ? [ballState] : []);
+    for (const ball of ballsToRender) {
+      if (ball && ball.phase !== 'inactive') {
+        renderBall(ctx, ball, gameState.gameTime, gameState.enemies);
+
+        // RUN 039: Render outside punch telegraphs (dodgeable attacks from bees outside ball)
+        if (ball.activePunches && ball.activePunches.length > 0) {
+          renderOutsidePunchIndicators(
+            ctx,
+            ball.activePunches,
+            gameState.enemies.map(e => ({ id: e.id, position: e.position })),
+            gameState.player.position,
+            gameState.gameTime
+          );
+        }
+      }
     }
 
+    // Run 038: Render apex strike afterimages (BEHIND player for depth)
+    if (juiceSystem.apexStrike?.afterimages && juiceSystem.apexStrike.afterimages.length > 0) {
+      renderAfterimages(ctx, juiceSystem.apexStrike.afterimages, gameState.player.radius || 15);
+    }
+
+    // Render ghost trail afterimages (BEHIND player for depth layering)
+    renderGhostTrail(ctx, apexState?.ghostTrail || [], gameState.player.radius || 15);
+
     // Render player (enhanced with visual upgrades)
-    renderPlayer(ctx, gameState, meleeState);
+    renderPlayer(ctx, gameState, meleeState, apexState);
+
+    // Kill streak indicator disabled - was distracting
+    // if (killStreak > 0) {
+    //   renderKillStreak(ctx, gameState.player.position, killStreak, gameState.player.radius || 15);
+    // }
 
     // Run 036: Render Apex Strike crosshair/sightline during lock phase
     if (apexState && isLocking(apexState)) {
       renderApexCrosshair(ctx, gameState.player.position, apexState, chargePercent);
     }
 
-    // Run 036: Render player melee attack arc
-    if (meleeState) {
-      renderMeleeAttack(ctx, gameState.player.position, meleeState, gameState.gameTime);
+    // Run 036: Render player melee attack arc (with cooldown visualization)
+    // Arc always visible, oriented toward nearest enemy, fills from center as cooldown
+    {
+      // Calculate cooldown progress for smooth fill animation
+      const cooldownMs = 400; // Base cooldown
+      const isAttacking = meleeState?.isActive || meleeState?.isInWindup || meleeState?.isInRecovery;
+
+      // Track when attack ends to start cooldown timer
+      if (wasAttackingRef.current && !isAttacking) {
+        lastAttackEndTimeRef.current = performance.now();
+      }
+      wasAttackingRef.current = !!isAttacking;
+
+      let cooldownProgress = 1; // Default to ready
+      if (isAttacking) {
+        cooldownProgress = 0;
+      } else if (lastAttackEndTimeRef.current > 0) {
+        const elapsed = performance.now() - lastAttackEndTimeRef.current;
+        cooldownProgress = Math.min(1, Math.max(0, elapsed / cooldownMs));
+      }
+
+      // Calculate direction to nearest enemy (always needed for arc orientation)
+      let rawTargetDirection = meleeState?.direction ?? { x: 1, y: 0 };
+      if (gameState.enemies.length > 0) {
+        let nearestDist = Infinity;
+        let nearestEnemy = gameState.enemies[0];
+        for (const enemy of gameState.enemies) {
+          const dx = enemy.position.x - gameState.player.position.x;
+          const dy = enemy.position.y - gameState.player.position.y;
+          const dist = dx * dx + dy * dy;
+          if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestEnemy = enemy;
+          }
+        }
+        const dx = nearestEnemy.position.x - gameState.player.position.x;
+        const dy = nearestEnemy.position.y - gameState.player.position.y;
+        const mag = Math.sqrt(dx * dx + dy * dy);
+        if (mag > 0) {
+          rawTargetDirection = { x: dx / mag, y: dy / mag };
+        }
+      }
+
+      // Run 040: Smooth interpolation for target direction (prevents jarring snaps)
+      // Use angle-based lerping for smooth rotation
+      const currentAngle = Math.atan2(smoothTargetDirectionRef.current.y, smoothTargetDirectionRef.current.x);
+      const targetAngle = Math.atan2(rawTargetDirection.y, rawTargetDirection.x);
+
+      // Calculate shortest angle difference (handles wrap-around at ±π)
+      let angleDiff = targetAngle - currentAngle;
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+      // Lerp the angle
+      const newAngle = currentAngle + angleDiff * DIRECTION_LERP_SPEED;
+      smoothTargetDirectionRef.current = {
+        x: Math.cos(newAngle),
+        y: Math.sin(newAngle)
+      };
+
+      const targetDirection = smoothTargetDirectionRef.current;
+
+      renderMeleeAttackArc(
+        ctx,
+        gameState.player.position,
+        targetDirection,
+        cooldownProgress,
+        isAttacking ? (meleeState?.direction ?? targetDirection) : null,
+        meleeState ? getAttackProgress(meleeState, gameState.gameTime) : null,
+        hasFullArc,
+        isDoubleStrikeReady  // Run 040: Pass double strike status for red indicator
+      );
     }
 
     // Render particles (juice system)
@@ -165,11 +441,27 @@ export function GameCanvas({ gameState, juiceSystem, ballState, meleeState, apex
     // (healthFraction already calculated above for intensity)
     renderVignette(ctx, healthFraction);
 
+    // Run 038: Apply circular inversion effect (after game content, before HUD)
+    if (shouldApplyCircleInversion) {
+      ctx.save();
+      // Use difference blend mode with white circle = color inversion
+      ctx.globalCompositeOperation = 'difference';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(screenEffect.centerX, screenEffect.centerY, screenEffect.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     ctx.restore();
 
     // Render HUD (not affected by shake)
-    renderHUD(ctx, gameState, juiceSystem);
-  }, [gameState, juiceSystem, ballState, meleeState, apexState, chargePercent]);
+    // Run 038: Pass smoothly animated XP value
+    // Run 038: Pass player position for adaptive UI positioning and transparency
+    renderHUD(ctx, gameState, juiceSystem, displayedXpRef.current, gameState.player.position);
+
+    // Run 038: Apex meter removed - was cluttering the UI
+  }, [juiceSystem]); // RUN 039 FIX: Only depend on stable juiceSystem - other values read from refs
 
   // DD-17: Calculate crescendo state from combo
   const crescendo = useMemo(
@@ -184,9 +476,15 @@ export function GameCanvas({ gameState, juiceSystem, ballState, meleeState, apex
   }, [crescendo]);
 
   // Animation loop for rendering
+  // DEFENSIVE: try-catch ensures render errors don't kill the animation loop
   useEffect(() => {
     const animate = () => {
-      render();
+      try {
+        render();
+      } catch (err) {
+        // Log but don't die - keeps canvas updating even if one frame fails
+        console.error('[GameCanvas] Render error (animation continues):', err);
+      }
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
@@ -219,25 +517,26 @@ export function GameCanvas({ gameState, juiceSystem, ballState, meleeState, apex
 // =============================================================================
 
 /**
- * DD-20: Health Vignette
+ * DD-20: Health Vignette (CRITICAL ONLY)
  *
- * Creates tunnel vision effect as health decreases:
- * - HP > 50%: No vignette
- * - HP 25-50%: Subtle red edge darkening
- * - HP 10-25%: Strong vignette
- * - HP < 10%: Pulsing vignette (synced to ~5Hz)
+ * Reserved for true crisis moments - health bar handles normal feedback.
+ * - HP > 25%: No vignette (health bar is sufficient)
+ * - HP 10-25%: Subtle red edge (opacity 0.3)
+ * - HP < 10%: Pulsing vignette (opacity 0.5)
  */
 function renderVignette(ctx: CanvasRenderingContext2D, healthFraction: number) {
-  // No vignette above 50% HP
-  if (healthFraction > 0.5) return;
+  // No vignette above 25% HP - health bar provides sufficient feedback
+  if (healthFraction > 0.25) return;
 
-  // Intensity increases as health decreases (0 at 50%, 1 at 0%)
-  const intensity = 1 - healthFraction / 0.5;
+  // Intensity: 0 at 25%, 1 at 0%
+  const intensity = 1 - healthFraction / 0.25;
 
   // Pulsing at critical health (< 10%)
   let pulse = 1.0;
+  let maxAlpha = 0.3; // Reduced intensity at 10-25% HP
   if (healthFraction < 0.1) {
     pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200); // ~5Hz pulse
+    maxAlpha = 0.5; // Stronger at <10% HP
   }
 
   // Radial gradient from center (clear) to edges (red)
@@ -255,8 +554,8 @@ function renderVignette(ctx: CanvasRenderingContext2D, healthFraction: number) {
     outerRadius
   );
 
-  // Red vignette that intensifies with low health
-  const alpha = intensity * 0.5 * pulse;
+  // Red vignette with reduced intensity
+  const alpha = intensity * maxAlpha * pulse;
   gradient.addColorStop(0, 'transparent');
   gradient.addColorStop(0.5, `rgba(80, 0, 0, ${alpha * 0.3})`);
   gradient.addColorStop(1, `rgba(120, 0, 0, ${alpha})`);
@@ -264,9 +563,9 @@ function renderVignette(ctx: CanvasRenderingContext2D, healthFraction: number) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
 
-  // Extra edge darkening at critical health
-  if (healthFraction < 0.25) {
-    const edgeAlpha = (0.25 - healthFraction) / 0.25 * 0.3 * pulse;
+  // Extra edge darkening only at very critical health (<15%)
+  if (healthFraction < 0.15) {
+    const edgeAlpha = (0.15 - healthFraction) / 0.15 * 0.25 * pulse;
     ctx.fillStyle = `rgba(0, 0, 0, ${edgeAlpha})`;
 
     // Top edge
@@ -282,6 +581,61 @@ function renderVignette(ctx: CanvasRenderingContext2D, healthFraction: number) {
     edgeGradientBottom.addColorStop(1, `rgba(0, 0, 0, ${edgeAlpha})`);
     ctx.fillStyle = edgeGradientBottom;
     ctx.fillRect(0, ARENA_HEIGHT * 0.85, ARENA_WIDTH, ARENA_HEIGHT * 0.15);
+  }
+}
+
+/**
+ * Render ghost trail afterimages during apex strike dash.
+ * Creates a fading trail of semi-transparent player shapes behind the player.
+ *
+ * Each ghost is rendered at its spawn position with opacity fading over time.
+ * The trail creates a motion blur effect that emphasizes the dash speed.
+ */
+function renderGhostTrail(
+  ctx: CanvasRenderingContext2D,
+  ghosts: GhostAfterimage[],
+  playerRadius: number = 15
+) {
+  const totalGhosts = ghosts.length;
+  if (totalGhosts === 0) return;
+
+  for (let i = 0; i < totalGhosts; i++) {
+    const ghost = ghosts[i];
+    // Sequential fade: oldest (index 0) fades first, newest stays visible
+    const opacity = getGhostOpacity(i, totalGhosts);
+    if (opacity <= 0.01) continue; // Skip nearly invisible ghosts
+
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.translate(ghost.position.x, ghost.position.y);
+
+    // Rotate to face movement direction
+    const angle = Math.atan2(ghost.direction.y, ghost.direction.x);
+    ctx.rotate(angle);
+
+    // Draw ghost as semi-transparent player shape
+    // Use a slightly desaturated/lighter version of player color
+    ctx.fillStyle = 'rgba(255, 165, 0, 0.7)'; // Orange tint for hornet
+
+    // Draw pointed oval (hornet body shape)
+    ctx.beginPath();
+    ctx.ellipse(0, 0, playerRadius * 1.3, playerRadius * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Add motion blur effect - stretched tail
+    const tailLength = playerRadius * 1.5;
+    const gradient = ctx.createLinearGradient(-tailLength, 0, 0, 0);
+    gradient.addColorStop(0, 'rgba(255, 165, 0, 0)');
+    gradient.addColorStop(1, `rgba(255, 165, 0, ${opacity * 0.5})`);
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(0, -playerRadius * 0.5);
+    ctx.lineTo(-tailLength, 0);
+    ctx.lineTo(0, playerRadius * 0.5);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
   }
 }
 
@@ -401,6 +755,9 @@ function renderApexCrosshair(
   ctx.restore();
 }
 
+// NOTE: renderApexMeter removed - was cluttering the UI (Run 038)
+// The function is preserved in git history if needed later.
+
 /**
  * Render the player (hornet) with full visual upgrades.
  * "Ukiyo-e meets arcade brutalism" - The hornet emerges from shadow.
@@ -411,7 +768,8 @@ function renderApexCrosshair(
 function renderPlayer(
   ctx: CanvasRenderingContext2D,
   state: GameState,
-  meleeState?: MeleeAttackState
+  meleeState?: MeleeAttackState,
+  apexState?: ApexStrikeState
 ) {
   const { player } = state;
   const activeUpgrades = player.activeUpgrades as ActiveUpgrades | undefined;
@@ -495,6 +853,220 @@ function renderPlayer(
   ctx.beginPath();
   ctx.arc(player.position.x, player.position.y, breathingGlowRadius, 0, Math.PI * 2);
   ctx.fill();
+
+  // ==========================================================================
+  // ABILITY VISUAL EFFECTS - Auras based on owned abilities
+  // Read from player.upgrades (array of AbilityId strings)
+  // ==========================================================================
+  const ownedAbilities = (player.upgrades ?? []) as string[];
+  const time = state.gameTime / 1000;
+
+  // HOVER PRESSURE - 50px pulsing orange/red aura (passive DPS to nearby)
+  if (ownedAbilities.includes('hover_pressure')) {
+    const hpRadius = 50;
+    const hpPulse = 0.3 + 0.1 * Math.sin(time * 4);
+    const hpGradient = ctx.createRadialGradient(
+      player.position.x, player.position.y, playerRadius,
+      player.position.x, player.position.y, hpRadius
+    );
+    hpGradient.addColorStop(0, `rgba(255, 100, 50, ${hpPulse * 0.3})`);
+    hpGradient.addColorStop(0.7, `rgba(255, 60, 20, ${hpPulse * 0.15})`);
+    hpGradient.addColorStop(1, 'rgba(255, 60, 20, 0)');
+    ctx.fillStyle = hpGradient;
+    ctx.beginPath();
+    ctx.arc(player.position.x, player.position.y, hpRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // THREAT AURA - 30px subtle purple/blue intimidation field
+  if (ownedAbilities.includes('threat_aura')) {
+    const taRadius = 30;
+    const taPulse = 0.25 + 0.1 * Math.sin(time * 3);
+    const taGradient = ctx.createRadialGradient(
+      player.position.x, player.position.y, playerRadius * 0.8,
+      player.position.x, player.position.y, taRadius
+    );
+    taGradient.addColorStop(0, `rgba(100, 50, 150, ${taPulse * 0.2})`);
+    taGradient.addColorStop(0.6, `rgba(80, 40, 120, ${taPulse * 0.1})`);
+    taGradient.addColorStop(1, 'rgba(80, 40, 120, 0)');
+    ctx.fillStyle = taGradient;
+    ctx.beginPath();
+    ctx.arc(player.position.x, player.position.y, taRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // BUZZ FIELD - 20px yellow/gold aura (visible when stationary effect would be active)
+  if (ownedAbilities.includes('buzz_field')) {
+    const bfRadius = 20;
+    const bfPulse = 0.4 + 0.2 * Math.sin(time * 8); // Faster buzz
+    const bfGradient = ctx.createRadialGradient(
+      player.position.x, player.position.y, playerRadius * 0.5,
+      player.position.x, player.position.y, bfRadius
+    );
+    bfGradient.addColorStop(0, `rgba(255, 220, 50, ${bfPulse * 0.25})`);
+    bfGradient.addColorStop(0.5, `rgba(255, 200, 0, ${bfPulse * 0.15})`);
+    bfGradient.addColorStop(1, 'rgba(255, 200, 0, 0)');
+    ctx.fillStyle = bfGradient;
+    ctx.beginPath();
+    ctx.arc(player.position.x, player.position.y, bfRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // BARBED CHITIN - Spiky outline around player (contact damage)
+  if (ownedAbilities.includes('barbed_chitin')) {
+    const spikeCount = 8;
+    const spikeLength = 6;
+    ctx.strokeStyle = 'rgba(139, 90, 43, 0.7)'; // Brown spikes
+    ctx.lineWidth = 2;
+    for (let i = 0; i < spikeCount; i++) {
+      const angle = (i / spikeCount) * Math.PI * 2 + time * 0.5;
+      const innerR = playerRadius + 2;
+      const outerR = playerRadius + 2 + spikeLength;
+      ctx.beginPath();
+      ctx.moveTo(
+        player.position.x + Math.cos(angle) * innerR,
+        player.position.y + Math.sin(angle) * innerR
+      );
+      ctx.lineTo(
+        player.position.x + Math.cos(angle) * outerR,
+        player.position.y + Math.sin(angle) * outerR
+      );
+      ctx.stroke();
+    }
+  }
+
+  // ABLATIVE SHELL - Golden shimmer border (first hit protection)
+  if (ownedAbilities.includes('ablative_shell')) {
+    const shellPulse = 0.4 + 0.2 * Math.sin(time * 2);
+    ctx.strokeStyle = `rgba(255, 215, 0, ${shellPulse})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(player.position.x, player.position.y, playerRadius + 3, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // REGENERATION - Green healing particles rising
+  if (ownedAbilities.includes('regeneration')) {
+    const particleCount = 3;
+    for (let i = 0; i < particleCount; i++) {
+      const pTime = (time * 2 + i * 0.33) % 1;
+      const pY = player.position.y - playerRadius - pTime * 15;
+      const pX = player.position.x + Math.sin(i * 2.1 + time * 3) * 8;
+      const pAlpha = pTime < 0.5 ? pTime * 2 : (1 - pTime) * 2;
+      ctx.fillStyle = `rgba(100, 255, 100, ${pAlpha * 0.5})`;
+      ctx.beginPath();
+      ctx.arc(pX, pY, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // LIFESTEAL - Red/crimson subtle aura
+  if (ownedAbilities.includes('lifesteal')) {
+    const lsRadius = playerRadius + 8;
+    const lsPulse = 0.2 + 0.1 * Math.sin(time * 5);
+    ctx.strokeStyle = `rgba(180, 30, 30, ${lsPulse})`;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.arc(player.position.x, player.position.y, lsRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // SPEED ABILITIES - Cyan trail effect (swift_wings, frenzy, berserker_pace, bullet_time, quick_strikes, hunters_rush)
+  const hasSpeedAbility = ownedAbilities.includes('swift_wings') ||
+                          ownedAbilities.includes('frenzy') ||
+                          ownedAbilities.includes('berserker_pace') ||
+                          ownedAbilities.includes('bullet_time') ||
+                          ownedAbilities.includes('quick_strikes') ||
+                          ownedAbilities.includes('hunters_rush');
+  if (hasSpeedAbility) {
+    // Speed lines emanating from player - cyan for wing abilities
+    const speedLineCount = ownedAbilities.includes('swift_wings') ? 6 : 4;
+    ctx.strokeStyle = ownedAbilities.includes('swift_wings')
+      ? 'rgba(0, 255, 255, 0.5)'  // Brighter cyan for swift_wings
+      : 'rgba(0, 200, 255, 0.3)';
+    ctx.lineWidth = ownedAbilities.includes('swift_wings') ? 2 : 1;
+    for (let i = 0; i < speedLineCount; i++) {
+      const lineOffset = ((time * 3 + i * 0.25) % 1) * 20;
+      const angle = (i / speedLineCount) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(
+        player.position.x + Math.cos(angle) * (playerRadius + lineOffset),
+        player.position.y + Math.sin(angle) * (playerRadius + lineOffset)
+      );
+      ctx.lineTo(
+        player.position.x + Math.cos(angle) * (playerRadius + lineOffset + 8),
+        player.position.y + Math.sin(angle) * (playerRadius + lineOffset + 8)
+      );
+      ctx.stroke();
+    }
+  }
+
+  // GLASS CANNON - Cracked red aura (high damage, low HP)
+  if (ownedAbilities.includes('glass_cannon') || ownedAbilities.includes('glass_cannon_mastery')) {
+    const gcPulse = 0.4 + 0.2 * Math.sin(time * 6);
+    ctx.strokeStyle = `rgba(255, 50, 50, ${gcPulse})`;
+    ctx.lineWidth = 1.5;
+    // Draw cracked circle segments
+    for (let i = 0; i < 6; i++) {
+      const startAngle = (i / 6) * Math.PI * 2 + time * 0.3;
+      const gapAngle = 0.15;
+      ctx.beginPath();
+      ctx.arc(
+        player.position.x, player.position.y,
+        playerRadius + 4,
+        startAngle + gapAngle,
+        startAngle + (Math.PI / 3) - gapAngle
+      );
+      ctx.stroke();
+    }
+  }
+
+  // CRITICAL STING - Occasional spark on player
+  if (ownedAbilities.includes('critical_sting')) {
+    const sparkChance = (time * 3) % 1;
+    if (sparkChance < 0.15) {
+      const sparkAngle = time * 5;
+      const sparkX = player.position.x + Math.cos(sparkAngle) * playerRadius * 0.8;
+      const sparkY = player.position.y + Math.sin(sparkAngle) * playerRadius * 0.8;
+      ctx.fillStyle = 'rgba(255, 255, 100, 0.8)';
+      ctx.beginPath();
+      ctx.arc(sparkX, sparkY, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // LAST STAND - Red pulsing border when below 30% HP
+  if (ownedAbilities.includes('last_stand') && healthFraction < 0.3) {
+    const lsPulse = 0.6 + 0.4 * Math.sin(time * 8);
+    ctx.strokeStyle = `rgba(255, 0, 0, ${lsPulse})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(player.position.x, player.position.y, playerRadius + 5, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // HEAT RETENTION - Orange speed lines when below 50% HP
+  if (ownedAbilities.includes('heat_retention') && healthFraction < 0.5) {
+    const hrAlpha = (0.5 - healthFraction) * 1.5; // More visible at lower HP
+    ctx.strokeStyle = `rgba(255, 140, 0, ${hrAlpha * 0.4})`;
+    ctx.lineWidth = 2;
+    const hrOffset = (time * 4) % 1 * 15;
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2 + Math.PI / 6;
+      ctx.beginPath();
+      ctx.moveTo(
+        player.position.x + Math.cos(angle) * (playerRadius + hrOffset),
+        player.position.y + Math.sin(angle) * (playerRadius + hrOffset)
+      );
+      ctx.lineTo(
+        player.position.x + Math.cos(angle) * (playerRadius + hrOffset + 10),
+        player.position.y + Math.sin(angle) * (playerRadius + hrOffset + 10)
+      );
+      ctx.stroke();
+    }
+  }
 
   // ==========================================================================
   // VISUAL UPGRADE: Wing Blur (render BEFORE body - semi-transparent behind)
@@ -604,11 +1176,16 @@ function renderPlayer(
 
   // ==========================================================================
   // Health bar above player (pushed up to accommodate mandibles)
+  // Fades when HP > 75% to reduce visual clutter when not needed
   // ==========================================================================
   const healthBarWidth = playerRadius * 2.5;
   const healthBarHeight = 4;
   const healthBarX = player.position.x - healthBarWidth / 2;
   const healthBarY = player.position.y - playerRadius - 18; // Pushed up
+
+  // Fade health bar when HP is high (>75%) - players don't need to see "100% health" constantly
+  const healthBarOpacity = healthFraction > 0.75 ? 0.3 : 1.0;
+  ctx.globalAlpha = healthBarOpacity;
 
   // Background
   ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -623,6 +1200,49 @@ function renderPlayer(
         : COLORS.crisis;
   ctx.fillStyle = healthColor;
   ctx.fillRect(healthBarX, healthBarY, healthBarWidth * healthFraction, healthBarHeight);
+
+  // Reset alpha after health bar
+  ctx.globalAlpha = 1.0;
+
+  // ==========================================================================
+  // STUMBLE MOMENTUM: Dazed indicator (stars orbiting head)
+  // Same visual as bees in recovery - shows player is disoriented
+  // ==========================================================================
+  if (apexState && hasStumbleMomentum(apexState)) {
+    const stumbleProgress = getStumbleMomentumProgress(apexState);
+    // Stars are more visible when momentum is high, fade as control returns
+    const starAlpha = 0.5 + stumbleProgress * 0.5; // 0.5 → 1.0
+
+    ctx.globalAlpha = starAlpha;
+    ctx.fillStyle = '#FFD700'; // Golden stars, same as bees
+
+    const starCount = 4; // Slightly more than bees (3) - hornet is bigger
+    const starOrbitRadius = playerRadius + 10;
+    const starRotation = (state.gameTime * 0.008) % (Math.PI * 2); // Faster rotation than bees
+
+    for (let i = 0; i < starCount; i++) {
+      const starAngle = starRotation + (i * Math.PI * 2) / starCount;
+      const starX = player.position.x + Math.cos(starAngle) * starOrbitRadius;
+      // Elliptical orbit - compressed vertically for 3D feel
+      const starY = player.position.y - playerRadius * 0.6 + Math.sin(starAngle) * (starOrbitRadius * 0.35);
+
+      // Draw 4-pointed star (same as bees)
+      ctx.beginPath();
+      const starSize = 5; // Slightly larger than bee stars (4)
+      ctx.moveTo(starX, starY - starSize);
+      ctx.lineTo(starX + starSize * 0.3, starY - starSize * 0.3);
+      ctx.lineTo(starX + starSize, starY);
+      ctx.lineTo(starX + starSize * 0.3, starY + starSize * 0.3);
+      ctx.lineTo(starX, starY + starSize);
+      ctx.lineTo(starX - starSize * 0.3, starY + starSize * 0.3);
+      ctx.lineTo(starX - starSize, starY);
+      ctx.lineTo(starX - starSize * 0.3, starY - starSize * 0.3);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 1.0; // Reset alpha
+  }
 }
 
 // =============================================================================
@@ -1042,6 +1662,81 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState) {
         ctx.fill();
     }
 
+    // ==========================================================================
+    // Run 040: STATUS EFFECT TINT OVERLAYS
+    // Highly visible color overlays to show poison/burn/slow/venom effects
+    // ==========================================================================
+
+    renderStatusEffectTints(ctx, enemy, enemyX, enemyY, drawRadius, state.gameTime);
+
+    // ==========================================================================
+    // SHIELD VISUAL: Pulsing cyan hexagonal shield ring
+    // Royal Guards have shields that require multiple hits to kill
+    // ==========================================================================
+    const enemyShield = enemy.shield ?? 0;
+    if (enemyShield > 0) {
+      const shieldPulse = Math.sin(state.gameTime * 0.005) * 0.3 + 0.7;  // Pulse between 0.4 and 1.0
+      const shieldRadius = drawRadius * 1.4;
+
+      // Outer glow
+      const shieldGlow = ctx.createRadialGradient(
+        enemyX, enemyY, drawRadius,
+        enemyX, enemyY, shieldRadius * 1.3
+      );
+      shieldGlow.addColorStop(0, `rgba(0, 220, 255, ${0.3 * shieldPulse})`);
+      shieldGlow.addColorStop(0.5, `rgba(0, 180, 255, ${0.15 * shieldPulse})`);
+      shieldGlow.addColorStop(1, 'rgba(0, 180, 255, 0)');
+      ctx.fillStyle = shieldGlow;
+      ctx.beginPath();
+      ctx.arc(enemyX, enemyY, shieldRadius * 1.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Hexagonal shield ring (6 sides for "force field" feel)
+      ctx.strokeStyle = `rgba(0, 220, 255, ${0.7 * shieldPulse})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI * 2 * i) / 6 - Math.PI / 6;  // Rotate to point up
+        const px = enemyX + Math.cos(angle) * shieldRadius;
+        const py = enemyY + Math.sin(angle) * shieldRadius;
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Inner brighter ring
+      ctx.strokeStyle = `rgba(200, 255, 255, ${0.5 * shieldPulse})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI * 2 * i) / 6 - Math.PI / 6;
+        const px = enemyX + Math.cos(angle) * (shieldRadius * 0.95);
+        const py = enemyY + Math.sin(angle) * (shieldRadius * 0.95);
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Shield count indicator (small cyan dots)
+      ctx.fillStyle = '#00FFFF';
+      for (let i = 0; i < enemyShield; i++) {
+        const dotAngle = (Math.PI * 2 * i) / Math.max(enemyShield, 1) - Math.PI / 2;
+        const dotX = enemyX + Math.cos(dotAngle) * (shieldRadius + 6);
+        const dotY = enemyY + Math.sin(dotAngle) * (shieldRadius + 6);
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     // DD-21: Additional glow during attack
     if (isAttacking) {
       ctx.strokeStyle = '#FFFFFF';
@@ -1384,6 +2079,193 @@ function renderParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
   ctx.globalAlpha = 1;
 }
 
+// =============================================================================
+// Run 039: Aggregate Threat Meter
+// =============================================================================
+
+/**
+ * Threat level thresholds (as fraction of max health)
+ * green (safe) -> yellow (caution) -> orange (danger) -> red (critical)
+ */
+interface ThreatColors {
+  color: string;
+  glowColor: string;
+  pulseSpeed: number;  // Hz
+}
+
+const THREAT_THRESHOLDS: { maxLevel: number; config: ThreatColors }[] = [
+  { maxLevel: 0.25, config: { color: '#00FF88', glowColor: '#00FF88', pulseSpeed: 0.5 } },   // Green (safe)
+  { maxLevel: 0.50, config: { color: '#FFE066', glowColor: '#FFE066', pulseSpeed: 1.0 } },   // Light yellow (caution)
+  { maxLevel: 0.75, config: { color: '#FF3366', glowColor: '#FF3366', pulseSpeed: 2.0 } },   // Pinkish-red (danger)
+  { maxLevel: Infinity, config: { color: '#FF0000', glowColor: '#FF4444', pulseSpeed: 4.0 } }, // Red (critical)
+];
+
+/**
+ * Calculate aggregate threat from all currently-telegraphing enemies
+ * Returns threat level as a fraction of player's max health
+ */
+function calculateAggregateThreat(state: GameState): number {
+  let totalIncomingDamage = 0;
+
+  for (const enemy of state.enemies) {
+    // Only count enemies in telegraph state (about to attack)
+    if (enemy.behaviorState === 'telegraph') {
+      const behavior = BEE_BEHAVIORS[enemy.type];
+      if (behavior) {
+        totalIncomingDamage += behavior.attackDamage;
+      }
+    }
+  }
+
+  // Normalize to player's max health
+  if (state.player.maxHealth <= 0) return 0;
+  return totalIncomingDamage / state.player.maxHealth;
+}
+
+/**
+ * Get threat color configuration based on level
+ */
+function getThreatConfig(threatLevel: number): ThreatColors {
+  for (const threshold of THREAT_THRESHOLDS) {
+    if (threatLevel <= threshold.maxLevel) {
+      return threshold.config;
+    }
+  }
+  return THREAT_THRESHOLDS[THREAT_THRESHOLDS.length - 1].config;
+}
+
+/**
+ * Interpolate between two hex colors
+ */
+function lerpColor(color1: string, color2: string, t: number): string {
+  // Parse hex colors
+  const r1 = parseInt(color1.slice(1, 3), 16);
+  const g1 = parseInt(color1.slice(3, 5), 16);
+  const b1 = parseInt(color1.slice(5, 7), 16);
+  const r2 = parseInt(color2.slice(1, 3), 16);
+  const g2 = parseInt(color2.slice(3, 5), 16);
+  const b2 = parseInt(color2.slice(5, 7), 16);
+
+  const r = Math.round(r1 + (r2 - r1) * t);
+  const g = Math.round(g1 + (g2 - g1) * t);
+  const b = Math.round(b1 + (b2 - b1) * t);
+
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+/**
+ * Get smoothly interpolated threat color
+ */
+function getThreatColor(threatLevel: number): string {
+  if (threatLevel <= 0) return '#00FF88';
+  if (threatLevel >= 1) return '#FF0000';
+
+  // Find which segment we're in and interpolate
+  const segments = [
+    { start: 0, end: 0.25, c1: '#00FF88', c2: '#FFE066' },    // Green to light yellow
+    { start: 0.25, end: 0.50, c1: '#FFE066', c2: '#FF3366' }, // Light yellow to pinkish-red
+    { start: 0.50, end: 0.75, c1: '#FF3366', c2: '#FF0000' }, // Pinkish-red to red
+    { start: 0.75, end: 1.0, c1: '#FF0000', c2: '#FF0000' },
+  ];
+
+  for (const seg of segments) {
+    if (threatLevel <= seg.end) {
+      const t = (threatLevel - seg.start) / (seg.end - seg.start);
+      return lerpColor(seg.c1, seg.c2, t);
+    }
+  }
+  return '#FF0000';
+}
+
+/**
+ * Render the aggregate threat meter
+ * Position: Top center, below wave indicator
+ * Size: 200px wide, 8px tall
+ */
+function renderThreatMeter(
+  ctx: CanvasRenderingContext2D,
+  state: GameState
+) {
+  const threatLevel = calculateAggregateThreat(state);
+
+  // Don't render if no threat (all clear)
+  if (threatLevel <= 0) return;
+
+  const threatConfig = getThreatConfig(threatLevel);
+  const threatColor = getThreatColor(threatLevel);
+
+  // Position: Top center
+  const meterWidth = 200;
+  const meterHeight = 8;
+  const meterX = (ARENA_WIDTH - meterWidth) / 2;
+  const meterY = 42;  // Below wave indicator
+
+  // Pulse animation - faster when threat is higher
+  const pulseTime = Date.now() * threatConfig.pulseSpeed * 0.006;
+  const pulseIntensity = 0.7 + 0.3 * Math.sin(pulseTime);
+
+  // Label
+  ctx.save();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('THREAT', ARENA_WIDTH / 2, meterY - 4);
+
+  // Background panel with hex styling
+  drawHUDPanel(ctx, meterX - 5, meterY - 2, meterWidth + 10, meterHeight + 4);
+
+  // Background track
+  ctx.fillStyle = 'rgba(40, 30, 30, 0.8)';
+  ctx.beginPath();
+  ctx.roundRect(meterX, meterY, meterWidth, meterHeight, 2);
+  ctx.fill();
+
+  // Threat fill (capped at 100% visually, but can exceed conceptually)
+  const fillWidth = Math.min(threatLevel, 1.0) * meterWidth;
+
+  if (fillWidth > 0) {
+    // Gradient fill for visual appeal
+    const gradient = ctx.createLinearGradient(meterX, meterY, meterX + fillWidth, meterY);
+    gradient.addColorStop(0, threatColor);
+    gradient.addColorStop(1, lerpColor(threatColor, '#FFFFFF', 0.2));
+
+    ctx.fillStyle = gradient;
+    ctx.globalAlpha = pulseIntensity;
+    ctx.beginPath();
+    ctx.roundRect(meterX, meterY, fillWidth, meterHeight, 2);
+    ctx.fill();
+
+    // Glow effect on the fill
+    ctx.shadowColor = threatConfig.glowColor;
+    ctx.shadowBlur = 8 * pulseIntensity;
+    ctx.strokeStyle = threatColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // Border
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(244, 163, 0, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(meterX, meterY, meterWidth, meterHeight, 2);
+  ctx.stroke();
+
+  // Critical warning - add pulsing exclamation marks at high threat
+  if (threatLevel >= 0.75) {
+    ctx.fillStyle = threatColor;
+    ctx.font = 'bold 12px sans-serif';
+    ctx.globalAlpha = pulseIntensity;
+    ctx.textAlign = 'left';
+    ctx.fillText('!', meterX - 12, meterY + meterHeight - 1);
+    ctx.textAlign = 'right';
+    ctx.fillText('!', meterX + meterWidth + 12, meterY + meterHeight - 1);
+  }
+
+  ctx.restore();
+}
+
 /**
  * Draw a semi-transparent HUD panel with honey amber border
  */
@@ -1460,26 +2342,61 @@ function drawHexBadge(
   ctx.closePath();
 }
 
+/**
+ * Calculate UI element opacity based on player proximity
+ * Returns 0.3 (semi-transparent) if player overlaps, 1.0 otherwise
+ */
+function getUIOpacity(
+  playerPos: { x: number; y: number },
+  uiRect: { x: number; y: number; width: number; height: number },
+  playerRadius: number = 20  // Buffer around player
+): number {
+  const playerLeft = playerPos.x - playerRadius;
+  const playerRight = playerPos.x + playerRadius;
+  const playerTop = playerPos.y - playerRadius;
+  const playerBottom = playerPos.y + playerRadius;
+
+  const uiLeft = uiRect.x;
+  const uiRight = uiRect.x + uiRect.width;
+  const uiTop = uiRect.y;
+  const uiBottom = uiRect.y + uiRect.height;
+
+  // Check for overlap
+  const overlaps = !(playerRight < uiLeft || playerLeft > uiRight ||
+                     playerBottom < uiTop || playerTop > uiBottom);
+
+  return overlaps ? 0.3 : 1.0;
+}
+
 function renderHUD(
   ctx: CanvasRenderingContext2D,
   state: GameState,
-  juiceSystem: JuiceSystem
+  juiceSystem: JuiceSystem,
+  displayedXp: number,  // Run 038: Smoothly animated XP value
+  playerPos: { x: number; y: number }  // Run 038: Player position for adaptive UI
 ) {
   const padding = 12;
   const combo = juiceSystem.escalation.combo;
+
+  // Run 038: Threshold for flipping combo to bottom (player near top of screen)
+  const playerNearTop = playerPos.y < 80;
 
   // ==========================================================================
   // TOP LEFT: Wave indicator with hexagonal badge
   // ==========================================================================
 
   const waveText = `Wave ${state.wave}`;
-  ctx.font = 'bold 20px sans-serif';
+  ctx.font = `${GAME_FONT_BOLD}22px ${GAME_FONT}`;
   const waveTextWidth = ctx.measureText(waveText).width;
   const waveBadgeWidth = waveTextWidth + 50;
   const waveBadgeHeight = 32;
 
+  // Run 038: Calculate opacity for wave badge (top-left)
+  const waveOpacity = getUIOpacity(playerPos, { x: padding - 5, y: 8, width: waveBadgeWidth, height: waveBadgeHeight });
+
   // Hexagonal badge background
   ctx.save();
+  ctx.globalAlpha = waveOpacity;
   drawHexBadge(ctx, padding - 5, 8, waveBadgeWidth, waveBadgeHeight);
 
   // Gradient fill for the badge
@@ -1497,29 +2414,47 @@ function renderHUD(
   ctx.shadowBlur = 6;
   ctx.stroke();
   ctx.shadowBlur = 0;
-  ctx.restore();
 
   // Wave text with bee icon
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 20px sans-serif';
+  ctx.font = `${GAME_FONT_BOLD}22px ${GAME_FONT}`;
   ctx.textAlign = 'left';
   drawTextWithShadow(ctx, `Wave ${state.wave}`, padding + 8, 30);
+  ctx.restore();
+
+  // ==========================================================================
+  // TOP CENTER: Aggregate Threat Meter (Run 039)
+  // ==========================================================================
+
+  // Run 038: Calculate opacity for threat meter (top center)
+  const threatMeterOpacity = getUIOpacity(playerPos, { x: (ARENA_WIDTH - 200) / 2 - 5, y: 30, width: 210, height: 25 });
+  ctx.save();
+  ctx.globalAlpha = threatMeterOpacity;
+  renderThreatMeter(ctx, state);
+  ctx.restore();
 
   // ==========================================================================
   // TOP RIGHT: Score with panel
   // ==========================================================================
 
-  const scoreText = `${state.score.toLocaleString()}`;
-  ctx.font = 'bold 18px sans-serif';
+  const scoreText = `Score: ${state.score.toLocaleString()}`;
+  ctx.font = `${GAME_FONT_BOLD}20px ${GAME_FONT}`;
   const scoreTextWidth = ctx.measureText(scoreText).width;
-  const scorePanelWidth = scoreTextWidth + 60;
+  const scorePanelWidth = scoreTextWidth + 24; // 12px padding on each side
+  const scorePanelX = ARENA_WIDTH - padding - scorePanelWidth;
 
-  drawHUDPanel(ctx, ARENA_WIDTH - padding - scorePanelWidth, 6, scorePanelWidth, 30);
+  // Run 038: Calculate opacity for score panel (top-right)
+  const scoreOpacity = getUIOpacity(playerPos, { x: scorePanelX, y: 6, width: scorePanelWidth, height: 30 });
+
+  ctx.save();
+  ctx.globalAlpha = scoreOpacity;
+  drawHUDPanel(ctx, scorePanelX, 6, scorePanelWidth, 30);
 
   ctx.fillStyle = COLORS.xp;
-  ctx.font = 'bold 18px sans-serif';
+  ctx.font = `${GAME_FONT_BOLD}20px ${GAME_FONT}`;
   ctx.textAlign = 'right';
-  drawTextWithShadow(ctx, `Score: ${scoreText}`, ARENA_WIDTH - padding - 10, 27);
+  drawTextWithShadow(ctx, scoreText, ARENA_WIDTH - padding - 12, 27);
+  ctx.restore();
 
   // ==========================================================================
   // XP Bar with hexagonal styling and gradient fill
@@ -1529,7 +2464,14 @@ function renderHUD(
   const xpBarHeight = 12;
   const xpBarX = padding;
   const xpBarY = 48;
-  const xpFraction = state.player.xp / state.player.xpToNextLevel;
+  // Run 038: Use smoothly animated XP value instead of raw state
+  const xpFraction = displayedXp / state.player.xpToNextLevel;
+
+  // Run 038: Calculate opacity for XP bar area (includes level indicator)
+  const xpOpacity = getUIOpacity(playerPos, { x: xpBarX - 5, y: xpBarY - 4, width: xpBarWidth + 60, height: xpBarHeight + 20 });
+
+  ctx.save();
+  ctx.globalAlpha = xpOpacity;
 
   // XP bar background panel
   drawHUDPanel(ctx, xpBarX - 5, xpBarY - 4, xpBarWidth + 10, xpBarHeight + 8);
@@ -1579,12 +2521,20 @@ function renderHUD(
 
   // Level indicator
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 13px sans-serif';
+  ctx.font = `${GAME_FONT_BOLD}15px ${GAME_FONT}`;
   ctx.textAlign = 'left';
   drawTextWithShadow(ctx, `Lv.${state.player.level}`, xpBarX + xpBarWidth + 10, xpBarY + 10);
 
+  // Run 038: XP numeric display (shows actual XP / needed)
+  ctx.fillStyle = '#FFD700';
+  ctx.font = `600 11px ${GAME_FONT}`;
+  ctx.textAlign = 'center';
+  drawTextWithShadow(ctx, `${Math.floor(displayedXp)}/${state.player.xpToNextLevel}`, xpBarX + xpBarWidth / 2, xpBarY + xpBarHeight + 12);
+  ctx.restore();
+
   // ==========================================================================
-  // CENTER TOP: Combo indicator (scales with combo count)
+  // CENTER TOP/BOTTOM: Combo indicator (scales with combo count)
+  // Run 038: Flips to bottom when player is near top of screen
   // ==========================================================================
 
   if (combo > 1) {
@@ -1593,14 +2543,15 @@ function renderHUD(
 
     // Scale font size with combo (max at 50+)
     const comboScale = Math.min(1 + (combo - 1) * 0.02, 1.5);
-    const comboFontSize = Math.floor(24 * comboScale);
-    ctx.font = `bold ${comboFontSize}px sans-serif`;
+    const comboFontSize = Math.floor(26 * comboScale);
+    ctx.font = `${GAME_FONT_BOLD}${comboFontSize}px ${GAME_FONT}`;
 
     const comboTextWidth = ctx.measureText(comboText).width;
     const comboPanelWidth = comboTextWidth + 30;
     const comboPanelHeight = comboFontSize + 16;
     const comboPanelX = (ARENA_WIDTH - comboPanelWidth) / 2;
-    const comboPanelY = 5;
+    // Run 038: Flip to bottom when player is near top
+    const comboPanelY = playerNearTop ? (ARENA_HEIGHT - comboPanelHeight - 45) : 5;
 
     // Determine glow color based on combo tier
     let comboColor = '#FF8800'; // Orange
@@ -1620,20 +2571,24 @@ function renderHUD(
     const pulseTime = Date.now() * 0.006;
     const pulseIntensity = 0.5 + Math.sin(pulseTime) * 0.3;
 
+    // Run 038: Calculate opacity for combo panel
+    const comboOpacity = getUIOpacity(playerPos, { x: comboPanelX, y: comboPanelY, width: comboPanelWidth, height: comboPanelHeight });
+
+    ctx.save();
+    ctx.globalAlpha = comboOpacity;
+
     drawHUDPanel(ctx, comboPanelX, comboPanelY, comboPanelWidth, comboPanelHeight, {
       glow: true,
       glowColor: glowColor
     });
 
     // Combo text with glow
-    ctx.save();
     ctx.fillStyle = comboColor;
     ctx.textAlign = 'center';
     ctx.shadowColor = comboColor;
     ctx.shadowBlur = 10 * pulseIntensity;
     ctx.fillText(comboText, ARENA_WIDTH / 2, comboPanelY + comboPanelHeight - 8);
     ctx.shadowBlur = 0;
-    ctx.restore();
 
     // Combo timer bar (if combo is decaying)
     const comboDecayMax = 2000; // 2 seconds
@@ -1652,6 +2607,8 @@ function renderHUD(
       ctx.fillStyle = comboColor;
       ctx.fillRect(timerBarX, timerBarY, timerBarWidth * comboTimeRatio, timerBarHeight);
     }
+
+    ctx.restore();
   }
 
   // ==========================================================================
@@ -1660,14 +2617,22 @@ function renderHUD(
 
   const enemyText = `${state.enemies.length}`;
   const killText = `${state.totalEnemiesKilled}`;
+  const bottomLeftPanelX = padding - 5;
+  const bottomLeftPanelY = ARENA_HEIGHT - 38;
 
-  drawHUDPanel(ctx, padding - 5, ARENA_HEIGHT - 38, 140, 30);
+  // Run 038: Calculate opacity for bottom-left panel
+  const bottomLeftOpacity = getUIOpacity(playerPos, { x: bottomLeftPanelX, y: bottomLeftPanelY, width: 145, height: 30 });
+
+  ctx.save();
+  ctx.globalAlpha = bottomLeftOpacity;
+  drawHUDPanel(ctx, bottomLeftPanelX, bottomLeftPanelY, 145, 30);
 
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = '13px sans-serif';
+  ctx.font = `600 14px ${GAME_FONT}`;
   ctx.textAlign = 'left';
   drawTextWithShadow(ctx, `Enemies: ${enemyText}`, padding + 5, ARENA_HEIGHT - 18);
-  drawTextWithShadow(ctx, `Kills: ${killText}`, padding + 75, ARENA_HEIGHT - 18);
+  drawTextWithShadow(ctx, `Kills: ${killText}`, padding + 78, ARENA_HEIGHT - 18);
+  ctx.restore();
 
   // ==========================================================================
   // BOTTOM RIGHT: Game time with panel
@@ -1677,137 +2642,285 @@ function renderHUD(
   const seconds = Math.floor((state.gameTime % 60000) / 1000);
   const timeText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
-  ctx.font = 'bold 16px sans-serif';
+  ctx.font = `${GAME_FONT_BOLD}18px ${GAME_FONT}`;
   const timeTextWidth = ctx.measureText(timeText).width;
+  const timePanelWidth = timeTextWidth + 30;
+  const timePanelX = ARENA_WIDTH - padding - timeTextWidth - 25;
+  const timePanelY = ARENA_HEIGHT - 38;
 
-  drawHUDPanel(ctx, ARENA_WIDTH - padding - timeTextWidth - 25, ARENA_HEIGHT - 38, timeTextWidth + 30, 30);
+  // Run 038: Calculate opacity for bottom-right panel
+  const bottomRightOpacity = getUIOpacity(playerPos, { x: timePanelX, y: timePanelY, width: timePanelWidth, height: 30 });
+
+  ctx.save();
+  ctx.globalAlpha = bottomRightOpacity;
+  drawHUDPanel(ctx, timePanelX, timePanelY, timePanelWidth, 30);
 
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 16px sans-serif';
+  ctx.font = `${GAME_FONT_BOLD}18px ${GAME_FONT}`;
   ctx.textAlign = 'right';
   drawTextWithShadow(ctx, timeText, ARENA_WIDTH - padding - 5, ARENA_HEIGHT - 17);
+  ctx.restore();
 }
 
 // =============================================================================
-// Run 036: Melee Attack Rendering
+// Run 039: Attack Arc Visualization (Always Visible)
 // =============================================================================
 
 /**
- * Render the Mandible Reaver melee attack arc
- * Visual: Amber/gold arc sweep with mandible trail effect
+ * Render the melee attack arc - NOISE REDUCED VERSION
+ * - Only visible when cooldown is >70% ready OR actively attacking
+ * - Reduced opacity when not attacking (0.4 base vs 1.0 during attack)
+ * - Thinner lines, reduced pulsing intensity
+ * - Cardinal markers removed for cleaner visuals
+ * - Run 040: When hasFullArc is true (Sweeping Arc ability), shows 360-degree ring
  */
-function renderMeleeAttack(
+function renderMeleeAttackArc(
   ctx: CanvasRenderingContext2D,
   playerPos: { x: number; y: number },
-  meleeState: MeleeAttackState,
-  gameTime: number
+  targetDirection: { x: number; y: number },  // Direction to nearest enemy
+  cooldownProgress: number,  // 0 = just attacked, 1 = ready
+  attackDirection: { x: number; y: number } | null,  // Non-null when actively attacking
+  attackProgress: { phase: string; progress: number } | null,  // Attack phase info
+  hasFullArc: boolean = false,  // Run 040: Sweeping Arc ability - 360 degree attacks
+  isDoubleStrikeReady: boolean = false  // Run 040: Next attack will be double strike (red indicator)
 ) {
-  // Only render during active phases
-  if (!meleeState.isActive && !meleeState.isInWindup && !meleeState.isInRecovery) {
+  // NOISE REDUCTION: Only show arc when nearly ready (>70%) OR actively attacking
+  // This hides the constant cooldown animation, making arc a "ready" indicator
+  const isActivelyAttacking = attackDirection !== null;
+  if (cooldownProgress < 0.7 && !isActivelyAttacking) {
     return;
   }
 
-  const { phase, progress } = getAttackProgress(meleeState, gameTime);
+  const config = MANDIBLE_REAVER_CONFIG;
+  const baseAngle = Math.atan2(targetDirection.y, targetDirection.x);
+
+  // DEFENSIVE: Ensure range is always positive (canvas.arc throws on negative radius)
+  const safeRange = Math.max(1, config.range || 60);
+
+  // Run 040: Color selection - red for double strike, gold for normal
+  const arcColor = isDoubleStrikeReady ? '#FF4444' : '#FFD700';
+
+  // NOISE REDUCTION: Lower base opacity when not attacking (0.4 vs 1.0)
+  const baseOpacity = isActivelyAttacking ? 1.0 : 0.4;
 
   ctx.save();
 
-  // Get arc points for rendering
-  const arcPoints = getArcRenderPoints(playerPos, meleeState.direction, MANDIBLE_REAVER_CONFIG, 16);
+  // Run 040: Sweeping Arc - 360-degree circular indicator
+  if (hasFullArc) {
+    // === SWEEPING ARC: Full circle attack indicator ===
+    // Use orange color (#FF8844) matching the sweeping_arc ability color
 
-  // Phase-specific rendering
-  if (phase === 'windup') {
-    // Windup: Faint preview of arc
-    ctx.globalAlpha = 0.3 * progress;
-    ctx.strokeStyle = '#FFB000';
-    ctx.lineWidth = 2;
+    // Outer ring outline - reduced opacity and thickness
+    ctx.strokeStyle = '#FF8844';
+    ctx.lineWidth = 1.4;  // Reduced from 2
+    ctx.globalAlpha = 0.35 * baseOpacity;  // Reduced from 0.5
     ctx.beginPath();
-    for (let i = 0; i < arcPoints.length; i++) {
-      if (i === 0) {
-        ctx.moveTo(arcPoints[i].x, arcPoints[i].y);
-      } else {
-        ctx.lineTo(arcPoints[i].x, arcPoints[i].y);
-      }
-    }
+    ctx.arc(playerPos.x, playerPos.y, safeRange, 0, Math.PI * 2);
     ctx.stroke();
-  } else if (phase === 'active') {
-    // Active: Full arc with amber fill and golden edge
-    const attackAlpha = 1 - progress * 0.5; // Fade as attack completes
 
-    // Fill the arc
-    ctx.globalAlpha = attackAlpha * 0.4;
-    ctx.fillStyle = '#FFB000';
-    ctx.beginPath();
-    for (let i = 0; i < arcPoints.length; i++) {
-      if (i === 0) {
-        ctx.moveTo(arcPoints[i].x, arcPoints[i].y);
-      } else {
-        ctx.lineTo(arcPoints[i].x, arcPoints[i].y);
+    // === COOLDOWN: Expanding ring from center ===
+    if (!attackDirection && cooldownProgress > 0 && cooldownProgress < 1) {
+      const fillRange = safeRange * cooldownProgress;
+      const fillAlpha = (0.1 + cooldownProgress * 0.15) * baseOpacity;  // Reduced from 0.15 + 0.2
+
+      ctx.globalAlpha = fillAlpha;
+      ctx.fillStyle = '#FF8844';
+      ctx.beginPath();
+      ctx.arc(playerPos.x, playerPos.y, fillRange, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // === READY: Full circle glow with subtle rotation animation ===
+    if (!attackDirection && cooldownProgress >= 1) {
+      // Pulsing glow effect - REDUCED intensity
+      const pulsePhase = (Date.now() % 1000) / 1000;
+      const pulseAlpha = (0.15 + Math.sin(pulsePhase * Math.PI * 2) * 0.05) * baseOpacity;  // Reduced from 0.25 + 0.1
+
+      ctx.globalAlpha = pulseAlpha;
+      ctx.fillStyle = '#FF8844';
+      ctx.beginPath();
+      ctx.arc(playerPos.x, playerPos.y, safeRange, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rotating "sweep" line to show 360 coverage - reduced opacity and thickness
+      const sweepAngle = (Date.now() % 2000) / 2000 * Math.PI * 2;
+      ctx.globalAlpha = 0.4 * baseOpacity;  // Reduced from 0.6
+      ctx.strokeStyle = '#FFAA66';
+      ctx.lineWidth = 2;  // Reduced from 3
+      ctx.beginPath();
+      ctx.moveTo(playerPos.x, playerPos.y);
+      ctx.lineTo(
+        playerPos.x + Math.cos(sweepAngle) * safeRange,
+        playerPos.y + Math.sin(sweepAngle) * safeRange
+      );
+      ctx.stroke();
+
+      // REMOVED: Four cardinal direction markers - visual clutter
+    }
+
+    // === ATTACKING: Expanding ring flash ===
+    if (attackDirection && attackProgress && attackProgress.phase === 'active') {
+      if (attackProgress.progress < 0.3) {
+        const flashAlpha = 0.7 * (1 - attackProgress.progress / 0.3);
+        ctx.globalAlpha = flashAlpha;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 3;  // Reduced from 4
+        ctx.beginPath();
+        ctx.arc(playerPos.x, playerPos.y, safeRange, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner expanding ring for impact feel
+        const expandRadius = safeRange * (0.5 + attackProgress.progress * 0.5);
+        ctx.globalAlpha = flashAlpha * 0.5;
+        ctx.beginPath();
+        ctx.arc(playerPos.x, playerPos.y, expandRadius, 0, Math.PI * 2);
+        ctx.stroke();
       }
     }
+
+    ctx.restore();
+    return;
+  }
+
+  // === NORMAL ARC (non-sweeping): Original directional indicator ===
+  const arcAngleRad = (config.arcAngle / 2) * (Math.PI / 180);
+
+  // === ALWAYS: Draw outline arc toward target - reduced opacity and thickness
+  ctx.strokeStyle = arcColor;  // Run 040: Dynamic color (red for double strike)
+  ctx.lineWidth = 1.4;  // Reduced from 2
+  ctx.globalAlpha = 0.3 * baseOpacity;  // Reduced from 0.4
+
+  ctx.beginPath();
+  ctx.arc(
+    playerPos.x,
+    playerPos.y,
+    safeRange,
+    baseAngle - arcAngleRad,
+    baseAngle + arcAngleRad
+  );
+  ctx.stroke();
+
+  // Draw radial lines at arc edges (mandible hints) - same reduced settings
+  ctx.beginPath();
+  ctx.moveTo(playerPos.x, playerPos.y);
+  ctx.lineTo(
+    playerPos.x + Math.cos(baseAngle - arcAngleRad) * safeRange,
+    playerPos.y + Math.sin(baseAngle - arcAngleRad) * safeRange
+  );
+  ctx.moveTo(playerPos.x, playerPos.y);
+  ctx.lineTo(
+    playerPos.x + Math.cos(baseAngle + arcAngleRad) * safeRange,
+    playerPos.y + Math.sin(baseAngle + arcAngleRad) * safeRange
+  );
+  ctx.stroke();
+
+  // === COOLDOWN: Fill arc from center based on progress ===
+  if (!attackDirection && cooldownProgress > 0 && cooldownProgress < 1) {
+    // Fill expands from center as cooldown completes - reduced intensity
+    const fillRange = safeRange * cooldownProgress;
+    const fillAlpha = (0.15 + cooldownProgress * 0.2) * baseOpacity;  // Reduced from 0.2 + 0.3
+
+    ctx.globalAlpha = fillAlpha;
+    ctx.fillStyle = arcColor;  // Run 040: Dynamic color (red for double strike)
+
+    ctx.beginPath();
+    ctx.moveTo(playerPos.x, playerPos.y);
+    ctx.arc(
+      playerPos.x,
+      playerPos.y,
+      fillRange,
+      baseAngle - arcAngleRad,
+      baseAngle + arcAngleRad
+    );
     ctx.closePath();
     ctx.fill();
-
-    // Edge glow
-    ctx.globalAlpha = attackAlpha;
-    ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 3;
-    ctx.shadowColor = '#FFD700';
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    // Only draw the arc edge (skip the lines back to center)
-    for (let i = 1; i < arcPoints.length - 1; i++) {
-      if (i === 1) {
-        ctx.moveTo(arcPoints[i].x, arcPoints[i].y);
-      } else {
-        ctx.lineTo(arcPoints[i].x, arcPoints[i].y);
-      }
-    }
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    // Mandible "teeth" at the arc edge (for that bee theme)
-    const teethCount = 5;
-    ctx.fillStyle = '#FFD700';
-    ctx.globalAlpha = attackAlpha * 0.8;
-    for (let i = 0; i < teethCount; i++) {
-      const t = (i + 0.5) / teethCount;
-      const idx = Math.floor(1 + t * (arcPoints.length - 3));
-      if (idx < arcPoints.length - 1) {
-        const toothPos = arcPoints[idx];
-        const nextPos = arcPoints[idx + 1] || toothPos;
-
-        // Tooth direction (outward from arc)
-        const dx = toothPos.x - playerPos.x;
-        const dy = toothPos.y - playerPos.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 0) {
-          const nx = dx / dist;
-          const ny = dy / dist;
-          const toothLength = 8;
-
-          ctx.beginPath();
-          ctx.moveTo(toothPos.x, toothPos.y);
-          ctx.lineTo(toothPos.x + nx * toothLength, toothPos.y + ny * toothLength);
-          ctx.lineTo(nextPos.x, nextPos.y);
-          ctx.fill();
-        }
-      }
-    }
-  } else if (phase === 'recovery') {
-    // Recovery: Fading afterglow
-    ctx.globalAlpha = 0.2 * (1 - progress);
-    ctx.strokeStyle = '#FFB000';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let i = 0; i < arcPoints.length; i++) {
-      if (i === 0) {
-        ctx.moveTo(arcPoints[i].x, arcPoints[i].y);
-      } else {
-        ctx.lineTo(arcPoints[i].x, arcPoints[i].y);
-      }
-    }
-    ctx.stroke();
   }
+
+  // === READY: Full arc glow when ready - reduced intensity
+  if (!attackDirection && cooldownProgress >= 1) {
+    ctx.globalAlpha = 0.35 * baseOpacity;  // Reduced from 0.5
+    ctx.fillStyle = arcColor;  // Run 040: Dynamic color (red for double strike)
+
+    ctx.beginPath();
+    ctx.moveTo(playerPos.x, playerPos.y);
+    ctx.arc(
+      playerPos.x,
+      playerPos.y,
+      safeRange,
+      baseAngle - arcAngleRad,
+      baseAngle + arcAngleRad
+    );
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // === ATTACKING: Brief flash when attack fires ===
+  // Full opacity during attacks for clarity
+  if (attackDirection && attackProgress && attackProgress.phase === 'active') {
+    // Quick flash at start of attack only
+    if (attackProgress.progress < 0.3) {
+      ctx.globalAlpha = 0.6 * (1 - attackProgress.progress / 0.3);
+      ctx.fillStyle = '#FFFFFF';
+
+      ctx.beginPath();
+      ctx.moveTo(playerPos.x, playerPos.y);
+      const attackAngle = Math.atan2(attackDirection.y, attackDirection.x);
+      ctx.arc(
+        playerPos.x,
+        playerPos.y,
+        safeRange,
+        attackAngle - arcAngleRad,
+        attackAngle + arcAngleRad
+      );
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+// =============================================================================
+// Momentum Visualization
+// =============================================================================
+
+/**
+ * Render momentum kill streak indicator
+ * Shows current kill streak with bonus percentage
+ */
+export function renderKillStreak(
+  ctx: CanvasRenderingContext2D,
+  playerPos: { x: number; y: number },
+  killStreak: number,
+  playerRadius: number
+) {
+  if (killStreak <= 0) return;
+
+  const bonusPercent = Math.min(killStreak * 15, 75);  // +15% per kill, max 75%
+
+  ctx.save();
+
+  // Position above player
+  const textY = playerPos.y - playerRadius - 20;
+
+  // Kill streak text
+  ctx.font = 'bold 12px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Color intensity based on streak
+  const intensity = Math.min(killStreak / 5, 1);
+  const red = Math.floor(255);
+  const green = Math.floor(200 - intensity * 150);
+  const blue = Math.floor(100 - intensity * 100);
+
+  // Glow effect for high streaks
+  if (killStreak >= 3) {
+    ctx.shadowColor = `rgb(${red}, ${green}, ${blue})`;
+    ctx.shadowBlur = 8;
+  }
+
+  ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
+  ctx.fillText(`${killStreak}x +${bonusPercent}%`, playerPos.x, textY);
 
   ctx.restore();
 }
@@ -1873,6 +2986,222 @@ function drawHexagon(
   }
   ctx.closePath();
   ctx.stroke();
+}
+
+// =============================================================================
+// Run 040: STATUS EFFECT TINT RENDERING
+// Highly visible color overlays for poison/burn/slow/venom effects
+// =============================================================================
+
+/**
+ * Status effect color configuration
+ * Each effect has a distinct, highly visible color
+ */
+const STATUS_EFFECT_COLORS = {
+  poison: {
+    color: '#00FF00',  // Bright green
+    rgb: '0, 255, 0',
+    // Opacity scales with stacks: 15% -> 25% -> 35%
+    getOpacity: (stacks: number) => Math.min(0.35, 0.15 + (stacks - 1) * 0.10),
+  },
+  burn: {
+    color: '#FF6600',  // Orange/fire
+    rgb: '255, 102, 0',
+    getOpacity: (stacks: number) => Math.min(0.40, 0.20 + (stacks - 1) * 0.10),
+  },
+  slow: {
+    color: '#00CCFF',  // Ice blue
+    rgb: '0, 204, 255',
+    getOpacity: (stacks: number) => Math.min(0.35, 0.15 + (stacks - 1) * 0.10),
+  },
+  venomArchitect: {
+    color: '#8B00FF',  // Purple
+    rgb: '139, 0, 255',
+    // Venom architect scales more aggressively since it stacks infinitely
+    getOpacity: (stacks: number) => Math.min(0.50, 0.10 + stacks * 0.04),
+  },
+} as const;
+
+/**
+ * Render status effect tint overlays on an enemy
+ * Creates pulsing colored overlays for each active status effect
+ */
+function renderStatusEffectTints(
+  ctx: CanvasRenderingContext2D,
+  enemy: Enemy,
+  enemyX: number,
+  enemyY: number,
+  drawRadius: number,
+  gameTime: number
+) {
+  // Get pulsing multiplier (0.8 to 1.2 of base opacity)
+  // Each effect type pulses at a slightly different rate for visual interest
+  const getPulseMultiplier = (offset: number) => {
+    const phase = Math.sin(gameTime * 0.004 + offset);
+    return 0.9 + phase * 0.2; // 0.8 to 1.2 range
+  };
+
+  // Helper to draw a tint overlay circle
+  const drawTintOverlay = (rgb: string, baseOpacity: number, pulseOffset: number) => {
+    const pulse = getPulseMultiplier(pulseOffset);
+    const opacity = baseOpacity * pulse;
+
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.fillStyle = `rgb(${rgb})`;
+    ctx.beginPath();
+
+    // Draw shape based on enemy type
+    switch (enemy.type) {
+      case 'basic':
+      case 'worker':
+        ctx.arc(enemyX, enemyY, drawRadius, 0, Math.PI * 2);
+        break;
+      case 'fast':
+      case 'scout':
+        drawTriangle(ctx, enemyX, enemyY, drawRadius);
+        break;
+      case 'spitter':
+      case 'propolis':
+        drawDiamond(ctx, enemyX, enemyY, drawRadius);
+        break;
+      case 'tank':
+      case 'guard':
+        ctx.rect(enemyX - drawRadius, enemyY - drawRadius, drawRadius * 2, drawRadius * 2);
+        break;
+      case 'boss':
+      case 'royal':
+        drawOctagon(ctx, enemyX, enemyY, drawRadius);
+        break;
+      default:
+        ctx.arc(enemyX, enemyY, drawRadius, 0, Math.PI * 2);
+    }
+    ctx.fill();
+    ctx.restore();
+  };
+
+  // Helper to draw status icon above enemy for heavy effects (3+ stacks)
+  const drawStatusIcon = (iconColor: string, yOffset: number, stacks: number, iconType: 'poison' | 'burn' | 'slow' | 'venom') => {
+    if (stacks < 3) return;
+
+    const iconY = enemyY - drawRadius - 12 + yOffset;
+    const iconSize = 6;
+    const pulse = getPulseMultiplier(stacks);
+
+    ctx.save();
+    ctx.globalAlpha = 0.9 * pulse;
+    ctx.fillStyle = iconColor;
+
+    switch (iconType) {
+      case 'poison':
+        // Skull/droplet shape
+        ctx.beginPath();
+        ctx.arc(enemyX, iconY, iconSize, 0, Math.PI * 2);
+        ctx.fill();
+        // Drip
+        ctx.beginPath();
+        ctx.moveTo(enemyX, iconY + iconSize);
+        ctx.lineTo(enemyX - 3, iconY + iconSize + 5);
+        ctx.lineTo(enemyX + 3, iconY + iconSize + 5);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      case 'burn':
+        // Flame shape
+        ctx.beginPath();
+        ctx.moveTo(enemyX, iconY - iconSize);
+        ctx.quadraticCurveTo(enemyX + iconSize, iconY, enemyX, iconY + iconSize);
+        ctx.quadraticCurveTo(enemyX - iconSize, iconY, enemyX, iconY - iconSize);
+        ctx.fill();
+        break;
+      case 'slow':
+        // Snowflake/crystal
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = iconColor;
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI * 2 * i) / 6;
+          ctx.beginPath();
+          ctx.moveTo(enemyX, iconY);
+          ctx.lineTo(
+            enemyX + Math.cos(angle) * iconSize,
+            iconY + Math.sin(angle) * iconSize
+          );
+          ctx.stroke();
+        }
+        break;
+      case 'venom':
+        // Spiral/biohazard-like
+        ctx.beginPath();
+        ctx.arc(enemyX, iconY, iconSize, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(enemyX, iconY, iconSize * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+    }
+
+    // Stack count for high stacks
+    if (stacks >= 5) {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 8px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${stacks}`, enemyX, iconY + iconSize + 12);
+    }
+
+    ctx.restore();
+  };
+
+  let iconYOffset = 0;
+
+  // POISON: Green tint
+  if (enemy.poisonStacks && enemy.poisonStacks > 0) {
+    const cfg = STATUS_EFFECT_COLORS.poison;
+    const opacity = cfg.getOpacity(enemy.poisonStacks);
+    drawTintOverlay(cfg.rgb, opacity, 0);
+    drawStatusIcon(cfg.color, iconYOffset, enemy.poisonStacks, 'poison');
+    iconYOffset -= 16;
+  }
+
+  // BURN: Orange tint
+  if (enemy.burnStacks && enemy.burnStacks > 0) {
+    const cfg = STATUS_EFFECT_COLORS.burn;
+    const opacity = cfg.getOpacity(enemy.burnStacks);
+    drawTintOverlay(cfg.rgb, opacity, 1);
+    drawStatusIcon(cfg.color, iconYOffset, enemy.burnStacks, 'burn');
+    iconYOffset -= 16;
+  }
+
+  // SLOW: Blue tint
+  if (enemy.slowStacks && enemy.slowStacks > 0) {
+    const cfg = STATUS_EFFECT_COLORS.slow;
+    const opacity = cfg.getOpacity(enemy.slowStacks);
+    drawTintOverlay(cfg.rgb, opacity, 2);
+    drawStatusIcon(cfg.color, iconYOffset, enemy.slowStacks, 'slow');
+    iconYOffset -= 16;
+  }
+
+  // VENOM ARCHITECT: Purple tint (infinite stacking, very visible)
+  if (enemy.venomArchitectStacks && enemy.venomArchitectStacks > 0) {
+    const cfg = STATUS_EFFECT_COLORS.venomArchitect;
+    const opacity = cfg.getOpacity(enemy.venomArchitectStacks);
+    drawTintOverlay(cfg.rgb, opacity, 3);
+    drawStatusIcon(cfg.color, iconYOffset, enemy.venomArchitectStacks, 'venom');
+
+    // Extra glow ring for venom architect (it's the signature ability)
+    if (enemy.venomArchitectStacks >= 3) {
+      const glowPulse = getPulseMultiplier(3);
+      const glowRadius = drawRadius * (1.3 + enemy.venomArchitectStacks * 0.05);
+      ctx.save();
+      ctx.globalAlpha = 0.3 * glowPulse;
+      ctx.strokeStyle = cfg.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(enemyX, enemyY, glowRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
 }
 
 function drawTriangle(
@@ -2958,10 +4287,17 @@ function renderBall(ctx: CanvasRenderingContext2D, ballState: BallState, gameTim
 
   // ==========================================================================
   // 2. THE RING (with gap)
+  // RUN 042: Tier 2 (outer) ball uses DOTTED yellow line
   // ==========================================================================
 
-  // Ring thickness based on phase
-  const ringThickness = phase === 'cooking' ? 12 : phase === 'constrict' ? 8 : 6;
+  // Check if this is a tier 2 (outer) ball
+  const isTier2 = ballState.ballTier === 2;
+
+  // DEBUG: Log ball rendering state
+  console.log(`[BALL-RENDER] tier=${ballState.ballTier}, phase=${phase}, isTier2=${isTier2}`);
+
+  // Ring thickness based on phase (tier 2 is thinner)
+  const ringThickness = isTier2 ? 4 : (phase === 'cooking' ? 12 : phase === 'constrict' ? 8 : 6);
 
   // Draw the ring arc (excluding the gap)
   const gapStart = gapAngle - gapSize / 2;
@@ -2970,14 +4306,32 @@ function renderBall(ctx: CanvasRenderingContext2D, ballState: BallState, gameTim
   // Ring pulse (with fade opacity)
   const pulseAlpha = 0.7 + Math.sin(gameTime * 0.008) * 0.2;
 
-  ctx.strokeStyle = colors.ring;
-  ctx.lineWidth = ringThickness;
-  ctx.globalAlpha = applyOpacity(pulseAlpha);
+  // Tier 2: Dotted yellow line (warning, no knockback)
+  // Tier 1 during forming: Also dotted yellow (can walk through, no knockback yet)
+  // Tier 1 after forming: Solid colored line (danger, has knockback)
+  const isWalkablePhase = phase === 'forming' || phase === 'gathering';
+
+  if (isTier2 || (ballState.ballTier === 1 && isWalkablePhase)) {
+    // Dotted yellow for walkable phases (tier 2, or tier 1 during forming/gathering)
+    ctx.strokeStyle = '#FFD700';  // Gold/yellow for warning
+    ctx.lineWidth = ringThickness;
+    ctx.globalAlpha = applyOpacity(pulseAlpha * 0.8);
+    ctx.setLineDash([3, 8]);  // DOTTED pattern: 3px dot, 8px gap
+  } else {
+    // Solid line for dangerous phases (silence, constrict, cooking)
+    ctx.strokeStyle = colors.ring;
+    ctx.lineWidth = ringThickness;
+    ctx.globalAlpha = applyOpacity(pulseAlpha);
+    ctx.setLineDash([]);  // Solid line
+  }
 
   // Draw the ring in two arcs (before and after the gap)
   ctx.beginPath();
   ctx.arc(center.x, center.y, currentRadius, gapEnd, gapStart + Math.PI * 2);
   ctx.stroke();
+
+  // Reset line dash
+  ctx.setLineDash([]);
 
   // ==========================================================================
   // 3. THE GAP (escape route indicator)
@@ -3093,14 +4447,20 @@ function renderBall(ctx: CanvasRenderingContext2D, ballState: BallState, gameTim
   ctx.textAlign = 'center';
 
   const phaseText = {
-    forming: '⚠ THE BALL FORMING',
-    silence: '⚠ SILENCE BEFORE STORM',
-    constrict: '🔥 CONSTRICTING!',
-    cooking: '💀 COOKING!',
+    forming: '!! THE BALL FORMING',
+    silence: '!! SILENCE BEFORE STORM',
+    constrict: '>> CONSTRICTING!',
+    cooking: 'XX COOKING!',
   } as const;
 
+  // Tier 2 shows "OUTER" prefix
+  const tierPrefix = isTier2 ? 'OUTER ' : '';
+  const displayText = isTier2
+    ? `>> ${tierPrefix}BALL`
+    : (phaseText[phase as keyof typeof phaseText] ?? 'THE BALL');
+
   ctx.fillText(
-    phaseText[phase as keyof typeof phaseText] ?? 'THE BALL',
+    displayText,
     center.x,
     center.y - currentRadius - 20
   );
@@ -3353,7 +4713,7 @@ function renderBall(ctx: CanvasRenderingContext2D, ballState: BallState, gameTim
     ctx.fillStyle = '#FFAA00';
     ctx.font = 'bold 10px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('⚠ BALL CAN REVIVE!', center.x, center.y - currentRadius - 35);
+    ctx.fillText('!! BALL CAN REVIVE!', center.x, center.y - currentRadius - 35);
   }
 
   ctx.restore();

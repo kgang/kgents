@@ -985,8 +985,8 @@ export function getPhaseTransitionEffects(
   if (fromPhase === 'FLOW' && toPhase === 'CRISIS') {
     return {
       screenTint: { color: '#6B2D5B', duration: 500, opacity: 0.15 },
-      vignette: { color: '#FF6600', intensity: 0.2 },
-      hudText: { text: 'THEY GROW BOLD', color: '#FF6600', duration: 2500 },
+      vignette: { color: '#FF3366', intensity: 0.2 },  // Pinkish-red crisis (distinct from player)
+      hudText: { text: 'THEY GROW BOLD', color: '#FF3366', duration: 2500 },
       cameraShake: { intensity: 4, duration: 300 },
       musicShift: 'minor',
       soundCue: 'phase_crisis',

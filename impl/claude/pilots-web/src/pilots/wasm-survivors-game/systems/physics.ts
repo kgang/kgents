@@ -33,6 +33,139 @@ const ENEMY_CHASE_SPEED_FACTOR = 0.5; // Enemies move toward player (increased f
 const ENEMY_PROJECTILE_SPEED = 400;
 
 // =============================================================================
+// Catch-Up / Self-Healing System Constants
+// Prevents enemies from getting "stuck" far from the action
+// =============================================================================
+
+/** Distance threshold beyond which enemies are considered "too far" */
+const CATCH_UP_DISTANCE_THRESHOLD = 500;
+
+/** Time an enemy can be "too far" before catch-up kicks in (ms) */
+const CATCH_UP_TIME_THRESHOLD = 5000; // 5 seconds
+
+/** Speed boost multiplier when enemy is in catch-up mode */
+const CATCH_UP_SPEED_BOOST = 3.0;
+
+/** If enemy is THIS far away, teleport them closer (hard limit) */
+const TELEPORT_DISTANCE_THRESHOLD = 800;
+
+/** Teleport target distance from player (places enemy just outside normal range) */
+const TELEPORT_TARGET_DISTANCE = 350;
+
+/** Minimum speed to consider enemy "moving" (prevents velocity=0 stuck state) */
+const MINIMUM_MOVEMENT_SPEED = 10;
+
+// =============================================================================
+// Catch-Up / Self-Healing Helper Functions
+// =============================================================================
+
+/**
+ * Apply catch-up logic to an enemy that might be "stuck" far from action.
+ *
+ * This system prevents frustrating scenarios where one enemy spawns far away
+ * and takes forever to reach the player, blocking wave completion.
+ *
+ * Three tiers of intervention:
+ * 1. ACCELERATION: After 5s far away, enemy gets 3x speed boost
+ * 2. TELEPORT: If >800px away, teleport to ~350px from player
+ * 3. STUCK FIX: If velocity is near-zero, force movement toward player
+ *
+ * @param enemy - The enemy to check
+ * @param playerPos - Player's current position
+ * @param deltaTime - Time since last frame (ms)
+ * @returns Updated enemy with catch-up state applied
+ */
+function applyCatchUpLogic(
+  enemy: Enemy,
+  playerPos: Vector2,
+  deltaTime: number
+): { enemy: Enemy; catchUpMultiplier: number; wasTeleported: boolean } {
+  // Calculate distance to player
+  const dx = playerPos.x - enemy.position.x;
+  const dy = playerPos.y - enemy.position.y;
+  const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
+
+  let updatedEnemy = { ...enemy };
+  let catchUpMultiplier = 1.0;
+  let wasTeleported = false;
+
+  // ==========================================================================
+  // TIER 3: TELEPORT - Enemy is extremely far away (>800px)
+  // This is a hard reset to prevent indefinite stalling
+  // ==========================================================================
+  if (distanceToPlayer > TELEPORT_DISTANCE_THRESHOLD) {
+    // Teleport enemy to ~350px from player in a random direction
+    const angle = Math.random() * Math.PI * 2;
+    const teleportX = playerPos.x + Math.cos(angle) * TELEPORT_TARGET_DISTANCE;
+    const teleportY = playerPos.y + Math.sin(angle) * TELEPORT_TARGET_DISTANCE;
+
+    // Clamp to arena bounds (with some padding)
+    const clampedX = Math.max(50, Math.min(ARENA_WIDTH - 50, teleportX));
+    const clampedY = Math.max(50, Math.min(ARENA_HEIGHT - 50, teleportY));
+
+    updatedEnemy.position = { x: clampedX, y: clampedY };
+    updatedEnemy.farAwayTime = 0;
+    updatedEnemy.inCatchUpMode = false;
+    wasTeleported = true;
+
+    console.log(`[CATCH-UP] Teleported ${enemy.type} from ${Math.round(distanceToPlayer)}px to ${TELEPORT_TARGET_DISTANCE}px from player`);
+
+    return { enemy: updatedEnemy, catchUpMultiplier: 1.0, wasTeleported };
+  }
+
+  // ==========================================================================
+  // TIER 1 & 2: TRACK TIME FAR AWAY + ACCELERATION
+  // ==========================================================================
+  if (distanceToPlayer > CATCH_UP_DISTANCE_THRESHOLD) {
+    // Enemy is far - accumulate time
+    const currentFarTime = enemy.farAwayTime ?? 0;
+    updatedEnemy.farAwayTime = currentFarTime + deltaTime;
+
+    // After threshold time, enable catch-up mode
+    if (updatedEnemy.farAwayTime >= CATCH_UP_TIME_THRESHOLD) {
+      updatedEnemy.inCatchUpMode = true;
+      catchUpMultiplier = CATCH_UP_SPEED_BOOST;
+    }
+  } else {
+    // Enemy is within normal range - reset catch-up state
+    updatedEnemy.farAwayTime = 0;
+    updatedEnemy.inCatchUpMode = false;
+  }
+
+  // ==========================================================================
+  // TIER 2.5: STUCK FIX - Velocity near zero but enemy still alive
+  // This handles edge cases where behaviorState causes movement to stop
+  // ==========================================================================
+  const velocityMagnitude = Math.sqrt(
+    enemy.velocity.x * enemy.velocity.x +
+    enemy.velocity.y * enemy.velocity.y
+  );
+
+  if (
+    velocityMagnitude < MINIMUM_MOVEMENT_SPEED &&
+    distanceToPlayer > 100 && // Not already near player
+    enemy.behaviorState !== 'telegraph' && // Not intentionally stopped
+    enemy.behaviorState !== 'attack'
+  ) {
+    // Force movement toward player with base speed
+    const dirX = dx / distanceToPlayer;
+    const dirY = dy / distanceToPlayer;
+    const baseSpeed = getEnemySpeed(enemy.type);
+
+    updatedEnemy.velocity = {
+      x: dirX * baseSpeed,
+      y: dirY * baseSpeed,
+    };
+
+    // Also enable catch-up mode to speed this up
+    updatedEnemy.inCatchUpMode = true;
+    catchUpMultiplier = Math.max(catchUpMultiplier, CATCH_UP_SPEED_BOOST * 0.5); // 1.5x minimum
+  }
+
+  return { enemy: updatedEnemy, catchUpMultiplier, wasTeleported };
+}
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -43,7 +176,7 @@ export interface PhysicsResult {
 }
 
 export interface CollisionEvent {
-  type: 'enemy_killed' | 'player_hit' | 'xp_collected';
+  type: 'enemy_killed' | 'player_hit' | 'xp_collected' | 'shield_broken';
   position: Vector2;
   // DD-21: Track which attack type caused the hit (bee attacks)
   attackType?: 'swarm' | 'sting' | 'block' | 'sticky' | 'combo';
@@ -64,13 +197,19 @@ export interface CollisionResult {
 /**
  * Update physics for all entities
  * Budget: < 5ms
+ *
+ * @param state - Current game state
+ * @param playerVelocity - Player velocity in pixels per second
+ * @param deltaTime - Time since last frame in MILLISECONDS (frame-rate independent)
+ * @param enemySlowFactor - Global enemy speed multiplier from abilities (1.0 = normal, 0.8 = 20% slower)
  */
 export function updatePhysics(
   state: GameState,
   playerVelocity: Vector2,
-  deltaTime: number
+  deltaTime: number,
+  enemySlowFactor: number = 1.0
 ): PhysicsResult {
-  const dt = deltaTime / 1000; // Convert to seconds
+  const dt = deltaTime / 1000; // Convert to seconds for velocity calculations
 
   // Update player position
   let playerX = state.player.position.x + playerVelocity.x * dt;
@@ -101,9 +240,29 @@ export function updatePhysics(
   const updatedEnemies = state.enemies.map((enemy) => {
     const playerPos = { x: playerX, y: playerY };
 
+    // ==========================================================================
+    // Run 038: CATCH-UP / SELF-HEALING SYSTEM
+    // Prevents enemies from getting stuck far from the action
+    // Applied FIRST so teleported enemies get proper behavior updates
+    // ==========================================================================
+    const catchUpResult = applyCatchUpLogic(enemy, playerPos, deltaTime);
+    let updatedEnemy = catchUpResult.enemy;
+    const catchUpMultiplier = catchUpResult.catchUpMultiplier;
+
+    // If enemy was teleported, skip normal behavior update this frame
+    // (they just need to start moving toward player)
+    if (catchUpResult.wasTeleported) {
+      // Reset behavior state to chase
+      updatedEnemy.behaviorState = 'chase';
+      updatedEnemy.stateStartTime = state.gameTime;
+      updatedEnemy.attackDirection = undefined;
+      updatedEnemy.targetPosition = undefined;
+    }
+
     // DD-21: Update behavior state machine (Bee FSM)
-    const behaviorResult = updateBeeBehavior(enemy, playerPos, state.gameTime, deltaTime);
-    let updatedEnemy = behaviorResult.enemy;
+    // Pass enemySlowFactor to apply Bullet Time slowdown to attack movements
+    const behaviorResult = updateBeeBehavior(updatedEnemy, playerPos, state.gameTime, deltaTime, enemySlowFactor);
+    updatedEnemy = behaviorResult.enemy;
     enemyDamageDealt += behaviorResult.damageDealt;
 
     // Collect enemy projectiles (Spitter)
@@ -124,12 +283,24 @@ export function updatePhysics(
     const dy = playerPos.y - updatedEnemy.position.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    let speedMultiplier = 1.0;
+    // Calculate total speed multiplier from all sources
+    // 1. Start with global enemySlowFactor from Bullet Time ability (1.0 = normal, 0.8 = 20% slower)
+    // 2. Apply DD-15 Slow Field if enemy is within radius
+    // 3. Apply Run 043 Movement Trail slow (thermal_wake + rally_scent)
+    // 4. Apply Run 038 Catch-Up boost (3x) if enemy has been far away too long
+    let speedMultiplier = enemySlowFactor * catchUpMultiplier;
     if (slowRadius > 0 && distance < slowRadius) {
-      speedMultiplier = 1.0 - slowPercent / 100;
+      speedMultiplier *= (1.0 - slowPercent / 100);
+    }
+
+    // Run 043: Apply trail slow from thermal_wake + rally_scent abilities
+    // trailSlowPercent is set by processMovementTrail in useGameLoop
+    if (updatedEnemy.trailSlowPercent && updatedEnemy.trailSlowPercent > 0) {
+      speedMultiplier *= (1.0 - updatedEnemy.trailSlowPercent / 100);
     }
 
     // Apply movement (only if not in attack state - attack movement handled in behavior)
+    // Movement is frame-rate independent: velocity * speedMultiplier * dt (where dt = deltaTime/1000)
     if (updatedEnemy.behaviorState !== 'attack') {
       const newX = updatedEnemy.position.x + movement.x * speedMultiplier * ENEMY_CHASE_SPEED_FACTOR * dt;
       const newY = updatedEnemy.position.y + movement.y * speedMultiplier * ENEMY_CHASE_SPEED_FACTOR * dt;
@@ -412,7 +583,7 @@ function getEnemySpeed(type: EnemyType): number {
     case 'propolis':
       return 50;     // Ranged, stays back
     case 'guard':
-      return 40;     // Slow defenders
+      return 48;     // Slow defenders (+20% faster for more pressure)
     case 'royal':
       return 60;     // Elite, deliberate
     default:
@@ -432,7 +603,7 @@ export function createInitialPlayer(): GameState['player'] {
     maxHealth: 100,
     level: 1,
     xp: 0,
-    xpToNextLevel: 100,
+    xpToNextLevel: 250,  // Tuned for balanced progression
     upgrades: [],
     damage: 7,
     attackSpeed: 1,

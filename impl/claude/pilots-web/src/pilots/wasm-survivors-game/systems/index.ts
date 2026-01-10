@@ -275,9 +275,10 @@ export {
   type UseAdaptationNotificationsResult,
 } from './witness-adaptive-bridge';
 
-// Run 036: New Abilities System (61 composable abilities)
+// Run 036: New Abilities System (36 abilities across 6 categories)
 export {
   ABILITY_POOL,
+  getAllAbilities,
   getAbility,
   getAbilitiesByCategory,
   getRiskRewardAbilities,
@@ -285,19 +286,31 @@ export {
   createInitialAbilities,
   addAbility,
   generateAbilityChoices,
+  getAbilityChoices,
   hasAbility,
   getAbilityLevel,
+  canTakeAbility,
+  computeAbilityEffects,
+  resetRuntimeForWave,
+  recordKillForTrophyScent,
+  incrementSawtoothCounter,
+  hasConflict,
+  getConflicts,
+  wouldConflict,
   type AbilityId,
   type AbilityCategory,
   type Ability,
+  type AbilityEffect,
   type AbilityMechanic,
   type AbilityCurse,
   type CurseEffect,
   type ActiveAbilities as NewActiveAbilities,
+  type AbilityRuntime,
   type ComputedEffects,
   type RiskLevel,
   type SkillDemand,
   type ComboPotential,
+  type AbilityJuiceConfig,
 } from './abilities';
 
 // Run 036: Mandible Reaver Melee System

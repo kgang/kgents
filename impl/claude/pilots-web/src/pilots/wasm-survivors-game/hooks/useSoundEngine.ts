@@ -25,6 +25,7 @@ import {
   setSpatialConfig,
   playLayeredKillSound,
   playDamageSound,
+  playEnemyHitSound,
   playDashSound,
   playXPSound,
   playLevelUpSound,
@@ -64,7 +65,13 @@ export interface UseSoundEngineResult {
     comboCount?: number,
     position?: Vector2
   ) => void;
-  /** Play damage sound */
+  /**
+   * Play enemy hit sound (player damages enemy, not a kill)
+   * @param damage - Amount of damage dealt (affects volume)
+   * @param position - Enemy position for spatial audio
+   */
+  playEnemyHit: (damage?: number, position?: Vector2) => void;
+  /** Play damage sound (player takes damage) */
   playDamage: () => void;
   /** Play level up fanfare */
   playLevelUp: () => void;
@@ -110,6 +117,19 @@ export interface UseSoundEngineResult {
   playHoneyDrip: () => void;
   /** Play freeze frame sound (time-stop impact) */
   playFreezeFrame: (type: 'significant' | 'multi' | 'critical' | 'massacre') => void;
+  /**
+   * Start low health heartbeat loop
+   * Plays heartbeat sound at ~1.5 second intervals while active.
+   * Call when health drops below 30% threshold.
+   */
+  startHeartbeatLoop: () => void;
+  /**
+   * Stop low health heartbeat loop
+   * Call when health goes above 30% threshold or player dies.
+   */
+  stopHeartbeatLoop: () => void;
+  /** Check if heartbeat loop is currently playing */
+  isHeartbeatPlaying: boolean;
   /** Mute all sounds */
   mute: () => void;
   /** Unmute sounds */
@@ -130,12 +150,21 @@ export interface UseSoundEngineResult {
  *
  * "Every kill should sound like biting into a perfect apple."
  */
+// Low health heartbeat interval in milliseconds (~1.5 seconds between lub-dub)
+const HEARTBEAT_INTERVAL_MS = 1500;
+// Volume for heartbeat (noticeable but not overwhelming)
+const HEARTBEAT_VOLUME = 0.5;
+
 export function useSoundEngine(): UseSoundEngineResult {
   // Legacy engine for sounds not yet in audio.ts
   const legacyEngineRef = useRef<SoundEngine | null>(null);
   const mutedRef = useRef<boolean>(false);
   const silentRef = useRef<boolean>(false);
   const audioInitializedRef = useRef<boolean>(false);
+
+  // Low health heartbeat loop state
+  const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const heartbeatPlayingRef = useRef<boolean>(false);
 
   // Initialize both audio systems on mount
   useEffect(() => {
@@ -156,6 +185,12 @@ export function useSoundEngine(): UseSoundEngineResult {
     // Cleanup
     return () => {
       stopAllAudio();
+      // Clean up heartbeat interval if running
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = null;
+        heartbeatPlayingRef.current = false;
+      }
     };
   }, []);
 
@@ -205,6 +240,15 @@ export function useSoundEngine(): UseSoundEngineResult {
   const playDamage = useCallback(() => {
     if (mutedRef.current || silentRef.current) return;
     playDamageSound();
+  }, []);
+
+  /**
+   * Enemy Hit Sound (non-lethal damage to enemy)
+   * Satisfying impact with volume scaled by damage.
+   */
+  const playEnemyHit = useCallback((damage: number = 10, position?: Vector2) => {
+    if (mutedRef.current || silentRef.current) return;
+    playEnemyHitSound(damage, position);
   }, []);
 
   const playLevelUp = useCallback(() => {
@@ -322,6 +366,53 @@ export function useSoundEngine(): UseSoundEngineResult {
     playFreezeFrameSound(type);
   }, []);
 
+  /**
+   * Start low health heartbeat loop
+   *
+   * Plays a heartbeat sound every ~1.5 seconds to warn the player they're in danger.
+   * The heartbeat uses the legacy sound engine's 'heartbeat' sound which produces
+   * a "lub-dub" pattern with minor 2nd unease.
+   *
+   * Call when health drops below 30% threshold.
+   */
+  const startHeartbeatLoop = useCallback(() => {
+    // Don't start if already playing, muted, or in silence mode
+    if (heartbeatPlayingRef.current || mutedRef.current || silentRef.current) return;
+
+    // Play first heartbeat immediately
+    legacyEngineRef.current?.play('heartbeat', { volume: HEARTBEAT_VOLUME });
+
+    // Set up interval for subsequent heartbeats
+    heartbeatIntervalRef.current = setInterval(() => {
+      // Check conditions each beat (mute/silence could change)
+      if (mutedRef.current || silentRef.current) {
+        // Stop the loop if muted/silenced
+        if (heartbeatIntervalRef.current) {
+          clearInterval(heartbeatIntervalRef.current);
+          heartbeatIntervalRef.current = null;
+          heartbeatPlayingRef.current = false;
+        }
+        return;
+      }
+      legacyEngineRef.current?.play('heartbeat', { volume: HEARTBEAT_VOLUME });
+    }, HEARTBEAT_INTERVAL_MS);
+
+    heartbeatPlayingRef.current = true;
+  }, []);
+
+  /**
+   * Stop low health heartbeat loop
+   *
+   * Call when health goes above 30% threshold or player dies.
+   */
+  const stopHeartbeatLoop = useCallback(() => {
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
+    heartbeatPlayingRef.current = false;
+  }, []);
+
   const mute = useCallback(() => {
     legacyEngineRef.current?.mute();
     setMasterVolume(0);
@@ -337,6 +428,7 @@ export function useSoundEngine(): UseSoundEngineResult {
   return {
     play,
     playKill,
+    playEnemyHit,
     playDamage,
     playLevelUp,
     playSynergy,
@@ -352,6 +444,9 @@ export function useSoundEngine(): UseSoundEngineResult {
     playDeath,
     playHoneyDrip,
     playFreezeFrame,
+    startHeartbeatLoop,
+    stopHeartbeatLoop,
+    isHeartbeatPlaying: heartbeatPlayingRef.current,
     mute,
     unmute,
     isMuted: mutedRef.current,

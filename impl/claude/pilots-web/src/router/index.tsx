@@ -11,19 +11,17 @@
  * - /pilots/disney-portal-planner - Disney Portal Planner
  */
 
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createHashRouter } from 'react-router-dom';
 import { WASMSurvivors } from '@/pilots/wasm-survivors-game';
 
 /**
  * Application router
+ *
+ * Uses HashRouter for static hosting compatibility (itch.io, GitHub Pages, etc.)
  */
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/',
-    element: <Navigate to="/pilots/wasm-survivors-game" replace />,
-  },
-  {
-    path: '/pilots/wasm-survivors-game',
     element: <WASMSurvivors />,
   },
 ]);
