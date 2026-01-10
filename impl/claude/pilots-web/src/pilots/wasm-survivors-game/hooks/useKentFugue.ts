@@ -800,18 +800,27 @@ class FugueSynthesizer {
           centerPitch * Math.pow(2, -pitchDrop / 1200), // cents to ratio
           startTime + note.duration * 0.8
         );
-        peakFilter.gain.value = 8;
-        peakFilter.Q.value = 1.5;
+        // REDUCED HARSHNESS: Lower peak gain and Q for smoother crash
+        peakFilter.gain.value = 4; // Reduced from 8 dB
+        peakFilter.Q.value = 1.0;  // Reduced from 1.5 - wider, smoother peak
 
         const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(note.velocity * 1.2 * volumeMultiplier, startTime);
+        // REDUCED HARSHNESS: Lower overall crash volume
+        gain.gain.setValueAtTime(note.velocity * 0.7 * volumeMultiplier, startTime); // Reduced from 1.2
         gain.gain.exponentialRampToValueAtTime(0.001, startTime + note.duration);
+
+        // REDUCED HARSHNESS: Lowpass filter to tame harsh high frequencies
+        const lpFilter = this.ctx.createBiquadFilter();
+        lpFilter.type = 'lowpass';
+        lpFilter.frequency.value = 6000; // Cut harsh highs above 6kHz
+        lpFilter.Q.value = 0.5; // Gentle rolloff
 
         noise.connect(hpFilter);
         hpFilter.connect(peakFilter);
         ringMod.connect(ringGain);
         ringGain.connect(peakFilter.frequency); // FM on peak frequency
-        peakFilter.connect(gain);
+        peakFilter.connect(lpFilter);
+        lpFilter.connect(gain);
         gain.connect(this.masterGain);
 
         noise.start(startTime);

@@ -407,3 +407,83 @@ export {
   type ApexUpdateResult,
   type ApexTarget,
 } from './apex-strike';
+
+// INSANE COMBO SYSTEM - Bee Bounce, Momentum Stacking, Chain Kills, Perk Synergies
+export {
+  // Configuration
+  BEE_BOUNCE_CONFIG,
+  MOMENTUM_CONFIG,
+  COMBO_WINDOW_CONFIG,
+  GRAZE_CONFIG,
+  CHAIN_KILL_CONFIG,
+  TIER_THRESHOLDS,
+  PERK_SYNERGIES,
+  TRANSCENDENT_ABILITIES,
+  // State factories
+  createInitialInsaneComboState,
+  createInitialBeeBounceState,
+  createInitialMomentumStacks,
+  // Bee Bounce system
+  calculateBounceDirection,
+  processBeeBounce,
+  updateBeeBounce,
+  // Momentum system
+  addMomentumStack,
+  updateMomentum,
+  calculateMomentumMultiplier,
+  // Graze system
+  processGraze,
+  updateGraze,
+  // Chain Kill system
+  markChainTargets,
+  processChainKills,
+  // Combo Window system
+  startComboWindow,
+  processComboWindow,
+  updateComboWindow,
+  // Synergies
+  checkPerkSynergies,
+  checkTranscendentAbilities,
+  updateSynergies,
+  // Total multiplier
+  recalculateTotalMultiplier,
+  updateInsaneComboSystem,
+  // Utilities
+  getComboTierDisplayName,
+  getComboTierColor,
+  applyComboMultiplier,
+  applyComboSpeedBonus,
+  // Types
+  type ComboTier as InsaneComboTier,
+  type MomentumType,
+  type BeeBounceState,
+  type MomentumStack,
+  type InsaneComboState,
+  type ChainTarget,
+  type PerkSynergy,
+  type SynergyEffect,
+  type TranscendentAbility,
+  type TranscendentEffect,
+  type ComboEvent,
+} from './insane-combos';
+
+// ENHANCED PERKS - Audited perks with unique mechanics, visuals, and synergies
+export {
+  ENHANCED_PERKS,
+  getEnhancedPerk,
+  getSynergyPartners,
+  hasSynergy,
+  getActiveSynergies,
+  calculateEnhancedEffects,
+  // Types
+  type EnhancedPerk,
+  type EnhancedPerkEffect,
+  type PassiveEffect,
+  type OnKillEffect,
+  type OnHitEffect,
+  type ConditionalEffect,
+  type ParticleSystemType,
+  type ScreenEffectType,
+  type SkillScalingType,
+  type ApexIntegration,
+} from './enhanced-perks';

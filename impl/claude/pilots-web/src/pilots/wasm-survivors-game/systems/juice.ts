@@ -317,6 +317,145 @@ export const BUMPER_JUICE = {
 } as const;
 
 /**
+ * INSANE COMBO SYSTEM Parameters
+ * "If I have the right combo of perks and skill, I'll really pop off"
+ *
+ * @see systems/insane-combos.ts
+ */
+export const INSANE_COMBO_JUICE = {
+  // === BEE BOUNCE (Pinball physics) ===
+  beeBounce: {
+    // Bounce spark effect - PING!
+    sparkCount: 8,
+    sparkColor: '#FFD700',       // Gold
+    sparkColorAlt: '#FFFFFF',    // White flash
+    sparkVelocity: 200,
+    sparkLifespan: 200,
+    // Trail during bounce chain
+    trailColor: '#FFD70088',     // Semi-transparent gold
+    trailWidth: 4,
+    trailFadeTime: 400,
+    // Flow state triggers at 3+ bounces
+    flowThreshold: 3,
+    flowColor: '#FFD700',
+    // Screen effects at high bounce
+    shakePerBounce: 2,           // px shake
+    chromatic: {
+      threshold: 6,              // Chromatic aberration at 6+ bounces
+      intensity: 3,              // px offset
+    },
+    // Sound pitch scaling
+    basePitch: 1.0,
+    pitchPerBounce: 0.08,        // Higher pitch per bounce
+  },
+
+  // === MOMENTUM STACKING ===
+  momentum: {
+    // Kill streak visuals
+    killStreak: {
+      stackColor: '#FF4444',     // Red for damage
+      pulseRate: 200,            // ms per pulse
+      glowRadius: 20,
+      maxGlow: 50,               // At max stacks
+    },
+    // Graze streak visuals
+    grazeStreak: {
+      stackColor: '#00FFFF',     // Cyan for graze
+      sparkPerGraze: 4,
+      ringColor: '#00FFFFAA',
+    },
+    // Perfect timing visuals
+    perfectTiming: {
+      flashColor: '#FFFFFF',
+      flashDuration: 100,
+      ringColor: '#FFD700',
+    },
+    // Momentum decay warning
+    decayWarning: {
+      pulseColor: '#FF666688',
+      pulseRate: 100,
+    },
+  },
+
+  // === COMBO TIERS ===
+  tiers: {
+    basic: {
+      color: '#FFFFFF',
+      textSize: 16,
+      particleMultiplier: 1.0,
+    },
+    advanced: {
+      color: '#FFD700',          // Gold
+      textSize: 20,
+      particleMultiplier: 1.5,
+      glowRadius: 30,
+    },
+    legendary: {
+      color: '#FF6600',          // Orange
+      textSize: 24,
+      particleMultiplier: 2.0,
+      glowRadius: 50,
+      screenTint: '#FF660010',
+    },
+    transcendent: {
+      color: '#FF00FF',          // Magenta
+      textSize: 28,
+      particleMultiplier: 3.0,
+      glowRadius: 80,
+      screenTint: '#FF00FF15',
+      timeDilation: 0.7,         // Slow-mo effect
+      chromatic: 5,              // Chromatic aberration px
+    },
+  },
+
+  // === CHAIN KILL VISUALS ===
+  chainKill: {
+    lineColor: '#4488FF',        // Blue lightning
+    lineWidth: 3,
+    lineGlow: 8,
+    fadeTime: 300,
+    cascadeDelay: 80,            // ms between chain visuals
+    explosionColor: '#FF4444',
+    explosionRadius: 30,
+  },
+
+  // === SYNERGY ACTIVATION ===
+  synergy: {
+    discoveryFlash: '#FFD700',   // Gold flash
+    discoveryDuration: 500,
+    shakeMagnitude: 10,
+    freezeFrames: 6,
+    textColor: '#FFD700',
+    textSize: 24,
+    ringColor: '#FFD70088',
+    ringExpansion: 150,          // px radius expansion
+  },
+
+  // === TRANSCENDENT ABILITY ===
+  transcendent: {
+    unlockFlash: '#FF00FF',      // Magenta
+    unlockDuration: 1000,
+    shakeMagnitude: 15,
+    freezeFrames: 10,
+    screenFlash: '#FFFFFF',
+    screenFlashAlpha: 0.5,
+    particleBurst: 50,
+    textColor: '#FF00FF',
+    textSize: 32,
+  },
+
+  // === COMBO BROKEN ===
+  comboBreak: {
+    shatterColor: '#FF4444',
+    shatterCount: 12,
+    shakeMagnitude: 8,
+    soundPitch: 0.5,             // Lower pitch = disappointment
+    textColor: '#FF4444',
+    textSize: 20,
+  },
+} as const;
+
+/**
  * Graze System Parameters
  * "RISK-TAKING REWARDED - Near-miss = sparks + chain bonus"
  */
