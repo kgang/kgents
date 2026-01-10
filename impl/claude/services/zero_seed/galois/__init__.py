@@ -130,6 +130,15 @@ from .fixed_point import (
     extract_axioms,
 )
 
+# Core Galois Loss Computer (DI integration)
+# Note: GaloisLoss is imported from axiomatics above (the canonical source)
+from .galois_loss import (  # type: ignore[assignment]
+    EvidenceTier,
+    GaloisLossComputer,
+    classify_evidence_tier,
+    compute_galois_loss_async,
+)
+
 # Layer Assignment (Amendment C)
 from .layer_assignment import (
     CALIBRATION_CORPUS,
@@ -146,7 +155,6 @@ from .layer_assignment import (
 # Proof coherence: Toulmin proofs with Galois loss
 from .proof import (
     Alternative,
-    EvidenceTier,
     GaloisWitnessedProof,
     ProofLossDecomposition,
     ProofValidation,
@@ -224,6 +232,10 @@ __all__ = [
     # Functions
     "classify_by_loss",
     "select_witness_mode_from_loss",
+    # === Galois Loss Computer (DI integration) ===
+    "GaloisLossComputer",
+    "classify_evidence_tier",
+    "compute_galois_loss_async",
     # === Fixed-Point Detection (Amendment F) ===
     "STABILITY_THRESHOLD",
     "MAX_STABILITY_ITERATIONS",

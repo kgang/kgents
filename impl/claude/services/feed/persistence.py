@@ -105,9 +105,7 @@ class FeedFeedbackPersistence:
 
             await session.commit()
 
-            logger.debug(
-                f"Recorded {action.value} interaction: user={user_id}, kblock={kblock_id}"
-            )
+            logger.debug(f"Recorded {action.value} interaction: user={user_id}, kblock={kblock_id}")
 
             return interaction_id
 
@@ -167,9 +165,9 @@ class FeedFeedbackPersistence:
             }
 
             if action == FeedbackAction.VIEW:
-                initial_values["last_viewed_at"] = timestamp
+                initial_values["last_viewed_at"] = timestamp  # type: ignore[assignment]
             elif action == FeedbackAction.ENGAGE:
-                initial_values["last_engaged_at"] = timestamp
+                initial_values["last_engaged_at"] = timestamp  # type: ignore[assignment]
 
             stats = FeedEngagementStats(**initial_values)
             session.add(stats)
@@ -177,9 +175,7 @@ class FeedFeedbackPersistence:
         # Recompute attention score
         await self._recompute_attention_score(session, kblock_id)
 
-    async def _recompute_attention_score(
-        self, session: AsyncSession, kblock_id: str
-    ) -> None:
+    async def _recompute_attention_score(self, session: AsyncSession, kblock_id: str) -> None:
         """
         Recompute attention score for a K-Block.
 
@@ -191,9 +187,7 @@ class FeedFeedbackPersistence:
             kblock_id: K-Block identifier
         """
         # Fetch current stats
-        stmt = select(FeedEngagementStats).where(
-            FeedEngagementStats.kblock_id == kblock_id
-        )
+        stmt = select(FeedEngagementStats).where(FeedEngagementStats.kblock_id == kblock_id)
         result = await session.execute(stmt)
         stats = result.scalar_one_or_none()
 
@@ -240,9 +234,7 @@ class FeedFeedbackPersistence:
 
             return score or 0.0
 
-    async def get_interaction_stats(
-        self, user_id: str, kblock_id: str
-    ) -> dict[str, int]:
+    async def get_interaction_stats(self, user_id: str, kblock_id: str) -> dict[str, int]:
         """
         Get raw interaction counts for a K-Block.
 
@@ -254,9 +246,7 @@ class FeedFeedbackPersistence:
             Dictionary with views, engagements, dismissals counts
         """
         async with self._session_factory() as session:
-            stmt = select(FeedEngagementStats).where(
-                FeedEngagementStats.kblock_id == kblock_id
-            )
+            stmt = select(FeedEngagementStats).where(FeedEngagementStats.kblock_id == kblock_id)
             result = await session.execute(stmt)
             stats = result.scalar_one_or_none()
 
@@ -307,9 +297,7 @@ class FeedFeedbackPersistence:
                 func.sum(FeedEngagementStats.view_count).label("total_views"),
                 func.sum(FeedEngagementStats.engage_count).label("total_engages"),
                 func.sum(FeedEngagementStats.dismiss_count).label("total_dismissals"),
-                func.avg(FeedEngagementStats.avg_dwell_time_sec).label(
-                    "avg_dwell_time"
-                ),
+                func.avg(FeedEngagementStats.avg_dwell_time_sec).label("avg_dwell_time"),
             )
             totals_result = await session.execute(totals_stmt)
             totals = totals_result.one()
@@ -331,9 +319,7 @@ class FeedFeedbackPersistence:
                         "engage_count": kb.engage_count,
                         "dismiss_count": kb.dismiss_count,
                         "last_engaged_at": (
-                            kb.last_engaged_at.isoformat()
-                            if kb.last_engaged_at
-                            else None
+                            kb.last_engaged_at.isoformat() if kb.last_engaged_at else None
                         ),
                     }
                     for kb in top_kblocks

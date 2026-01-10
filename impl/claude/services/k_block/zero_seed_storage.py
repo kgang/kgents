@@ -37,7 +37,7 @@ class ZeroSeedStorage:
     3. CRUD operations with lineage validation
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._kblocks: dict[str, KBlock] = {}
         self._dag = DerivationDAG()
 
@@ -99,10 +99,7 @@ class ZeroSeedStorage:
             parent_ids=lineage,
         )
 
-        logger.info(
-            f"Created Zero Seed node: {node_id} (L{layer}, {kind}, "
-            f"lineage={len(lineage)})"
-        )
+        logger.info(f"Created Zero Seed node: {node_id} (L{layer}, {kind}, lineage={len(lineage)})")
 
         return kblock, node_id
 
@@ -144,14 +141,16 @@ class ZeroSeedStorage:
             return None
 
         # Update metadata
+        # Note: _title is a dynamically added attribute from the factory
+        # for backward compatibility. It's not part of the KBlock dataclass.
         if title is not None:
-            kblock._title = title
+            setattr(kblock, "_title", title)
         if content is not None:
             kblock.set_content(content)
         if confidence is not None:
-            kblock._confidence = confidence
+            kblock.confidence = confidence
         if tags is not None:
-            kblock._tags = tags
+            kblock.tags = tags
 
         logger.info(f"Updated Zero Seed node: {node_id}")
         return kblock
@@ -209,9 +208,7 @@ class ZeroSeedStorage:
         """
         dag_nodes = self._dag.get_layer_nodes(layer)
         return [
-            self._kblocks[node.kblock_id]
-            for node in dag_nodes
-            if node.kblock_id in self._kblocks
+            self._kblocks[node.kblock_id] for node in dag_nodes if node.kblock_id in self._kblocks
         ]
 
     def is_grounded(self, node_id: str) -> bool:

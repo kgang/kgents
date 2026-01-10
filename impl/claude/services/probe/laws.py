@@ -55,7 +55,7 @@ class IdentityProbe:
         try:
             from services.tooling.base import IdentityTool
 
-            identity = IdentityTool()
+            identity: IdentityTool[Any] = IdentityTool()
 
             # Compute three paths
             # 1. Id >> tool

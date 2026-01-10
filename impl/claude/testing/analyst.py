@@ -622,7 +622,7 @@ class CausalAnalyst:
 
         max_hour_count = max(hour_counts.values())
         if max_hour_count >= len(fail_runs) * 0.6:
-            peak_hour = max(hour_counts, key=hour_counts.get)  # type: ignore
+            peak_hour = max(hour_counts, key=hour_counts.get)  # type: ignore[arg-type]
             return f"Failures cluster at hour {peak_hour}"
 
         return None

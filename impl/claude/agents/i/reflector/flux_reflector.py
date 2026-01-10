@@ -132,17 +132,17 @@ class FluxReflector(BaseReflector):
 
         # Route by event type
         if event.event_type == EventType.COMMAND_START:
-            self._handle_command_start(event)  # type: ignore
+            self._handle_command_start(event)  # type: ignore[arg-type]
         elif event.event_type == EventType.COMMAND_END:
-            self._handle_command_end(event)  # type: ignore
+            self._handle_command_end(event)  # type: ignore[arg-type]
         elif event.event_type == EventType.AGENT_HEALTH_UPDATE:
-            self._handle_agent_health(event)  # type: ignore
+            self._handle_agent_health(event)  # type: ignore[arg-type]
         elif event.event_type == EventType.PHEROMONE_EMITTED:
-            self._handle_pheromone(event)  # type: ignore
+            self._handle_pheromone(event)  # type: ignore[arg-type]
         elif event.event_type == EventType.PROPOSAL_ADDED:
-            self._handle_proposal_added(event)  # type: ignore
+            self._handle_proposal_added(event)  # type: ignore[arg-type]
         elif event.event_type == EventType.ERROR:
-            self._handle_error(event)  # type: ignore
+            self._handle_error(event)  # type: ignore[arg-type]
 
     def _handle_command_start(self, event: "CommandStartEvent") -> None:
         """Handle command start - flash HUD with command path."""
@@ -295,7 +295,7 @@ class FluxReflector(BaseReflector):
             screen = self.app.screen
             # Check if it's a FluxScreen
             if hasattr(screen, "invoke_agentese"):
-                return screen  # type: ignore
+                return screen  # type: ignore[return-value]
             return None
         except Exception:
             return None

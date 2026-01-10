@@ -36,10 +36,10 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
-    BaseModel = object  # type: ignore
-    Field = lambda *args, **kwargs: None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
+    BaseModel = object  # type: ignore[assignment, misc]
+    Field = lambda *args, **kwargs: None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,9 @@ class ConstitutionalHealthResponse(BaseModel):  # type: ignore[misc]
     """Constitutional health for an agent."""
 
     agent_id: str
-    trust_level: str = Field(..., description="L0-L3 trust level (READ_ONLY, BOUNDED, SUGGESTION, AUTONOMOUS)")
+    trust_level: str = Field(
+        ..., description="L0-L3 trust level (READ_ONLY, BOUNDED, SUGGESTION, AUTONOMOUS)"
+    )
     trust_level_value: int = Field(..., description="Numeric trust level (0-3)")
 
     # Metrics
@@ -262,11 +264,7 @@ def create_constitutional_router() -> "APIRouter | None":
             marks = await persistence.get_marks(limit=1000)
 
             # Filter by agent and timeframe
-            agent_marks = [
-                m
-                for m in marks
-                if m.origin == agent_id and m.timestamp >= since
-            ]
+            agent_marks = [m for m in marks if m.origin == agent_id and m.timestamp >= since]
 
             # Build trajectory from constitutional alignment in marks
             trajectory: list[AlignmentHistoryPoint] = []
@@ -286,9 +284,7 @@ def create_constitutional_router() -> "APIRouter | None":
             alignments = [m.constitutional for m in agent_marks if m.constitutional]
             total_violations = sum(1 for a in alignments if not a.is_compliant)
             average_alignment = (
-                sum(a.weighted_total for a in alignments) / len(alignments)
-                if alignments
-                else 0.0
+                sum(a.weighted_total for a in alignments) / len(alignments) if alignments else 0.0
             )
 
             # Convert marks to crystal-like format for response

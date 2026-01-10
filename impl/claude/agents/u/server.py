@@ -75,7 +75,7 @@ class MockInterceptResult:
     annotation: Optional[str] = "Soul unavailable. Human review required."
     recommendation: Optional[str] = "escalate"
     confidence: float = 0.0
-    matching_principles: list[str] = None  # type: ignore
+    matching_principles: list[str] = None  # type: ignore[assignment]
     reasoning: str = "Soul service not configured."
     was_deep: bool = False
 
@@ -93,7 +93,7 @@ class ServerState:
 
     soul: Any = None  # KgentSoul when available
     llm_client: Any = None  # LLM client when available
-    startup_time: datetime = None  # type: ignore
+    startup_time: datetime = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         if self.startup_time is None:

@@ -282,7 +282,7 @@ class ChromaDBBackend:
                 search_results.append(
                     VectorSearchResult(
                         id=entry_id,
-                        entry=None,  # type: ignore  # Will be filled by caller
+                        entry=None,  # type: ignore[arg-type]  # Will be filled by caller
                         distance=distance,
                         similarity=similarity,
                         metadata=metadata,
@@ -537,7 +537,7 @@ class FAISSBackend:
             results.append(
                 VectorSearchResult(
                     id=entry_id,
-                    entry=None,  # type: ignore  # Will be filled by caller
+                    entry=None,  # type: ignore[arg-type]  # Will be filled by caller
                     distance=1.0 - similarity,  # Convert to distance
                     similarity=similarity,
                     metadata=metadata,

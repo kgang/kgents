@@ -54,7 +54,7 @@ from .llm_agents import (
 )
 
 if TYPE_CHECKING:
-    from agents.k.soul import LLMClient
+    from agents.k.soul import LLMClient  # type: ignore[attr-defined]
     from agents.operad.domains.analysis import (
         CategoricalReport,
         ConstitutionalReport,
@@ -229,9 +229,7 @@ class AnalysisService:
             context = None
             if categorical and categorical.has_violations:
                 violations = [
-                    v.law_name
-                    for v in categorical.law_verifications
-                    if v.status.name == "FAILED"
+                    v.law_name for v in categorical.law_verifications if v.status.name == "FAILED"
                 ]
                 context = f"Law violations detected: {', '.join(violations)}"
 
@@ -396,9 +394,7 @@ class AnalysisService:
                     bootstrap=None,
                     summary="Error",
                 ),
-                dialectical=DialecticalReport(
-                    target=spec_path, tensions=(), summary="Error"
-                ),
+                dialectical=DialecticalReport(target=spec_path, tensions=(), summary="Error"),
                 generative=GenerativeReport(
                     target=spec_path,
                     grammar=OperadGrammar(
@@ -456,9 +452,7 @@ class AnalysisService:
 
         # Dialectical
         if dialectical.problematic_count > 0:
-            parts.append(
-                f"⚠️ Dialectical: {dialectical.problematic_count} problematic tensions"
-            )
+            parts.append(f"⚠️ Dialectical: {dialectical.problematic_count} problematic tensions")
         else:
             parts.append(
                 f"✓ Dialectical: {len(dialectical.tensions)} tensions, {dialectical.resolved_count} resolved"

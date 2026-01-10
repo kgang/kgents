@@ -35,7 +35,7 @@ try:
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
-    yaml = None  # type: ignore
+    yaml = None  # type: ignore[assignment]
 
 
 # =============================================================================
@@ -233,7 +233,7 @@ def extract_frontmatter(content: str) -> tuple[FrontmatterData, str]:
                 if value.startswith("[") and value.endswith("]"):
                     items = value[1:-1].split(",")
                     value = [item.strip().strip("\"'") for item in items]
-                frontmatter[key] = value  # type: ignore
+                frontmatter[key] = value  # type: ignore[literal-required]
 
     return frontmatter, remaining_content
 

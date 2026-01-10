@@ -326,7 +326,7 @@ def _entailment_probability(premise: str, hypothesis: str) -> float:
     global _NLI_CLASSIFIER
 
     try:
-        from transformers import pipeline  # type: ignore[import-not-found]
+        from transformers import pipeline
 
         if _NLI_CLASSIFIER is None:
             _NLI_CLASSIFIER = pipeline(

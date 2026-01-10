@@ -11,7 +11,7 @@ See: spec/protocols/portal-resource-system.md §5.1
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from ..resolver import ResolvedResource
 from ..uri import PortalURI
@@ -86,7 +86,11 @@ class ChatResolver:
         """Resolve full ChatSession."""
         # Get session metadata
         turn_count = session.turn_count
-        flow_state = session.flow_state.value if hasattr(session.flow_state, "value") else str(session.flow_state)
+        flow_state = (
+            session.flow_state.value
+            if hasattr(session.flow_state, "value")
+            else str(session.flow_state)
+        )
         branch_name = getattr(session, "branch_name", None)
         created_at = getattr(session, "created_at", None)
         updated_at = getattr(session, "updated_at", None)
@@ -100,10 +104,10 @@ class ChatResolver:
             uri=uri.render(),
             resource_type=self.resource_type,
             exists=True,
-            title=branch_name or session.session_id,
+            title=branch_name or session.id,
             preview=preview,
             content={
-                "session_id": session.session_id,
+                "session_id": session.id,
                 "branch_name": branch_name,
                 "turn_count": turn_count,
                 "flow_state": flow_state,
@@ -112,7 +116,7 @@ class ChatResolver:
             },
             actions=["expand", "fork", "resume"],
             metadata={
-                "session_id": session.session_id,
+                "session_id": session.id,
                 "branch_name": branch_name,
                 "turn_count": turn_count,
                 "flow_state": flow_state,
@@ -123,8 +127,8 @@ class ChatResolver:
         self, uri: PortalURI, session: ChatSession, turn_number: int
     ) -> ResolvedResource:
         """Resolve specific turn from session."""
-        # Get turn from working context
-        turns = session.working_context.turns
+        # Get turn from context
+        turns = session.context.turns
         if turn_number < 0 or turn_number >= len(turns):
             return ResolvedResource(
                 uri=uri.render(),
@@ -144,14 +148,16 @@ class ChatResolver:
             resource_type="turn",
             exists=True,
             title=f"Turn {turn_number}",
-            preview=turn.user_message[:100] + "..." if len(turn.user_message) > 100 else turn.user_message,
+            preview=turn.user_message[:100] + "..."
+            if len(turn.user_message) > 100
+            else turn.user_message,
             content={
                 "user_message": turn.user_message,
                 "assistant_response": turn.assistant_response or "",
             },
             actions=["expand", "fork_from", "cite"],
             metadata={
-                "session_id": session.session_id,
+                "session_id": session.id,
                 "turn_number": turn_number,
                 "timestamp": turn.timestamp.isoformat() if hasattr(turn, "timestamp") else None,
             },
@@ -163,9 +169,11 @@ class ChatResolver:
             return None
 
         if hasattr(self.session_store, "get"):
-            return await self.session_store.get(session_id)
+            result = await self.session_store.get(session_id)
+            return cast("ChatSession | None", result)
         elif hasattr(self.session_store, "load"):
-            return await self.session_store.load(session_id)
+            result = await self.session_store.load(session_id)
+            return cast("ChatSession | None", result)
         else:
             return None
 

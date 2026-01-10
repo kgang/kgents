@@ -85,12 +85,14 @@ class AnalysisState:
     @property
     def modes_applied(self) -> int:
         """Count of analysis modes applied."""
-        return sum([
-            self.categorical_done,
-            self.epistemic_done,
-            self.dialectical_done,
-            self.generative_done,
-        ])
+        return sum(
+            [
+                self.categorical_done,
+                self.epistemic_done,
+                self.dialectical_done,
+                self.generative_done,
+            ]
+        )
 
     @property
     def is_complete(self) -> bool:
@@ -107,13 +109,15 @@ class AnalysisState:
         return False
 
     def __hash__(self) -> int:
-        return hash((
-            self.target,
-            self.categorical_done,
-            self.epistemic_done,
-            self.dialectical_done,
-            self.generative_done,
-        ))
+        return hash(
+            (
+                self.target,
+                self.categorical_done,
+                self.epistemic_done,
+                self.dialectical_done,
+                self.generative_done,
+            )
+        )
 
 
 @dataclass(frozen=True)
@@ -337,7 +341,9 @@ def analyze_as_dp(target: str, gamma: float = 0.95) -> tuple[float, PolicyTrace[
     return solver.solve()
 
 
-async def analyze_as_dp_llm(target: str, gamma: float = 0.95) -> tuple[float, PolicyTrace[AnalysisState]]:
+async def analyze_as_dp_llm(
+    target: str, gamma: float = 0.95
+) -> tuple[float, PolicyTrace[AnalysisState]]:
     """
     Analyze a spec using the DP formulation (LLM mode).
 
@@ -396,12 +402,14 @@ async def analyze_as_dp_llm(target: str, gamma: float = 0.95) -> tuple[float, Po
         categorical_done=True,
         categorical_result=categorical_result,
     )
-    trace_entries.append(TraceEntry(
-        state=initial_state,
-        action=AnalysisAction("categorical"),
-        reward=_compute_reward(initial_state, AnalysisAction("categorical"), state_after_cat),
-        next_state=state_after_cat,
-    ))
+    trace_entries.append(
+        TraceEntry(
+            state=initial_state,
+            action=AnalysisAction("categorical"),
+            reward=_compute_reward(initial_state, AnalysisAction("categorical"), state_after_cat),
+            next_state=state_after_cat,
+        )
+    )
 
     # Epistemic step
     state_after_epi = AnalysisState(
@@ -411,12 +419,14 @@ async def analyze_as_dp_llm(target: str, gamma: float = 0.95) -> tuple[float, Po
         categorical_result=categorical_result,
         epistemic_result=epistemic_result,
     )
-    trace_entries.append(TraceEntry(
-        state=state_after_cat,
-        action=AnalysisAction("epistemic"),
-        reward=_compute_reward(state_after_cat, AnalysisAction("epistemic"), state_after_epi),
-        next_state=state_after_epi,
-    ))
+    trace_entries.append(
+        TraceEntry(
+            state=state_after_cat,
+            action=AnalysisAction("epistemic"),
+            reward=_compute_reward(state_after_cat, AnalysisAction("epistemic"), state_after_epi),
+            next_state=state_after_epi,
+        )
+    )
 
     # Dialectical step
     state_after_dia = AnalysisState(
@@ -428,25 +438,29 @@ async def analyze_as_dp_llm(target: str, gamma: float = 0.95) -> tuple[float, Po
         epistemic_result=epistemic_result,
         dialectical_result=dialectical_result,
     )
-    trace_entries.append(TraceEntry(
-        state=state_after_epi,
-        action=AnalysisAction("dialectical"),
-        reward=_compute_reward(state_after_epi, AnalysisAction("dialectical"), state_after_dia),
-        next_state=state_after_dia,
-    ))
+    trace_entries.append(
+        TraceEntry(
+            state=state_after_epi,
+            action=AnalysisAction("dialectical"),
+            reward=_compute_reward(state_after_epi, AnalysisAction("dialectical"), state_after_dia),
+            next_state=state_after_dia,
+        )
+    )
 
     # Generative step
-    trace_entries.append(TraceEntry(
-        state=state_after_dia,
-        action=AnalysisAction("generative"),
-        reward=_compute_reward(state_after_dia, AnalysisAction("generative"), final_state),
-        next_state=final_state,
-    ))
+    trace_entries.append(
+        TraceEntry(
+            state=state_after_dia,
+            action=AnalysisAction("generative"),
+            reward=_compute_reward(state_after_dia, AnalysisAction("generative"), final_state),
+            next_state=final_state,
+        )
+    )
 
     # Compute total discounted reward
     total_reward = 0.0
     for i, entry in enumerate(trace_entries):
-        total_reward += (gamma ** i) * entry.reward
+        total_reward += (gamma**i) * entry.reward
 
     # Build policy trace
     trace = PolicyTrace(
@@ -575,64 +589,74 @@ def _create_witness_marks(report: FullAnalysisReport, target: str) -> list[dict[
     marks: list[dict[str, Any]] = []
 
     # Categorical mark
-    marks.append({
-        "origin": "analysis_operad",
-        "action": "categorical_analysis",
-        "state_before": f"unanalyzed:{target}",
-        "state_after": f"categorical:{report.categorical.laws_passed}/{report.categorical.laws_total}",
-        "value": 1.0 if not report.categorical.has_violations else 0.5,
-        "rationale": report.categorical.summary,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "mode": "categorical",
-    })
+    marks.append(
+        {
+            "origin": "analysis_operad",
+            "action": "categorical_analysis",
+            "state_before": f"unanalyzed:{target}",
+            "state_after": f"categorical:{report.categorical.laws_passed}/{report.categorical.laws_total}",
+            "value": 1.0 if not report.categorical.has_violations else 0.5,
+            "rationale": report.categorical.summary,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "mode": "categorical",
+        }
+    )
 
     # Epistemic mark
-    marks.append({
-        "origin": "analysis_operad",
-        "action": "epistemic_analysis",
-        "state_before": f"categorical:{target}",
-        "state_after": f"epistemic:L{report.epistemic.layer}",
-        "value": 1.0 if report.epistemic.is_grounded else 0.5,
-        "rationale": report.epistemic.summary,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "mode": "epistemic",
-    })
+    marks.append(
+        {
+            "origin": "analysis_operad",
+            "action": "epistemic_analysis",
+            "state_before": f"categorical:{target}",
+            "state_after": f"epistemic:L{report.epistemic.layer}",
+            "value": 1.0 if report.epistemic.is_grounded else 0.5,
+            "rationale": report.epistemic.summary,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "mode": "epistemic",
+        }
+    )
 
     # Dialectical mark
-    marks.append({
-        "origin": "analysis_operad",
-        "action": "dialectical_analysis",
-        "state_before": f"epistemic:{target}",
-        "state_after": f"dialectical:{report.dialectical.resolved_count}/{len(report.dialectical.tensions)}",
-        "value": 1.0 if report.dialectical.problematic_count == 0 else 0.5,
-        "rationale": report.dialectical.summary,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "mode": "dialectical",
-    })
+    marks.append(
+        {
+            "origin": "analysis_operad",
+            "action": "dialectical_analysis",
+            "state_before": f"epistemic:{target}",
+            "state_after": f"dialectical:{report.dialectical.resolved_count}/{len(report.dialectical.tensions)}",
+            "value": 1.0 if report.dialectical.problematic_count == 0 else 0.5,
+            "rationale": report.dialectical.summary,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "mode": "dialectical",
+        }
+    )
 
     # Generative mark
-    marks.append({
-        "origin": "analysis_operad",
-        "action": "generative_analysis",
-        "state_before": f"dialectical:{target}",
-        "state_after": f"generative:compression={report.generative.compression_ratio:.2f}",
-        "value": 1.0 if report.generative.is_regenerable else 0.5,
-        "rationale": report.generative.summary,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "mode": "generative",
-    })
+    marks.append(
+        {
+            "origin": "analysis_operad",
+            "action": "generative_analysis",
+            "state_before": f"dialectical:{target}",
+            "state_after": f"generative:compression={report.generative.compression_ratio:.2f}",
+            "value": 1.0 if report.generative.is_regenerable else 0.5,
+            "rationale": report.generative.summary,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "mode": "generative",
+        }
+    )
 
     # Synthesis mark
-    marks.append({
-        "origin": "analysis_operad",
-        "action": "synthesis",
-        "state_before": f"analyzed:{target}",
-        "state_after": f"valid:{report.is_valid}",
-        "value": 1.0 if report.is_valid else 0.3,
-        "rationale": report.synthesis,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "mode": "full",
-    })
+    marks.append(
+        {
+            "origin": "analysis_operad",
+            "action": "synthesis",
+            "state_before": f"analyzed:{target}",
+            "state_after": f"valid:{report.is_valid}",
+            "value": 1.0 if report.is_valid else 0.3,
+            "rationale": report.synthesis,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "mode": "full",
+        }
+    )
 
     return marks
 
@@ -652,16 +676,17 @@ def self_analyze_with_dp() -> tuple[FullAnalysisReport, PolicyTrace[AnalysisStat
         if isinstance(final_state, AnalysisState) and final_state.is_complete:
             report = FullAnalysisReport(
                 target=final_state.target,
-                categorical=final_state.categorical_result,  # type: ignore
-                epistemic=final_state.epistemic_result,  # type: ignore
-                dialectical=final_state.dialectical_result,  # type: ignore
-                generative=final_state.generative_result,  # type: ignore
+                categorical=final_state.categorical_result,  # type: ignore[arg-type]
+                epistemic=final_state.epistemic_result,  # type: ignore[arg-type]
+                dialectical=final_state.dialectical_result,  # type: ignore[arg-type]
+                generative=final_state.generative_result,  # type: ignore[arg-type]
                 synthesis=f"DP-formulated self-analysis complete. Value: {value:.3f}",
             )
             return report, trace
 
     # Fallback to direct analysis
     from .analysis import _full_analysis
+
     report = _full_analysis("spec/theory/analysis-operad.md")
     return report, trace
 

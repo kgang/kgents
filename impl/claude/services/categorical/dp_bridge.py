@@ -115,13 +115,13 @@ class Principle(Enum):
     - Actions that violate principles get negative reward
     """
 
-    TASTEFUL = auto()       # Each agent serves a clear, justified purpose
-    CURATED = auto()        # Intentional selection over exhaustive cataloging
-    ETHICAL = auto()        # Agents augment human capability, never replace judgment
-    JOY_INDUCING = auto()   # Delight in interaction
-    COMPOSABLE = auto()     # Agents are morphisms in a category
+    TASTEFUL = auto()  # Each agent serves a clear, justified purpose
+    CURATED = auto()  # Intentional selection over exhaustive cataloging
+    ETHICAL = auto()  # Agents augment human capability, never replace judgment
+    JOY_INDUCING = auto()  # Delight in interaction
+    COMPOSABLE = auto()  # Agents are morphisms in a category
     HETERARCHICAL = auto()  # Agents exist in flux, not fixed hierarchy
-    GENERATIVE = auto()     # Spec is compression
+    GENERATIVE = auto()  # Spec is compression
 
     @property
     def weight(self) -> float:
@@ -246,7 +246,7 @@ class PolicyTrace(Generic[T]):
         """
         total = 0.0
         for i, entry in enumerate(self.log):
-            total += (gamma ** i) * entry.value
+            total += (gamma**i) * entry.value
         return total
 
     def to_marks(self) -> list[dict[str, Any]]:
@@ -473,9 +473,7 @@ class ValueFunction(Generic[S, A]):
     )
 
     # Memoization cache for evaluation results
-    _cache: dict[tuple[str, Any, Any], ValueScore] = field(
-        default_factory=dict, repr=False
-    )
+    _cache: dict[tuple[str, Any, Any], ValueScore] = field(default_factory=dict, repr=False)
 
     def evaluate(self, agent_name: str, state: S, action: A | None = None) -> ValueScore:
         """
@@ -652,6 +650,7 @@ class BellmanMorphism(Generic[S, A, B]):
         if not actions:
             # Empty composition = identity
             from agents.poly import identity
+
             return identity()
 
         from agents.poly import sequential
@@ -805,9 +804,7 @@ class OptimalSubstructure(Generic[S]):
         """
         # Check overlap condition
         if left.end_state != right.start_state:
-            logger.warning(
-                f"Gluing failed: {left.end_state} != {right.start_state}"
-            )
+            logger.warning(f"Gluing failed: {left.end_state} != {right.start_state}")
             return None
 
         # Glue the traces
@@ -966,8 +963,8 @@ class MetaDP(Generic[S, A]):
     formulations: dict[str, ProblemFormulation[S, A]] = field(default_factory=dict)
 
     # Reformulation operators
-    reformulators: dict[str, Callable[[ProblemFormulation[S, A]], ProblemFormulation[S, A]]] = field(
-        default_factory=dict
+    reformulators: dict[str, Callable[[ProblemFormulation[S, A]], ProblemFormulation[S, A]]] = (
+        field(default_factory=dict)
     )
 
     # Quality scores for formulations
@@ -1007,7 +1004,7 @@ class MetaDP(Generic[S, A]):
 
             # Penalize overly complex formulations
             complexity_penalty = 0.0
-            if hasattr(formulation, 'initial_states'):
+            if hasattr(formulation, "initial_states"):
                 state_count = len(formulation.initial_states)
                 if state_count > 100:
                     complexity_penalty = 0.1 * (state_count - 100) / 100
@@ -1163,7 +1160,7 @@ class DPSolver(Generic[S, A]):
         """
         if initial_state is None:
             if not self.formulation.initial_states:
-                return 0.0, PolicyTrace.pure(initial_state)  # type: ignore
+                return 0.0, PolicyTrace.pure(initial_state)  # type: ignore[arg-type]
             initial_state = next(iter(self.formulation.initial_states))
 
         # Initialize value table

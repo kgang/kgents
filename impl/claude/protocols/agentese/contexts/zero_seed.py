@@ -206,7 +206,9 @@ class AxiomDiscoveryResult:
         for i, candidate in enumerate(self.candidates, 1):
             fp_marker = "[FP]" if candidate.is_fixed_point else "[NF]"
             lines.append(f"{i}. {fp_marker} {candidate.text[:60]}...")
-            lines.append(f"   Loss: {candidate.galois_loss:.4f}, Confidence: {candidate.confidence:.2f}")
+            lines.append(
+                f"   Loss: {candidate.galois_loss:.4f}, Confidence: {candidate.confidence:.2f}"
+            )
         return "\n".join(lines)
 
 
@@ -589,7 +591,7 @@ class GoalNode(BaseLogosNode):
             6: 0.52,
             7: 0.71,
         }
-        best_layer = min(loss_by_layer, key=loss_by_layer.get)  # type: ignore
+        best_layer = min(loss_by_layer, key=loss_by_layer.get)  # type: ignore[arg-type]
         best_loss = loss_by_layer[best_layer]
 
         result = LayerAssignment(

@@ -291,7 +291,7 @@ class TestNudge:
         )
 
         with pytest.raises(AttributeError):
-            nudge.location = "changed"  # type: ignore
+            nudge.location = "changed"  # type: ignore[misc]
 
 
 # =============================================================================
@@ -522,3 +522,118 @@ class TestSpecHash:
         )
 
         assert output1.spec_hash != output2.spec_hash
+
+
+# =============================================================================
+# Test Galois Integration
+# =============================================================================
+
+
+class TestGaloisIntegration:
+    """Tests for Galois loss integration in Evidence and ASHCOutput."""
+
+    def test_galois_coherence_without_loss(self) -> None:
+        """galois_coherence returns 0.0 when galois_loss is None."""
+        evidence = Evidence(runs=())
+        assert evidence.galois_coherence == 0.0
+
+    def test_galois_coherence_with_loss(self) -> None:
+        """galois_coherence = 1 - galois_loss."""
+        runs = tuple(make_run(run_id=f"run-{i}") for i in range(10))
+        evidence = Evidence(runs=runs, galois_loss=0.15)
+
+        assert evidence.galois_coherence == 0.85
+
+    def test_with_galois_loss_creates_new_evidence(self) -> None:
+        """with_galois_loss creates a new Evidence with loss attached."""
+        runs = tuple(make_run(run_id=f"run-{i}") for i in range(10))
+        evidence = Evidence(runs=runs)
+
+        assert evidence.galois_loss is None
+
+        evidence_with_loss = evidence.with_galois_loss(0.10)
+        assert evidence_with_loss.galois_loss == 0.10
+        assert evidence_with_loss.galois_coherence == 0.90
+
+        # Original should be unchanged
+        assert evidence.galois_loss is None
+
+    def test_equivalence_score_uses_galois_when_available(self) -> None:
+        """equivalence_score uses Galois formula when loss available."""
+        runs = tuple(make_run(run_id=f"run-{i}") for i in range(100))  # 100 runs for max volume
+        evidence = Evidence(runs=runs, galois_loss=0.10)
+
+        # galois_coherence = 1.0 - 0.10 = 0.90
+        # pass_rate = 1.0 (all pass)
+        # volume_factor = min(1.0, 100/100) = 1.0
+        # empirical_weight = 1.0 * 0.7 + 1.0 * 0.3 = 1.0
+        # equivalence_score = 0.90 * 1.0 = 0.90
+        assert abs(evidence.equivalence_score - 0.90) < 0.01
+
+    def test_equivalence_score_legacy_without_galois(self) -> None:
+        """equivalence_score uses legacy formula when no galois_loss."""
+        runs = tuple(make_run(run_id=f"run-{i}") for i in range(10))
+        evidence = Evidence(runs=runs)  # No galois_loss
+
+        # Legacy: all pass -> 1.0
+        assert evidence.equivalence_score == 1.0
+
+    def test_is_verified_requires_galois_coherence(self) -> None:
+        """is_verified with Galois requires coherence >= 0.85."""
+        runs = tuple(make_run(run_id=f"run-{i}") for i in range(100))
+
+        # High coherence (0.90) - should verify
+        evidence_high = Evidence(runs=runs, galois_loss=0.10)
+        output_high = ASHCOutput(executable="", evidence=evidence_high, spec_hash="abc")
+        assert output_high.is_verified
+
+        # Low coherence (0.80) - should NOT verify
+        evidence_low = Evidence(runs=runs, galois_loss=0.20)
+        output_low = ASHCOutput(executable="", evidence=evidence_low, spec_hash="abc")
+        assert not output_low.is_verified
+
+    def test_galois_verified_property(self) -> None:
+        """galois_verified is True only with Galois + verified."""
+        runs = tuple(make_run(run_id=f"run-{i}") for i in range(100))
+
+        # With Galois and verified
+        evidence = Evidence(runs=runs, galois_loss=0.10)
+        output = ASHCOutput(executable="", evidence=evidence, spec_hash="abc")
+        assert output.galois_verified
+
+        # Without Galois (legacy)
+        evidence_legacy = Evidence(runs=runs)
+        output_legacy = ASHCOutput(executable="", evidence=evidence_legacy, spec_hash="abc")
+        assert not output_legacy.galois_verified
+
+    def test_empirical_weight_scaling(self) -> None:
+        """empirical_weight scales with runs up to 100."""
+        # Few runs -> lower volume factor
+        runs_10 = tuple(make_run(run_id=f"run-{i}") for i in range(10))
+        evidence_10 = Evidence(runs=runs_10, galois_loss=0.0)  # Perfect coherence
+
+        # volume_factor = 10/100 = 0.1
+        # empirical_weight = 1.0 * 0.7 + 0.1 * 0.3 = 0.73
+        # equivalence_score = 1.0 * 0.73 = 0.73
+        assert abs(evidence_10.equivalence_score - 0.73) < 0.01
+
+        # Many runs -> higher volume factor
+        runs_100 = tuple(make_run(run_id=f"run-{i}") for i in range(100))
+        evidence_100 = Evidence(runs=runs_100, galois_loss=0.0)
+
+        # volume_factor = 1.0, empirical_weight = 1.0
+        assert evidence_100.equivalence_score == 1.0
+
+    def test_spec_and_impl_content_preserved(self) -> None:
+        """spec_content and best_impl_content are preserved."""
+        runs = tuple(make_run(run_id=f"run-{i}") for i in range(10))
+        evidence = Evidence(
+            runs=runs,
+            spec_content="def add(a, b): return a + b",
+            best_impl_content="def add(a: int, b: int) -> int: return a + b",
+            galois_loss=0.05,
+        )
+
+        assert evidence.spec_content == "def add(a, b): return a + b"
+        assert evidence.best_impl_content == "def add(a: int, b: int) -> int: return a + b"
+        assert evidence.galois_loss == 0.05

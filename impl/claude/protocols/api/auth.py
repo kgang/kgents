@@ -24,9 +24,9 @@ try:
 except ImportError:
     HAS_FASTAPI = False
     # Stubs for when FastAPI is not installed
-    Header = None  # type: ignore
-    Request = None  # type: ignore
-    BaseHTTPMiddleware = object  # type: ignore
+    Header = None  # type: ignore[assignment]
+    Request = None  # type: ignore[assignment, misc]
+    BaseHTTPMiddleware = object  # type: ignore[assignment, misc]
 
     class HTTPException(Exception):  # type: ignore[no-redef]
         """Stub HTTPException."""

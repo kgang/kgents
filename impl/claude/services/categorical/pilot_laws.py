@@ -595,7 +595,6 @@ def _create_pilot_laws() -> list[PilotLaw]:
             description="Crystal discloses what was dropped",
             predicate=compression_honesty,
         ),
-
         # =====================================================================
         # sprite-procedural-taste-lab
         # =====================================================================
@@ -928,6 +927,18 @@ def summarize_pilot_laws() -> dict[str, dict[str, list[str]]]:
 # Module Exports
 # =============================================================================
 
+# =============================================================================
+# Pilot Bootstrap Protocol Exports
+# =============================================================================
+
+# Re-export from bootstrap module for convenience
+from .bootstrap import (
+    ContentLayer,
+    PilotBootstrapper,
+    PilotFoundation,
+    classify_content_layer,
+)
+
 __all__ = [
     # Enums
     "LawSchema",
@@ -955,4 +966,9 @@ __all__ = [
     "get_all_pilots",
     "get_law_by_name",
     "summarize_pilot_laws",
+    # Pilot Bootstrap Protocol
+    "ContentLayer",
+    "classify_content_layer",
+    "PilotBootstrapper",
+    "PilotFoundation",
 ]

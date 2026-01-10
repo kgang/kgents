@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Protocol, Sequence
+from typing import Any, Protocol, Sequence
 
 from services.witness.crystal import ConstitutionalCrystalMeta, Crystal
 from services.witness.polynomial import TrustLevel
@@ -78,7 +78,7 @@ class ConstitutionalTrustResult:
         """True if trust level is AUTONOMOUS (L3)."""
         return self.trust_level == TrustLevel.AUTONOMOUS
 
-    def to_dict(self) -> dict[str, any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize for API/frontend."""
         return {
             "trust_level": self.trust_level.name,
@@ -170,11 +170,7 @@ class ConstitutionalTrustComputer:
             ConstitutionalTrustResult with trust level and metrics
         """
         # Extract constitutional metadata
-        metas = [
-            c.constitutional_meta
-            for c in crystals
-            if c.constitutional_meta is not None
-        ]
+        metas = [c.constitutional_meta for c in crystals if c.constitutional_meta is not None]
 
         if not metas:
             logger.debug(f"No constitutional history for {agent_id}")
@@ -288,11 +284,17 @@ class ConstitutionalTrustComputer:
         ):
             missing_for_l3 = []
             if average_alignment < self.l3_alignment_threshold:
-                missing_for_l3.append(f"alignment needs {self.l3_alignment_threshold - average_alignment:.2f} more")
+                missing_for_l3.append(
+                    f"alignment needs {self.l3_alignment_threshold - average_alignment:.2f} more"
+                )
             if violation_rate >= self.l3_violation_threshold:
-                missing_for_l3.append(f"violations need to drop below {self.l3_violation_threshold:.0%}")
+                missing_for_l3.append(
+                    f"violations need to drop below {self.l3_violation_threshold:.0%}"
+                )
             if trust_capital < self.l3_trust_capital_threshold:
-                missing_for_l3.append(f"capital needs {self.l3_trust_capital_threshold - trust_capital:.2f} more")
+                missing_for_l3.append(
+                    f"capital needs {self.l3_trust_capital_threshold - trust_capital:.2f} more"
+                )
 
             return (
                 TrustLevel.SUGGESTION,
@@ -306,11 +308,17 @@ class ConstitutionalTrustComputer:
         ):
             missing_for_l2 = []
             if average_alignment < self.l2_alignment_threshold:
-                missing_for_l2.append(f"alignment needs {self.l2_alignment_threshold - average_alignment:.2f} more")
+                missing_for_l2.append(
+                    f"alignment needs {self.l2_alignment_threshold - average_alignment:.2f} more"
+                )
             if violation_rate >= self.l2_violation_threshold:
-                missing_for_l2.append(f"violations need to drop below {self.l2_violation_threshold:.0%}")
+                missing_for_l2.append(
+                    f"violations need to drop below {self.l2_violation_threshold:.0%}"
+                )
             if trust_capital < self.l2_trust_capital_threshold:
-                missing_for_l2.append(f"capital needs {self.l2_trust_capital_threshold - trust_capital:.2f} more")
+                missing_for_l2.append(
+                    f"capital needs {self.l2_trust_capital_threshold - trust_capital:.2f} more"
+                )
 
             return (
                 TrustLevel.BOUNDED,
@@ -320,9 +328,13 @@ class ConstitutionalTrustComputer:
         # Default to L0
         missing_for_l1 = []
         if average_alignment < self.l1_alignment_threshold:
-            missing_for_l1.append(f"alignment needs {self.l1_alignment_threshold - average_alignment:.2f} more")
+            missing_for_l1.append(
+                f"alignment needs {self.l1_alignment_threshold - average_alignment:.2f} more"
+            )
         if violation_rate >= self.l1_violation_threshold:
-            missing_for_l1.append(f"violations need to drop below {self.l1_violation_threshold:.0%}")
+            missing_for_l1.append(
+                f"violations need to drop below {self.l1_violation_threshold:.0%}"
+            )
 
         if missing_for_l1:
             return (

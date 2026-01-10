@@ -32,7 +32,7 @@ import logging
 import uuid
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from agents.d.datum import Datum
 from agents.d.schemas.trail import (
@@ -45,7 +45,7 @@ from agents.d.schemas.trail import (
     TrailCommitment,
     TrailStep,
 )
-from agents.d.universe import Query, Universe, get_universe
+from agents.d.universe import Query, Schema, Universe, get_universe
 
 if TYPE_CHECKING:
     from protocols.exploration.types import (
@@ -183,10 +183,11 @@ class TrailStorageAdapter:
     def _ensure_schemas_registered(self) -> None:
         """Register Trail schemas with Universe."""
         # Register all trail-related schemas
-        self.universe.register_schema(TRAIL_SCHEMA)
-        self.universe.register_schema(TRAIL_STEP_SCHEMA)
-        self.universe.register_schema(TRAIL_ANNOTATION_SCHEMA)
-        self.universe.register_schema(TRAIL_COMMITMENT_SCHEMA)
+        # Cast to Schema[Any] to satisfy Protocol variance requirements
+        self.universe.register_schema(cast(Schema[Any], TRAIL_SCHEMA))
+        self.universe.register_schema(cast(Schema[Any], TRAIL_STEP_SCHEMA))
+        self.universe.register_schema(cast(Schema[Any], TRAIL_ANNOTATION_SCHEMA))
+        self.universe.register_schema(cast(Schema[Any], TRAIL_COMMITMENT_SCHEMA))
 
     # =========================================================================
     # Save Operations

@@ -507,7 +507,7 @@ class TownSheaf:
                         if triangle not in seen and len(triangle) == 3:
                             seen.add(triangle)
                             sorted_tri = tuple(sorted(triangle))
-                            triangles.append(sorted_tri)  # type: ignore
+                            triangles.append(sorted_tri)  # type: ignore[arg-type]
 
         if triangles:
             motifs.append(

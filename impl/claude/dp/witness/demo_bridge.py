@@ -18,7 +18,7 @@ from dp.witness.bridge import (
 from services.categorical.dp_bridge import PolicyTrace, TraceEntry
 
 
-def main():
+def main() -> None:
     print("=" * 70)
     print("PolicyTrace ↔ Mark Bridge Demonstration")
     print("=" * 70)

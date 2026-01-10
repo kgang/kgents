@@ -22,11 +22,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from typing import Any
-
     from services.k_block.core.kblock import KBlock
 
     # GaloisLoss protocol: any object with async compute_loss(content: str) -> float
@@ -73,7 +71,7 @@ class ContradictionPair:
         """Whether this contradiction exceeds the significance threshold."""
         return self.strength >= CONTRADICTION_THRESHOLD
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize for API/storage."""
         return {
             "id": self.id,
@@ -134,11 +132,11 @@ class ContradictionDetector:
         # Get individual losses
         # If K-Block already has galois_loss computed, use it
         # Otherwise compute fresh
-        loss_a = getattr(kblock_a, 'galois_loss', None)
+        loss_a = getattr(kblock_a, "galois_loss", None)
         if loss_a is None:
             loss_a = await galois.compute_loss(kblock_a.content)
 
-        loss_b = getattr(kblock_b, 'galois_loss', None)
+        loss_b = getattr(kblock_b, "galois_loss", None)
         if loss_b is None:
             loss_b = await galois.compute_loss(kblock_b.content)
 

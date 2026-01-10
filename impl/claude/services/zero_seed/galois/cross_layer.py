@@ -126,9 +126,7 @@ def compute_cross_layer_loss(
     elif layer_delta == 1:
         explanation = "Adjacent layer edge (expected flow)"
     else:
-        explanation = (
-            f"Cross-layer edge skipping {layer_delta - 1} intermediate layer(s)"
-        )
+        explanation = f"Cross-layer edge skipping {layer_delta - 1} intermediate layer(s)"
 
     # Generate suggestion if high loss
     suggestion = None
@@ -189,14 +187,14 @@ Cross-layer edge transition:
 Source Node (Layer {source.layer}):
 Path: {source.path}
 Title: {source.title}
-Content: {getattr(source, 'content', '')[:300]}
+Content: {getattr(source, "content", "")[:300]}
 
 Edge Type: {edge.kind.value}
 
 Target Node (Layer {target.layer}):
 Path: {target.path}
 Title: {target.title}
-Content: {getattr(target, 'content', '')[:300]}
+Content: {getattr(target, "content", "")[:300]}
 
 This edge skips {layer_delta - 1 if layer_delta > 1 else 0} intermediate layer(s).
 """
@@ -204,7 +202,7 @@ This edge skips {layer_delta - 1 if layer_delta > 1 else 0} intermediate layer(s
         # Compute Galois loss via LLM
         result = await compute_galois_loss_async(
             transition,
-            llm_client=llm_client,
+            llm_client=llm_client,  # type: ignore[arg-type]
             use_cache=True,
         )
 

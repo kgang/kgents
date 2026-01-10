@@ -25,7 +25,7 @@ AGENTESE: self.data.table.kblock.*
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, DateTime, Float, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -89,21 +89,17 @@ class KBlock(TimestampMixin, Base):
     )  # PRISTINE, DIRTY, STALE, CONFLICTING, ENTANGLED
 
     # Zero Seed Integration (NULL for regular files)
-    zero_seed_layer: Mapped[int | None] = mapped_column(
-        Integer, nullable=True, index=True
-    )  # 0-7
+    zero_seed_layer: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)  # 0-7
     zero_seed_kind: Mapped[str | None] = mapped_column(
         String(64), nullable=True, index=True
     )  # "axiom", "value", "goal", etc.
 
     # Derivation (lineage tracking)
-    lineage: Mapped[list[str]] = mapped_column(
-        JSON, default=list
-    )  # Parent K-Block IDs
+    lineage: Mapped[list[str]] = mapped_column(JSON, default=list)  # Parent K-Block IDs
 
     # Proof tracking
     has_proof: Mapped[bool] = mapped_column(Integer, default=0)  # Boolean as 0/1
-    toulmin_proof: Mapped[dict | None] = mapped_column(
+    toulmin_proof: Mapped[dict[str, Any] | None] = mapped_column(
         JSON, nullable=True
     )  # Toulmin proof structure
 
@@ -112,8 +108,8 @@ class KBlock(TimestampMixin, Base):
 
     # Edges (JSON for graph queries - use JSONB in PostgreSQL migrations)
     # Format: [{"id": "edge_id", "source": "kb_1", "target": "kb_2", "kind": "derives_from", "label": "..."}]
-    incoming_edges: Mapped[list[dict]] = mapped_column(JSON, default=list)
-    outgoing_edges: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    incoming_edges: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    outgoing_edges: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
 
     # Metadata
     tags: Mapped[list[str]] = mapped_column(JSON, default=list)
@@ -140,6 +136,7 @@ class KBlock(TimestampMixin, Base):
         Index("idx_kblocks_created", "created_at"),
         # Note: GIN indexes for tags/lineage are created via Alembic migration
         # for PostgreSQL (requires JSONB type). SQLite uses regular B-tree.
+        {"extend_existing": True},
     )
 
     def __repr__(self) -> str:
@@ -175,19 +172,15 @@ class KBlockEdge(TimestampMixin, Base):
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
 
     # Edge endpoints
-    source_id: Mapped[str] = mapped_column(
-        String(64), nullable=False, index=True
-    )  # Source K-Block
-    target_id: Mapped[str] = mapped_column(
-        String(64), nullable=False, index=True
-    )  # Target K-Block
+    source_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)  # Source K-Block
+    target_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)  # Target K-Block
 
     # Edge type
     kind: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     label: Mapped[str | None] = mapped_column(Text, nullable=True)  # Human-readable label
 
     # Edge metadata (renamed to avoid SQLAlchemy reserved name)
-    edge_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    edge_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_by: Mapped[str] = mapped_column(String(128), default="system")
 
     __table_args__ = (
@@ -200,6 +193,7 @@ class KBlockEdge(TimestampMixin, Base):
         # Fast queries for specific edge types between nodes
         Index("idx_kblock_edges_source_kind", "source_id", "kind"),
         Index("idx_kblock_edges_target_kind", "target_id", "kind"),
+        {"extend_existing": True},
     )
 
     def __repr__(self) -> str:

@@ -84,6 +84,7 @@ if TYPE_CHECKING:
     from services.verification import VerificationPersistence
     from services.witness import WitnessPersistence
     from services.witness.bus import WitnessSynergyBus
+    from services.zero_seed.galois import GaloisLossComputer
 
 logger = logging.getLogger(__name__)
 
@@ -509,6 +510,42 @@ async def get_lemma_database() -> "PostgresLemmaDatabase":
 
 
 # =============================================================================
+# Zero Seed Crown Jewel (Galois-Grounded Constitutional Evaluation)
+# =============================================================================
+
+
+async def get_galois_service() -> "GaloisLossComputer":
+    """
+    Get the GaloisLossComputer for constitutional evaluation.
+
+    The Galois loss service implements the core formula:
+        L(P) = d(P, C(R(P)))
+
+    Where:
+    - R: Prompt -> ModularPrompt (restructure via LLM)
+    - C: ModularPrompt -> Prompt (reconstitute via LLM)
+    - d: Prompt x Prompt -> [0,1] (semantic distance)
+
+    Used by:
+    - Constitutional evaluator for evidence tier classification
+    - Zero Seed bootstrap verification
+    - Proof coherence validation
+
+    Evidence tiers (Kent-calibrated thresholds):
+    - CATEGORICAL: L < 0.10 (near-lossless, deductive)
+    - EMPIRICAL: L < 0.38 (moderate loss, inductive)
+    - AESTHETIC: L < 0.45 (taste-based judgment)
+    - SOMATIC: L < 0.65 (intuitive, embodied)
+    - CHAOTIC: L >= 0.65 (high entropy, unreliable)
+
+    See: spec/protocols/zero-seed1/galois.md
+    """
+    from services.zero_seed.galois import GaloisLossComputer
+
+    return GaloisLossComputer()
+
+
+# =============================================================================
 # Fusion Crown Jewel (Symmetric Supersession)
 # =============================================================================
 
@@ -886,7 +923,9 @@ async def setup_providers() -> None:
     # Register core infrastructure services
     container.register("session_factory", get_session_factory, singleton=True)
     container.register("dgent", get_dgent_router, singleton=True)
-    container.register("universe", get_universe, singleton=True)  # D-gent Universe (Crystal persistence)
+    container.register(
+        "universe", get_universe, singleton=True
+    )  # D-gent Universe (Crystal persistence)
     container.register("brain_persistence", get_brain_persistence, singleton=True)
     container.register("chat_persistence", get_chat_persistence, singleton=True)
     # Note: trace_store removed in Crown Jewel Cleanup 2025-12-21
@@ -918,9 +957,13 @@ async def setup_providers() -> None:
 
     # Witness Crown Jewel (8th Jewel - The Ghost That Watches)
     container.register("witness_persistence", get_witness_persistence, singleton=True)
-    container.register("witness", get_witness, singleton=True)  # Alias for nodes declaring "witness"
+    container.register(
+        "witness", get_witness, singleton=True
+    )  # Alias for nodes declaring "witness"
     container.register("bus", get_bus, singleton=True)  # WitnessSynergyBus
-    container.register("daily_lab", get_daily_lab, singleton=True)  # Daily Lab (witness.daily_lab.*)
+    container.register(
+        "daily_lab", get_daily_lab, singleton=True
+    )  # Daily Lab (witness.daily_lab.*)
 
     # Document Director Crown Jewel (Spec-to-Code Lifecycle)
     container.register("director", get_director, singleton=True)
@@ -943,6 +986,9 @@ async def setup_providers() -> None:
 
     # ASHC Crown Jewel (Proof-Generating Self-Hosting Compiler)
     container.register("lemma_database", get_lemma_database, singleton=True)
+
+    # Zero Seed Crown Jewel (Galois-Grounded Constitutional Evaluation)
+    container.register("galois_service", get_galois_service, singleton=True)
 
     # Fusion Crown Jewel (Symmetric Supersession)
     container.register("fusion_service", get_fusion_service, singleton=True)
@@ -1201,6 +1247,8 @@ __all__ = [
     "get_interactive_text_service",
     # ASHC Crown Jewel
     "get_lemma_database",
+    # Zero Seed Crown Jewel
+    "get_galois_service",
     # Fusion Crown Jewel
     "get_fusion_service",
     # Trail Intelligence

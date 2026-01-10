@@ -31,8 +31,8 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
 
@@ -76,13 +76,9 @@ class BrowseResponse(BaseModel):
         description="K-Blocks organized by kind (axioms, values, goals, etc.)",
     )
     # Layer-based grouping
-    layers: list[LayerGroup] = Field(
-        default_factory=list, description="K-Blocks grouped by layer"
-    )
+    layers: list[LayerGroup] = Field(default_factory=list, description="K-Blocks grouped by layer")
     # User-created K-Blocks (not part of Zero Seed)
-    user: list[KBlockSummary] = Field(
-        default_factory=list, description="User-created K-Blocks"
-    )
+    user: list[KBlockSummary] = Field(default_factory=list, description="User-created K-Blocks")
     # Totals
     total_count: int = Field(default=0, description="Total K-Block count")
     zero_seed_count: int = Field(default=0, description="Zero Seed K-Block count")
@@ -226,9 +222,7 @@ def create_kblocks_router() -> "APIRouter | None":
                         preview=content[:200] if content else "",
                         has_proof=has_proof,
                         tags=tags,
-                        created_at=(
-                            node.created_at.isoformat() if node.created_at else None
-                        ),
+                        created_at=(node.created_at.isoformat() if node.created_at else None),
                     )
 
                     # Add to layer grouping
@@ -327,9 +321,7 @@ def create_kblocks_router() -> "APIRouter | None":
                         preview=content[:200],
                         has_proof=bool(node.has_proof),
                         tags=tags,
-                        created_at=(
-                            node.created_at.isoformat() if node.created_at else None
-                        ),
+                        created_at=(node.created_at.isoformat() if node.created_at else None),
                     )
                 )
 
@@ -388,9 +380,7 @@ def create_kblocks_router() -> "APIRouter | None":
                 has_proof=bool(node.has_proof),
                 toulmin_proof=node.toulmin_proof,
                 tags=getattr(node, "_tags", []),
-                created_at=(
-                    node.created_at.isoformat() if node.created_at else None
-                ),
+                created_at=(node.created_at.isoformat() if node.created_at else None),
                 incoming_edges=[edge.to_dict() for edge in node.incoming_edges],
                 outgoing_edges=[edge.to_dict() for edge in node.outgoing_edges],
             )

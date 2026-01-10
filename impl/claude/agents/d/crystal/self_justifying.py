@@ -100,7 +100,7 @@ class SelfJustifyingCrystal(Generic[T]):
     @classmethod
     def create_axiom(cls, value: T, path: str = "void.axiom") -> "SelfJustifyingCrystal[T]":
         """Create an axiomatic (L1) Crystal - no proof needed."""
-        datum = Datum.create({"value": str(value)})
+        datum = Datum.create({"value": str(value)})  # type: ignore[arg-type]
         meta = CrystalMeta(
             schema_name="axiom",
             schema_version=1,
@@ -125,7 +125,7 @@ class SelfJustifyingCrystal(Generic[T]):
         path: str,
     ) -> "SelfJustifyingCrystal[T]":
         """Create a Crystal with proof (for L3+)."""
-        datum = Datum.create({"value": str(value)})
+        datum = Datum.create({"value": str(value)})  # type: ignore[arg-type]
         meta = CrystalMeta(
             schema_name="justified",
             schema_version=1,

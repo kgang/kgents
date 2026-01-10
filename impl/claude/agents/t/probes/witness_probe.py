@@ -100,7 +100,7 @@ class WitnessConfig:
     laws_to_check: FrozenSet[Law] = frozenset([IDENTITY_LAW, ASSOCIATIVITY_LAW])
 
 
-class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
+class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):  # type: ignore[misc]
     """
     WitnessProbe: Observer morphism for categorical law verification.
 
@@ -148,17 +148,17 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
     # === TruthFunctor Properties ===
 
     @property
-    def name(self) -> str:
+    def name(self) -> str:  # type: ignore[override]
         """Return agent/probe name."""
         return f"WitnessProbe({self.config.label})"
 
     @property
-    def mode(self) -> AnalysisMode:
+    def mode(self) -> AnalysisMode:  # type: ignore[override]
         """Return analysis mode."""
         return AnalysisMode.CATEGORICAL
 
     @property
-    def gamma(self) -> float:
+    def gamma(self) -> float:  # type: ignore[override]
         """Discount factor for DP."""
         return 0.99
 
@@ -172,11 +172,19 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
         Returns all possible probe states with different phases and observations.
         """
         # For simplicity, we define the canonical states
-        return frozenset([
-            ProbeState(phase=WitnessPhase.OBSERVING.name, observations=(), laws_verified=frozenset()),
-            ProbeState(phase=WitnessPhase.VERIFYING.name, observations=(), laws_verified=frozenset()),
-            ProbeState(phase=WitnessPhase.COMPLETE.name, observations=(), laws_verified=frozenset()),
-        ])
+        return frozenset(
+            [
+                ProbeState(
+                    phase=WitnessPhase.OBSERVING.name, observations=(), laws_verified=frozenset()
+                ),
+                ProbeState(
+                    phase=WitnessPhase.VERIFYING.name, observations=(), laws_verified=frozenset()
+                ),
+                ProbeState(
+                    phase=WitnessPhase.COMPLETE.name, observations=(), laws_verified=frozenset()
+                ),
+            ]
+        )
 
     def actions(self, state: ProbeState) -> FrozenSet[ProbeAction]:
         """
@@ -189,17 +197,21 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
         phase = WitnessPhase[state.phase]
 
         if phase == WitnessPhase.OBSERVING:
-            return frozenset([
-                ProbeAction("observe"),
-                ProbeAction("verify_identity"),
-                ProbeAction("verify_associativity"),
-            ])
+            return frozenset(
+                [
+                    ProbeAction("observe"),
+                    ProbeAction("verify_identity"),
+                    ProbeAction("verify_associativity"),
+                ]
+            )
         elif phase == WitnessPhase.VERIFYING:
-            return frozenset([
-                ProbeAction("verify_identity"),
-                ProbeAction("verify_associativity"),
-                ProbeAction("synthesize"),
-            ])
+            return frozenset(
+                [
+                    ProbeAction("verify_identity"),
+                    ProbeAction("verify_associativity"),
+                    ProbeAction("synthesize"),
+                ]
+            )
         else:  # COMPLETE
             return frozenset()
 
@@ -351,6 +363,7 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
             # Check if agent is async or sync
             import asyncio
             import inspect
+
             if inspect.iscoroutinefunction(agent) or asyncio.iscoroutinefunction(agent):
                 output = await agent(input)
             else:
@@ -405,7 +418,7 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
 
         # Create verdict
         verdict = TruthVerdict(
-            value=output,  # type: ignore
+            value=output,
             passed=all_laws_passed,
             confidence=len(self._verified_laws) / max(1, len(self.config.laws_to_check)),
             reasoning="\n".join(law_results),
@@ -708,13 +721,9 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
                 state_before=prev_state,
                 action=action,
                 state_after=next_state,
-
                 reward=ConstitutionalScore(composable=1.0 if passed else 0.0),
-
                 reasoning=f"Functor Identity: F(id) {'=' if passed else '≠'} id",
-
                 timestamp=datetime.now(),
-
             )
             self._trace_entries.append(entry)
             self._current_state = next_state
@@ -728,19 +737,12 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
             prev_state = self._current_state
 
             entry = TraceEntry(
-
                 state_before=prev_state,
-
                 action=ProbeAction("verify_functor_identity"),
-
                 state_after=prev_state,
-
                 reward=ConstitutionalScore(composable=0.0),
-
                 reasoning=f"Functor identity check failed: {e}",
-
                 timestamp=datetime.now(),
-
             )
             self._trace_entries.append(entry)
             return False
@@ -790,13 +792,9 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
                 state_before=prev_state,
                 action=action,
                 state_after=next_state,
-
                 reward=ConstitutionalScore(composable=1.0 if passed else 0.0),
-
                 reasoning=f"Functor Composition: F(g . f) {'=' if passed else '≠'} F(g) . F(f)",
-
                 timestamp=datetime.now(),
-
             )
             self._trace_entries.append(entry)
             self._current_state = next_state
@@ -810,19 +808,12 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
             prev_state = self._current_state
 
             entry = TraceEntry(
-
                 state_before=prev_state,
-
                 action=ProbeAction("verify_functor_composition"),
-
                 state_after=prev_state,
-
                 reward=ConstitutionalScore(composable=0.0),
-
                 reasoning=f"Functor composition check failed: {e}",
-
                 timestamp=datetime.now(),
-
             )
             self._trace_entries.append(entry)
             return False
@@ -868,13 +859,9 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
                 state_before=prev_state,
                 action=action,
                 state_after=next_state,
-
                 reward=ConstitutionalScore(composable=1.0 if passed else 0.0),
-
                 reasoning=f"Monad Left Identity: unit(a).bind(f) {'≡' if passed else '≠'} f(a)",
-
                 timestamp=datetime.now(),
-
             )
             self._trace_entries.append(entry)
             self._current_state = next_state
@@ -888,19 +875,12 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
             prev_state = self._current_state
 
             entry = TraceEntry(
-
                 state_before=prev_state,
-
                 action=ProbeAction("verify_monad_left_identity"),
-
                 state_after=prev_state,
-
                 reward=ConstitutionalScore(composable=0.0),
-
                 reasoning=f"Monad left identity check failed: {e}",
-
                 timestamp=datetime.now(),
-
             )
             self._trace_entries.append(entry)
             return False
@@ -944,13 +924,9 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
                 state_before=prev_state,
                 action=action,
                 state_after=next_state,
-
                 reward=ConstitutionalScore(composable=1.0 if passed else 0.0),
-
                 reasoning=f"Monad Right Identity: m.bind(unit) {'≡' if passed else '≠'} m",
-
                 timestamp=datetime.now(),
-
             )
             self._trace_entries.append(entry)
             self._current_state = next_state
@@ -964,19 +940,12 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
             prev_state = self._current_state
 
             entry = TraceEntry(
-
                 state_before=prev_state,
-
                 action=ProbeAction("verify_monad_right_identity"),
-
                 state_after=prev_state,
-
                 reward=ConstitutionalScore(composable=0.0),
-
                 reasoning=f"Monad right identity check failed: {e}",
-
                 timestamp=datetime.now(),
-
             )
             self._trace_entries.append(entry)
             return False
@@ -1026,13 +995,9 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
                 state_before=prev_state,
                 action=action,
                 state_after=next_state,
-
                 reward=ConstitutionalScore(composable=1.0 if passed else 0.0),
-
                 reasoning=f"Monad Associativity: m.bind(f).bind(g) {'≡' if passed else '≠'} m.bind(λa. f(a).bind(g))",
-
                 timestamp=datetime.now(),
-
             )
             self._trace_entries.append(entry)
             self._current_state = next_state
@@ -1046,19 +1011,12 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
             prev_state = self._current_state
 
             entry = TraceEntry(
-
                 state_before=prev_state,
-
                 action=ProbeAction("verify_monad_associativity"),
-
                 state_after=prev_state,
-
                 reward=ConstitutionalScore(composable=0.0),
-
                 reasoning=f"Monad associativity check failed: {e}",
-
                 timestamp=datetime.now(),
-
             )
             self._trace_entries.append(entry)
             return False
@@ -1068,7 +1026,7 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
     @property
     def history(self) -> list[A]:
         """Get captured history (inputs only)."""
-        return [obs.input for obs in self._observations]  # type: ignore
+        return [obs.input for obs in self._observations]
 
     @property
     def call_count(self) -> int:
@@ -1109,7 +1067,7 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
         """
         if not self._observations:
             raise IndexError(f"{self.name} has no captured values")
-        return self._observations[-1].input  # type: ignore
+        return self._observations[-1].input  # type: ignore[no-any-return]
 
     # === Assertions (Test helpers) ===
 
@@ -1139,9 +1097,7 @@ class WitnessProbe(TruthFunctor[ProbeState, A, B], Agent[A, A], Generic[A, B]):
             AssertionError: If count doesn't match
         """
         actual = self._invocation_count
-        assert actual == count, (
-            f"Expected {count} invocations in {self.name}, got {actual}"
-        )
+        assert actual == count, f"Expected {count} invocations in {self.name}, got {actual}"
 
     def assert_not_empty(self) -> None:
         """

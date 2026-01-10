@@ -129,6 +129,7 @@ class AnalysisReportRendering:
 @dataclass(frozen=True)
 class AnalyzeRequest:
     """Request for analysis operation."""
+
     target: str
     use_llm: bool = True
 
@@ -136,6 +137,7 @@ class AnalyzeRequest:
 @dataclass(frozen=True)
 class AnalyzeResponse:
     """Response from analysis operation."""
+
     mode: str
     target: str
     passed: bool
@@ -145,6 +147,7 @@ class AnalyzeResponse:
 @dataclass(frozen=True)
 class FullAnalyzeResponse:
     """Response from full four-mode analysis."""
+
     target: str
     is_valid: bool
     categorical_passed: bool
@@ -232,6 +235,7 @@ class AnalysisNode(BaseLogosNode):
         # Check LLM availability
         try:
             from agents.k.llm import has_llm_credentials
+
             llm_available = has_llm_credentials()
         except ImportError:
             llm_available = False
@@ -252,25 +256,33 @@ class AnalysisNode(BaseLogosNode):
 
     async def _invoke_aspect(
         self,
-        aspect_name: str,
+        aspect: str,
         observer: "Umwelt[Any, Any]",
         **kwargs: Any,
     ) -> Any:
         """Route custom aspects to handlers."""
-        if aspect_name == "categorical":
-            return await self._analyze_categorical(kwargs.get("target", ""), kwargs.get("use_llm", True))
-        if aspect_name == "epistemic":
-            return await self._analyze_epistemic(kwargs.get("target", ""), kwargs.get("use_llm", True))
-        if aspect_name == "dialectical":
-            return await self._analyze_dialectical(kwargs.get("target", ""), kwargs.get("use_llm", True))
-        if aspect_name == "generative":
-            return await self._analyze_generative(kwargs.get("target", ""), kwargs.get("use_llm", True))
-        if aspect_name == "full":
+        if aspect == "categorical":
+            return await self._analyze_categorical(
+                kwargs.get("target", ""), kwargs.get("use_llm", True)
+            )
+        if aspect == "epistemic":
+            return await self._analyze_epistemic(
+                kwargs.get("target", ""), kwargs.get("use_llm", True)
+            )
+        if aspect == "dialectical":
+            return await self._analyze_dialectical(
+                kwargs.get("target", ""), kwargs.get("use_llm", True)
+            )
+        if aspect == "generative":
+            return await self._analyze_generative(
+                kwargs.get("target", ""), kwargs.get("use_llm", True)
+            )
+        if aspect == "full":
             return await self._analyze_full(kwargs.get("target", ""), kwargs.get("use_llm", True))
-        if aspect_name == "self":
+        if aspect == "self":
             return await self._analyze_self(kwargs.get("use_llm", True))
 
-        raise NotImplementedError(f"Aspect {aspect_name} not implemented")
+        raise NotImplementedError(f"Aspect {aspect} not implemented")
 
     async def _analyze_categorical(self, target: str, use_llm: bool) -> AnalysisReportRendering:
         """Run categorical analysis."""
@@ -278,9 +290,11 @@ class AnalysisNode(BaseLogosNode):
 
         if use_llm:
             from agents.operad.domains.analysis import analyze_categorical_llm
+
             report = await analyze_categorical_llm(target)
         else:
             from agents.operad.domains.analysis import _categorical_analysis
+
             report = _categorical_analysis(target)
 
         return AnalysisReportRendering(
@@ -301,9 +315,11 @@ class AnalysisNode(BaseLogosNode):
 
         if use_llm:
             from agents.operad.domains.analysis import analyze_epistemic_llm
+
             report = await analyze_epistemic_llm(target)
         else:
             from agents.operad.domains.analysis import _epistemic_analysis
+
             report = _epistemic_analysis(target)
 
         return AnalysisReportRendering(
@@ -324,9 +340,11 @@ class AnalysisNode(BaseLogosNode):
 
         if use_llm:
             from agents.operad.domains.analysis import analyze_dialectical_llm
+
             report = await analyze_dialectical_llm(target)
         else:
             from agents.operad.domains.analysis import _dialectical_analysis
+
             report = _dialectical_analysis(target)
 
         return AnalysisReportRendering(
@@ -347,9 +365,11 @@ class AnalysisNode(BaseLogosNode):
 
         if use_llm:
             from agents.operad.domains.analysis import analyze_generative_llm
+
             report = await analyze_generative_llm(target)
         else:
             from agents.operad.domains.analysis import _generative_analysis
+
             report = _generative_analysis(target)
 
         return AnalysisReportRendering(
@@ -370,9 +390,11 @@ class AnalysisNode(BaseLogosNode):
 
         if use_llm:
             from agents.operad.domains.analysis import analyze_full_llm
+
             report = await analyze_full_llm(target)
         else:
             from agents.operad.domains.analysis import _full_analysis
+
             report = _full_analysis(target)
 
         return AnalysisReportRendering(
@@ -394,9 +416,11 @@ class AnalysisNode(BaseLogosNode):
 
         if use_llm:
             from agents.operad.domains.analysis import self_analyze_llm
+
             report = await self_analyze_llm()
         else:
             from agents.operad.domains.analysis import self_analyze
+
             report = self_analyze()
 
         return AnalysisReportRendering(

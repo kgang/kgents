@@ -14,7 +14,7 @@ from agents.d.universe.backend import Query
 from agents.d.universe.backends import MemoryBackend, SQLiteBackend
 
 
-async def test_backend(backend, name: str):
+async def test_backend(backend: MemoryBackend | SQLiteBackend, name: str) -> None:
     """Test a backend implementation."""
     print(f"\n{'=' * 60}")
     print(f"Testing {name} Backend")
@@ -96,7 +96,7 @@ async def test_backend(backend, name: str):
     print(f"\n✅ {name} Backend: ALL TESTS PASSED")
 
 
-async def main():
+async def main() -> None:
     """Run tests on all available backends."""
     print("\n" + "=" * 60)
     print("Backend Protocol Implementation Test")
@@ -124,7 +124,7 @@ async def main():
         if url and "postgresql" in url:
             postgres_backend = PostgresBackend(url=url, namespace="test_backend")
             if await postgres_backend.is_available():
-                await test_backend(postgres_backend, "Postgres")
+                await test_backend(postgres_backend, "Postgres")  # type: ignore[arg-type]
                 await postgres_backend.close()
             else:
                 print("\n⚠️  Postgres backend unavailable (connection failed)")

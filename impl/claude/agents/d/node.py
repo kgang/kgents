@@ -213,11 +213,7 @@ class DatumGetResponse:
     datum: Datum | None
 
     def to_dict(self) -> dict[str, Any]:
-        import json
-
-        return {
-            "datum": json.loads(self.datum.to_json()) if self.datum else None
-        }
+        return {"datum": self.datum.to_json() if self.datum else None}
 
 
 @dataclass(frozen=True)
@@ -237,10 +233,8 @@ class DatumListResponse:
     count: int
 
     def to_dict(self) -> dict[str, Any]:
-        import json
-
         return {
-            "data": [json.loads(d.to_json()) for d in self.data],
+            "data": [d.to_json() for d in self.data],
             "count": self.count,
         }
 
@@ -260,10 +254,8 @@ class CausalChainResponse:
     count: int
 
     def to_dict(self) -> dict[str, Any]:
-        import json
-
         return {
-            "chain": [json.loads(d.to_json()) for d in self.chain],
+            "chain": [d.to_json() for d in self.chain],
             "count": self.count,
         }
 
@@ -434,9 +426,7 @@ class DataNode(BaseLogosNode):
         help="Display D-gent data layer status",
         examples=["kg data", "kg data manifest"],
     )
-    async def manifest(
-        self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any
-    ) -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest D-gent status to observer.
 
@@ -504,17 +494,19 @@ class DataNode(BaseLogosNode):
             return {"results": results, "count": len(results)}
 
         elif aspect == "get":
-            datum_id = kwargs.get("id")
-            if not datum_id:
+            datum_id_raw = kwargs.get("id")
+            if not datum_id_raw:
                 return {"error": "id required"}
+            datum_id = str(datum_id_raw)
 
             data = await self._universe.get(datum_id)
             return {"data": data}
 
         elif aspect == "delete":
-            datum_id = kwargs.get("id")
-            if not datum_id:
+            datum_id_raw = kwargs.get("id")
+            if not datum_id_raw:
                 return {"error": "id required"}
+            datum_id = str(datum_id_raw)
 
             deleted = await self._universe.delete(datum_id)
             return {"deleted": deleted}
@@ -547,9 +539,10 @@ class DataNode(BaseLogosNode):
             return {"datum_id": datum_id}
 
         elif aspect == "datum.get":
-            datum_id = kwargs.get("id")
-            if not datum_id:
+            datum_id_raw = kwargs.get("id")
+            if not datum_id_raw:
                 return {"error": "id required"}
+            datum_id = str(datum_id_raw)
 
             # Get raw datum (bypass schema deserialization)
             router = DgentRouter()
@@ -566,9 +559,10 @@ class DataNode(BaseLogosNode):
             return {"data": data, "count": len(data)}
 
         elif aspect == "datum.chain":
-            datum_id = kwargs.get("id")
-            if not datum_id:
+            datum_id_raw = kwargs.get("id")
+            if not datum_id_raw:
                 return {"error": "id required"}
+            datum_id = str(datum_id_raw)
 
             router = DgentRouter()
             chain = await router.causal_chain(datum_id)

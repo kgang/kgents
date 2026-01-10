@@ -205,9 +205,7 @@ class ChatSession:
     evidence: ChatEvidence = field(default_factory=ChatEvidence)
 
     # PolicyTrace for witnessing turns
-    policy_trace: ChatPolicyTrace = field(
-        default_factory=lambda: ChatPolicyTrace(session_id="")
-    )
+    policy_trace: ChatPolicyTrace = field(default_factory=lambda: ChatPolicyTrace(session_id=""))
 
     # Checkpoints
     checkpoints: list[dict[str, Any]] = field(default_factory=list)
@@ -387,7 +385,7 @@ class ChatSession:
             List of PrincipleScore objects, one per turn
         """
         return [
-            mark.constitutional_scores
+            mark.constitutional_scores  # type: ignore[misc]
             for mark in self.policy_trace.get_marks()
             if mark.constitutional_scores is not None
         ]
@@ -574,16 +572,17 @@ class ChatSession:
             merged_turns = self.turns + other.turns
         elif strategy == MergeStrategy.INTERLEAVE:
             # Merge by timestamp
-            merged_turns = sorted(
-                self.turns + other.turns, key=lambda t: t.started_at
-            )
+            merged_turns = sorted(self.turns + other.turns, key=lambda t: t.started_at)
         else:
             # Manual merge - for now, just sequential
             merged_turns = self.turns + other.turns
 
         # Combine evidence using join
         # For now, use the prior with more observations
-        if self.evidence.prior.alpha + self.evidence.prior.beta > other.evidence.prior.alpha + other.evidence.prior.beta:
+        if (
+            self.evidence.prior.alpha + self.evidence.prior.beta
+            > other.evidence.prior.alpha + other.evidence.prior.beta
+        ):
             merged_evidence = self.evidence
         else:
             merged_evidence = other.evidence
@@ -628,9 +627,7 @@ class ChatSession:
         }
 
     @classmethod
-    def create(
-        cls, project_id: str | None = None, branch_name: str = "main"
-    ) -> ChatSession:
+    def create(cls, project_id: str | None = None, branch_name: str = "main") -> ChatSession:
         """
         Create a new chat session.
 

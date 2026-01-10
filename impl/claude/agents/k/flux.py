@@ -1024,7 +1024,7 @@ class KgentFlux:
 
         # Signal output completion
         try:
-            self._output_queue.put_nowait(self._SENTINEL)  # type: ignore
+            self._output_queue.put_nowait(self._SENTINEL)  # type: ignore[arg-type]
         except asyncio.QueueFull:
             pass
 
@@ -1122,7 +1122,7 @@ class KgentFlux:
 
             # Signal output completion
             try:
-                self._output_queue.put_nowait(self._SENTINEL)  # type: ignore
+                self._output_queue.put_nowait(self._SENTINEL)  # type: ignore[arg-type]
             except asyncio.QueueFull:
                 pass
 

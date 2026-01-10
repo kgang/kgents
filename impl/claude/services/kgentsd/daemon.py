@@ -877,7 +877,7 @@ class WitnessDaemon:
                 await self._cli_server.stop()
                 logger.info("CLI socket server stopped")
                 # Log server stats
-                if hasattr(self._cli_server, 'stats'):
+                if hasattr(self._cli_server, "stats"):
                     logger.info(f"Server stats: {self._cli_server.stats}")
             except Exception as e:
                 logger.warning(f"Error stopping CLI socket server: {e}")
@@ -889,7 +889,7 @@ class WitnessDaemon:
 
                 await stop_worker_pools()
                 logger.info("Worker pool stopped")
-                if hasattr(self._worker_pool, 'stats'):
+                if hasattr(self._worker_pool, "stats"):
                     logger.info(f"Worker pool stats: {self._worker_pool.stats}")
             except Exception as e:
                 logger.warning(f"Error stopping worker pool: {e}")
@@ -940,7 +940,7 @@ def start_daemon(config: DaemonConfig | None = None) -> int:
     is_running, existing_pid = check_daemon_status(config)
     if is_running:
         logger.info(f"Daemon already running (PID: {existing_pid})")
-        return existing_pid  # type: ignore
+        return existing_pid  # type: ignore[return-value]
 
     # Spawn daemon as subprocess
     env = os.environ.copy()

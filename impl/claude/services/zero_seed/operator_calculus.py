@@ -395,6 +395,10 @@ class EdgeOperator(ABC):
     galois: GaloisLoss
     edge_kind: EdgeKind
 
+    def __init__(self, *, galois: GaloisLoss | None = None) -> None:
+        """Initialize operator with Galois loss. Overridden by dataclass subclasses."""
+        ...
+
     @abstractmethod
     def apply(self, source: ZeroNode, target: ZeroNode) -> EdgeTransform:
         """
@@ -645,9 +649,7 @@ LAYER_TRANSITIONS: dict[EdgeKind, list[tuple[int, int]]] = {
     EdgeKind.DERIVES: [(i, i) for i in range(1, 8)],
     EdgeKind.SYNTHESIZES: [(i, i) for i in range(1, 8)],
     EdgeKind.CONTRADICTS: [(i, i) for i in range(1, 8)],
-    EdgeKind.CROSS_LAYER: [
-        (i, j) for i in range(1, 8) for j in range(1, 8) if abs(i - j) > 1
-    ],
+    EdgeKind.CROSS_LAYER: [(i, j) for i in range(1, 8) for j in range(1, 8) if abs(i - j) > 1],
 }
 
 
@@ -1038,9 +1040,7 @@ class ReflectsOnOperator(EdgeOperator):
         Synthesis: Does the reflection capture key insights?
         """
         loss = self.galois.compute_text(reflection_desc)
-        synthesis_loss = self.galois.synthesis_loss_text(
-            execution.content, reflection.content
-        )
+        synthesis_loss = self.galois.synthesis_loss_text(execution.content, reflection.content)
 
         total_loss = 0.6 * loss + 0.4 * synthesis_loss
 
@@ -1438,9 +1438,7 @@ class CrossLayerOperator(EdgeOperator):
     def apply(self, source: ZeroNode, target: ZeroNode) -> EdgeTransform:
         """Create cross-layer edge."""
         if source.layer != self.source_layer or target.layer != self.target_layer:
-            raise ValueError(
-                f"Layer mismatch: expected {self.source_layer}->{self.target_layer}"
-            )
+            raise ValueError(f"Layer mismatch: expected {self.source_layer}->{self.target_layer}")
 
         if abs(source.layer - target.layer) <= 1:
             raise ValueError("CROSS_LAYER requires non-adjacent layers")
@@ -1800,9 +1798,7 @@ def find_optimal_path(
     galois = galois or GaloisLoss()
 
     # Priority queue: (accumulated_loss, node_id, nodes_path, ops_path)
-    queue: list[tuple[float, str, list[ZeroNode], list[EdgeKind]]] = [
-        (0.0, source.id, [], [])
-    ]
+    queue: list[tuple[float, str, list[ZeroNode], list[EdgeKind]]] = [(0.0, source.id, [], [])]
     visited: set[str] = set()
 
     while queue:
@@ -1818,9 +1814,7 @@ def find_optimal_path(
         if current_id == target.id:
             # Found target
             total_reward = sum(
-                _compute_edge_reward(
-                    nodes_path[i], ops_path[i], nodes_path[i + 1], galois
-                )
+                _compute_edge_reward(nodes_path[i], ops_path[i], nodes_path[i + 1], galois)
                 for i in range(len(ops_path))
             )
             return OperatorPath(
@@ -1935,9 +1929,7 @@ class OperatorValueAgent:
                     loss = transform.galois_loss
                     future_value = self.compute_value(target, graph_nodes, max_depth - 1)
 
-                    total_value = (
-                        reward - self.lambda_penalty * loss + self.gamma * future_value
-                    )
+                    total_value = reward - self.lambda_penalty * loss + self.gamma * future_value
                     max_value = max(max_value, total_value)
                 except (ValueError, TypeError):
                     continue

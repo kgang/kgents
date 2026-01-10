@@ -275,7 +275,7 @@ class TimelineService:
     # Private Helpers
     # =========================================================================
 
-    async def _calculate_coherence(self, kblocks: list) -> float:
+    async def _calculate_coherence(self, kblocks: list[Any]) -> float:
         """
         Calculate overall coherence score.
 
@@ -293,9 +293,9 @@ class TimelineService:
 
         # Coherence is inverse of loss
         coherence = max(0.0, min(1.0, 1.0 - avg_loss))
-        return coherence
+        return float(coherence)
 
-    def _calculate_layer_distribution(self, kblocks: list) -> dict[int, int]:
+    def _calculate_layer_distribution(self, kblocks: list[Any]) -> dict[int, int]:
         """
         Calculate distribution of K-Blocks across layers.
 

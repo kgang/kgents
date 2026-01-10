@@ -92,8 +92,9 @@ except ImportError:
 
 # O-gent: Observation
 try:
+    from agents.o.telemetry import TelemetryObserver  # type: ignore[import-untyped]
+
     from agents.o.observer import Observer, ObserverFunctor
-    from agents.o.telemetry import TelemetryObserver
 
     OGENT_AVAILABLE = True
 except ImportError:

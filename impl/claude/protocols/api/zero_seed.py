@@ -46,9 +46,9 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
-    Query = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
+    Query = None  # type: ignore[assignment]
 
 try:
     from pydantic import BaseModel, Field
@@ -56,8 +56,8 @@ try:
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
-    BaseModel = object  # type: ignore
-    Field = lambda *args, **kwargs: None  # type: ignore
+    BaseModel = object  # type: ignore[assignment, misc]
+    Field = lambda *args, **kwargs: None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 

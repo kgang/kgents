@@ -48,7 +48,7 @@ def _get_console() -> "Console":
     global _console
     if _console is None and RICH_AVAILABLE:
         _console = Console()
-    return _console  # type: ignore
+    return _console  # type: ignore[return-value]
 
 
 # =============================================================================

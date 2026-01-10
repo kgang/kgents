@@ -75,7 +75,7 @@ class BusNode(BaseLogosNode):
     _bus: Any = None
 
     # Active subscriptions (handler_id -> unsubscribe_fn)
-    _subscriptions: dict[str, Any] = None  # type: ignore
+    _subscriptions: dict[str, Any] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         """Initialize subscriptions dict."""

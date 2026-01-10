@@ -27,8 +27,8 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
 
@@ -168,9 +168,7 @@ def create_daily_lab_router() -> "APIRouter | None":
 
             # Capture the mark using the appropriate method
             if request.reasoning:
-                daily_mark = lab.capture.with_reasoning(
-                    request.content, request.reasoning, tag
-                )
+                daily_mark = lab.capture.with_reasoning(request.content, request.reasoning, tag)
             elif tag:
                 daily_mark = lab.capture.tagged(request.content, tag)
             else:
@@ -178,9 +176,7 @@ def create_daily_lab_router() -> "APIRouter | None":
 
             # Build warmth response
             if tag:
-                warmth = WARMTH_RESPONSES["mark_captured_with_feeling"].format(
-                    tag=tag.value
-                )
+                warmth = WARMTH_RESPONSES["mark_captured_with_feeling"].format(tag=tag.value)
             else:
                 warmth = WARMTH_RESPONSES["mark_captured"]
 

@@ -42,7 +42,16 @@ class PathType(str, Enum):
 
 @dataclass(frozen=True)
 class HoTTType:
-    """A type in Homotopy Type Theory."""
+    """
+    Conceptual model of a type in Homotopy Type Theory.
+
+    IMPORTANT: This is NOT a real HoTT type. Python classes cannot represent
+    genuine homotopy types with their full mathematical structure. This class
+    provides a conceptual approximation for verification workflows.
+
+    A type in HoTT is characterized by its universe level, constructors
+    (introduction rules), and eliminators (elimination rules).
+    """
 
     name: str
     universe_level: UniverseLevel
@@ -74,7 +83,17 @@ class HoTTType:
 
 @dataclass(frozen=True)
 class HoTTPath:
-    """A path (proof of equality) in HoTT."""
+    """
+    Conceptual model of a path (proof of equality) in HoTT.
+
+    IMPORTANT: This is NOT a genuine homotopy path. In real HoTT, paths are
+    first-class proof objects with rich structure (composition, inversion,
+    transport). This class provides a conceptual approximation that captures
+    the metadata of equality proofs without the full mathematical semantics.
+
+    A path represents evidence that two terms are equal, along with the
+    method used to construct that evidence.
+    """
 
     source: Any
     target: Any
@@ -97,7 +116,17 @@ class HoTTPath:
 
 @dataclass(frozen=True)
 class Isomorphism:
-    """An isomorphism between two structures."""
+    """
+    Conceptual model of an isomorphism between two structures.
+
+    IMPORTANT: The univalence axiom (isomorphism = identity) is conceptual here.
+    In real HoTT, univalence provides a path between isomorphic types in the
+    universe. This class captures the structural data of isomorphisms without
+    the full type-theoretic machinery that would make univalence meaningful.
+
+    An isomorphism consists of forward and inverse maps, plus optional proofs
+    that they compose to identities.
+    """
 
     source_type: str
     target_type: str
@@ -139,7 +168,17 @@ class HoTTVerificationResult:
 
 
 class HoTTContext:
-    """Homotopy Type Theory context for formal verification."""
+    """
+    Conceptual infrastructure for HoTT-based verification.
+
+    IMPORTANT: This is a conceptual model, not a real HoTT proof assistant.
+    Genuine HoTT verification requires tools like Agda, Coq, or Lean with
+    their cubical type theory extensions. This class provides a Python-native
+    approximation for capturing verification workflows and isomorphism checks.
+
+    The context maintains a type universe, path cache, and isomorphism registry
+    to support structural verification operations.
+    """
 
     def __init__(self, llm_client: Any = None):
         self.llm_client = llm_client
@@ -342,6 +381,84 @@ class HoTTContext:
         )
         self.register_type(hit)
         return hit
+
+
+@dataclass(frozen=True)
+class LawVerificationResult:
+    """
+    Result of verifying a categorical law.
+
+    IMPORTANT: This is a conceptual model for capturing verification metadata,
+    not a genuine proof object. Real categorical law proofs require formal
+    proof assistants like Lean, Coq, or Agda.
+    """
+
+    law_name: str
+    verified: bool
+    path: HoTTPath | None = None
+    counter_example: Any | None = None
+
+
+class CategoricalLawVerifier:
+    """
+    Verify categorical laws using HoTT path equality.
+
+    IMPORTANT: This is a conceptual model, not a genuine proof system.
+    The "verification" here is structural checking that captures the
+    intent of categorical laws without providing formal proofs.
+
+    For genuine categorical law proofs, export to Lean 4 using LeanExporter.
+    """
+
+    def __init__(self, context: HoTTContext | None = None):
+        self.context = context or HoTTContext()
+
+    async def verify_associativity(self, f: Any, g: Any, h: Any) -> LawVerificationResult:
+        """
+        Verify (f . g) . h = f . (g . h).
+
+        This checks that composition is associative by constructing
+        a path between left-associated and right-associated compositions.
+        """
+        left = {"composition": "left", "morphisms": [f, g, h]}
+        right = {"composition": "right", "morphisms": [f, g, h]}
+
+        path = await self.context.construct_path(left, right)
+        return LawVerificationResult(
+            law_name="composition_associativity",
+            verified=path is not None,
+            path=path,
+        )
+
+    async def verify_left_identity(self, f: Any, id_a: Any) -> LawVerificationResult:
+        """
+        Verify id . f = f.
+
+        This checks that composing with the identity on the left
+        yields the original morphism.
+        """
+        composed = {"id_composed": True, "morphism": f, "side": "left"}
+        path = await self.context.construct_path(composed, f)
+        return LawVerificationResult(
+            law_name="left_identity",
+            verified=path is not None,
+            path=path,
+        )
+
+    async def verify_right_identity(self, f: Any, id_b: Any) -> LawVerificationResult:
+        """
+        Verify f . id = f.
+
+        This checks that composing with the identity on the right
+        yields the original morphism.
+        """
+        composed = {"id_composed": True, "morphism": f, "side": "right"}
+        path = await self.context.construct_path(composed, f)
+        return LawVerificationResult(
+            law_name="right_identity",
+            verified=path is not None,
+            path=path,
+        )
 
 
 async def verify_isomorphism(a: Any, b: Any, context: HoTTContext | None = None) -> bool:

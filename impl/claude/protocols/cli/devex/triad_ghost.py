@@ -246,7 +246,7 @@ class TriadGhostCollector:
         try:
             import redis.asyncio as redis
 
-            client = await redis.from_url(self.redis_url, socket_timeout=5.0)
+            client = await redis.from_url(self.redis_url, socket_timeout=5.0)  # type: ignore[arg-type]
             try:
                 pong = await client.ping()
                 return 1.0 if pong else 0.5

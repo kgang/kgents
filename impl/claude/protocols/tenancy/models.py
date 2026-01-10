@@ -133,7 +133,7 @@ class Tenant:
     def tokens_remaining(self) -> int:
         """Tokens remaining this billing period."""
         if self.tokens_limit_month == 0:  # Unlimited
-            return float("inf")  # type: ignore
+            return float("inf")  # type: ignore[return-value]
         return max(0, self.tokens_limit_month - self.tokens_used_month)
 
     @property

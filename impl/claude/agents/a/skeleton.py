@@ -194,7 +194,7 @@ def has_meta(agent: Agent[Any, Any]) -> bool:
 def get_meta(agent: Agent[Any, Any]) -> AgentMeta | None:
     """Get AgentMeta from an agent if present."""
     if has_meta(agent):
-        return agent.meta  # type: ignore
+        return agent.meta  # type: ignore[attr-defined, no-any-return]
     return None
 
 
@@ -221,7 +221,7 @@ def check_composition(agent_a: Agent[Any, Any], agent_b: Agent[Any, Any]) -> tup
     Returns: (is_compatible, reason)
     """
     if is_composable(agent_a):
-        return agent_a.can_compose_with(agent_b)  # type: ignore
+        return agent_a.can_compose_with(agent_b)  # type: ignore[attr-defined, no-any-return]
 
     # Fallback: check metadata if available
     meta_a = get_meta(agent_a)
@@ -687,7 +687,7 @@ class _WrappedAgent(Agent[A, B], Generic[A, B]):
             result = await self._impl(input)
         else:
             result = self._impl(input)
-        return result  # type: ignore
+        return result  # type: ignore[no-any-return]
 
 
 class AgentFactory:
@@ -981,7 +981,7 @@ class GroundedSkeleton(Agent[Any, AgentMeta]):
         """
         # If target has meta, use it
         if self._target and has_meta(self._target):
-            return get_meta(self._target)  # type: ignore
+            return get_meta(self._target)  # type: ignore[return-value]
 
         # Infer from target properties
         if self._target:

@@ -25,8 +25,8 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +41,8 @@ class RecordFeedbackRequest(BaseModel):
 
     user_id: str = Field(..., description="User identifier")
     kblock_id: str = Field(..., description="K-Block identifier")
-    action: str = Field(
-        ..., description="Action type: view, engage, dismiss, contradict"
-    )
-    dwell_time_ms: int | None = Field(
-        None, description="Time spent viewing (milliseconds)"
-    )
+    action: str = Field(..., description="Action type: view, engage, dismiss, contradict")
+    dwell_time_ms: int | None = Field(None, description="Time spent viewing (milliseconds)")
     interaction_type: str | None = Field(
         None, description="Specific interaction: edit, comment, link, copy"
     )
@@ -156,7 +152,7 @@ def create_feed_router() -> "APIRouter | None":
             from services.feed.feedback import FeedbackAction
             from services.providers import get_feed_feedback_persistence
 
-            persistence = await get_feed_feedback_persistence()
+            persistence = await get_feed_feedback_persistence()  # type: ignore[no-untyped-call]
 
             # Parse action
             action_map = {
@@ -342,7 +338,7 @@ def create_feed_router() -> "APIRouter | None":
         try:
             from services.providers import get_feed_feedback_persistence
 
-            persistence = await get_feed_feedback_persistence()
+            persistence = await get_feed_feedback_persistence()  # type: ignore[no-untyped-call]
 
             analytics = await persistence.get_analytics(
                 limit=limit,

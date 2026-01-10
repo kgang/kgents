@@ -178,6 +178,7 @@ def route_command(
     if timeout == DEFAULT_TIMEOUT:
         try:
             from protocols.cli.handler_meta import get_handler_timeout
+
             timeout = get_handler_timeout(command, DEFAULT_TIMEOUT)
         except ImportError:
             # Fallback gracefully if handler_meta not available
@@ -191,13 +192,9 @@ def route_command(
         use_pty = _should_use_pty(command)
 
     if use_pty:
-        return route_command_pty(
-            command, args, flags, socket_path=socket_path, timeout=timeout
-        )
+        return route_command_pty(command, args, flags, socket_path=socket_path, timeout=timeout)
 
-    return route_command_simple(
-        command, args, flags, socket_path=socket_path, timeout=timeout
-    )
+    return route_command_simple(command, args, flags, socket_path=socket_path, timeout=timeout)
 
 
 def route_command_simple(
@@ -335,9 +332,7 @@ def route_command_pty(
         # Restore terminal settings
         if original_settings is not None:
             try:
-                termios.tcsetattr(
-                    sys.stdin.fileno(), termios.TCSAFLUSH, original_settings
-                )
+                termios.tcsetattr(sys.stdin.fileno(), termios.TCSAFLUSH, original_settings)
             except termios.error:
                 pass
 
@@ -603,7 +598,7 @@ def _pty_io_loop(sock: socket.socket, correlation_id: str, seq: int) -> int:
                     else:
                         # Might be a CLIResponse (error case)
                         if "exit_code" in data:
-                            return data.get("exit_code", 1)
+                            return int(data.get("exit_code", 1))
 
             except BlockingIOError:
                 pass

@@ -205,6 +205,7 @@ class RepositoryMiner:
             if since_dt.tzinfo is None:
                 # Assume UTC if no timezone specified
                 from datetime import timezone as tz
+
                 since_dt = since_dt.replace(tzinfo=tz.utc)
             commits = [c for c in commits if c.timestamp >= since_dt]
 
@@ -297,27 +298,27 @@ class RepositoryMiner:
 
         for commit in commits:
             for file_path in commit.files_changed:
-                file_data[file_path]["commits"] = int(file_data[file_path]["commits"]) + 1  # type: ignore
-                file_data[file_path]["churn"] = int(file_data[file_path]["churn"]) + commit.churn  # type: ignore
+                file_data[file_path]["commits"] = int(file_data[file_path]["commits"]) + 1  # type: ignore[arg-type, call-overload]
+                file_data[file_path]["churn"] = int(file_data[file_path]["churn"]) + commit.churn  # type: ignore[arg-type, call-overload]
                 assert isinstance(file_data[file_path]["authors"], set)
-                file_data[file_path]["authors"].add(commit.author)  # type: ignore
+                file_data[file_path]["authors"].add(commit.author)  # type: ignore[union-attr]
 
                 # Track last modified
                 last_mod = file_data[file_path]["last_modified"]
-                if last_mod is None or commit.timestamp > last_mod:  # type: ignore
+                if last_mod is None or commit.timestamp > last_mod:  # type: ignore[operator]
                     file_data[file_path]["last_modified"] = commit.timestamp
 
                 # Track coupling (files changed together)
                 for other_file in commit.files_changed:
                     if other_file != file_path:
                         assert isinstance(file_data[file_path]["co_changes"], Counter)
-                        file_data[file_path]["co_changes"][other_file] += 1  # type: ignore
+                        file_data[file_path]["co_changes"][other_file] += 1  # type: ignore[index]
 
         # Convert to FileChurnMetric
         metrics = []
         for path, data in file_data.items():
-            commits_count = int(data["commits"])  # type: ignore
-            total_churn = int(data["churn"])  # type: ignore
+            commits_count = int(data["commits"])  # type: ignore[arg-type, call-overload]
+            total_churn = int(data["churn"])  # type: ignore[arg-type, call-overload]
             avg_churn = total_churn / commits_count if commits_count > 0 else 0.0
 
             assert isinstance(data["co_changes"], Counter)
@@ -332,9 +333,7 @@ class RepositoryMiner:
             )
 
             assert isinstance(data["authors"], set)
-            assert data["last_modified"] is None or isinstance(
-                data["last_modified"], datetime
-            )
+            assert data["last_modified"] is None or isinstance(data["last_modified"], datetime)
 
             metrics.append(
                 FileChurnMetric(
@@ -385,26 +384,23 @@ class RepositoryMiner:
 
         for commit in commits:
             author = commit.author
-            author_data[author]["commits"] = int(author_data[author]["commits"]) + 1  # type: ignore
+            author_data[author]["commits"] = int(author_data[author]["commits"]) + 1  # type: ignore[arg-type, call-overload]
             assert isinstance(author_data[author]["types"], Counter)
             assert isinstance(author_data[author]["files"], Counter)
-            author_data[author]["types"][commit.commit_type] += 1  # type: ignore
+            author_data[author]["types"][commit.commit_type] += 1  # type: ignore[index]
             assert isinstance(author_data[author]["sizes"], list)
-            author_data[author]["sizes"].append(commit.churn)  # type: ignore
+            author_data[author]["sizes"].append(commit.churn)  # type: ignore[union-attr]
 
             # Track file ownership
             for file_path in commit.files_changed:
-                author_data[author]["files"][file_path] += 1  # type: ignore
+                author_data[author]["files"][file_path] += 1  # type: ignore[index]
 
             # Track collaborators (other authors in same files)
             for file_path in commit.files_changed:
                 for other_commit in commits:
-                    if (
-                        other_commit.author != author
-                        and file_path in other_commit.files_changed
-                    ):
+                    if other_commit.author != author and file_path in other_commit.files_changed:
                         assert isinstance(author_data[author]["collaborators"], Counter)
-                        author_data[author]["collaborators"][other_commit.author] += 1  # type: ignore
+                        author_data[author]["collaborators"][other_commit.author] += 1  # type: ignore[index]
 
         # Convert to AuthorPattern
         patterns = []
@@ -415,9 +411,7 @@ class RepositoryMiner:
             owned = []
             for file_path, count in data["files"].items():
                 # Check if this author has majority commits for this file
-                file_total_commits = sum(
-                    1 for c in commits if file_path in c.files_changed
-                )
+                file_total_commits = sum(1 for c in commits if file_path in c.files_changed)
                 if count / file_total_commits > 0.5:
                     owned.append(file_path)
 
@@ -619,9 +613,7 @@ class RepositoryMiner:
                 for later_commit in subsequent_commits:
                     if later_commit.commit_type == "fix":
                         # Check if it touches same files
-                        overlap = set(commit.files_changed) & set(
-                            later_commit.files_changed
-                        )
+                        overlap = set(commit.files_changed) & set(later_commit.files_changed)
                         if overlap:
                             fix_count += 1
 
@@ -644,9 +636,7 @@ class RepositoryMiner:
         recent = commits[:mid]
         older = commits[mid:]
 
-        recent_fix_ratio = sum(1 for c in recent if c.commit_type == "fix") / len(
-            recent
-        )
+        recent_fix_ratio = sum(1 for c in recent if c.commit_type == "fix") / len(recent)
         older_fix_ratio = sum(1 for c in older if c.commit_type == "fix") / len(older)
 
         # Improving if recent fix ratio is lower

@@ -158,7 +158,7 @@ class VgentToLgentAdapter:
             results.append(
                 VectorSearchResult(
                     id=vr.id,
-                    entry=None,  # type: ignore  # Will be filled by caller
+                    entry=None,  # type: ignore[arg-type]  # Will be filled by caller
                     distance=vr.distance,
                     similarity=vr.similarity,
                     metadata=dict(vr.metadata),

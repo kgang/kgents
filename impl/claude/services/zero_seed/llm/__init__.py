@@ -36,7 +36,7 @@ from .budgets import (
     TokenBudget,
     TokenBudgetExceeded,
 )
-from .operations import (
+from .operations import (  # type: ignore[import-untyped]
     AxiomMiner,
     ContradictionDetector,
     ProofValidator,

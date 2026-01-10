@@ -358,7 +358,7 @@ def _run_simple_foreground(config: DaemonConfig) -> int:
         _print_thought(thought)
         await original_send(thought)
 
-    daemon._send_thought = print_thought  # type: ignore
+    daemon._send_thought = print_thought  # type: ignore[method-assign]
 
     # Run the daemon
     try:
@@ -420,7 +420,9 @@ def cmd_banish(args: list[str]) -> int:
             if not force:
                 console = _get_console()
                 if console:
-                    console.print("[yellow]Process didn't exit gracefully, sending SIGKILL...[/yellow]")
+                    console.print(
+                        "[yellow]Process didn't exit gracefully, sending SIGKILL...[/yellow]"
+                    )
                 else:
                     print("Process didn't exit gracefully, sending SIGKILL...")
                 os.kill(pid, signal.SIGKILL)
@@ -472,6 +474,7 @@ def cmd_status(args: list[str]) -> int:
     if status["running"]:
         try:
             from .socket_client import is_daemon_available
+
             status["socket_responsive"] = is_daemon_available()
         except Exception:
             status["socket_responsive"] = status["socket_active"]
@@ -480,6 +483,7 @@ def cmd_status(args: list[str]) -> int:
 
     if json_output:
         import json as json_module
+
         print(json_module.dumps(status, indent=2))
         return 0
 
@@ -740,6 +744,7 @@ def cmd_restart(args: list[str]) -> int:
 
     # Wait for socket cleanup
     import time
+
     time.sleep(0.5)
 
     # Restart with same watchers in background
@@ -775,7 +780,9 @@ def cmd_reload(args: list[str]) -> int:
     if not is_running or pid is None:
         console = _get_console()
         if console:
-            console.print("[yellow]Witness is not running. Use `kgentsd summon` to start it.[/yellow]")
+            console.print(
+                "[yellow]Witness is not running. Use `kgentsd summon` to start it.[/yellow]"
+            )
         else:
             print("Witness is not running. Use `kgentsd summon` to start it.")
         return 1
@@ -786,7 +793,9 @@ def cmd_reload(args: list[str]) -> int:
 
         console = _get_console()
         if console:
-            console.print(f"[green]🔮 Sent SIGHUP to Witness (PID {pid}). Configuration reloading.[/green]")
+            console.print(
+                f"[green]🔮 Sent SIGHUP to Witness (PID {pid}). Configuration reloading.[/green]"
+            )
         else:
             print(f"🔮 Sent SIGHUP to Witness (PID {pid}). Configuration reloading.")
 

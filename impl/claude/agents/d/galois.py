@@ -138,6 +138,7 @@ def token_overlap_distance(a: str, b: str) -> float:
     Returns:
         Normalized distance in [0, 1]
     """
+
     # Tokenize (simple whitespace + punctuation split)
     def tokenize(s: str) -> set[str]:
         tokens = re.findall(r"\w+", s.lower())
@@ -180,9 +181,7 @@ def cosine_embedding_distance(a: str, b: str) -> float:
         # Use cached model if available (global singleton pattern)
         if not hasattr(cosine_embedding_distance, "_model"):
             # Use small, fast model for MVP
-            cosine_embedding_distance._model = SentenceTransformer(
-                "all-MiniLM-L6-v2"
-            )
+            cosine_embedding_distance._model = SentenceTransformer("all-MiniLM-L6-v2")
 
         model = cosine_embedding_distance._model
         emb_a = model.encode(a)
@@ -315,9 +314,7 @@ class GaloisLossComputer:
     def __post_init__(self):
         """Validate and set metric function."""
         if self.metric not in METRICS:
-            raise ValueError(
-                f"Unknown metric '{self.metric}'. Choose from: {list(METRICS.keys())}"
-            )
+            raise ValueError(f"Unknown metric '{self.metric}'. Choose from: {list(METRICS.keys())}")
         # Use object.__setattr__ since dataclass is frozen
         object.__setattr__(self, "_metric_fn", METRICS[self.metric])
 
@@ -455,7 +452,7 @@ class GaloisLossComputer:
 
 
 async def compute_crystal_loss(
-    crystal: Crystal, metric: str = "token", llm=None
+    crystal: "Crystal[Any]", metric: str = "token", llm: Any = None
 ) -> float:
     """
     Compute Galois loss for a Crystal.

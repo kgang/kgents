@@ -172,9 +172,7 @@ class GaloisLossComponents:
         )
 
     @classmethod
-    def from_proof_decomposition(
-        cls, decomp: ProofLossDecomposition
-    ) -> GaloisLossComponents:
+    def from_proof_decomposition(cls, decomp: ProofLossDecomposition) -> GaloisLossComponents:
         """
         Convert from Toulmin-based ProofLossDecomposition to principle-based.
 
@@ -223,9 +221,7 @@ class ZeroSeedMark(Mark):
 
     # Core Galois tracking
     galois_loss: float = 0.0  # Total Galois loss [0, 1]
-    loss_components: GaloisLossComponents = field(
-        default_factory=GaloisLossComponents.zero
-    )
+    loss_components: GaloisLossComponents = field(default_factory=GaloisLossComponents.zero)
 
     # Optional Zero Seed specifics
     layer_transition: tuple[int, int] | None = None  # (from_layer, to_layer)
@@ -270,9 +266,7 @@ class ZeroSeedMark(Mark):
             {
                 "galois_loss": self.galois_loss,
                 "loss_components": self.loss_components.to_dict(),
-                "layer_transition": list(self.layer_transition)
-                if self.layer_transition
-                else None,
+                "layer_transition": list(self.layer_transition) if self.layer_transition else None,
                 "constitutional_scores": self.constitutional_scores,
                 "llm_tier": self.llm_tier,
                 "llm_tokens_input": self.llm_tokens_input,
@@ -622,7 +616,9 @@ async def create_node_witnessed(
 
     # 5. Auto-select witness mode
     mode = mark.get_witness_mode()
-    logger.info(f"Created node {node.id} with Galois loss {mark.galois_loss:.2%} (mode={mode.name})")
+    logger.info(
+        f"Created node {node.id} with Galois loss {mark.galois_loss:.2%} (mode={mode.name})"
+    )
 
     # 6. Store mark
     mark_store.append(mark)
@@ -960,10 +956,7 @@ async def trace_node_lineage(
     # Find proof marks (validation history)
     proof_marks: list[MarkId] = []
     for mark in mark_store.all():
-        if (
-            mark.origin == "zero_seed.proof_validation"
-            and mark.metadata.get("node_id") == node.id
-        ):
+        if mark.origin == "zero_seed.proof_validation" and mark.metadata.get("node_id") == node.id:
             proof_marks.append(mark.id)
 
     return NodeLineage(
@@ -1028,9 +1021,7 @@ async def crystallize_galois_session(
 
     # Significance from loss trend
     if len(marks) > 1:
-        first_half_loss = sum(m.galois_loss for m in marks[: len(marks) // 2]) / (
-            len(marks) // 2
-        )
+        first_half_loss = sum(m.galois_loss for m in marks[: len(marks) // 2]) / (len(marks) // 2)
         second_half_loss = sum(m.galois_loss for m in marks[len(marks) // 2 :]) / (
             len(marks) - len(marks) // 2
         )
@@ -1081,7 +1072,7 @@ async def crystallize_galois_session(
     )
 
     # Store crystal
-    await crystal_store.save(crystal)
+    await crystal_store.save(crystal)  # type: ignore[func-returns-value, arg-type]
 
     return crystal
 

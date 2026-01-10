@@ -106,7 +106,7 @@ class MetricState:
     """Internal state for a single metric."""
 
     current: float = 0.0
-    history: list[float] = None  # type: ignore
+    history: list[float] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         if self.history is None:

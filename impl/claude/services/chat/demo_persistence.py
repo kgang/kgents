@@ -14,7 +14,7 @@ from services.chat import ChatSession
 from services.chat.persistence import ChatPersistence
 
 
-async def demo_persistence():
+async def demo_persistence() -> None:
     """Demonstrate persistent chat sessions."""
     print("=" * 80)
     print("CHAT PERSISTENCE DEMO: Sessions Survive Restarts")

@@ -670,21 +670,29 @@ class Hydrator:
 
     def _find_relevant_teaching(self, keywords: list[str]) -> Iterator[TeachingResult]:
         """
-        Find teaching moments relevant to keywords (sync, from docstrings).
+        Find teaching moments relevant to keywords (sync, from cached index).
 
         Matches against:
         - module path
         - symbol name
         - insight text
 
-        NOTE: This is the legacy path. Prefer hydrate_from_brain() for
-        unified hydration that queries Brain instead of re-extracting.
+        NOTE: Uses the module-level teaching index for performance.
+        The index is built once and shared across all Hydrator instances.
+        Prefer hydrate_from_brain() for production use.
+
+        Teaching:
+            gotcha: This uses get_teaching_index() which caches results.
+                    If you need fresh data, call clear_teaching_index() first.
+                    (Evidence: test_hydrator.py::test_teaching_cache_used)
         """
         if not keywords:
             return
 
-        # Collect all teaching moments
-        all_results = list(self._collector.collect_all())
+        # Use cached teaching index (module singleton)
+        from .teaching import get_teaching_index
+
+        all_results = get_teaching_index()
 
         # Score and rank
         scored: list[tuple[int, TeachingResult]] = []
@@ -815,13 +823,17 @@ class Hydrator:
         Find modules related to keywords.
 
         Uses teaching moment modules as proxy for "important" modules.
+        Uses the cached teaching index for performance.
         """
         if not keywords:
             return
 
+        # Use cached teaching index (module singleton)
+        from .teaching import get_teaching_index
+
         # Get unique modules from teaching moments
         modules_seen: set[str] = set()
-        for result in self._collector.collect_all():
+        for result in get_teaching_index():
             if result.module not in modules_seen:
                 module_lower = result.module.lower()
                 for kw in keywords:

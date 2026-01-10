@@ -197,7 +197,7 @@ class FlowAgent(Generic[A, B]):
 
                 except Exception as e:
                     yield FlowEvent(
-                        value=None,  # type: ignore
+                        value=None,  # type: ignore[arg-type]
                         event_type="error",
                         metadata={"error": str(e)},
                     )
@@ -347,7 +347,7 @@ class Flow:
         )
 
         # Attach the full agent pool for collaboration modality to use
-        flow_agent._agent_pool = agents  # type: ignore
+        flow_agent._agent_pool = agents  # type: ignore[attr-defined]
 
         return flow_agent
 

@@ -34,6 +34,17 @@ See: docs/theory/05-sheaf-coherence.md
 See: plans/categorical-reinvention-phase1-foundations.md
 """
 
+# Pilot Bootstrap Protocol
+from .bootstrap import (
+    Axiom,
+    ContentLayer,
+    GaloisLossComputer,
+    PilotBootstrapper,
+    PilotFoundation,
+    Value,
+    classify_content_layer,
+    validate_axiom_candidate,
+)
 from .constitution import (
     PRINCIPLE_WEIGHTS,
     Constitution,
@@ -202,4 +213,13 @@ __all__ = [
     "get_all_pilots",
     "get_law_by_name",
     "summarize_pilot_laws",
+    # Pilot Bootstrap Protocol
+    "ContentLayer",
+    "classify_content_layer",
+    "Axiom",
+    "Value",
+    "PilotFoundation",
+    "GaloisLossComputer",
+    "validate_axiom_candidate",
+    "PilotBootstrapper",
 ]

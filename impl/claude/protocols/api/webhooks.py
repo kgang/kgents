@@ -87,8 +87,8 @@ try:
     HAS_STRIPE = True
 except ImportError:
     HAS_STRIPE = False
-    stripe = None
-    SignatureVerificationError = Exception  # noqa: N816
+    stripe = None  # type: ignore[assignment]
+    SignatureVerificationError = Exception  # type: ignore[misc,assignment]  # noqa: N816
 
 # OpenMeter client for bridging
 try:

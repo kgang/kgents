@@ -21,11 +21,12 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from services.k_block.core.kblock import KBlock
 
 if TYPE_CHECKING:
+    from services.feed.core import Feed
     from services.feed.persistence import FeedFeedbackPersistence
 
 # =============================================================================
@@ -69,7 +70,7 @@ class FeedbackEvent:
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: "dict[str, str]" = field(default_factory=dict)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "user_id": self.user_id,
@@ -392,7 +393,7 @@ class FeedbackSystem:
         user_id: str,
         base_feed_id: str = "cosmos",
         name: str | None = None,
-    ):
+    ) -> "Feed":
         """
         Create a personalized feed based on user interaction history.
 

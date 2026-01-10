@@ -36,7 +36,7 @@ except ImportError:
     APIRouter = None  # type: ignore[misc, assignment]
     HTTPException = None  # type: ignore[misc, assignment]
     BaseModel = object  # type: ignore[misc, assignment]
-    Field = lambda **kwargs: None  # type: ignore[misc, assignment]
+    Field = lambda **kwargs: None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -113,8 +113,12 @@ class FTUEAxiomStatus(BaseModel):
     """Status of a single FTUE axiom."""
 
     complete: bool = Field(default=False, description="Whether this axiom is complete")
-    artifact_id: Optional[str] = Field(default=None, description="ID of the artifact (K-Block, edge, judgment, mark)")
-    completed_at: Optional[datetime] = Field(default=None, description="When this axiom was completed")
+    artifact_id: Optional[str] = Field(
+        default=None, description="ID of the artifact (K-Block, edge, judgment, mark)"
+    )
+    completed_at: Optional[datetime] = Field(
+        default=None, description="When this axiom was completed"
+    )
 
 
 class FTUEStatusResponse(BaseModel):
@@ -125,9 +129,15 @@ class FTUEStatusResponse(BaseModel):
 
     # Individual axiom statuses
     f1_identity_seed: FTUEAxiomStatus = Field(..., description="F1: Identity Seed (first K-Block)")
-    f2_connection_pattern: FTUEAxiomStatus = Field(..., description="F2: Connection Pattern (first edge)")
-    f3_judgment_experience: FTUEAxiomStatus = Field(..., description="F3: Judgment Experience (first judgment)")
-    fg_growth_witness: FTUEAxiomStatus = Field(..., description="FG: Growth Witness (witnessed emergence)")
+    f2_connection_pattern: FTUEAxiomStatus = Field(
+        ..., description="F2: Connection Pattern (first edge)"
+    )
+    f3_judgment_experience: FTUEAxiomStatus = Field(
+        ..., description="F3: Judgment Experience (first judgment)"
+    )
+    fg_growth_witness: FTUEAxiomStatus = Field(
+        ..., description="FG: Growth Witness (witnessed emergence)"
+    )
 
 
 class JudgmentRequest(BaseModel):
@@ -272,6 +282,7 @@ async def create_ftue_witness_mark(
         logger.warning(f"Failed to create FTUE witness mark: {e}")
         # Return a placeholder ID if mark creation fails (non-critical)
         import uuid
+
         return f"mark-{uuid.uuid4().hex[:12]}"
 
 
@@ -687,7 +698,9 @@ Loss: {loss:.2f}
 
             except ImportError:
                 # Sovereign store not available (testing environment)
-                logger.warning("Sovereign store not available, skipping edge creation (F2 not completed)")
+                logger.warning(
+                    "Sovereign store not available, skipping edge creation (F2 not completed)"
+                )
             except Exception as e:
                 # Non-critical - log but don't fail the declaration
                 logger.warning(f"Failed to create Zero Seed edges (F2 not completed): {e}")
@@ -801,7 +814,7 @@ Loss: {loss:.2f}
             )
             await db.commit()
 
-            deleted_count = result.rowcount
+            deleted_count = result.rowcount  # type: ignore[attr-defined]
             logger.info(f"Cleaned up {deleted_count} abandoned onboarding sessions")
 
             return {
@@ -935,7 +948,9 @@ Loss: {loss:.2f}
             if verdict_lower == "accept":
                 message = f"You accepted the proposal '{request.proposal_title}'. Your judgment shapes the system."
             elif verdict_lower == "revise":
-                message = f"You revised the proposal '{request.proposal_title}'. Your voice is heard."
+                message = (
+                    f"You revised the proposal '{request.proposal_title}'. Your voice is heard."
+                )
             else:
                 message = f"You rejected the proposal '{request.proposal_title}'. That's a valid judgment too."
 
@@ -1111,9 +1126,7 @@ Loss: {loss:.2f}
             else:
                 # Get most recent session
                 result = await db.execute(
-                    select(OnboardingSession).order_by(
-                        OnboardingSession.created_at.desc()
-                    ).limit(1)
+                    select(OnboardingSession).order_by(OnboardingSession.created_at.desc()).limit(1)
                 )
                 session = result.scalar_one_or_none()
 

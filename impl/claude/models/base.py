@@ -38,7 +38,8 @@ class Base(AsyncAttrs, DeclarativeBase):
     """
 
     # Consistent naming convention for constraints (helps with migrations)
-    __table_args__ = {"extend_existing": True}
+    # Type allows both dict and tuple forms of __table_args__
+    __table_args__: Any = {"extend_existing": True}
 
     # Default repr shows class name and primary key
     def __repr__(self) -> str:

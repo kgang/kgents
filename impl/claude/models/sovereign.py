@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     JSON,
@@ -84,9 +84,7 @@ class SovereignCollectionRow(TimestampMixin, Base):
 
     __tablename__ = "sovereign_collections"
 
-    id: Mapped[str] = mapped_column(
-        String(64), primary_key=True, default=generate_collection_id
-    )
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=generate_collection_id)
     name: Mapped[str] = mapped_column(String(256), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -110,9 +108,7 @@ class SovereignCollectionRow(TimestampMixin, Base):
     # "pending" = not all paths analyzed
     # "partial" = some paths analyzed
     # "complete" = all paths analyzed
-    analysis_status: Mapped[str] = mapped_column(
-        String(32), default="pending", nullable=False
-    )
+    analysis_status: Mapped[str] = mapped_column(String(32), default="pending", nullable=False)
     analyzed_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Relationships
@@ -126,7 +122,7 @@ class SovereignCollectionRow(TimestampMixin, Base):
         remote_side=[id],
     )
 
-    __table_args__ = (  # type: ignore[assignment]
+    __table_args__ = (
         Index("idx_sovereign_collections_name", "name"),
         Index("idx_sovereign_collections_created_by", "created_by"),
         Index("idx_sovereign_collections_paths", "paths", postgresql_using="gin"),
@@ -177,14 +173,10 @@ class SovereignPlaceholderRow(TimestampMixin, Base):
 
     __tablename__ = "sovereign_placeholders"
 
-    id: Mapped[str] = mapped_column(
-        String(64), primary_key=True, default=generate_placeholder_id
-    )
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=generate_placeholder_id)
 
     # The path that was referenced but doesn't exist
-    path: Mapped[str] = mapped_column(
-        String(1024), nullable=False, unique=True, index=True
-    )
+    path: Mapped[str] = mapped_column(String(1024), nullable=False, unique=True, index=True)
 
     # Who referenced this (JSON array of paths)
     # Multiple documents can reference the same missing file
@@ -196,7 +188,7 @@ class SovereignPlaceholderRow(TimestampMixin, Base):
 
     # Context snippets from referencing documents
     # e.g., [{"path": "spec/foo.md", "line": 42, "context": "See spec/bar.md for..."}]
-    contexts: Mapped[list[dict]] = mapped_column(JSONBCompat, default=list)
+    contexts: Mapped[list[dict[str, Any]]] = mapped_column(JSONBCompat, default=list)
 
     # Resolved when real document uploaded
     resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -205,7 +197,7 @@ class SovereignPlaceholderRow(TimestampMixin, Base):
     # Optional user annotation (even for placeholders)
     annotation: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    __table_args__ = (  # type: ignore[assignment]
+    __table_args__ = (
         Index("idx_sovereign_placeholders_resolved", "resolved"),
         Index("idx_sovereign_placeholders_path", "path"),
         Index(
@@ -216,7 +208,7 @@ class SovereignPlaceholderRow(TimestampMixin, Base):
     )
 
     def add_reference(
-        self, referenced_by_path: str, edge_type: str, context: dict | None = None
+        self, referenced_by_path: str, edge_type: str, context: dict[str, Any] | None = None
     ) -> None:
         """Add a reference from another document."""
         if referenced_by_path not in self.referenced_by:

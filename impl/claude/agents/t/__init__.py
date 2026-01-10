@@ -126,7 +126,7 @@ from .truth_functor import (
 try:
     from agents.operad.domains.probe import PROBE_OPERAD
 except ImportError:
-    PROBE_OPERAD = None  # Fallback if operad not available
+    PROBE_OPERAD = None  # type: ignore[assignment]  # Fallback if operad not available
 
 # ARCHIVED: E-gent integration (2025-12-16)
 # Removed: evolution_integration.py deleted (see commit for restoration if needed)

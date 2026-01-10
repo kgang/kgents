@@ -83,33 +83,37 @@ class ToulminProof:
 
     def without(self, component: str) -> "ToulminProof":
         """Create a copy with the specified component removed/emptied."""
-        kwargs: dict[str, object] = {
-            "data": self.data,
-            "warrant": self.warrant,
-            "claim": self.claim,
-            "backing": self.backing,
-            "qualifier": self.qualifier,
-            "rebuttals": self.rebuttals,
-        }
+        # Start with current values
+        data = self.data
+        warrant = self.warrant
+        claim = self.claim
+        backing = self.backing
+        qualifier = self.qualifier
+        rebuttals = self.rebuttals
 
-        # Map component names to field names
-        component_map = {
-            "data": "data",
-            "warrant": "warrant",
-            "claim": "claim",
-            "backing": "backing",
-            "qualifier": "qualifier",
-            "rebuttals": "rebuttals",
-        }
+        # Zero out the specified component
+        field_name = component.lower()
+        if field_name == "data":
+            data = ""
+        elif field_name == "warrant":
+            warrant = ""
+        elif field_name == "claim":
+            claim = ""
+        elif field_name == "backing":
+            backing = ""
+        elif field_name == "qualifier":
+            qualifier = ""
+        elif field_name == "rebuttals":
+            rebuttals = ()
 
-        field_name = component_map.get(component.lower())
-        if field_name:
-            if field_name == "rebuttals":
-                kwargs[field_name] = ()
-            else:
-                kwargs[field_name] = ""
-
-        return ToulminProof(**kwargs)
+        return ToulminProof(
+            data=data,
+            warrant=warrant,
+            claim=claim,
+            backing=backing,
+            qualifier=qualifier,
+            rebuttals=rebuttals,
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -293,18 +297,12 @@ class GaloisWitnessedProof:
         # Suggest improvements for top 2 offenders
         for component, loss in sorted_components[:2]:
             if loss > 0.15:
-                suggestions.append(
-                    f"Strengthen {component} to reduce loss (current: {loss:.2f})"
-                )
+                suggestions.append(f"Strengthen {component} to reduce loss (current: {loss:.2f})")
 
         # Suggest ghost alternatives if they improve coherence
         if self.ghost_alternatives:
-            best_ghost = min(
-                self.ghost_alternatives, key=lambda g: g.deferral_cost
-            )
-            suggestions.append(
-                f"Consider alternative formulation: {best_ghost.rationale}"
-            )
+            best_ghost = min(self.ghost_alternatives, key=lambda g: g.deferral_cost)
+            suggestions.append(f"Consider alternative formulation: {best_ghost.rationale}")
 
         # Add composition advice if significant
         if self.loss_decomposition.composition_loss > 0.1:
@@ -417,7 +415,7 @@ class GraphLossDecomposition:
         """Edge type with highest average loss."""
         if not self.edge_type_losses:
             return None
-        return max(self.edge_type_losses, key=self.edge_type_losses.get)
+        return max(self.edge_type_losses, key=lambda k: self.edge_type_losses[k])
 
 
 # -----------------------------------------------------------------------------
@@ -445,11 +443,7 @@ class NodeLossDecomposition:
     @property
     def total_loss(self) -> float:
         """Weighted sum of loss components."""
-        return (
-            0.5 * self.intrinsic_loss
-            + 0.3 * self.contextual_loss
-            + 0.2 * self.structural_loss
-        )
+        return 0.5 * self.intrinsic_loss + 0.3 * self.contextual_loss + 0.2 * self.structural_loss
 
     @property
     def dominant_loss_source(self) -> str:
@@ -459,7 +453,7 @@ class NodeLossDecomposition:
             "contextual": self.contextual_loss,
             "structural": self.structural_loss,
         }
-        return max(losses, key=losses.get)
+        return max(losses, key=lambda k: losses[k])
 
     def improvement_focus(self) -> str:
         """Where to focus improvement efforts."""
@@ -556,9 +550,7 @@ def generate_improvement_suggestions(
 
     # Analyze proof decomposition
     if proof_decomposition:
-        for i, (component, loss) in enumerate(
-            proof_decomposition.top_contributors[:3]
-        ):
+        for i, (component, loss) in enumerate(proof_decomposition.top_contributors[:3]):
             if loss > 0.1:
                 suggestions.append(
                     ImprovementSuggestion(

@@ -29,9 +29,9 @@ from __future__ import annotations
 import logging
 import secrets
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from models.probe import ProbeResultRow
+from models.probe import ProbeResultRow  # type: ignore[import-untyped]
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -111,7 +111,7 @@ class ProbeStore:
     async def save_probe(
         self,
         result: ProbeResult,
-        witness=None,  # WitnessPersistence | None
+        witness: Any = None,  # WitnessPersistence | None
         store_all: bool = False,
     ) -> str | None:
         """
@@ -289,7 +289,7 @@ class ProbeStore:
 
             return {row[0]: row[1] for row in rows}
 
-    async def get_health_summary(self, hours: int = 24) -> dict[str, dict]:
+    async def get_health_summary(self, hours: int = 24) -> dict[str, dict[str, Any]]:
         """
         Get health summary for Crown Jewels over the last N hours.
 
@@ -323,7 +323,7 @@ class ProbeStore:
             probes = list(result.scalars().all())
 
             # Group by jewel name (extract from probe name like "health:brain")
-            jewel_stats: dict[str, dict] = {}
+            jewel_stats: dict[str, dict[str, Any]] = {}
 
             for probe in probes:
                 # Extract jewel name from "health:jewel_name"

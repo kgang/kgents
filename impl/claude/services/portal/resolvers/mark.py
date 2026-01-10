@@ -11,12 +11,13 @@ See: spec/protocols/portal-resource-system.md §5.2
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from ..resolver import ResolvedResource
 from ..uri import PortalURI
 
 if TYPE_CHECKING:
+    from services.categorical.constitution import ConstitutionalEvaluation
     from services.chat.session import ChatSession
     from services.chat.witness import ChatMark
 
@@ -105,8 +106,8 @@ class MarkResolver:
 
     def _resolve_mark(self, uri: PortalURI, mark: ChatMark, session_id: str) -> ResolvedResource:
         """Resolve ChatMark to resource."""
-        # Build content dict
-        content = {
+        # Build content dict with explicit Any type for mixed values
+        content: dict[str, Any] = {
             "user_message": mark.user_message,
             "assistant_response": mark.assistant_response,
             "tools_used": list(mark.tools_used),
@@ -115,9 +116,18 @@ class MarkResolver:
         }
 
         # Add constitutional scores if available
-        if mark.constitutional_scores:
-            content["constitutional_scores"] = mark.constitutional_scores.to_dict()
-            preview = f"Score: {mark.constitutional_scores.weighted_total():.1f}"
+        # Note: constitutional_scores may be PrincipleScore or ConstitutionalEvaluation
+        # depending on usage context, so we use duck-typing with hasattr checks
+        scores = mark.constitutional_scores
+        if scores is not None and hasattr(scores, "to_dict"):
+            content["constitutional_scores"] = scores.to_dict()
+            if hasattr(scores, "weighted_total"):
+                weighted = scores.weighted_total
+                # weighted_total may be property or method
+                total = weighted() if callable(weighted) else weighted
+                preview = f"Score: {total:.1f}"
+            else:
+                preview = "Scores available"
         else:
             content["constitutional_scores"] = None
             preview = "No scores available"
@@ -143,12 +153,14 @@ class MarkResolver:
         if self.session_store is None:
             return None
 
+        result: ChatSession | None
         if hasattr(self.session_store, "get"):
-            return await self.session_store.get(session_id)
+            result = cast("ChatSession | None", await self.session_store.get(session_id))
         elif hasattr(self.session_store, "load"):
-            return await self.session_store.load(session_id)
+            result = cast("ChatSession | None", await self.session_store.load(session_id))
         else:
-            return None
+            result = None
+        return result
 
     def _parse_turn_number(self, fragment: str | None) -> int | None:
         """Parse turn number from fragment."""

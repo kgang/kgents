@@ -119,9 +119,9 @@ class EvidenceResolver:
             return None
 
         if hasattr(self.session_store, "get"):
-            return await self.session_store.get(session_id)
+            return await self.session_store.get(session_id)  # type: ignore[no-any-return]
         elif hasattr(self.session_store, "load"):
-            return await self.session_store.load(session_id)
+            return await self.session_store.load(session_id)  # type: ignore[no-any-return]
         else:
             return None
 

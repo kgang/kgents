@@ -104,13 +104,25 @@ class Run:
 @dataclass(frozen=True)
 class Evidence:
     """
-    Accumulated evidence for spec↔impl equivalence.
+    Accumulated evidence for spec↔impl equivalence with Galois integration.
 
-    The evidence is empirical: many runs, statistical confidence.
+    The evidence combines:
+    - Empirical verification (tests, types, lint)
+    - Galois coherence (structure preservation under R o C)
+
+    When galois_loss is provided:
+        equivalence_score = galois_coherence * empirical_weight
+
+    Where:
+        galois_coherence = 1 - galois_loss
+        empirical_weight = pass_rate * 0.7 + volume_factor * 0.3
     """
 
     runs: tuple[Run, ...]
     created_at: datetime = field(default_factory=datetime.now)
+    spec_content: str = ""
+    best_impl_content: str = ""
+    galois_loss: float | None = None
 
     @property
     def run_count(self) -> int:
@@ -130,11 +142,57 @@ class Evidence:
         return self.pass_count / len(self.runs)
 
     @property
+    def galois_coherence(self) -> float:
+        """
+        Galois coherence = 1 - galois_loss.
+
+        Returns 0.0 if galois_loss not computed.
+        """
+        if self.galois_loss is None:
+            return 0.0
+        return 1.0 - self.galois_loss
+
+    @property
     def equivalence_score(self) -> float:
         """
-        Overall equivalence score (0.0 - 1.0).
+        Overall equivalence score (0.0 - 1.0) with Galois integration.
 
-        How confident are we that spec matches impl?
+        When galois_loss is available:
+            Score = galois_coherence * empirical_weight
+
+        Where:
+            galois_coherence = 1 - L (structure preservation)
+            empirical_weight = pass_rate * 0.7 + volume_factor * 0.3
+            volume_factor = min(1.0, run_count / 100)
+
+        Falls back to legacy weighted score when galois_loss unavailable.
+        """
+        if self.galois_loss is None:
+            return self._legacy_equivalence_score()
+
+        galois_coherence = 1.0 - self.galois_loss
+        empirical_weight = self._compute_empirical_weight()
+        return galois_coherence * empirical_weight
+
+    def _compute_empirical_weight(self) -> float:
+        """
+        Compute empirical weight from test results.
+
+        Weight = pass_rate * 0.7 + volume_factor * 0.3
+
+        This rewards both passing tests AND having many runs.
+        """
+        if not self.runs:
+            return 0.0
+
+        pass_rate = sum(1 for r in self.runs if r.test_results.success) / len(self.runs)
+        volume_factor = min(1.0, len(self.runs) / 100)
+
+        return pass_rate * 0.7 + volume_factor * 0.3
+
+    def _legacy_equivalence_score(self) -> float:
+        """
+        Legacy equivalence score without Galois loss.
 
         Computed as weighted average of:
         - Test pass rate (60%)
@@ -168,6 +226,26 @@ class Evidence:
             return None
         return max(self.runs, key=lambda r: r.verification_score)
 
+    def with_galois_loss(self, loss: float) -> "Evidence":
+        """
+        Create new Evidence with Galois loss attached.
+
+        This is the preferred way to add Galois loss since Evidence is frozen.
+
+        Args:
+            loss: Galois loss value in [0, 1]
+
+        Returns:
+            New Evidence instance with galois_loss set
+        """
+        return Evidence(
+            runs=self.runs,
+            created_at=self.created_at,
+            spec_content=self.spec_content,
+            best_impl_content=self.best_impl_content,
+            galois_loss=loss,
+        )
+
 
 # =============================================================================
 # ASHCOutput Type (compiler output)
@@ -177,10 +255,15 @@ class Evidence:
 @dataclass(frozen=True)
 class ASHCOutput:
     """
-    The compiler's output: executable + evidence.
+    The compiler's output: executable + evidence with Galois verification.
 
     An output is "verified" when there's sufficient evidence
     that the spec and implementation are equivalent.
+
+    With Galois integration, verification requires:
+    - Galois coherence >= 0.85 (structure preservation)
+    - At least 10 runs (statistical confidence)
+    - equivalence_score >= 0.8 (combined metric)
     """
 
     executable: str  # Best implementation code
@@ -192,16 +275,50 @@ class ASHCOutput:
         """
         Is there sufficient evidence for this executable?
 
-        Requires:
+        When Galois loss available:
+        - galois_coherence >= 0.85 (structure preservation)
+        - At least 10 runs
+        - equivalence_score >= 0.8
+
+        Legacy mode (no Galois):
         - equivalence_score >= 0.8
         - At least 10 runs
         """
-        return self.evidence.equivalence_score >= 0.8 and len(self.evidence.runs) >= 10
+        # Minimum runs required
+        if len(self.evidence.runs) < 10:
+            return False
+
+        # Galois-enhanced verification
+        if self.evidence.galois_loss is not None:
+            # Galois coherence must be high
+            if self.evidence.galois_coherence < 0.85:
+                return False
+            # Combined score must meet threshold
+            if self.evidence.equivalence_score < 0.8:
+                return False
+            return True
+
+        # Legacy verification
+        return self.evidence.equivalence_score >= 0.8
 
     @property
     def confidence(self) -> float:
         """Confidence level (0.0 - 1.0)."""
         return self.evidence.equivalence_score
+
+    @property
+    def galois_verified(self) -> bool:
+        """
+        Is this output verified via Galois coherence?
+
+        True only when:
+        - galois_loss is available
+        - galois_coherence >= 0.85
+        - is_verified is True
+        """
+        if self.evidence.galois_loss is None:
+            return False
+        return self.is_verified and self.evidence.galois_coherence >= 0.85
 
 
 # =============================================================================

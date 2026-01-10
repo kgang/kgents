@@ -94,7 +94,7 @@ class VerifiedLemmaModel(TimestampMixin, Base):
         nullable=False,
     )
 
-    __table_args__ = (  # type: ignore[assignment]
+    __table_args__ = (
         # Usage ranking for stigmergic retrieval
         Index("idx_ashc_lemmas_usage", "usage_count"),
         # Recency for temporal queries

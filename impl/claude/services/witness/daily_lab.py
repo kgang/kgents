@@ -463,7 +463,9 @@ class Trail:
 
         return self.for_range(start, end)
 
-    def navigate(self, position: TrailPosition, direction: Literal["next", "prev"]) -> TrailPosition:
+    def navigate(
+        self, position: TrailPosition, direction: Literal["next", "prev"]
+    ) -> TrailPosition:
         """Navigate within a trail."""
         new_index = position.index
         if direction == "next" and position.has_next:
@@ -522,7 +524,9 @@ class CompressionHonesty:
         return " ".join(parts)
 
     @classmethod
-    def from_honesty_module(cls, honesty: HonestyCompressionHonesty, dropped_count: int) -> "CompressionHonesty":
+    def from_honesty_module(
+        cls, honesty: HonestyCompressionHonesty, dropped_count: int
+    ) -> "CompressionHonesty":
         """Create from honesty module's CompressionHonesty."""
         return cls(
             dropped_count=dropped_count,
@@ -609,7 +613,9 @@ class DailyCrystallizer:
         # Use 'is not None' instead of 'or' because empty stores are falsy
         self._mark_store = mark_store if mark_store is not None else get_mark_store()
         self._crystal_store = crystal_store if crystal_store is not None else get_crystal_store()
-        self._honesty_calculator = honesty_calculator if honesty_calculator is not None else get_honesty_calculator()
+        self._honesty_calculator = (
+            honesty_calculator if honesty_calculator is not None else get_honesty_calculator()
+        )
 
     def crystallize_day(self, target_date: date) -> DailyCrystal | None:
         """
@@ -621,7 +627,9 @@ class DailyCrystallizer:
         position = trail.for_date(target_date)
 
         if position.total < self.MIN_MARKS_FOR_CRYSTAL:
-            logger.info(f"Not enough marks to crystallize ({position.total} < {self.MIN_MARKS_FOR_CRYSTAL})")
+            logger.info(
+                f"Not enough marks to crystallize ({position.total} < {self.MIN_MARKS_FOR_CRYSTAL})"
+            )
             return None
 
         return self._compress_marks(
@@ -726,6 +734,7 @@ class DailyCrystallizer:
                 loop = asyncio.get_running_loop()
                 # Already in async context - create task
                 import concurrent.futures
+
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     future = executor.submit(
                         asyncio.run,
@@ -733,7 +742,7 @@ class DailyCrystallizer:
                             original_marks=marks,
                             crystal=crystal,
                             kept_marks=kept_marks,
-                        )
+                        ),
                     )
                     honesty_result = future.result()
             except RuntimeError:
@@ -762,7 +771,9 @@ class DailyCrystallizer:
 
             dropped_tags = list({tag for m in dropped_marks for tag in m.tags if tag})
             dropped_summaries = [
-                m.response.content[:50] + "..." if len(m.response.content) > 50 else m.response.content
+                m.response.content[:50] + "..."
+                if len(m.response.content) > 50
+                else m.response.content
                 for m in dropped_marks[:3]
             ]
 
@@ -1305,9 +1316,7 @@ class DailyLabNode(BaseLogosNode):
         # Guest: minimal
         return ("manifest",)
 
-    async def manifest(
-        self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any
-    ) -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest daily lab status to observer.
 
@@ -1422,12 +1431,14 @@ class DailyLabNode(BaseLogosNode):
         # Build marks list
         marks_data = []
         for mark in position.marks:
-            marks_data.append({
-                "mark_id": str(mark.id),
-                "content": mark.response.content,
-                "tags": list(mark.tags),
-                "timestamp": mark.timestamp.isoformat(),
-            })
+            marks_data.append(
+                {
+                    "mark_id": str(mark.id),
+                    "content": mark.response.content,
+                    "tags": list(mark.tags),
+                    "timestamp": mark.timestamp.isoformat(),
+                }
+            )
 
         return {
             "total": position.total,
@@ -1493,7 +1504,7 @@ class DailyLabNode(BaseLogosNode):
         export = self._lab.export.export_day(
             target_date,
             include_crystal=include_crystal,
-            format=format_str,  # type: ignore[arg-type]
+            format=format_str,
         )
 
         # Get content based on format

@@ -33,9 +33,9 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    Query = None  # type: ignore
-    StreamingResponse = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    Query = None  # type: ignore[assignment]
+    StreamingResponse = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
 

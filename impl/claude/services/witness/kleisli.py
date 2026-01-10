@@ -145,9 +145,7 @@ class Witnessed(Generic[A]):
             marks=self.marks + result.marks,
         )
 
-    async def bind_async(
-        self, f: Callable[[A], Awaitable["Witnessed[B]"]]
-    ) -> "Witnessed[B]":
+    async def bind_async(self, f: Callable[[A], Awaitable["Witnessed[B]"]]) -> "Witnessed[B]":
         """
         Async monadic bind for async effectful operations.
 
@@ -264,8 +262,8 @@ class Witnessed(Generic[A]):
 
     def _verify_right_identity(self) -> bool:
         """Verify right identity: m >>= pure ≡ m (value preserved)."""
-        lhs = self.bind(Witnessed.pure)
-        return lhs.value == self.value
+        lhs: Witnessed[A] = self.bind(Witnessed.pure)
+        return bool(lhs.value == self.value)
 
     # =========================================================================
     # Convenience Methods
@@ -306,9 +304,11 @@ def kleisli_compose(
         >>> result = analyze_and_synthesize("input")
         >>> print(result.marks)  # Contains marks from both analyze and synthesize
     """
+
     def composed(a: A) -> Witnessed[C]:
         witnessed_b = f(a)
         return witnessed_b.bind(g)
+
     return composed
 
 
@@ -326,13 +326,15 @@ async def kleisli_compose_async(
     Returns:
         Composed async function
     """
+
     async def composed(a: A) -> Witnessed[C]:
         witnessed_b = await f(a)
         return await witnessed_b.bind_async(g)
+
     return composed
 
 
-def kleisli_chain(*fs: Callable) -> Callable:
+def kleisli_chain(*fs: Callable[..., Any]) -> Callable[..., Any]:
     """
     Chain multiple Kleisli arrows.
 
@@ -408,9 +410,8 @@ def witnessed_operation(
         >>> print(result.value)  # The LLM response
         >>> print(result.marks)  # [Mark(...)]
     """
-    def decorator(
-        func: Callable[P, Awaitable[B]]
-    ) -> Callable[P, Awaitable[Witnessed[B]]]:
+
+    def decorator(func: Callable[P, Awaitable[B]]) -> Callable[P, Awaitable[Witnessed[B]]]:
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> Witnessed[B]:
             # Execute function
@@ -461,6 +462,7 @@ def witnessed_operation(
             return Witnessed(value=result, marks=[mark])
 
         return wrapper
+
     return decorator
 
 
@@ -482,6 +484,7 @@ def witnessed_sync(
         ... def compute_hash(data: str) -> str:
         ...     return hashlib.sha256(data.encode()).hexdigest()
     """
+
     def decorator(func: Callable[P, B]) -> Callable[P, Witnessed[B]]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> Witnessed[B]:
@@ -522,6 +525,7 @@ def witnessed_sync(
             return Witnessed(value=result, marks=[mark])
 
         return wrapper
+
     return decorator
 
 

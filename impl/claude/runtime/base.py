@@ -202,7 +202,7 @@ class AsyncComposedAgent(LLMAgent[A, C], Generic[A, B, C]):
 
     @property
     def name(self) -> str:
-        return f"({self.f.name} >> {self.g.name})"
+        return f"({self.f.name} >> {self.g.name})"  # type: ignore[attr-defined]
 
     async def invoke(self, input: A) -> C:
         """Not implemented - use execute_async with runtime instead."""

@@ -196,7 +196,7 @@ def require_tenant(func: F) -> F:
             raise TenantNotSetError(func.__name__)
         return func(*args, **kwargs)
 
-    return wrapper  # type: ignore
+    return wrapper  # type: ignore[return-value]
 
 
 def require_scope(scope: str) -> Callable[[F], F]:
@@ -226,7 +226,7 @@ def require_scope(scope: str) -> Callable[[F], F]:
                 raise InsufficientPermissionError(scope, func.__name__)
             return func(*args, **kwargs)
 
-        return wrapper  # type: ignore
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 

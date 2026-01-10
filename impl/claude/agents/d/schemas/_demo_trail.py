@@ -16,7 +16,7 @@ from agents.d.schemas.trail import (
 )
 
 
-def demo_trail_schemas():
+def demo_trail_schemas() -> None:
     """Demonstrate trail schema usage."""
     print("=== Trail Schemas Demo ===\n")
 
@@ -99,7 +99,7 @@ def demo_trail_schemas():
         TRAIL_COMMITMENT_SCHEMA,
         TRAIL_ANNOTATION_SCHEMA,
     ]:
-        print(f"   - {schema.name} v{schema.version}: {schema.contract.__name__}")
+        print(f"   - {schema.name} v{schema.version}: {schema.contract.__name__}")  # type: ignore[attr-defined]
 
     print("\n=== Demo Complete ===")
 

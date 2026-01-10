@@ -291,6 +291,71 @@ class TeachingCollector:
 
 
 # ============================================================================
+# Teaching Index (Module-Level Cache)
+# ============================================================================
+#
+# Teaching moments are stable within a Python process (they only change when
+# code changes). Re-scanning the codebase on every hydrate() call is wasteful.
+#
+# The Teaching Index caches the full scan once and shares it across all callers.
+# This transforms test performance from O(n * scan_time) to O(scan_time + n * 0).
+#
+# Teaching:
+#     gotcha: The index is populated lazily on first access. In tests, use
+#             the conftest.py fixtures to control when population happens.
+#             (Evidence: test_teaching.py::test_teaching_index_singleton)
+# ============================================================================
+
+import threading
+
+_TEACHING_INDEX: list[TeachingResult] | None = None
+_TEACHING_INDEX_LOCK = threading.Lock()
+
+
+def get_teaching_index(*, force_refresh: bool = False) -> list[TeachingResult]:
+    """
+    Get the cached teaching index (module singleton).
+
+    This is the canonical source for all teaching moments. The index
+    is built lazily on first access and shared across all callers.
+
+    Args:
+        force_refresh: If True, rebuild the index from scratch.
+                       Use sparingly—only for testing or after code changes.
+
+    Returns:
+        List of all TeachingResults in the codebase.
+
+    Teaching:
+        gotcha: This function is thread-safe but not async-safe.
+                Don't call from multiple async tasks without external coordination.
+                (Evidence: test_teaching.py::test_index_thread_safety)
+    """
+    global _TEACHING_INDEX
+
+    if _TEACHING_INDEX is None or force_refresh:
+        with _TEACHING_INDEX_LOCK:
+            # Double-check after acquiring lock
+            if _TEACHING_INDEX is None or force_refresh:
+                collector = TeachingCollector()
+                _TEACHING_INDEX = list(collector.collect_all())
+
+    return _TEACHING_INDEX
+
+
+def clear_teaching_index() -> None:
+    """
+    Clear the cached teaching index.
+
+    Call this when you need to force re-collection (e.g., after code changes
+    in a long-running process, or between test modules).
+    """
+    global _TEACHING_INDEX
+    with _TEACHING_INDEX_LOCK:
+        _TEACHING_INDEX = None
+
+
+# ============================================================================
 # Convenience Functions (Preferred API)
 # ============================================================================
 

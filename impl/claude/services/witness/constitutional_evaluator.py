@@ -38,7 +38,13 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 from services.categorical.constitution import Constitution, ConstitutionalEvaluation, Principle
+from services.verification.lean_import import (
+    LeanProofChecker,
+    LeanVerificationEvidence,
+    get_constitutional_evidence,
+)
 from services.witness.mark import ConstitutionalAlignment, Mark
+from services.zero_seed.galois.galois_loss import compute_galois_loss_async
 
 logger = logging.getLogger("kgents.witness.constitutional_evaluator")
 
@@ -87,27 +93,127 @@ class MarkConstitutionalEvaluator:
 
     Configuration:
         - threshold: Compliance threshold (default 0.5)
-        - include_galois: Whether to compute Galois loss (expensive, default False)
+        - include_galois: Whether to compute Galois loss (default True for full constitutional integration)
     """
 
     threshold: float = 0.5
-    include_galois: bool = False
+    include_galois: bool = True
 
     async def evaluate(self, mark: Mark) -> ConstitutionalAlignment:
         """
         Evaluate a mark against constitutional principles.
 
-        This is the primary async interface. For most use cases,
-        the sync version is sufficient since Constitution.evaluate()
-        is synchronous.
+        This is the primary async interface. When include_galois=True,
+        this method computes the Galois loss asynchronously.
 
         Args:
             mark: The mark to evaluate
 
         Returns:
-            ConstitutionalAlignment with principle scores
+            ConstitutionalAlignment with principle scores and optional Galois loss
         """
-        return self.evaluate_sync(mark)
+        # Extract state/action/context synchronously
+        state_before = self._extract_state_before(mark)
+        action = self._extract_action(mark)
+        state_after = self._extract_state_after(mark)
+        context = self._build_context(mark)
+
+        # Evaluate against constitution
+        evaluation = Constitution.evaluate(state_before, action, state_after, context)
+
+        # Compute Galois loss if requested
+        galois_loss: float | None = None
+        if self.include_galois:
+            galois_loss = await self._compute_galois_loss(mark)
+
+        # Convert to ConstitutionalAlignment
+        return self._to_alignment(evaluation, mark, galois_loss=galois_loss)
+
+    async def _compute_galois_loss(self, mark: Mark) -> float:
+        """
+        Compute Galois loss for a mark.
+
+        The Galois loss measures semantic preservation through the
+        restructure-reconstitute cycle: L(P) = d(P, C(R(P)))
+
+        For marks, we compute loss on the combined stimulus+response content,
+        which captures the full action signature.
+
+        Args:
+            mark: The mark to compute loss for
+
+        Returns:
+            Galois loss in [0, 1] where 0 = perfect preservation
+        """
+        # Build content from mark's stimulus and response
+        content = self._build_galois_content(mark)
+
+        try:
+            result = await compute_galois_loss_async(content)
+            logger.debug(
+                f"Galois loss computed for mark {mark.id}: "
+                f"loss={result.loss:.3f}, method={result.method}"
+            )
+            return result.loss
+        except Exception as e:
+            logger.warning(f"Failed to compute Galois loss for mark {mark.id}: {e}")
+            # Return moderate loss on failure (not zero, not one)
+            return 0.5
+
+    def _build_galois_content(self, mark: Mark) -> str:
+        """
+        Build content string for Galois loss computation.
+
+        Combines stimulus and response into a coherent representation
+        that captures the mark's semantic signature.
+        """
+        parts = []
+
+        # Add stimulus
+        if mark.stimulus.content:
+            parts.append(f"Stimulus ({mark.stimulus.kind}): {mark.stimulus.content}")
+
+        # Add response
+        if mark.response.content:
+            parts.append(f"Response ({mark.response.kind}): {mark.response.content}")
+
+        # Add proof if present (proofs are significant for constitutional alignment)
+        if mark.proof and mark.proof.warrant:
+            parts.append(f"Warrant: {mark.proof.warrant}")
+
+        return "\n".join(parts) if parts else "empty mark"
+
+    def _tier_from_galois(self, galois_loss: float) -> str:
+        """
+        Map Galois loss to evidence tier (Kent-calibrated 2025-12-28).
+
+        The Galois loss measures semantic preservation through the
+        restructure-reconstitute cycle. Lower loss = higher confidence
+        in the constitutional evaluation.
+
+        Evidence Tiers:
+            CATEGORICAL: L < 0.10 (axiom-level, fixed point)
+            EMPIRICAL: L < 0.38 (strong empirical evidence)
+            AESTHETIC: L < 0.45 (Kent sees derivation paths)
+            SOMATIC: L < 0.65 (felt sense, Mirror test)
+            CHAOTIC: L >= 0.65 (high loss, low confidence)
+
+        Args:
+            galois_loss: The computed Galois loss in [0, 1]
+
+        Returns:
+            Evidence tier name as string
+        """
+        if galois_loss < 0.10:
+            return "CATEGORICAL"
+        elif galois_loss < 0.38:
+            return "EMPIRICAL"
+        elif galois_loss < 0.45:
+            return "AESTHETIC"
+        elif galois_loss < 0.65:
+            return "SOMATIC"
+        else:
+            return "CHAOTIC"
 
     def evaluate_sync(self, mark: Mark) -> ConstitutionalAlignment:
         """
@@ -214,26 +320,42 @@ class MarkConstitutionalEvaluator:
         self,
         evaluation: ConstitutionalEvaluation,
         mark: Mark,
+        galois_loss: float | None = None,
     ) -> ConstitutionalAlignment:
         """
         Convert ConstitutionalEvaluation to ConstitutionalAlignment.
 
         Maps the evaluation's PrincipleScore objects to the alignment's
         principle_scores dict, preserving weighted_total.
+
+        When galois_loss is provided, the evidence tier is derived from the
+        Galois loss using Kent-calibrated thresholds. This provides a more
+        rigorous tier assignment based on semantic preservation quality.
+
+        Args:
+            evaluation: The constitutional evaluation result
+            mark: The mark being evaluated
+            galois_loss: Optional pre-computed Galois loss
+
+        Returns:
+            ConstitutionalAlignment with principle scores and optional Galois loss
         """
         # Build principle scores dict
-        principle_scores = {
-            ps.principle.name: ps.score for ps in evaluation.scores
-        }
+        principle_scores = {ps.principle.name: ps.score for ps in evaluation.scores}
 
-        # Determine evidence tier from mark proof (if available)
-        tier = "EMPIRICAL"
-        if mark.proof:
+        # Determine evidence tier:
+        # 1. If galois_loss is provided, use Kent-calibrated thresholds
+        # 2. Otherwise, fall back to mark proof tier or default EMPIRICAL
+        if galois_loss is not None:
+            tier = self._tier_from_galois(galois_loss)
+        elif mark.proof:
             tier = mark.proof.tier.name
+        else:
+            tier = "EMPIRICAL"
 
         return ConstitutionalAlignment.from_scores(
             principle_scores=principle_scores,
-            galois_loss=None,  # Computed separately if include_galois=True
+            galois_loss=galois_loss,
             tier=tier,
             threshold=self.threshold,
         )
@@ -242,6 +364,75 @@ class MarkConstitutionalEvaluator:
 # =============================================================================
 # Batch Evaluator
 # =============================================================================
+
+
+# =============================================================================
+# Lean Formal Verification Integration
+# =============================================================================
+
+# Cache for Lean verification (expensive, only check once)
+_lean_verification_cache: LeanVerificationEvidence | None = None
+
+
+async def get_lean_verified_composable() -> LeanVerificationEvidence:
+    """
+    Get Lean-verified evidence for COMPOSABLE principle (L2.5).
+
+    This provides CATEGORICAL tier evidence for the COMPOSABLE principle
+    by formally verifying that kgents' categorical laws hold in Lean 4.
+
+    The verification covers:
+    - Category laws: associativity, left/right identity
+    - Functor laws: preservation of identity and composition
+    - Natural transformation laws: naturality squares
+    - Operad laws: agent composition monoid (MOONSHOT)
+
+    Returns:
+        LeanVerificationEvidence with formal proof status
+
+    Note:
+        Results are cached after first call (expensive Lean build).
+    """
+    global _lean_verification_cache
+
+    if _lean_verification_cache is not None:
+        return _lean_verification_cache
+
+    try:
+        _lean_verification_cache = await get_constitutional_evidence()
+        logger.info(
+            f"Lean verification complete: "
+            f"verified={_lean_verification_cache.verified}, "
+            f"theorems={_lean_verification_cache.report.verified_theorems}/"
+            f"{_lean_verification_cache.report.total_theorems}"
+        )
+    except Exception as e:
+        logger.warning(f"Lean verification failed: {e}")
+        # Create a failed evidence result
+        from services.verification.lean_import import VerificationReport
+
+        _lean_verification_cache = LeanVerificationEvidence(
+            verified=False,
+            report=VerificationReport(errors=[str(e)]),
+        )
+
+    return _lean_verification_cache
+
+
+def get_lean_verified_composable_sync() -> LeanVerificationEvidence | None:
+    """
+    Synchronous getter for cached Lean verification.
+
+    Returns None if verification hasn't been run yet.
+    Use get_lean_verified_composable() to trigger verification.
+    """
+    return _lean_verification_cache
+
+
+def clear_lean_verification_cache() -> None:
+    """Clear the Lean verification cache (for testing)."""
+    global _lean_verification_cache
+    _lean_verification_cache = None
 
 
 class BatchConstitutionalEvaluator:
@@ -329,4 +520,8 @@ __all__ = [
     "ConstitutionalEvaluatorProtocol",
     "MarkConstitutionalEvaluator",
     "BatchConstitutionalEvaluator",
+    # Lean Formal Verification
+    "get_lean_verified_composable",
+    "get_lean_verified_composable_sync",
+    "clear_lean_verification_cache",
 ]

@@ -712,16 +712,18 @@ class GatekeeperProbe(TruthFunctor[ValidationState, ValidationInput, list[Violat
     gamma: float = 0.99
 
     @property
-    def states(self) -> FrozenSet[str]:
+    def states(self) -> FrozenSet[ValidationState]:
         """Valid probe states."""
-        return frozenset([
-            "init",
-            "heuristic",
-            "semantic",
-            "llm",
-            "synthesis",
-            "complete",
-        ])
+        return frozenset(
+            [
+                ValidationState(phase="init"),
+                ValidationState(phase="heuristic"),
+                ValidationState(phase="semantic"),
+                ValidationState(phase="llm"),
+                ValidationState(phase="synthesis"),
+                ValidationState(phase="complete"),
+            ]
+        )
 
     def actions(self, state: ValidationState) -> FrozenSet[ProbeAction]:
         """Valid actions for given state."""
@@ -730,12 +732,14 @@ class GatekeeperProbe(TruthFunctor[ValidationState, ValidationInput, list[Violat
         elif state.phase == "heuristic":
             return frozenset([ProbeAction("advance_to_semantic")])
         elif state.phase == "semantic":
-            return frozenset([
-                ProbeAction("run_tastefulness"),
-                ProbeAction("run_composability"),
-                ProbeAction("run_gratitude"),
-                ProbeAction("advance_to_synthesis"),
-            ])
+            return frozenset(
+                [
+                    ProbeAction("run_tastefulness"),
+                    ProbeAction("run_composability"),
+                    ProbeAction("run_gratitude"),
+                    ProbeAction("advance_to_synthesis"),
+                ]
+            )
         elif state.phase == "llm":
             return frozenset([ProbeAction("run_llm_analysis")])
         elif state.phase == "synthesis":
@@ -816,7 +820,7 @@ class GatekeeperProbe(TruthFunctor[ValidationState, ValidationInput, list[Violat
         Returns:
             PolicyTrace[TruthVerdict[list[Violation]]]
         """
-        trace = PolicyTrace(
+        trace: PolicyTrace[TruthVerdict[list[Violation]]] = PolicyTrace(
             TruthVerdict(
                 value=[],
                 passed=True,
@@ -958,9 +962,7 @@ class GatekeeperProbe(TruthFunctor[ValidationState, ValidationInput, list[Violat
 
         # Determine pass/fail
         violations = list(state.violations)
-        passed = not any(
-            v.severity in [Severity.ERROR, Severity.CRITICAL] for v in violations
-        )
+        passed = not any(v.severity in [Severity.ERROR, Severity.CRITICAL] for v in violations)
 
         # Build reasoning
         if violations:
@@ -992,7 +994,9 @@ class GatekeeperProbe(TruthFunctor[ValidationState, ValidationInput, list[Violat
         trace.value = TruthVerdict(
             value=violations,
             passed=passed,
-            confidence=min(state.tastefulness_score, state.composability_score, state.gratitude_score),
+            confidence=min(
+                state.tastefulness_score, state.composability_score, state.gratitude_score
+            ),
             reasoning=reasoning,
             timestamp=datetime.now(),
         )

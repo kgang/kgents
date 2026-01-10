@@ -113,7 +113,7 @@ class MaybeEither(Generic[A]):
         """
         if self._value.is_nothing():
             return MaybeEither(Nothing)  # Nothing is compatible with Maybe[Either[Any, B]]
-        inner = self._value.value  # type: ignore
+        inner = self._value.value  # type: ignore[attr-defined]
         if inner.is_left():
             return MaybeEither(Just(inner))
         return f(inner.value)

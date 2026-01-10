@@ -46,7 +46,7 @@ from .prompts import (
 )
 
 if TYPE_CHECKING:
-    from agents.k.soul import LLMClient
+    from agents.k.soul import LLMClient  # type: ignore[attr-defined]
     from agents.operad.domains.analysis import (
         CategoricalReport,
         ConstitutionalReport,

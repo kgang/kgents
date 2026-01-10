@@ -49,7 +49,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...agents.d.universe.universe import Universe
+    from ...agents.d.universe.universe import Universe  # type: ignore[import-not-found]
     from ..code.boundary import BoundaryDetector
 
 # Re-export result types from CodeService for backward compatibility
@@ -406,9 +406,7 @@ class SyncFlow:
 
             os.unlink(temp_path)
 
-    def _create_function_crystal(
-        self, parsed: ParsedFunction, file_path: str
-    ) -> str:
+    def _create_function_crystal(self, parsed: ParsedFunction, file_path: str) -> str:
         """
         Create FunctionCrystal from parsed function.
 

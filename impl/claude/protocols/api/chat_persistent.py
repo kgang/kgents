@@ -43,8 +43,8 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
 
 from services.chat import ChatSession as ChatSessionDomain
 from services.chat.persistence import ChatPersistence
@@ -59,7 +59,7 @@ async def initialize_persistence() -> None:
     """Initialize persistence layer. Call during app startup."""
     global _persistence
     if _persistence is None:
-        _persistence = await ChatPersistence.create()
+        _persistence = await ChatPersistence.create()  # type: ignore[attr-defined]
         logger.info("ChatPersistence initialized")
 
 
@@ -317,9 +317,7 @@ def create_chat_router() -> "APIRouter | None":
                 completed_at = datetime.now()
 
                 # Add turn to session
-                session.add_turn(
-                    user_message=request.message, assistant_response=accumulated
-                )
+                session.add_turn(user_message=request.message, assistant_response=accumulated)
 
                 # Persist updated session
                 await persistence.save_session(session)
@@ -380,9 +378,7 @@ def create_chat_router() -> "APIRouter | None":
         # Persist forked session
         await persistence.save_session(forked_session)
 
-        logger.info(
-            f"Forked session {session_id} -> {forked_session.id} ({request.branch_name})"
-        )
+        logger.info(f"Forked session {session_id} -> {forked_session.id} ({request.branch_name})")
 
         return domain_to_response(forked_session)
 

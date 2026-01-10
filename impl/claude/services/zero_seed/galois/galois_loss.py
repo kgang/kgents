@@ -26,7 +26,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Protocol, TypeVar, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from .distance import (
     BERTScoreDistance,
@@ -36,6 +36,8 @@ from .distance import (
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from agents.k.llm import LLMClient as AgentLLMClient
 
 
 # -----------------------------------------------------------------------------
@@ -88,12 +90,22 @@ class ContradictionType(Enum):
 
 
 class EvidenceTier(Enum):
-    """Evidence tier based on Galois loss."""
+    """
+    Evidence tier based on Galois loss.
 
-    CATEGORICAL = auto()  # Near-lossless (deductive), L < 0.1
-    EMPIRICAL = auto()  # Moderate loss (inductive), L < 0.3
-    AESTHETIC = auto()  # High loss (taste-based), L < 0.6
-    SOMATIC = auto()  # Very high loss (intuitive), L >= 0.6
+    Kent calibration (2025-12-28):
+    - CATEGORICAL: L < 0.10 (near-lossless, deductive)
+    - EMPIRICAL: L < 0.38 (moderate loss, inductive)
+    - AESTHETIC: L < 0.45 (taste-based judgment)
+    - SOMATIC: L < 0.65 (intuitive, embodied)
+    - CHAOTIC: L >= 0.65 (high entropy, unreliable)
+    """
+
+    CATEGORICAL = auto()  # Near-lossless (deductive), L < 0.10
+    EMPIRICAL = auto()  # Moderate loss (inductive), L < 0.38
+    AESTHETIC = auto()  # Taste-based judgment, L < 0.45
+    SOMATIC = auto()  # Intuitive/embodied, L < 0.65
+    CHAOTIC = auto()  # High entropy/unreliable, L >= 0.65
 
 
 # -----------------------------------------------------------------------------
@@ -280,9 +292,9 @@ class SimpleLLMClient:
 
     def __init__(self, model: str = "claude-sonnet-4-20250514") -> None:
         self.model = model
-        self._client: object | None = None
+        self._client: AgentLLMClient | None = None
 
-    def _get_client(self) -> object:
+    def _get_client(self) -> AgentLLMClient:
         """Get or create kgents LLM client."""
         if self._client is None:
             from agents.k.llm import create_llm_client
@@ -453,13 +465,9 @@ class GaloisLossComputer:
     From spec Part II: "Galois Loss as THE Fundamental Metric"
     """
 
-    llm: LLMClientProtocol | None = None
+    llm: LLMClientProtocol = field(default_factory=SimpleLLMClient)
     metric: SemanticDistanceMetric = field(default_factory=get_default_metric)
     cache: LossCache = field(default_factory=LossCache)
-
-    def __post_init__(self) -> None:
-        if self.llm is None:
-            self.llm = SimpleLLMClient()
 
     async def compute_loss(self, content: str, use_cache: bool = True) -> float:
         """
@@ -654,9 +662,7 @@ def _explain_layer_choice(best_layer: int, losses: dict[int, float]) -> str:
         7: "Content represents meta-structure (high abstraction)",
     }
 
-    loss_summary = ", ".join(
-        f"L{layer}: {loss:.2f}" for layer, loss in sorted(losses.items())
-    )
+    loss_summary = ", ".join(f"L{layer}: {loss:.2f}" for layer, loss in sorted(losses.items()))
 
     return f"{explanations[best_layer]}. Loss by layer: {loss_summary}"
 
@@ -889,20 +895,23 @@ def classify_evidence_tier(loss: float) -> EvidenceTier:
     """
     Map Galois loss to evidence tier.
 
-    From spec Part IV:
-    - Categorical: Near-lossless (deductive), L < 0.1
-    - Empirical: Moderate loss (inductive), L < 0.3
-    - Aesthetic: High loss (taste-based), L < 0.6
-    - Somatic: Very high loss (intuitive), L >= 0.6
+    Kent calibration (2025-12-28):
+    - CATEGORICAL: L < 0.10 (near-lossless, deductive)
+    - EMPIRICAL: L < 0.38 (moderate loss, inductive)
+    - AESTHETIC: L < 0.45 (taste-based judgment)
+    - SOMATIC: L < 0.65 (intuitive, embodied)
+    - CHAOTIC: L >= 0.65 (high entropy, unreliable)
     """
-    if loss < 0.1:
+    if loss < 0.10:
         return EvidenceTier.CATEGORICAL
-    elif loss < 0.3:
+    elif loss < 0.38:
         return EvidenceTier.EMPIRICAL
-    elif loss < 0.6:
+    elif loss < 0.45:
         return EvidenceTier.AESTHETIC
-    else:
+    elif loss < 0.65:
         return EvidenceTier.SOMATIC
+    else:
+        return EvidenceTier.CHAOTIC
 
 
 # -----------------------------------------------------------------------------

@@ -495,12 +495,7 @@ def run_dawn_tui(
 
     # Check if we have a real terminal
     if not sys.stdin.isatty():
-        print(
-            "Error: TUI requires an interactive terminal.\n"
-            "\n"
-            "Or use CLI mode:\n"
-            "  kg dawn --cli"
-        )
+        print("Error: TUI requires an interactive terminal.\n\nOr use CLI mode:\n  kg dawn --cli")
         return 1
 
     app = DawnCockpit(focus_manager, snippet_library)
@@ -517,7 +512,7 @@ def run_dawn_tui(
             # Already in an event loop - run Textual in a separate thread
             import concurrent.futures
 
-            def run_in_thread():
+            def run_in_thread() -> None:
                 new_loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(new_loop)
                 try:

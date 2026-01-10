@@ -27,8 +27,8 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
 
 try:
     from pydantic import BaseModel, Field
@@ -36,8 +36,8 @@ try:
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
-    BaseModel = object  # type: ignore
-    Field = lambda *args, **kwargs: None  # type: ignore
+    BaseModel = object  # type: ignore[assignment, misc]
+    Field = lambda *args, **kwargs: None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -350,8 +350,9 @@ def create_genesis_router() -> APIRouter | None:
             def normalize_for_match(name: str) -> str:
                 """Normalize name for case/space/hyphen-insensitive matching."""
                 import re
+
                 # Remove all whitespace and hyphens, lowercase
-                return re.sub(r'[\s\-]', '', name).lower()
+                return re.sub(r"[\s\-]", "", name).lower()
 
             # Find the law by name (case/space/hyphen-insensitive)
             law = None
@@ -359,14 +360,16 @@ def create_genesis_router() -> APIRouter | None:
 
             for candidate in DESIGN_LAWS:
                 # Try matching by: exact name, ID, or normalized name
-                if (candidate.name.lower() == law_name.lower() or
-                    candidate.id == law_name or
-                    normalize_for_match(candidate.name) == normalized_input):
+                if (
+                    candidate.name.lower() == law_name.lower()
+                    or candidate.id == law_name
+                    or normalize_for_match(candidate.name) == normalized_input
+                ):
                     law = candidate
                     break
 
             if not law:
-                valid_names = ', '.join(f'"{l.name}"' for l in DESIGN_LAWS)
+                valid_names = ", ".join(f'"{l.name}"' for l in DESIGN_LAWS)
                 raise HTTPException(
                     status_code=404,
                     detail=f"Design law '{law_name}' not found. Valid names: {valid_names}",
@@ -476,9 +479,7 @@ def create_genesis_router() -> APIRouter | None:
             layer_1 = await storage.get_layer_nodes(1)
             layer_2 = await storage.get_layer_nodes(2)
             law_nodes = [
-                node
-                for node in layer_1 + layer_2
-                if "design-law" in getattr(node, "_tags", [])
+                node for node in layer_1 + layer_2 if "design-law" in getattr(node, "_tags", [])
             ]
             design_laws = [
                 DesignLawResponse(

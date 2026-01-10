@@ -35,6 +35,53 @@ Integration:
 
 See: spec/theory/dp-native-kgents.md
 See: CLAUDE.md → Project Philosophy
+
+Governance Articles (L2.8-L2.14) Operationalization:
+
+    The Constitution defines governance articles that guide human-agent collaboration.
+    This table maps each article to its implementation status:
+
+    | Article                        | Implementation                          | Status          |
+    |--------------------------------|-----------------------------------------|-----------------|
+    | Symmetric Agency (L2.8)        | Equal evaluation of human/agent claims  | CONCEPTUAL      |
+    | Adversarial Cooperation (L2.9) | kg decide dialectic format              | IMPLEMENTED     |
+    | Supersession Rights (L2.10)    | Trust-gated action approval             | IMPLEMENTED     |
+    | Disgust Veto (L2.11)           | ETHICAL floor constraint (Amendment A)  | IMPLEMENTED     |
+    | Trust Accumulation (L2.12)     | ConstitutionalTrustComputer             | IMPLEMENTED     |
+    | Fusion as Goal (L2.13)         | kg decide --synthesis                   | IMPLEMENTED     |
+    | Amendment (L2.14)              | Constitution versioning                 | NOT IMPLEMENTED |
+
+    Article Details:
+
+    L2.8 Symmetric Agency:
+        Human and agent claims receive equal evaluation weight. Currently conceptual -
+        no explicit implementation enforces symmetry, but the principle guides design.
+
+    L2.9 Adversarial Cooperation:
+        The `kg decide` dialectic format captures opposing viewpoints (Kent vs Claude)
+        and synthesizes them. See CLAUDE.md → Decision Witnessing.
+
+    L2.10 Supersession Rights:
+        Trust levels (L0-L3) gate what actions agents can take autonomously.
+        Higher trust = more autonomy. See services/witness/trust/constitutional_trust.py.
+
+    L2.11 Disgust Veto:
+        ETHICAL_FLOOR_THRESHOLD = 0.6 implements Article IV (Disgust Veto).
+        If ETHICAL score < 0.6, action is rejected regardless of other scores.
+        This is Amendment A's key contribution.
+
+    L2.12 Trust Accumulation:
+        ConstitutionalTrustComputer tracks alignment history over time.
+        Trust is earned through consistent constitutional compliance.
+        See services/witness/trust/constitutional_trust.py.
+
+    L2.13 Fusion as Goal:
+        The `kg decide --synthesis` flag captures the goal of dialectic resolution.
+        Kent's view + Claude's view → synthesis that honors both.
+
+    L2.14 Amendment:
+        Constitution versioning is NOT YET IMPLEMENTED. Future work should
+        track constitutional amendments with version numbers and rationale.
 """
 
 from __future__ import annotations
@@ -73,8 +120,8 @@ ETHICAL_FLOOR_THRESHOLD: float = 0.6
 
 # Weights for non-floor principles (ETHICAL removed - it's a floor, not a weight)
 PRINCIPLE_WEIGHTS = {
-    Principle.ETHICAL: 0.0,       # NOT weighted - floor constraint (Amendment A)
-    Principle.COMPOSABLE: 1.5,    # Architecture first (after ETHICAL passes)
+    Principle.ETHICAL: 0.0,  # NOT weighted - floor constraint (Amendment A)
+    Principle.COMPOSABLE: 1.5,  # Architecture first (after ETHICAL passes)
     Principle.JOY_INDUCING: 1.2,  # Kent's aesthetic priority
     Principle.TASTEFUL: 1.0,
     Principle.CURATED: 1.0,
@@ -83,9 +130,109 @@ PRINCIPLE_WEIGHTS = {
 }
 
 # Sum of weights for non-ETHICAL principles (for normalization)
-_WEIGHT_SUM_WITHOUT_ETHICAL = sum(
-    w for p, w in PRINCIPLE_WEIGHTS.items() if p != Principle.ETHICAL
+_WEIGHT_SUM_WITHOUT_ETHICAL = sum(w for p, w in PRINCIPLE_WEIGHTS.items() if p != Principle.ETHICAL)
+
+
+# =============================================================================
+# Governance Article Implementation Status (L2.8-L2.14)
+# =============================================================================
+
+
+class ArticleStatus(Enum):
+    """Implementation status for governance articles."""
+
+    CONCEPTUAL = auto()  # Design principle, not yet operationalized
+    IMPLEMENTED = auto()  # Fully implemented and operational
+    NOT_IMPLEMENTED = auto()  # Identified but not yet built
+
+
+@dataclass(frozen=True)
+class GovernanceArticle:
+    """
+    A governance article from the Constitution.
+
+    Maps constitutional governance articles (L2.8-L2.14) to their
+    implementation status and location in the codebase.
+    """
+
+    article_id: str  # e.g., "L2.8"
+    name: str  # e.g., "Symmetric Agency"
+    implementation: str  # Description of how it's implemented
+    status: ArticleStatus  # Current implementation status
+    location: str = ""  # File path or module where implemented
+
+
+# The canonical mapping of governance articles to implementations
+GOVERNANCE_ARTICLES: tuple[GovernanceArticle, ...] = (
+    GovernanceArticle(
+        article_id="L2.8",
+        name="Symmetric Agency",
+        implementation="Equal evaluation of human/agent claims",
+        status=ArticleStatus.CONCEPTUAL,
+        location="",
+    ),
+    GovernanceArticle(
+        article_id="L2.9",
+        name="Adversarial Cooperation",
+        implementation="kg decide dialectic format",
+        status=ArticleStatus.IMPLEMENTED,
+        location="CLAUDE.md → Decision Witnessing",
+    ),
+    GovernanceArticle(
+        article_id="L2.10",
+        name="Supersession Rights",
+        implementation="Trust-gated action approval",
+        status=ArticleStatus.IMPLEMENTED,
+        location="services/witness/trust/constitutional_trust.py",
+    ),
+    GovernanceArticle(
+        article_id="L2.11",
+        name="Disgust Veto",
+        implementation="ETHICAL floor constraint (Amendment A)",
+        status=ArticleStatus.IMPLEMENTED,
+        location="services/categorical/constitution.py:ETHICAL_FLOOR_THRESHOLD",
+    ),
+    GovernanceArticle(
+        article_id="L2.12",
+        name="Trust Accumulation",
+        implementation="ConstitutionalTrustComputer",
+        status=ArticleStatus.IMPLEMENTED,
+        location="services/witness/trust/constitutional_trust.py",
+    ),
+    GovernanceArticle(
+        article_id="L2.13",
+        name="Fusion as Goal",
+        implementation="kg decide --synthesis",
+        status=ArticleStatus.IMPLEMENTED,
+        location="CLAUDE.md → Decision Witnessing",
+    ),
+    GovernanceArticle(
+        article_id="L2.14",
+        name="Amendment",
+        implementation="Constitution versioning",
+        status=ArticleStatus.NOT_IMPLEMENTED,
+        location="",
+    ),
 )
+
+
+def get_article_status_table() -> str:
+    """
+    Generate a formatted table of governance article implementation status.
+
+    Returns:
+        Markdown-formatted table string.
+    """
+    lines = [
+        "| Article | Implementation | Status |",
+        "|---------|----------------|--------|",
+    ]
+    for article in GOVERNANCE_ARTICLES:
+        status_str = article.status.name.replace("_", " ")
+        lines.append(
+            f"| {article.name} ({article.article_id}) | {article.implementation} | {status_str} |"
+        )
+    return "\n".join(lines)
 
 
 # =============================================================================
@@ -230,19 +377,13 @@ class ConstitutionalEvaluation:
             return 0.0
 
         # Sum only non-ETHICAL principles (compute weights from present scores)
-        non_ethical_scores = [
-            ps for ps in self.scores
-            if ps.principle != Principle.ETHICAL
-        ]
+        non_ethical_scores = [ps for ps in self.scores if ps.principle != Principle.ETHICAL]
 
         if not non_ethical_scores:
             return 0.0
 
         total = sum(ps.weighted_score for ps in non_ethical_scores)
-        weight_sum = sum(
-            PRINCIPLE_WEIGHTS.get(ps.principle, 1.0)
-            for ps in non_ethical_scores
-        )
+        weight_sum = sum(PRINCIPLE_WEIGHTS.get(ps.principle, 1.0) for ps in non_ethical_scores)
 
         return total / weight_sum if weight_sum > 0 else 0.0
 
@@ -368,7 +509,9 @@ class Constitution:
         scores.append(Constitution._evaluate_ethical(state_before, action, state_after, context))
         scores.append(Constitution._evaluate_joy(state_before, action, state_after, context))
         scores.append(Constitution._evaluate_composable(state_before, action, state_after, context))
-        scores.append(Constitution._evaluate_heterarchical(state_before, action, state_after, context))
+        scores.append(
+            Constitution._evaluate_heterarchical(state_before, action, state_after, context)
+        )
         scores.append(Constitution._evaluate_generative(state_before, action, state_after, context))
 
         return ConstitutionalEvaluation(scores=tuple(scores))
@@ -931,7 +1074,11 @@ Modular components:"""
             user=restructure_prompt,
             temperature=temperature,
         )
-        modular = restructure_response.text if hasattr(restructure_response, "text") else str(restructure_response)
+        modular = (
+            restructure_response.text
+            if hasattr(restructure_response, "text")
+            else str(restructure_response)
+        )
 
         # Step 2: Reconstitute back from modular form
         reconstitute_prompt = f"""Given these modular components, reconstitute the original output.
@@ -946,7 +1093,11 @@ Reconstituted output:"""
             user=reconstitute_prompt,
             temperature=temperature,
         )
-        reconstituted = reconstitute_response.text if hasattr(reconstitute_response, "text") else str(reconstitute_response)
+        reconstituted = (
+            reconstitute_response.text
+            if hasattr(reconstitute_response, "text")
+            else str(reconstitute_response)
+        )
 
         # Step 3: Measure semantic distance
         # Simple heuristic: normalized Levenshtein distance
@@ -999,6 +1150,11 @@ __all__ = [
     "ETHICAL_FLOOR_THRESHOLD",
     # Weights
     "PRINCIPLE_WEIGHTS",
+    # Governance Articles (L2.8-L2.14)
+    "ArticleStatus",
+    "GovernanceArticle",
+    "GOVERNANCE_ARTICLES",
+    "get_article_status_table",
     # Scores
     "PrincipleScore",
     "ConstitutionalEvaluation",

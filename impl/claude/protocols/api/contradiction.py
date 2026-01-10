@@ -33,11 +33,11 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
-    Query = None  # type: ignore
-    BaseModel = object  # type: ignore
-    Field = lambda *args, **kwargs: None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
+    Query = None  # type: ignore[assignment]
+    BaseModel = object  # type: ignore[assignment, misc]
+    Field = lambda *args, **kwargs: None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +50,7 @@ logger = logging.getLogger(__name__)
 class DetectionRequest(BaseModel):
     """Request to detect contradictions between K-Blocks."""
 
-    k_block_ids: list[str] = Field(
-        ..., min_length=2, description="K-Block IDs to analyze (min 2)"
-    )
+    k_block_ids: list[str] = Field(..., min_length=2, description="K-Block IDs to analyze (min 2)")
     threshold: float = Field(
         default=0.1,
         ge=0.0,
@@ -74,31 +72,23 @@ class ContradictionResponse(BaseModel):
     """Single contradiction detection result."""
 
     id: str = Field(..., description="Contradiction ID (sorted K-Block IDs)")
-    type: str = Field(
-        ..., description="Type: APPARENT, PRODUCTIVE, TENSION, FUNDAMENTAL"
-    )
+    type: str = Field(..., description="Type: APPARENT, PRODUCTIVE, TENSION, FUNDAMENTAL")
     severity: float = Field(..., ge=0.0, le=1.0, description="Contradiction strength")
     k_block_a: KBlockSummary = Field(..., description="First K-Block")
     k_block_b: KBlockSummary = Field(..., description="Second K-Block")
-    super_additive_loss: float = Field(
-        ..., description="Super-additive loss (combined - sum)"
-    )
+    super_additive_loss: float = Field(..., description="Super-additive loss (combined - sum)")
     loss_a: float = Field(..., description="Individual loss of K-Block A")
     loss_b: float = Field(..., description="Individual loss of K-Block B")
     loss_combined: float = Field(..., description="Combined loss")
     detected_at: str = Field(..., description="Detection timestamp (ISO)")
-    suggested_strategy: str = Field(
-        ..., description="Suggested resolution strategy"
-    )
+    suggested_strategy: str = Field(..., description="Suggested resolution strategy")
     classification: dict[str, Any] = Field(..., description="Full classification data")
 
 
 class DetectionResponse(BaseModel):
     """Response from contradiction detection."""
 
-    contradictions: list[ContradictionResponse] = Field(
-        ..., description="Detected contradictions"
-    )
+    contradictions: list[ContradictionResponse] = Field(..., description="Detected contradictions")
     total: int = Field(..., ge=0, description="Total contradictions found")
     analyzed_pairs: int = Field(..., ge=0, description="Total K-Block pairs analyzed")
     threshold: float = Field(..., description="Threshold used for detection")
@@ -115,17 +105,11 @@ class ListContradictionsResponse(BaseModel):
 class ResolutionRequest(BaseModel):
     """Request to resolve a contradiction."""
 
-    strategy: str = Field(
-        ..., description="Strategy: SYNTHESIZE, SCOPE, CHOOSE, TOLERATE, IGNORE"
-    )
-    context: dict[str, Any] | None = Field(
-        None, description="Additional context for resolution"
-    )
+    strategy: str = Field(..., description="Strategy: SYNTHESIZE, SCOPE, CHOOSE, TOLERATE, IGNORE")
+    context: dict[str, Any] | None = Field(None, description="Additional context for resolution")
     new_content: str | None = Field(None, description="New content (for SYNTHESIZE)")
     scope_note: str | None = Field(None, description="Scope clarification (for SCOPE)")
-    chosen_k_block_id: str | None = Field(
-        None, description="Chosen K-Block ID (for CHOOSE)"
-    )
+    chosen_k_block_id: str | None = Field(None, description="Chosen K-Block ID (for CHOOSE)")
 
 
 class ResolutionResponse(BaseModel):
@@ -148,9 +132,7 @@ class ContradictionStats(BaseModel):
     resolved_count: int = Field(..., ge=0, description="Resolved contradictions")
     unresolved_count: int = Field(..., ge=0, description="Unresolved contradictions")
     average_strength: float = Field(..., description="Average contradiction strength")
-    most_common_strategy: str | None = Field(
-        None, description="Most common resolution strategy"
-    )
+    most_common_strategy: str | None = Field(None, description="Most common resolution strategy")
 
 
 class ResolutionPromptResponse(BaseModel):
@@ -163,9 +145,7 @@ class ResolutionPromptResponse(BaseModel):
     classification: dict[str, Any] = Field(..., description="Classification data")
     suggested_strategy: str = Field(..., description="Suggested strategy")
     reasoning: str = Field(..., description="Why this suggestion")
-    available_strategies: list[dict[str, Any]] = Field(
-        ..., description="All available strategies"
-    )
+    available_strategies: list[dict[str, Any]] = Field(..., description="All available strategies")
 
 
 # =============================================================================
@@ -268,9 +248,7 @@ def create_contradiction_router() -> "APIRouter | None":
             for kb_id in request.k_block_ids:
                 kblock = storage.get_node(kb_id)
                 if not kblock:
-                    raise HTTPException(
-                        status_code=404, detail=f"K-Block not found: {kb_id}"
-                    )
+                    raise HTTPException(status_code=404, detail=f"K-Block not found: {kb_id}")
                 k_blocks.append(kblock)
 
             # Get Galois loss calculator
@@ -293,9 +271,7 @@ def create_contradiction_router() -> "APIRouter | None":
             contradictions = []
             for pair in pairs:
                 classification = default_classifier.classify_pair(pair)
-                suggested_strategy = default_engine.suggest_strategy(
-                    pair, classification
-                )
+                suggested_strategy = default_engine.suggest_strategy(pair, classification)
                 response = _contradiction_to_response(
                     pair, classification, suggested_strategy.value
                 )
@@ -345,9 +321,7 @@ def create_contradiction_router() -> "APIRouter | None":
         # Count by severity range
         by_severity = {
             "low": sum(1 for c in all_contradictions if c.severity < 0.3),
-            "medium": sum(
-                1 for c in all_contradictions if 0.3 <= c.severity < 0.6
-            ),
+            "medium": sum(1 for c in all_contradictions if 0.3 <= c.severity < 0.6),
             "high": sum(1 for c in all_contradictions if c.severity >= 0.6),
         }
 
@@ -356,9 +330,7 @@ def create_contradiction_router() -> "APIRouter | None":
         unresolved_count = total - resolved_count
 
         # Average strength
-        average_strength = (
-            sum(c.severity for c in all_contradictions) / total if total > 0 else 0.0
-        )
+        average_strength = sum(c.severity for c in all_contradictions) / total if total > 0 else 0.0
 
         # Most common resolution strategy
         strategy_counts: dict[str, int] = {}
@@ -366,9 +338,7 @@ def create_contradiction_router() -> "APIRouter | None":
             strategy_counts[r.strategy] = strategy_counts.get(r.strategy, 0) + 1
 
         most_common_strategy = (
-            max(strategy_counts.items(), key=lambda x: x[1])[0]
-            if strategy_counts
-            else None
+            max(strategy_counts.items(), key=lambda x: x[1])[0] if strategy_counts else None
         )
 
         return ContradictionStats(
@@ -423,9 +393,7 @@ def create_contradiction_router() -> "APIRouter | None":
         filtered = filtered[offset : offset + limit]
         has_more = total > offset + limit
 
-        return ListContradictionsResponse(
-            contradictions=filtered, total=total, has_more=has_more
-        )
+        return ListContradictionsResponse(contradictions=filtered, total=total, has_more=has_more)
 
     # =========================================================================
     # GET /api/contradictions/{id} - Get single contradiction with prompt
@@ -537,9 +505,7 @@ def create_contradiction_router() -> "APIRouter | None":
             try:
                 strategy = ResolutionStrategy[request.strategy]
             except KeyError:
-                raise HTTPException(
-                    status_code=400, detail=f"Invalid strategy: {request.strategy}"
-                )
+                raise HTTPException(status_code=400, detail=f"Invalid strategy: {request.strategy}")
 
             # Create witness mark for resolution
             witness = await get_witness_persistence()

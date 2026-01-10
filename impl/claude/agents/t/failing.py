@@ -128,9 +128,9 @@ class FailingAgent(Agent[A, B], Generic[A, B]):
         if self.config.fail_count >= 0 and self._attempt_count > self.config.fail_count:
             # Recovery phase
             if self.config.recovery_token is not None:
-                return self.config.recovery_token  # type: ignore
+                return self.config.recovery_token  # type: ignore[no-any-return]
             # Default recovery: return input as-is (identity)
-            return input  # type: ignore
+            return input  # type: ignore[return-value]
 
         # Generate and raise appropriate error
         error_msg = self.config.get_error_message(self._attempt_count)

@@ -477,7 +477,7 @@ class FluxAgent(Generic[A, B]):
 
         # Signal output completion
         try:
-            self._output_queue.put_nowait(self._SENTINEL)  # type: ignore
+            self._output_queue.put_nowait(self._SENTINEL)  # type: ignore[arg-type]
         except asyncio.QueueFull:
             pass
 
@@ -634,7 +634,7 @@ class FluxAgent(Generic[A, B]):
 
             # Signal output completion
             try:
-                self._output_queue.put_nowait(self._SENTINEL)  # type: ignore
+                self._output_queue.put_nowait(self._SENTINEL)  # type: ignore[arg-type]
             except asyncio.QueueFull:
                 pass
 
@@ -816,7 +816,9 @@ class FluxAgent(Generic[A, B]):
         Returns:
             True if result was a SemaphoreToken (handled), False otherwise
         """
-        from .semaphore.flux_integration import process_semaphore_result
+        from .semaphore.flux_integration import (
+            process_semaphore_result,
+        )
         from .semaphore.mixin import is_semaphore_token
 
         if not is_semaphore_token(result):

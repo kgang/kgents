@@ -410,7 +410,7 @@ class PythonFunctionParser:
                 param_str += f": {ast.unparse(arg.annotation)}"
             # kw_defaults is aligned with kwonlyargs
             if args.kw_defaults[i] is not None:
-                default_val = ast.unparse(args.kw_defaults[i])
+                default_val = ast.unparse(args.kw_defaults[i])  # type: ignore[arg-type]
                 param_str += f" = {default_val}"
             params.append(param_str)
 
@@ -491,7 +491,7 @@ class PythonFunctionParser:
 
             default = None
             if args.kw_defaults[i] is not None:
-                default = ast.unparse(args.kw_defaults[i])
+                default = ast.unparse(args.kw_defaults[i])  # type: ignore[arg-type]
 
             params.append(
                 ParamInfo(

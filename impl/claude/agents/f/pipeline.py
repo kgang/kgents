@@ -40,7 +40,7 @@ class FlowPipeline(Generic[A, C]):
         if not self.stages:
             # Empty pipeline - just pass through
             async for item in source:
-                yield FlowEvent(value=item)  # type: ignore
+                yield FlowEvent(value=item)  # type: ignore[arg-type]
             return
 
         # Thread through stages
@@ -103,8 +103,8 @@ def _flow_agent_ror(self: FlowAgent[B, C], other: FlowAgent[A, B]) -> FlowPipeli
 
 
 # Monkey-patch FlowAgent with | operator support
-FlowAgent.__or__ = _flow_agent_or  # type: ignore
-FlowAgent.__ror__ = _flow_agent_ror  # type: ignore
+FlowAgent.__or__ = _flow_agent_or  # type: ignore[method-assign, assignment]
+FlowAgent.__ror__ = _flow_agent_ror  # type: ignore[method-assign, assignment]
 
 
 __all__ = [

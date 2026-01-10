@@ -29,19 +29,21 @@ from typing import TYPE_CHECKING
 
 try:
     from fastapi import APIRouter, HTTPException
+
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
 
 try:
     from pydantic import BaseModel, Field, field_validator
+
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
-    BaseModel = object  # type: ignore
-    Field = lambda *args, **kwargs: None  # type: ignore
+    BaseModel = object  # type: ignore[assignment, misc]
+    Field = lambda *args, **kwargs: None  # type: ignore[assignment]
     field_validator = lambda *args, **kwargs: lambda f: f  # noqa: E731
 
 if TYPE_CHECKING:
@@ -89,8 +91,7 @@ def _validate_content(content: str, field_name: str = "content") -> str:
 
     if len(stripped) < MIN_CONTENT_LENGTH:
         raise ValueError(
-            f"{field_name} must be at least {MIN_CONTENT_LENGTH} characters, "
-            f"got {len(stripped)}"
+            f"{field_name} must be at least {MIN_CONTENT_LENGTH} characters, got {len(stripped)}"
         )
 
     if len(content) > MAX_CONTENT_LENGTH:
@@ -158,7 +159,7 @@ class GaloisLossResponse(BaseModel):
     cached: bool = Field(..., description="Whether result was from cache")
     evidence_tier: str = Field(
         ...,
-        description="Evidence tier: categorical (<0.1), empirical (<0.3), aesthetic (<0.6), somatic (>=0.6)"
+        description="Evidence tier: categorical (<0.1), empirical (<0.3), aesthetic (<0.6), somatic (>=0.6)",
     )
 
 
@@ -178,10 +179,7 @@ class ContradictionRequest(BaseModel):
         description="Second content",
     )
     tolerance: float = Field(
-        default=0.1,
-        ge=0.0,
-        le=1.0,
-        description="Tau tolerance for super-additivity detection"
+        default=0.1, ge=0.0, le=1.0, description="Tau tolerance for super-additivity detection"
     )
 
     @field_validator("content_a", "content_b")
@@ -197,29 +195,14 @@ class ContradictionRequest(BaseModel):
 class ContradictionResponse(BaseModel):
     """Response from contradiction detection."""
 
-    is_contradiction: bool = Field(
-        ...,
-        description="True if L(A U B) > L(A) + L(B) + tau"
-    )
-    strength: float = Field(
-        ...,
-        description="Super-additive excess (positive = contradiction)"
-    )
+    is_contradiction: bool = Field(..., description="True if L(A U B) > L(A) + L(B) + tau")
+    strength: float = Field(..., description="Super-additive excess (positive = contradiction)")
     loss_a: float = Field(..., ge=0.0, le=1.0, description="Galois loss of content A")
     loss_b: float = Field(..., ge=0.0, le=1.0, description="Galois loss of content B")
-    loss_combined: float = Field(
-        ...,
-        ge=0.0,
-        le=1.0,
-        description="Galois loss of combined content"
-    )
-    contradiction_type: str = Field(
-        ...,
-        description="Type: none, weak, moderate, strong"
-    )
+    loss_combined: float = Field(..., ge=0.0, le=1.0, description="Galois loss of combined content")
+    contradiction_type: str = Field(..., description="Type: none, weak, moderate, strong")
     synthesis_hint: str | None = Field(
-        None,
-        description="Ghost alternative suggestion for synthesis"
+        None, description="Ghost alternative suggestion for synthesis"
     )
 
 
@@ -232,17 +215,9 @@ class FixedPointRequest(BaseModel):
         max_length=MAX_CONTENT_LENGTH,
         description="Content to analyze for fixed point",
     )
-    max_iterations: int = Field(
-        default=7,
-        ge=1,
-        le=20,
-        description="Maximum iterations to try"
-    )
+    max_iterations: int = Field(default=7, ge=1, le=20, description="Maximum iterations to try")
     stability_threshold: float = Field(
-        default=0.05,
-        ge=0.0,
-        le=1.0,
-        description="Loss variance threshold for stability"
+        default=0.05, ge=0.0, le=1.0, description="Loss variance threshold for stability"
     )
 
     @field_validator("content")
@@ -259,20 +234,13 @@ class FixedPointResponse(BaseModel):
     """Response from fixed point analysis."""
 
     is_fixed_point: bool = Field(..., description="Whether content converges to fixed point")
-    is_axiom: bool = Field(
-        ...,
-        description="Whether it's an axiom (fixed point with loss < 0.01)"
-    )
+    is_axiom: bool = Field(..., description="Whether it's an axiom (fixed point with loss < 0.01)")
     final_loss: float = Field(..., ge=0.0, le=1.0, description="Final loss value")
     iterations_to_converge: int = Field(
-        ...,
-        description="Iterations needed to converge (-1 if not converged)"
+        ..., description="Iterations needed to converge (-1 if not converged)"
     )
     loss_history: list[float] = Field(..., description="Loss at each iteration")
-    stability_achieved: bool = Field(
-        ...,
-        description="Whether loss variance is below threshold"
-    )
+    stability_achieved: bool = Field(..., description="Whether loss variance is below threshold")
 
 
 class LayerAssignRequest(BaseModel):
@@ -398,9 +366,7 @@ def create_galois_router() -> tuple[APIRouter, APIRouter] | None:
     # =========================================================================
 
     @router.post("/contradiction", response_model=ContradictionResponse)
-    async def detect_contradiction(
-        request: ContradictionRequest
-    ) -> ContradictionResponse:
+    async def detect_contradiction(request: ContradictionRequest) -> ContradictionResponse:
         """
         Detect contradiction between two contents using super-additive loss.
 
@@ -528,9 +494,11 @@ def create_galois_router() -> tuple[APIRouter, APIRouter] | None:
             stability_achieved = False
             if len(loss_history) >= 2:
                 # Compute variance of last few losses
-                recent_losses = loss_history[-min(3, len(loss_history)):]
+                recent_losses = loss_history[-min(3, len(loss_history)) :]
                 mean_loss = sum(recent_losses) / len(recent_losses)
-                variance = sum((loss - mean_loss) ** 2 for loss in recent_losses) / len(recent_losses)
+                variance = sum((loss - mean_loss) ** 2 for loss in recent_losses) / len(
+                    recent_losses
+                )
                 stability_achieved = variance < request.stability_threshold
 
             return FixedPointResponse(
@@ -615,8 +583,7 @@ def create_galois_router() -> tuple[APIRouter, APIRouter] | None:
             sanitized_loss = _sanitize_loss(result.loss)
             sanitized_confidence = _sanitize_loss(result.confidence)
             sanitized_loss_by_layer = {
-                layer: _sanitize_loss(loss)
-                for layer, loss in result.loss_by_layer.items()
+                layer: _sanitize_loss(loss) for layer, loss in result.loss_by_layer.items()
             }
 
             return LayerAssignResponse(

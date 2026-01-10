@@ -225,9 +225,7 @@ class CosineEmbeddingDistance:
         except Exception:
             return None
 
-    def _cosine_similarity(
-        self, vec_a: list[float], vec_b: list[float]
-    ) -> float:
+    def _cosine_similarity(self, vec_a: list[float], vec_b: list[float]) -> float:
         """Compute cosine similarity."""
         dot = sum(a * b for a, b in zip(vec_a, vec_b, strict=False))
         norm_a = math.sqrt(sum(a * a for a in vec_a))
@@ -272,7 +270,7 @@ class BERTScoreDistance:
     def distance(self, text_a: str, text_b: str) -> float:
         """Compute 1 - F1 BERTScore."""
         try:
-            from bert_score import score  # type: ignore[import-not-found]
+            from bert_score import score
 
             P, R, F1 = score(
                 [text_a],
@@ -368,7 +366,7 @@ class BidirectionalEntailmentDistance:
         """Lazy load NLI classifier."""
         if self._classifier is None:
             try:
-                from transformers import pipeline  # type: ignore[import-not-found]
+                from transformers import pipeline
 
                 self._classifier = pipeline(
                     "text-classification",
@@ -491,10 +489,7 @@ class CompositeDistance:
         if total_weight == 0:
             return 0.5
 
-        weighted_sum = sum(
-            m.distance(text_a, text_b) * w
-            for m, w in self.metrics
-        )
+        weighted_sum = sum(m.distance(text_a, text_b) * w for m, w in self.metrics)
         return weighted_sum / total_weight
 
 

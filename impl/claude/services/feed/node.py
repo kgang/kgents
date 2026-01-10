@@ -88,8 +88,6 @@ class FeedManifestRendering:
         return "\n".join(lines)
 
 
-
-
 def _apply_ranking(items: list[FeedKBlockItem], ranking: str) -> list[FeedKBlockItem]:
     """Apply ranking algorithm to items."""
     if ranking == "chronological":
@@ -108,7 +106,7 @@ def _apply_ranking(items: list[FeedKBlockItem], ranking: str) -> list[FeedKBlock
 
         def score(item: FeedKBlockItem) -> float:
             # Parse timestamp for recency
-            created = datetime.fromisoformat(item.created_at.replace('Z', '+00:00'))
+            created = datetime.fromisoformat(item.created_at.replace("Z", "+00:00"))
             hours_old = (datetime.now(UTC) - created).total_seconds() / 3600
             recency_score = 1.0 / (1.0 + hours_old / 24)  # Decay over days
 
@@ -175,7 +173,7 @@ class FeedNode(BaseLogosNode):
                 (Evidence: _apply_ranking() and Feed.tsx:applyRanking())
     """
 
-    def __init__(self, feed_service=None) -> None:
+    def __init__(self, feed_service: Any = None) -> None:
         """
         Initialize FeedNode.
 
@@ -217,9 +215,7 @@ class FeedNode(BaseLogosNode):
         # Guest: cosmos only
         return ("cosmos",)
 
-    async def manifest(
-        self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any
-    ) -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest feed status to observer.
 
@@ -287,7 +283,7 @@ class FeedNode(BaseLogosNode):
                         "loss": 0.0,  # TODO: Compute Galois loss
                         "author": getattr(kb, "created_by", "unknown"),
                         "createdAt": kb.created_at.isoformat(),
-                        "updatedAt": kb.updated_at.isoformat(),
+                        "updatedAt": kb.updated_at.isoformat(),  # type: ignore[union-attr]
                         "tags": getattr(kb, "tags", []),
                         "principles": [],  # TODO: Extract from proof
                         "edgeCount": 0,  # TODO: Count edges
@@ -332,7 +328,7 @@ class FeedNode(BaseLogosNode):
                         "loss": 0.0,  # TODO: Compute Galois loss
                         "author": getattr(kb, "created_by", "unknown"),
                         "createdAt": kb.created_at.isoformat(),
-                        "updatedAt": kb.updated_at.isoformat(),
+                        "updatedAt": kb.updated_at.isoformat(),  # type: ignore[union-attr]
                         "tags": getattr(kb, "tags", []),
                         "principles": [],  # TODO: Extract from proof
                         "edgeCount": 0,  # TODO: Count edges

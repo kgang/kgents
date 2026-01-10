@@ -55,7 +55,7 @@ if TYPE_CHECKING:
 try:
     from .backends.postgres import PostgresBackend
 except ImportError:
-    PostgresBackend = None  # type: ignore
+    PostgresBackend = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class DataclassSchema(Generic[T]):
     def serialize(self, obj: T) -> dict[str, Any]:
         """Use to_dict() if available, else __dict__."""
         if hasattr(obj, "to_dict"):
-            return obj.to_dict()  # type: ignore
+            return obj.to_dict()  # type: ignore[no-any-return]
         elif hasattr(obj, "__dict__"):
             return obj.__dict__
         else:
@@ -115,7 +115,7 @@ class DataclassSchema(Generic[T]):
     def deserialize(self, data: dict[str, Any]) -> T:
         """Use from_dict() if available, else direct construction."""
         if hasattr(self.type_cls, "from_dict"):
-            return self.type_cls.from_dict(data)  # type: ignore
+            return self.type_cls.from_dict(data)  # type: ignore[attr-defined, no-any-return]
         else:
             return self.type_cls(**data)
 
@@ -254,7 +254,7 @@ class Universe:
 
                     url = os.getenv("KGENTS_DATABASE_URL")
                     if url and "postgresql" in url:
-                        backend = PostgresBackend(url)
+                        backend = PostgresBackend(url)  # type: ignore[assignment]
                         # Test connection
                         await backend.count()
                         logger.info("Selected Postgres backend")

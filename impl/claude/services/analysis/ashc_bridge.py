@@ -125,12 +125,14 @@ class AnalysisASHCBridge:
     """
 
     # Mode weights for confidence aggregation
-    mode_weights: dict[str, float] = field(default_factory=lambda: {
-        "categorical": 0.25,
-        "epistemic": 0.25,
-        "dialectical": 0.25,
-        "generative": 0.25,
-    })
+    mode_weights: dict[str, float] = field(
+        default_factory=lambda: {
+            "categorical": 0.25,
+            "epistemic": 0.25,
+            "dialectical": 0.25,
+            "generative": 0.25,
+        }
+    )
 
     # Confidence thresholds
     high_confidence_threshold: float = 0.8
@@ -162,6 +164,7 @@ class AnalysisASHCBridge:
             EvidencedAnalysis with confidence, bet, and marks
         """
         import time
+
         start_time = time.time()
 
         # Calculate confidence from report
@@ -236,8 +239,7 @@ class AnalysisASHCBridge:
 
         total_weight = sum(self.mode_weights.values())
         weighted_sum = sum(
-            mode_confidences[mode] * self.mode_weights[mode]
-            for mode in mode_confidences
+            mode_confidences[mode] * self.mode_weights[mode] for mode in mode_confidences
         )
 
         return weighted_sum / total_weight if total_weight > 0 else 0.0
@@ -306,7 +308,7 @@ class AnalysisASHCBridge:
 
             logger.info(
                 f"ASHC bet resolved: {resolved.bet_id} "
-                f"(success={success}, payout={resolved.payout})"
+                f"(success={success}, payout={resolved.payout})"  # type: ignore[attr-defined]
             )
 
             return resolved.bet_id
@@ -330,7 +332,7 @@ class AnalysisASHCBridge:
 
         try:
             # Try to use real witness service
-            from services.witness import emit_mark
+            from services.witness import emit_mark  # type: ignore[attr-defined]
 
             for evidence in evidences:
                 mark = await emit_mark(

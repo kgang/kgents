@@ -66,7 +66,7 @@ class FeedSource:
                 if layer is None:
                     return False
                 if isinstance(self.value, int):
-                    return layer == self.value
+                    return bool(layer == self.value)
                 elif isinstance(self.value, tuple):
                     return layer in self.value
                 return False
@@ -140,7 +140,7 @@ class FeedFilter:
                 return self._compare(kblock.created_at, self.value)
             case "custom":
                 if callable(self.value):
-                    return self.value(kblock)
+                    return bool(self.value(kblock))
                 return False
             case _:
                 return False
@@ -149,14 +149,14 @@ class FeedFilter:
         """Helper to compare values based on operator."""
         match self.operator:
             case "eq":
-                return field_value == filter_value
+                return bool(field_value == filter_value)
             case "lt":
-                return field_value < filter_value
+                return bool(field_value < filter_value)
             case "gt":
-                return field_value > filter_value
+                return bool(field_value > filter_value)
             case "between":
                 if isinstance(filter_value, tuple) and len(filter_value) == 2:
-                    return filter_value[0] <= field_value <= filter_value[1]
+                    return bool(filter_value[0] <= field_value <= filter_value[1])
                 return False
             case "contains":
                 if is_collection:

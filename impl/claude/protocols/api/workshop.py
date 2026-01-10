@@ -36,9 +36,9 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    StreamingResponse = None  # type: ignore
-    BaseModel = object  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    StreamingResponse = None  # type: ignore[assignment, misc]
+    BaseModel = object  # type: ignore[assignment, misc]
 
     def Field(*args: Any, **kwargs: Any) -> Any:  # type: ignore[no-redef]
         return None

@@ -243,8 +243,8 @@ class PersistentAgent(Generic[S]):
         """
         try:
             if is_dataclass(self.schema):
-                return self._deserialize_dataclass(self.schema, data)  # type: ignore
-            return data  # type: ignore
+                return self._deserialize_dataclass(self.schema, data)  # type: ignore[no-any-return]
+            return data  # type: ignore[no-any-return]
         except Exception as e:
             raise StateCorruptionError(f"Cannot deserialize to {self.schema}: {e}")
 

@@ -74,16 +74,11 @@ class TokenBudget:
             True if operation would stay within budget
         """
         total_estimated = (
-            self.cumulative_input
-            + estimated_input
-            + self.cumulative_output
-            + estimated_output
+            self.cumulative_input + estimated_input + self.cumulative_output + estimated_output
         )
         return total_estimated < self.max_session_cumulative
 
-    def check_and_reserve(
-        self, estimated_input: int, estimated_output: int
-    ) -> None:
+    def check_and_reserve(self, estimated_input: int, estimated_output: int) -> None:
         """Check budget and raise if insufficient.
 
         Args:
@@ -116,9 +111,7 @@ class TokenBudget:
         """Remaining budget tokens."""
         return max(
             0,
-            self.max_session_cumulative
-            - self.cumulative_input
-            - self.cumulative_output,
+            self.max_session_cumulative - self.cumulative_input - self.cumulative_output,
         )
 
     @property
@@ -243,29 +236,31 @@ class QualityBudget:
     """
 
     # Model specifications with loss tolerances
-    MODELS: dict[str, dict[str, Any]] = field(default_factory=lambda: {
-        "opus": {
-            "name": "claude-opus-4-5-20251101",
-            "loss_tolerance": 0.05,  # < 5% loss
-            "latency_estimate": 8.0,  # seconds per 1K tokens
-            "cost_per_1M_input": 15.0,
-            "cost_per_1M_output": 75.0,
-        },
-        "sonnet": {
-            "name": "claude-sonnet-4-20250514",
-            "loss_tolerance": 0.15,  # < 15% loss
-            "latency_estimate": 3.0,
-            "cost_per_1M_input": 3.0,
-            "cost_per_1M_output": 15.0,
-        },
-        "haiku": {
-            "name": "claude-3-5-haiku-20241022",
-            "loss_tolerance": 0.30,  # < 30% loss
-            "latency_estimate": 1.0,
-            "cost_per_1M_input": 1.0,
-            "cost_per_1M_output": 5.0,
-        },
-    })
+    MODELS: dict[str, dict[str, Any]] = field(
+        default_factory=lambda: {
+            "opus": {
+                "name": "claude-opus-4-5-20251101",
+                "loss_tolerance": 0.05,  # < 5% loss
+                "latency_estimate": 8.0,  # seconds per 1K tokens
+                "cost_per_1M_input": 15.0,
+                "cost_per_1M_output": 75.0,
+            },
+            "sonnet": {
+                "name": "claude-sonnet-4-20250514",
+                "loss_tolerance": 0.15,  # < 15% loss
+                "latency_estimate": 3.0,
+                "cost_per_1M_input": 3.0,
+                "cost_per_1M_output": 15.0,
+            },
+            "haiku": {
+                "name": "claude-3-5-haiku-20241022",
+                "loss_tolerance": 0.30,  # < 30% loss
+                "latency_estimate": 1.0,
+                "cost_per_1M_input": 1.0,
+                "cost_per_1M_output": 5.0,
+            },
+        }
+    )
 
     def select_model(self, task: str, max_loss: float) -> str:
         """Select cheapest model that meets loss tolerance.
@@ -286,10 +281,10 @@ class QualityBudget:
         for model_id in ["haiku", "sonnet", "opus"]:
             model = self.MODELS[model_id]
             if model["loss_tolerance"] >= max_loss:
-                return model["name"]
+                return str(model["name"])
 
         # Fallback: use opus if even haiku doesn't meet tolerance
-        return self.MODELS["opus"]["name"]
+        return str(self.MODELS["opus"]["name"])
 
     def get_model_tier(self, model_name: str) -> str:
         """Get tier name from model name.
@@ -305,9 +300,7 @@ class QualityBudget:
                 return tier
         return "sonnet"  # Default
 
-    def estimate_cost(
-        self, model: str, input_tokens: int, output_tokens: int
-    ) -> float:
+    def estimate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
         """Estimate cost for an operation.
 
         Args:
@@ -323,8 +316,8 @@ class QualityBudget:
             tier = "sonnet"
 
         config = self.MODELS[tier]
-        input_cost = (input_tokens / 1_000_000) * config["cost_per_1M_input"]
-        output_cost = (output_tokens / 1_000_000) * config["cost_per_1M_output"]
+        input_cost = (input_tokens / 1_000_000) * float(config["cost_per_1M_input"])
+        output_cost = (output_tokens / 1_000_000) * float(config["cost_per_1M_output"])
         return input_cost + output_cost
 
 

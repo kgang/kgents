@@ -395,7 +395,7 @@ class GardenService:
             orphans=tuple(orphans),
             overall_health=overall_health,
             lens=lens,
-            density=density,  # type: ignore
+            density=density,  # type: ignore[arg-type]
         )
 
     def _apply_lens(

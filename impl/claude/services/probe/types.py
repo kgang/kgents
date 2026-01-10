@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 
 class ProbeType(Enum):
@@ -68,7 +69,7 @@ class ProbeResult:
         """Whether the probe failed."""
         return self.status == ProbeStatus.FAILED
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "name": self.name,
@@ -101,7 +102,7 @@ class HealthStatus:
     uptime_ms: float = 0.0
     last_error: str | None = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "component": self.component,

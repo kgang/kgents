@@ -33,10 +33,10 @@ try:
     HAS_WEBSOCKET = True
 except ImportError:
     HAS_WEBSOCKET = False
-    APIRouter = None  # type: ignore
-    WebSocket = None  # type: ignore
-    WebSocketDisconnect = Exception  # type: ignore
-    WebSocketState = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    WebSocket = None  # type: ignore[assignment, misc]
+    WebSocketDisconnect = Exception  # type: ignore[assignment, misc]
+    WebSocketState = None  # type: ignore[assignment, misc]
 
 
 # =============================================================================

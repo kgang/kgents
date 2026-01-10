@@ -261,7 +261,7 @@ def create_test_health_panel_class() -> type:
         total_tests: reactive[int] = reactive(0)
         pass_rate: reactive[float] = reactive(1.0)
         avg_time_ms: reactive[float] = reactive(0.0)
-        tier_counts: reactive[dict] = reactive({})  # type: ignore
+        tier_counts: reactive[dict] = reactive({})  # type: ignore[type-arg]
         recommendation_count: reactive[int] = reactive(0)
         expensive_count: reactive[int] = reactive(0)
         status: reactive[str] = reactive("--")

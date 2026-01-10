@@ -13,7 +13,7 @@ from dp.core import Constitution, ValueAgent
 from services.categorical.dp_bridge import Principle
 
 
-def main():
+def main() -> None:
     print("=" * 80)
     print("ValueAgent Sequential Composition Demo")
     print("=" * 80)

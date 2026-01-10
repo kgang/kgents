@@ -143,6 +143,8 @@ dev = [
     "ruff>=0.8.0",
     "mypy>=1.19.0",
     "types-pyyaml",
+    "types-redis",
+    "types-stripe",
     "alembic>=1.17.2",
     "asyncpg>=0.31.0",
 ]

@@ -567,7 +567,7 @@ class LetheStore:
                 signals = signals_by_epoch.get(epoch.epoch_id, [])
                 if signals:
                     await self.compost(epoch, signals)
-                    records.append(self.get_record(epoch.epoch_id))  # type: ignore
+                    records.append(self.get_record(epoch.epoch_id))  # type: ignore[arg-type]
 
             elif policy == RetentionPolicy.FORGET:
                 # Cryptographic deletion

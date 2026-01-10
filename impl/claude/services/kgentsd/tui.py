@@ -464,7 +464,7 @@ class WitnessApp(App[None]):
             self._add_thought(thought)
             await original_send(thought)
 
-        self.daemon._send_thought = tui_send_thought  # type: ignore
+        self.daemon._send_thought = tui_send_thought  # type: ignore[method-assign]
 
         # Start daemon in background task
         asyncio.create_task(self._run_daemon())

@@ -35,4 +35,4 @@ try:
 
     __all__.append("PostgresBackend")
 except ImportError:
-    PostgresBackend = None  # type: ignore
+    PostgresBackend = None  # type: ignore[assignment, misc]

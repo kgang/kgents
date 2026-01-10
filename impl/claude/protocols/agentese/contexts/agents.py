@@ -500,7 +500,7 @@ class AgentContextResolver:
         handle = f"world.agent.{letter}"
 
         if handle in self._cache:
-            return self._cache[handle]  # type: ignore
+            return self._cache[handle]  # type: ignore[return-value]
 
         # Check if this is a known agent
         # Normalize: "egent" → "e", "bgent" → "b", etc.

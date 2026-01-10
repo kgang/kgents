@@ -225,7 +225,7 @@ class MaybeAgent(Agent[Maybe[A], Maybe[B]]):
     async def invoke(self, input: Maybe[A]) -> Maybe[B]:
         if input.is_nothing():
             return Nothing
-        return Just(await self._inner.invoke(input.value))  # type: ignore
+        return Just(await self._inner.invoke(input.value))  # type: ignore[attr-defined]
 
 
 class EitherAgent(Agent[Either[E, A], Either[E, B]]):
@@ -246,8 +246,8 @@ class EitherAgent(Agent[Either[E, A], Either[E, B]]):
 
     async def invoke(self, input: Either[E, A]) -> Either[E, B]:
         if input.is_left():
-            return input  # type: ignore
-        return Right(await self._inner.invoke(input.value))  # type: ignore
+            return input  # type: ignore[return-value]
+        return Right(await self._inner.invoke(input.value))  # type: ignore[attr-defined]
 
 
 # --- Fix Pattern: Retry with Exponential Backoff ---

@@ -535,9 +535,7 @@ class CodeNode(BaseLogosNode):
         help="Display code artifact layer status",
         examples=["kg code", "kg code manifest"],
     )
-    async def manifest(
-        self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any
-    ) -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest code layer status to observer.
 
@@ -704,7 +702,7 @@ class CodeNode(BaseLogosNode):
             }
 
         # Get functions this one calls
-        calls_ids = getattr(root, "calls", frozenset())
+        calls_ids: frozenset[str] = getattr(root, "calls", frozenset())
         calls = []
         for call_id in calls_ids:
             # Try to resolve by qualified name
@@ -712,36 +710,24 @@ class CodeNode(BaseLogosNode):
 
             query = Query(schema="code.function", limit=1000)
             all_functions = await self._universe.query(query)
-            matching = [
-                f
-                for f in all_functions
-                if getattr(f, "qualified_name", None) == call_id
-            ]
+            matching = [f for f in all_functions if getattr(f, "qualified_name", None) == call_id]
             if matching:
                 calls.append(
-                    matching[0].to_dict()
-                    if hasattr(matching[0], "to_dict")
-                    else matching[0]
+                    matching[0].to_dict() if hasattr(matching[0], "to_dict") else matching[0]
                 )
 
         # Get functions that call this one
-        called_by_ids = getattr(root, "called_by", frozenset())
+        called_by_ids: frozenset[str] = getattr(root, "called_by", frozenset())
         called_by = []
         for caller_id in called_by_ids:
             from agents.d.universe.universe import Query
 
             query = Query(schema="code.function", limit=1000)
             all_functions = await self._universe.query(query)
-            matching = [
-                f
-                for f in all_functions
-                if getattr(f, "qualified_name", None) == caller_id
-            ]
+            matching = [f for f in all_functions if getattr(f, "qualified_name", None) == caller_id]
             if matching:
                 called_by.append(
-                    matching[0].to_dict()
-                    if hasattr(matching[0], "to_dict")
-                    else matching[0]
+                    matching[0].to_dict() if hasattr(matching[0], "to_dict") else matching[0]
                 )
 
         root_dict = root.to_dict() if hasattr(root, "to_dict") else root
@@ -769,21 +755,15 @@ class CodeNode(BaseLogosNode):
 
         # Apply filters
         if parent_id:
-            kblocks = [
-                kb for kb in kblocks if getattr(kb, "parent_kblock_id", None) == parent_id
-            ]
+            kblocks = [kb for kb in kblocks if getattr(kb, "parent_kblock_id", None) == parent_id]
         if boundary_type:
-            kblocks = [
-                kb for kb in kblocks if getattr(kb, "boundary_type", None) == boundary_type
-            ]
+            kblocks = [kb for kb in kblocks if getattr(kb, "boundary_type", None) == boundary_type]
 
         # Serialize
         serialized = [kb.to_dict() if hasattr(kb, "to_dict") else kb for kb in kblocks]
         return {"kblocks": serialized, "count": len(serialized)}
 
-    async def _kblock_get(
-        self, id: str, include_functions: bool = True
-    ) -> dict[str, Any]:
+    async def _kblock_get(self, id: str, include_functions: bool = True) -> dict[str, Any]:
         """Get K-block by ID with optional function contents."""
         kblock = await self._universe.get(id)
         if kblock is None:
@@ -792,13 +772,11 @@ class CodeNode(BaseLogosNode):
         functions = []
         if include_functions:
             # Get function IDs from K-block
-            function_ids = getattr(kblock, "function_ids", frozenset())
+            function_ids: frozenset[str] = getattr(kblock, "function_ids", frozenset())
             for func_id in function_ids:
                 func = await self._universe.get(func_id)
                 if func:
-                    functions.append(
-                        func.to_dict() if hasattr(func, "to_dict") else func
-                    )
+                    functions.append(func.to_dict() if hasattr(func, "to_dict") else func)
 
         kblock_dict = kblock.to_dict() if hasattr(kblock, "to_dict") else kblock
         return {"kblock": kblock_dict, "functions": functions}
@@ -880,21 +858,15 @@ class CodeNode(BaseLogosNode):
         ghosts = await self._universe.query(query)
 
         # Apply filters
-        ghosts = [
-            g for g in ghosts if getattr(g, "resolved", True) == resolved
-        ]
+        ghosts = [g for g in ghosts if getattr(g, "resolved", True) == resolved]
         if reason:
-            ghosts = [
-                g for g in ghosts if getattr(g, "ghost_reason", None) == reason
-            ]
+            ghosts = [g for g in ghosts if getattr(g, "ghost_reason", None) == reason]
 
         # Serialize
         serialized = [g.to_dict() if hasattr(g, "to_dict") else g for g in ghosts]
         return {"ghosts": serialized, "count": len(serialized)}
 
-    async def _ghost_resolve(
-        self, id: str, resolved_to: str | None = None
-    ) -> dict[str, Any]:
+    async def _ghost_resolve(self, id: str, resolved_to: str | None = None) -> dict[str, Any]:
         """Mark ghost as resolved."""
         from datetime import UTC, datetime
 
@@ -935,9 +907,7 @@ class CodeNode(BaseLogosNode):
 
     # === File operations ===
 
-    async def _upload(
-        self, file_path: str, content: str, parse: bool = True
-    ) -> dict[str, Any]:
+    async def _upload(self, file_path: str, content: str, parse: bool = True) -> dict[str, Any]:
         """Upload file and optionally parse into function crystals."""
         # TODO: Implement file parsing with AST
         # For now, return placeholder
@@ -961,9 +931,7 @@ class CodeNode(BaseLogosNode):
 
     # === Analysis operations ===
 
-    async def _derivation(
-        self, id: str, include_spec: bool = True
-    ) -> dict[str, Any]:
+    async def _derivation(self, id: str, include_spec: bool = True) -> dict[str, Any]:
         """Get derivation chain for a function."""
         function = await self._universe.get(id)
         if function is None:
@@ -983,15 +951,11 @@ class CodeNode(BaseLogosNode):
             query = Query(schema="code.function", limit=1000)
             all_functions = await self._universe.query(query)
             matching = [
-                f
-                for f in all_functions
-                if getattr(f, "qualified_name", None) == parent_name
+                f for f in all_functions if getattr(f, "qualified_name", None) == parent_name
             ]
             if matching:
                 derivation_chain.append(
-                    matching[0].to_dict()
-                    if hasattr(matching[0], "to_dict")
-                    else matching[0]
+                    matching[0].to_dict() if hasattr(matching[0], "to_dict") else matching[0]
                 )
 
         # Get spec references

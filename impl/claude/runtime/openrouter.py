@@ -238,7 +238,7 @@ class OpenRouterRuntime(Runtime):
                     # Validate against expected type
                     if not self._check_type_match(output, expected_type):
                         raise TypeError(
-                            f"Agent {agent.name} parse_response returned {type(output).__name__}, "
+                            f"Agent {agent.name} parse_response returned {type(output).__name__}, "  # type: ignore[attr-defined]
                             f"but expected {expected_type}"
                         )
                     return

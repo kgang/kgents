@@ -58,8 +58,8 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
 
 from agents.k import DialogueMode
 from services.chat import ChatContext, KgentBridge, create_kgent_bridge
@@ -71,8 +71,6 @@ logger = logging.getLogger(__name__)
 
 # Global K-gent bridge instance (singleton)
 _kgent_bridge = None
-
-
 
 
 # Global persistence instance (currently disabled - see NOTE)
@@ -663,7 +661,9 @@ def create_chat_router() -> "APIRouter | None":
                 # TODO: Integrate ASHC evidence accumulation for spec edits
                 # See: services.chat.ashc_bridge.ASHCBridge for spec compilation evidence
                 temp_evidence = _update_evidence(
-                    session.evidence, evidence_delta, 0.0  # confidence param ignored now
+                    session.evidence,
+                    evidence_delta,
+                    0.0,  # confidence param ignored now
                 )
                 turn_confidence = temp_evidence.confidence
 
@@ -823,12 +823,8 @@ def create_chat_router() -> "APIRouter | None":
             merged_turns = base_session.turns + other_session.turns
 
         # Combine evidence - use session with more observations
-        base_observations = (
-            base_session.evidence.prior_alpha + base_session.evidence.prior_beta
-        )
-        other_observations = (
-            other_session.evidence.prior_alpha + other_session.evidence.prior_beta
-        )
+        base_observations = base_session.evidence.prior_alpha + base_session.evidence.prior_beta
+        other_observations = other_session.evidence.prior_alpha + other_session.evidence.prior_beta
 
         if base_observations >= other_observations:
             merged_evidence = ChatEvidence(
@@ -1020,9 +1016,7 @@ def create_chat_router() -> "APIRouter | None":
             branches.append(branch)
 
             # Find children (sessions that have this session as parent)
-            children = [
-                sid for sid, s in _sessions.items() if s.parent_id == session_id_to_process
-            ]
+            children = [sid for sid, s in _sessions.items() if s.parent_id == session_id_to_process]
             to_process.extend(children)
 
         return BranchesResponse(branches=branches)

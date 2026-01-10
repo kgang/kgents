@@ -200,7 +200,7 @@ class Cortex:
             test_id=test_id,
             agent_path=agent_path,
             input_data=input_data,
-            outcome=outcome,  # type: ignore
+            outcome=outcome,  # type: ignore[arg-type]
             duration_ms=duration_ms,
             error_trace=error_trace,
         )

@@ -39,7 +39,15 @@ from typing import Any, Protocol
 from uuid import uuid4
 
 from ..witness.kleisli import Witnessed, witness_value
-from ..witness.mark import Mark, Proof, Response, Stimulus, UmweltSnapshot, generate_mark_id
+from ..witness.mark import (
+    EvidenceTier,
+    Mark,
+    Proof,
+    Response,
+    Stimulus,
+    UmweltSnapshot,
+    generate_mark_id,
+)
 
 # =============================================================================
 # Type Aliases
@@ -72,12 +80,12 @@ class FusionResult(Enum):
     - VETO: Article IV — Kent's disgust veto (absolute)
     """
 
-    CONSENSUS = "consensus"        # Agreement reached
-    SYNTHESIS = "synthesis"        # New position that sublates both
-    KENT_PREVAILS = "kent"         # Kent's position wins
-    CLAUDE_PREVAILS = "claude"     # Claude's position wins
-    DEFERRED = "deferred"          # Decision deferred
-    VETO = "veto"                  # Kent's disgust veto
+    CONSENSUS = "consensus"  # Agreement reached
+    SYNTHESIS = "synthesis"  # New position that sublates both
+    KENT_PREVAILS = "kent"  # Kent's position wins
+    CLAUDE_PREVAILS = "claude"  # Claude's position wins
+    DEFERRED = "deferred"  # Decision deferred
+    VETO = "veto"  # Kent's disgust veto
 
 
 # =============================================================================
@@ -362,25 +370,29 @@ class DialecticalFusionService:
     store: FusionStore = field(default_factory=get_fusion_store)
 
     # Constitutional principles with weights
-    PRINCIPLE_WEIGHTS: dict[str, float] = field(default_factory=lambda: {
-        "ETHICAL": 2.0,      # Safety first
-        "COMPOSABLE": 1.5,   # Architecture second
-        "JOY_INDUCING": 1.2, # Kent's aesthetic
-        "TASTEFUL": 1.0,
-        "CURATED": 1.0,
-        "HETERARCHICAL": 1.0,
-        "GENERATIVE": 1.0,
-    })
+    PRINCIPLE_WEIGHTS: dict[str, float] = field(
+        default_factory=lambda: {
+            "ETHICAL": 2.0,  # Safety first
+            "COMPOSABLE": 1.5,  # Architecture second
+            "JOY_INDUCING": 1.2,  # Kent's aesthetic
+            "TASTEFUL": 1.0,
+            "CURATED": 1.0,
+            "HETERARCHICAL": 1.0,
+            "GENERATIVE": 1.0,
+        }
+    )
 
     # Trust deltas for outcomes
-    TRUST_DELTAS: dict[FusionResult, float] = field(default_factory=lambda: {
-        FusionResult.CONSENSUS: 0.10,      # Strong trust building
-        FusionResult.SYNTHESIS: 0.15,      # Best outcome for trust
-        FusionResult.KENT_PREVAILS: 0.05,  # Mild trust building
-        FusionResult.CLAUDE_PREVAILS: 0.08, # Good trust building
-        FusionResult.DEFERRED: 0.0,        # Neutral
-        FusionResult.VETO: -0.10,          # Trust loss (misalignment)
-    })
+    TRUST_DELTAS: dict[FusionResult, float] = field(
+        default_factory=lambda: {
+            FusionResult.CONSENSUS: 0.10,  # Strong trust building
+            FusionResult.SYNTHESIS: 0.15,  # Best outcome for trust
+            FusionResult.KENT_PREVAILS: 0.05,  # Mild trust building
+            FusionResult.CLAUDE_PREVAILS: 0.08,  # Good trust building
+            FusionResult.DEFERRED: 0.0,  # Neutral
+            FusionResult.VETO: -0.10,  # Trust loss (misalignment)
+        }
+    )
 
     async def propose_fusion(
         self,
@@ -406,30 +418,20 @@ class DialecticalFusionService:
             Witnessed[Fusion] containing the fusion and witness marks
         """
         # 1. Structure positions
-        kent_position = await self._structure_position(
-            kent_view, kent_reasoning, "kent"
-        )
-        claude_position = await self._structure_position(
-            claude_view, claude_reasoning, "claude"
-        )
+        kent_position = await self._structure_position(kent_view, kent_reasoning, "kent")
+        claude_position = await self._structure_position(claude_view, claude_reasoning, "claude")
 
         # 2. Check for immediate consensus
         is_consensus = await self._check_consensus(kent_position, claude_position)
 
         if is_consensus:
-            return await self._create_consensus_fusion(
-                topic, kent_position, claude_position
-            )
+            return await self._create_consensus_fusion(topic, kent_position, claude_position)
 
         # 3. Attempt synthesis
-        synthesis = await self._attempt_synthesis(
-            topic, kent_position, claude_position
-        )
+        synthesis = await self._attempt_synthesis(topic, kent_position, claude_position)
 
         # 4. Determine result
-        result, reasoning = await self._determine_result(
-            kent_position, claude_position, synthesis
-        )
+        result, reasoning = await self._determine_result(kent_position, claude_position, synthesis)
 
         # 5. Compute trust delta
         trust_delta = self._compute_trust_delta(result)
@@ -695,8 +697,10 @@ Synthesis:"""
             data=f"Fusion: {fusion.kent_position.content[:50]}... vs {fusion.claude_position.content[:50]}...",
             warrant=fusion.reasoning,
             claim=f"Fusion result: {fusion.result.value}",
-            qualifier="probably" if fusion.result in [FusionResult.SYNTHESIS, FusionResult.CONSENSUS] else "arguably",
-            tier="EMPIRICAL",
+            qualifier="probably"
+            if fusion.result in [FusionResult.SYNTHESIS, FusionResult.CONSENSUS]
+            else "arguably",
+            tier=EvidenceTier.EMPIRICAL,
             principles=("composable", "heterarchical"),
         )
 
@@ -799,19 +803,21 @@ Synthesis:"""
 
         for fusion in fusions:
             cumulative += fusion.trust_delta
-            trajectory.append({
-                "fusion_id": fusion.id,
-                "topic": fusion.topic,
-                "result": fusion.result.value,
-                "delta": fusion.trust_delta,
-                "cumulative": cumulative,
-                "timestamp": fusion.timestamp.isoformat(),
-            })
+            trajectory.append(
+                {
+                    "fusion_id": fusion.id,
+                    "topic": fusion.topic,
+                    "result": fusion.result.value,
+                    "delta": fusion.trust_delta,
+                    "cumulative": cumulative,
+                    "timestamp": fusion.timestamp.isoformat(),
+                }
+            )
 
         # Compute trend from last 5 fusions
         if len(trajectory) >= 2:
             recent = trajectory[-5:]
-            deltas = [t["delta"] for t in recent]
+            deltas: list[float] = [t["delta"] for t in recent]  # type: ignore[misc]
             avg_delta = sum(deltas) / len(deltas)
 
             if avg_delta > 0.02:

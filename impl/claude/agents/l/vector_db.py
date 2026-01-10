@@ -213,7 +213,7 @@ class DgentVectorBackend:
             results.append(
                 VectorSearchResult(
                     id=entry_id,
-                    entry=None,  # type: ignore  # Will be filled by caller
+                    entry=None,  # type: ignore[arg-type]  # Will be filled by caller
                     distance=distance,
                     similarity=similarity,
                     metadata=metadata,

@@ -248,7 +248,7 @@ class WitnessScheduler:
         if at is None and delay is None:
             raise ValueError("Must provide either 'at' datetime or 'delay' timedelta")
 
-        next_run = at if at else datetime.now(UTC) + delay  # type: ignore
+        next_run = at if at else datetime.now(UTC) + delay  # type: ignore[operator]
 
         task = ScheduledTask(
             name=name or f"Invoke {path}",
@@ -292,7 +292,7 @@ class WitnessScheduler:
         if at is None and delay is None:
             raise ValueError("Must provide either 'at' datetime or 'delay' timedelta")
 
-        next_run = at if at else datetime.now(UTC) + delay  # type: ignore
+        next_run = at if at else datetime.now(UTC) + delay  # type: ignore[operator]
 
         task = ScheduledTask(
             name=name or f"Pipeline ({len(pipeline)} steps)",

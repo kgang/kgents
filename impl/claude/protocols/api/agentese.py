@@ -52,9 +52,9 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    Depends = None  # type: ignore
-    BaseModel = object  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    Depends = None  # type: ignore[assignment]
+    BaseModel = object  # type: ignore[assignment, misc]
 
     def Field(*args: Any, **kwargs: Any) -> Any:  # type: ignore[no-redef]
         return None
@@ -212,7 +212,7 @@ def create_agentese_router() -> "APIRouter":
     async def invoke_path(
         request: InvokeRequest,
         api_key: "ApiKeyData" = Depends(get_api_key),
-        http_request: Request = None,  # type: ignore
+        http_request: Request = None,  # type: ignore[assignment]
     ) -> InvokeResponse:
         """
         Invoke an AGENTESE path.

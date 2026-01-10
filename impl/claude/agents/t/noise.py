@@ -98,7 +98,7 @@ class NoiseAgent(Generic[A]):
             Perturbed input (same type, slightly modified)
         """
         if isinstance(input_data, str):
-            return self._perturb_string(input_data)  # type: ignore
+            return self._perturb_string(input_data)  # type: ignore[return-value]
         # For non-string types, return unchanged
         return input_data
 

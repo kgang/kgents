@@ -17,7 +17,7 @@ from ..resolver import ResolvedResource
 from ..uri import PortalURI
 
 if TYPE_CHECKING:
-    from services.chat.crystallizer import MemoryCrystal
+    from services.chat.crystallizer import MemoryCrystal  # type: ignore[attr-defined]
 
 
 class CrystalResolver:

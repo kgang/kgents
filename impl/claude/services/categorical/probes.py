@@ -279,7 +279,7 @@ class MonadProbe:
                     return str(int(val))
                 return str(val)
             except ValueError:
-                return num
+                return str(num)
 
         return None
 

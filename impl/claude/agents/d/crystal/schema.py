@@ -130,7 +130,7 @@ class Schema(Generic[T]):
         Returns:
             Dictionary with data + metadata
         """
-        data = asdict(value) if hasattr(value, "__dataclass_fields__") else dict(value)  # type: ignore
+        data = asdict(value) if hasattr(value, "__dataclass_fields__") else dict(value)  # type: ignore[call-overload]
         return {
             **data,
             "_schema": self.name,

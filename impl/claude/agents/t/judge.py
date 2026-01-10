@@ -263,7 +263,7 @@ Evaluate the output against the intent. Return JSON with scores."""
         """
         bootstrap_judge = BootstrapJudge()
         return await bootstrap_judge.invoke(
-            JudgeInput(agent=self, principles=principles, context=context)
+            JudgeInput(agent=self, principles=principles, context=context)  # type: ignore[arg-type]
         )
 
 

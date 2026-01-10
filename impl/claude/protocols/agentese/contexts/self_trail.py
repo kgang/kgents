@@ -666,7 +666,7 @@ class TrailNode(BaseLogosNode):
 
                 registry = get_registry()
                 session_factory = registry.session_factory
-                self._storage = TrailStorageAdapter(session_factory=session_factory)
+                self._storage = TrailStorageAdapter(session_factory=session_factory)  # type: ignore[call-arg]
             except (ImportError, RuntimeError) as e:
                 logger.warning(f"TrailStorageAdapter not available: {e}")
                 raise RuntimeError("Trail storage not available") from e

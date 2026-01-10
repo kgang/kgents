@@ -39,8 +39,8 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
 
 try:
     from pydantic import BaseModel, Field
@@ -48,8 +48,8 @@ try:
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
-    BaseModel = object  # type: ignore
-    Field = lambda *args, **kwargs: None  # type: ignore
+    BaseModel = object  # type: ignore[assignment, misc]
+    Field = lambda *args, **kwargs: None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -252,9 +252,7 @@ class CaptureRequest(BaseModel):
 
     prompt_mark_id: str = Field(..., description="Mark ID of the prompt that generated this")
     generated_files: dict[str, str] = Field(..., description="path → content")
-    test_results: dict[str, Any] | None = Field(
-        default=None, description="Test execution results"
-    )
+    test_results: dict[str, Any] | None = Field(default=None, description="Test execution results")
     model: str = Field(default="claude-opus-4", description="Model used for generation")
     temperature: float = Field(default=0.0, description="Temperature used")
 
@@ -369,7 +367,9 @@ class ParseRequest(BaseModel):
     """Request to parse document content."""
 
     content: str = Field(..., description="Document content to parse")
-    layout_mode: str = Field(default="COMFORTABLE", description="Layout mode: COMPACT, COMFORTABLE, SPACIOUS")
+    layout_mode: str = Field(
+        default="COMFORTABLE", description="Layout mode: COMPACT, COMFORTABLE, SPACIOUS"
+    )
 
 
 class ParseResponse(BaseModel):
@@ -419,6 +419,7 @@ async def _run_analysis(path: str, store: "Any") -> None:
 
         # Get witness persistence
         from services.providers import get_witness_persistence
+
         witness = await get_witness_persistence()
 
         # Run deep analysis
@@ -458,6 +459,7 @@ async def _run_analysis(path: str, store: "Any") -> None:
 
         # Set status to FAILED
         from services.sovereign.analysis import AnalysisState, AnalysisStatus
+
         await store.set_analysis_state(
             path,
             AnalysisState(
@@ -470,6 +472,7 @@ async def _run_analysis(path: str, store: "Any") -> None:
         try:
             from services.director.types import DocumentTopics
             from services.witness.bus import get_synergy_bus
+
             bus = get_synergy_bus()
             await bus.publish(
                 DocumentTopics.ANALYSIS_FAILED,
@@ -771,7 +774,9 @@ def create_director_router() -> APIRouter | None:
                     claim_count=len(overlay.get("claims", [])) if overlay else None,
                     impl_count=len(overlay.get("implementations", [])) if overlay else None,
                     test_count=len(overlay.get("tests", [])) if overlay else None,
-                    placeholder_count=len(overlay.get("placeholder_paths", [])) if overlay else None,
+                    placeholder_count=len(overlay.get("placeholder_paths", []))
+                    if overlay
+                    else None,
                     uploaded_at=entity.metadata.get("created_at"),
                     analyzed_at=overlay.get("analyzed_at") if overlay else None,
                 )
@@ -788,9 +793,15 @@ def create_director_router() -> APIRouter | None:
     async def list_documents(
         status: str | None = Query(default=None, description="Filter by status"),
         prefix: str = Query(default="", description="Filter by path prefix"),
-        needs_evidence: bool = Query(default=False, description="Filter to documents without implementations/tests"),
-        has_placeholders: bool = Query(default=False, description="Filter to documents with unresolved placeholders"),
-        min_claims: int | None = Query(default=None, ge=0, description="Filter by minimum claim count"),
+        needs_evidence: bool = Query(
+            default=False, description="Filter to documents without implementations/tests"
+        ),
+        has_placeholders: bool = Query(
+            default=False, description="Filter to documents with unresolved placeholders"
+        ),
+        min_claims: int | None = Query(
+            default=None, ge=0, description="Filter by minimum claim count"
+        ),
         sort_by: str = Query(default="path", description="Sort field"),
         limit: int = Query(default=100, ge=1, le=500, description="Max results"),
         offset: int = Query(default=0, ge=0, description="Pagination offset"),
@@ -876,7 +887,9 @@ def create_director_router() -> APIRouter | None:
                     claim_count=len(overlay.get("claims", [])) if overlay else None,
                     impl_count=len(overlay.get("implementations", [])) if overlay else None,
                     test_count=len(overlay.get("tests", [])) if overlay else None,
-                    placeholder_count=len(overlay.get("placeholder_paths", [])) if overlay else None,
+                    placeholder_count=len(overlay.get("placeholder_paths", []))
+                    if overlay
+                    else None,
                     uploaded_at=entity.metadata.get("created_at"),
                     analyzed_at=overlay.get("analyzed_at") if overlay else None,
                 )
@@ -1118,10 +1131,10 @@ Generate code for the following paths:
 ## Context
 
 Claims from spec:
-{len(context['claims'])} claims extracted
+{len(context["claims"])} claims extracted
 
 Existing implementations:
-{chr(10).join(f"- {r}" for r in context.get('existing_refs', []))}
+{chr(10).join(f"- {r}" for r in context.get("existing_refs", []))}
 
 ## Requirements
 
@@ -1465,8 +1478,7 @@ Existing implementations:
         target_exists = await store.get_current(request.new_path)
         if target_exists:
             raise HTTPException(
-                status_code=409,
-                detail=f"Target path already exists: {request.new_path}"
+                status_code=409, detail=f"Target path already exists: {request.new_path}"
             )
 
         # Get analysis state and overlay

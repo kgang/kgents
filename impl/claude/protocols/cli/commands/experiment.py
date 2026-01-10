@@ -22,12 +22,16 @@ See: brainstorming/tool-use/CLAUDE_CODE_CLI_STRATEGY.md
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import json
 import sys
 from typing import TYPE_CHECKING, Any
 
+from sqlalchemy import Table
+
 if TYPE_CHECKING:
+    from services.experiment import Experiment
     from services.experiment.types import GenerateConfig
 
 
@@ -89,17 +93,13 @@ def _print_experiment(exp_dict: dict[str, Any], verbose: bool = False) -> None:
 
 def cmd_generate(args: list[str]) -> int:
     """Run code generation experiment."""
-    import argparse
-
     parser = argparse.ArgumentParser(
         prog="kg experiment generate",
         description="Run code generation experiment via VoidHarness",
     )
     parser.add_argument("--spec", required=True, help="Code specification to implement")
     parser.add_argument("--n", type=int, default=10, help="Number of trials (default: 10)")
-    parser.add_argument(
-        "--adaptive", action="store_true", help="Use Bayesian adaptive stopping"
-    )
+    parser.add_argument("--adaptive", action="store_true", help="Use Bayesian adaptive stopping")
     parser.add_argument(
         "--confidence",
         type=float,
@@ -151,9 +151,7 @@ def cmd_generate(args: list[str]) -> int:
                     f"  Success rate: {experiment.evidence.success_rate:.1%} "
                     f"({experiment.evidence.trials_success}/{experiment.evidence.trials_total})"
                 )
-                console.print(
-                    f"  Mean confidence: {experiment.evidence.mean_confidence:.2f}"
-                )
+                console.print(f"  Mean confidence: {experiment.evidence.mean_confidence:.2f}")
                 if experiment.evidence.stopped_early:
                     console.print("  [yellow]Stopped early (Bayesian criterion)[/yellow]")
         else:
@@ -167,7 +165,7 @@ def cmd_generate(args: list[str]) -> int:
     return 0
 
 
-async def _run_generate_and_save(config: GenerateConfig):
+async def _run_generate_and_save(config: GenerateConfig) -> Experiment:
     """Run generation experiment and save to store (async wrapper)."""
     from models.base import get_engine
     from models.experiment import ExperimentModel
@@ -176,10 +174,9 @@ async def _run_generate_and_save(config: GenerateConfig):
 
     # Ensure experiments table exists
     engine = get_engine()
+    table: Table = ExperimentModel.__table__  # type: ignore[assignment]
     async with engine.begin() as conn:
-        await conn.run_sync(
-            lambda sync_conn: ExperimentModel.__table__.create(sync_conn, checkfirst=True)
-        )
+        await conn.run_sync(lambda sync_conn: table.create(sync_conn, checkfirst=True))
 
     # Run experiment
     runner = ExperimentRunner(emit_marks=True)
@@ -192,7 +189,7 @@ async def _run_generate_and_save(config: GenerateConfig):
     return experiment
 
 
-async def _get_experiments(parsed):
+async def _get_experiments(parsed: argparse.Namespace) -> list[Experiment]:
     """Get experiments from store (async wrapper)."""
     from models.base import get_engine
     from models.experiment import ExperimentModel
@@ -200,10 +197,9 @@ async def _get_experiments(parsed):
 
     # Ensure experiments table exists
     engine = get_engine()
+    table: Table = ExperimentModel.__table__  # type: ignore[assignment]
     async with engine.begin() as conn:
-        await conn.run_sync(
-            lambda sync_conn: ExperimentModel.__table__.create(sync_conn, checkfirst=True)
-        )
+        await conn.run_sync(lambda sync_conn: table.create(sync_conn, checkfirst=True))
 
     store = get_experiment_store()
 
@@ -215,7 +211,7 @@ async def _get_experiments(parsed):
         return await store.list_recent(limit=parsed.limit)
 
 
-async def _get_experiment(experiment_id: str):
+async def _get_experiment(experiment_id: str) -> Experiment | None:
     """Get experiment by ID (async wrapper)."""
     from models.base import get_engine
     from models.experiment import ExperimentModel
@@ -223,10 +219,9 @@ async def _get_experiment(experiment_id: str):
 
     # Ensure experiments table exists
     engine = get_engine()
+    table: Table = ExperimentModel.__table__  # type: ignore[assignment]
     async with engine.begin() as conn:
-        await conn.run_sync(
-            lambda sync_conn: ExperimentModel.__table__.create(sync_conn, checkfirst=True)
-        )
+        await conn.run_sync(lambda sync_conn: table.create(sync_conn, checkfirst=True))
 
     store = get_experiment_store()
     return await store.get(experiment_id)
@@ -234,8 +229,6 @@ async def _get_experiment(experiment_id: str):
 
 def cmd_history(args: list[str]) -> int:
     """Show experiment history."""
-    import argparse
-
     parser = argparse.ArgumentParser(
         prog="kg experiment history", description="Show experiment history"
     )
@@ -322,7 +315,7 @@ def main(argv: list[str] | None = None) -> int:
         print()
         print("Examples:")
         print('  kg experiment generate --spec "def add(a, b): return a + b" --n 10')
-        print("  kg experiment generate --spec \"...\" --adaptive --confidence 0.95")
+        print('  kg experiment generate --spec "..." --adaptive --confidence 0.95')
         print("  kg experiment history --today")
         return 0
 

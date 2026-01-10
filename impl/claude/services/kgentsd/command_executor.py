@@ -27,10 +27,11 @@ import logging
 import os
 import sys
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, cast
 
 from .socket_server import CLIRequest, CLIResponse, CLIStreamMessage
 
@@ -289,7 +290,13 @@ class CommandExecutor:
                         # Set KGENTS_DAEMON_WORKER so handlers know they're in daemon context
                         os.environ["KGENTS_DAEMON_WORKER"] = "1"
                         try:
-                            exit_code = await handler(request.args, ctx=ctx)
+                            # Handler is async, so result is a coroutine (cast needed
+                            # because handler is typed as Callable[..., int])
+                            coro = cast(
+                                Coroutine[Any, Any, int],
+                                handler(request.args, ctx=ctx),
+                            )
+                            exit_code = await coro
                         finally:
                             if "KGENTS_DAEMON_WORKER" in os.environ:
                                 del os.environ["KGENTS_DAEMON_WORKER"]
@@ -377,6 +384,11 @@ class CommandExecutor:
                 message=f"Unknown command: {request.command}",
             )
 
+        # PTY streams must be set before calling _execute_tier2
+        # (checked in execute() before routing here)
+        assert self._current_reader is not None, "PTY reader not set"
+        assert self._current_writer is not None, "PTY writer not set"
+
         # Create PTY bridge
         bridge = PTYBridge(
             reader=self._current_reader,
@@ -399,7 +411,13 @@ class CommandExecutor:
             try:
                 with self._with_cwd_and_env(request):
                     if meta.is_async or asyncio.iscoroutinefunction(handler):
-                        exit_code = await handler(request.args, ctx=ctx)
+                        # Handler is async, so result is a coroutine (cast needed
+                        # because handler is typed as Callable[..., int])
+                        coro = cast(
+                            Coroutine[Any, Any, int],
+                            handler(request.args, ctx=ctx),
+                        )
+                        exit_code = await coro
                     else:
                         # Run sync handler in thread pool
                         loop = asyncio.get_running_loop()
@@ -542,7 +560,7 @@ class CommandExecutor:
         )
 
     @contextmanager
-    def _with_cwd_and_env(self, request: CLIRequest):
+    def _with_cwd_and_env(self, request: CLIRequest) -> Generator[None, None, None]:
         """Context manager for temporary cwd and env changes."""
         original_cwd = os.getcwd()
         original_env = dict(os.environ)

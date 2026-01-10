@@ -189,7 +189,7 @@ def parse_epistemic_response(response: str, target: str) -> EpistemicReport:
         # Parse grounding chain
         chain_data = data.get("grounding_chain", [])
         grounding = GroundingChain(
-            steps=tuple(tuple(step) for step in chain_data),  # type: ignore
+            steps=tuple(tuple(step) for step in chain_data),
             terminates_at_axiom=data.get("terminates_at_axiom", False),
         )
 
@@ -261,9 +261,7 @@ def parse_dialectical_response(response: str, target: str) -> DialecticalReport:
             Tension(
                 thesis=t.get("thesis", ""),
                 antithesis=t.get("antithesis", ""),
-                classification=ContradictionType[
-                    t.get("classification", "PRODUCTIVE").upper()
-                ],
+                classification=ContradictionType[t.get("classification", "PRODUCTIVE").upper()],
                 synthesis=t.get("synthesis"),
                 is_resolved=t.get("is_resolved", False),
             )

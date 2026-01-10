@@ -23,7 +23,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Callable, Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -349,7 +349,7 @@ class NodeGaloisLoss:
     loss: float  # L(node) in [0, 1]
     loss_components: GaloisLossComponents
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "node_id": self.node_id,
@@ -461,7 +461,7 @@ class LossAnnotation:
   Meta:    {self.components.metadata_loss:.3f}
 Status: {self.threshold_status}"""
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "loss": self.loss,
@@ -498,9 +498,9 @@ class NodeProjection:
     # Annotations
     annotation: LossAnnotation | None = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
-        result = {
+        result: dict[str, Any] = {
             "node_id": self.node_id,
             "layer": self.layer,
             "position": {"x": self.position.x, "y": self.position.y},
@@ -541,7 +541,7 @@ class GradientArrow:
     color: Color
     width: float = 2.0
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "start": {"x": self.start.x, "y": self.start.y},
@@ -646,7 +646,11 @@ class GaloisTelescopeState:
         opacity = 1.0
 
         # Get color from loss
-        color = self.get_node_color(layer, loss) if self.show_loss else LAYER_BASE_COLORS.get(layer, LAYER_BASE_COLORS[4])
+        color = (
+            self.get_node_color(layer, loss)
+            if self.show_loss
+            else LAYER_BASE_COLORS.get(layer, LAYER_BASE_COLORS[4])
+        )
 
         # High-loss nodes glow as warning
         glow = False
@@ -690,7 +694,7 @@ class GaloisTelescopeState:
             annotation=annotation,
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "focal_distance": self.focal_distance,
@@ -819,9 +823,7 @@ def follow_gradient(
         direction = (neighbor_pos - current_pos).normalized()
         alignment = gradient.dot(direction)
 
-        if alignment > best_alignment and losses.get(neighbor, 1.0) < losses.get(
-            current, 1.0
-        ):
+        if alignment > best_alignment and losses.get(neighbor, 1.0) < losses.get(current, 1.0):
             best_alignment = alignment
             best_neighbor = neighbor
 

@@ -194,7 +194,7 @@ async def analyze_now(force: bool = False) -> LedgerReport:
         computed_by="ledger_node.analyze_now",
     )
 
-    return handle.data  # type: ignore
+    return handle.data  # type: ignore[return-value]
 
 
 # =============================================================================

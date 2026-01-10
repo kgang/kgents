@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...agents.d.universe.universe import Universe
+    from agents.d.universe.universe import Universe
 
 
 # =============================================================================
@@ -238,7 +238,7 @@ class CodeService:
             if universe:
                 import json
 
-                from ...agents.d.datum import Datum
+                from agents.d.datum import Datum
 
                 datum = Datum.create(
                     content=json.dumps(
@@ -371,9 +371,7 @@ class CodeService:
             kblock_id = f"kb_{name}"
 
             # Create derivation edges (simplified)
-            derivation_edges = [
-                f"edge_{spec_id}_{func_id}" for func_id in impl_functions
-            ]
+            derivation_edges = [f"edge_{spec_id}_{func_id}" for func_id in impl_functions]
 
             return BootstrapResult(
                 spec_id=spec_id,
@@ -396,13 +394,13 @@ class CodeService:
 
         # Try to get singleton
         try:
-            from ...agents.d.universe.universe import get_universe
+            from agents.d.universe.universe import get_universe
 
             return get_universe()
         except Exception:
             return None
 
-    def _detect_ghosts(self, functions: list[FunctionInfo]) -> list[dict]:
+    def _detect_ghosts(self, functions: list[FunctionInfo]) -> list[dict[str, str]]:
         """
         Detect ghost placeholders from call graph.
 
@@ -432,21 +430,19 @@ class CodeService:
 
         return unique_ghosts
 
-    async def _create_kblock(
-        self, file_path: str, functions: list[FunctionInfo]
-    ) -> str:
+    async def _create_kblock(self, file_path: str, functions: list[FunctionInfo]) -> str:
         """
         Create K-block for a file.
 
         A K-block groups related functions (file-level boundary).
         """
-        from ...services.k_block.core.kblock import generate_kblock_id
+        from services.k_block.core.kblock import generate_kblock_id
 
         kblock_id = generate_kblock_id()
 
         # In full implementation, would create KBlockCrystal
-        # For now, just return the ID
-        return kblock_id
+        # For now, just return the ID (KBlockId is a NewType of str)
+        return str(kblock_id)
 
 
 # =============================================================================

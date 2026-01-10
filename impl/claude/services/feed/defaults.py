@@ -130,7 +130,7 @@ DEFAULT_FEEDS = (
 # =============================================================================
 
 
-def _has_contradiction_edge(kblock) -> bool:
+def _has_contradiction_edge(kblock: object) -> bool:
     """
     Check if K-Block has a contradiction edge.
 

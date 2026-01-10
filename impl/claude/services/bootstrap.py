@@ -292,7 +292,7 @@ class ServiceRegistry:
 
             return WitnessPersistence(
                 session_factory=self.session_factory,
-                dgent=self.dgent,
+                dgent=self.dgent,  # type: ignore[call-arg]
             )
 
         # Chat persistence (Chat Crown Jewel)

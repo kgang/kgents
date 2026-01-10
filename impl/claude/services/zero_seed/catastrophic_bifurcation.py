@@ -294,8 +294,7 @@ class ZeroGraph:
             incoming = self.incoming_edges(node.id)
             # Check if any incoming edge is from a lower layer
             has_grounding = any(
-                self.nodes.get(e.source, ZeroNode("", 0, NodeKind.AXIOM, "")).layer
-                < node.layer
+                self.nodes.get(e.source, ZeroNode("", 0, NodeKind.AXIOM, "")).layer < node.layer
                 for e in incoming
                 if e.kind == EdgeKind.GROUNDED_BY
             )
@@ -318,9 +317,7 @@ class ZeroGraph:
 
         return subgraph
 
-    def replace_subgraph(
-        self, old_node_ids: set[str], new_nodes: list[ZeroNode]
-    ) -> ZeroGraph:
+    def replace_subgraph(self, old_node_ids: set[str], new_nodes: list[ZeroNode]) -> ZeroGraph:
         """Replace a subgraph with new nodes."""
         result = ZeroGraph()
 
@@ -577,7 +574,9 @@ def compute_instability_indicators(
             EvidenceTier.SOMATIC: 0.4,
         }
         coherences = [
-            tier_to_coherence.get(n.proof.tier, 0.5) for n in nodes_with_proof
+            tier_to_coherence.get(n.proof.tier, 0.5)
+            for n in nodes_with_proof
+            if n.proof is not None
         ]
         mean_coherence = mean(coherences)
         proof_coherence_drop = 1.0 - mean_coherence
@@ -775,7 +774,7 @@ def compute_topology(graph: ZeroGraph, galois: GaloisLossComputer | None = None)
     fixed_points = [n for n in nodes if galois.compute(n) < CriticalThreshold.EPSILON_1.value]
 
     # Layer distribution
-    layer_counts = {}
+    layer_counts: dict[int, int] = {}
     for node in nodes:
         layer_counts[node.layer] = layer_counts.get(node.layer, 0) + 1
 
@@ -1011,9 +1010,7 @@ def select_recovery_strategy(
 
     # 4. Check for high-loss clusters
     if indicators.high_loss_cluster > 0.3:
-        high_loss_nodes = [
-            n for n in graph.nodes.values() if galois.compute(n) > 0.7
-        ]
+        high_loss_nodes = [n for n in graph.nodes.values() if galois.compute(n) > 0.7]
         return RecoveryStrategy(
             type=StrategyType.GALOIS_RESTRUCTURE,
             target=set(n.id for n in high_loss_nodes),
@@ -1079,7 +1076,7 @@ async def reground_to_axiom(
         grounding_losses[axiom.id] = loss
 
     # Select minimum-loss axiom
-    best_axiom_id = min(grounding_losses, key=grounding_losses.get)
+    best_axiom_id = min(grounding_losses, key=grounding_losses.get)  # type: ignore[arg-type]
     best_axiom = graph.get_node(best_axiom_id)
     best_loss = grounding_losses[best_axiom_id]
 

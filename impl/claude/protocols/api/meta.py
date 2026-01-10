@@ -25,9 +25,9 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
-    Query = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
+    Query = None  # type: ignore[assignment]
 
 try:
     from pydantic import BaseModel, Field
@@ -35,8 +35,8 @@ try:
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
-    BaseModel = object  # type: ignore
-    Field = lambda *args, **kwargs: None  # type: ignore
+    BaseModel = object  # type: ignore[assignment, misc]
+    Field = lambda *args, **kwargs: None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -160,9 +160,7 @@ def create_meta_router() -> APIRouter | None:
                     layer_distribution=p.layer_distribution,
                     total_nodes=p.total_nodes,
                     total_edges=p.total_edges,
-                    breakthrough=any(
-                        bt.timestamp == p.timestamp for bt in timeline.breakthroughs
-                    ),
+                    breakthrough=any(bt.timestamp == p.timestamp for bt in timeline.breakthroughs),
                 )
                 for p in timeline.points
             ]
@@ -187,9 +185,7 @@ def create_meta_router() -> APIRouter | None:
                 layer_distribution=timeline.layer_distribution,
                 total_nodes=timeline.total_nodes,
                 total_edges=timeline.total_edges,
-                start_date=(
-                    timeline.start_date.isoformat() if timeline.start_date else None
-                ),
+                start_date=(timeline.start_date.isoformat() if timeline.start_date else None),
                 end_date=timeline.end_date.isoformat() if timeline.end_date else None,
             )
 
@@ -253,9 +249,7 @@ def create_meta_router() -> APIRouter | None:
                     layer_distribution=p.layer_distribution,
                     total_nodes=p.total_nodes,
                     total_edges=p.total_edges,
-                    breakthrough=any(
-                        bt.timestamp == p.timestamp for bt in timeline.breakthroughs
-                    ),
+                    breakthrough=any(bt.timestamp == p.timestamp for bt in timeline.breakthroughs),
                 )
                 for p in timeline.points
             ]
@@ -280,9 +274,7 @@ def create_meta_router() -> APIRouter | None:
                 layer_distribution=timeline.layer_distribution,
                 total_nodes=timeline.total_nodes,
                 total_edges=timeline.total_edges,
-                start_date=(
-                    timeline.start_date.isoformat() if timeline.start_date else None
-                ),
+                start_date=(timeline.start_date.isoformat() if timeline.start_date else None),
                 end_date=timeline.end_date.isoformat() if timeline.end_date else None,
             )
 

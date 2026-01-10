@@ -83,17 +83,19 @@ try:
         LLMInvocationMark,
         StateChange,
     )
+
     _LLM_TRACE_AVAILABLE = True
 except ImportError:
     _LLM_TRACE_AVAILABLE = False
 
 try:
-    from .invocation import (
+    from .invocation import (  # type: ignore[assignment]
         LLM_INVOCATION_MARK_SCHEMA,
         STATE_CHANGE_SCHEMA,
         LLMInvocationMark,
         StateChange,
     )
+
     _INVOCATION_AVAILABLE = True
 except ImportError:
     _INVOCATION_AVAILABLE = False
@@ -116,27 +118,30 @@ try:
         AxiomCrystal,
         ValueCrystal,
     )
+
     _AXIOM_AVAILABLE = True
 except ImportError:
     _AXIOM_AVAILABLE = False
 
 try:
     from .prompt import (
-        INVOCATION_CRYSTAL_SCHEMA,
-        PROMPT_CRYSTAL_SCHEMA,
+        INVOCATION_SCHEMA as INVOCATION_CRYSTAL_SCHEMA,
+        PROMPT_SCHEMA as PROMPT_CRYSTAL_SCHEMA,
         InvocationCrystal,
         PromptCrystal,
         PromptParam,
     )
+
     _PROMPT_AVAILABLE = True
 except ImportError:
     _PROMPT_AVAILABLE = False
 
 try:
     from .spec import (
-        SPEC_CRYSTAL_SCHEMA,
+        SPEC_SCHEMA as SPEC_CRYSTAL_SCHEMA,
         SpecCrystal,
     )
+
     _SPEC_AVAILABLE = True
 except ImportError:
     _SPEC_AVAILABLE = False
@@ -148,6 +153,7 @@ try:
         InterpretationCrystal,
         ReflectionCrystal,
     )
+
     _REFLECTION_AVAILABLE = True
 except ImportError:
     _REFLECTION_AVAILABLE = False
@@ -205,47 +211,59 @@ __all__ = [
 
 # Conditionally add new schemas to __all__
 if _AXIOM_AVAILABLE:
-    __all__.extend([
-        "AxiomCrystal",
-        "AXIOM_SCHEMA",
-        "ValueCrystal",
-        "VALUE_SCHEMA",
-    ])
+    __all__.extend(
+        [
+            "AxiomCrystal",
+            "AXIOM_SCHEMA",
+            "ValueCrystal",
+            "VALUE_SCHEMA",
+        ]
+    )
 
 if _PROMPT_AVAILABLE:
-    __all__.extend([
-        "PromptCrystal",
-        "PROMPT_CRYSTAL_SCHEMA",
-        "PromptParam",
-        "InvocationCrystal",
-        "INVOCATION_CRYSTAL_SCHEMA",
-    ])
+    __all__.extend(
+        [
+            "PromptCrystal",
+            "PROMPT_CRYSTAL_SCHEMA",
+            "PromptParam",
+            "InvocationCrystal",
+            "INVOCATION_CRYSTAL_SCHEMA",
+        ]
+    )
 
 if _SPEC_AVAILABLE:
-    __all__.extend([
-        "SpecCrystal",
-        "SPEC_CRYSTAL_SCHEMA",
-    ])
+    __all__.extend(
+        [
+            "SpecCrystal",
+            "SPEC_CRYSTAL_SCHEMA",
+        ]
+    )
 
 if _REFLECTION_AVAILABLE:
-    __all__.extend([
-        "ReflectionCrystal",
-        "REFLECTION_CRYSTAL_SCHEMA",
-        "InterpretationCrystal",
-        "INTERPRETATION_CRYSTAL_SCHEMA",
-    ])
+    __all__.extend(
+        [
+            "ReflectionCrystal",
+            "REFLECTION_CRYSTAL_SCHEMA",
+            "InterpretationCrystal",
+            "INTERPRETATION_CRYSTAL_SCHEMA",
+        ]
+    )
 
 if _LLM_TRACE_AVAILABLE:
-    __all__.extend([
-        "StateChange",
-        "LLMInvocationMark",
-        "LLM_INVOCATION_SCHEMA",
-    ])
+    __all__.extend(
+        [
+            "StateChange",
+            "LLMInvocationMark",
+            "LLM_INVOCATION_SCHEMA",
+        ]
+    )
 
 if _INVOCATION_AVAILABLE:
-    __all__.extend([
-        "StateChange",
-        "LLMInvocationMark",
-        "STATE_CHANGE_SCHEMA",
-        "LLM_INVOCATION_MARK_SCHEMA",
-    ])
+    __all__.extend(
+        [
+            "StateChange",
+            "LLMInvocationMark",
+            "STATE_CHANGE_SCHEMA",
+            "LLM_INVOCATION_MARK_SCHEMA",
+        ]
+    )

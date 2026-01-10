@@ -258,9 +258,7 @@ class StreamMessage:
     @classmethod
     def exit(cls, correlation_id: str, exit_code: int, seq: int = 0) -> StreamMessage:
         """Create an exit message."""
-        return cls(
-            type="exit", correlation_id=correlation_id, exit_code=exit_code, seq=seq
-        )
+        return cls(type="exit", correlation_id=correlation_id, exit_code=exit_code, seq=seq)
 
     @classmethod
     def create_event(
@@ -333,17 +331,17 @@ class PTYBridge:
     @property
     def stdout(self) -> TextIO:
         """Get stdout file-like object."""
-        return self._stdout  # type: ignore
+        return self._stdout  # type: ignore[return-value]
 
     @property
     def stderr(self) -> TextIO:
         """Get stderr file-like object."""
-        return self._stderr  # type: ignore
+        return self._stderr  # type: ignore[return-value]
 
     @property
     def stdin(self) -> TextIO:
         """Get stdin file-like object (limited functionality)."""
-        return self._stdin  # type: ignore
+        return self._stdin  # type: ignore[return-value]
 
     async def start(self) -> None:
         """Start the bridge (begins reading client messages)."""

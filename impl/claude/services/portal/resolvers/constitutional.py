@@ -17,7 +17,6 @@ from ..resolver import ResolvedResource
 from ..uri import PortalURI
 
 if TYPE_CHECKING:
-    from services.chat.reward import PrincipleScore
     from services.chat.session import ChatSession
 
 
@@ -99,8 +98,20 @@ class ConstitutionalResolver:
                 metadata={"error": "scores_not_found"},
             )
 
-        scores = mark.constitutional_scores
-        weighted = scores.weighted_total()
+        # Note: constitutional_scores may be PrincipleScore or ConstitutionalEvaluation
+        # depending on usage context, so we use duck-typing with hasattr checks
+        scores: Any = mark.constitutional_scores
+
+        # Get weighted total - may be property or method
+        weighted: float = 0.0
+        if hasattr(scores, "weighted_total"):
+            weighted_attr = scores.weighted_total
+            weighted = weighted_attr() if callable(weighted_attr) else weighted_attr
+
+        # Get scores dict - may have to_dict method
+        scores_dict: dict[str, Any] = {}
+        if hasattr(scores, "to_dict"):
+            scores_dict = scores.to_dict()
 
         return ResolvedResource(
             uri=uri.render(),
@@ -109,7 +120,7 @@ class ConstitutionalResolver:
             title=f"Constitutional Scores: Turn {turn_number}",
             preview=f"Score: {weighted:.1f}",
             content={
-                "scores": scores.to_dict(),
+                "scores": scores_dict,
                 "radar_data": self._to_radar_data(scores),
                 "weighted_total": weighted,
                 "turn_number": turn_number,
@@ -146,9 +157,12 @@ class ConstitutionalResolver:
                 },
             )
 
-        # Aggregate scores across all turns
+        # Aggregate scores across all turns (returns constitutional.reward.PrincipleScore)
         aggregate = self._aggregate_scores(history)
-        weighted = aggregate.weighted_total()
+        weighted: float = aggregate.weighted_total()
+
+        # Convert history items to dicts using duck-typing
+        history_dicts = [s.to_dict() if hasattr(s, "to_dict") else {} for s in history]
 
         return ResolvedResource(
             uri=uri.render(),
@@ -161,7 +175,7 @@ class ConstitutionalResolver:
                 "radar_data": self._to_radar_data(aggregate),
                 "weighted_total": weighted,
                 "turn_count": len(history),
-                "history": [s.to_dict() for s in history],
+                "history": history_dicts,
             },
             actions=["expand", "view_radar", "view_history"],
             metadata={
@@ -172,34 +186,46 @@ class ConstitutionalResolver:
             },
         )
 
-    def _aggregate_scores(self, history: list[PrincipleScore]) -> PrincipleScore:
-        """Aggregate scores across multiple turns using mean."""
-        from services.chat.reward import PrincipleScore
+    def _aggregate_scores(self, history: list[Any]) -> Any:
+        """
+        Aggregate scores across multiple turns using mean.
+
+        Note: history items may be PrincipleScore from either constitutional.reward
+        or dp_bridge. We return a constitutional.reward.PrincipleScore since it has
+        the methods we need (weighted_total, to_dict).
+        """
+        from services.constitutional.reward import PrincipleScore
 
         if not history:
             return PrincipleScore()
 
         n = len(history)
         return PrincipleScore(
-            tasteful=sum(s.tasteful for s in history) / n,
-            curated=sum(s.curated for s in history) / n,
-            ethical=sum(s.ethical for s in history) / n,
-            joy_inducing=sum(s.joy_inducing for s in history) / n,
-            composable=sum(s.composable for s in history) / n,
-            heterarchical=sum(s.heterarchical for s in history) / n,
-            generative=sum(s.generative for s in history) / n,
+            tasteful=sum(getattr(s, "tasteful", 0.0) for s in history) / n,
+            curated=sum(getattr(s, "curated", 0.0) for s in history) / n,
+            ethical=sum(getattr(s, "ethical", 0.0) for s in history) / n,
+            joy_inducing=sum(getattr(s, "joy_inducing", 0.0) for s in history) / n,
+            composable=sum(getattr(s, "composable", 0.0) for s in history) / n,
+            heterarchical=sum(getattr(s, "heterarchical", 0.0) for s in history) / n,
+            generative=sum(getattr(s, "generative", 0.0) for s in history) / n,
         )
 
-    def _to_radar_data(self, scores: PrincipleScore) -> list[dict[str, Any]]:
-        """Convert scores to radar chart data format."""
+    def _to_radar_data(self, scores: Any) -> list[dict[str, Any]]:
+        """
+        Convert scores to radar chart data format.
+
+        Note: scores may be PrincipleScore from constitutional.reward (with direct fields)
+        or PrincipleScore from dp_bridge (with different structure). Uses duck-typing
+        via getattr with defaults to handle both cases.
+        """
         return [
-            {"axis": "Tasteful", "value": scores.tasteful},
-            {"axis": "Curated", "value": scores.curated},
-            {"axis": "Ethical", "value": scores.ethical},
-            {"axis": "Joy-Inducing", "value": scores.joy_inducing},
-            {"axis": "Composable", "value": scores.composable},
-            {"axis": "Heterarchical", "value": scores.heterarchical},
-            {"axis": "Generative", "value": scores.generative},
+            {"axis": "Tasteful", "value": getattr(scores, "tasteful", 0.0)},
+            {"axis": "Curated", "value": getattr(scores, "curated", 0.0)},
+            {"axis": "Ethical", "value": getattr(scores, "ethical", 0.0)},
+            {"axis": "Joy-Inducing", "value": getattr(scores, "joy_inducing", 0.0)},
+            {"axis": "Composable", "value": getattr(scores, "composable", 0.0)},
+            {"axis": "Heterarchical", "value": getattr(scores, "heterarchical", 0.0)},
+            {"axis": "Generative", "value": getattr(scores, "generative", 0.0)},
         ]
 
     async def _get_session(self, session_id: str) -> ChatSession | None:
@@ -207,12 +233,14 @@ class ConstitutionalResolver:
         if self.session_store is None:
             return None
 
+        result: ChatSession | None
         if hasattr(self.session_store, "get"):
-            return await self.session_store.get(session_id)
+            result = await self.session_store.get(session_id)
         elif hasattr(self.session_store, "load"):
-            return await self.session_store.load(session_id)
+            result = await self.session_store.load(session_id)
         else:
-            return None
+            result = None
+        return result
 
     def _parse_turn_number(self, fragment: str | None) -> int | None:
         """Parse turn number from fragment."""

@@ -78,7 +78,7 @@ def dict_to_json(obj: DictSerializable) -> str:
 
 def json_to_dict(cls: type[T], data: str) -> T:
     """Create DictSerializable from JSON string."""
-    return cls.from_dict(json.loads(data))  # type: ignore
+    return cls.from_dict(json.loads(data))  # type: ignore[attr-defined, no-any-return]
 
 
 @dataclass
@@ -131,7 +131,7 @@ class HotData(Generic[T]):
 
         # Check if schema implements Serializable directly
         if hasattr(self.schema, "from_json"):
-            return self.schema.from_json(data)  # type: ignore
+            return self.schema.from_json(data)  # type: ignore[attr-defined, no-any-return]
 
         # Fallback to DictSerializable pattern
         if hasattr(self.schema, "from_dict"):

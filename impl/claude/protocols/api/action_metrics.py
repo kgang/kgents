@@ -38,8 +38,8 @@ try:
     HAS_OTEL = True
 except ImportError:
     HAS_OTEL = False
-    trace = None  # type: ignore
-    TracerProvider = None  # type: ignore
+    trace = None  # type: ignore[assignment]
+    TracerProvider = None  # type: ignore[assignment, misc]
 
 
 # =============================================================================

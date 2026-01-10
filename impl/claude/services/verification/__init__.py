@@ -42,6 +42,15 @@ from .contracts import (
     ViolationType,
 )
 from .graph_engine import GraphEngine
+from .lean_import import (
+    LeanProofChecker,
+    LeanVerificationEvidence,
+    ProofStatus,
+    VerificationReport,
+    get_constitutional_evidence,
+    verify_categorical_laws,
+    verify_categorical_laws_sync,
+)
 from .persistence import VerificationPersistence
 from .service import VerificationService
 
@@ -67,4 +76,12 @@ __all__ = [
     "AgentMorphism",
     "CounterExample",
     "BehavioralPattern",
+    # Lean 4 Formal Verification
+    "LeanProofChecker",
+    "LeanVerificationEvidence",
+    "ProofStatus",
+    "VerificationReport",
+    "get_constitutional_evidence",
+    "verify_categorical_laws",
+    "verify_categorical_laws_sync",
 ]

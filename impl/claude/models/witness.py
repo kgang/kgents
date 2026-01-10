@@ -92,7 +92,7 @@ class WitnessTrust(TimestampMixin, Base):
         order_by="WitnessEscalation.created_at.desc()",
     )
 
-    __table_args__ = (  # type: ignore[assignment]
+    __table_args__ = (
         Index("idx_witness_trust_email", "git_email_hash"),
         Index("idx_witness_trust_level", "trust_level"),
     )
@@ -158,7 +158,7 @@ class WitnessThought(TimestampMixin, Base):
     # Repository context
     repository_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
-    __table_args__ = (  # type: ignore[assignment]
+    __table_args__ = (
         Index("idx_witness_thoughts_recent", "created_at"),
         Index("idx_witness_thoughts_source", "source"),
         Index("idx_witness_thoughts_tags", "tags", postgresql_using="gin"),
@@ -197,7 +197,7 @@ class WitnessAction(TimestampMixin, Base):
     # Repository context
     repository_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
-    __table_args__ = (  # type: ignore[assignment]
+    __table_args__ = (
         Index("idx_witness_actions_recent", "created_at"),
         Index("idx_witness_actions_success", "success"),
         Index("idx_witness_actions_reversible", "reversible"),
@@ -235,7 +235,7 @@ class WitnessEscalation(TimestampMixin, Base):
     # Relationship
     trust: Mapped["WitnessTrust"] = relationship("WitnessTrust", back_populates="escalations")
 
-    __table_args__ = (  # type: ignore[assignment]
+    __table_args__ = (
         Index("idx_witness_escalations_trust", "trust_id"),
         Index("idx_witness_escalations_recent", "created_at"),
     )
@@ -311,7 +311,7 @@ class WitnessMark(TimestampMixin, Base):
     sealed_by_crystal_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     sealed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    __table_args__ = (  # type: ignore[assignment]
+    __table_args__ = (
         Index("idx_witness_marks_recent", "created_at"),
         Index("idx_witness_marks_author", "author"),
         Index("idx_witness_marks_session", "session_id"),

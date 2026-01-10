@@ -9,6 +9,7 @@ AGENTESE: concept.experiment.history.*
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import JSON, DateTime, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -37,13 +38,13 @@ class ExperimentModel(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
 
     # Experiment configuration (JSON serialized)
-    config: Mapped[dict] = mapped_column(JSON, default=dict)
+    config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
     # Trial data (JSON array of trial dicts)
-    trials: Mapped[list] = mapped_column(JSON, default=list)
+    trials: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
 
     # Evidence summary (JSON serialized)
-    evidence: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    evidence: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     # Witness mark references
     mark_ids: Mapped[list[str]] = mapped_column(JSON, default=list)

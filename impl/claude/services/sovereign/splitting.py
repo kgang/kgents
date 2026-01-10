@@ -190,7 +190,7 @@ class SplittingService:
     CONTRADICTION_THRESHOLD = 0.4  # Loss threshold for contradiction detection
     LAYER_DIVERSITY_THRESHOLD = 2  # Max layer spread allowed
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize splitting service."""
         pass
 
@@ -349,9 +349,7 @@ class SplittingService:
 
         return sections
 
-    async def _compute_internal_contradiction(
-        self, sections: list[SplitSection]
-    ) -> float:
+    async def _compute_internal_contradiction(self, sections: list[SplitSection]) -> float:
         """
         Compute internal contradiction loss between sections.
 
@@ -392,9 +390,7 @@ class SplittingService:
 
         return min(base_loss + contradiction_boost, 1.0)
 
-    async def _assign_section_layers(
-        self, sections: list[SplitSection]
-    ) -> list[int]:
+    async def _assign_section_layers(self, sections: list[SplitSection]) -> list[int]:
         """
         Assign layers to sections based on content.
 

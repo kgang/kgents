@@ -90,13 +90,13 @@ class NullProbe(TruthFunctor[NullState, A, B], Generic[A, B]):
     delay_ms: int = 0
     name: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set default name if not provided."""
         if not self.name:
             object.__setattr__(self, "name", f"NullProbe(output={self.constant})")
 
     @property
-    def mode(self) -> AnalysisMode:
+    def mode(self) -> AnalysisMode:  # type: ignore[override]
         """Analysis mode for this probe."""
         return AnalysisMode.EPISTEMIC
 
@@ -134,9 +134,9 @@ class NullProbe(TruthFunctor[NullState, A, B], Generic[A, B]):
         """
         if state == NullState.READY and action.name == "invoke":
             return ConstitutionalScore(
-                ethical=1.0,      # Fully predictable
-                composable=1.0,   # Satisfies identity
-                generative=0.5,   # Minimal but present
+                ethical=1.0,  # Fully predictable
+                composable=1.0,  # Satisfies identity
+                generative=0.5,  # Minimal but present
             )
         return ConstitutionalScore()
 

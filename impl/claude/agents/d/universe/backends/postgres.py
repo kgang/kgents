@@ -33,7 +33,7 @@ try:
 
     ASYNCPG_AVAILABLE = True
 except ImportError:
-    LegacyPostgresBackend = None
+    LegacyPostgresBackend = None  # type: ignore[misc, assignment]
     ASYNCPG_AVAILABLE = False
 
 

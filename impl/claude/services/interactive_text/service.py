@@ -265,9 +265,7 @@ class InteractiveTextService:
             token_types[kind] = token_types.get(kind, 0) + 1
 
         # Calculate token count (non-plain-text tokens)
-        token_count = sum(
-            count for kind, count in token_types.items() if kind != "PLAIN_TEXT"
-        )
+        token_count = sum(count for kind, count in token_types.items() if kind != "PLAIN_TEXT")
 
         return ParseResponse(
             scene_graph=scene.to_dict(),
@@ -329,7 +327,7 @@ class InteractiveTextService:
         observer: Observer,
     ) -> TaskToggleResponse:
         """Toggle task in a file on disk."""
-        file_path = Path(request.file_path)  # type: ignore
+        file_path = Path(request.file_path)  # type: ignore[arg-type]
 
         if not file_path.exists():
             return TaskToggleResponse(

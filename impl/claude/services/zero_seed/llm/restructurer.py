@@ -175,9 +175,7 @@ class LLMGaloisRestructurer:
     cache_enabled: bool = True
 
     # Cache for loss computations (expensive)
-    _loss_cache: dict[tuple[str, str, LossAxis], float] = field(
-        default_factory=dict, repr=False
-    )
+    _loss_cache: dict[tuple[str, str, LossAxis], float] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
         """Initialize quality budget for model selection."""
@@ -308,7 +306,7 @@ class LLMGaloisRestructurer:
             actual_output=len(response.text) // 4,
         )
 
-        return response.text.strip()
+        return str(response.text).strip()
 
     async def galois_loss(
         self,

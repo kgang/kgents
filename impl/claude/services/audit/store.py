@@ -29,9 +29,9 @@ import logging
 import secrets
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from models.audit import AuditResultRow
+from models.audit import AuditResultRow  # type: ignore[import-untyped]
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -64,7 +64,11 @@ def _result_to_row(result: AuditResult, audit_id: str, mark_id: str) -> AuditRes
     from services.audit.types import AuditSeverity
 
     drift_errors = len(
-        [d for d in result.drift_items if d.severity in (AuditSeverity.ERROR, AuditSeverity.CRITICAL)]
+        [
+            d
+            for d in result.drift_items
+            if d.severity in (AuditSeverity.ERROR, AuditSeverity.CRITICAL)
+        ]
     )
 
     return AuditResultRow(
@@ -133,7 +137,7 @@ class AuditStore:
     async def save_audit(
         self,
         result: AuditResult,
-        witness=None,  # WitnessPersistence | None
+        witness: Any = None,  # WitnessPersistence | None
     ) -> str:
         """
         Save an audit result with automatic witness marking.
@@ -173,7 +177,9 @@ class AuditStore:
             session.add(row)
             await session.commit()
             mean_score_str = f"{row.principle_mean:.2f}" if row.principle_mean else "N/A"
-            logger.info(f"Saved audit {audit_id}: {result.spec_path} (mean score: {mean_score_str})")
+            logger.info(
+                f"Saved audit {audit_id}: {result.spec_path} (mean score: {mean_score_str})"
+            )
 
         return audit_id
 

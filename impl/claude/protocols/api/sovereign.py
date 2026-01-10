@@ -40,11 +40,11 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore
-    HTTPException = None  # type: ignore
-    JSONResponse = None  # type: ignore
-    UploadFile = None  # type: ignore
-    File = None  # type: ignore
+    APIRouter = None  # type: ignore[assignment, misc]
+    HTTPException = None  # type: ignore[assignment, misc]
+    JSONResponse = None  # type: ignore[assignment, misc]
+    UploadFile = None  # type: ignore[assignment, misc]
+    File = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -237,12 +237,14 @@ def create_sovereign_router() -> APIRouter | None:
         for path in paths:
             entity = await store.get_current(path)
             if entity:
-                entities.append({
-                    "path": path,
-                    "version": entity.version,
-                    "content_hash": entity.content_hash,
-                    "is_analyzed": await store.is_analyzed(path),
-                })
+                entities.append(
+                    {
+                        "path": path,
+                        "version": entity.version,
+                        "content_hash": entity.content_hash,
+                        "is_analyzed": await store.is_analyzed(path),
+                    }
+                )
 
         return EntityListResponse(entities=entities, total=len(all_paths))
 
@@ -312,7 +314,9 @@ def create_sovereign_router() -> APIRouter | None:
     @router.post("/upload", response_model=EntityUploadResponse)
     async def upload_file(
         file: UploadFile = File(...),
-        path: str | None = Query(default=None, description="Target path (defaults to uploads/{filename})"),
+        path: str | None = Query(
+            default=None, description="Target path (defaults to uploads/{filename})"
+        ),
     ) -> EntityUploadResponse:
         """
         Upload a file to the sovereign store.
@@ -366,7 +370,7 @@ def create_sovereign_router() -> APIRouter | None:
             return RenameResponse(
                 old_path=request.old_path,
                 new_path=request.new_path,
-                success=success,
+                success=success,  # type: ignore[arg-type]
                 message="Entity renamed successfully",
             )
         except ValueError as e:

@@ -93,7 +93,7 @@ class DifferentialDenial:
     challenge_evidence: str
     severity: float = 0.2  # Default: light challenge
     challenger: str = "system"  # ashc, human, or agent name
-    timestamp: datetime = None  # type: ignore
+    timestamp: datetime = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         """Set timestamp if not provided."""

@@ -211,7 +211,7 @@ class Vector2D:
 
     def magnitude(self) -> float:
         """Get vector magnitude."""
-        return (self.x**2 + self.y**2) ** 0.5
+        return float((self.x**2 + self.y**2) ** 0.5)
 
     def normalized(self) -> Vector2D:
         """Return normalized (unit) vector."""
@@ -472,9 +472,7 @@ class TelescopeValueState(GaloisTelescopeState):
     _pareto_frontier: list[NavigationPath] = field(default_factory=list)
 
     # Constitutional reward weights (context-dependent)
-    principle_weights: ConstitutionalWeights = field(
-        default_factory=ConstitutionalWeights.default
-    )
+    principle_weights: ConstitutionalWeights = field(default_factory=ConstitutionalWeights.default)
 
     def get_value(self, node_id: NodeId) -> float:
         """Get DP value estimate for node."""
@@ -584,9 +582,7 @@ class ZeroSeedConstitution:
 
     def _evaluate_composable(self, node: ZeroNode) -> float:
         """Composable: Well-connected nodes are composable."""
-        edge_count = len(self.graph.edges_from(node.id)) + len(
-            self.graph.edges_to(node.id)
-        )
+        edge_count = len(self.graph.edges_from(node.id)) + len(self.graph.edges_to(node.id))
         expected = EXPECTED_EDGES_BY_LAYER.get(node.layer, 4)
 
         # Reward nodes close to expected connectivity
@@ -595,9 +591,7 @@ class ZeroSeedConstitution:
         deviation = abs(edge_count - expected) / max(edge_count, expected, 1)
         return 1.0 - deviation
 
-    def _evaluate_heterarchical(
-        self, from_node: NodeId | None, to_node: ZeroNode
-    ) -> float:
+    def _evaluate_heterarchical(self, from_node: NodeId | None, to_node: ZeroNode) -> float:
         """Heterarchical: Navigating across layers is good (no fixed hierarchy)."""
         if from_node is None:
             return 0.5
@@ -693,9 +687,7 @@ class NavigationReward:
         )
 
         # Weighted sum
-        return (
-            0.3 * loss_reward + 0.5 * constitutional + 0.1 * exploration + 0.1 * efficiency
-        )
+        return 0.3 * loss_reward + 0.5 * constitutional + 0.1 * exploration + 0.1 * efficiency
 
 
 # =============================================================================
@@ -920,13 +912,11 @@ class TelescopeValueAgent:
                         for n in self.graph.neighbors(state.focal_point)
                         if (
                             self.graph.get_node(n) is not None
-                            and self.graph.get_node(n).layer < current_node.layer  # type: ignore
+                            and self.graph.get_node(n).layer < current_node.layer  # type: ignore[union-attr]
                         )
                     ]
                     if parents:
-                        next_state = dataclasses.replace(
-                            next_state, focal_point=parents[0]
-                        )
+                        next_state = dataclasses.replace(next_state, focal_point=parents[0])
 
         elif action.type == NavigationActionType.CHILD:
             if state.focal_point is not None:
@@ -937,13 +927,11 @@ class TelescopeValueAgent:
                         for n in self.graph.neighbors(state.focal_point)
                         if (
                             self.graph.get_node(n) is not None
-                            and self.graph.get_node(n).layer > current_node.layer  # type: ignore
+                            and self.graph.get_node(n).layer > current_node.layer  # type: ignore[union-attr]
                         )
                     ]
                     if children:
-                        next_state = dataclasses.replace(
-                            next_state, focal_point=children[0]
-                        )
+                        next_state = dataclasses.replace(next_state, focal_point=children[0])
 
         elif action.type == NavigationActionType.LOWEST_LOSS:
             if state.focal_point is not None:
@@ -956,18 +944,14 @@ class TelescopeValueAgent:
             if state.focal_point is not None:
                 neighbors = self.graph.neighbors(state.focal_point)
                 if neighbors:
-                    highest = max(
-                        neighbors, key=lambda n: self._value_cache.get(n, 0.0)
-                    )
+                    highest = max(neighbors, key=lambda n: self._value_cache.get(n, 0.0))
                     next_state = dataclasses.replace(next_state, focal_point=highest)
 
         elif action.type == NavigationActionType.POLICY_SUGGEST:
             if state.focal_point is not None:
                 suggested = self._policy_cache.get(state.focal_point)
                 if suggested and suggested.target:
-                    next_state = dataclasses.replace(
-                        next_state, focal_point=suggested.target
-                    )
+                    next_state = dataclasses.replace(next_state, focal_point=suggested.target)
 
         elif action.type == NavigationActionType.ZOOM_IN:
             next_state = dataclasses.replace(
@@ -1050,9 +1034,7 @@ Expected Long-Term Value: {value:.3f}
 
     def _evaluate_connectivity(self, node: ZeroNode) -> float:
         """Helper to evaluate node connectivity."""
-        edge_count = len(self.graph.edges_from(node.id)) + len(
-            self.graph.edges_to(node.id)
-        )
+        edge_count = len(self.graph.edges_from(node.id)) + len(self.graph.edges_to(node.id))
         expected = EXPECTED_EDGES_BY_LAYER.get(node.layer, 4)
         if edge_count == 0 and expected == 0:
             return 1.0
@@ -1138,9 +1120,7 @@ class NavigationPath:
     Used for Pareto frontier computation.
     """
 
-    steps: list[tuple[TelescopeValueState, NavigationAction | None]] = field(
-        default_factory=list
-    )
+    steps: list[tuple[TelescopeValueState, NavigationAction | None]] = field(default_factory=list)
     objectives: NavigationObjectives = field(
         default_factory=lambda: NavigationObjectives(0.0, 0.0, 0.0, 0.0)
     )
@@ -1168,12 +1148,8 @@ class NavigationPath:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, NavigationPath):
             return False
-        return (
-            len(self.steps) == len(other.steps)
-            and all(
-                s1[0].focal_point == s2[0].focal_point
-                for s1, s2 in zip(self.steps, other.steps)
-            )
+        return len(self.steps) == len(other.steps) and all(
+            s1[0].focal_point == s2[0].focal_point for s1, s2 in zip(self.steps, other.steps)
         )
 
 
@@ -1197,11 +1173,7 @@ def compute_pareto_frontier(
 
         if not dominated:
             # Remove any frontier paths dominated by this path
-            frontier = [
-                fp
-                for fp in frontier
-                if not path.objectives.dominates(fp.objectives)
-            ]
+            frontier = [fp for fp in frontier if not path.objectives.dominates(fp.objectives)]
             frontier.append(path)
 
     return frontier
@@ -1372,9 +1344,7 @@ class NavigationWitnessMark:
 
         return Mark(
             origin="zero_seed_telescope",
-            stimulus=Stimulus.from_event(
-                "navigation", f"From {self.from_node}", "telescope"
-            ),
+            stimulus=Stimulus.from_event("navigation", f"From {self.from_node}", "telescope"),
             response=Response.thought(
                 f"Navigate via {self.action.type.value} to {self.to_node}",
                 ("navigation", "dp_guided"),
@@ -1396,9 +1366,7 @@ class NavigationWitnessMark:
 
     def format_reasoning(self) -> str:
         """Format decision reasoning."""
-        alts_str = "\n".join(
-            f"  - {a.type.value}: {v:.3f}" for a, v in self.alternatives[:3]
-        )
+        alts_str = "\n".join(f"  - {a.type.value}: {v:.3f}" for a, v in self.alternatives[:3])
 
         const_str = "\n".join(
             f"  - {p.value}: {s:.2f}" for p, s in self.constitutional_scores.items()
@@ -1454,9 +1422,7 @@ class NavigationWitnessSession:
             if next_state.focal_point
             else 0.0,
             immediate_reward=self.value_agent.reward(state, action, next_state),
-            expected_future_value=self.value_agent._value_cache.get(
-                next_state.focal_point, 0.0
-            )
+            expected_future_value=self.value_agent._value_cache.get(next_state.focal_point, 0.0)
             if next_state.focal_point
             else 0.0,
             alternatives=alternatives,

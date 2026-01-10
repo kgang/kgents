@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .detection import ContradictionPair
@@ -116,7 +116,7 @@ class ClassificationResult:
     confidence: float
     reasoning: str
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize for API/storage."""
         return {
             "type": self.type.value,

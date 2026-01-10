@@ -337,9 +337,7 @@ class StorageProvider:
             self.paths.cache_root.resolve(),
             self.paths.state_root.resolve(),
         ]
-        in_root = any(
-            resolved == root or root in resolved.parents for root in roots
-        )
+        in_root = any(resolved == root or root in resolved.parents for root in roots)
 
         if not in_root and not allow_outside_root:
             raise ValueError(
@@ -439,11 +437,12 @@ class StorageProvider:
         Returns:
             Formatted string (e.g., "1.5 MB")
         """
+        size: float = float(size_bytes)
         for unit in ["B", "KB", "MB", "GB", "TB"]:
-            if size_bytes < 1024:
-                return f"{size_bytes:.1f} {unit}"
-            size_bytes /= 1024
-        return f"{size_bytes:.1f} PB"
+            if size < 1024:
+                return f"{size:.1f} {unit}"
+            size /= 1024
+        return f"{size:.1f} PB"
 
 
 # =============================================================================

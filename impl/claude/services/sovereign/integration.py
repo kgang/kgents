@@ -248,9 +248,7 @@ class IntegrationService:
         self.uploads_root = uploads_root
         self.kgents_root = kgents_root
 
-    async def integrate(
-        self, source_path: str, destination_path: str
-    ) -> IntegrationResult:
+    async def integrate(self, source_path: str, destination_path: str) -> IntegrationResult:
         """
         Integrate a file from uploads/ to its destination.
 
@@ -263,9 +261,7 @@ class IntegrationService:
         Returns:
             IntegrationResult with all discovered information
         """
-        result = IntegrationResult(
-            source_path=source_path, destination_path=destination_path
-        )
+        result = IntegrationResult(source_path=source_path, destination_path=destination_path)
 
         try:
             # Read source content
@@ -294,8 +290,11 @@ class IntegrationService:
             # STEP 3: Create K-Block (one doc = one K-Block heuristic)
             logger.info("Step 3: Creating K-Block with portal tokens")
             result.kblock_id = await self._create_kblock(
-                destination_path, content, result.layer, result.galois_loss,
-                portal_tokens=result.portal_tokens
+                destination_path,
+                content,
+                result.layer,
+                result.galois_loss,
+                portal_tokens=result.portal_tokens,
             )
 
             # STEP 4: Discover edges (what does this relate to?)
@@ -312,9 +311,7 @@ class IntegrationService:
 
             # STEP 7: Check for contradictions with existing content
             logger.info("Step 7: Checking for contradictions")
-            result.contradictions = await self._find_contradictions(
-                content, destination_path
-            )
+            result.contradictions = await self._find_contradictions(content, destination_path)
 
             # STEP 8: Move file to destination
             logger.info(f"Step 8: Moving file to {destination_path}")
@@ -450,7 +447,12 @@ class IntegrationService:
         elif "spec" in text_lower or "protocol" in text_lower:
             layer = 4  # L4: Specifications
             galois_loss = 0.35
-        elif "impl" in text_lower or "implementation" in text_lower or "def " in text or "class " in text:
+        elif (
+            "impl" in text_lower
+            or "implementation" in text_lower
+            or "def " in text
+            or "class " in text
+        ):
             layer = 5  # L5: Implementation
             galois_loss = 0.5
         elif "reflection" in text_lower or "retrospective" in text_lower:
@@ -520,7 +522,7 @@ class IntegrationService:
 
             # Store K-Block in a temporary registry for later persistence
             # This will be persisted in Step 9 when we add to cosmos
-            if not hasattr(self, '_kblocks_pending'):
+            if not hasattr(self, "_kblocks_pending"):
                 self._kblocks_pending = {}
             self._kblocks_pending[str(kblock_id)] = kblock
 
@@ -534,13 +536,11 @@ class IntegrationService:
             logger.warning("K-Block service not available, using placeholder ID")
             import hashlib
 
-            kblock_id = f"kblock-{hashlib.sha256(content).hexdigest()[:12]}"
+            kblock_id = f"kblock-{hashlib.sha256(content).hexdigest()[:12]}"  # type: ignore[assignment]
             logger.debug(f"Created placeholder K-Block: {kblock_id}")
             return kblock_id
 
-    async def _discover_edges(
-        self, content: bytes, source_path: str
-    ) -> list[DiscoveredEdge]:
+    async def _discover_edges(self, content: bytes, source_path: str) -> list[DiscoveredEdge]:
         """
         Step 4: Discover edges (what does this relate to?).
 
@@ -650,11 +650,7 @@ class IntegrationService:
                 else:
                     token_type = "path"  # e.g., [[path/to/file.md]]
 
-                tokens.append(
-                    PortalToken(
-                        token=token, token_type=token_type, resolved_target=None
-                    )
-                )
+                tokens.append(PortalToken(token=token, token_type=token_type, resolved_target=None))
 
             logger.debug(f"Extracted {len(tokens)} portal tokens")
 
@@ -663,9 +659,7 @@ class IntegrationService:
 
         return tokens
 
-    async def _identify_concepts(
-        self, content: bytes, layer: int
-    ) -> list[IdentifiedConcept]:
+    async def _identify_concepts(self, content: bytes, layer: int) -> list[IdentifiedConcept]:
         """
         Step 6: Identify concepts (axioms, constructs, principles, laws).
 
@@ -721,9 +715,7 @@ class IntegrationService:
 
         return concepts
 
-    async def _find_contradictions(
-        self, content: bytes, path: str
-    ) -> list[Contradiction]:
+    async def _find_contradictions(self, content: bytes, path: str) -> list[Contradiction]:
         """
         Step 7: Check for contradictions with existing content.
 
@@ -785,7 +777,7 @@ class IntegrationService:
             detected_pairs = await detector.detect_all(
                 kblock=new_kblock,
                 candidates=candidates,
-                galois=galois,  # type: ignore[arg-type]
+                galois=galois,
             )
 
             # Convert ContradictionPairs to integration.Contradiction format
@@ -1007,7 +999,7 @@ class IntegrationService:
             result: Integration result
         """
         # Step 9a: Persist K-Block to storage
-        if result.kblock_id and hasattr(self, '_kblocks_pending'):
+        if result.kblock_id and hasattr(self, "_kblocks_pending"):
             kblock = self._kblocks_pending.get(result.kblock_id)
             if kblock:
                 try:
@@ -1053,9 +1045,7 @@ class IntegrationService:
                     mark_id=result.witness_mark_id,
                 )
 
-                logger.info(
-                    f"Committed {result.destination_path} to cosmos (version={version_id})"
-                )
+                logger.info(f"Committed {result.destination_path} to cosmos (version={version_id})")
 
         except Exception as e:
             logger.warning(f"Failed to commit to cosmos: {e}")

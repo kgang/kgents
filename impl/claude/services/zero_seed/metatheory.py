@@ -756,8 +756,7 @@ class GaloisConstitution:
         # Weighted sum of inverse losses
         total_weight = sum(self.principle_weights.values())
         weighted_sum = sum(
-            self.principle_weights.get(p, 1.0) * (1.0 - loss)
-            for p, loss in losses.items()
+            self.principle_weights.get(p, 1.0) * (1.0 - loss) for p, loss in losses.items()
         )
 
         return weighted_sum / total_weight if total_weight > 0 else 0.5
@@ -784,16 +783,14 @@ class GaloisConstitution:
             reward = 1.0 - loss
             weight = self.principle_weights.get(principle, 1.0)
 
-            result["principles"][principle.name] = {
+            result["principles"][principle.name] = {  # type: ignore[index]
                 "loss": loss,
                 "reward": reward,
                 "weight": weight,
                 "weighted_reward": reward * weight,
             }
 
-        result["total_reward"] = self.reward(
-            state_content, action, next_state_content
-        )
+        result["total_reward"] = self.reward(state_content, action, next_state_content)
         result["transition_loss"] = self.galois.loss(
             f"{state_content} -> {next_state_content} via {action}"
         )
@@ -1016,9 +1013,7 @@ class DialecticalSynthesizer:
         """
         thesis_loss = self.galois.loss(thesis_node.content)
         antithesis_loss = self.galois.loss(antithesis_node.content)
-        union_loss = self.galois.loss(
-            f"{thesis_node.content}\n{antithesis_node.content}"
-        )
+        union_loss = self.galois.loss(f"{thesis_node.content}\n{antithesis_node.content}")
 
         # Generate synthesis
         synthesize = self.synthesis_fn or self._default_synthesis
@@ -1033,20 +1028,15 @@ class DialecticalSynthesizer:
             synthesis_node = ZeroNode(
                 id=f"synthesis:{hash(synthesis_content)}",
                 content=synthesis_content,
-                layer=EpistemicLayer(
-                    max(thesis_node.layer.value, antithesis_node.layer.value)
-                ),
+                layer=EpistemicLayer(max(thesis_node.layer.value, antithesis_node.layer.value)),
                 loss=synthesis_loss,
                 tags=thesis_node.tags + antithesis_node.tags,
             )
-            reason = (
-                f"Synthesis reduced loss from {threshold:.2f} to {synthesis_loss:.2f}"
-            )
+            reason = f"Synthesis reduced loss from {threshold:.2f} to {synthesis_loss:.2f}"
         else:
             synthesis_node = None
             reason = (
-                f"Synthesis has higher loss ({synthesis_loss:.2f}) "
-                f"than threshold ({threshold:.2f})"
+                f"Synthesis has higher loss ({synthesis_loss:.2f}) than threshold ({threshold:.2f})"
             )
 
         return SynthesisResult(
