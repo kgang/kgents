@@ -26,6 +26,8 @@ Example:
 
 from __future__ import annotations
 
+from typing import Any
+
 from .core import (
     character_ngrams,
     clamp,
@@ -187,7 +189,7 @@ def semantic_distance_multilevel(
     return clamp(1.0 - combined_sim)
 
 
-def _set_similarity(a: set, b: set) -> float:
+def _set_similarity(a: set[Any], b: set[Any]) -> float:
     """Compute Jaccard-like set similarity."""
     if not a and not b:
         return 1.0
@@ -324,7 +326,7 @@ def _entailment_probability(premise: str, hypothesis: str) -> float:
     global _NLI_CLASSIFIER
 
     try:
-        from transformers import pipeline
+        from transformers import pipeline  # type: ignore[import-not-found]
 
         if _NLI_CLASSIFIER is None:
             _NLI_CLASSIFIER = pipeline(
@@ -341,7 +343,7 @@ def _entailment_probability(premise: str, hypothesis: str) -> float:
             for item in scores:
                 label = item.get("label", "").upper()
                 if label == "ENTAILMENT":
-                    return item.get("score", 0.0)
+                    return float(item.get("score", 0.0))
 
         return 0.0
 
@@ -415,10 +417,10 @@ def soft_cosine_distance(
         return _set_similarity(tri1, tri2)
 
     # Build term frequency vectors
-    tf_a = {}
+    tf_a: dict[str, int] = {}
     for t in tokens_a:
         tf_a[t] = tf_a.get(t, 0) + 1
-    tf_b = {}
+    tf_b: dict[str, int] = {}
     for t in tokens_b:
         tf_b[t] = tf_b.get(t, 0) + 1
 

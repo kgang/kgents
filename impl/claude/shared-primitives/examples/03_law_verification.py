@@ -11,16 +11,18 @@ This is THE canonical way to verify composition in kgents.
 All future kgents development uses law verification to catch bugs early.
 """
 
+from typing import Any
+
 from kgents_laws import LawStatus, verify_associativity, verify_identity
-from kgents_poly import from_function, identity
+from kgents_poly import PolyAgent, from_function, identity
 
 # =============================================================================
 # PURE AGENTS: Laws hold
 # =============================================================================
 
-double = from_function("double", lambda x: x * 2)
-add_one = from_function("add_one", lambda x: x + 1)
-negate = from_function("negate", lambda x: -x)
+double: PolyAgent[str, int, int] = from_function("double", lambda x: x * 2)
+add_one: PolyAgent[str, int, int] = from_function("add_one", lambda x: x + 1)
+negate: PolyAgent[str, int, int] = from_function("negate", lambda x: -x)
 
 # Verify identity law: Id >> f == f == f >> Id
 # This law says: composing with identity should change nothing
@@ -42,7 +44,7 @@ print("\n--- Demonstrating bug detection ---")
 call_count = [0]
 
 
-def buggy_function(x):
+def buggy_function(x: Any) -> Any:
     """A function that isn't pure - it has hidden state."""
     call_count[0] += 1
     return x + call_count[0]  # Non-deterministic: depends on call history

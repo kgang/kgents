@@ -472,7 +472,7 @@ def create_agent_operad() -> Operad:
             _transition=fix_transition,
         )
 
-    def _trace_compose(inner: PolyAgent) -> PolyAgent:
+    def _trace_compose(inner: PolyAgent[Any, Any, Any]) -> PolyAgent[Any, Any, Any]:
         """Add observation/logging to agent."""
         traces: list[tuple[Any, Any, Any]] = []
 
@@ -490,7 +490,10 @@ def create_agent_operad() -> Operad:
 
     # Create associativity verifier
     def _verify_associativity(
-        a: PolyAgent, b: PolyAgent, c: PolyAgent, op_name: str = "seq"
+        a: PolyAgent[Any, Any, Any],
+        b: PolyAgent[Any, Any, Any],
+        c: PolyAgent[Any, Any, Any],
+        op_name: str = "seq",
     ) -> LawVerification:
         """Verify (a op b) op c = a op (b op c)."""
         try:

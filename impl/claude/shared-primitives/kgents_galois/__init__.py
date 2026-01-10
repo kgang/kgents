@@ -443,7 +443,7 @@ class NLIContradictionDistance:
         """Lazy load NLI classifier."""
         if self._classifier is None:
             try:
-                from transformers import pipeline  # type: ignore[import-not-found]
+                from transformers import pipeline
 
                 self._classifier = pipeline(
                     "text-classification",

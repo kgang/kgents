@@ -382,7 +382,7 @@ def verify_monad_left_identity(
     pure_fn: Callable[[T], Any],
     bind_fn: Callable[[Any, Callable[[T], Any]], Any],
     f: Callable[[T], Any],
-    test_values: list[T] | None = None,
+    test_values: list[Any] | None = None,
 ) -> LawResult:
     """
     Verify monad left identity: pure(a) >>= f = f(a).

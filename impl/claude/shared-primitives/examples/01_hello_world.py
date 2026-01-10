@@ -9,10 +9,10 @@ This is THE canonical way to create agents in kgents.
 All future kgents development builds on this foundation.
 """
 
-from kgents_poly import from_function
+from kgents_poly import PolyAgent, from_function
 
 # Create an agent from any function
-double = from_function("double", lambda x: x * 2)
+double: PolyAgent[str, int, int] = from_function("double", lambda x: x * 2)
 
 # Run it
 state, result = double.invoke("ready", 21)
