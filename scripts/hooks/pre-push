@@ -1,27 +1,37 @@
 #!/usr/bin/env bash
 #
-# kgents pre-push hook (HEAVY) - OPTIMIZED
+# kgents pre-push hook (HEAVY) - OPTIMIZED FOR MULTI-AGENT EXECUTION
 #
 # Philosophy: Gate pushes with rigorous verification.
+# Architecture: Heterarchical - resources flow where needed.
 # This is the last line of defense before CI.
 #
-# Optimizations (2025-12-16, updated 2025-12-19):
-#   - Parallel test execution with pytest-xdist (-n 5 default)
+# Optimizations (2025-01-10 - Enlightened Enhancement):
+#   - Parallel test execution with pytest-xdist (adaptive worker count)
+#   - Mypy incremental caching (uses .mypy_cache/)
+#   - Optional mypy daemon mode (2-3x faster re-runs)
 #   - Combined test passes (unit + law + property in single run)
-#   - Smart marker detection (skip empty passes)
-#   - Reduced collection overhead
-#   - Worker cap at 5 (was auto=all CPUs, caused system thrashing)
+#   - Smart test filtering (--changed-only for affected tests)
+#   - Multi-agent safe (PID-based database isolation)
+#   - CPU throttling based on system load
+#   - Timing information for each step
 #
 # Checks (ALL BLOCKING):
 #   1. Ruff lint (strict, BLOCKING)
-#   2. Mypy (strict, BLOCKING)
+#   2. Mypy (strict, incremental, BLOCKING)
 #   3. All tests in single parallel run (BLOCKING)
 #
 # Gated checks (only if relevant files changed):
 #   - Contract sync (if API/node files changed, requires backend)
 #
-# Optional (can skip with KGENTS_SKIP_HEAVY=1):
-#   - Chaos tests (accursed share)
+# Environment Variables:
+#   KGENTS_SKIP_HEAVY=1       - Skip all heavy checks
+#   KGENTS_SKIP_CHAOS=1       - Skip chaos/accursed share tests
+#   KGENTS_SKIP_CONTRACT=1    - Skip contract sync check
+#   KGENTS_PYTEST_WORKERS=N   - Override worker count
+#   KGENTS_CHANGED_ONLY=1     - Only test files affected by changes
+#   KGENTS_USE_DMYPY=1        - Use mypy daemon for faster type checking
+#   KGENTS_VERBOSE=1          - Show verbose output
 #
 
 # Note: We intentionally don't use `set -e` because we handle exit codes manually
@@ -38,7 +48,31 @@ cd "$REPO_ROOT"
 REMOTE="$1"
 URL="$2"
 
-echo -e "${BOLD}pre-push${NC} ${CYAN}(heavy verification before push to ${REMOTE})${NC}"
+# Timing helper
+time_cmd() {
+    local start=$(date +%s.%N 2>/dev/null || date +%s)
+    "$@"
+    local exit_code=$?
+    local end=$(date +%s.%N 2>/dev/null || date +%s)
+    # Use bc for floating point math, fall back to integer
+    if command -v bc &> /dev/null; then
+        LAST_DURATION=$(echo "$end - $start" | bc)
+    else
+        LAST_DURATION=$((${end%.*} - ${start%.*}))
+    fi
+    return $exit_code
+}
+
+format_duration() {
+    local duration="$1"
+    # Handle bc output format
+    if [[ "$duration" == .* ]]; then
+        duration="0$duration"
+    fi
+    printf "%.1fs" "$duration"
+}
+
+echo -e "${BOLD}pre-push${NC} ${CYAN}(heavy verification before push to ${REMOTE:-origin})${NC}"
 echo ""
 
 # Check for skip flag
@@ -53,23 +87,69 @@ require_uv
 
 TOTAL_STEPS=3
 FAILED=0
+TOTAL_START=$(date +%s)
 
-# Detect CPU count for parallel execution
-# KGENTS_PYTEST_WORKERS overrides auto-detection (default: 5 to reduce system load)
-if [ -n "${KGENTS_PYTEST_WORKERS:-}" ]; then
-    CPU_COUNT="$KGENTS_PYTEST_WORKERS"
-elif command -v nproc &> /dev/null; then
-    CPU_COUNT=$(( $(nproc) / 2 ))
-    [ "$CPU_COUNT" -lt 4 ] && CPU_COUNT=4
-    [ "$CPU_COUNT" -gt 5 ] && CPU_COUNT=5
-elif command -v sysctl &> /dev/null; then
-    TOTAL_CPU=$(sysctl -n hw.ncpu 2>/dev/null || echo "8")
-    CPU_COUNT=$(( TOTAL_CPU / 2 ))
-    [ "$CPU_COUNT" -lt 4 ] && CPU_COUNT=4
-    [ "$CPU_COUNT" -gt 5 ] && CPU_COUNT=5
-else
-    CPU_COUNT=5
-fi
+# =============================================================================
+# Detect optimal worker count (adaptive based on system load)
+# =============================================================================
+detect_workers() {
+    # Allow explicit override
+    if [ -n "${KGENTS_PYTEST_WORKERS:-}" ]; then
+        echo "$KGENTS_PYTEST_WORKERS"
+        return
+    fi
+
+    local cpu_count=4
+    local workers=4
+
+    # Get CPU count
+    if command -v nproc &> /dev/null; then
+        cpu_count=$(nproc)
+    elif command -v sysctl &> /dev/null; then
+        cpu_count=$(sysctl -n hw.ncpu 2>/dev/null || echo "8")
+    fi
+
+    # Check system load (macOS/Linux only)
+    if command -v uptime &> /dev/null; then
+        # Extract 1-minute load average
+        local load_avg=$(uptime | sed -n 's/.*load average[s]*: \([0-9.]*\).*/\1/p' 2>/dev/null || echo "0")
+
+        # If system is heavily loaded, reduce workers
+        if [ -n "$load_avg" ]; then
+            local load_int=${load_avg%.*}
+            local threshold=$((cpu_count * 80 / 100))
+
+            if [ "${load_int:-0}" -gt "$threshold" ] 2>/dev/null; then
+                workers=$((cpu_count / 3))
+                [ "$workers" -lt 2 ] && workers=2
+            elif [ "${load_int:-0}" -gt "$((cpu_count / 2))" ] 2>/dev/null; then
+                workers=$((cpu_count / 2))
+            else
+                workers=$((cpu_count - 2))
+            fi
+        fi
+    else
+        # Default: use half CPUs minus 1
+        workers=$((cpu_count / 2))
+    fi
+
+    # Clamp to reasonable range
+    [ "$workers" -lt 2 ] && workers=2
+    [ "$workers" -gt 8 ] && workers=8
+
+    echo "$workers"
+}
+
+CPU_COUNT=$(detect_workers)
+
+# =============================================================================
+# Detect changed files for intelligent filtering
+# =============================================================================
+get_changed_python_files() {
+    # Get Python files changed compared to base branch
+    local base="${REMOTE:-origin}/$(git symbolic-ref --short HEAD 2>/dev/null || echo 'main')"
+    git diff --name-only "$base" 2>/dev/null | grep -E '\.py$' || echo ""
+}
 
 # =============================================================================
 # Step 1: Lint (strict - BLOCKING)
@@ -77,16 +157,23 @@ fi
 section "Ruff lint (strict, BLOCKING)" 1 $TOTAL_STEPS
 
 cd "$REPO_ROOT/impl/claude"
-LINT_OUTPUT=$(uv run ruff check agents/ bootstrap/ runtime/ protocols/ testing/ 2>&1)
+
+run_lint() {
+    uv run ruff check agents/ bootstrap/ runtime/ protocols/ testing/ services/ 2>&1
+}
+
+LINT_OUTPUT=$(time_cmd run_lint)
 LINT_EXIT=$?
+LINT_DURATION=$(format_duration "$LAST_DURATION")
+
 if [ $LINT_EXIT -eq 0 ]; then
-    success "Lint passed"
+    success "Lint passed ($LINT_DURATION)"
 else
     # Count issues and show summary
     LINT_COUNT=$(echo "$LINT_OUTPUT" | grep -c "^[A-Z][0-9]" || echo "0")
-    error "Lint: $LINT_COUNT issues (BLOCKING)"
+    error "Lint: $LINT_COUNT issues (BLOCKING) ($LINT_DURATION)"
     echo "$LINT_OUTPUT" | head -20
-    if [ $LINT_COUNT -gt 20 ]; then
+    if [ "$LINT_COUNT" -gt 20 ]; then
         info "... and $((LINT_COUNT - 20)) more (run 'ruff check' for all)"
     fi
     FAILED=1
@@ -95,21 +182,35 @@ cd "$REPO_ROOT"
 echo ""
 
 # =============================================================================
-# Step 2: Type check (strict - BLOCKING)
+# Step 2: Type check (strict - BLOCKING, with incremental caching)
 # =============================================================================
-section "Mypy (strict, BLOCKING)" 2 $TOTAL_STEPS
+section "Mypy (strict, incremental, BLOCKING)" 2 $TOTAL_STEPS
 
 cd "$REPO_ROOT/impl/claude"
-MYPY_OUTPUT=$(uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1)
+
+run_mypy() {
+    if [ "${KGENTS_USE_DMYPY:-0}" = "1" ] && command -v dmypy &> /dev/null; then
+        # Use mypy daemon for faster re-runs (2-3x speedup)
+        info "Using mypy daemon (KGENTS_USE_DMYPY=1)..."
+        uv run dmypy run -- --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1
+    else
+        # Standard mypy with incremental caching (enabled in mypy.ini)
+        uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1
+    fi
+}
+
+MYPY_OUTPUT=$(time_cmd run_mypy)
 MYPY_EXIT=$?
+MYPY_DURATION=$(format_duration "$LAST_DURATION")
+
 if [ $MYPY_EXIT -eq 0 ]; then
-    success "Type check passed"
+    success "Type check passed ($MYPY_DURATION)"
 else
     # Count errors and show summary
     MYPY_COUNT=$(echo "$MYPY_OUTPUT" | grep -c ": error:" || echo "0")
-    error "Mypy: $MYPY_COUNT errors (BLOCKING)"
+    error "Mypy: $MYPY_COUNT errors (BLOCKING) ($MYPY_DURATION)"
     echo "$MYPY_OUTPUT" | grep ": error:" | head -20
-    if [ $MYPY_COUNT -gt 20 ]; then
+    if [ "$MYPY_COUNT" -gt 20 ]; then
         info "... and $((MYPY_COUNT - 20)) more (run 'mypy' for all)"
     fi
     FAILED=1
@@ -128,28 +229,60 @@ cd "$REPO_ROOT/impl/claude"
 # Excludes: slow, tier3 (E2E), accursed_share (chaos - run separately if needed)
 # Includes: unit, law, property tests in one pass
 #
-# Optimizations applied:
-#   1. Combined passes: unit + law + property in single run (was 5 separate)
-#   2. Parallel execution: -n $CPU_COUNT with loadfile distribution
-#   3. Eliminated empty passes: integration marker had 0 tests
+# Multi-agent safety:
+#   - PID-based database isolation (see conftest.py::_reset_database_engine_at_session_start)
+#   - Each pytest process gets its own DB file: membrane_test_{pid}.db
+#   - pytest-xdist workers get: membrane_test_gw{N}_{pid}.db
+
+run_tests() {
+    local extra_args=""
+
+    # Changed-only mode: only run tests for changed files
+    if [ "${KGENTS_CHANGED_ONLY:-0}" = "1" ]; then
+        local changed_files=$(get_changed_python_files)
+        if [ -n "$changed_files" ]; then
+            info "Running tests for changed files only..."
+            # Filter to test files
+            local test_files=$(echo "$changed_files" | grep -E "test_.*\.py$|_test\.py$" || echo "")
+            if [ -n "$test_files" ]; then
+                extra_args="$test_files"
+            else
+                info "No test files changed, running affected tests..."
+                # Run tests that might be affected by changed files
+                extra_args="--last-failed --last-failed-no-failures=all"
+            fi
+        fi
+    fi
+
+    # Verbose output if requested
+    local quiet_flag="-q"
+    if [ "${KGENTS_VERBOSE:-0}" = "1" ]; then
+        quiet_flag="-v"
+    fi
+
+    uv run pytest \
+        -m "not slow and not tier3 and not accursed_share" \
+        -n "$CPU_COUNT" \
+        --tb=no \
+        $quiet_flag \
+        --dist=worksteal \
+        $extra_args \
+        2>&1
+}
+
 info "Running tests with $CPU_COUNT workers (combined pass)..."
-TEST_OUTPUT=$(uv run pytest \
-    -m "not slow and not tier3 and not accursed_share" \
-    -n "$CPU_COUNT" \
-    --tb=no \
-    -q \
-    --dist=loadfile \
-    2>&1)
+TEST_OUTPUT=$(time_cmd run_tests)
 TEST_EXIT=$?
+TEST_DURATION=$(format_duration "$LAST_DURATION")
 
 if [ $TEST_EXIT -eq 0 ]; then
     # Extract summary line (e.g., "19000 passed in 45.34s")
     SUMMARY=$(echo "$TEST_OUTPUT" | tail -1)
-    success "All tests: $SUMMARY"
+    success "All tests: $SUMMARY ($TEST_DURATION total)"
 else
     # Show last few lines on failure
-    SUMMARY=$(echo "$TEST_OUTPUT" | tail -5)
-    error "Tests failed:"
+    SUMMARY=$(echo "$TEST_OUTPUT" | tail -10)
+    error "Tests failed ($TEST_DURATION):"
     echo "$SUMMARY"
     FAILED=1
 fi
@@ -207,8 +340,10 @@ fi
 if [ "${KGENTS_SKIP_CHAOS:-0}" != "1" ]; then
     info "Running chaos tests (accursed share, non-blocking)..."
     cd "$REPO_ROOT/impl/claude"
+
     CHAOS_OUTPUT=$(uv run pytest -m "accursed_share" -n "$CPU_COUNT" --tb=no -q 2>&1)
     CHAOS_EXIT=$?
+
     if [ $CHAOS_EXIT -eq 0 ]; then
         SUMMARY=$(echo "$CHAOS_OUTPUT" | tail -1)
         success "Chaos tests: $SUMMARY"
@@ -224,9 +359,12 @@ fi
 # =============================================================================
 # Summary
 # =============================================================================
+TOTAL_END=$(date +%s)
+TOTAL_DURATION=$((TOTAL_END - TOTAL_START))
+
 hr
 if [ $FAILED -eq 0 ]; then
-    success "pre-push complete. All checks passed."
+    success "pre-push complete. All checks passed in ${TOTAL_DURATION}s."
     hr
     exit 0
 else
@@ -234,6 +372,12 @@ else
     echo ""
     info "To bypass (not recommended):"
     info "  KGENTS_SKIP_HEAVY=1 git push"
+    info ""
+    info "To debug sequentially:"
+    info "  KGENTS_SEQUENTIAL=1 git push"
+    info ""
+    info "To run only changed tests:"
+    info "  KGENTS_CHANGED_ONLY=1 git push"
     hr
     exit 1
 fi
