@@ -23,13 +23,13 @@ describe('NotFound', () => {
 
     it('should render the title', () => {
       renderWithRouter(<NotFound />);
-      expect(screen.getByText('Page Not Found')).toBeInTheDocument();
+      expect(screen.getByText('Path Not Found')).toBeInTheDocument();
     });
 
-    it('should render the description', () => {
+    it('should render available paths description', () => {
       renderWithRouter(<NotFound />);
       expect(
-        screen.getByText('This page does not exist. Check the URL or navigate home.')
+        screen.getByText('This AGENTESE path does not exist. Try one of these:')
       ).toBeInTheDocument();
     });
 
@@ -42,16 +42,31 @@ describe('NotFound', () => {
   describe('navigation links', () => {
     it('should have a link to home', () => {
       renderWithRouter(<NotFound />);
-      const homeLink = screen.getByRole('link', { name: /go home/i });
+      const homeLink = screen.getByRole('link', { name: /go to home page/i });
       expect(homeLink).toBeInTheDocument();
       expect(homeLink).toHaveAttribute('href', '/');
     });
 
-    it('should have a link to cockpit', () => {
+    it('should have a link to chat', () => {
       renderWithRouter(<NotFound />);
-      const cockpitLink = screen.getByRole('link', { name: /open cockpit/i });
-      expect(cockpitLink).toBeInTheDocument();
-      expect(cockpitLink).toHaveAttribute('href', '/concept.cockpit');
+      const chatLink = screen.getByRole('link', { name: /chat/i });
+      expect(chatLink).toBeInTheDocument();
+      expect(chatLink).toHaveAttribute('href', '/self.chat');
+    });
+
+    it('should have a link to director', () => {
+      renderWithRouter(<NotFound />);
+      const directorLink = screen.getByRole('link', { name: /director/i });
+      expect(directorLink).toBeInTheDocument();
+      expect(directorLink).toHaveAttribute('href', '/self.director');
+    });
+
+    it('should have a link to document', () => {
+      renderWithRouter(<NotFound />);
+      // Use getAllByRole since "document" appears multiple times, then filter by href
+      const links = screen.getAllByRole('link');
+      const documentLink = links.find((link) => link.getAttribute('href') === '/world.document');
+      expect(documentLink).toBeInTheDocument();
     });
   });
 
@@ -59,7 +74,7 @@ describe('NotFound', () => {
     it('should have heading level 1', () => {
       renderWithRouter(<NotFound />);
       const heading = screen.getByRole('heading', { level: 1 });
-      expect(heading).toHaveTextContent('Page Not Found');
+      expect(heading).toHaveTextContent('Path Not Found');
     });
   });
 });
