@@ -272,7 +272,7 @@ class BERTScoreDistance:
     def distance(self, text_a: str, text_b: str) -> float:
         """Compute 1 - F1 BERTScore."""
         try:
-            from bert_score import score
+            from bert_score import score  # type: ignore[import-not-found]
 
             P, R, F1 = score(
                 [text_a],
@@ -281,7 +281,7 @@ class BERTScoreDistance:
                 model_type=self.model_type,
                 verbose=False,
             )
-            f1_score = F1.item()
+            f1_score: float = F1.item()
             return max(0.0, min(1.0, 1.0 - f1_score))
 
         except ImportError:
@@ -357,7 +357,7 @@ class BidirectionalEntailmentDistance:
                 for item in scores:
                     label = item.get("label", "").upper()
                     if label == "ENTAILMENT":
-                        return item.get("score", 0.0)
+                        return float(item.get("score", 0.0))
 
             return 0.0
 
@@ -368,7 +368,7 @@ class BidirectionalEntailmentDistance:
         """Lazy load NLI classifier."""
         if self._classifier is None:
             try:
-                from transformers import pipeline
+                from transformers import pipeline  # type: ignore[import-not-found]
 
                 self._classifier = pipeline(
                     "text-classification",
@@ -443,7 +443,7 @@ class NLIContradictionDistance:
         """Lazy load NLI classifier."""
         if self._classifier is None:
             try:
-                from transformers import pipeline
+                from transformers import pipeline  # type: ignore[import-not-found]
 
                 self._classifier = pipeline(
                     "text-classification",

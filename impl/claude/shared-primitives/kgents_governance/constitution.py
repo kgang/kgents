@@ -170,19 +170,19 @@ class Constitution:
         # Evaluate gate laws first - any failure blocks
         for law in self.laws:
             if isinstance(law, GateLaw):
-                result = law.apply(scores)
-                if result == law.on_fail:
+                gate_result = law.apply(scores)
+                if gate_result == law.on_fail:
                     blocked = True
-                    final_score = result
+                    final_score = gate_result
                     break
 
         # If not blocked, evaluate threshold laws
         if not blocked:
             for law in self.laws:
                 if isinstance(law, ThresholdLaw):
-                    result = law.check(scores.get(law.dimension, 0.0))
-                    if result.warning:
-                        warnings.append(result.warning)
+                    threshold_result = law.check(scores.get(law.dimension, 0.0))
+                    if threshold_result.warning:
+                        warnings.append(threshold_result.warning)
 
         return LawResult(
             passed=not blocked,

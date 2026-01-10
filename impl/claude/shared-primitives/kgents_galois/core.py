@@ -313,7 +313,7 @@ def geometric_mean(values: Sequence[float]) -> float:
             return 0.0
         product *= v
 
-    return product ** (1.0 / len(values))
+    return float(product ** (1.0 / len(values)))
 
 
 def harmonic_mean(values: Sequence[float]) -> float:

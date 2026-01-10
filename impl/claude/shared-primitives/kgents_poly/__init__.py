@@ -61,6 +61,9 @@ B = TypeVar("B")  # Output type
 S2 = TypeVar("S2")  # Second state type (for composition)
 C = TypeVar("C")  # Third output type (for composition)
 
+# Protocol-specific type variables with proper variance
+B_co = TypeVar("B_co", covariant=True)  # Output type for protocols (covariant)
+
 
 # -----------------------------------------------------------------------------
 # Protocol: The Interface
@@ -68,7 +71,7 @@ C = TypeVar("C")  # Third output type (for composition)
 
 
 @runtime_checkable
-class PolyAgentProtocol(Protocol[S, A, B]):
+class PolyAgentProtocol(Protocol[S, A, B_co]):
     """
     Protocol for polynomial agents.
 
@@ -121,7 +124,7 @@ class PolyAgentProtocol(Protocol[S, A, B]):
         """
         ...
 
-    def transition(self, state: S, input: A) -> tuple[S, B]:
+    def transition(self, state: S, input: A) -> tuple[S, B_co]:
         """
         State transition function.
 
@@ -367,7 +370,7 @@ def from_function(
     return PolyAgent(
         name=name,
         positions=frozenset({"ready"}),
-        _directions=lambda s: frozenset({Any}),
+        _directions=lambda s: frozenset({Any}),  # type: ignore[arg-type]
         _transition=lambda s, x: ("ready", fn(x)),
     )
 
