@@ -156,7 +156,7 @@
 
 /* Contradiction aspect - warm red accent when active */
 .aspect-pills__btn--contradiction.aspect-pills__btn--active {
-  background: #FF6B6B; /* coral - productive tension */
+  background: #ff6b6b; /* coral - productive tension */
   color: #1a0a0a;
 }
 
@@ -566,8 +566,13 @@
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 /* =============================================================================
@@ -727,7 +732,8 @@
 
 /* Use the global breathe-subtle class from breathing.css */
 @keyframes breathe-subtle-fallback {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.975;
   }
@@ -772,5 +778,204 @@
 
   .mark-feed-item__reasoning {
     font-size: 0.75rem;
+  }
+}
+
+/* =============================================================================
+ * Mark Detail Panel (Slide-in from Right)
+ * ============================================================================= */
+
+.mark-detail__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 12, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  animation: backdrop-fade-in 0.2s ease-out;
+}
+
+@keyframes backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mark-detail__panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 480px;
+  max-width: 90vw;
+  background: #141418;
+  border-left: 1px solid #28282f;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  animation: panel-slide-in 0.25s ease-out;
+}
+
+@keyframes panel-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Panel Header */
+.mark-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #1c1c22;
+  border-bottom: 1px solid #28282f;
+}
+
+.mark-detail__header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mark-detail__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #141418;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  font-size: 1rem;
+  color: #c4a77d;
+}
+
+.mark-detail__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #d2d2dc;
+}
+
+.mark-detail__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid #28282f;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  color: #8c8c96;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.mark-detail__close:hover {
+  background: #28282f;
+  border-color: #c4a77d;
+  color: #d2d2dc;
+}
+
+/* Meta row */
+.mark-detail__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #0a0a0c;
+  border-bottom: 1px solid #28282f;
+}
+
+.mark-detail__author {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.mark-detail__time {
+  font-size: 0.8rem;
+  color: #5a5a64;
+}
+
+/* Content sections */
+.mark-detail__section {
+  padding: 16px 20px;
+  border-bottom: 1px solid #1c1c22;
+}
+
+.mark-detail__section--subtle {
+  background: #0a0a0c;
+}
+
+.mark-detail__label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #5a5a64;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.mark-detail__action {
+  font-size: 1rem;
+  color: #d2d2dc;
+  line-height: 1.5;
+}
+
+.mark-detail__reasoning {
+  font-size: 0.9rem;
+  color: #b4b4be;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.mark-detail__principles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mark-detail__principle {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: #1c1c22;
+  border: 1px solid #3a3a44;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #8c8c96;
+}
+
+.mark-detail__id {
+  font-family: 'SF Mono', 'Fira Code', 'Monaco', monospace;
+  font-size: 0.75rem;
+  color: #5a5a64;
+  word-break: break-all;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .mark-detail__panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .mark-detail__header {
+    padding: 14px 16px;
+  }
+
+  .mark-detail__section {
+    padding: 14px 16px;
   }
 }

@@ -53,6 +53,23 @@ function getEventSummary(event: WitnessEvent): string {
       return event.content?.slice(0, 40) || 'Thought';
     case 'spec':
       return event.specAction === 'scan' ? 'Corpus scanned' : event.specAction || 'Spec';
+    case 'agentese':
+      // Show the AGENTESE path being invoked
+      return event.agentesePath
+        ? `${event.agentesePath}${event.agenteseAspect ? '/' + event.agenteseAspect : ''}`
+        : 'AGENTESE invocation';
+    case 'sovereign':
+      return event.action?.slice(0, 40) || 'Document ingested';
+    case 'director':
+      return event.directorStatus || event.action?.slice(0, 40) || 'Director';
+    case 'git':
+      return event.commitMessage?.slice(0, 40) || `Commit ${event.commitHash?.slice(0, 7) || ''}`;
+    case 'constitutional':
+      return event.action?.slice(0, 40) || 'Constitutional check';
+    case 'proxy':
+      return event.action?.slice(0, 40) || 'Background task';
+    case 'trail':
+      return event.path || 'Trail';
     case 'connected':
       return 'Connected';
     default:
@@ -152,6 +169,27 @@ function LogEntry({ event }: LogEntryProps) {
       content = event.specAction || 'spec';
       detail = event.specPaths?.join(', ') || '';
       break;
+    case 'agentese':
+      content = event.agentesePath
+        ? `${event.agentesePath}${event.agenteseAspect ? '/' + event.agenteseAspect : ''}`
+        : 'AGENTESE invocation';
+      break;
+    case 'sovereign':
+      content = event.action || 'Document ingested';
+      break;
+    case 'director':
+      content = event.directorStatus || event.action || 'Director action';
+      break;
+    case 'git':
+      content = event.commitMessage || `Commit ${event.commitHash?.slice(0, 7) || ''}`;
+      detail = event.filesChanged ? `${event.filesChanged} files` : '';
+      break;
+    case 'constitutional':
+      content = event.action || 'Constitutional check';
+      break;
+    case 'proxy':
+      content = event.action || 'Background task';
+      break;
     case 'connected':
       content = 'stream connected';
       break;
@@ -160,9 +198,7 @@ function LogEntry({ event }: LogEntryProps) {
   }
 
   // Format principles as tags
-  const tags = event.principles?.length
-    ? event.principles.map(p => `#${p}`).join(' ')
-    : '';
+  const tags = event.principles?.length ? event.principles.map((p) => `#${p}`).join(' ') : '';
 
   return (
     <div className="witness-log__entry" data-type={event.type}>
@@ -247,9 +283,7 @@ export function WitnessFooter() {
               {allEvents.length > 0 ? (
                 allEvents.map((event) => <LogEntry key={event.id} event={event} />)
               ) : (
-                <div className="witness-log__empty">
-                  Awaiting first mark...
-                </div>
+                <div className="witness-log__empty">Awaiting first mark...</div>
               )}
             </div>
           </motion.div>

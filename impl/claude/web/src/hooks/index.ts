@@ -46,11 +46,7 @@ export {
 } from './useWitnessStream';
 
 // Document Director hook
-export {
-  useDirector,
-  type UseDirectorOptions,
-  type UseDirectorResult,
-} from './useDirector';
+export { useDirector, type UseDirectorOptions, type UseDirectorResult } from './useDirector';
 
 // Input handling
 export {
@@ -177,11 +173,7 @@ export {
 } from './useTelescopeState';
 
 // Workspace sidebar state (three-panel layout)
-export {
-  useSidebarState,
-  type SidebarState,
-  type UseSidebarStateReturn,
-} from './useSidebarState';
+export { useSidebarState, type SidebarState, type UseSidebarStateReturn } from './useSidebarState';
 
 // Unified witness hook (Witness Architecture)
 export {
@@ -197,10 +189,7 @@ export {
 } from './useWitness';
 
 // Mode system (six-mode editing for hypergraph)
-export {
-  useMode,
-  type UseModeReturn,
-} from './useMode';
+export { useMode, type UseModeReturn } from './useMode';
 
 // Route-aware mode reset (reset to NORMAL on navigation)
 export { useRouteAwareModeReset } from './useRouteAwareModeReset';
@@ -214,3 +203,22 @@ export {
   type ContradictionKBlockSummary,
   type UseItemContradictionsResult,
 } from './useItemContradictions';
+
+// Command Palette (Ctrl+K universal gateway)
+export {
+  useCommandPalette,
+  type Command,
+  type CommandCategory,
+  type CommandPaletteState,
+  type UseCommandPaletteOptions,
+  type UseCommandPaletteReturn,
+} from './useCommandPalette';
+
+// Derivation Navigation (Constitutional graph traversal)
+export {
+  useDerivationNavigation,
+  type DerivationNode,
+  type DerivationLink,
+  type DerivationSibling,
+  type DerivationNavigationResult,
+} from './useDerivationNavigation';

@@ -135,15 +135,44 @@ export interface UseWitnessStream {
 // =============================================================================
 
 const MAX_EVENTS = 100;
-const RECONNECT_DELAY = 3000;
+const INITIAL_RECONNECT_DELAY = 1000;
+const MAX_RECONNECT_DELAY = 30000; // Cap at 30 seconds
+const MAX_RECONNECT_ATTEMPTS = 10; // Stop retrying after 10 attempts
+
+// Check if witness stream is disabled via env var
+const STREAM_DISABLED = import.meta.env.VITE_DISABLE_WITNESS_STREAM === 'true';
 
 export function useWitnessStream(): UseWitnessStream {
   const [events, setEvents] = useState<WitnessEvent[]>([]);
   const [connected, setConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptRef = useRef(0);
+  const hasLoggedDisabledRef = useRef(false);
+  const hasLoggedMaxAttemptsRef = useRef(false);
 
   const connect = useCallback(() => {
+    // Skip if stream is disabled via env var
+    if (STREAM_DISABLED) {
+      if (!hasLoggedDisabledRef.current) {
+        console.debug('[useWitnessStream] Disabled via VITE_DISABLE_WITNESS_STREAM');
+        hasLoggedDisabledRef.current = true;
+      }
+      return;
+    }
+
+    // Stop retrying after max attempts
+    if (reconnectAttemptRef.current >= MAX_RECONNECT_ATTEMPTS) {
+      if (!hasLoggedMaxAttemptsRef.current) {
+        console.debug(
+          '[useWitnessStream] Max reconnection attempts reached. Backend may not be running. ' +
+            'Set VITE_DISABLE_WITNESS_STREAM=true to disable.'
+        );
+        hasLoggedMaxAttemptsRef.current = true;
+      }
+      return;
+    }
+
     // Clean up existing connection
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -157,6 +186,9 @@ export function useWitnessStream(): UseWitnessStream {
 
     eventSource.onopen = () => {
       setConnected(true);
+      // Reset reconnection attempts on successful connection
+      reconnectAttemptRef.current = 0;
+      hasLoggedMaxAttemptsRef.current = false;
       // Add connection event
       const connectionEvent: WitnessEvent = {
         id: `conn-${Date.now()}`,
@@ -240,14 +272,43 @@ export function useWitnessStream(): UseWitnessStream {
       setConnected(false);
       eventSource.close();
 
-      // Attempt reconnection
+      // Increment attempt counter
+      reconnectAttemptRef.current += 1;
+
+      // Stop if max attempts reached
+      if (reconnectAttemptRef.current >= MAX_RECONNECT_ATTEMPTS) {
+        if (!hasLoggedMaxAttemptsRef.current) {
+          console.debug(
+            '[useWitnessStream] Max reconnection attempts reached. Backend may not be running.'
+          );
+          hasLoggedMaxAttemptsRef.current = true;
+        }
+        return;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s, 8s, 16s, capped at 30s
+      const delay = Math.min(
+        INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttemptRef.current - 1),
+        MAX_RECONNECT_DELAY
+      );
+
+      // Only log first few attempts to avoid spam
+      if (reconnectAttemptRef.current <= 3) {
+        console.debug(
+          `[useWitnessStream] Connection failed, retry ${reconnectAttemptRef.current}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`
+        );
+      }
+
       reconnectTimeoutRef.current = setTimeout(() => {
         connect();
-      }, RECONNECT_DELAY);
+      }, delay);
     };
   }, []);
 
   const reconnect = useCallback(() => {
+    // Reset attempt counter on manual reconnect
+    reconnectAttemptRef.current = 0;
+    hasLoggedMaxAttemptsRef.current = false;
     connect();
   }, [connect]);
 

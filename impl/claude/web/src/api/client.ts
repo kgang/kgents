@@ -1299,7 +1299,10 @@ export const sovereignApi = {
   },
 
   // REST-based entity operations
-  listEntities: async (prefix?: string, limit = 100): Promise<{ entities: SovereignEntity[]; total: number }> => {
+  listEntities: async (
+    prefix?: string,
+    limit = 100
+  ): Promise<{ entities: SovereignEntity[]; total: number }> => {
     const params = new URLSearchParams();
     if (prefix) params.set('prefix', prefix);
     params.set('limit', String(limit));
@@ -1386,22 +1389,31 @@ export const sovereignApi = {
     return response.data;
   },
 
-  getReferences: async (path: string): Promise<{ path: string; referenced_by: EntityReference[]; count: number }> => {
-    const response = await apiClient.get<{ path: string; referenced_by: EntityReference[]; count: number }>(
-      `/api/sovereign/entity/references?path=${encodeURIComponent(path)}`
-    );
+  getReferences: async (
+    path: string
+  ): Promise<{ path: string; referenced_by: EntityReference[]; count: number }> => {
+    const response = await apiClient.get<{
+      path: string;
+      referenced_by: EntityReference[];
+      count: number;
+    }>(`/api/sovereign/entity/references?path=${encodeURIComponent(path)}`);
     return response.data;
   },
 
   exportEntities: async (paths: string[], format: 'json' | 'zip' = 'zip'): Promise<Blob> => {
-    const response = await apiClient.get(`/api/sovereign/export?paths=${paths.join(',')}&format=${format}`, {
-      responseType: 'blob',
-    });
+    const response = await apiClient.get(
+      `/api/sovereign/export?paths=${paths.join(',')}&format=${format}`,
+      {
+        responseType: 'blob',
+      }
+    );
     return response.data;
   },
 
   // Collection operations
-  listCollections: async (parentId?: string): Promise<{ collections: SovereignCollection[]; total: number }> => {
+  listCollections: async (
+    parentId?: string
+  ): Promise<{ collections: SovereignCollection[]; total: number }> => {
     const params = parentId ? `?parent_id=${parentId}` : '';
     const response = await apiClient.get<{ collections: SovereignCollection[]; total: number }>(
       `/api/sovereign/collections${params}`
@@ -1425,7 +1437,9 @@ export const sovereignApi = {
   },
 
   getCollection: async (collectionId: string): Promise<SovereignCollection> => {
-    const response = await apiClient.get<SovereignCollection>(`/api/sovereign/collections/${collectionId}`);
+    const response = await apiClient.get<SovereignCollection>(
+      `/api/sovereign/collections/${collectionId}`
+    );
     return response.data;
   },
 
@@ -1440,14 +1454,19 @@ export const sovereignApi = {
     return response.data;
   },
 
-  deleteCollection: async (collectionId: string): Promise<{ deleted: boolean; collection_id: string }> => {
+  deleteCollection: async (
+    collectionId: string
+  ): Promise<{ deleted: boolean; collection_id: string }> => {
     const response = await apiClient.delete<{ deleted: boolean; collection_id: string }>(
       `/api/sovereign/collections/${collectionId}`
     );
     return response.data;
   },
 
-  addPathsToCollection: async (collectionId: string, paths: string[]): Promise<SovereignCollection> => {
+  addPathsToCollection: async (
+    collectionId: string,
+    paths: string[]
+  ): Promise<SovereignCollection> => {
     const response = await apiClient.post<SovereignCollection>(
       `/api/sovereign/collections/${collectionId}/paths`,
       { paths }
@@ -1455,7 +1474,10 @@ export const sovereignApi = {
     return response.data;
   },
 
-  removePathsFromCollection: async (collectionId: string, paths: string[]): Promise<SovereignCollection> => {
+  removePathsFromCollection: async (
+    collectionId: string,
+    paths: string[]
+  ): Promise<SovereignCollection> => {
     const response = await apiClient.delete<SovereignCollection>(
       `/api/sovereign/collections/${collectionId}/paths`,
       { data: { paths } }
@@ -2097,6 +2119,46 @@ export interface GenesisZeroSeedResponse {
   design_laws: GenesisDesignLawResponse[];
 }
 
+// Clean Slate Genesis Types
+export interface CleanSlateKBlock {
+  id: string;
+  title: string;
+  layer: number;
+  galois_loss: number;
+  derives_from: string[];
+  tags: string[];
+  content?: string;
+}
+
+export interface CleanSlateStatusResponse {
+  is_seeded: boolean;
+  kblock_count: number;
+  expected_count: number; // 22
+  missing_kblocks: string[];
+  average_loss: number | null;
+}
+
+export interface CleanSlateResponse {
+  success: boolean;
+  message: string;
+  kblocks: CleanSlateKBlock[];
+  total_kblocks: number;
+  average_loss: number;
+  timestamp: string;
+}
+
+export interface DerivationEdge {
+  from: string;
+  to: string;
+  type: string;
+}
+
+export interface DerivationGraphResponse {
+  nodes: CleanSlateKBlock[];
+  edges: DerivationEdge[];
+  layers: Record<number, string[]>;
+}
+
 export const genesisApi = {
   /**
    * Check if system has been seeded via REST: GET /api/genesis/status
@@ -2128,6 +2190,29 @@ export const genesisApi = {
    */
   getZeroSeed: async (): Promise<GenesisZeroSeedResponse> => {
     const response = await apiClient.get<GenesisZeroSeedResponse>('/api/genesis/zero-seed');
+    return response.data;
+  },
+
+  /** Check if clean slate genesis is complete */
+  getCleanSlateStatus: async (): Promise<CleanSlateStatusResponse> => {
+    const response = await apiClient.get<CleanSlateStatusResponse>(
+      '/api/genesis/clean-slate/status'
+    );
+    return response.data;
+  },
+
+  /** Seed the clean slate genesis (creates 22 K-Blocks) */
+  seedCleanSlate: async (wipeExisting = false, force = false): Promise<CleanSlateResponse> => {
+    const response = await apiClient.post<CleanSlateResponse>('/api/genesis/clean-slate', {
+      wipe_existing: wipeExisting,
+      force,
+    });
+    return response.data;
+  },
+
+  /** Get the Constitutional derivation graph */
+  getDerivationGraph: async (): Promise<DerivationGraphResponse> => {
+    const response = await apiClient.get<DerivationGraphResponse>('/api/genesis/clean-slate/graph');
     return response.data;
   },
 };
@@ -2189,11 +2274,7 @@ export const feedApi = {
    * @param limit - Maximum items to return
    * @param ranking - Ranking strategy (chronological, coherence, principles)
    */
-  getCosmos: async (
-    offset = 0,
-    limit = 50,
-    ranking = 'chronological'
-  ): Promise<FeedResponse> => {
+  getCosmos: async (offset = 0, limit = 50, ranking = 'chronological'): Promise<FeedResponse> => {
     const response = await apiClient.get<FeedResponse>(
       `/api/feed/cosmos?offset=${offset}&limit=${limit}&ranking=${ranking}`
     );
@@ -2207,11 +2288,7 @@ export const feedApi = {
    * @param limit - Maximum items to return
    * @param maxLoss - Maximum Galois loss threshold (0-1)
    */
-  getCoherent: async (
-    offset = 0,
-    limit = 50,
-    maxLoss = 0.2
-  ): Promise<FeedResponse> => {
+  getCoherent: async (offset = 0, limit = 50, maxLoss = 0.2): Promise<FeedResponse> => {
     const response = await apiClient.get<FeedResponse>(
       `/api/feed/coherent?offset=${offset}&limit=${limit}&max_loss=${maxLoss}`
     );
@@ -2231,14 +2308,16 @@ export const feedApi = {
   }> => {
     // Fetch all content sources in parallel
     const [cosmosResponse, uploadsResponse] = await Promise.all([
-      feedApi.getCosmos(0, 100).catch(() => ({ items: [], total: 0, has_more: false, offset: 0, limit: 100 })),
+      feedApi
+        .getCosmos(0, 100)
+        .catch(() => ({ items: [], total: 0, has_more: false, offset: 0, limit: 100 })),
       sovereignApi.listEntities('uploads/', 100).catch(() => ({ entities: [], total: 0 })),
     ]);
 
     // Transform cosmos items into unified format
     const zeroSeed: UnifiedContentItem[] = cosmosResponse.items
-      .filter(item => item.zero_seed_layer !== null)
-      .map(item => ({
+      .filter((item) => item.zero_seed_layer !== null)
+      .map((item) => ({
         id: item.id,
         path: item.path,
         name: item.path.split('/').pop() || item.path,
@@ -2249,7 +2328,7 @@ export const feedApi = {
       }));
 
     // Transform uploads into unified format
-    const uploads: UnifiedContentItem[] = uploadsResponse.entities.map(entity => ({
+    const uploads: UnifiedContentItem[] = uploadsResponse.entities.map((entity) => ({
       id: entity.path,
       path: entity.path,
       name: entity.path.split('/').pop() || entity.path,
@@ -2268,10 +2347,7 @@ export const feedApi = {
 /**
  * Map Zero Seed layer and kind to unified content kind.
  */
-function mapLayerToKind(
-  layer: number | null,
-  kind: string | null
-): UnifiedContentItem['kind'] {
+function mapLayerToKind(layer: number | null, kind: string | null): UnifiedContentItem['kind'] {
   if (kind) {
     const kindMap: Record<string, UnifiedContentItem['kind']> = {
       axiom: 'axiom',
@@ -2402,7 +2478,9 @@ export const kblocksApi = {
    * @param kblockId - K-Block ID
    */
   getById: async (kblockId: string): Promise<KBlockDetailResponse> => {
-    const response = await apiClient.get<KBlockDetailResponse>(`/api/kblocks/${encodeURIComponent(kblockId)}`);
+    const response = await apiClient.get<KBlockDetailResponse>(
+      `/api/kblocks/${encodeURIComponent(kblockId)}`
+    );
     return response.data;
   },
 
@@ -2457,7 +2535,15 @@ export const kblocksApi = {
     const nodes: FileNode[] = [];
 
     // Create category directories under zero-seed
-    const categories = ['axioms', 'values', 'goals', 'specs', 'actions', 'reflections', 'representations'];
+    const categories = [
+      'axioms',
+      'values',
+      'goals',
+      'specs',
+      'actions',
+      'reflections',
+      'representations',
+    ];
 
     for (const category of categories) {
       const kblocks = response.zero_seed[category] || [];
@@ -2511,7 +2597,13 @@ function mapKindToContentKind(kind: string | null): ContentKind {
 
 // Import types from FileExplorer and browse
 import type { FileNode } from '../components/FileExplorer/types';
-import type { BrowseItem, BrowseCategory, ContentKind, WitnessMark, MarkBrowseResponse } from '../components/browse/types';
+import type {
+  BrowseItem,
+  BrowseCategory,
+  ContentKind,
+  WitnessMark,
+  MarkBrowseResponse,
+} from '../components/browse/types';
 
 // =============================================================================
 // Witness API (Marks Explorer) - REST API
@@ -2548,9 +2640,11 @@ export const witnessApi = {
     if (options?.grep) params.set('grep', options.grep);
     if (options?.principle) params.set('principle', options.principle);
 
-    const response = await apiClient.get<{ marks: WitnessMark[]; total: number; has_more: boolean }>(
-      `/api/witness/marks?${params}`
-    );
+    const response = await apiClient.get<{
+      marks: WitnessMark[];
+      total: number;
+      has_more: boolean;
+    }>(`/api/witness/marks?${params}`);
     return response.data;
   },
 
@@ -2726,7 +2820,9 @@ export const edgesApi = {
    * @param edgeId - Edge ID
    */
   getById: async (edgeId: string): Promise<EdgeDetailResponse> => {
-    const response = await apiClient.get<EdgeDetailResponse>(`/api/edges/${encodeURIComponent(edgeId)}`);
+    const response = await apiClient.get<EdgeDetailResponse>(
+      `/api/edges/${encodeURIComponent(edgeId)}`
+    );
     return response.data;
   },
 

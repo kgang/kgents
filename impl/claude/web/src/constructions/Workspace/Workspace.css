@@ -31,7 +31,9 @@
   flex-direction: column;
   border-right: 1px solid var(--steel-800, #27272a);
   background: var(--steel-950, #0a0a0a);
-  transition: width 0.2s ease, margin-left 0.2s ease;
+  transition:
+    width 0.2s ease,
+    margin-left 0.2s ease;
   overflow: hidden;
   position: relative;
 }
@@ -79,7 +81,9 @@
   flex-direction: column;
   border-left: 1px solid var(--steel-800, #27272a);
   background: var(--steel-950, #0a0a0a);
-  transition: width 0.2s ease, margin-right 0.2s ease;
+  transition:
+    width 0.2s ease,
+    margin-right 0.2s ease;
   overflow: hidden;
   position: relative;
 }
@@ -111,7 +115,9 @@
   cursor: pointer;
   color: var(--steel-400, #a1a1aa);
   z-index: 10;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .workspace__sidebar-toggle:hover {
@@ -166,7 +172,8 @@
 }
 
 @keyframes pulse-unread {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -227,6 +234,51 @@
   background: var(--steel-900, #18181b);
   padding: 2px 6px;
   border-radius: 4px;
+  margin-left: auto;
+}
+
+/* =============================================================================
+   Sidebar Tabs (K-Blocks / Files switcher)
+   ============================================================================= */
+
+.workspace__sidebar-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--steel-800, #27272a);
+  background: var(--steel-900, #18181b);
+}
+
+.workspace__sidebar-tab {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--steel-500, #71717a);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.workspace__sidebar-tab:hover {
+  color: var(--steel-300, #d4d4d8);
+  background: var(--steel-800, #27272a);
+}
+
+.workspace__sidebar-tab--active {
+  color: var(--steel-100, #f4f4f5);
+  background: var(--steel-800, #27272a);
+  border-color: var(--steel-700, #3f3f46);
+}
+
+.workspace__sidebar-tab:focus-visible {
+  outline: 2px solid var(--accent-gold, #f59e0b);
+  outline-offset: 2px;
 }
 
 /* =============================================================================

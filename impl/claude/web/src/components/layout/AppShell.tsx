@@ -4,6 +4,7 @@
  * Wraps all surfaces with:
  * - Top navbar for surface switching (Editor, Docs, Chart, Feed)
  * - Bottom WitnessFooter (always-on compact stream)
+ * - CommandPalette (Ctrl+K universal gateway)
  *
  * "Stop documenting agents. Become the agent."
  */
@@ -13,6 +14,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { useRouteAwareModeReset } from '@/hooks/useRouteAwareModeReset';
 import { WitnessFooter } from './WitnessFooter';
+import { CommandPalette } from '@/components/navigation/CommandPalette';
 
 import './AppShell.css';
 
@@ -135,6 +137,7 @@ export function AppShell({ children }: AppShellProps) {
         {/* Right side: sidebar toggles + help */}
         <div className="app-shell__actions">
           <span className="app-shell__sidebar-hints">
+            <kbd>Ctrl+K</kbd> Commands
             <kbd>Ctrl+B</kbd> Files
             <kbd>Ctrl+J</kbd> Chat
           </span>
@@ -143,7 +146,7 @@ export function AppShell({ children }: AppShellProps) {
             title="Keyboard shortcuts"
             onClick={() => {
               console.info(
-                'Shortcuts: Ctrl+B: Toggle Files sidebar | Ctrl+J: Toggle Chat sidebar | Shift+E: Editor'
+                'Shortcuts: Ctrl+K: Command Palette | Ctrl+B: Toggle Files sidebar | Ctrl+J: Toggle Chat sidebar | Shift+E: Editor'
               );
             }}
           >
@@ -157,6 +160,9 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Always-on witness footer */}
       <WitnessFooter />
+
+      {/* Command Palette (Ctrl+K) */}
+      <CommandPalette />
     </div>
   );
 }

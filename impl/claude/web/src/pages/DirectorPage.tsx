@@ -1,12 +1,19 @@
 /**
  * DirectorPage — Documents (Living Document Canvas)
  *
+ * @deprecated This page is DEPRECATED as of 2025-12-25.
+ * File browser functionality has been moved to a sidebar in the Hypergraph Editor.
+ * Use /world.document and toggle the files sidebar with Ctrl+B (Cmd+B on Mac).
+ *
+ * This page is kept for backward compatibility during the grace period.
+ * It will be removed in a future release.
+ *
  * Philosophy:
  *   "The canvas breathes. Documents arrive, analyze, become ready."
  *   "This is not accounting. This is gardening."
  */
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DirectorDashboard } from '../components/DirectorDashboard';
 import { sovereignApi } from '../api/client';
@@ -28,9 +35,20 @@ async function readFileAsText(file: File): Promise<string> {
 // Component
 // =============================================================================
 
+/**
+ * @deprecated Use the Files sidebar in /world.document instead (Ctrl+B to toggle)
+ */
 export function DirectorPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Log deprecation warning on mount
+  useEffect(() => {
+    console.warn(
+      '[DEPRECATED] DirectorPage is deprecated. ' +
+        'File browser is now a sidebar in /world.document. Use Ctrl+B (Cmd+B on Mac) to toggle.'
+    );
+  }, []);
 
   const handleSelectDocument = useCallback(
     (path: string) => navigate(`/world.document/${path}`),
@@ -74,7 +92,16 @@ export function DirectorPage() {
   const handleUpload = useCallback(() => fileInputRef.current?.click(), []);
 
   return (
-    <div className="full-height">
+    <div className="full-height flex flex-col">
+      {/* Deprecation Banner */}
+      <div className="bg-amber-900/30 border-b border-amber-700/50 px-4 py-2 text-amber-200 text-sm flex-shrink-0">
+        <strong>DEPRECATED:</strong> This page is deprecated. Files browser is now a sidebar in the{' '}
+        <a href="/world.document" className="underline hover:text-amber-100">
+          Hypergraph Editor
+        </a>
+        . Use <kbd className="px-1 py-0.5 bg-amber-800/50 rounded text-xs">Ctrl+B</kbd> to toggle.
+      </div>
+
       <input
         ref={fileInputRef}
         type="file"
@@ -82,7 +109,9 @@ export function DirectorPage() {
         onChange={handleFileSelect}
         accept=".md,.txt,.py,.ts,.tsx,.js,.jsx,.json,.yaml,.yml"
       />
-      <DirectorDashboard onSelectDocument={handleSelectDocument} onUpload={handleUpload} />
+      <div className="flex-1 overflow-auto">
+        <DirectorDashboard onSelectDocument={handleSelectDocument} onUpload={handleUpload} />
+      </div>
     </div>
   );
 }

@@ -56,6 +56,9 @@ export function FeedPage() {
   const [filters, setFilters] = useState<FeedFilter[]>([]);
   const [feedHeight, setFeedHeight] = useState(window.innerHeight - 120);
 
+  // Selected mark for detail view
+  const [selectedMark, setSelectedMark] = useState<Mark | null>(null);
+
   // Witness stream for real-time marks
   const { events: streamEvents, connected: witnessConnected } = useWitnessStream();
 
@@ -129,14 +132,15 @@ export function FeedPage() {
     [navigate, feedAspect]
   );
 
-  // Handle mark click - could navigate to witness detail
-  const handleMarkClick = useCallback(
-    (mark: Mark) => {
-      // For now, log it. Could navigate to /witness/mark/:id
-      console.info('[FeedPage] Mark clicked:', mark.id, mark.action);
-    },
-    []
-  );
+  // Handle mark click - show detail panel
+  const handleMarkClick = useCallback((mark: Mark) => {
+    setSelectedMark(mark);
+  }, []);
+
+  // Close detail panel
+  const handleCloseDetail = useCallback(() => {
+    setSelectedMark(null);
+  }, []);
 
   // Handle contradiction click (log for now, could open modal)
   const handleContradiction = useCallback((a: KBlock, b: KBlock) => {
@@ -175,7 +179,9 @@ export function FeedPage() {
         <AspectPills value={feedAspect} onChange={setFeedAspect} />
         {feedAspect !== 'contradictions' && (
           <>
-            <span className="feed-page__ranking-label feed-page__ranking-label--secondary">Ranking:</span>
+            <span className="feed-page__ranking-label feed-page__ranking-label--secondary">
+              Ranking:
+            </span>
             <RankingPills value={ranking} onChange={setRanking} />
           </>
         )}
@@ -202,7 +208,104 @@ export function FeedPage() {
           />
         )}
       </main>
+
+      {/* Mark Detail Panel (slide-in from right) */}
+      {selectedMark && <MarkDetailPanel mark={selectedMark} onClose={handleCloseDetail} />}
     </div>
+  );
+}
+
+// =============================================================================
+// Mark Detail Panel (Full details on click)
+// =============================================================================
+
+interface MarkDetailPanelProps {
+  mark: Mark;
+  onClose: () => void;
+}
+
+function MarkDetailPanel({ mark, onClose }: MarkDetailPanelProps) {
+  const timestamp = new Date(mark.timestamp);
+
+  // Author color mapping
+  const authorColors: Record<string, string> = {
+    kent: '#6b8b6b', // mint (human)
+    claude: '#c4a77d', // spore (AI)
+    system: '#5a5a64', // steel (system)
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="mark-detail__backdrop" onClick={onClose} />
+
+      {/* Panel */}
+      <div className="mark-detail__panel">
+        {/* Header */}
+        <div className="mark-detail__header">
+          <div className="mark-detail__header-left">
+            <span className="mark-detail__icon">⊢</span>
+            <span className="mark-detail__title">Witness Mark</span>
+          </div>
+          <button className="mark-detail__close" onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </div>
+
+        {/* Meta row */}
+        <div className="mark-detail__meta">
+          <span
+            className="mark-detail__author"
+            style={{ color: authorColors[mark.author] || authorColors.system }}
+          >
+            {mark.author}
+          </span>
+          <span className="mark-detail__time">
+            {timestamp.toLocaleString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        </div>
+
+        {/* Action */}
+        <div className="mark-detail__section">
+          <div className="mark-detail__label">Action</div>
+          <div className="mark-detail__action">{mark.action}</div>
+        </div>
+
+        {/* Reasoning (full, not truncated) */}
+        {mark.reasoning && (
+          <div className="mark-detail__section">
+            <div className="mark-detail__label">Reasoning</div>
+            <div className="mark-detail__reasoning">{mark.reasoning}</div>
+          </div>
+        )}
+
+        {/* Principles */}
+        {mark.principles.length > 0 && (
+          <div className="mark-detail__section">
+            <div className="mark-detail__label">Principles</div>
+            <div className="mark-detail__principles">
+              {mark.principles.map((principle) => (
+                <span key={principle} className="mark-detail__principle">
+                  {principle}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ID (for reference) */}
+        <div className="mark-detail__section mark-detail__section--subtle">
+          <div className="mark-detail__label">ID</div>
+          <div className="mark-detail__id">{mark.id}</div>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -252,11 +355,7 @@ function UnifiedFeed({ marks, marksLoading, onMarkClick, height }: UnifiedFeedPr
     <div className="unified-feed" style={{ height, overflowY: 'auto' }}>
       <div className="unified-feed__items">
         {sortedMarks.map((mark) => (
-          <MarkFeedItem
-            key={mark.id}
-            mark={mark}
-            onClick={() => onMarkClick(mark)}
-          />
+          <MarkFeedItem key={mark.id} mark={mark} onClick={() => onMarkClick(mark)} />
         ))}
       </div>
       <div className="feed__end">
@@ -291,9 +390,9 @@ function MarkFeedItem({ mark, onClick }: MarkFeedItemProps) {
 
   // Author color mapping
   const authorColors: Record<string, string> = {
-    kent: '#6b8b6b',    // mint (human)
-    claude: '#c4a77d',  // spore (AI)
-    system: '#5a5a64',  // steel (system)
+    kent: '#6b8b6b', // mint (human)
+    claude: '#c4a77d', // spore (AI)
+    system: '#5a5a64', // steel (system)
   };
 
   return (
@@ -303,7 +402,7 @@ function MarkFeedItem({ mark, onClick }: MarkFeedItemProps) {
     >
       {/* Left gutter - mark icon */}
       <div className="mark-feed-item__icon" title="Witness Mark">
-        turnstile
+        ⊢
       </div>
 
       {/* Main content */}
@@ -322,16 +421,10 @@ function MarkFeedItem({ mark, onClick }: MarkFeedItemProps) {
         </div>
 
         {/* Action (main text) */}
-        <div className="mark-feed-item__action">
-          {mark.action}
-        </div>
+        <div className="mark-feed-item__action">{mark.action}</div>
 
         {/* Reasoning preview */}
-        {reasoningPreview && (
-          <div className="mark-feed-item__reasoning">
-            {reasoningPreview}
-          </div>
-        )}
+        {reasoningPreview && <div className="mark-feed-item__reasoning">{reasoningPreview}</div>}
 
         {/* Principles tags */}
         {mark.principles.length > 0 && (
@@ -353,7 +446,7 @@ function MarkFeedItem({ mark, onClick }: MarkFeedItemProps) {
       {/* Right indicator - recent badge */}
       {recent && (
         <div className="mark-feed-item__recent-badge" title="Recent (< 60s)">
-          new
+          ●
         </div>
       )}
     </div>
@@ -545,9 +638,7 @@ function FilterDropdown({ filters, onChange }: FilterDropdownProps) {
         aria-haspopup="menu"
       >
         <span className="filter-dropdown__icon">Filters</span>
-        {activeCount > 0 && (
-          <span className="filter-dropdown__badge">{activeCount}</span>
-        )}
+        {activeCount > 0 && <span className="filter-dropdown__badge">{activeCount}</span>}
         <span className="filter-dropdown__chevron">{open ? '...' : '...'}</span>
       </button>
 
@@ -598,11 +689,7 @@ function FilterDropdown({ filters, onChange }: FilterDropdownProps) {
 
           {filters.length > 0 && (
             <div className="filter-dropdown__section">
-              <button
-                className="filter-dropdown__clear"
-                onClick={clearFilters}
-                role="menuitem"
-              >
+              <button className="filter-dropdown__clear" onClick={clearFilters} role="menuitem">
                 Clear All Filters
               </button>
             </div>

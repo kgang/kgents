@@ -23,11 +23,24 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useSidebarState } from '../../hooks/useSidebarState';
 import { HypergraphEditor } from '../../hypergraph/HypergraphEditor';
-import { FileSidebar, FileTree, BrowseModal, type UploadedFile, type BrowseItem } from '../../components/browse';
+import {
+  FileSidebar,
+  FileTree,
+  BrowseModal,
+  type UploadedFile,
+  type BrowseItem,
+} from '../../components/browse';
 import { useBrowseItems } from '../../components/browse/hooks/useBrowseItems';
 import { ChatSidebar } from '../../components/chat/ChatSidebar';
+import { KBlockExplorer, type KBlockExplorerItem } from '../../components/kblock-explorer';
 import type { GraphNode } from '../../hypergraph/state/types';
 import './Workspace.css';
+
+// =============================================================================
+// Types for Left Sidebar View
+// =============================================================================
+
+type LeftSidebarView = 'files' | 'kblocks';
 
 // =============================================================================
 // Types
@@ -77,9 +90,14 @@ export const Workspace = memo(function Workspace({
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [chatHasUnread, setChatHasUnread] = useState(false);
   const [browseModalOpen, setBrowseModalOpen] = useState(false);
+  const [leftSidebarView, setLeftSidebarView] = useState<LeftSidebarView>('kblocks');
 
   // Fetch K-Blocks from PostgreSQL for BrowseModal
-  const { items: browseItems, loading: browseLoading, refresh: refreshBrowseItems } = useBrowseItems();
+  const {
+    items: browseItems,
+    loading: browseLoading,
+    refresh: refreshBrowseItems,
+  } = useBrowseItems();
 
   // ==========================================================================
   // Keyboard Shortcuts (Ctrl+B, Ctrl+J, Ctrl+O)
@@ -89,7 +107,8 @@ export const Workspace = memo(function Workspace({
     const handleKeyDown = (e: KeyboardEvent) => {
       // Skip if in input/textarea (except for Ctrl+O which should work anywhere)
       const target = e.target as HTMLElement;
-      const isInInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      const isInInput =
+        target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
 
       // Ctrl+O: Open browse modal (works even in inputs)
       if (e.ctrlKey && e.key === 'o') {
@@ -153,6 +172,15 @@ export const Workspace = memo(function Workspace({
     void refreshBrowseItems();
   }, [refreshBrowseItems]);
 
+  // Handle K-Block selection from explorer
+  const handleKBlockSelect = useCallback(
+    (item: KBlockExplorerItem) => {
+      // Navigate to K-Block path (may be kblock:// URI or file path)
+      onNavigate(item.path);
+    },
+    [onNavigate]
+  );
+
   // ==========================================================================
   // CSS Variables for dynamic widths
   // ==========================================================================
@@ -191,25 +219,45 @@ export const Workspace = memo(function Workspace({
 
         {/* Content */}
         <div className="workspace__sidebar-content">
-          <div className="workspace__sidebar-header">
-            <span className="workspace__sidebar-title">Files</span>
+          {/* Tab Switcher */}
+          <div className="workspace__sidebar-tabs">
+            <button
+              className={`workspace__sidebar-tab ${leftSidebarView === 'kblocks' ? 'workspace__sidebar-tab--active' : ''}`}
+              onClick={() => setLeftSidebarView('kblocks')}
+              title="K-Block Explorer"
+            >
+              K-Blocks
+            </button>
+            <button
+              className={`workspace__sidebar-tab ${leftSidebarView === 'files' ? 'workspace__sidebar-tab--active' : ''}`}
+              onClick={() => setLeftSidebarView('files')}
+              title="File Tree"
+            >
+              Files
+            </button>
             <span className="workspace__sidebar-shortcut">Ctrl+B</span>
           </div>
           <div className="workspace__sidebar-body">
+            {/* K-Block Explorer (default view) */}
+            {leftSidebarView === 'kblocks' && (
+              <KBlockExplorer onSelect={handleKBlockSelect} selectedId={currentPath ?? undefined} />
+            )}
             {/* FileSidebar with FileTree for traditional file browsing */}
-            <FileSidebar
-              onOpenFile={onNavigate}
-              onUploadFile={handleUploadFileSync}
-              recentFiles={recentFiles}
-              onClearRecent={onClearRecent}
-              onOpenBrowseModal={handleOpenBrowseModal}
-            >
-              <FileTree
-                rootPaths={['spec/', 'impl/', 'docs/']}
-                onSelectFile={onNavigate}
-                currentFile={currentPath ?? undefined}
-              />
-            </FileSidebar>
+            {leftSidebarView === 'files' && (
+              <FileSidebar
+                onOpenFile={onNavigate}
+                onUploadFile={handleUploadFileSync}
+                recentFiles={recentFiles}
+                onClearRecent={onClearRecent}
+                onOpenBrowseModal={handleOpenBrowseModal}
+              >
+                <FileTree
+                  rootPaths={['spec/', 'impl/', 'docs/']}
+                  onSelectFile={onNavigate}
+                  currentFile={currentPath ?? undefined}
+                />
+              </FileSidebar>
+            )}
           </div>
         </div>
       </aside>
@@ -230,7 +278,8 @@ export const Workspace = memo(function Workspace({
           <div className="workspace__empty-state">
             <div className="workspace__empty-state-icon">◇</div>
             <p className="workspace__empty-state-text">
-              Open a file from the sidebar<br />
+              Open a file from the sidebar
+              <br />
               <kbd>Ctrl+B</kbd> files • <kbd>Ctrl+O</kbd> browse all
             </p>
           </div>
@@ -270,9 +319,7 @@ export const Workspace = memo(function Workspace({
             <span className="workspace__sidebar-shortcut">Ctrl+J</span>
           </div>
           <div className="workspace__sidebar-body">
-            <ChatSidebar
-              onUnreadChange={setChatHasUnread}
-            />
+            <ChatSidebar onUnreadChange={setChatHasUnread} />
           </div>
         </div>
       </aside>

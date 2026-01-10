@@ -70,10 +70,15 @@ const GrowthWitness = React.lazy(() =>
   import('../pages/Genesis').then((m) => ({ default: m.GrowthWitness }))
 );
 
-// Genesis Showcase (DEPRECATED - now unified with main Genesis flow)
-// Redirects to /genesis which has the synthesized design
-const GenesisShowcase = React.lazy(() =>
-  import('../pages/Genesis').then((m) => ({ default: m.GenesisPage }))
+// Genesis Showcase - Clean Slate (replaces old showcase)
+const GenesisCleanSlate = React.lazy(() =>
+  import('../pages/Genesis/GenesisCleanSlate').then((m) => ({ default: m.GenesisCleanSlate }))
+);
+
+// Genesis Experience - NEW unified Constitutional Graph-first experience (2026-01)
+// This is the canonical /genesis route - unified 5-phase experience
+const GenesisExperience = React.lazy(() =>
+  import('../pages/Genesis/GenesisExperience').then((m) => ({ default: m.GenesisExperience }))
 );
 
 // StudioPage (three-panel workspace with Feed + Editor + Witness)
@@ -93,7 +98,9 @@ const MetaPage = React.lazy(() =>
 
 // Contradiction Workspace (focused dialectical resolution)
 const ContradictionWorkspacePage = React.lazy(() =>
-  import('../pages/ContradictionWorkspacePage').then((m) => ({ default: m.ContradictionWorkspacePage }))
+  import('../pages/ContradictionWorkspacePage').then((m) => ({
+    default: m.ContradictionWorkspacePage,
+  }))
 );
 
 /**
@@ -147,19 +154,45 @@ const PATH_MAPPINGS: PathMapping[] = [
  *
  * ALL legacy routes now redirect to /world.document (the Workspace).
  * Chat and Director are now sidebars in the Workspace, not separate pages.
+ *
+ * DEPRECATION NOTICE: These routes are deprecated and will be removed in a future release.
+ * Please update all bookmarks and links to use AGENTESE paths directly.
  */
-const LEGACY_REDIRECTS: Record<string, string> = {
-  '/brain': '/self.feed',                // Brain → FeedPage
-  '/chat': '/world.document',            // ChatPage is now right sidebar (Ctrl+J)
-  '/director': '/world.document',        // DirectorPage is now left sidebar (Ctrl+B)
-  '/self.chat': '/world.document',       // AGENTESE path → editor (sidebar)
-  '/self.director': '/world.document',   // AGENTESE path → editor (sidebar)
-  '/editor': '/world.document',
-  '/hypergraph-editor': '/world.document',
-  '/chart': '/world.document',           // ChartPage deleted → editor
-  '/feed': '/self.feed',                 // Legacy feed → FeedPage
-  '/proof-engine': '/genesis/showcase',  // Proof engine → Genesis showcase
-  '/zero-seed': '/genesis/showcase',     // Zero seed → Genesis showcase
+interface LegacyRedirectConfig {
+  to: string;
+  hint?: string; // Keyboard shortcut hint for sidebar features
+}
+
+const LEGACY_REDIRECTS: Record<string, LegacyRedirectConfig> = {
+  // Brain/Feed redirects
+  '/brain': { to: '/self.feed' },
+  '/feed': { to: '/self.feed' },
+
+  // Chat redirects (now a sidebar)
+  '/chat': { to: '/world.document', hint: 'Chat is now a sidebar. Use Ctrl+J to toggle.' },
+  '/self.chat': { to: '/world.document', hint: 'Chat is now a sidebar. Use Ctrl+J to toggle.' },
+
+  // Director/Files redirects (now a sidebar)
+  '/director': {
+    to: '/world.document',
+    hint: 'Files browser is now a sidebar. Use Ctrl+B to toggle.',
+  },
+  '/self.director': {
+    to: '/world.document',
+    hint: 'Files browser is now a sidebar. Use Ctrl+B to toggle.',
+  },
+
+  // Editor redirects
+  '/editor': { to: '/world.document' },
+  '/hypergraph-editor': { to: '/world.document' },
+
+  // Removed features → fallback
+  '/chart': { to: '/world.document' },
+  '/proof-engine': { to: '/genesis/showcase' },
+  '/zero-seed': { to: '/genesis/showcase' },
+
+  // Meta redirect (AGENTESE canonical)
+  '/meta': { to: '/self.meta' },
 };
 
 /**
@@ -201,9 +234,7 @@ function UniversalProjection() {
         <div className="flex items-center justify-center min-h-screen bg-surface-canvas">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Path Not Found</h1>
-            <code className="bg-surface-overlay px-3 py-1 rounded text-sm">
-              {path.fullPath}
-            </code>
+            <code className="bg-surface-overlay px-3 py-1 rounded text-sm">{path.fullPath}</code>
             <p className="mt-4 text-text-secondary">
               This AGENTESE path doesn't have a projection yet.
             </p>
@@ -228,12 +259,8 @@ function UniversalProjection() {
       <div className="flex items-center justify-center min-h-screen bg-surface-canvas">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Invalid Path</h1>
-          <code className="bg-surface-overlay px-3 py-1 rounded text-sm">
-            {location.pathname}
-          </code>
-          <p className="mt-4 text-text-secondary">
-            This URL is not a valid AGENTESE path.
-          </p>
+          <code className="bg-surface-overlay px-3 py-1 rounded text-sm">{location.pathname}</code>
+          <p className="mt-4 text-text-secondary">This URL is not a valid AGENTESE path.</p>
           <p className="mt-2 text-sm text-text-tertiary">
             AGENTESE paths must start with a context: world, self, concept, void, or time
           </p>
@@ -258,17 +285,20 @@ function LoadingFallback() {
  * Legacy redirect component with deprecation warning and toast.
  * Preserves query parameters during redirect.
  */
-function LegacyRedirect({ from, to }: { from: string; to: string }) {
+function LegacyRedirect({ from, config }: { from: string; config: LegacyRedirectConfig }) {
   const location = useLocation();
+  const { to, hint } = config;
 
   React.useEffect(() => {
-    console.warn(`[Deprecated Route] ${from} → ${to}`);
-    console.warn('Legacy routes are deprecated. Please update your bookmarks to use AGENTESE paths.');
-
-    // Show deprecation toast (if toast system available)
-    const message = `Redirected from deprecated route ${from} to ${to}. Please update your bookmarks.`;
-    console.info(message);
-  }, [from, to]);
+    // Group deprecation warnings for cleaner console
+    console.groupCollapsed(`[DEPRECATED ROUTE] ${from} → ${to}`);
+    console.warn('This route is deprecated and will be removed in a future release.');
+    console.warn('Please update your bookmarks to use AGENTESE paths directly.');
+    if (hint) {
+      console.info(`TIP: ${hint}`);
+    }
+    console.groupEnd();
+  }, [from, to, hint]);
 
   // Preserve query parameters
   const targetPath = location.search ? `${to}${location.search}` : to;
@@ -294,9 +324,20 @@ export function AgenteseRouter() {
             {/* Root - Check onboarding status, redirect to Genesis or editor */}
             <Route path="/" element={<Navigate to="/world.document" replace />} />
 
-            {/* Genesis FTUE routes */}
+            {/* Genesis Experience - NEW canonical /genesis route (2026-01) */}
+            {/* Unified Constitutional Graph-first 5-phase experience */}
             <Route
               path="/genesis"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <GenesisExperience />
+                </Suspense>
+              }
+            />
+
+            {/* Legacy Genesis FTUE routes (redirect to new experience or showcase) */}
+            <Route
+              path="/genesis/legacy"
               element={
                 <Suspense fallback={<LoadingFallback />}>
                   <GenesisPage />
@@ -339,7 +380,7 @@ export function AgenteseRouter() {
               path="/genesis/showcase"
               element={
                 <Suspense fallback={<LoadingFallback />}>
-                  <GenesisShowcase />
+                  <GenesisCleanSlate />
                 </Suspense>
               }
             />
@@ -365,11 +406,12 @@ export function AgenteseRouter() {
             />
 
             {/* Legacy redirects (Phase 3: Pure AGENTESE - all redirect) */}
-            {Object.entries(LEGACY_REDIRECTS).map(([from, to]) => (
+            {/* NOTE: /meta is included in LEGACY_REDIRECTS, no separate route needed */}
+            {Object.entries(LEGACY_REDIRECTS).map(([from, config]) => (
               <Route
                 key={from}
                 path={from}
-                element={<LegacyRedirect from={from} to={to} />}
+                element={<LegacyRedirect from={from} config={config} />}
               />
             ))}
 
@@ -381,10 +423,6 @@ export function AgenteseRouter() {
                   <MetaPage />
                 </Suspense>
               }
-            />
-            <Route
-              path="/meta"
-              element={<LegacyRedirect from="/meta" to="/self.meta" />}
             />
 
             {/* Contradiction Workspace (focused dialectical resolution) */}
@@ -451,5 +489,13 @@ export function isLegacyRoute(pathname: string): boolean {
  * Get AGENTESE path for legacy route.
  */
 export function getLegacyRedirect(pathname: string): string | null {
+  const config = LEGACY_REDIRECTS[pathname];
+  return config?.to || null;
+}
+
+/**
+ * Get full redirect config for legacy route (includes hints).
+ */
+export function getLegacyRedirectConfig(pathname: string): LegacyRedirectConfig | null {
   return LEGACY_REDIRECTS[pathname] || null;
 }

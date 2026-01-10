@@ -34,34 +34,36 @@ export type WitnessDomain = 'navigation' | 'portal' | 'chat' | 'edit' | 'system'
  * Navigation-specific action types.
  */
 export type NavigationAction =
-  | 'derivation'      // gD - go to derivation parent
-  | 'loss_gradient'   // gl/gh - follow loss gradient
-  | 'sibling'         // gj/gk - navigate siblings
-  | 'definition'      // gd - go to definition
-  | 'references'      // gr - go to references
-  | 'tests'           // gt - go to tests
-  | 'back'            // go back in trail
-  | 'forward'         // go forward in trail
-  | 'direct';         // direct path navigation
+  | 'derivation' // gD/gh - go to derivation parent
+  | 'derivation_child' // gl - go to derivation child
+  | 'genesis' // gG - trace to axiom
+  | 'loss_gradient' // gL/gH - follow loss gradient
+  | 'sibling' // gj/gk - navigate siblings
+  | 'definition' // gd - go to definition
+  | 'references' // gr - go to references
+  | 'tests' // gt - go to tests
+  | 'back' // go back in trail
+  | 'forward' // go forward in trail
+  | 'direct'; // direct path navigation
 
 /**
  * Portal-specific action types.
  */
 export type PortalAction =
-  | 'expand'          // zo - expand portal
-  | 'collapse'        // zc - collapse portal
-  | 'toggle'          // za - toggle portal
-  | 'cure';           // cure unparsed portal
+  | 'expand' // zo - expand portal
+  | 'collapse' // zc - collapse portal
+  | 'toggle' // za - toggle portal
+  | 'cure'; // cure unparsed portal
 
 /**
  * Chat-specific action types.
  */
 export type ChatAction =
-  | 'message'         // send message
-  | 'fork'            // create branch
-  | 'merge'           // merge branches
-  | 'checkpoint'      // create checkpoint
-  | 'rewind';         // rewind to checkpoint
+  | 'message' // send message
+  | 'fork' // create branch
+  | 'merge' // merge branches
+  | 'checkpoint' // create checkpoint
+  | 'rewind'; // rewind to checkpoint
 
 /**
  * Extended mark with domain information.
@@ -106,28 +108,28 @@ export interface WitnessOptions {
  */
 const ACTION_PRINCIPLES: Record<string, string[]> = {
   // Navigation
-  derivation: ['generative'],           // Following proof chains is generative
-  loss_gradient: ['ethical'],           // Seeking truth/stability
-  sibling: ['composable'],              // Exploring related structures
-  definition: ['generative'],           // Following definitions
-  references: ['composable'],           // Understanding connections
-  tests: ['ethical', 'composable'],     // Verifying behavior
-  back: ['tasteful'],                   // Intentional retreat
-  forward: ['tasteful'],                // Intentional advance
-  direct: ['tasteful'],                 // Purposeful navigation
+  derivation: ['generative'], // Following proof chains is generative
+  loss_gradient: ['ethical'], // Seeking truth/stability
+  sibling: ['composable'], // Exploring related structures
+  definition: ['generative'], // Following definitions
+  references: ['composable'], // Understanding connections
+  tests: ['ethical', 'composable'], // Verifying behavior
+  back: ['tasteful'], // Intentional retreat
+  forward: ['tasteful'], // Intentional advance
+  direct: ['tasteful'], // Purposeful navigation
 
   // Portal
-  expand: ['composable', 'joy_inducing'],  // Bringing docs to you
-  collapse: ['tasteful'],                  // Cleaning up
-  toggle: ['joy_inducing'],                // Quick exploration
-  cure: ['generative'],                    // Resolving ambiguity
+  expand: ['composable', 'joy_inducing'], // Bringing docs to you
+  collapse: ['tasteful'], // Cleaning up
+  toggle: ['joy_inducing'], // Quick exploration
+  cure: ['generative'], // Resolving ambiguity
 
   // Chat
-  message: ['ethical', 'joy_inducing'],    // Communication
-  fork: ['heterarchical'],                 // Exploring alternatives
-  merge: ['composable'],                   // Synthesizing
-  checkpoint: ['ethical'],                 // Preserving state
-  rewind: ['ethical'],                     // Correcting course
+  message: ['ethical', 'joy_inducing'], // Communication
+  fork: ['heterarchical'], // Exploring alternatives
+  merge: ['composable'], // Synthesizing
+  checkpoint: ['ethical'], // Preserving state
+  rewind: ['ethical'], // Correcting course
 };
 
 /**
@@ -270,18 +272,11 @@ export function useWitness(options?: {
    * Convenience method for navigation witnessing.
    */
   const witnessNavigation = useCallback(
-    (
-      actionType: NavigationAction,
-      fromPath: string | null,
-      toPath: string,
-      reasoning?: string
-    ) => {
+    (actionType: NavigationAction, fromPath: string | null, toPath: string, reasoning?: string) => {
       return witness({
         domain: 'navigation',
         actionType,
-        action: fromPath
-          ? `${fromPath} -> ${toPath}`
-          : `Navigated to ${toPath}`,
+        action: fromPath ? `${fromPath} -> ${toPath}` : `Navigated to ${toPath}`,
         reasoning: reasoning ?? `Navigated via ${actionType}`,
         fireAndForget: true,
         metadata: { fromPath, toPath },
@@ -294,12 +289,7 @@ export function useWitness(options?: {
    * Convenience method for portal witnessing.
    */
   const witnessPortal = useCallback(
-    (
-      actionType: PortalAction,
-      edgeType: string,
-      destination: string,
-      depth?: number
-    ) => {
+    (actionType: PortalAction, edgeType: string, destination: string, depth?: number) => {
       return witness({
         domain: 'portal',
         actionType,
@@ -316,12 +306,7 @@ export function useWitness(options?: {
    * Convenience method for chat witnessing.
    */
   const witnessChat = useCallback(
-    (
-      actionType: ChatAction,
-      sessionId: string,
-      turnNumber: number,
-      reasoning?: string
-    ) => {
+    (actionType: ChatAction, sessionId: string, turnNumber: number, reasoning?: string) => {
       return witness({
         domain: 'chat',
         actionType,
@@ -377,9 +362,7 @@ export function useWitness(options?: {
           domain: extractDomain(mark.action) ?? ('system' as WitnessDomain),
         }));
         setRecentMarks(
-          filterDomain
-            ? domainMarks.filter((m) => m.domain === filterDomain)
-            : domainMarks
+          filterDomain ? domainMarks.filter((m) => m.domain === filterDomain) : domainMarks
         );
       })
       .catch((error) => {
