@@ -189,14 +189,16 @@ section "Mypy (strict, incremental, BLOCKING)" 2 $TOTAL_STEPS
 cd "$REPO_ROOT/impl/claude"
 
 run_mypy() {
-    if [ "${KGENTS_USE_DMYPY:-0}" = "1" ] && command -v dmypy &> /dev/null; then
-        # Use mypy daemon for faster re-runs (2-3x speedup)
-        info "Using mypy daemon (KGENTS_USE_DMYPY=1)..."
-        uv run dmypy run -- --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1
-    else
-        # Standard mypy with incremental caching (enabled in mypy.ini)
-        uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1
+    # Try dmypy first (2-3x faster) - now the default
+    if [ "${KGENTS_NO_DMYPY:-0}" != "1" ]; then
+        # Check if dmypy is running or can be started
+        if uv run dmypy status &>/dev/null || uv run dmypy start &>/dev/null; then
+            uv run dmypy check agents/ bootstrap/ runtime/ 2>&1
+            return $?
+        fi
     fi
+    # Fallback to standard mypy with incremental caching
+    uv run mypy agents/ bootstrap/ runtime/ 2>&1
 }
 
 MYPY_OUTPUT=$(time_cmd run_mypy)
@@ -237,19 +239,21 @@ cd "$REPO_ROOT/impl/claude"
 run_tests() {
     local extra_args=""
 
-    # Changed-only mode: only run tests for changed files
+    # Smart test selection (default: prioritize last-failed, then run all)
+    # This gives fast feedback on known issues while still catching new ones
+    if [ "${KGENTS_FULL_TESTS:-0}" != "1" ]; then
+        # Default: run last-failed first, then all if none failed
+        extra_args="--last-failed --last-failed-no-failures=all"
+    fi
+
+    # Changed-only mode: only run tests for changed files (explicit opt-in)
     if [ "${KGENTS_CHANGED_ONLY:-0}" = "1" ]; then
         local changed_files=$(get_changed_python_files)
         if [ -n "$changed_files" ]; then
             info "Running tests for changed files only..."
-            # Filter to test files
             local test_files=$(echo "$changed_files" | grep -E "test_.*\.py$|_test\.py$" || echo "")
             if [ -n "$test_files" ]; then
                 extra_args="$test_files"
-            else
-                info "No test files changed, running affected tests..."
-                # Run tests that might be affected by changed files
-                extra_args="--last-failed --last-failed-no-failures=all"
             fi
         fi
     fi
@@ -260,12 +264,17 @@ run_tests() {
         quiet_flag="-v"
     fi
 
+    # Use auto worker detection, cap at 8 for stability
+    local workers="$CPU_COUNT"
+    [ "$workers" -gt 8 ] && workers=8
+
     uv run pytest \
         -m "not slow and not tier3 and not accursed_share" \
-        -n "$CPU_COUNT" \
+        -n "$workers" \
         --tb=no \
         $quiet_flag \
         --dist=worksteal \
+        --cache-clear-failed \
         $extra_args \
         2>&1
 }
