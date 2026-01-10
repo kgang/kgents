@@ -41,7 +41,7 @@ import { AudioDebugOverlay } from './components/AudioDebugOverlay';
 import { VoiceLineOverlay } from './components/VoiceLineOverlay';
 import { HornetIcon, SkullIcon, LightningIcon, ArrowUpIcon, GamepadIcon } from './components/Icons';
 import { ARENA_WIDTH, ARENA_HEIGHT } from './systems/physics';
-import { COLORS } from './systems/juice';
+import { COLORS, SHAKE } from './systems/juice';
 import { applyUpgrade as applyVerbUpgrade, type UpgradeType, createInitialActiveUpgrades, type ActiveUpgrades, getGhostSummary } from './systems/upgrades';
 import { generateAbilityChoices, type AbilityId, type ActiveAbilities, type ComputedEffects } from './systems/abilities';
 import { BEE_BEHAVIORS, type TelegraphData } from './systems/enemies';
@@ -427,28 +427,60 @@ export function WASMSurvivors() {
 
   // THE BALL Formation event callback (Appendix E JUICE: Audio cue for scout coordination)
   // RUN 039: Alarm pheromone plays on GATHERING start (earliest warning)
+  // RUN 049: Full audio sequencing for THE BALL phases
   const handleBallEvent = useCallback((event: import('./systems/formation').FormationEvent) => {
-    if (event.type === 'ball_gathering_started') {
-      // Play alarm pheromone sound - signals scouts coordinating for THE BALL
-      // This is the "oh no" audio warning that gives players a chance to react
-      // Now plays at gathering start for maximum warning time
-      soundEngine.play('alarmPheromone');
+    // =========================================================================
+    // THE BALL Audio Sequencing (Run 049)
+    // "THE BALL should have 3s complete silence then bass drop"
+    // =========================================================================
+    switch (event.type) {
+      case 'ball_gathering_started':
+        // Play alarm pheromone sound - signals scouts coordinating for THE BALL
+        // This is the "oh no" audio warning that gives players a chance to react
+        soundEngine.play('alarmPheromone');
 
-      // Hornet Sound Identity: Play warning clicks for THE BALL formation
-      // Adds biological hornet "mandible click" warning sounds
-      hornetSound.playWarningClick();
-      setTimeout(() => hornetSound.playWarningClick(), 300);
-      setTimeout(() => hornetSound.playWarningClick(), 600);
-    }
+        // Hornet Sound Identity: Play warning clicks for THE BALL formation
+        hornetSound.playWarningClick();
+        setTimeout(() => hornetSound.playWarningClick(), 300);
+        setTimeout(() => hornetSound.playWarningClick(), 600);
+        break;
 
-    // RUN 039: Outside punch telegraph sounds
-    if (event.type === 'punch_hit') {
-      // Punch connected - use ASMR audio for proper layered impact
-      // Higher damage value (25) for heavier punch feel
-      soundEngine.playEnemyHit(25, event.position);
-    } else if (event.type === 'punch_whiff') {
-      // Player dodged! - GRAZE SOUND DISABLED
-      // The dodge detection still works, but no audio feedback
+      case 'ball_forming_started':
+        // Transition to forming: Quick fade out (500ms)
+        // Creates anticipation before the terrifying silence
+        soundEngine.fadeOutAudio(500);
+        break;
+
+      case 'ball_silence_started':
+        // TRUE SILENCE phase: Stop ALL audio for maximum dread
+        // The setTrueSilence is already called by fadeOutAudio
+        // No additional action needed - silence IS the action
+        break;
+
+      case 'ball_constrict_started':
+        // After 3s of silence: BASS DROP + intense music
+        // "THOOM" - the signature sound of THE BALL constricting
+        soundEngine.playBassDrop();
+        soundEngine.startIntense();
+        break;
+
+      case 'ball_escaped':
+      case 'ball_dispersed':
+      case 'ball_dissipating':
+        // Dissipation: Fade back to normal music (1000ms)
+        // Tension release - they survived or escaped
+        soundEngine.fadeToNormal(1000);
+        break;
+
+      // RUN 039: Outside punch telegraph sounds
+      case 'punch_hit':
+        // Punch connected - use ASMR audio for proper layered impact
+        soundEngine.playEnemyHit(25, event.position);
+        break;
+
+      case 'punch_whiff':
+        // Player dodged! - GRAZE SOUND DISABLED
+        break;
     }
   }, [soundEngine, hornetSound]);
 
@@ -619,6 +651,8 @@ export function WASMSurvivors() {
       // TODO: Play synergy sound if new synergy discovered (DD-7)
       if (newSynergies.length > 0) {
         console.log('SYNERGY DISCOVERED:', newSynergies.map(s => s.announcement).join(', '));
+        // Wire shake: Synergy discovery - 10px + flash celebration (biggest moment!)
+        juiceSystem.triggerShake(SHAKE.synergyDiscovery.amplitude, SHAKE.synergyDiscovery.duration);
         // soundEngine.playSynergy(); // When sound is ready
       }
 

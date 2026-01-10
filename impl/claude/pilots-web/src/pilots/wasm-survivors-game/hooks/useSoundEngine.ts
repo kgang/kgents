@@ -40,6 +40,11 @@ import {
   playHoneyDripSound,
   playFreezeFrameSound,
   getAudioState,
+  // THE BALL audio sequencing (Run 049: Audio Integration)
+  fadeOutAllAudio,
+  playBassDropSound,
+  startIntenseMusic,
+  fadeToNormalMusic,
   // Debug exports
   DEBUG_GET_AUDIO_STATE,
   DEBUG_GET_AUDIO_LEVEL,
@@ -117,6 +122,29 @@ export interface UseSoundEngineResult {
   playHoneyDrip: () => void;
   /** Play freeze frame sound (time-stop impact) */
   playFreezeFrame: (type: 'significant' | 'multi' | 'critical' | 'massacre') => void;
+  // =========================================================================
+  // THE BALL Audio Sequencing (Run 049: Audio Integration)
+  // =========================================================================
+  /**
+   * Fade out all audio (for forming phase transition to silence)
+   * @param durationMs - Fade duration in milliseconds (default: 500ms)
+   */
+  fadeOutAudio: (durationMs?: number) => void;
+  /**
+   * Play bass drop sound - THE BALL's signature "THOOM"
+   * Used at constrict phase start after silence for maximum impact
+   */
+  playBassDrop: () => void;
+  /**
+   * Start intense music (for constrict phase)
+   * Uses maximum coordination buzz intensity
+   */
+  startIntense: () => void;
+  /**
+   * Fade back to normal music (for dissipating phase)
+   * @param durationMs - Fade duration in milliseconds (default: 1000ms)
+   */
+  fadeToNormal: (durationMs?: number) => void;
   /**
    * Start low health heartbeat loop
    * Plays heartbeat sound at ~1.5 second intervals while active.
@@ -366,6 +394,50 @@ export function useSoundEngine(): UseSoundEngineResult {
     playFreezeFrameSound(type);
   }, []);
 
+  // ===========================================================================
+  // THE BALL Audio Sequencing (Run 049: Audio Integration)
+  // ===========================================================================
+
+  /**
+   * Fade out all audio for THE BALL forming phase.
+   * Creates anticipation before the terrifying silence.
+   */
+  const fadeOutAudio = useCallback((durationMs: number = 500) => {
+    if (mutedRef.current) return;
+    fadeOutAllAudio(durationMs);
+    silentRef.current = true;  // Mark as silent for other sounds
+  }, []);
+
+  /**
+   * Play bass drop sound - THE BALL's signature "THOOM"
+   * Hits hard after 3 seconds of complete silence.
+   */
+  const playBassDrop = useCallback(() => {
+    if (mutedRef.current) return;
+    silentRef.current = false;  // End silence mode
+    playBassDropSound();
+  }, []);
+
+  /**
+   * Start intense music for constrict phase.
+   * Maximum coordination buzz - temperature rising, danger escalating.
+   */
+  const startIntense = useCallback(() => {
+    if (mutedRef.current) return;
+    silentRef.current = false;  // End silence mode
+    startIntenseMusic();
+  }, []);
+
+  /**
+   * Fade back to normal music when THE BALL dissipates.
+   * Tension release - they survived (or escaped).
+   */
+  const fadeToNormal = useCallback((durationMs: number = 1000) => {
+    if (mutedRef.current) return;
+    silentRef.current = false;
+    fadeToNormalMusic(durationMs);
+  }, []);
+
   /**
    * Start low health heartbeat loop
    *
@@ -444,6 +516,11 @@ export function useSoundEngine(): UseSoundEngineResult {
     playDeath,
     playHoneyDrip,
     playFreezeFrame,
+    // THE BALL audio sequencing (Run 049)
+    fadeOutAudio,
+    playBassDrop,
+    startIntense,
+    fadeToNormal,
     startHeartbeatLoop,
     stopHeartbeatLoop,
     isHeartbeatPlaying: heartbeatPlayingRef.current,

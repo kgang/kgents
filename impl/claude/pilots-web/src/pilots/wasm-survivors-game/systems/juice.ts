@@ -18,6 +18,46 @@ import type { AbilityId } from './abilities';
 import { getSoundEngine } from './sound';
 
 // =============================================================================
+// DEBUG TIME SCALE (for principled test acceleration)
+// =============================================================================
+
+/**
+ * Debug time scale multiplier for accelerated testing.
+ *
+ * This enables running the game at 4x speed (or faster) while preserving
+ * the integrity of game-time-based systems like reaction modeling.
+ *
+ * Key insight: The PlaythroughAgent's reaction model operates in GAME time.
+ * At 4x acceleration: 250ms game-time reaction = 62.5ms wall-clock time.
+ * The reaction is still "250ms in game" - it just happens faster IRL.
+ *
+ * IMPORTANT: This multiplies on TOP of the juice system's time scaling:
+ * - Freeze frames (0x) still freeze
+ * - Clutch moments (0.2x) still slow
+ * - But everything runs 4x faster when not in slowmo
+ */
+let debugTimeScale: number = 1.0;
+
+/**
+ * Set the debug time scale for accelerated testing.
+ *
+ * @param scale - Time multiplier (e.g., 4.0 for 4x speed)
+ *                Range: 0.1 to 10.0 (clamped)
+ */
+export function DEBUG_SET_TIME_SCALE(scale: number): void {
+  debugTimeScale = Math.max(0.1, Math.min(10.0, scale));
+}
+
+/**
+ * Get the current debug time scale.
+ *
+ * @returns Current time scale multiplier
+ */
+export function DEBUG_GET_TIME_SCALE(): number {
+  return debugTimeScale;
+}
+
+// =============================================================================
 // APPENDIX E: JUICE PARAMETERS (from PROTO_SPEC) - COPY-PASTED VALUES
 // =============================================================================
 
@@ -32,6 +72,12 @@ export const SHAKE = {
   playerHit:   { amplitude: 8,  duration: 200, frequency: 60 },
   multiKill:   { amplitude: 6,  duration: 120, frequency: 60 },  // 3+ kills
   massacre:    { amplitude: 15, duration: 350, frequency: 60 },  // 5+ kills
+  // New shake events from quality spec
+  dashExecution: { amplitude: 3, duration: 50, frequency: 60 },   // 2-3px on dash start
+  dashGraze:     { amplitude: 1, duration: 30, frequency: 60 },   // 1px subtle graze feedback
+  ballForming:   { amplitude: 1, duration: 100, frequency: 60 },  // Initial forming (ramps 1-5px)
+  ballConstrict: { amplitude: 8, duration: 200, frequency: 60 },  // Intense constrict
+  synergyDiscovery: { amplitude: 10, duration: 300, frequency: 60 }, // 10px + flash celebration
 } as const;
 
 /**
@@ -51,7 +97,7 @@ export const FREEZE = {
  */
 export const PARTICLES = {
   deathSpiral: {
-    count: 12,           // Reduced from 25 to prevent visual soup
+    count: 25,           // Full 25 particles for dramatic death effect
     color: '#FFE066',    // soft yellow pollen
     spread: 45,          // degrees
     lifespan: 400,       // ms
@@ -443,7 +489,8 @@ export interface Particle {
   maxLifetime: number;
   alpha: number;
   type: 'burst' | 'trail' | 'text' | 'ring' | 'spiral' | 'drip' | 'pool' | 'fragment' | 'graze_spark'
-      | 'apex_wing_blur' | 'apex_wind_dust' | 'apex_speed_line' | 'apex_air' | 'apex_impact' | 'apex_tumble' | 'apex_fury_text';
+      | 'apex_wing_blur' | 'apex_wind_dust' | 'apex_speed_line' | 'apex_air' | 'apex_impact' | 'apex_tumble' | 'apex_fury_text'
+      | 'xp_sparkle';
   text?: string;
   // Death spiral specific
   rotation?: number;        // Current rotation in radians
@@ -659,6 +706,14 @@ export interface JuiceSystem {
 
   // Main ability juice dispatcher - routes to specific effect based on ability ID
   emitAbilityJuice: (abilityId: AbilityId, context: AbilityJuiceContext) => void;
+
+  // =================================================================
+  // BALL ESCAPE CELEBRATION - "Through the gap. Every time."
+  // =================================================================
+
+  // Victory celebration when escaping THE BALL through the gap
+  // Spawns victory particles, triggers freeze frame, screen flash
+  emitBallEscape: (position: Vector2, gapAngle: number, escapeCount: number) => void;
 }
 
 // =============================================================================
@@ -1951,7 +2006,7 @@ export function createJuiceSystem(): JuiceSystem {
     },
 
     emitXPCollect(position: Vector2, amount: number) {
-      // Trail particle toward XP bar (top of screen)
+      // Main trail particle toward XP bar (top of screen)
       state.particles.push(
         createParticle(position, 'trail', COLORS.xp, {
           velocity: { x: 0, y: -200 },
@@ -1960,6 +2015,32 @@ export function createJuiceSystem(): JuiceSystem {
           size: 6,
         })
       );
+
+      // XP sparkle trail - multiple sparkles that fan out then converge upward
+      const sparkleCount = Math.min(5, Math.ceil(amount / 5)); // More sparkles for bigger XP
+      for (let i = 0; i < sparkleCount; i++) {
+        const angle = ((i / sparkleCount) - 0.5) * Math.PI * 0.6; // Spread in a 108-degree arc
+        const speed = 100 + Math.random() * 50;
+        const delay = i * 30; // Stagger spawn slightly
+
+        // Create sparkle with initial outward burst, then upward pull
+        setTimeout(() => {
+          state.particles.push({
+            id: `xp-sparkle-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+            position: { ...position },
+            velocity: {
+              x: Math.sin(angle) * speed,
+              y: -150 - Math.random() * 100, // Upward with variance
+            },
+            color: i % 2 === 0 ? COLORS.xp : '#FFFFFF', // Alternate gold and white
+            size: 3 + Math.random() * 2,
+            lifetime: 400 + Math.random() * 200,
+            maxLifetime: 500,
+            alpha: 1,
+            type: 'xp_sparkle',
+          });
+        }, delay);
+      }
 
       // Small text
       if (amount >= 10) {
@@ -3427,6 +3508,148 @@ export function createJuiceSystem(): JuiceSystem {
         }
       }
     },
+
+    // =================================================================
+    // BALL ESCAPE CELEBRATION
+    // "Through the gap. Every time."
+    //
+    // When the player escapes THE BALL formation through the gap,
+    // this triggers a victory celebration:
+    // - Directional particle burst through the gap
+    // - Green/cyan victory particles
+    // - Freeze frame for dramatic effect
+    // - Screen shake for impact
+    // - Expanding ring effect
+    // =================================================================
+    emitBallEscape(position: Vector2, gapAngle: number, escapeCount: number) {
+      const sound = getSoundEngine();
+
+      // Scale celebration intensity with escape count
+      // First escape: normal. Multiple escapes: LEGENDARY.
+      const intensityScale = Math.min(2.0, 1.0 + escapeCount * 0.25);
+
+      // =================================================================
+      // 1. DIRECTIONAL PARTICLE BURST - Victory particles through the gap
+      // Particles shoot outward in the direction of escape (gap angle)
+      // =================================================================
+      const particleCount = Math.floor(20 * intensityScale);
+      const escapeColors = ['#00FF88', '#00FFFF', '#88FFAA', '#00FF00']; // Green/cyan victory colors
+
+      for (let i = 0; i < particleCount; i++) {
+        // Particles spread outward from gap angle
+        const spreadAngle = (Math.random() - 0.5) * (Math.PI / 3); // 60 degree spread
+        const particleAngle = gapAngle + spreadAngle;
+        const speed = (200 + Math.random() * 200) * intensityScale;
+
+        const color = escapeColors[Math.floor(Math.random() * escapeColors.length)];
+
+        state.particles.push({
+          id: `escape-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+          position: { ...position },
+          velocity: {
+            x: Math.cos(particleAngle) * speed,
+            y: Math.sin(particleAngle) * speed,
+          },
+          color,
+          size: 4 + Math.random() * 4,
+          lifetime: 500 + Math.random() * 300,
+          maxLifetime: 500 + Math.random() * 300,
+          alpha: 1,
+          type: 'burst',
+        });
+      }
+
+      // =================================================================
+      // 2. CIRCULAR BURST - Secondary burst for visual impact
+      // Full 360 degree sparkle burst
+      // =================================================================
+      const burstCount = Math.floor(12 * intensityScale);
+      for (let i = 0; i < burstCount; i++) {
+        const angle = (i / burstCount) * Math.PI * 2;
+        const speed = 100 + Math.random() * 80;
+
+        state.particles.push({
+          id: `escape-burst-${Date.now()}-${i}`,
+          position: { ...position },
+          velocity: {
+            x: Math.cos(angle) * speed,
+            y: Math.sin(angle) * speed,
+          },
+          color: '#FFFFFF',
+          size: 2 + Math.random() * 2,
+          lifetime: 300,
+          maxLifetime: 300,
+          alpha: 0.8,
+          type: 'burst',
+        });
+      }
+
+      // =================================================================
+      // 3. EXPANDING RING EFFECT - Shockwave of freedom
+      // =================================================================
+      state.particles.push({
+        id: `escape-ring-${Date.now()}`,
+        position: { ...position },
+        velocity: { x: 0, y: 0 },
+        color: '#00FF88',
+        size: 10,
+        lifetime: 400,
+        maxLifetime: 400,
+        alpha: 0.8,
+        type: 'ring',
+        text: (80 * intensityScale).toString(), // Max ring size
+      });
+
+      // =================================================================
+      // 4. VICTORY TEXT - Floating text indicator
+      // =================================================================
+      const victoryText = escapeCount >= 3 ? 'LEGENDARY ESCAPE!'
+        : escapeCount >= 2 ? 'ESCAPE MASTER!'
+        : 'ESCAPED!';
+
+      state.particles.push({
+        id: `escape-text-${Date.now()}`,
+        position: { x: position.x, y: position.y - 20 },
+        velocity: { x: 0, y: -60 },
+        color: '#00FF88',
+        size: escapeCount >= 2 ? 20 : 16,
+        lifetime: 1200,
+        maxLifetime: 1200,
+        alpha: 1,
+        type: 'text',
+        text: victoryText,
+      });
+
+      // =================================================================
+      // 5. SCREEN EFFECTS - Shake and freeze for impact
+      // =================================================================
+
+      // Screen shake - stronger for multiple escapes
+      const shakeIntensity = Math.min(10, 5 + escapeCount * 2);
+      this.triggerShake(shakeIntensity, 150);
+
+      // Freeze frame - "time slows when you're badass"
+      // First escape gets a small freeze, subsequent escapes get bigger
+      if (escapeCount >= 2) {
+        this.triggerFreeze('significant');
+      } else {
+        this.triggerFreeze('critical');
+      }
+
+      // =================================================================
+      // 6. AUDIO FEEDBACK
+      // =================================================================
+
+      // Play victory sound
+      sound.play('powerup', { pitch: 1.2, volume: 0.8 });
+
+      // Additional audio for legendary escapes
+      if (escapeCount >= 2) {
+        sound.play('bassDrop', { volume: 0.6 });
+      }
+
+      console.log(`[BALL ESCAPE] Celebration triggered! Escape #${escapeCount}, gap angle: ${(gapAngle * 180 / Math.PI).toFixed(1)}deg`);
+    },
   };
 }
 
@@ -3566,6 +3789,18 @@ export function processJuice(
       particle.velocity.y += gravity * dt;
       // Add wobble for tumbling effect
       particle.velocity.x += (Math.random() - 0.5) * 20;
+    }
+
+    // XP_SPARKLE: Upward float with gentle deceleration and twinkle
+    if (particle.type === 'xp_sparkle') {
+      // Gentle upward acceleration (pulled toward XP bar)
+      particle.velocity.y -= 50 * dt;
+      // Horizontal deceleration for convergence
+      particle.velocity.x *= 0.95;
+      // Cap upward velocity
+      if (particle.velocity.y < -300) {
+        particle.velocity.y = -300;
+      }
     }
 
     // Update lifetime
@@ -3708,15 +3943,17 @@ export function processJuice(
  * Priority: Freeze > Clutch > Normal
  */
 export function getEffectiveTimeScale(juice: JuiceSystem): number {
-  // Freeze frames completely stop time
+  // Freeze frames completely stop time (even with debug speedup)
   if (juice.freeze.active && juice.freeze.framesRemaining > 0) {
     return 0; // Complete stop
   }
-  // Clutch moments slow time
-  if (juice.clutch.active) {
-    return juice.clutch.timeScale;
-  }
-  return 1.0;
+
+  // Base time scale (1.0 normally, or clutch slowmo)
+  const baseTimeScale = juice.clutch.active ? juice.clutch.timeScale : 1.0;
+
+  // Apply debug time scale multiplier
+  // This enables accelerated testing while preserving game-time semantics
+  return baseTimeScale * debugTimeScale;
 }
 
 /**

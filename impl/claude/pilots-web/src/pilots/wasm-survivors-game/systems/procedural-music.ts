@@ -1002,6 +1002,12 @@ export class FugueVoice {
 
   /**
    * Play a scheduled note
+   *
+   * TIMBRE IMPROVEMENTS (2025-01):
+   * - Warmer sound: sine+triangle blend instead of harsh sawtooth
+   * - Gentler attacks: longer attack times reduce "crash" sound
+   * - Lower filter cutoff: removes harsh high frequencies
+   * - More consonant: slight detuning for chorus warmth without dissonance
    */
   playNote(note: ScheduledNote, baseTime: number): void {
     // Validate all numeric values to prevent AudioParam errors
@@ -1030,63 +1036,86 @@ export class FugueVoice {
       return;
     }
 
-    // Create oscillator with slight detuning for warmth
-    const osc = this.ctx.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(note.frequency, startTime);
+    // === WARM TIMBRE: Sine + Triangle blend (no harsh sawtooth) ===
+    // Primary oscillator: sine wave for pure, warm fundamental
+    const oscSine = this.ctx.createOscillator();
+    oscSine.type = 'sine';
+    oscSine.frequency.setValueAtTime(note.frequency, startTime);
 
-    // Add vibrato for longer notes
-    if (note.duration > 0.3) {
-      const vibratoDepth = 3; // Hz
-      const vibratoRate = 5;  // Hz
+    // Secondary oscillator: triangle for gentle harmonic content
+    const oscTriangle = this.ctx.createOscillator();
+    oscTriangle.type = 'triangle';
+    oscTriangle.frequency.setValueAtTime(note.frequency, startTime);
+    // Slight detune for warmth/chorus effect (3 cents = subtle)
+    oscTriangle.detune.setValueAtTime(3, startTime);
+
+    // Mix gains: 60% sine (warm) + 40% triangle (gentle harmonics)
+    const sineGain = this.ctx.createGain();
+    sineGain.gain.value = 0.6;
+    const triangleGain = this.ctx.createGain();
+    triangleGain.gain.value = 0.4;
+
+    // Add gentle vibrato for longer notes (slower, subtler than before)
+    if (note.duration > 0.4) {
+      const vibratoDepth = 2; // Hz (reduced from 3)
+      const vibratoRate = 4;  // Hz (reduced from 5)
       const lfo = this.ctx.createOscillator();
       const lfoGain = this.ctx.createGain();
       lfo.frequency.value = vibratoRate;
       lfoGain.gain.value = vibratoDepth;
       lfo.connect(lfoGain);
-      lfoGain.connect(osc.frequency);
-      lfo.start(startTime + 0.1);
+      lfoGain.connect(oscSine.frequency);
+      lfoGain.connect(oscTriangle.frequency);
+      // Delayed vibrato onset for more natural sound
+      lfo.start(startTime + 0.15);
       lfo.stop(endTime);
     }
 
-    // Envelope
+    // === GENTLER ENVELOPE: Longer attacks, smoother release ===
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0, startTime);
 
-    // Attack based on articulation
-    const attackTime = note.articulation === 'staccato' ? 0.01 :
-                       note.articulation === 'accent' ? 0.005 :
-                       0.02;
-    gain.gain.linearRampToValueAtTime(note.velocity * 0.3, startTime + attackTime);
+    // Attack times increased by ~2x for smoother onset (reduces "crash")
+    const attackTime = note.articulation === 'staccato' ? 0.025 :
+                       note.articulation === 'accent' ? 0.015 :
+                       0.04; // Much gentler default attack
+    gain.gain.linearRampToValueAtTime(note.velocity * 0.28, startTime + attackTime);
 
-    // Sustain and release
-    const sustainLevel = note.articulation === 'staccato' ? 0.5 : 0.8;
+    // Sustain and release - longer release for smoother decay
+    const sustainLevel = note.articulation === 'staccato' ? 0.5 : 0.85;
     const releaseStart = note.articulation === 'staccato'
       ? startTime + note.duration * 0.5
-      : endTime - 0.05;
+      : endTime - 0.08; // Slightly earlier release start for smoother fade
 
-    gain.gain.setValueAtTime(note.velocity * 0.3 * sustainLevel, releaseStart);
-    gain.gain.exponentialRampToValueAtTime(0.001, endTime);
+    gain.gain.setValueAtTime(note.velocity * 0.28 * sustainLevel, releaseStart);
+    // Longer release time for smoother decay
+    gain.gain.exponentialRampToValueAtTime(0.001, endTime + 0.05);
 
-    // Filter for timbre
+    // === WARMER FILTER: Lower cutoff, gentler resonance ===
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(2000 + note.velocity * 3000, startTime);
-    filter.Q.value = 1;
+    // Reduced cutoff: 1200-2700 Hz (was 2000-5000 Hz) - removes harsh highs
+    filter.frequency.setValueAtTime(1200 + note.velocity * 1500, startTime);
+    filter.Q.value = 0.7; // Lower Q = less resonant peak = smoother
 
-    // Connect
-    osc.connect(filter);
+    // Connect: both oscillators through mixer to filter to envelope
+    oscSine.connect(sineGain);
+    oscTriangle.connect(triangleGain);
+    sineGain.connect(filter);
+    triangleGain.connect(filter);
     filter.connect(gain);
     gain.connect(this.masterGain);
 
-    osc.start(startTime);
-    osc.stop(endTime + 0.1);
+    oscSine.start(startTime);
+    oscTriangle.start(startTime);
+    oscSine.stop(endTime + 0.15);
+    oscTriangle.stop(endTime + 0.15);
 
     // Cleanup
     const noteId = Math.random();
-    this.activeOscillators.set(noteId, { osc, gain });
+    this.activeOscillators.set(noteId, { osc: oscSine, gain });
 
-    osc.onended = () => {
+    oscSine.onended = () => {
       this.activeOscillators.delete(noteId);
     };
   }
@@ -1146,9 +1175,10 @@ export class ProceduralFugueEngine {
       this.masterGain.connect(this.compressor);
       this.compressor.connect(this.ctx.destination);
 
+      // WARMTH IMPROVEMENT: Increased reverb for richer, more pleasant sound
       if (this.reverb) {
         const reverbGain = this.ctx.createGain();
-        reverbGain.gain.value = 0.2;
+        reverbGain.gain.value = 0.35; // Increased from 0.2 for warmer ambiance
         this.masterGain.connect(this.reverb);
         this.reverb.connect(reverbGain);
         reverbGain.connect(this.ctx.destination);
@@ -1169,7 +1199,13 @@ export class ProceduralFugueEngine {
   }
 
   /**
-   * Create simple reverb using convolution
+   * Create warm reverb using convolution
+   *
+   * WARMTH IMPROVEMENTS (2025-01):
+   * - Longer reverb tail (2.5s) for cathedral-like ambiance
+   * - Smoother exponential decay (1.5 power instead of 2)
+   * - High-frequency damping for warmer, less harsh tail
+   * - Reduced noise intensity for cleaner reverb
    */
   private async createReverb(): Promise<ConvolverNode | null> {
     if (!this.ctx) return null;
@@ -1179,14 +1215,25 @@ export class ProceduralFugueEngine {
 
       // Generate impulse response
       const sampleRate = this.ctx.sampleRate;
-      const length = sampleRate * 2; // 2 second reverb
+      const length = Math.floor(sampleRate * 2.5); // 2.5 second reverb (increased for warmth)
       const impulse = this.ctx.createBuffer(2, length, sampleRate);
 
       for (let channel = 0; channel < 2; channel++) {
         const data = impulse.getChannelData(channel);
         for (let i = 0; i < length; i++) {
-          // Exponential decay with some randomness
-          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2);
+          const progress = i / length;
+
+          // WARMTH: Smoother exponential decay (1.5 power instead of 2)
+          const decay = Math.pow(1 - progress, 1.5);
+
+          // WARMTH: High-frequency damping - apply lowpass filter effect
+          // Later samples have less high-frequency content (warmer tail)
+          const hfDamping = 1 - progress * 0.6; // Gradually reduce HF
+
+          // Reduced noise amplitude for cleaner reverb
+          const noise = (Math.random() * 2 - 1) * 0.8;
+
+          data[i] = noise * decay * hfDamping;
         }
       }
 

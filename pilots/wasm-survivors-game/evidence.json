@@ -1,43 +1,31 @@
 {
   "spec_hash": "df3b012309f3",
-  "galois_loss": 0.8025568181818181,
-  "galois_coherence": 0.19744318181818188,
-  "equivalence_score": 0.005923295454545456,
+  "galois_loss": 0.43125334511465185,
+  "galois_coherence": 0.5687466548853481,
+  "equivalence_score": 0.010237439787936266,
   "is_verified": false,
-  "run_count": 5,
+  "run_count": 3,
   "pass_count": 0,
   "pass_rate": 0.0,
-  "created_at": "2026-01-10T12:55:23.905308",
+  "created_at": "2026-01-10T13:47:45.652681",
   "runs": [
     {
-      "run_id": "run-1-1768067698",
+      "run_id": "run-1-1768070625",
       "passed": false,
       "verification_score": 0.0,
-      "duration_ms": 6357.069375000719
+      "duration_ms": 120010.62404200275
     },
     {
-      "run_id": "run-2-1768067704",
+      "run_id": "run-2-1768070745",
       "passed": false,
       "verification_score": 0.0,
-      "duration_ms": 6207.743249997293
+      "duration_ms": 120012.23195800048
     },
     {
-      "run_id": "run-3-1768067710",
+      "run_id": "run-3-1768070865",
       "passed": false,
       "verification_score": 0.0,
-      "duration_ms": 6527.523959000973
-    },
-    {
-      "run_id": "run-4-1768067717",
-      "passed": false,
-      "verification_score": 0.0,
-      "duration_ms": 6484.007499999279
-    },
-    {
-      "run_id": "run-5-1768067723",
-      "passed": false,
-      "verification_score": 0.0,
-      "duration_ms": 6531.387332997838
+      "duration_ms": 120014.83725000071
     }
   ]
 }

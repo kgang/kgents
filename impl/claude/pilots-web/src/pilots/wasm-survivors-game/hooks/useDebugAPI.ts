@@ -49,6 +49,12 @@ import {
   DEBUG_CLEAR_AUDIO_LOG,
 } from '../systems/audio';
 
+// Time scale debug functions (for accelerated testing)
+import {
+  DEBUG_SET_TIME_SCALE,
+  DEBUG_GET_TIME_SCALE,
+} from '../systems/juice';
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -298,6 +304,12 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
       window.DEBUG_FORCE_BALL = onForceBall;
     }
 
+    // Time scale debug functions (for accelerated testing)
+    // Key insight: PlaythroughAgent's reaction model operates in GAME time.
+    // At 4x: 250ms game-time reaction = 62.5ms wall-clock time.
+    window.DEBUG_SET_TIME_SCALE = DEBUG_SET_TIME_SCALE;
+    window.DEBUG_GET_TIME_SCALE = DEBUG_GET_TIME_SCALE;
+
     // Debug API ready (silent - use DEBUG_* functions in console)
 
     // Cleanup on unmount
@@ -322,6 +334,9 @@ export function useDebugAPI(config: DebugAPIConfig): UseDebugAPIResult {
       // THE BALL debug functions
       delete window.DEBUG_GET_BALL_STATE;
       delete window.DEBUG_FORCE_BALL;
+      // Time scale debug functions
+      delete window.DEBUG_SET_TIME_SCALE;
+      delete window.DEBUG_GET_TIME_SCALE;
     };
   }, [
     isDebugMode,

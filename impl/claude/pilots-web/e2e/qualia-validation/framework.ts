@@ -110,7 +110,8 @@ export function createStateMachineValidator(): QualiaValidator<StateMachineConfi
 
       // Observe state changes over time
       const observeState = async () => {
-        const currentState = await page.evaluate(config.getState);
+        // Call getState directly - it's a Node.js async function that may internally use page.evaluate()
+        const currentState = await config.getState();
 
         if (currentState !== lastState) {
           const now = Date.now();
@@ -255,15 +256,17 @@ export function createTimeDynamicsAnalyzer(): QualiaValidator<TimeDynamicsConfig
         const elapsed = now - startTime;
 
         // Sample intensity if available
+        // Call getIntensity directly - it's a Node.js async function that may internally use page.evaluate()
         if (config.getIntensity) {
-          const intensity = await page.evaluate(config.getIntensity);
+          const intensity = await config.getIntensity();
           intensitySamples.push({ time: elapsed, value: intensity });
         }
 
         // Check for phase transitions
         if (currentPhaseIndex < config.phases.length) {
           const currentPhase = config.phases[currentPhaseIndex];
-          const isInPhase = await page.evaluate(currentPhase.detector);
+          // Call detector directly - it's a Node.js async function that may internally use page.evaluate()
+          const isInPhase = await currentPhase.detector();
 
           if (isInPhase && phases.length === currentPhaseIndex) {
             // Just entered this phase
@@ -434,7 +437,8 @@ export function createEmergenceDetector(): QualiaValidator<EmergenceConfig, Emer
         const elapsed = now - startTime;
 
         // Get active components
-        const activeComponents = await page.evaluate(config.getActiveComponents);
+        // Call getActiveComponents directly - it's a Node.js async function that may internally use page.evaluate()
+        const activeComponents = await config.getActiveComponents();
         activeComponents.forEach(c => componentsObserved.add(c));
 
         // Record combination
@@ -444,7 +448,8 @@ export function createEmergenceDetector(): QualiaValidator<EmergenceConfig, Emer
         }
 
         // Detect emergence
-        const emergent = await page.evaluate(config.detectEmergence);
+        // Call detectEmergence directly - it's a Node.js async function that may internally use page.evaluate()
+        const emergent = await config.detectEmergence();
         for (const e of emergent) {
           const existing = emergenceEvents.find(ev => ev.name === e.name);
           if (!existing || e.strength > existing.strength) {

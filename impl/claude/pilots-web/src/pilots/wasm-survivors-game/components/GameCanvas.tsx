@@ -1990,17 +1990,26 @@ function renderParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
         break;
 
       case 'drip':
-        // Honey drip - teardrop shape
+        // Honey drip - proper teardrop shape falling with gravity
+        ctx.save();
+        ctx.translate(particle.position.x, particle.position.y);
         ctx.fillStyle = particle.color;
         ctx.beginPath();
-        ctx.arc(
-          particle.position.x,
-          particle.position.y,
-          particle.size,
-          0,
-          Math.PI * 2
-        );
+        // Teardrop: rounded bottom, pointed top (direction of fall)
+        const dripSize = particle.size;
+        // Bottom bulb (main drop)
+        ctx.arc(0, dripSize * 0.3, dripSize, 0, Math.PI, false);
+        // Tapered top (tail pointing up as it falls)
+        ctx.quadraticCurveTo(-dripSize * 0.3, -dripSize * 0.5, 0, -dripSize * 1.2);
+        ctx.quadraticCurveTo(dripSize * 0.3, -dripSize * 0.5, dripSize, dripSize * 0.3);
+        ctx.closePath();
         ctx.fill();
+        // Add highlight for viscous effect
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.beginPath();
+        ctx.arc(-dripSize * 0.3, dripSize * 0.1, dripSize * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
         break;
 
       case 'pool':
@@ -2021,19 +2030,36 @@ function renderParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
         ctx.restore();
         break;
 
-      case 'fragment':
-        // Damage flash fragments - sharp angular shapes
+      case 'fragment': {
+        // Damage flash fragments - explosive angular shards
+        ctx.save();
+        ctx.translate(particle.position.x, particle.position.y);
+        // Rotate based on velocity direction for dynamic look
+        const fragAngle = Math.atan2(particle.velocity.y, particle.velocity.x);
+        ctx.rotate(fragAngle);
+
+        // Draw angular shard shape (elongated diamond/crystal)
+        const fragSize = particle.size;
         ctx.fillStyle = particle.color;
         ctx.beginPath();
-        ctx.arc(
-          particle.position.x,
-          particle.position.y,
-          particle.size,
-          0,
-          Math.PI * 2
-        );
+        ctx.moveTo(fragSize * 1.5, 0);           // Sharp front point
+        ctx.lineTo(fragSize * 0.3, fragSize * 0.4);  // Upper back
+        ctx.lineTo(-fragSize * 0.5, 0);          // Back point
+        ctx.lineTo(fragSize * 0.3, -fragSize * 0.4); // Lower back
+        ctx.closePath();
         ctx.fill();
+
+        // Add bright edge highlight for glass/crystal effect
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(fragSize * 1.5, 0);
+        ctx.lineTo(fragSize * 0.3, -fragSize * 0.4);
+        ctx.stroke();
+
+        ctx.restore();
         break;
+      }
 
       case 'graze_spark':
         // Graze sparks - cyan flash with glow
@@ -2073,6 +2099,64 @@ function renderParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
         ctx.fill();
         ctx.restore();
         break;
+
+      case 'xp_sparkle': {
+        // XP collection sparkle - twinkling golden particles with glow
+        ctx.save();
+
+        // Twinkle effect based on lifetime
+        const twinkle = 0.5 + 0.5 * Math.sin(particle.lifetime * 0.03);
+        const sparkleAlpha = particle.alpha * twinkle;
+        ctx.globalAlpha = sparkleAlpha;
+
+        // Outer glow
+        const xpGradient = ctx.createRadialGradient(
+          particle.position.x,
+          particle.position.y,
+          0,
+          particle.position.x,
+          particle.position.y,
+          particle.size * 2.5
+        );
+        xpGradient.addColorStop(0, particle.color);
+        xpGradient.addColorStop(0.4, `${particle.color}88`);
+        xpGradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = xpGradient;
+        ctx.beginPath();
+        ctx.arc(
+          particle.position.x,
+          particle.position.y,
+          particle.size * 2.5,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Bright core with 4-point star shape
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        const coreSize = particle.size * 0.8;
+        // Draw 4-point star
+        for (let i = 0; i < 4; i++) {
+          const angle = (Math.PI / 2) * i;
+          const outerX = particle.position.x + Math.cos(angle) * coreSize;
+          const outerY = particle.position.y + Math.sin(angle) * coreSize;
+          const innerAngle = angle + Math.PI / 4;
+          const innerX = particle.position.x + Math.cos(innerAngle) * coreSize * 0.3;
+          const innerY = particle.position.y + Math.sin(innerAngle) * coreSize * 0.3;
+          if (i === 0) {
+            ctx.moveTo(outerX, outerY);
+          } else {
+            ctx.lineTo(outerX, outerY);
+          }
+          ctx.lineTo(innerX, innerY);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+        break;
+      }
     }
   }
 
@@ -4264,6 +4348,112 @@ function renderBall(ctx: CanvasRenderingContext2D, ballState: BallState, gameTim
   } as const;
 
   const colors = phaseColors[phase as keyof typeof phaseColors] ?? phaseColors.forming;
+
+  // ==========================================================================
+  // TEMPERATURE VISUAL EFFECTS - THE BALL must look TERRIFYING
+  // Temperature ranges from 0-100, visual effects scale accordingly
+  // ==========================================================================
+
+  const temperature = ballState.temperature;
+  const tempNormalized = Math.min(1, temperature / 100); // 0-1 scale
+
+  // Temperature-based red glow around formation (the heat radiating outward)
+  if (tempNormalized > 0.3) {
+    const heatGlowRadius = currentRadius + 50 + Math.sin(gameTime * 0.008) * 15;
+    const heatGlowIntensity = (tempNormalized - 0.3) * 0.7; // 0-0.5 intensity
+
+    // Inner core - bright orange-red
+    const heatGlow = ctx.createRadialGradient(
+      center.x, center.y, currentRadius * 0.5,
+      center.x, center.y, heatGlowRadius
+    );
+
+    // Color shifts from orange (low temp) to deep red (high temp)
+    const redComponent = Math.floor(255);
+    const greenComponent = Math.floor(100 - tempNormalized * 100);
+    const heatColor = `rgb(${redComponent}, ${greenComponent}, 0)`;
+
+    heatGlow.addColorStop(0, `rgba(${redComponent}, ${greenComponent}, 0, ${heatGlowIntensity * 0.6})`);
+    heatGlow.addColorStop(0.4, `rgba(${redComponent}, ${greenComponent * 0.5}, 0, ${heatGlowIntensity * 0.3})`);
+    heatGlow.addColorStop(1, 'rgba(255, 0, 0, 0)');
+
+    ctx.globalAlpha = applyOpacity(1);
+    ctx.fillStyle = heatGlow;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, heatGlowRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Add shadow blur for extra menacing glow effect
+    ctx.save();
+    ctx.shadowColor = heatColor;
+    ctx.shadowBlur = tempNormalized * 40;
+    ctx.strokeStyle = `rgba(${redComponent}, ${greenComponent}, 0, ${heatGlowIntensity})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, currentRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Heat shimmer effect - distortion waves when temperature > 50%
+  // Creates the visual impression of heat radiating from THE BALL
+  if (tempNormalized > 0.5) {
+    const shimmerIntensity = (tempNormalized - 0.5) * 2; // 0-1 when temp is 50-100
+    const shimmerWaveCount = 3 + Math.floor(shimmerIntensity * 3); // 3-6 waves
+
+    for (let wave = 0; wave < shimmerWaveCount; wave++) {
+      // Each wave oscillates at a different phase
+      const wavePhase = (gameTime * 0.004 + wave * 0.7) % (Math.PI * 2);
+      const waveOffset = Math.sin(wavePhase) * (8 + shimmerIntensity * 12);
+
+      // Draw distortion arcs around the ball
+      const arcCount = 8;
+      for (let arc = 0; arc < arcCount; arc++) {
+        const arcAngle = (arc / arcCount) * Math.PI * 2;
+        const arcRadius = currentRadius + 15 + wave * 12 + waveOffset;
+
+        // Create wavy line segment
+        const arcStartAngle = arcAngle - 0.3;
+        const arcEndAngle = arcAngle + 0.3;
+
+        ctx.globalAlpha = applyOpacity(shimmerIntensity * 0.15 * (1 - wave / shimmerWaveCount));
+        ctx.strokeStyle = `rgba(255, ${150 - shimmerIntensity * 100}, 50, 0.4)`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(
+          center.x + Math.sin(wavePhase + arc) * waveOffset * 0.3,
+          center.y + Math.cos(wavePhase + arc) * waveOffset * 0.3,
+          arcRadius,
+          arcStartAngle,
+          arcEndAngle
+        );
+        ctx.stroke();
+      }
+    }
+
+    // Rising heat particles (like embers floating up)
+    if (tempNormalized > 0.7) {
+      const emberCount = Math.floor(5 + shimmerIntensity * 10);
+      for (let i = 0; i < emberCount; i++) {
+        // Each ember rises at different speeds and positions
+        const emberPhase = ((gameTime * 0.002 + i * 137.5) % 1); // Golden ratio spacing
+        const emberAngle = (i / emberCount) * Math.PI * 2 + gameTime * 0.001;
+        const emberDistance = currentRadius * (0.3 + emberPhase * 0.8);
+
+        const emberX = center.x + Math.cos(emberAngle) * emberDistance + Math.sin(gameTime * 0.005 + i) * 5;
+        const emberY = center.y + Math.sin(emberAngle) * emberDistance - emberPhase * 30; // Rise up
+
+        const emberAlpha = (1 - emberPhase) * shimmerIntensity * 0.6;
+        const emberSize = 2 + (1 - emberPhase) * 3;
+
+        ctx.globalAlpha = applyOpacity(emberAlpha);
+        ctx.fillStyle = emberPhase < 0.3 ? '#FFAA00' : emberPhase < 0.6 ? '#FF6600' : '#FF3300';
+        ctx.beginPath();
+        ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
 
   // ==========================================================================
   // 1. OUTER GLOW (threat indicator)

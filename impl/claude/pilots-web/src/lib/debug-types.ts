@@ -180,6 +180,20 @@ export interface DebugAPI {
   DEBUG_GET_BALL_STATE: () => DebugBallState | null;
   /** Force THE BALL to start forming (bypasses normal triggers) */
   DEBUG_FORCE_BALL: () => void;
+
+  // Time scale debug functions (for accelerated testing)
+  /**
+   * Set the debug time scale for accelerated testing.
+   *
+   * Key insight: PlaythroughAgent's reaction model operates in GAME time.
+   * At 4x: 250ms game-time reaction = 62.5ms wall-clock time.
+   * The reaction is still "250ms in game" - it just happens faster IRL.
+   *
+   * @param scale - Time multiplier (e.g., 4.0 for 4x speed). Range: 0.1 to 10.0
+   */
+  DEBUG_SET_TIME_SCALE: (scale: number) => void;
+  /** Get the current debug time scale multiplier */
+  DEBUG_GET_TIME_SCALE: () => number;
 }
 
 // =============================================================================

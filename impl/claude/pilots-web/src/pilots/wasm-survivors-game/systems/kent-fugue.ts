@@ -114,25 +114,31 @@ export const STOCHASTIC_CONFIG = {
   pitchVariationProbability: 0.2,  // Slightly reduced for clearer theme
 
   // Probability of rhythmic variation (stretch/compress)
-  rhythmVariationProbability: 0.25,
+  // PLEASANTNESS: Reduced from 0.25 - less jarring rhythm changes
+  rhythmVariationProbability: 0.15,
 
   // Probability of spontaneous ornamentation
-  ornamentProbability: 0.1,  // Reduced - too much ornamentation obscures theme
+  // PLEASANTNESS: Reduced - ornamentation can sound harsh
+  ornamentProbability: 0.06,
 
   // Probability of octave displacement
-  octaveDisplacementProbability: 0.08,
+  // PLEASANTNESS: Reduced - octave jumps can be jarring
+  octaveDisplacementProbability: 0.04,
 
   // Probability of dynamic variation
-  dynamicVariationProbability: 0.3,
+  // PLEASANTNESS: Reduced - more consistent dynamics feel smoother
+  dynamicVariationProbability: 0.2,
 
   // Bass drone probability (long held notes)
-  bassDroneProbability: 0.5,
+  // CHANTINGNESS: Increased - more hypnotic drone presence
+  bassDroneProbability: 0.7,
 
   // Minimum duration for bass notes (in beats)
-  minBassDuration: 2.0,
+  // CHANTINGNESS: Increased - longer drones = more hypnotic
+  minBassDuration: 3.0,
 
   // Maximum random rest duration (in beats)
-  maxRestDuration: 2.0,  // Reduced from 3.0
+  maxRestDuration: 1.5,  // Reduced for more continuous sound
 };
 
 /**
@@ -500,11 +506,156 @@ export const KENT_COUNTERSUBJECT: FugueNote[] = [
 ];
 
 // =============================================================================
+// HYPNOTIC OSTINATO PATTERNS (+40% CHANTINGNESS)
+// =============================================================================
+// These patterns create a mesmerizing, repetitive foundation that supports
+// the fugue while adding a chant-like, trance-inducing quality.
+
+/**
+ * Bass ostinato: hypnotic repeating pattern on tonic pedal
+ * Creates a grounding drone effect with subtle rhythmic pulse.
+ * Pattern length: 4 beats (one measure)
+ */
+export const BASS_OSTINATO_TONIC: FugueNote[] = [
+  // Strong downbeat
+  { semitone: 0, duration: 1.0, velocity: 0.75, articulation: 'tenuto' },  // C# (tonic)
+  // Pulsing eighth notes
+  { semitone: 0, duration: 0.5, velocity: 0.55, articulation: 'legato' },  // C#
+  { semitone: 0, duration: 0.5, velocity: 0.5, articulation: 'legato' },   // C#
+  // Slight lift before repeat
+  { semitone: 7, duration: 0.5, velocity: 0.6, articulation: 'legato' },   // G# (dominant)
+  { semitone: 0, duration: 0.5, velocity: 0.65, articulation: 'tenuto' },  // C# back
+  // Breathing space
+  { semitone: 0, duration: 0.5, velocity: 0.45, articulation: 'legato' },  // C#
+];
+
+/**
+ * Bass ostinato: dominant pedal variation
+ * Used during development sections for harmonic tension.
+ */
+export const BASS_OSTINATO_DOMINANT: FugueNote[] = [
+  { semitone: 7, duration: 1.0, velocity: 0.7, articulation: 'tenuto' },   // G#
+  { semitone: 7, duration: 0.5, velocity: 0.5, articulation: 'legato' },   // G#
+  { semitone: 7, duration: 0.5, velocity: 0.45, articulation: 'legato' },  // G#
+  { semitone: 0, duration: 0.5, velocity: 0.55, articulation: 'legato' },  // C# (brief tonic)
+  { semitone: 7, duration: 0.5, velocity: 0.6, articulation: 'tenuto' },   // G# back
+  { semitone: 7, duration: 0.5, velocity: 0.4, articulation: 'legato' },   // G#
+];
+
+/**
+ * Chant-like melodic ostinato: meditative repetition
+ * This is a 2-bar pattern that creates a hypnotic, prayer-like quality.
+ * Uses mostly stepwise motion and consonant intervals.
+ */
+export const CHANT_OSTINATO_MEDITATIVE: FugueNote[] = [
+  // Bar 1: Rising phrase
+  { semitone: 0, duration: 0.5, velocity: 0.6, articulation: 'legato' },   // C#
+  { semitone: 2, duration: 0.5, velocity: 0.65, articulation: 'legato' },  // D#
+  { semitone: 3, duration: 0.75, velocity: 0.7, articulation: 'tenuto' },  // E
+  { semitone: 2, duration: 0.25, velocity: 0.55, articulation: 'legato' }, // D# (turn)
+  { semitone: 0, duration: 1.0, velocity: 0.6, articulation: 'tenuto' },   // C# (return)
+  // Bar 2: Descending phrase (mirror)
+  { semitone: 0, duration: 0.5, velocity: 0.55, articulation: 'legato' },  // C#
+  { semitone: -1, duration: 0.5, velocity: 0.5, articulation: 'legato' },  // B (7 below = -1)
+  { semitone: 0, duration: 0.75, velocity: 0.65, articulation: 'tenuto' }, // C# (home)
+  { semitone: 2, duration: 0.25, velocity: 0.5, articulation: 'legato' },  // D# (grace)
+  { semitone: 0, duration: 1.0, velocity: 0.7, articulation: 'tenuto' },   // C# (resolution)
+];
+
+/**
+ * Rhythmic ostinato: driving pulse pattern
+ * Creates forward momentum while remaining hypnotic.
+ */
+export const RHYTHMIC_OSTINATO_PULSE: FugueNote[] = [
+  // Emphasize beats 1 and 3 with offbeat echoes
+  { semitone: 0, duration: 0.5, velocity: 0.7, articulation: 'accent' },   // C# (beat 1)
+  { semitone: 7, duration: 0.25, velocity: 0.45, articulation: 'staccato' }, // G# (offbeat)
+  { semitone: 0, duration: 0.25, velocity: 0.4, articulation: 'staccato' },  // C# (offbeat)
+  { semitone: 5, duration: 0.5, velocity: 0.6, articulation: 'tenuto' },   // F# (beat 2)
+  { semitone: 0, duration: 0.25, velocity: 0.45, articulation: 'staccato' }, // C# (offbeat)
+  { semitone: 7, duration: 0.25, velocity: 0.4, articulation: 'staccato' },  // G# (offbeat)
+  { semitone: 0, duration: 0.5, velocity: 0.65, articulation: 'accent' },  // C# (beat 3)
+  { semitone: 3, duration: 0.25, velocity: 0.45, articulation: 'staccato' }, // E (offbeat)
+  { semitone: 0, duration: 0.25, velocity: 0.4, articulation: 'staccato' },  // C# (offbeat)
+  { semitone: 7, duration: 0.5, velocity: 0.55, articulation: 'legato' },  // G# (beat 4 - dominant)
+];
+
+/**
+ * Select an appropriate ostinato pattern based on fugue phase and intensity
+ */
+export function selectOstinatoPattern(
+  phase: FuguePhase,
+  intensity: number
+): FugueNote[] {
+  // Meditative/calm phases: use chant pattern
+  if (intensity < 0.4 || phase === 'exposition_1' || phase === 'coda') {
+    return [...CHANT_OSTINATO_MEDITATIVE];
+  }
+
+  // Development/tension: use rhythmic pulse
+  if (intensity > 0.7 || phase === 'development' || phase === 'stretto') {
+    return [...RHYTHMIC_OSTINATO_PULSE];
+  }
+
+  // Pedal point: dominant ostinato
+  if (phase === 'pedal_point') {
+    return [...BASS_OSTINATO_DOMINANT];
+  }
+
+  // Default: tonic bass ostinato
+  return [...BASS_OSTINATO_TONIC];
+}
+
+/**
+ * Generate a hypnotic drone layer for bass voices
+ * This creates a sustained, breathing drone underneath the fugue.
+ * Duration is in beats.
+ */
+export function generateChantDrone(duration: number, root: number = 0): FugueNote[] {
+  const notes: FugueNote[] = [];
+  let elapsed = 0;
+
+  // Create a breathing pattern: long notes with subtle swells
+  while (elapsed < duration) {
+    // Determine note length - prefer longer notes for drone effect
+    const noteDuration = Math.min(
+      duration - elapsed,
+      2.0 + Math.random() * 2.0 // 2-4 beat notes
+    );
+
+    // Slight pitch variation: mostly root, occasionally fifth
+    const pitch = Math.random() < 0.85 ? root : root + 7;
+
+    // Breathing dynamics: swell up and down
+    const positionInDrone = elapsed / duration;
+    const breathingCurve = Math.sin(positionInDrone * Math.PI * 2) * 0.15;
+    const velocity = 0.5 + breathingCurve;
+
+    notes.push({
+      semitone: pitch,
+      duration: noteDuration,
+      velocity: Math.max(0.35, Math.min(0.65, velocity)),
+      articulation: 'tenuto',
+    });
+
+    elapsed += noteDuration;
+  }
+
+  return notes;
+}
+
+// =============================================================================
 // FREE COUNTERPOINT GENERATORS
 // =============================================================================
 
 /**
  * Generate a free counterpoint line based on harmonic constraints
+ *
+ * PLEASANTNESS IMPROVEMENTS (2025-01):
+ * - Raised tension threshold for dissonance (0.75 instead of 0.6)
+ * - Weighted interval selection favors 3rds, 5ths, 6ths (most pleasing)
+ * - Longer note durations for smoother, more cantabile lines
+ * - Prefer legato articulation for warmth
  */
 export function generateFreeCounterpoint(
   targetLength: number,
@@ -517,13 +668,25 @@ export function generateFreeCounterpoint(
   let totalDuration = 0;
 
   while (totalDuration < targetLength) {
-    // Choose interval based on tension
-    const consonantIntervals = [0, 3, 4, 5, 7, 8, 9]; // Consonances
-    const dissonantIntervals = [1, 2, 6, 10, 11];     // Dissonances
+    // PLEASANTNESS: Weighted interval selection favoring most consonant
+    // Perfect consonances: unison (0), 5th (7), octave (12)
+    // Imperfect consonances: 3rds (3, 4), 6ths (8, 9) - MOST PLEASING
+    // Mild dissonances: 2nd (2), 7th (10, 11), tritone (6)
+    const pleasantIntervals = [
+      0,         // Unison - stable
+      3, 3,      // Minor 3rd - weighted 2x (sweet)
+      4, 4,      // Major 3rd - weighted 2x (sweet)
+      5,         // Perfect 4th - open
+      7, 7, 7,   // Perfect 5th - weighted 3x (most consonant)
+      8, 8,      // Minor 6th - weighted 2x (warm)
+      9, 9,      // Major 6th - weighted 2x (bright)
+    ];
 
-    const intervals = tension > 0.6
-      ? [...consonantIntervals, ...dissonantIntervals]
-      : consonantIntervals;
+    // Only add dissonant intervals at high tension (PLEASANTNESS: raised from 0.6)
+    const dissonantIntervals = [1, 2, 6, 10, 11];
+    const intervals = tension > 0.75
+      ? [...pleasantIntervals, ...dissonantIntervals]
+      : pleasantIntervals;
 
     const interval = intervals[Math.floor(Math.random() * intervals.length)];
 
@@ -541,18 +704,18 @@ export function generateFreeCounterpoint(
     // Keep in reasonable range
     nextPitch = ((nextPitch % 12) + 12) % 12;
 
-    // Choose duration
-    const durations = tension > 0.5
-      ? [0.25, 0.25, 0.5]  // Faster when tense
-      : [0.5, 0.75, 1.0];  // Slower when calm
+    // PLEASANTNESS: Longer durations for smoother, more singing lines
+    const durations = tension > 0.6
+      ? [0.5, 0.5, 0.75]   // Moderate speed when tense (was 0.25, 0.25, 0.5)
+      : [0.75, 1.0, 1.25]; // Slower, more cantabile when calm
 
     const duration = durations[Math.floor(Math.random() * durations.length)];
 
     notes.push({
       semitone: nextPitch,
       duration,
-      velocity: 0.5 + Math.random() * 0.3,
-      articulation: duration < 0.5 ? 'staccato' : 'legato',
+      velocity: 0.55 + Math.random() * 0.25, // Slightly narrower range
+      articulation: 'legato', // PLEASANTNESS: Always legato for smoothness
     });
 
     currentPitch = nextPitch;
@@ -1647,9 +1810,9 @@ function get16BarFill(
     notes.push({ type: 'kick', velocity: 0.85 });
   }
 
-  // Crash anticipation on 15
+  // Crash anticipation on 15 (REDUCED for less harshness)
   if (sixteenthPosition === 15) {
-    notes.push({ type: 'crash', velocity: 0.7 });
+    notes.push({ type: 'crash', velocity: 0.5 });
   }
 
   return notes;
@@ -1680,12 +1843,12 @@ function get32BarFill(
     notes.push({ type: 'kick', velocity: 0.8 + (globalPos / 32) * 0.2 });
   }
 
-  // Crash on downbeat of bar 1 and anticipation on final 16th
+  // Crash on downbeat of bar 1 and anticipation on final 16th (REDUCED for less harshness)
   if (fillPhase === 0 && sixteenthPosition === 0) {
-    notes.push({ type: 'crash', velocity: 0.7 });
+    notes.push({ type: 'crash', velocity: 0.5 });
   }
   if (fillPhase === 1 && sixteenthPosition === 15) {
-    notes.push({ type: 'crash', velocity: 0.9 });
+    notes.push({ type: 'crash', velocity: 0.65 }); // Reduced from 0.9
   }
 
   return notes;
@@ -1872,14 +2035,14 @@ export function generatePercussion(
       });
     }
 
-    // CRASH on beat 1 of new sections
+    // CRASH on beat 1 of new sections (REDUCED velocities for less harshness)
     if (sixteenthPosition === 0 && measureNum > 0) {
       // Crash after 32-bar fill (new section)
       if (barInPhrase32 === 0) {
         notes.push({
           type: 'crash',
           startTime: noteTime,
-          velocity: 0.95 * dynamicMod,
+          velocity: 0.65 * dynamicMod, // Reduced from 0.95
           duration: beatDuration * 4,
         });
       }
@@ -1888,7 +2051,7 @@ export function generatePercussion(
         notes.push({
           type: 'crash',
           startTime: noteTime,
-          velocity: 0.7 * dynamicMod,
+          velocity: 0.5 * dynamicMod, // Reduced from 0.7
           duration: beatDuration * 3,
         });
       }
@@ -2875,14 +3038,10 @@ export function assignVoiceMaterial(
         role: 'subject',
         beatOffset: 0,
       };
-      // Bass provides harmonic foundation from the start (minimum 2 voices)
+      // Bass provides hypnotic ostinato foundation (CHANTINGNESS +40%)
       voices.bass = {
         ...voices.bass,
-        material: [
-          { semitone: 0, duration: 4, velocity: 0.5, articulation: 'tenuto' },  // C# pedal
-          { semitone: 7, duration: 2, velocity: 0.45, articulation: 'legato' }, // G# (dominant)
-          { semitone: 0, duration: 2, velocity: 0.5, articulation: 'tenuto' },  // C# return
-        ],
+        material: [...BASS_OSTINATO_TONIC, ...BASS_OSTINATO_TONIC], // Loop pattern 2x
         isActive: true,
         role: 'free',
         beatOffset: 0,
@@ -2908,14 +3067,10 @@ export function assignVoiceMaterial(
         role: 'countersubject',
         beatOffset: 0,
       };
-      // Bass provides harmonic foundation
+      // Bass provides hypnotic dominant ostinato (CHANTINGNESS +40%)
       voices.bass = {
         ...voices.bass,
-        material: [
-          { semitone: 7, duration: 3, velocity: 0.5, articulation: 'tenuto' },  // G# (dominant for answer)
-          { semitone: 5, duration: 2, velocity: 0.45, articulation: 'legato' }, // F# (subdominant)
-          { semitone: 0, duration: 3, velocity: 0.55, articulation: 'tenuto' }, // C# (tonic)
-        ],
+        material: [...BASS_OSTINATO_DOMINANT, ...BASS_OSTINATO_TONIC], // Dominant then tonic
         isActive: true,
         role: 'free',
         beatOffset: 0,
@@ -2946,15 +3101,10 @@ export function assignVoiceMaterial(
         isActive: true,
         role: 'countersubject',
       };
-      // Bass provides harmonic foundation
+      // Bass provides chant-like ostinato foundation (CHANTINGNESS +40%)
       voices.bass = {
         ...voices.bass,
-        material: [
-          { semitone: 0, duration: 2, velocity: 0.5, articulation: 'tenuto' },  // C# (tonic)
-          { semitone: 5, duration: 2, velocity: 0.45, articulation: 'legato' }, // F# (subdominant)
-          { semitone: 7, duration: 2, velocity: 0.5, articulation: 'tenuto' },  // G# (dominant)
-          { semitone: 0, duration: 2, velocity: 0.55, articulation: 'tenuto' }, // C# (return)
-        ],
+        material: [...CHANT_OSTINATO_MEDITATIVE], // Meditative chant pattern
         isActive: true,
         role: 'free',
         beatOffset: 0,
@@ -3014,13 +3164,10 @@ export function assignVoiceMaterial(
         role: 'free',
         beatOffset: 1, // Canon offset
       };
-      // Bass always active for harmonic foundation
+      // Bass provides rhythmic pulse ostinato for episodes (CHANTINGNESS +40%)
       voices.bass = {
         ...voices.bass,
-        material: [
-          { semitone: 0, duration: 3, velocity: 0.5, articulation: 'tenuto' },  // C# pedal
-          { semitone: 7, duration: 3, velocity: 0.45, articulation: 'legato' }, // G# (dominant)
-        ],
+        material: selectOstinatoPattern(phase, state.intensity),
         isActive: true,
         role: 'free',
         beatOffset: 0,
@@ -3061,15 +3208,11 @@ export function assignVoiceMaterial(
       };
 
       // DENSITY FIX: Always add bass if not already the devVoice
+      // Uses intensity-selected ostinato pattern (CHANTINGNESS +40%)
       if (devVoice !== 'bass') {
         voices.bass = {
           ...voices.bass,
-          material: [
-            { semitone: 0, duration: 3, velocity: 0.5, articulation: 'tenuto' },  // C# pedal
-            { semitone: 5, duration: 2, velocity: 0.45, articulation: 'legato' }, // F# (subdominant)
-            { semitone: 7, duration: 2, velocity: 0.5, articulation: 'tenuto' },  // G# (dominant)
-            { semitone: 0, duration: 3, velocity: 0.55, articulation: 'tenuto' }, // C# (return)
-          ],
+          material: selectOstinatoPattern(phase, state.intensity),
           isActive: true,
           role: 'free',
           beatOffset: 0,

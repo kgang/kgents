@@ -33,7 +33,7 @@ interface InputState {
   aimDirection?: { x: number; y: number }; // Current WASD aim direction
 }
 import { updateSpawner, type SpawnResult } from '../systems/spawn';
-import { processJuice, type JuiceSystem, checkClutchMoment, getEffectiveTimeScale } from '../systems/juice';
+import { processJuice, type JuiceSystem, checkClutchMoment, getEffectiveTimeScale, SHAKE } from '../systems/juice';
 import { emitWitnessMark, type WitnessContext } from '../systems/witness';
 import { type ActiveUpgrades } from '../systems/upgrades';
 // STUB: Metamorphosis system removed in bee theme migration
@@ -406,6 +406,21 @@ export function useGameLoop(
     GRAZE_COOLDOWN: 500,          // ms - cooldown per enemy before they can grant another stack
   };
   void _GRAZE_FRENZY; // Suppresses unused variable warning - will be used when graze_frenzy is implemented
+
+  // Voice Line Tracking - Part VII: Wire voice lines to game events
+  // "The hornet KNOWS what this is and does it anyway. Swagger before the fall."
+  const voiceLineTriggeredRef = useRef<{
+    lowHpEntered: boolean;        // Trigger once when first dropping below 25% health
+    killMilestones: Set<number>;  // Track which kill milestones have been triggered
+    consecutiveGrazes: number;    // Track consecutive grazes for voice line cooldown
+    lastGrazeLineTime: number;    // Last time a graze voice line was shown
+  }>({
+    lowHpEntered: false,
+    killMilestones: new Set(),
+    consecutiveGrazes: 0,
+    lastGrazeLineTime: 0,
+  });
+  const KILL_MILESTONES = [10, 25, 50, 100, 200, 300] as const;
 
   // THERMAL MOMENTUM state (Run 042: Movement-based heat mechanic)
   // "Build heat while moving. Stop to release a damage pulse."
@@ -1400,6 +1415,20 @@ export function useGameLoop(
 
         // GRAZE FRENZY: System disabled - no reset needed
 
+        // Part VII: Low HP entered voice line - "Getting interesting." / "Pain? I call that motivation."
+        // Triggers once when first dropping below 25% health
+        const LOW_HP_THRESHOLD = 0.25;
+        const healthFractionAfterDamage = newState.player.health / newState.player.maxHealth;
+        const healthFractionBeforeDamage = healthBeforeAttack / newState.player.maxHealth;
+        if (healthFractionAfterDamage > 0 &&
+            healthFractionAfterDamage < LOW_HP_THRESHOLD &&
+            healthFractionBeforeDamage >= LOW_HP_THRESHOLD &&
+            !voiceLineTriggeredRef.current.lowHpEntered) {
+          voiceLineTriggeredRef.current.lowHpEntered = true;
+          const line = triggerVoiceLine(emotionalStateRef.current, 'low_hp_entered', newState.gameTime);
+          if (line) callbacks.onVoiceLine?.(line);
+        }
+
         // Check for game over from attack damage
         if (newState.player.health <= 0) {
           newState = { ...newState, status: 'gameover' };
@@ -1523,6 +1552,19 @@ export function useGameLoop(
             } else if (recentKills >= 3) {
               const line = triggerVoiceLine(emotionalStateRef.current, 'multi_kill', newState.gameTime);
               if (line) callbacks.onVoiceLine?.(line);
+            }
+
+            // Part VII: Kill milestone voice lines
+            // "Warm-up complete." at 10, "Half a hundred souls." at 50, etc.
+            for (const milestone of KILL_MILESTONES) {
+              if (newState.totalEnemiesKilled >= milestone &&
+                  !voiceLineTriggeredRef.current.killMilestones.has(milestone)) {
+                voiceLineTriggeredRef.current.killMilestones.add(milestone);
+                const milestoneTrigger = `kill_milestone_${milestone}` as import('../systems/contrast').VoiceLineTrigger;
+                const line = triggerVoiceLine(emotionalStateRef.current, milestoneTrigger, newState.gameTime);
+                if (line) callbacks.onVoiceLine?.(line);
+                break; // Only trigger one milestone per kill
+              }
             }
 
             // DD-14: Burst - AoE damage on kill
@@ -1660,6 +1702,19 @@ export function useGameLoop(
 
             // GRAZE FRENZY: System disabled - no reset needed
 
+            // Part VII: Low HP entered voice line (collision damage path)
+            const LOW_HP_THRESHOLD_COLLISION = 0.25;
+            const healthFractionAfterCollision = newState.player.health / newState.player.maxHealth;
+            const healthFractionBeforeCollision = healthBeforeHit / newState.player.maxHealth;
+            if (healthFractionAfterCollision > 0 &&
+                healthFractionAfterCollision < LOW_HP_THRESHOLD_COLLISION &&
+                healthFractionBeforeCollision >= LOW_HP_THRESHOLD_COLLISION &&
+                !voiceLineTriggeredRef.current.lowHpEntered) {
+              voiceLineTriggeredRef.current.lowHpEntered = true;
+              const lowHpLine = triggerVoiceLine(emotionalStateRef.current, 'low_hp_entered', newState.gameTime);
+              if (lowHpLine) callbacks.onVoiceLine?.(lowHpLine);
+            }
+
             // DD-16: Check for clutch moment (survived near-death)
             if (newState.player.health > 0) {
               const healthFraction = newState.player.health / newState.player.maxHealth;
@@ -1756,6 +1811,8 @@ export function useGameLoop(
       const isDashing = isStriking(apexStrikeRef.current);
       if (isDashing && !wasDashingRef.current) {
         combatStateRef.current = startDash(combatStateRef.current);
+        // Wire shake: Dash execution - 2-3px punch on dash start
+        juiceSystem.triggerShake(SHAKE.dashExecution.amplitude, SHAKE.dashExecution.duration);
       } else if (!isDashing && wasDashingRef.current) {
         combatStateRef.current = endDash(combatStateRef.current);
       }
@@ -1802,6 +1859,25 @@ export function useGameLoop(
           // GRAZE SYSTEM: Detection preserved, surface (sound/visuals/bonuses) DISABLED
           // The underlying graze detection still runs in combat.ts for potential future use
           // No particles, no sound, no frenzy stacks - silent tracking only
+
+          // Wire shake: Dash graze - 1px subtle shake during dash grazes
+          if (isDashing) {
+            juiceSystem.triggerShake(SHAKE.dashGraze.amplitude, SHAKE.dashGraze.duration);
+          }
+
+          // Part VII: Graze voice lines - "Almost." / "Too slow, little ones."
+          // Track consecutive grazes and trigger voice line every 5+ grazes
+          // This adds personality without gameplay impact
+          voiceLineTriggeredRef.current.consecutiveGrazes++;
+          const GRAZE_LINE_THRESHOLD = 5;
+          const GRAZE_LINE_COOLDOWN = 8000; // 8 seconds between graze voice lines
+          if (voiceLineTriggeredRef.current.consecutiveGrazes >= GRAZE_LINE_THRESHOLD &&
+              newState.gameTime - voiceLineTriggeredRef.current.lastGrazeLineTime > GRAZE_LINE_COOLDOWN) {
+            voiceLineTriggeredRef.current.lastGrazeLineTime = newState.gameTime;
+            voiceLineTriggeredRef.current.consecutiveGrazes = 0; // Reset after triggering
+            const line = triggerVoiceLine(emotionalStateRef.current, 'graze', newState.gameTime);
+            if (line) callbacks.onVoiceLine?.(line);
+          }
         } else if (event.type === 'graze_bonus_triggered') {
           // GRAZE BONUS: Surface disabled (no visual ring effect)
         } else if (event.type === 'hover_brake_activated') {
@@ -2992,6 +3068,9 @@ export function useGameLoop(
 
         // Special handling for specific events
         if (ballEvent.type === 'ball_forming_started') {
+          // Wire shake: BALL forming - 1-5px ramping (starts at 1, intensity ramps during phase)
+          juiceSystem.triggerShake(SHAKE.ballForming.amplitude, SHAKE.ballForming.duration);
+
           // Part VII: Voice line when BALL starts forming
           const ballLine = triggerVoiceLine(emotionalStateRef.current, 'ball_forming', newState.gameTime);
           if (ballLine) callbacks.onVoiceLine?.(ballLine);
@@ -3001,11 +3080,24 @@ export function useGameLoop(
             gameTime: newState.gameTime,
             context: buildWitnessContext(newState),
           });
+        } else if (ballEvent.type === 'ball_constrict_started') {
+          // Wire shake: BALL constrict - 8px intense shake when constricting begins
+          juiceSystem.triggerShake(SHAKE.ballConstrict.amplitude, SHAKE.ballConstrict.duration);
         } else if (ballEvent.type === 'ball_escaped') {
           // Player escaped THE BALL! Record this achievement
           const escapeCount = ballResult.state.escapeCount;
           const escapeLine = triggerVoiceLine(emotionalStateRef.current, 'survived_ball', newState.gameTime);
           if (escapeLine) callbacks.onVoiceLine?.(escapeLine);
+
+          // =================================================================
+          // BALL ESCAPE CELEBRATION - "Through the gap. Every time."
+          // Trigger victory particles, freeze frame, and audio feedback
+          // =================================================================
+          juiceSystem.emitBallEscape(
+            newState.player.position,
+            ballResult.state.gapAngle,
+            escapeCount
+          );
 
           emitWitnessMark(witnessContextRef.current, {
             type: 'ball_escaped',
@@ -3029,6 +3121,19 @@ export function useGameLoop(
         // Trigger damage juice
         juiceSystem.emitDamage(newState.player.position, ballResult.damageToPlayer);
         callbacks.onPlayerDamaged?.(ballResult.damageToPlayer);
+
+        // Part VII: Low HP entered voice line (THE BALL damage path)
+        const LOW_HP_THRESHOLD_BALL = 0.25;
+        const healthFractionAfterBall = newState.player.health / newState.player.maxHealth;
+        const healthFractionBeforeBall = healthBeforeBall / newState.player.maxHealth;
+        if (healthFractionAfterBall > 0 &&
+            healthFractionAfterBall < LOW_HP_THRESHOLD_BALL &&
+            healthFractionBeforeBall >= LOW_HP_THRESHOLD_BALL &&
+            !voiceLineTriggeredRef.current.lowHpEntered) {
+          voiceLineTriggeredRef.current.lowHpEntered = true;
+          const lowHpLine = triggerVoiceLine(emotionalStateRef.current, 'low_hp_entered', newState.gameTime);
+          if (lowHpLine) callbacks.onVoiceLine?.(lowHpLine);
+        }
 
         // Check for game over from THE BALL cooking
         if (newState.player.health <= 0) {
@@ -3462,6 +3567,14 @@ export function useGameLoop(
       grazedEnemyIds: new Map(),
     };
 
+    // Reset voice line tracking for new run (Part VII: Wire voice lines to events)
+    voiceLineTriggeredRef.current = {
+      lowHpEntered: false,
+      killMilestones: new Set(),
+      consecutiveGrazes: 0,
+      lastGrazeLineTime: 0,
+    };
+
     // Reset apex strike state for new run (Run 036: The hornet's predator dash)
     apexStrikeRef.current = createInitialApexState();
 
@@ -3521,6 +3634,13 @@ export function useGameLoop(
       stacks: 0,
       lastGrazeTime: 0,
       grazedEnemyIds: new Map(),
+    };
+    // Reset voice line tracking (Part VII: Wire voice lines to events)
+    voiceLineTriggeredRef.current = {
+      lowHpEntered: false,
+      killMilestones: new Set(),
+      consecutiveGrazes: 0,
+      lastGrazeLineTime: 0,
     };
   }, [initialState]);
 

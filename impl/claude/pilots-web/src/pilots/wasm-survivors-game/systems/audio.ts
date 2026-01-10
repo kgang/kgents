@@ -182,10 +182,13 @@ export const KILL_SOUND_LAYERS: Record<EnemyType, KillSoundConfig> = {
  * "The dopamine hit should ESCALATE."
  */
 export const MULTI_KILL_AUDIO = {
-  pitchScale: 1.05,      // Each kill 5% higher
-  maxPitch: 1.5,         // Cap at 50% higher
-  volumeScale: 1.03,     // Each kill 3% louder
-  maxVolume: 1.0,        // Cap at unity
+  // Semitone-based pitch escalation: each combo step = +1 semitone
+  // Semitone ratio ≈ 2^(1/12) ≈ 1.059463 (multiply pitch by this per semitone)
+  semitoneRatio: 0.059463,  // ~1 semitone per combo step
+  maxSemitones: 12,         // Cap at one octave (12 semitones)
+  baseVolume: 0.7,          // Starting volume
+  volumePerCombo: 0.05,     // +5% volume per combo
+  maxVolume: 1.0,           // Cap at unity
 
   thresholds: {
     3: { type: 'harmonic' as const, interval: 1.5, volume: 0.16 },
@@ -787,14 +790,16 @@ export function playLayeredKillSound(
   // Tier multipliers
   const tierMult = { single: 1, multi: 1.2, massacre: 1.5 }[tier];
 
-  // Multi-kill escalation
-  const pitchMult = Math.min(
-    MULTI_KILL_AUDIO.maxPitch,
-    Math.pow(MULTI_KILL_AUDIO.pitchScale, comboCount - 1),
-  );
+  // Multi-kill escalation using SEMITONE-BASED pitch scaling
+  // "Multi-kill audio should escalate +1 semitone per combo"
+  // Pitch = 1 + (semitoneShift * 0.059463) where semitoneShift = min(comboCount, 12)
+  const semitoneShift = Math.min(comboCount, MULTI_KILL_AUDIO.maxSemitones);
+  const pitchMult = 1 + (semitoneShift * MULTI_KILL_AUDIO.semitoneRatio);
+
+  // Volume escalation: starts at 0.7, +5% per combo, cap at 1.0
   const volumeMult = Math.min(
     MULTI_KILL_AUDIO.maxVolume,
-    Math.pow(MULTI_KILL_AUDIO.volumeScale, comboCount - 1),
+    MULTI_KILL_AUDIO.baseVolume + (comboCount * MULTI_KILL_AUDIO.volumePerCombo),
   ) * tierMult;
 
   // Random pitch variation for organic feel
@@ -1561,6 +1566,199 @@ export function stopAllAudio(): void {
   logAudioEvent('stopAllAudio', {});
   stopBuzz();
   stopAmbient();
+}
+
+// =============================================================================
+// THE BALL Audio Sequencing Functions
+// =============================================================================
+
+// Track whether music is currently fading
+let isFadingOut = false;
+let fadeOutGain: GainNode | null = null;
+
+/**
+ * Fade out all audio over the specified duration.
+ * Used when THE BALL begins forming - creates anticipation before silence.
+ *
+ * "Silence should be terrifying. The fade-out builds the dread."
+ *
+ * @param durationMs - Duration of the fade in milliseconds (default: 500ms)
+ */
+export function fadeOutAllAudio(durationMs: number = 500): void {
+  if (!audioContext || !masterGain) return;
+
+  logAudioEvent('fadeOutAllAudio', { durationMs });
+  isFadingOut = true;
+
+  const ctx = audioContext;
+  const now = ctx.currentTime;
+  const fadeTime = durationMs / 1000;
+
+  // Create a gain node to control the fade
+  if (!fadeOutGain) {
+    fadeOutGain = ctx.createGain();
+  }
+
+  // Store original master gain value and fade it
+  const originalVolume = masterGain.gain.value;
+  masterGain.gain.setValueAtTime(originalVolume, now);
+  masterGain.gain.exponentialRampToValueAtTime(0.001, now + fadeTime);
+
+  // After fade completes, stop continuous sounds
+  setTimeout(() => {
+    stopBuzz();
+    stopAmbient();
+  }, durationMs);
+}
+
+/**
+ * Play the bass drop sound effect - THE BALL's signature "THOOM".
+ * This hits after TRUE SILENCE for maximum impact.
+ *
+ * "After 3 seconds of complete silence, this bass drop hits HARD."
+ *
+ * Characteristics:
+ * - Very low frequency (30-50 Hz) for physical impact
+ * - Quick attack (50ms) for punch
+ * - Longer sustain with pulse for cooking feel
+ */
+export function playBassDropSound(): void {
+  if (!audioContext || !masterGain || !isAudioEnabled) return;
+
+  logAudioEvent('playBassDropSound', {});
+  trackSoundStart();
+
+  const ctx = audioContext;
+  const now = ctx.currentTime;
+
+  // Restore master volume if it was faded
+  if (isFadingOut) {
+    masterGain.gain.setValueAtTime(0.001, now);
+    masterGain.gain.exponentialRampToValueAtTime(0.5, now + 0.05);
+    isFadingOut = false;
+  }
+
+  // =========================================================================
+  // THE BASS DROP - "THOOM"
+  // =========================================================================
+  // Three layers for maximum impact:
+  // 1. Sub-bass (30Hz) - physical presence
+  // 2. Low bass (50Hz) - tonal weight
+  // 3. Impact noise - transient punch
+  // =========================================================================
+
+  // Layer 1: Sub-bass (30Hz) - you FEEL this more than hear it
+  const subBass = ctx.createOscillator();
+  subBass.type = 'sine';
+  subBass.frequency.setValueAtTime(30, now);
+  subBass.frequency.exponentialRampToValueAtTime(25, now + 0.5);
+
+  const subGain = ctx.createGain();
+  subGain.gain.setValueAtTime(0, now);
+  subGain.gain.linearRampToValueAtTime(0.8, now + 0.05);  // Quick attack
+  subGain.gain.linearRampToValueAtTime(0.6, now + 0.2);   // Sustain
+  subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+
+  subBass.connect(subGain);
+  subGain.connect(masterGain);
+  subBass.start(now);
+  subBass.stop(now + 1.0);
+
+  // Layer 2: Low bass (50Hz) - tonal weight
+  const lowBass = ctx.createOscillator();
+  lowBass.type = 'sine';
+  lowBass.frequency.setValueAtTime(50, now);
+  lowBass.frequency.exponentialRampToValueAtTime(40, now + 0.8);
+
+  const lowGain = ctx.createGain();
+  lowGain.gain.setValueAtTime(0, now);
+  lowGain.gain.linearRampToValueAtTime(0.6, now + 0.03);  // Even quicker attack
+  lowGain.gain.linearRampToValueAtTime(0.4, now + 0.15);
+  lowGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+  lowBass.connect(lowGain);
+  lowGain.connect(masterGain);
+  lowBass.start(now);
+  lowBass.stop(now + 0.8);
+
+  // Layer 3: Impact noise - transient punch
+  const bufferSize = Math.floor(ctx.sampleRate * 0.1);
+  const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const noiseData = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    noiseData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+  }
+
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuffer;
+
+  // Low-pass filter for rumble
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = 'lowpass';
+  noiseFilter.frequency.value = 150;
+  noiseFilter.Q.value = 1;
+
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.5, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(masterGain);
+  noise.start(now);
+
+  setTimeout(() => trackSoundEnd(), 1000);
+}
+
+/**
+ * Start intense music after bass drop.
+ * Used during constrict phase - temperature rising, danger escalating.
+ *
+ * Uses the existing coordination buzz at maximum intensity.
+ */
+export function startIntenseMusic(): void {
+  if (!audioContext || !masterGain) return;
+
+  logAudioEvent('startIntenseMusic', {});
+
+  // Restore master volume if needed
+  if (isFadingOut) {
+    const ctx = audioContext;
+    const now = ctx.currentTime;
+    masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+    masterGain.gain.exponentialRampToValueAtTime(0.5, now + 0.1);
+    isFadingOut = false;
+  }
+
+  // Maximum coordination buzz intensity
+  updateCoordinationBuzz(10);
+}
+
+/**
+ * Fade back to normal music over the specified duration.
+ * Used when THE BALL dissipates - tension releases.
+ *
+ * @param durationMs - Duration of the fade in milliseconds (default: 1000ms)
+ */
+export function fadeToNormalMusic(durationMs: number = 1000): void {
+  if (!audioContext || !masterGain) return;
+
+  logAudioEvent('fadeToNormalMusic', { durationMs });
+
+  // Restore master volume if it was faded
+  if (isFadingOut) {
+    const ctx = audioContext;
+    const now = ctx.currentTime;
+    masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+    masterGain.gain.linearRampToValueAtTime(0.5, now + durationMs / 1000);
+    isFadingOut = false;
+  }
+
+  // Fade buzz back to normal level
+  updateCoordinationBuzz(3);  // Medium buzz
+
+  // Restore ambient mood (flow = normal gameplay)
+  setMoodAmbient('flow');
 }
 
 // =============================================================================
