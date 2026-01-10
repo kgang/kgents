@@ -44,12 +44,10 @@ License: MIT
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import (
     Any,
-    FrozenSet,
     Generic,
     Protocol,
     TypeVar,
@@ -493,7 +491,9 @@ def parallel(
             return left_dirs
         return left_dirs & right_dirs
 
-    def par_transition(state: tuple[S, S2], input: A) -> tuple[tuple[S, S2], tuple[B, C]]:
+    def par_transition(
+        state: tuple[S, S2], input: A
+    ) -> tuple[tuple[S, S2], tuple[B, C]]:
         s1, s2 = state
         new_s1, out1 = left.transition(s1, input)
         new_s2, out2 = right.transition(s2, input)
@@ -531,7 +531,9 @@ class WiringDiagram(Generic[S, S2, A, B, C]):
     @property
     def composed_positions(self) -> frozenset[tuple[S, S2]]:
         """Product of position sets."""
-        return frozenset((s1, s2) for s1 in self.left.positions for s2 in self.right.positions)
+        return frozenset(
+            (s1, s2) for s1 in self.left.positions for s2 in self.right.positions
+        )
 
     def compose(self) -> PolyAgent[tuple[S, S2], A, C]:
         """Compose the agents."""

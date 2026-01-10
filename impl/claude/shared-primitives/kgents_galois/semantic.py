@@ -426,8 +426,8 @@ def soft_cosine_distance(
 
     # Compute soft cosine
     numerator = 0.0
-    for i, ti in enumerate(all_terms):
-        for j, tj in enumerate(all_terms):
+    for _i, ti in enumerate(all_terms):
+        for _j, tj in enumerate(all_terms):
             sim_ij = word_similarity(ti, tj)
             a_i = tf_a.get(ti, 0)
             b_j = tf_b.get(tj, 0)
@@ -435,16 +435,16 @@ def soft_cosine_distance(
 
     # Compute norms
     norm_a_sq = 0.0
-    for i, ti in enumerate(all_terms):
-        for j, tj in enumerate(all_terms):
+    for _i, ti in enumerate(all_terms):
+        for _j, tj in enumerate(all_terms):
             sim_ij = word_similarity(ti, tj)
             a_i = tf_a.get(ti, 0)
             a_j = tf_a.get(tj, 0)
             norm_a_sq += sim_ij * a_i * a_j
 
     norm_b_sq = 0.0
-    for i, ti in enumerate(all_terms):
-        for j, tj in enumerate(all_terms):
+    for _i, ti in enumerate(all_terms):
+        for _j, tj in enumerate(all_terms):
             sim_ij = word_similarity(ti, tj)
             b_i = tf_b.get(ti, 0)
             b_j = tf_b.get(tj, 0)

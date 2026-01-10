@@ -66,15 +66,22 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum, auto
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
+# Re-export error types for public API
 from .errors import (
-    AssociativityError,
-    CoherenceError,
-    IdentityError,
-    LawViolationError,
+    AssociativityError as AssociativityError,
+)
+from .errors import (
+    CoherenceError as CoherenceError,
+)
+from .errors import (
+    IdentityError as IdentityError,
+)
+from .errors import (
+    LawViolationError as LawViolationError,
 )
 
 # Type variables
@@ -248,8 +255,9 @@ def verify_identity(
                         left_value=left_result,
                         right_value=agent_result,
                         explanation=(
-                            f"Left identity failed: id >> {agent.name} gave {left_result!r}, "
-                            f"but {agent.name} alone gave {agent_result!r}"
+                            f"Left identity failed: id >> {agent.name} "
+                            f"gave {left_result!r}, but {agent.name} "
+                            f"alone gave {agent_result!r}"
                         ),
                         test_input=test_input,
                     )
@@ -339,10 +347,11 @@ def verify_associativity(
                         left_value=left_result,
                         right_value=right_result,
                         explanation=(
-                            f"Associativity failed at step: "
-                            f"({a.name} >> {b.name}) >> {c.name} gave {left_result!r}, "
-                            f"but {a.name} >> ({b.name} >> {c.name}) gave {right_result!r}. "
-                            f"Grouping matters when it shouldn't!"
+                            f"Associativity failed: "
+                            f"({a.name} >> {b.name}) >> {c.name} "
+                            f"gave {left_result!r}, but "
+                            f"{a.name} >> ({b.name} >> {c.name}) "
+                            f"gave {right_result!r}. Grouping matters!"
                         ),
                         test_input=test_input,
                     )
@@ -415,8 +424,8 @@ def verify_monad_left_identity(
                         left_value=left,
                         right_value=right,
                         explanation=(
-                            f"Left identity failed: pure({value!r}) >>= f gave {left!r}, "
-                            f"but f({value!r}) gave {right!r}"
+                            f"Left identity failed: pure({value!r}) >>= f "
+                            f"gave {left!r}, but f({value!r}) gave {right!r}"
                         ),
                         test_input=value,
                     )

@@ -250,7 +250,7 @@ def cosine_similarity(vec_a: Sequence[float], vec_b: Sequence[float]) -> float:
     if len(vec_a) != len(vec_b):
         raise ValueError(f"Vector length mismatch: {len(vec_a)} vs {len(vec_b)}")
 
-    dot_product = sum(a * b for a, b in zip(vec_a, vec_b))
+    dot_product = sum(a * b for a, b in zip(vec_a, vec_b, strict=False))
     norm_a = math.sqrt(sum(a * a for a in vec_a))
     norm_b = math.sqrt(sum(b * b for b in vec_b))
 
@@ -428,7 +428,9 @@ def compose_distances(
         return lambda a, b: 0.0
 
     def composed(a: str, b: str) -> float:
-        weighted_sum = sum(fn(a, b) * w for fn, w in zip(distance_fns, weights))
+        weighted_sum = sum(
+            fn(a, b) * w for fn, w in zip(distance_fns, weights, strict=False)
+        )
         return clamp(weighted_sum / total_weight)
 
     return composed

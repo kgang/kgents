@@ -143,13 +143,19 @@ class ThresholdLaw(GovernanceLaw):
             return LawResult(
                 passed=True,  # Soft limit - still passes
                 score=value,
-                warning=f"{self.dimension} exceeded threshold ({value:.2f} > {self.threshold:.2f})",
+                warning=(
+                    f"{self.dimension} exceeded threshold "
+                    f"({value:.2f} > {self.threshold:.2f})"
+                ),
                 reason=f"Consider action: {self.action}",
             )
         return LawResult(passed=True, score=value)
 
     def __repr__(self) -> str:
-        return f"ThresholdLaw(dimension={self.dimension!r}, threshold={self.threshold}, action={self.action!r})"
+        return (
+            f"ThresholdLaw(dimension={self.dimension!r}, "
+            f"threshold={self.threshold}, action={self.action!r})"
+        )
 
 
 def threshold_law(

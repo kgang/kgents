@@ -75,7 +75,6 @@ License: MIT
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
@@ -83,6 +82,9 @@ from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
 # Type variables
 T = TypeVar("T")  # Content type
 V = TypeVar("V")  # Rendered view type
+# Protocol-specific type variables with proper variance
+T_contra = TypeVar("T_contra", contravariant=True)  # Input type for protocols
+V_co = TypeVar("V_co", covariant=True)  # Output type for protocols
 
 
 # -----------------------------------------------------------------------------
@@ -91,7 +93,7 @@ V = TypeVar("V")  # Rendered view type
 
 
 @runtime_checkable
-class ViewProtocol(Protocol[T, V]):
+class ViewProtocol(Protocol[T_contra, V_co]):
     """
     Protocol for sheaf views.
 
@@ -104,7 +106,7 @@ class ViewProtocol(Protocol[T, V]):
         """View name for identification."""
         ...
 
-    def render(self, content: T, **kwargs: Any) -> V:
+    def render(self, content: T_contra, **kwargs: Any) -> V_co:
         """
         Render content into this view's representation.
 
@@ -350,7 +352,10 @@ class Sheaf(Generic[T]):
             checked_views=checked,
             conflicts=conflicts,
             coverage=len(checked) / len(self.views) if self.views else 1.0,
-            message="All views coherent" if not conflicts else f"{len(conflicts)} conflict(s)",
+            message=(
+                "All views coherent" if not conflicts
+                else f"{len(conflicts)} conflict(s)"
+            ),
         )
 
     def glue(self, rendered_views: dict[str, Any] | None = None) -> T:

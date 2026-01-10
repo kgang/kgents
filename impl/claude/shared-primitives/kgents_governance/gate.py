@@ -145,12 +145,18 @@ class GateLaw(GovernanceLaw):
                 passed=False,
                 score=self.on_fail,
                 blocked=True,
-                reason=f"{self.dimension} ({value:.2f}) below threshold ({self.threshold:.2f})",
+                reason=(
+                    f"{self.dimension} ({value:.2f}) "
+                    f"below threshold ({self.threshold:.2f})"
+                ),
             )
         return LawResult(passed=True, score=value)
 
     def __repr__(self) -> str:
-        return f"GateLaw(dimension={self.dimension!r}, threshold={self.threshold}, on_fail={self.on_fail})"
+        return (
+            f"GateLaw(dimension={self.dimension!r}, "
+            f"threshold={self.threshold}, on_fail={self.on_fail})"
+        )
 
 
 def gate_law(

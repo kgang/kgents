@@ -76,7 +76,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from itertools import combinations_with_replacement
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
     from kgents_poly import PolyAgent
@@ -409,7 +409,6 @@ def create_agent_operad() -> Operad:
         if_false: PolyAgent,
     ) -> PolyAgent:
         """Conditional composition."""
-        from typing import Any
 
         def branch_transition(
             state: tuple[Any, Any, Any], input: Any
@@ -442,8 +441,6 @@ def create_agent_operad() -> Operad:
         body: PolyAgent,
     ) -> PolyAgent:
         """Fixed-point composition: repeat until predicate succeeds."""
-        from typing import Any
-
         MAX_ITERATIONS = 10
 
         def fix_transition(

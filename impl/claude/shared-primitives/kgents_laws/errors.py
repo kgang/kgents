@@ -69,7 +69,7 @@ class IdentityError(LawViolationError):
     actual: Any = None
     side: str = "left"  # "left" for id >> f, "right" for f >> id
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.message = self._build_message()
         super().__init__(self.message)
 
@@ -107,10 +107,14 @@ class IdentityError(LawViolationError):
     def how_to_fix(self) -> str:
         """Actionable fix instructions."""
         return (
-            f"1. Check that '{self.agent_name}' accepts the same types identity produces.\n"
-            f"2. Verify identity truly returns input unchanged (no type coercion).\n"
-            f"3. If using custom identity, ensure transition is: (state, x) -> (state, x).\n"
-            f"4. Run: verify_identity({self.agent_name}, id, [{self.test_input!r}], verbose=True)"
+            f"1. Check that '{self.agent_name}' accepts the same types "
+            f"identity produces.\n"
+            f"2. Verify identity truly returns input unchanged "
+            f"(no type coercion).\n"
+            f"3. If using custom identity, ensure transition is: "
+            f"(state, x) -> (state, x).\n"
+            f"4. Run: verify_identity({self.agent_name}, id, "
+            f"[{self.test_input!r}], verbose=True)"
         )
 
 
@@ -148,7 +152,7 @@ class AssociativityError(LawViolationError):
     intermediate_left: Any = None  # Intermediate result for debugging
     intermediate_right: Any = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.message = self._build_message()
         super().__init__(self.message)
 
@@ -207,10 +211,13 @@ class AssociativityError(LawViolationError):
         """Actionable fix instructions."""
         f, g, h = self.agents
         return (
-            f"1. Check if any of [{f}, {g}, {h}] has order-dependent side effects.\n"
-            f"2. Verify all agents are pure (same input always gives same output).\n"
+            f"1. Check if any of [{f}, {g}, {h}] has order-dependent "
+            f"side effects.\n"
+            f"2. Verify all agents are pure (same input always gives "
+            f"same output).\n"
             f"3. Look for mutable state being shared between agents.\n"
-            f"4. If using stateful agents, ensure state transitions are deterministic.\n"
+            f"4. If using stateful agents, ensure state transitions "
+            f"are deterministic.\n"
             f"5. Run with verbose=True to see intermediate values at each step."
         )
 
@@ -247,16 +254,17 @@ class CoherenceError(LawViolationError):
     checked_views: list[str] = field(default_factory=list)
     coverage: float = 1.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.message = self._build_message()
         super().__init__(self.message)
 
     def _build_message(self) -> str:
         """Build the full error message following L8 template."""
+        checked_views_str = ', '.join(self.checked_views)
         lines = [
             self.what_failed,
             "",
-            f"Checked views ({len(self.checked_views)}): {', '.join(self.checked_views)}",
+            f"Checked views ({len(self.checked_views)}): {checked_views_str}",
             f"Coverage: {self.coverage:.1%}",
             "",
             f"Conflicts ({len(self.conflicts)}):",
@@ -272,7 +280,10 @@ class CoherenceError(LawViolationError):
     @property
     def what_failed(self) -> str:
         """One-line description of what failed."""
-        return f"Sheaf coherence violated: {len(self.conflicts)} conflict(s) in '{self.sheaf_name}'"
+        return (
+            f"Sheaf coherence violated: {len(self.conflicts)} conflict(s) "
+            f"in '{self.sheaf_name}'"
+        )
 
     @property
     def how_to_fix(self) -> str:
