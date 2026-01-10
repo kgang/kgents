@@ -17,11 +17,14 @@ Integration:
     - Produces ConstitutionalAlignment attached to marks
     - Feeds into ConstitutionalTrustComputer for trust level calculation
 
-The Seven Principles (with weights):
-    - ETHICAL: 2.0 (safety first)
-    - COMPOSABLE: 1.5 (architecture second)
-    - JOY_INDUCING: 1.2 (Kent's aesthetic)
-    - TASTEFUL, CURATED, HETERARCHICAL, GENERATIVE: 1.0 each
+The Seven Principles:
+    - ETHICAL: GATE (≥0.6 floor constraint, Amendment A) — safety first
+    - COMPOSABLE: 1.5 weight — architecture second
+    - JOY_INDUCING: 1.2 weight — Kent's aesthetic
+    - TASTEFUL, CURATED, HETERARCHICAL, GENERATIVE: 1.0 weight each
+
+Note: ETHICAL is NOT a weighted score. It's a floor constraint.
+If ETHICAL < 0.6, action is REJECTED regardless of other scores.
 
 See: spec/principles.md
 See: services/categorical/constitution.py
