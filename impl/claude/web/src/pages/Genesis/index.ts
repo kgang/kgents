@@ -20,3 +20,5 @@ export { FirstQuestion } from './FirstQuestion';
 export { WelcomeToStudio } from './WelcomeToStudio';
 export { JudgmentExperience } from './JudgmentExperience';
 export { GrowthWitness } from './GrowthWitness';
+export { GenesisCleanSlate } from './GenesisCleanSlate';
+export { GenesisExperience } from './GenesisExperience';

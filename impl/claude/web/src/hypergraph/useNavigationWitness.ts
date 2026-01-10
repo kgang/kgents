@@ -39,15 +39,13 @@ export interface NavigationWitnessResult {
       viaEdge?: string;
       lossValue?: number;
       confidence?: number;
+      direction?: 'next' | 'prev';
+      fromDepth?: number;
     }
   ) => void;
 
   /** Witness a mode transition */
-  witnessMode: (
-    fromMode: EditorMode,
-    toMode: EditorMode,
-    nodePath: string | null
-  ) => void;
+  witnessMode: (fromMode: EditorMode, toMode: EditorMode, nodePath: string | null) => void;
 
   /** Recent navigation marks */
   recentMarks: DomainMark[];
@@ -68,10 +66,11 @@ export interface NavigationWitnessResult {
  */
 const KEY_TO_ACTION: Record<string, NavigationAction> = {
   gD: 'derivation',
-  gl: 'loss_gradient',
-  gh: 'loss_gradient',
-  gL: 'loss_gradient',
-  gH: 'loss_gradient',
+  gh: 'derivation', // derivation parent (new)
+  gl: 'derivation_child', // derivation child (new)
+  gG: 'genesis', // trace to axiom (new)
+  gL: 'loss_gradient', // loss gradient (shifted)
+  gH: 'loss_gradient', // loss gradient (shifted)
   gj: 'sibling',
   gk: 'sibling',
   gd: 'definition',
@@ -105,18 +104,29 @@ function generateReasoning(
     viaEdge?: string;
     lossValue?: number;
     confidence?: number;
+    direction?: 'next' | 'prev';
+    fromDepth?: number;
   }
 ): string {
   switch (actionType) {
     case 'derivation':
       return 'Following derivation chain to understand justification';
+    case 'derivation_child':
+      return 'Descending derivation chain to explore derived nodes';
+    case 'genesis':
+      if (extra?.fromDepth !== undefined) {
+        return `Tracing ${extra.fromDepth} hops back to constitutional axiom`;
+      }
+      return 'Tracing derivation chain to constitutional axiom';
     case 'loss_gradient':
       if (extra?.lossValue !== undefined) {
         return `Following loss gradient (loss: ${(extra.lossValue * 100).toFixed(1)}%)`;
       }
       return 'Following loss gradient toward stability';
-    case 'sibling':
-      return 'Exploring related nodes at the same level';
+    case 'sibling': {
+      const dir = extra?.direction === 'prev' ? 'previous' : 'next';
+      return `Navigating to ${dir} sibling at same derivation level`;
+    }
     case 'definition':
       return 'Navigating to definition/implementation';
     case 'references':
@@ -161,12 +171,11 @@ export function useNavigationWitness(
 ): NavigationWitnessResult {
   const { enabled = true, debounceMs = 300, subscribe = false } = options;
 
-  const { witness, recentMarks, isConnected, pendingCount } =
-    useWitness({
-      subscribe,
-      filterDomain: 'navigation',
-      maxRecent: 30,
-    });
+  const { witness, recentMarks, isConnected, pendingCount } = useWitness({
+    subscribe,
+    filterDomain: 'navigation',
+    maxRecent: 30,
+  });
 
   // Debounce tracking
   const lastNavRef = useRef<{ path: string; time: number } | null>(null);

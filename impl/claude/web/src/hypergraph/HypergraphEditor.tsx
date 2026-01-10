@@ -28,6 +28,7 @@ import { useKBlock } from './useKBlock';
 import { useDirector } from '../hooks/useDirector';
 import { useLossNavigation } from './useLossNavigation';
 import { useNavigationWitness } from './useNavigationWitness';
+import { useDerivationNavigation } from '../hooks/useDerivationNavigation';
 import { StatusLine } from './StatusLine';
 import { CommandLine } from './CommandLine';
 import { EdgePanel } from './EdgePanel';
@@ -115,6 +116,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
   // Loss navigation
   const lossNav = useLossNavigation();
+
+  // Derivation navigation (Constitutional graph traversal)
+  const derivationNav = useDerivationNavigation();
 
   // Witness navigation (fire-and-forget marking)
   // Stream 1: Wire navigation actions to create witness marks automatically
@@ -224,6 +228,260 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     setConfidenceVisible((prev) => !prev);
   }, []);
 
+  // =============================================================================
+  // Derivation Navigation Handlers (gh/gl/gj/gk/gG)
+  // =============================================================================
+
+  /**
+   * gh - Navigate to derivation parent.
+   * Uses the useDerivationNavigation hook for Constitutional graph traversal.
+   */
+  const handleGoDerivationParentNew = useCallback(async () => {
+    const node = state.currentNode;
+    if (!node) return;
+
+    const parentNode = await derivationNav.goToParent();
+    if (parentNode && loadNode) {
+      // Witness the navigation
+      witnessNavigation('derivation', node, { path: parentNode.path } as any, {
+        keySequence: 'gh',
+        viaEdge: 'derives_from',
+      });
+
+      // Load and navigate
+      onNavigate?.(parentNode.path);
+      loadNode(parentNode.path).then((graphNode) => {
+        if (graphNode) {
+          focusNode(graphNode);
+          onNodeFocus?.(graphNode);
+        }
+      });
+
+      setFeedbackMessage({
+        type: 'success',
+        text: `Navigated to parent: ${parentNode.title}`,
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } else {
+      setFeedbackMessage({
+        type: 'warning',
+        text: 'No derivation parent (at axiom)',
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    }
+  }, [
+    state.currentNode,
+    derivationNav,
+    loadNode,
+    focusNode,
+    onNavigate,
+    onNodeFocus,
+    witnessNavigation,
+  ]);
+
+  /**
+   * gl - Navigate to derivation child.
+   * Uses the useDerivationNavigation hook to follow derives_from edge down.
+   */
+  const handleGoDerivationChild = useCallback(async () => {
+    const node = state.currentNode;
+    if (!node) return;
+
+    const childNode = await derivationNav.goToChild();
+    if (childNode && loadNode) {
+      // Witness the navigation
+      witnessNavigation('derivation', node, { path: childNode.path } as any, {
+        keySequence: 'gl',
+        viaEdge: 'derives_from',
+      });
+
+      // Load and navigate
+      onNavigate?.(childNode.path);
+      loadNode(childNode.path).then((graphNode) => {
+        if (graphNode) {
+          focusNode(graphNode);
+          onNodeFocus?.(graphNode);
+        }
+      });
+
+      setFeedbackMessage({
+        type: 'success',
+        text: `Navigated to child: ${childNode.title}`,
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } else {
+      setFeedbackMessage({
+        type: 'warning',
+        text: 'No derivation children',
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    }
+  }, [
+    state.currentNode,
+    derivationNav,
+    loadNode,
+    focusNode,
+    onNavigate,
+    onNodeFocus,
+    witnessNavigation,
+  ]);
+
+  /**
+   * gj - Navigate to next derivation sibling.
+   * Same layer, same parent.
+   */
+  const handleGoDerivationNextSibling = useCallback(async () => {
+    const node = state.currentNode;
+    if (!node) return;
+
+    const siblingNode = await derivationNav.goToNextSibling();
+    if (siblingNode && loadNode) {
+      // Witness the navigation
+      witnessNavigation('sibling', node, { path: siblingNode.path } as any, {
+        keySequence: 'gj',
+        direction: 'next',
+      });
+
+      // Load and navigate
+      onNavigate?.(siblingNode.path);
+      loadNode(siblingNode.path).then((graphNode) => {
+        if (graphNode) {
+          focusNode(graphNode);
+          onNodeFocus?.(graphNode);
+        }
+      });
+
+      const siblingInfo =
+        derivationNav.siblingCount > 1
+          ? ` (${derivationNav.siblingIndex + 1}/${derivationNav.siblingCount})`
+          : '';
+      setFeedbackMessage({
+        type: 'success',
+        text: `Next sibling: ${siblingNode.title}${siblingInfo}`,
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } else {
+      setFeedbackMessage({
+        type: 'warning',
+        text: 'No more siblings',
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    }
+  }, [
+    state.currentNode,
+    derivationNav,
+    loadNode,
+    focusNode,
+    onNavigate,
+    onNodeFocus,
+    witnessNavigation,
+  ]);
+
+  /**
+   * gk - Navigate to prev derivation sibling.
+   * Same layer, same parent.
+   */
+  const handleGoDerivationPrevSibling = useCallback(async () => {
+    const node = state.currentNode;
+    if (!node) return;
+
+    const siblingNode = await derivationNav.goToPrevSibling();
+    if (siblingNode && loadNode) {
+      // Witness the navigation
+      witnessNavigation('sibling', node, { path: siblingNode.path } as any, {
+        keySequence: 'gk',
+        direction: 'prev',
+      });
+
+      // Load and navigate
+      onNavigate?.(siblingNode.path);
+      loadNode(siblingNode.path).then((graphNode) => {
+        if (graphNode) {
+          focusNode(graphNode);
+          onNodeFocus?.(graphNode);
+        }
+      });
+
+      const siblingInfo =
+        derivationNav.siblingCount > 1
+          ? ` (${derivationNav.siblingIndex + 1}/${derivationNav.siblingCount})`
+          : '';
+      setFeedbackMessage({
+        type: 'success',
+        text: `Prev sibling: ${siblingNode.title}${siblingInfo}`,
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } else {
+      setFeedbackMessage({
+        type: 'warning',
+        text: 'No more siblings',
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    }
+  }, [
+    state.currentNode,
+    derivationNav,
+    loadNode,
+    focusNode,
+    onNavigate,
+    onNodeFocus,
+    witnessNavigation,
+  ]);
+
+  /**
+   * gG - Navigate to genesis (L1 axiom).
+   * Traces derivation chain all the way to the root axiom.
+   */
+  const handleGoToGenesis = useCallback(async () => {
+    const node = state.currentNode;
+    if (!node) return;
+
+    const genesisNode = await derivationNav.goToGenesis();
+    if (genesisNode && loadNode) {
+      // Witness the navigation
+      witnessNavigation('genesis', node, { path: genesisNode.path } as any, {
+        keySequence: 'gG',
+        fromDepth: derivationNav.derivationDepth,
+      });
+
+      // Load and navigate
+      onNavigate?.(genesisNode.path);
+      loadNode(genesisNode.path).then((graphNode) => {
+        if (graphNode) {
+          focusNode(graphNode);
+          onNodeFocus?.(graphNode);
+        }
+      });
+
+      setFeedbackMessage({
+        type: 'success',
+        text: `Traced to axiom: ${genesisNode.title}`,
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } else {
+      setFeedbackMessage({
+        type: 'warning',
+        text: 'Already at genesis (axiom)',
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    }
+  }, [
+    state.currentNode,
+    derivationNav,
+    loadNode,
+    focusNode,
+    onNavigate,
+    onNodeFocus,
+    witnessNavigation,
+  ]);
+
+  // Update derivation navigation context when node changes
+  useEffect(() => {
+    if (state.currentNode?.path) {
+      derivationNav.setCurrentNode(state.currentNode.path);
+    }
+  }, [state.currentNode?.path, derivationNav]);
+
   /**
    * Handle re-analyze action.
    * Triggers fresh LLM analysis of the current document via concept.document.analyze.
@@ -288,7 +546,10 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       const fallbackContent = state.currentNode.content ?? '';
       const fallbackId = `local-${Date.now()}`;
 
-      console.warn('[HypergraphEditor] K-Block creation failed, using local fallback:', kblockResult.error);
+      console.warn(
+        '[HypergraphEditor] K-Block creation failed, using local fallback:',
+        kblockResult.error
+      );
 
       // Still create K-Block state so content updates work
       dispatch({ type: 'KBLOCK_CREATED', blockId: fallbackId, content: fallbackContent });
@@ -321,7 +582,6 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     },
     [dispatch]
   );
-
 
   // Handle quick mark (immediate save with tag)
   const handleQuickMark = useCallback(
@@ -653,7 +913,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
     try {
       // Fetch marks related to the current node
-      const response = await fetch(`/api/witness/marks?path=${encodeURIComponent(state.currentNode.path)}`);
+      const response = await fetch(
+        `/api/witness/marks?path=${encodeURIComponent(state.currentNode.path)}`
+      );
       if (!response.ok) {
         throw new Error(`Failed to fetch marks: ${response.statusText}`);
       }
@@ -688,7 +950,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
     try {
       // Fetch warrant/justification for the current node
-      const response = await fetch(`/api/witness/warrant?path=${encodeURIComponent(state.currentNode.path)}`);
+      const response = await fetch(
+        `/api/witness/warrant?path=${encodeURIComponent(state.currentNode.path)}`
+      );
       if (!response.ok) {
         throw new Error(`Failed to fetch warrant: ${response.statusText}`);
       }
@@ -722,7 +986,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
     try {
       // Fetch decision/fusion related to the current node
-      const response = await fetch(`/api/witness/fusion?path=${encodeURIComponent(state.currentNode.path)}`);
+      const response = await fetch(
+        `/api/witness/fusion?path=${encodeURIComponent(state.currentNode.path)}`
+      );
       if (!response.ok) {
         throw new Error(`Failed to fetch decision: ${response.statusText}`);
       }
@@ -758,8 +1024,12 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     goDefinition,
     goReferences,
     goTests,
-    // Derivation navigation (gD/gc)
-    goDerivationParent: handleGoDerivationParent,
+    // Derivation navigation (gh/gl/gj/gk/gG and gD/gc)
+    goDerivationParent: handleGoDerivationParentNew, // gh - new derivation parent (via useDerivationNavigation)
+    goDerivationChild: handleGoDerivationChild, // gl - derivation child
+    goDerivationNextSibling: handleGoDerivationNextSibling, // gj already maps to sibling
+    goDerivationPrevSibling: handleGoDerivationPrevSibling, // gk already maps to sibling
+    goToGenesis: handleGoToGenesis, // gG - trace to axiom
     showConfidence: handleShowConfidence,
     // Portal operations (zo/zc — vim fold-style)
     openPortal,
@@ -789,7 +1059,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     onToggleAnalysisQuadrant: () => setAnalysisQuadrantOpen((prev) => !prev),
     // Edge metadata panel
     onToggleEdgePanel: () => setEdgePanelOpen((prev) => !prev),
-    // Loss-gradient navigation (gl/gh/gL/gH)
+    // Loss-gradient navigation (gL/gH — shifted to uppercase)
     goLowestLoss: handleGoLowestLoss,
     goHighestLoss: handleGoHighestLoss,
     zoomOut: handleZoomOut,
@@ -926,9 +1196,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
         // Show success feedback
         const path = state.currentNode?.path?.split('/').pop() || 'K-Block';
-        const message = reasoning
-          ? `Saved "${path}" (${reasoning})`
-          : `Saved "${path}"`;
+        const message = reasoning ? `Saved "${path}" (${reasoning})` : `Saved "${path}"`;
         setFeedbackMessage({ type: 'success', text: message });
         setTimeout(() => setFeedbackMessage(null), 3000);
       } else {
@@ -1031,7 +1299,9 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         const agentArgs = args.slice(1).join(' ');
 
         if (!agentesePath) {
-          console.warn('[HypergraphEditor] :ag requires a path (e.g., :ag self.brain.capture "text")');
+          console.warn(
+            '[HypergraphEditor] :ag requires a path (e.g., :ag self.brain.capture "text")'
+          );
           setFeedbackMessage({ type: 'warning', text: ':ag requires a path' });
           setTimeout(() => setFeedbackMessage(null), 3000);
           return;
@@ -1131,24 +1401,21 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
   // Handle task toggle (from InteractiveDocument)
   // Called when user clicks a checkbox in NORMAL mode
-  const handleTaskToggle = useCallback(
-    async (newState: boolean, taskId?: string) => {
-      console.info('[HypergraphEditor] Task toggle:', { newState, taskId });
+  const handleTaskToggle = useCallback(async (newState: boolean, taskId?: string) => {
+    console.info('[HypergraphEditor] Task toggle:', { newState, taskId });
 
-      // TODO: Integrate with K-Block to update content and persist
-      // For now, just log the toggle - full implementation would:
-      // 1. Parse the current content to find the task
-      // 2. Update the checkbox state in the markdown
-      // 3. Update K-Block working content
-      // 4. Create a witness mark for the toggle
-      setFeedbackMessage({
-        type: 'success',
-        text: `Task ${newState ? 'completed' : 'uncompleted'}`,
-      });
-      setTimeout(() => setFeedbackMessage(null), 2000);
-    },
-    []
-  );
+    // TODO: Integrate with K-Block to update content and persist
+    // For now, just log the toggle - full implementation would:
+    // 1. Parse the current content to find the task
+    // 2. Update the checkbox state in the markdown
+    // 3. Update K-Block working content
+    // 4. Create a witness mark for the toggle
+    setFeedbackMessage({
+      type: 'success',
+      text: `Task ${newState ? 'completed' : 'uncompleted'}`,
+    });
+    setTimeout(() => setFeedbackMessage(null), 2000);
+  }, []);
 
   // Get breadcrumb
   const breadcrumb = navigation.getTrailBreadcrumb();
@@ -1405,7 +1672,10 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
       {/* AnalysisQuadrant Modal (<leader>a) */}
       {analysisQuadrantOpen && state.currentNode && (
-        <div className="hypergraph-editor__modal-overlay" onClick={() => setAnalysisQuadrantOpen(false)}>
+        <div
+          className="hypergraph-editor__modal-overlay"
+          onClick={() => setAnalysisQuadrantOpen(false)}
+        >
           <div className="hypergraph-editor__modal-content" onClick={(e) => e.stopPropagation()}>
             <AnalysisQuadrant
               nodeId={state.currentNode.path}

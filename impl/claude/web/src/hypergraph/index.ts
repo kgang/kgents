@@ -97,10 +97,7 @@ export type {
 
 // Navigation Witness (Witness Architecture)
 export { useNavigationWitness, createWitnessedReducer } from './useNavigationWitness';
-export type {
-  NavigationWitnessOptions,
-  NavigationWitnessResult,
-} from './useNavigationWitness';
+export type { NavigationWitnessOptions, NavigationWitnessResult } from './useNavigationWitness';
 
 // Witnessed Trail (Trail + live marks)
 export { WitnessedTrail } from './WitnessedTrail';
@@ -139,6 +136,14 @@ export { useWitnessNavigationHandlers } from './useWitnessNavigationHandlers';
 export { ZeroSeedFoundation } from './ZeroSeedFoundation';
 export type { ZeroSeedFoundationProps } from './ZeroSeedFoundation';
 
+// Grounding Dialog (orphan K-Block → Constitutional principle)
+export { GroundingDialog } from './GroundingDialog';
+export type {
+  GroundingDialogProps,
+  GroundingSuggestion,
+  KBlock as GroundingKBlock,
+} from './GroundingDialog';
+
 // K-Block to GraphNode Conversion (Zero Seed wiring)
 export {
   kblockToGraphNode,
@@ -146,3 +151,15 @@ export {
   extractKBlockId,
   extractZeroSeedCategory,
 } from './kblockToGraphNode';
+
+// Constitutional Graph View (files derived from principles)
+export { ConstitutionalGraphView } from './ConstitutionalGraphView';
+export type {
+  ConstitutionalGraphViewProps,
+  DerivationEdge,
+  DerivationGraph,
+  ConstitutionalViewMode,
+  DerivationTier,
+  NodeStatus,
+  ContextMenuAction,
+} from './ConstitutionalGraphView';

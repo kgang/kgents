@@ -37,6 +37,10 @@ type ActionType =
   | 'GO_REFERENCES'
   | 'GO_TESTS'
   | 'GO_DERIVATION_PARENT'
+  | 'GO_DERIVATION_CHILD'
+  | 'GO_DERIVATION_NEXT_SIBLING'
+  | 'GO_DERIVATION_PREV_SIBLING'
+  | 'GO_TO_GENESIS'
   | 'SHOW_CONFIDENCE'
   | 'PORTAL_OPEN'
   | 'PORTAL_CLOSE'
@@ -126,18 +130,58 @@ const NORMAL_BINDINGS: Binding[] = [
   { keys: ['g', 'e'], action: { type: 'ENTER_EDGE' }, description: 'Enter edge mode' },
   { keys: ['g', 'E'], action: 'TOGGLE_EDGE_PANEL', description: 'Toggle edge metadata panel' },
   { keys: ['g', 'w'], action: { type: 'ENTER_WITNESS' }, description: 'Enter witness mode' },
-  { keys: ['g', 'W'], action: 'GO_TO_WARRANT', description: 'Go to warrant (justification for current node)' },
-  { keys: ['g', 'f'], action: 'GO_TO_DECISION', description: 'Go to fusion (dialectical synthesis for current node)' },
+  {
+    keys: ['g', 'W'],
+    action: 'GO_TO_WARRANT',
+    description: 'Go to warrant (justification for current node)',
+  },
+  {
+    keys: ['g', 'f'],
+    action: 'GO_TO_DECISION',
+    description: 'Go to fusion (dialectical synthesis for current node)',
+  },
   { keys: ['g', 'g'], action: 'SCROLL_TO_TOP', description: 'Go to top of document' },
-  { keys: ['g', 'm'], action: 'GO_TO_MARKS', description: 'Go to marks (witness trail for current node)' },
-  { keys: ['g', 'M'], action: 'TOGGLE_DECISION_STREAM', description: 'Toggle decision stream (all witness marks)' },
-  { keys: ['g', 'a'], action: 'TOGGLE_ANALYSIS_QUADRANT', description: 'Toggle analysis quadrant (four-mode analysis)' },
+  {
+    keys: ['g', 'm'],
+    action: 'GO_TO_MARKS',
+    description: 'Go to marks (witness trail for current node)',
+  },
+  {
+    keys: ['g', 'M'],
+    action: 'TOGGLE_DECISION_STREAM',
+    description: 'Toggle decision stream (all witness marks)',
+  },
+  {
+    keys: ['g', 'a'],
+    action: 'TOGGLE_ANALYSIS_QUADRANT',
+    description: 'Toggle analysis quadrant (four-mode analysis)',
+  },
+
+  // --- Derivation Navigation (Constitutional graph) ---
+  {
+    keys: ['g', 'h'],
+    action: 'GO_DERIVATION_PARENT',
+    description: 'Go to derivation parent (derives_from up)',
+  },
+  {
+    keys: ['g', 'l'],
+    action: 'GO_DERIVATION_CHILD',
+    description: 'Go to derivation child (derives_from down)',
+  },
+  // Note: gj/gk already exist for sibling navigation, we repurpose for derivation siblings
+  { keys: ['g', 'G'], action: 'GO_TO_GENESIS', description: 'Go to genesis (trace to L1 axiom)' },
 
   // --- Loss-Gradient Navigation (vim-style) ---
-  { keys: ['g', 'l'], action: 'GO_LOWEST_LOSS', description: 'Go to lowest-loss neighbor (follow gradient)' },
-  { keys: ['g', 'h'], action: 'GO_HIGHEST_LOSS', description: 'Go to highest-loss neighbor (investigate)' },
-  { keys: ['g', 'L'], action: 'ZOOM_OUT', description: 'Zoom out (increase focal distance)' },
-  { keys: ['g', 'H'], action: 'ZOOM_IN', description: 'Zoom in (decrease focal distance)' },
+  {
+    keys: ['g', 'L'],
+    action: 'GO_LOWEST_LOSS',
+    description: 'Go to lowest-loss neighbor (follow gradient)',
+  },
+  {
+    keys: ['g', 'H'],
+    action: 'GO_HIGHEST_LOSS',
+    description: 'Go to highest-loss neighbor (investigate)',
+  },
 
   // --- Scroll & Position ---
   { keys: ['G'], action: 'SCROLL_TO_BOTTOM', description: 'Go to bottom of document' },
@@ -169,6 +213,10 @@ export interface UseKeyHandlerOptions {
   goReferences: () => void;
   goTests: () => void;
   goDerivationParent?: () => void;
+  goDerivationChild?: () => void;
+  goDerivationNextSibling?: () => void;
+  goDerivationPrevSibling?: () => void;
+  goToGenesis?: () => void;
   showConfidence?: () => void;
 
   // Portal callbacks
@@ -235,6 +283,10 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     goReferences,
     goTests,
     goDerivationParent,
+    goDerivationChild,
+    goDerivationNextSibling,
+    goDerivationPrevSibling,
+    goToGenesis,
     showConfidence,
     openPortal,
     closePortal,
@@ -280,7 +332,32 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       GO_DEFINITION: goDefinition,
       GO_REFERENCES: goReferences,
       GO_TESTS: goTests,
-      GO_DERIVATION_PARENT: () => goDerivationParent?.(),
+      // Derivation navigation (Constitutional graph)
+      GO_DERIVATION_PARENT: () => {
+        if (goDerivationParent) {
+          void goDerivationParent();
+        }
+      },
+      GO_DERIVATION_CHILD: () => {
+        if (goDerivationChild) {
+          void goDerivationChild();
+        }
+      },
+      GO_DERIVATION_NEXT_SIBLING: () => {
+        if (goDerivationNextSibling) {
+          void goDerivationNextSibling();
+        }
+      },
+      GO_DERIVATION_PREV_SIBLING: () => {
+        if (goDerivationPrevSibling) {
+          void goDerivationPrevSibling();
+        }
+      },
+      GO_TO_GENESIS: () => {
+        if (goToGenesis) {
+          void goToGenesis();
+        }
+      },
       SHOW_CONFIDENCE: () => showConfidence?.(),
       PORTAL_OPEN: openPortal,
       PORTAL_CLOSE: closePortal,
@@ -346,6 +423,10 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       goReferences,
       goTests,
       goDerivationParent,
+      goDerivationChild,
+      goDerivationNextSibling,
+      goDerivationPrevSibling,
+      goToGenesis,
       showConfidence,
       openPortal,
       closePortal,
@@ -577,14 +658,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
         handleEdgeMode(e);
       }
     },
-    [
-      enabled,
-      state.mode,
-      resetSequence,
-      dispatch,
-      handleNormalMode,
-      handleEdgeMode,
-    ]
+    [enabled, state.mode, resetSequence, dispatch, handleNormalMode, handleEdgeMode]
   );
 
   // --- Event Listener ---

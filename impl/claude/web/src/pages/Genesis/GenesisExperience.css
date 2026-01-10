@@ -1,0 +1,992 @@
+/**
+ * GenesisExperience Styles
+ *
+ * Unified styling for the Constitutional Graph-First Experience.
+ * Uses LIVING_EARTH palette throughout.
+ *
+ * LIVING_EARTH Palette:
+ * - L0: #c4a77d (amber/honey glow) - warmest
+ * - L1: #6b8b6b (sage green)
+ * - L2: #8b7355 (earth brown)
+ * - L3: #f5f0e6 (sand/lantern) - coolest
+ *
+ * Design Philosophy:
+ * - Dark, grounded aesthetic
+ * - Amber for emphasis and warmth
+ * - Sage green for healthy/active states
+ * - Generous spacing for contemplation
+ * - Smooth, breathing animations
+ */
+
+/* =============================================================================
+ * CSS Custom Properties
+ * ============================================================================= */
+
+.genesis-exp,
+.genesis-welcome,
+.genesis-graph,
+.genesis-actions {
+  /* Background */
+  --bg-primary: #1a1614;
+  --bg-secondary: #221e1b;
+  --bg-tertiary: #2a2522;
+  --bg-elevated: #332e2a;
+
+  /* Text */
+  --text-primary: #e5e0db;
+  --text-secondary: #a39890;
+  --text-muted: #6b6560;
+
+  /* Accents */
+  --accent-amber: #c4a77d;
+  --accent-amber-bright: #d4b88c;
+  --accent-amber-glow: rgba(196, 167, 125, 0.2);
+
+  /* Life colors */
+  --life-sage: #6b8b6b;
+  --life-mint: #8ba98b;
+  --life-fern: #4a6b4a;
+
+  /* Layer colors */
+  --layer-0: #c4a77d;
+  --layer-1: #6b8b6b;
+  --layer-2: #8b7355;
+  --layer-3: #f5f0e6;
+
+  /* Borders */
+  --border-subtle: #3a3530;
+  --border-medium: #4a4540;
+  --border-accent: var(--accent-amber);
+
+  /* Shadows */
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 30px var(--accent-amber-glow);
+
+  /* Typography */
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* =============================================================================
+ * Genesis Experience Container
+ * ============================================================================= */
+
+.genesis-exp {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.genesis-exp--loading,
+.genesis-exp--not-seeded,
+.genesis-exp--seeding,
+.genesis-exp--error {
+  align-items: center;
+  justify-content: center;
+}
+
+.genesis-exp__phase {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.genesis-exp__phase--graph {
+  padding: 0;
+}
+
+/* =============================================================================
+ * Loading State
+ * ============================================================================= */
+
+.genesis-exp__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.genesis-exp__loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border-subtle);
+  border-top-color: var(--accent-amber);
+  border-radius: 50%;
+  animation: genesis-spin 1s linear infinite;
+}
+
+.genesis-exp__loading-spinner--large {
+  width: 64px;
+  height: 64px;
+  border-width: 4px;
+}
+
+@keyframes genesis-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.genesis-exp__loading-text {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+/* =============================================================================
+ * Not Seeded State
+ * ============================================================================= */
+
+.genesis-exp__seed-prompt {
+  text-align: center;
+  max-width: 500px;
+  padding: 2rem;
+}
+
+.genesis-exp__seed-title {
+  font-family: var(--font-mono);
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--accent-amber);
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+}
+
+.genesis-exp__seed-subtitle {
+  font-size: 1.125rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin: 0 0 2rem 0;
+}
+
+.genesis-exp__seed-info {
+  text-align: left;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.75rem;
+}
+
+.genesis-exp__seed-info p {
+  margin: 0 0 0.75rem 0;
+  color: var(--text-secondary);
+}
+
+.genesis-exp__seed-info ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: var(--text-muted);
+}
+
+.genesis-exp__seed-info li {
+  margin-bottom: 0.25rem;
+}
+
+.genesis-exp__seed-button {
+  background: var(--accent-amber);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: var(--shadow-soft);
+}
+
+.genesis-exp__seed-button:hover {
+  background: var(--accent-amber-bright);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+.genesis-exp__seed-button:active {
+  transform: translateY(0);
+}
+
+/* =============================================================================
+ * Seeding State
+ * ============================================================================= */
+
+.genesis-exp__seeding {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.genesis-exp__seeding-text {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.genesis-exp__seeding-subtext {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* =============================================================================
+ * Error State
+ * ============================================================================= */
+
+.genesis-exp__error {
+  text-align: center;
+  max-width: 500px;
+  padding: 2rem;
+}
+
+.genesis-exp__error-title {
+  font-size: 1.5rem;
+  color: #e07070;
+  margin: 0 0 1rem 0;
+}
+
+.genesis-exp__error-message {
+  color: var(--text-secondary);
+  margin: 0 0 2rem 0;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid #5a3535;
+  border-radius: 0.5rem;
+}
+
+.genesis-exp__error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.genesis-exp__error-retry,
+.genesis-exp__error-seed {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.genesis-exp__error-retry {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+}
+
+.genesis-exp__error-retry:hover {
+  background: var(--bg-elevated);
+  border-color: var(--text-secondary);
+}
+
+.genesis-exp__error-seed {
+  background: var(--accent-amber);
+  color: var(--bg-primary);
+  border: none;
+}
+
+.genesis-exp__error-seed:hover {
+  background: var(--accent-amber-bright);
+}
+
+/* =============================================================================
+ * Genesis Welcome (Phase 1: Arrival)
+ * ============================================================================= */
+
+.genesis-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, var(--bg-secondary) 0%, var(--bg-primary) 70%);
+}
+
+.genesis-welcome__particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.genesis-welcome__particle {
+  position: absolute;
+  background: var(--accent-amber);
+  border-radius: 50%;
+  opacity: 0.3;
+}
+
+.genesis-welcome__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem;
+}
+
+.genesis-welcome__title {
+  font-family: var(--font-mono);
+  font-size: clamp(3rem, 10vw, 6rem);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent-amber);
+  margin: 0;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px var(--accent-amber-glow);
+}
+
+.genesis-welcome__quote {
+  max-width: 500px;
+}
+
+.genesis-welcome__quote-text {
+  font-size: 1.25rem;
+  font-style: italic;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.6;
+}
+
+.genesis-welcome__quote-attribution {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.genesis-welcome__continue {
+  background: transparent;
+  color: var(--accent-amber);
+  border: 2px solid var(--accent-amber);
+  border-radius: 0.5rem;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.genesis-welcome__continue:hover {
+  background: var(--accent-amber);
+  color: var(--bg-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.genesis-welcome__skip-hint {
+  position: absolute;
+  bottom: 2rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* =============================================================================
+ * Genesis Graph (Phases 2-4: Illumination, Exploration, Connection)
+ * ============================================================================= */
+
+.genesis-graph {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+/* Header */
+.genesis-graph__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+}
+
+.genesis-graph__header-content {
+  flex: 1;
+}
+
+.genesis-graph__title {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--accent-amber);
+  margin: 0 0 0.25rem 0;
+  text-transform: uppercase;
+}
+
+.genesis-graph__subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.genesis-graph__stats {
+  display: flex;
+  gap: 2rem;
+}
+
+.genesis-graph__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.genesis-graph__stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.genesis-graph__stat-label {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Layer Tabs */
+.genesis-graph__tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+}
+
+.genesis-graph__tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.genesis-graph__tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.genesis-graph__tab--active {
+  color: var(--text-primary);
+  border-bottom-color: var(--layer-color, var(--accent-amber));
+}
+
+.genesis-graph__tab-layer {
+  font-weight: 700;
+  color: var(--layer-color, var(--accent-amber));
+}
+
+.genesis-graph__tab-name {
+  font-weight: 500;
+}
+
+.genesis-graph__tab-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+}
+
+/* Content */
+.genesis-graph__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2rem;
+  overflow: auto;
+}
+
+.genesis-graph__layer-info {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.genesis-graph__layer-name {
+  font-family: var(--font-mono);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.25rem 0;
+}
+
+.genesis-graph__layer-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Main area: Nodes + Detail panel */
+.genesis-graph__main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.5rem;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .genesis-graph__main {
+    grid-template-columns: 1fr;
+  }
+
+  .genesis-graph__panel {
+    order: -1;
+  }
+}
+
+/* Nodes Grid */
+.genesis-graph__nodes {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-content: flex-start;
+  padding: 0.5rem;
+}
+
+.genesis-graph__edges {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.genesis-graph__edge {
+  stroke-linecap: round;
+}
+
+/* Individual Node */
+.genesis-graph__node {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--node-color, var(--accent-amber));
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.genesis-graph__node:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--node-color, var(--accent-amber));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.genesis-graph__node--selected {
+  background: var(--bg-tertiary);
+  border-color: var(--node-color, var(--accent-amber));
+  box-shadow:
+    0 0 0 2px rgba(196, 167, 125, 0.3),
+    0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.genesis-graph__node-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--node-color, var(--accent-amber));
+  border-radius: 0.25rem;
+  color: var(--node-color, var(--accent-amber));
+  opacity: 0.8;
+}
+
+.genesis-graph__node-title {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.genesis-graph__node-loss {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-left: auto;
+}
+
+/* Detail Panel */
+.genesis-graph__panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.75rem;
+  overflow: auto;
+}
+
+.genesis-graph__detail {
+  padding: 1.5rem;
+}
+
+.genesis-graph__detail--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.genesis-graph__detail-placeholder {
+  font-style: italic;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.genesis-graph__detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.genesis-graph__detail-layer {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.genesis-graph__detail-loss {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.genesis-graph__detail-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.genesis-graph__detail-id {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem 0;
+}
+
+.genesis-graph__detail-content {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+.genesis-graph__detail-derivations {
+  margin-bottom: 1rem;
+}
+
+.genesis-graph__detail-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.genesis-graph__detail-parents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.genesis-graph__detail-parent {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-left-width: 3px;
+  border-radius: 0.25rem;
+  color: var(--text-secondary);
+}
+
+.genesis-graph__detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.genesis-graph__detail-tag {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  padding: 0.2rem 0.4rem;
+  background: var(--bg-elevated);
+  border-radius: 0.2rem;
+  color: var(--text-secondary);
+}
+
+/* Footer */
+.genesis-graph__footer {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+}
+
+.genesis-graph__continue {
+  background: var(--accent-amber);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.875rem 3rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-soft);
+}
+
+.genesis-graph__continue:hover {
+  background: var(--accent-amber-bright);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+.genesis-graph__continue:active {
+  transform: translateY(0);
+}
+
+/* =============================================================================
+ * Genesis Actions (Phase 5: Departure)
+ * ============================================================================= */
+
+.genesis-actions {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  background: var(--bg-primary);
+}
+
+.genesis-actions__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  transition: color 0.2s ease;
+}
+
+.genesis-actions__back:hover {
+  color: var(--text-primary);
+}
+
+.genesis-actions__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.genesis-actions__header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.genesis-actions__sparkle {
+  color: var(--accent-amber);
+  margin-bottom: 1rem;
+}
+
+.genesis-actions__title {
+  font-family: var(--font-mono);
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.genesis-actions__subtitle {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.genesis-actions__context {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1rem 2rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.5rem;
+}
+
+.genesis-actions__context-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.25rem 0;
+}
+
+.genesis-actions__context-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-amber);
+  margin: 0;
+}
+
+/* Action Cards */
+.genesis-actions__cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+@media (max-width: 800px) {
+  .genesis-actions__cards {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+}
+
+.genesis-actions__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-top: 3px solid var(--card-color, var(--accent-amber));
+  border-radius: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.genesis-actions__card:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--card-color, var(--accent-amber));
+}
+
+.genesis-actions__card-icon {
+  margin-bottom: 1rem;
+}
+
+.genesis-actions__card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.genesis-actions__card-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.genesis-actions__card-arrow {
+  margin-top: 1rem;
+  font-size: 1.25rem;
+  color: var(--card-color, var(--accent-amber));
+}
+
+/* Footer */
+.genesis-actions__footer {
+  text-align: center;
+}
+
+.genesis-actions__quote {
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* =============================================================================
+ * Reduced Motion
+ * ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .genesis-exp__loading-spinner,
+  .genesis-welcome__particle {
+    animation: none;
+  }
+
+  .genesis-exp__seed-button,
+  .genesis-welcome__continue,
+  .genesis-graph__continue,
+  .genesis-actions__card {
+    transition: none;
+  }
+
+  .genesis-exp__seed-button:hover,
+  .genesis-graph__continue:hover {
+    transform: none;
+  }
+}
+
+/* =============================================================================
+ * Print
+ * ============================================================================= */
+
+@media print {
+  .genesis-exp,
+  .genesis-welcome,
+  .genesis-graph,
+  .genesis-actions {
+    background: white;
+    color: #333;
+  }
+
+  .genesis-welcome__particles,
+  .genesis-graph__edges {
+    display: none;
+  }
+
+  .genesis-graph__node,
+  .genesis-graph__panel,
+  .genesis-actions__card {
+    background: #f5f5f5;
+    border-color: #ccc;
+  }
+}
