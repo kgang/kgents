@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -24,6 +25,8 @@ from .verify import (
     TypeReport,
     verify_code,
 )
+
+logger = logging.getLogger("kgents.ashc.evidence")
 
 # =============================================================================
 # Nudge Type (for causal tracking)
@@ -338,12 +341,16 @@ class EvidenceCompiler:
     The compiler generates N implementations, verifies each,
     and accumulates evidence about spec↔impl equivalence.
 
+    Now with witness integration: every run emits marks for audit trail.
+
     > "Writing prompts is easy. Gathering evidence is hard."
     """
 
     def __init__(
         self,
         generate_fn: Callable[[str], Awaitable[str]] | None = None,
+        mark_store: Any | None = None,
+        evaluate_constitutional: bool = True,
     ):
         """
         Initialize the compiler.
@@ -351,8 +358,14 @@ class EvidenceCompiler:
         Args:
             generate_fn: Optional function to generate implementation from spec.
                         If not provided, uses identity (spec = impl).
+            mark_store: Optional MarkStore for witness integration.
+                       If not provided, uses global mark store.
+            evaluate_constitutional: Whether to compute constitutional alignment
+                                    for each witness (default True).
         """
         self._generate_fn = generate_fn
+        self._mark_store = mark_store
+        self._evaluate_constitutional = evaluate_constitutional
 
     async def compile(
         self,
@@ -432,6 +445,7 @@ class EvidenceCompiler:
         import time
 
         start = time.monotonic()
+        run_id = str(uuid.uuid4())
 
         # Generate implementation
         if self._generate_fn:
@@ -454,19 +468,173 @@ class EvidenceCompiler:
 
         duration_ms = (time.monotonic() - start) * 1000
 
+        # Collect witnesses via witness bridge
+        witnesses = await self._emit_verification_witnesses(
+            verification=verification,
+            spec_hash=spec_hash,
+            run_id=run_id,
+            variation_index=variation_index,
+        )
+
         return Run(
-            run_id=str(uuid.uuid4()),
+            run_id=run_id,
             spec_hash=spec_hash,
             prompt_used=prompt_used,
             implementation=implementation,
             test_results=verification.test_report,
             type_results=verification.type_report,
             lint_results=verification.lint_report,
-            witnesses=(),  # L0 witnesses added separately if needed
+            witnesses=tuple(witnesses),  # NOW POPULATED!
             timestamp=datetime.now(),
             duration_ms=duration_ms,
             nudges=(),
         )
+
+    async def _emit_verification_witnesses(
+        self,
+        verification: Any,
+        spec_hash: str,
+        run_id: str,
+        variation_index: int,
+    ) -> list[TraceWitnessResult]:
+        """
+        Emit marks for verification results and return TraceWitnessResults.
+
+        This is the integration point between ASHC evidence and the witness system.
+        Each verification type (test, type, lint) emits a separate mark.
+        """
+        witnesses: list[TraceWitnessResult] = []
+
+        try:
+            from .paths.witness_bridge import WitnessType, emit_ashc_mark
+
+            # Emit mark for test verification
+            if verification.test_report:
+                test_evidence = {
+                    "total": verification.test_report.total,
+                    "passed": verification.test_report.passed,
+                    "failed": verification.test_report.failed,
+                    "success": verification.test_report.success,
+                }
+                action = (
+                    f"Verified tests: {verification.test_report.passed}/{verification.test_report.total} passed"
+                    if verification.test_report.total > 0
+                    else "No tests to run"
+                )
+
+                mark, witness = await emit_ashc_mark(
+                    action=action,
+                    evidence=test_evidence,
+                    witness_type=WitnessType.TEST,
+                    mark_store=self._mark_store,
+                    spec_hash=spec_hash,
+                    run_id=run_id,
+                    evaluate_constitutional=self._evaluate_constitutional,
+                )
+
+                witnesses.append(
+                    TraceWitnessResult(
+                        witness_id=witness.witness_id,
+                        agent_path=f"ashc.evidence.test.variation_{variation_index}",
+                        input_data={"spec_hash": spec_hash, "variation": variation_index},
+                        output_data=test_evidence,
+                        properties_verified=("tests_pass",)
+                        if verification.test_report.success
+                        else (),
+                        violations_found=()
+                        if verification.test_report.success
+                        else ({"type": "test_failure", "count": verification.test_report.failed},),
+                    )
+                )
+
+            # Emit mark for type verification
+            if verification.type_report:
+                type_evidence = {
+                    "passed": verification.type_report.passed,
+                    "errors": len(verification.type_report.errors),
+                }
+                action = (
+                    "Type check passed"
+                    if verification.type_report.passed
+                    else f"Type check failed: {len(verification.type_report.errors)} errors"
+                )
+
+                mark, witness = await emit_ashc_mark(
+                    action=action,
+                    evidence=type_evidence,
+                    witness_type=WitnessType.TEST,
+                    mark_store=self._mark_store,
+                    spec_hash=spec_hash,
+                    run_id=run_id,
+                    evaluate_constitutional=self._evaluate_constitutional,
+                )
+
+                witnesses.append(
+                    TraceWitnessResult(
+                        witness_id=witness.witness_id,
+                        agent_path=f"ashc.evidence.types.variation_{variation_index}",
+                        input_data={"spec_hash": spec_hash, "variation": variation_index},
+                        output_data=type_evidence,
+                        properties_verified=("types_valid",)
+                        if verification.type_report.passed
+                        else (),
+                        violations_found=()
+                        if verification.type_report.passed
+                        else tuple(
+                            {"type": "type_error", "message": e}
+                            for e in verification.type_report.errors[:3]
+                        ),
+                    )
+                )
+
+            # Emit mark for lint verification
+            if verification.lint_report:
+                lint_evidence = {
+                    "passed": verification.lint_report.passed,
+                    "errors": len(verification.lint_report.errors),
+                }
+                action = (
+                    "Lint check passed"
+                    if verification.lint_report.passed
+                    else f"Lint check failed: {len(verification.lint_report.errors)} errors"
+                )
+
+                mark, witness = await emit_ashc_mark(
+                    action=action,
+                    evidence=lint_evidence,
+                    witness_type=WitnessType.TEST,
+                    mark_store=self._mark_store,
+                    spec_hash=spec_hash,
+                    run_id=run_id,
+                    evaluate_constitutional=self._evaluate_constitutional,
+                )
+
+                witnesses.append(
+                    TraceWitnessResult(
+                        witness_id=witness.witness_id,
+                        agent_path=f"ashc.evidence.lint.variation_{variation_index}",
+                        input_data={"spec_hash": spec_hash, "variation": variation_index},
+                        output_data=lint_evidence,
+                        properties_verified=("lint_clean",)
+                        if verification.lint_report.passed
+                        else (),
+                        violations_found=()
+                        if verification.lint_report.passed
+                        else tuple(
+                            {"type": "lint_error", "message": e}
+                            for e in verification.lint_report.errors[:3]
+                        ),
+                    )
+                )
+
+            logger.debug(f"Emitted {len(witnesses)} witnesses for run {run_id}")
+
+        except ImportError as e:
+            logger.warning(f"Witness bridge not available, skipping mark emission: {e}")
+        except Exception as e:
+            logger.error(f"Failed to emit verification witnesses: {e}")
+
+        return witnesses
 
     async def compile_with_nudges(
         self,

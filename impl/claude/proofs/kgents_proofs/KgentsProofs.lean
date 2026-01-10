@@ -5,3 +5,5 @@ import KgentsProofs.CategoryLaws
 import KgentsProofs.FunctorLaws
 import KgentsProofs.NatTransLaws
 import KgentsProofs.OperadLaws
+import KgentsProofs.DerivationPaths
+import KgentsProofs.Transport

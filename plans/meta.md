@@ -308,6 +308,22 @@ Ghost preservation: Unchosen paths remain inspectable for audit
 Compression honesty: Crystal must disclose what was dropped
 ```
 
+### Coherence Synthesis Integration (2025-01-10)
+```
+R = 1 - L: Design axiom (reward = 1 - Galois loss), validated ρ = 0.8346
+Kent-calibrated tiers: CATEGORICAL (L<0.10), EMPIRICAL (L<0.38), AESTHETIC (L<0.45), SOMATIC (L<0.65), CHAOTIC (≥0.65)
+Content layers: AXIOM → VALUE → SPEC → TUNING mapped from tiers
+PilotBootstrapper: From axioms to laws in hours, not weeks
+validate_axiom_candidate(): Galois loss < 0.10 = axiom
+classify_content_layer(): Deterministic layer from loss
+HoTT conceptual model: Python classes for paths, not machine-verified proofs
+LeanExporter: Generates Lean 4 with `sorry` stubs for future formal proofs
+CategoricalLawVerifier: Tests associativity, identity laws via HoTT path construction
+Evidence.galois_loss: Now integrated into ASHC equivalence_score
+galois_coherence property: 1 - galois_loss (the unifying equation)
+15 coherence tests: Cross-system verification R = 1 - L holds
+```
+
 ### Aggressive Cleanup Protocol (2025-12-26)
 ```
 One truth source: plans/enlightened-synthesis/ replaces 20+ scattered docs

@@ -15,13 +15,16 @@ Heritage: Prediction Markets, Skin in the Game (Taleb), ConsentState.debt patter
 from __future__ import annotations
 
 import hashlib
+import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from .adaptive import BetaPrior, expected_samples_for_ndiff
+
+logger = logging.getLogger("kgents.ashc.economy")
 
 # =============================================================================
 # ASHCBet: A Wager on Compilation Outcome
@@ -380,6 +383,164 @@ class ASHCEconomy:
 
 
 # =============================================================================
+# Witness Integration
+# =============================================================================
+
+
+async def emit_bet_resolution_mark(
+    bet: ASHCBet,
+    mark_store: Any | None = None,
+    evaluate_constitutional: bool = True,
+) -> Any | None:
+    """
+    Emit a mark when a bet is resolved.
+
+    This captures the economic outcome for audit trail:
+    - What confidence was claimed?
+    - What was the actual outcome?
+    - Was it bullshit (high confidence + wrong)?
+
+    Args:
+        bet: The resolved bet
+        mark_store: Optional MarkStore instance
+        evaluate_constitutional: Whether to compute constitutional alignment
+
+    Returns:
+        Tuple of (Mark, DerivationWitness) if successful, None otherwise
+    """
+    if not bet.resolved:
+        logger.warning(f"Cannot emit mark for unresolved bet {bet.bet_id}")
+        return None
+
+    try:
+        from .paths.witness_bridge import WitnessType, emit_ashc_mark
+
+        evidence = {
+            "bet_id": bet.bet_id,
+            "spec_hash": bet.spec_hash,
+            "confidence": bet.confidence,
+            "stake": str(bet.stake),
+            "actual_success": bet.actual_success,
+            "was_bullshit": bet.was_bullshit,
+            "calibration_error": bet.calibration_error,
+            "is_well_calibrated": bet.is_well_calibrated,
+            "created_at": bet.created_at.isoformat(),
+            "resolved_at": bet.resolved_at.isoformat() if bet.resolved_at else None,
+            "principles_cited": list(bet.principles_cited),
+            "evidence_cited": list(bet.evidence_cited),
+        }
+
+        # Build action description
+        outcome = "SUCCESS" if bet.actual_success else "FAILURE"
+        if bet.was_bullshit:
+            action = f"Bet BULLSHIT: claimed {bet.confidence:.0%} confidence but {outcome}"
+        elif bet.is_well_calibrated:
+            action = f"Bet WELL-CALIBRATED: claimed {bet.confidence:.0%}, was {outcome}"
+        else:
+            action = f"Bet resolved: claimed {bet.confidence:.0%}, was {outcome} (error={bet.calibration_error:.2f})"
+
+        mark, witness = await emit_ashc_mark(
+            action=action,
+            evidence=evidence,
+            witness_type=WitnessType.ECONOMIC,
+            mark_store=mark_store,
+            spec_hash=bet.spec_hash,
+            run_id=bet.bet_id,
+            evaluate_constitutional=evaluate_constitutional,
+        )
+
+        logger.info(f"Emitted bet resolution mark: {bet.bet_id} -> {outcome}")
+        return mark, witness
+
+    except ImportError as e:
+        logger.warning(f"Witness bridge not available: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Failed to emit bet resolution mark: {e}")
+        return None
+
+
+async def emit_credibility_update_mark(
+    credibility: ASHCCredibility,
+    bet: ASHCBet,
+    previous_credibility: float,
+    mark_store: Any | None = None,
+    evaluate_constitutional: bool = True,
+) -> Any | None:
+    """
+    Emit a mark when credibility is updated.
+
+    This tracks the credibility evolution for audit trail:
+    - What was the credibility before?
+    - What changed it?
+    - What is the new credibility?
+
+    Args:
+        credibility: The updated credibility state
+        bet: The bet that caused the update
+        previous_credibility: Credibility before the update
+        mark_store: Optional MarkStore instance
+        evaluate_constitutional: Whether to compute constitutional alignment
+
+    Returns:
+        Tuple of (Mark, DerivationWitness) if successful, None otherwise
+    """
+    try:
+        from .paths.witness_bridge import WitnessType, emit_ashc_mark
+
+        delta = credibility.credibility - previous_credibility
+
+        evidence = {
+            "bet_id": bet.bet_id,
+            "previous_credibility": previous_credibility,
+            "new_credibility": credibility.credibility,
+            "delta": delta,
+            "total_bets": credibility.total_bets,
+            "successful_bets": credibility.successful_bets,
+            "bullshit_count": credibility.bullshit_count,
+            "average_calibration_error": credibility.average_calibration_error,
+            "success_rate": credibility.success_rate,
+            "bullshit_rate": credibility.bullshit_rate,
+            "bets_to_recover": credibility.bets_to_recover(),
+            "is_bankrupt": credibility.is_bankrupt,
+        }
+
+        # Build action description
+        direction = "increased" if delta > 0 else "decreased" if delta < 0 else "unchanged"
+        if credibility.is_bankrupt:
+            action = (
+                f"BANKRUPT: credibility hit zero after {credibility.bullshit_count} bullshit bets"
+            )
+        else:
+            action = (
+                f"Credibility {direction}: {previous_credibility:.2f} -> {credibility.credibility:.2f} "
+                f"(delta={delta:+.3f}, bets_to_full={credibility.bets_to_recover()})"
+            )
+
+        mark, witness = await emit_ashc_mark(
+            action=action,
+            evidence=evidence,
+            witness_type=WitnessType.ECONOMIC,
+            mark_store=mark_store,
+            spec_hash=bet.spec_hash,
+            run_id=f"cred-{bet.bet_id}",
+            evaluate_constitutional=evaluate_constitutional,
+        )
+
+        logger.info(
+            f"Emitted credibility update mark: {previous_credibility:.2f} -> {credibility.credibility:.2f}"
+        )
+        return mark, witness
+
+    except ImportError as e:
+        logger.warning(f"Witness bridge not available: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Failed to emit credibility update mark: {e}")
+        return None
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -388,4 +549,7 @@ __all__ = [
     "ASHCCredibility",
     "ASHCEconomy",
     "AllocationStrategy",
+    # Witness integration
+    "emit_bet_resolution_mark",
+    "emit_credibility_update_mark",
 ]

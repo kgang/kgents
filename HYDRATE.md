@@ -70,11 +70,24 @@ L(P) = d(P, C(R(P)))
 # R: Restructure via LLM (break into components)
 # C: Reconstitute via LLM (rebuild from components)
 # d: Semantic distance (BERTScore → cosine → fallback)
+
+# The Unifying Equation (design axiom, ρ = 0.8346):
+R_constitutional = 1 - L_galois
 ```
 
+**Kent-Calibrated Evidence Tiers** (2025-12-28):
+| Tier | Threshold | Content Layer |
+|------|-----------|---------------|
+| CATEGORICAL | L < 0.10 | AXIOM |
+| EMPIRICAL | L < 0.38 | VALUE |
+| AESTHETIC | L < 0.45 | SPEC |
+| SOMATIC | L < 0.65 | SPEC |
+| CHAOTIC | L ≥ 0.65 | TUNING |
+
 **Capabilities**:
-- Axiom detection: `L < 0.05` = fixed point
-- Layer assignment: L1-L7 via loss thresholds
+- Axiom detection: `L < 0.10` = fixed point (CATEGORICAL)
+- Layer assignment: `classify_content_layer(loss)` deterministic
+- Pilot bootstrap: `PilotBootstrapper` → from axioms to laws in hours
 - Contradiction detection: super-additivity signals tension
 
 ---
@@ -84,10 +97,13 @@ L(P) = d(P, C(R(P)))
 | Jewel | Status | Purpose |
 |-------|--------|---------|
 | Witness | 98% | Mark, Crystal, Grant, Playbook (678 tests) |
-| Zero Seed | 85% | Galois Loss, Layer Assignment |
+| Zero Seed | 95% | Galois Loss, Layer Assignment, **PilotBootstrapper** |
 | K-Block | 75% | Monad bind, Layer Factories |
-| Constitutional | 80% | 7-principle scoring, Amendment A |
+| Constitutional | 95% | 7-principle scoring, Amendment A, **Galois integration** |
 | Brain | 100% | Spatial cathedral of memory |
+| Formal Verify | 70% | HoTT foundation, **LeanExporter**, CategoricalLawVerifier |
+
+**New (2025-01-10)**: Coherence synthesis implemented. `R = 1 - L` verified across all systems.
 
 ---
 

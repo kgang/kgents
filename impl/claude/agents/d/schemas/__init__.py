@@ -267,3 +267,28 @@ if _INVOCATION_AVAILABLE:
             "LLM_INVOCATION_MARK_SCHEMA",
         ]
     )
+
+# ASHC DerivationPath schema
+try:
+    from .derivation import (
+        DERIVATION_PATH_SCHEMA,
+        DerivationPathCrystal,
+        get_derivation_path,
+        query_derivation_paths,
+        store_derivation_path,
+    )
+
+    _DERIVATION_AVAILABLE = True
+except ImportError:
+    _DERIVATION_AVAILABLE = False
+
+if _DERIVATION_AVAILABLE:
+    __all__.extend(
+        [
+            "DerivationPathCrystal",
+            "DERIVATION_PATH_SCHEMA",
+            "store_derivation_path",
+            "get_derivation_path",
+            "query_derivation_paths",
+        ]
+    )

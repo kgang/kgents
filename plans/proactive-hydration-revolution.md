@@ -105,7 +105,7 @@ Update `.claude/commands/hydrate.md` to:
 ### Phase 4: Skill Integration Commands
 
 Create new slash commands:
-- `/skill <name>` — Read and apply a specific skill
+- `/guide <name>` — Read and apply a specific skill
 - `/gotchas` — Surface all critical gotchas for current context
 
 ---

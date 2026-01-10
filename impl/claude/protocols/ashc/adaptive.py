@@ -26,6 +26,7 @@ References:
 
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -34,6 +35,8 @@ from typing import Any, Awaitable, Callable, Iterator
 from uuid import uuid4
 
 from .verify import LintReport, TestReport, TypeReport, verify_code
+
+logger = logging.getLogger("kgents.ashc.adaptive")
 
 # =============================================================================
 # Mathematical Foundations
@@ -501,6 +504,8 @@ class AdaptiveCompiler:
     Uses Bayesian updating and n_diff stopping to minimize samples
     while maintaining statistical confidence.
 
+    Now with witness integration: stopping decisions emit marks for audit trail.
+
     Key insight: Different tasks need different evidence:
     - Trivially easy: 1-3 samples, stop early
     - Likely works: n_diff=2, expect 3-5 samples
@@ -517,6 +522,8 @@ class AdaptiveCompiler:
         self,
         generate_fn: Callable[[str], Awaitable[str]] | None = None,
         estimate_fn: Callable[[str], Awaitable[float]] | None = None,
+        mark_store: Any | None = None,
+        evaluate_constitutional: bool = True,
     ):
         """
         Initialize adaptive compiler.
@@ -524,9 +531,13 @@ class AdaptiveCompiler:
         Args:
             generate_fn: Function to generate implementation from spec
             estimate_fn: Function to estimate success probability (cheap pre-check)
+            mark_store: Optional MarkStore for witness integration.
+            evaluate_constitutional: Whether to compute constitutional alignment.
         """
         self._generate_fn = generate_fn
         self._estimate_fn = estimate_fn
+        self._mark_store = mark_store
+        self._evaluate_constitutional = evaluate_constitutional
 
     async def compile(
         self,
@@ -597,6 +608,14 @@ class AdaptiveCompiler:
             # Update stopping state
             state.observe(run.success)
 
+        # Emit mark for stopping decision
+        await self._emit_stopping_decision_mark(
+            state=state,
+            prior=prior,
+            config=config,
+            spec=spec,
+        )
+
         return AdaptiveEvidence(
             runs=tuple(runs),
             prior=prior,
@@ -604,6 +623,73 @@ class AdaptiveCompiler:
             decision=state.decision,
             config=config,
         )
+
+    async def _emit_stopping_decision_mark(
+        self,
+        state: StoppingState,
+        prior: BetaPrior,
+        config: StoppingConfig,
+        spec: str,
+    ) -> None:
+        """
+        Emit a mark when the adaptive stopping decision is made.
+
+        This captures the Bayesian reasoning for audit trail:
+        - What was the prior belief?
+        - What evidence was gathered?
+        - Why did we stop?
+        """
+        try:
+            import hashlib
+
+            from .paths.witness_bridge import WitnessType, emit_ashc_mark
+
+            spec_hash = hashlib.sha256(spec.encode()).hexdigest()[:12]
+
+            evidence = {
+                "samples": state.total_samples,
+                "successes": state.successes,
+                "failures": state.failures,
+                "margin": state.margin,
+                "prior_alpha": prior.alpha,
+                "prior_beta": prior.beta,
+                "posterior_alpha": state.posterior.alpha,
+                "posterior_beta": state.posterior.beta,
+                "posterior_mean": state.posterior.mean,
+                "decision": state.decision.value,
+                "n_diff_threshold": config.n_diff,
+                "max_samples": config.max_samples,
+                "confidence_threshold": config.confidence_threshold,
+            }
+
+            # Build human-readable reason
+            if state.decision == StoppingDecision.STOP_SUCCESS:
+                reason = f"Stopped with success: {state.successes}/{state.total_samples} passed (margin={state.margin})"
+            elif state.decision == StoppingDecision.STOP_FAILURE:
+                reason = f"Stopped with failure: {state.failures}/{state.total_samples} failed (margin={state.margin})"
+            elif state.decision == StoppingDecision.STOP_UNCERTAIN:
+                reason = f"Stopped at max samples ({config.max_samples}) without clear winner"
+            else:
+                reason = "Sampling continues"
+
+            action = f"Adaptive stopping decision: {state.decision.value}. {reason}"
+
+            await emit_ashc_mark(
+                action=action,
+                evidence=evidence,
+                witness_type=WitnessType.ADAPTIVE,
+                mark_store=self._mark_store,
+                spec_hash=spec_hash,
+                run_id=f"adaptive-{uuid4().hex[:8]}",
+                evaluate_constitutional=self._evaluate_constitutional,
+            )
+
+            logger.debug(f"Emitted stopping decision mark: {state.decision.value}")
+
+        except ImportError as e:
+            logger.warning(f"Witness bridge not available, skipping mark emission: {e}")
+        except Exception as e:
+            logger.error(f"Failed to emit stopping decision mark: {e}")
 
     async def _estimate_tier(self, spec: str) -> ConfidenceTier:
         """
