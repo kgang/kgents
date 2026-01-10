@@ -1,5 +1,8 @@
-# Claude Code local settings
-.claude/
+# Claude Code local settings (machine-specific accumulations)
+.claude/settings.local.json
+
+# Track: .claude/commands/ (kgents workflows)
+# Track: .claude/settings.json (curated base permissions)
 
 # kgents local state
 .kgents/
