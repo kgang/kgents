@@ -7,19 +7,34 @@ replacing ad-hoc context gathering with structured, observer-dependent projectio
 AGENTESE: concept.docs.hydrate
 
 Usage:
-    from services.living_docs import hydrate_context
+    from services.living_docs import hydrate
 
-    # Generate context for a task
-    context = hydrate_context("implement wasm projector")
+    # Unified API (PREFERRED)
+    context = await hydrate("implement wasm projector")
     print(context.to_markdown())
+
+    # With options
+    context = await hydrate(
+        "fix brain persistence",
+        include_semantic=True,
+        include_ghosts=True,
+        quality_threshold=0.7,
+    )
+
+    # Fast sync path
+    context = hydrate_sync("quick check")
 
     # Or via CLI
     # kg docs hydrate "implement wasm projector"
 
 Teaching:
-    gotcha: hydrate_context() is keyword-based, not semantic.
-            Use Brain vectors for semantic similarity (future work).
-            (Evidence: test_hydrator.py::test_keyword_matching)
+    gotcha: Use hydrate() as the unified entry point. It combines keyword,
+            semantic, and ghost hydration with graceful degradation.
+            (Evidence: test_hydrator.py::test_unified_hydration)
+
+    gotcha: Keyword matching is always performed first. Semantic enrichment
+            only triggers when keyword coverage is below quality_threshold.
+            (Evidence: test_hydrator.py::test_quality_gated_semantic)
 
     gotcha: Voice anchors are curated, not mined.
             They come from _focus.md, not git history.
@@ -31,8 +46,9 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator, Literal
 
 from .teaching import TeachingCollector, TeachingResult
 
@@ -43,6 +59,59 @@ if TYPE_CHECKING:
     from .types import DocNode
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Unified Hydration Types
+# =============================================================================
+
+
+class HydrationTier(Enum):
+    """
+    Which tier of hydration was used.
+
+    Tracks the richness of context returned for diagnostics.
+    """
+
+    KEYWORD = "keyword"  # Fast sync, keyword matching only
+    SEMANTIC = "semantic"  # Keyword + Brain vector search
+    GHOST = "ghost"  # Keyword + ancestral wisdom
+    FULL = "full"  # Keyword + semantic + ghost (richest)
+
+
+class ObserverKind(Enum):
+    """
+    Type of observer requesting hydration.
+
+    Different observers get different default strategies:
+    - HUMAN: Include surprises (ghosts), skip semantic (slower)
+    - AGENT: Maximum precision (all tiers)
+    - IDE: Speed-first (keyword only)
+    """
+
+    HUMAN = "human"
+    AGENT = "agent"
+    IDE = "ide"
+
+
+# Default strategies per observer kind
+OBSERVER_DEFAULTS: dict[ObserverKind, dict[str, Any]] = {
+    ObserverKind.HUMAN: {
+        "include_semantic": False,
+        "include_ghosts": True,
+        "quality_threshold": 0.5,
+    },
+    ObserverKind.AGENT: {
+        "include_semantic": True,
+        "include_ghosts": True,
+        "quality_threshold": 0.7,
+    },
+    ObserverKind.IDE: {
+        "include_semantic": False,
+        "include_ghosts": False,
+        "quality_threshold": 0.3,
+    },
+}
 
 
 # Voice anchors from _focus.md — Kent's authentic voice
@@ -74,6 +143,10 @@ class HydrationContext:
         gotcha: to_markdown() output is designed for system prompts.
                 It's not a reference doc—it's a focus lens.
                 (Evidence: test_hydrator.py::test_markdown_format)
+
+        gotcha: Check the tier field to understand which hydration path was used.
+                FULL > SEMANTIC > GHOST > KEYWORD in terms of richness.
+                (Evidence: test_hydrator.py::test_tier_tracking)
     """
 
     task: str
@@ -88,6 +161,9 @@ class HydrationContext:
     # Ghost hydration (Memory-First Docs Phase 4)
     ancestral_wisdom: list[Any] = field(default_factory=list)  # GhostWisdom from deleted code
     extinct_modules: list[str] = field(default_factory=list)  # Modules that no longer exist
+    # Unified hydration metadata
+    tier: HydrationTier = HydrationTier.KEYWORD  # Which tier was actually used
+    keyword_coverage: float = 0.0  # Coverage score for keyword matching (0-1)
 
     def to_markdown(self) -> str:
         """
@@ -259,6 +335,9 @@ class HydrationContext:
             "related_modules": self.related_modules,
             "voice_anchors": self.voice_anchors,
             "has_semantic": self.has_semantic,
+            # Unified hydration metadata
+            "tier": self.tier.value,
+            "keyword_coverage": self.keyword_coverage,
         }
 
 
@@ -854,8 +933,8 @@ async def hydrate_from_brain(task: str) -> HydrationContext:
     """
     Generate hydration context from Brain (AD-017 unified path).
 
-    This is the PREFERRED hydration path. Queries Brain's crystallized
-    teaching moments instead of re-extracting from docstrings.
+    NOTE: Consider using hydrate() instead, which provides a unified API
+    with observer-dependent defaults and graceful degradation.
 
     REQUIRES: Run bootstrap_teaching_crystals.py first to populate Brain.
 
@@ -889,3 +968,247 @@ async def hydrate_from_brain(task: str) -> HydrationContext:
         # Graceful degradation: fall back to docstring extraction
         logger.warning(f"Failed to hydrate from Brain, using docstrings: {e}")
         return hydrate_context(task)
+
+
+# =============================================================================
+# Unified Hydration API (PREFERRED)
+# =============================================================================
+
+
+async def hydrate(
+    task: str,
+    *,
+    observer: ObserverKind | Literal["human", "agent", "ide"] = ObserverKind.AGENT,
+    include_semantic: bool | None = None,
+    include_ghosts: bool | None = None,
+    quality_threshold: float | None = None,
+) -> HydrationContext:
+    """
+    Generate hydration context with unified, tiered matching.
+
+    This is the PREFERRED entry point for hydration. It combines:
+    1. Keyword matching (always, fast)
+    2. Semantic enrichment (if enabled and coverage < threshold)
+    3. Ghost wisdom (if enabled and Brain available)
+
+    All tiers have graceful degradation—the function always returns
+    a valid HydrationContext, even if Brain/semantic services fail.
+
+    AGENTESE: concept.docs.hydrate
+
+    Args:
+        task: Natural language description of the task
+        observer: Type of observer (affects default strategy)
+            - "agent": Maximum precision (semantic + ghosts enabled)
+            - "human": Include surprises (ghosts yes, semantic no)
+            - "ide": Speed-first (keyword only)
+        include_semantic: Enable Brain vector search (None = observer default)
+        include_ghosts: Include ancestral wisdom (None = observer default)
+        quality_threshold: Minimum keyword coverage before semantic kicks in
+            (0.0-1.0, None = observer default)
+
+    Returns:
+        HydrationContext with tier indicating which enrichments were applied
+
+    Usage:
+        from services.living_docs import hydrate
+
+        # Default (agent observer)
+        ctx = await hydrate("implement wasm projector")
+
+        # Speed-first for IDE
+        ctx = await hydrate("quick tooltip", observer="ide")
+
+        # Force full enrichment
+        ctx = await hydrate(
+            "complex task",
+            include_semantic=True,
+            include_ghosts=True,
+            quality_threshold=0.5,
+        )
+
+    Teaching:
+        gotcha: Keyword matching ALWAYS runs first. Semantic only triggers
+                when keyword coverage is below quality_threshold.
+                (Evidence: test_hydrator.py::test_quality_gated_semantic)
+
+        gotcha: The tier field in the returned context tells you which
+                enrichments were actually applied (KEYWORD, SEMANTIC, GHOST, FULL).
+                (Evidence: test_hydrator.py::test_tier_tracking)
+    """
+    # Normalize observer to enum
+    if isinstance(observer, str):
+        observer = ObserverKind(observer)
+
+    # Get observer defaults
+    defaults = OBSERVER_DEFAULTS[observer]
+
+    # Apply explicit overrides or use defaults
+    use_semantic = (
+        include_semantic if include_semantic is not None else defaults["include_semantic"]
+    )
+    use_ghosts = include_ghosts if include_ghosts is not None else defaults["include_ghosts"]
+    threshold = (
+        quality_threshold if quality_threshold is not None else defaults["quality_threshold"]
+    )
+
+    # Phase 1: Keyword matching (always runs)
+    hydrator = Hydrator()
+    keywords = hydrator._extract_keywords(task)
+    relevant_teaching = list(hydrator._find_relevant_teaching(keywords))
+    related_modules = list(hydrator._find_related_modules(keywords))
+    voice_anchors = hydrator._select_voice_anchors(task)
+
+    # Calculate keyword coverage score
+    coverage = _compute_coverage(keywords, relevant_teaching)
+
+    # Initialize result with keyword-only tier
+    context = HydrationContext(
+        task=task,
+        relevant_teaching=relevant_teaching,
+        related_modules=related_modules,
+        voice_anchors=voice_anchors,
+        tier=HydrationTier.KEYWORD,
+        keyword_coverage=coverage,
+    )
+
+    # Track enrichments applied
+    has_semantic = False
+    has_ghosts = False
+
+    # Phase 2: Semantic enrichment (if enabled and coverage below threshold)
+    if use_semantic and coverage < threshold:
+        try:
+            from protocols.agentese.container import get_container
+
+            container = get_container()
+            brain = await container.resolve("brain_persistence")
+
+            # Get semantic teaching from Brain
+            semantic_results = await hydrator._find_relevant_teaching_from_brain(keywords, brain)
+
+            # Merge with keyword results, avoiding duplicates
+            seen_insights = {t.moment.insight for t in relevant_teaching}
+            for st in semantic_results:
+                if st.moment.insight not in seen_insights:
+                    relevant_teaching.append(st)
+                    seen_insights.add(st.moment.insight)
+
+            has_semantic = True
+            logger.debug(f"Semantic enrichment added {len(semantic_results)} teaching moments")
+        except Exception as e:
+            # Graceful degradation: log and continue without semantic
+            logger.warning(f"Semantic enrichment failed, continuing with keyword-only: {e}")
+
+    # Phase 3: Ghost hydration (if enabled)
+    ancestral_wisdom: list[Any] = []
+    extinct_modules: list[str] = []
+
+    if use_ghosts:
+        try:
+            from protocols.agentese.container import get_container
+
+            container = get_container()
+            brain = await container.resolve("brain_persistence")
+
+            ghosts = await brain.get_extinct_wisdom(keywords=keywords)
+            if ghosts:
+                ancestral_wisdom = ghosts
+                extinct_modules = list(set(g.teaching.source_module for g in ghosts))
+                has_ghosts = True
+                logger.debug(f"Ghost hydration added {len(ghosts)} ancestral wisdom entries")
+        except Exception as e:
+            # Graceful degradation: log and continue without ghosts
+            logger.warning(f"Ghost hydration failed, continuing without: {e}")
+
+    # Determine final tier
+    if has_semantic and has_ghosts:
+        tier = HydrationTier.FULL
+    elif has_semantic:
+        tier = HydrationTier.SEMANTIC
+    elif has_ghosts:
+        tier = HydrationTier.GHOST
+    else:
+        tier = HydrationTier.KEYWORD
+
+    # Assemble final context
+    return HydrationContext(
+        task=task,
+        relevant_teaching=relevant_teaching,
+        related_modules=related_modules,
+        voice_anchors=voice_anchors,
+        has_semantic=has_semantic,
+        ancestral_wisdom=ancestral_wisdom,
+        extinct_modules=extinct_modules,
+        tier=tier,
+        keyword_coverage=coverage,
+    )
+
+
+def hydrate_sync(task: str) -> HydrationContext:
+    """
+    Synchronous hydration for quick access (keyword-only).
+
+    Use this when you need fast hydration without async overhead.
+    Equivalent to the old hydrate_context() but with tier tracking.
+
+    Args:
+        task: Natural language description of the task
+
+    Returns:
+        HydrationContext with KEYWORD tier
+
+    Usage:
+        from services.living_docs import hydrate_sync
+
+        ctx = hydrate_sync("quick check")
+        print(ctx.to_markdown())
+    """
+    hydrator = Hydrator()
+    keywords = hydrator._extract_keywords(task)
+    relevant_teaching = list(hydrator._find_relevant_teaching(keywords))
+    related_modules = list(hydrator._find_related_modules(keywords))
+    voice_anchors = hydrator._select_voice_anchors(task)
+    coverage = _compute_coverage(keywords, relevant_teaching)
+
+    return HydrationContext(
+        task=task,
+        relevant_teaching=relevant_teaching,
+        related_modules=related_modules,
+        voice_anchors=voice_anchors,
+        tier=HydrationTier.KEYWORD,
+        keyword_coverage=coverage,
+    )
+
+
+def _compute_coverage(keywords: list[str], teaching: list[TeachingResult]) -> float:
+    """
+    Compute keyword coverage score (0.0-1.0).
+
+    Coverage measures what fraction of keywords are represented in
+    the teaching results. Higher coverage = keyword matching was effective.
+
+    Args:
+        keywords: Keywords extracted from task
+        teaching: Teaching results found by keyword matching
+
+    Returns:
+        float in [0, 1]: 1.0 = all keywords covered, 0.0 = none covered
+    """
+    if not keywords:
+        return 1.0  # No keywords = trivially covered
+
+    # Count keywords that appear in at least one teaching result
+    covered = 0
+    for kw in keywords:
+        kw_lower = kw.lower()
+        for t in teaching:
+            if (
+                kw_lower in t.module.lower()
+                or kw_lower in t.symbol.lower()
+                or kw_lower in t.moment.insight.lower()
+            ):
+                covered += 1
+                break
+
+    return covered / len(keywords)

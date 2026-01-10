@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from protocols.cli.handler_meta import handler
 
@@ -377,30 +377,44 @@ def _handle_lint(args: list[str]) -> int:
 def _handle_hydrate(args: list[str]) -> int:
     """Generate hydration context for a task.
 
-    Enhanced with unified hydration (AD-017 Living Docs):
-    - Default: ghost hydration (includes ancestral wisdom from deleted code)
-    - Use --from-brain: unified path querying Brain directly (PREFERRED)
-    - Use --no-ghosts: skip ghost hydration (faster, no async)
+    Unified hydration API with observer-dependent defaults:
+    - Default (agent): Full enrichment (semantic + ghosts)
+    - --observer human: Include ghosts, skip semantic
+    - --observer ide: Speed-first (keyword only)
+    - --no-ghosts: Explicitly disable ghost hydration
+    - --no-semantic: Explicitly disable semantic enrichment
+    - --sync: Use fast synchronous path (keyword only)
     """
     try:
         import asyncio
 
         from services.living_docs import (
-            hydrate_context,
-            hydrate_context_with_ghosts,
-            hydrate_from_brain,
+            ObserverKind,
+            hydrate,
+            hydrate_sync,
         )
 
-        # Extract task from args (everything after "hydrate" that's not a flag)
-        task_parts = []
+        # Parse arguments
+        task_parts: list[str] = []
         skip_next = False
-        from_brain = "--from-brain" in args
+        observer: Literal["human", "agent", "ide"] = "agent"
         no_ghosts = "--no-ghosts" in args
+        no_semantic = "--no-semantic" in args
+        use_sync = "--sync" in args
+        json_output = "--json" in args
+
         for i, arg in enumerate(args):
             if skip_next:
                 skip_next = False
                 continue
             if arg == "hydrate":
+                continue
+            if arg == "--observer":
+                skip_next = True
+                if i + 1 < len(args):
+                    obs_arg = args[i + 1]
+                    if obs_arg in ("human", "agent", "ide"):
+                        observer = obs_arg  # type: ignore[assignment]
                 continue
             if arg.startswith("-"):
                 if arg in ("--output", "--severity", "--module"):
@@ -409,37 +423,40 @@ def _handle_hydrate(args: list[str]) -> int:
             task_parts.append(arg)
 
         if not task_parts:
-            print("Usage: kg docs hydrate <task description>")
+            print("Usage: kg docs hydrate <task description> [options]")
+            print("")
+            print("Options:")
+            print("  --observer <kind>  Observer type: agent (default), human, ide")
+            print("  --no-ghosts        Disable ancestral wisdom from deleted code")
+            print("  --no-semantic      Disable Brain semantic enrichment")
+            print("  --sync             Fast synchronous path (keyword only)")
+            print("  --json             Output as JSON instead of markdown")
             print("")
             print("Examples:")
             print('  kg docs hydrate "implement wasm projector"')
-            print('  kg docs hydrate "fix brain persistence"')
-            print('  kg docs hydrate "town dialogue" --from-brain')
-            print('  kg docs hydrate "quick check" --no-ghosts')
+            print('  kg docs hydrate "fix brain" --observer ide')
+            print('  kg docs hydrate "quick check" --sync')
+            print('  kg docs hydrate "town dialogue" --no-ghosts --json')
             return 1
 
         task = " ".join(task_parts)
 
         # Choose hydration path
-        if from_brain:
-            # AD-017 unified path: query Brain directly
-            try:
-                context = asyncio.run(hydrate_from_brain(task))
-            except Exception:
-                # Graceful degradation: fall back to ghost hydration
-                context = asyncio.run(hydrate_context_with_ghosts(task))
-        elif no_ghosts:
-            # Fast sync path: no async, no ghosts
-            context = hydrate_context(task)
+        if use_sync:
+            # Fast sync path
+            context = hydrate_sync(task)
         else:
-            # Default: ghost hydration (Memory-First Docs Phase 4)
-            try:
-                context = asyncio.run(hydrate_context_with_ghosts(task))
-            except Exception:
-                # Graceful degradation: fall back to sync hydration
-                context = hydrate_context(task)
+            # Unified async path with options
+            context = asyncio.run(
+                hydrate(
+                    task,
+                    observer=observer,
+                    include_ghosts=False if no_ghosts else None,
+                    include_semantic=False if no_semantic else None,
+                )
+            )
 
-        if "--json" in args:
+        if json_output:
             print(json.dumps(context.to_dict(), indent=2))
         else:
             print(context.to_markdown())

@@ -34,11 +34,16 @@ from .generator import (
     generate_to_directory,
 )
 from .hydrator import (
+    OBSERVER_DEFAULTS,
     HydrationContext,
+    HydrationTier,
     Hydrator,
+    ObserverKind,
+    hydrate,
     hydrate_context,
     hydrate_context_with_ghosts,
     hydrate_from_brain,
+    hydrate_sync,
     relevant_for_file,
 )
 from .linter import (
@@ -100,12 +105,17 @@ __all__ = [
     "query_teaching",
     "verify_evidence",
     "get_teaching_stats",
-    # Hydration (Phase 6)
+    # Hydration (Phase 6 + Unified API)
     "HydrationContext",
+    "HydrationTier",
     "Hydrator",
-    "hydrate_context",
-    "hydrate_context_with_ghosts",
-    "hydrate_from_brain",
+    "ObserverKind",
+    "OBSERVER_DEFAULTS",
+    "hydrate",  # PREFERRED: Unified async API
+    "hydrate_sync",  # Fast sync path
+    "hydrate_context",  # Legacy: keyword-only
+    "hydrate_context_with_ghosts",  # Legacy: with ancestral wisdom
+    "hydrate_from_brain",  # Legacy: Brain unified path
     "relevant_for_file",
     # Brain Adapter (Metabolic Checkpoint 0.2)
     "HydrationBrainAdapter",
