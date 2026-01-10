@@ -1,39 +1,147 @@
 Hydrate context from HYDRATE.md. Apply spec/principles.md rigorously.
 
-## The Meta Structure (from spec/meta.md)
+## Session Initialization Protocol
 
-The spec is a **derivation DAG**:
+This command initializes your session with full context. Execute ALL steps in order.
 
+---
+
+## STEP 1: Read Meta Files (MANDATORY)
+
+Read these files IN ORDER:
+
+```bash
+# 1. Human intent (NEVER overwrite)
+cat plans/_focus.md
+
+# 2. Canopy view (auto-generated)
+cat plans/_forest.md
+
+# 3. Learnings (append only, 200-line cap)
+cat plans/meta.md
+
+# 4. Project state (keep terse)
+cat HYDRATE.md
 ```
-CONSTITUTION (1.0) → Meta-Principles → Operational → ADs → Domain Specs
-```
 
-**Navigation Hub**: `spec/meta.md` — start here for orientation.
-
-## Agent Protocol
-
-1. **Read first**: `plans/_focus.md` (human intent—NEVER overwrite)
-2. **Read second**: `plans/_forest.md` (canopy view—auto-generated)
-3. **Read third**: `plans/meta.md` (learnings—append only, **200-line cap**)
-4. **Read fourth**: `HYDRATE.md` (project state—keep terse)
-5. **Reference**: `spec/meta.md` (navigation hub for specs)
-
-## Boundaries (from spec/principles.md)
-
+**Boundaries**:
 | File | Agent May | Agent Must NOT |
 |------|-----------|----------------|
 | `_focus.md` | Read for direction | Overwrite (Kent's voice) |
 | `_forest.md` | Regenerate from plan headers | Add prose |
 | `meta.md` | Append atomic learnings | Add paragraphs (one line per insight) |
 | `HYDRATE.md` | Update stale facts | Bloat (compress, don't expand) |
-| `spec/meta.md` | Read for navigation | Modify (bootstrap layer) |
 
-## The Molasses Test (spec/principles.md)
+---
 
-Before adding to ANY meta file:
-1. Is this one atomic insight or a compound? → If compound, distill first
-2. Will future-me understand without context? → If no, rewrite
-3. Can this be deleted in 30 days if unused? → If no, it's not meta—it's spec
+## STEP 2: Invoke Living Docs (MANDATORY when arguments provided)
+
+If the user provides arguments describing a task:
+
+```bash
+# RUN THIS COMMAND
+kg docs hydrate "$ARGUMENTS" --no-ghosts
+```
+
+Parse the output and surface in this order:
+
+1. **CRITICAL GOTCHAS** (show these FIRST, with full context)
+2. **Warnings** (show next)
+3. **Related files** (list files to explore)
+4. **Voice anchors** (Kent's phrases to preserve)
+
+If arguments reference a specific file path:
+
+```bash
+# RUN THIS COMMAND
+kg docs relevant <file_path>
+```
+
+**Example output format**:
+
+```
+## Living Docs for: "implement wasm projector"
+
+### CRITICAL GOTCHAS
+- wasm-bindgen requires --target web flag for browser use
+- Async functions in WASM need wasm-bindgen-futures
+
+### Warnings
+- Memory cleanup is manual - call .free() on dropped structs
+
+### Related Files
+- impl/claude/services/projectors/wasm.py
+- spec/protocols/wasm-projection.md
+
+### Voice Anchors to Preserve
+- "Tasteful > feature-complete"
+- "The Mirror Test: Does K-gent feel like me on my best day?"
+```
+
+---
+
+## STEP 3: Route to Relevant Skills
+
+Based on task keywords, identify the skill(s) to read:
+
+### Task-to-Skill Routing Table
+
+| Task Keywords | Recommended Skill |
+|---------------|-------------------|
+| agent, polynomial, state machine | `docs/skills/polynomial-agent.md` |
+| @node, decorator, endpoint, DI, dependency | `docs/skills/agentese-node-registration.md` |
+| path, context, world, self, concept, void | `docs/skills/agentese-path.md` |
+| event, bus, reactive, DataBus, SynergyBus | `docs/skills/data-bus-integration.md` |
+| UI, responsive, compact, spacious, elastic | `docs/skills/elastic-ui-patterns.md` |
+| projection, CLI, TUI, JSON, marimo | `docs/skills/projection-target.md` |
+| spec, specification, document | `docs/skills/spec-template.md` + `docs/skills/spec-hygiene.md` |
+| test, testing, hypothesis, property | `docs/skills/validation.md` |
+| hypergraph, graph, navigation, K-Block | `docs/skills/hypergraph-editor.md` |
+| storage, persistence, D-gent, database | `docs/skills/metaphysical-fullstack.md` |
+| witness, mark, decision, trace | `docs/skills/witness-for-agents.md` |
+| analysis, audit, categorical | `docs/skills/analysis-operad.md` |
+| fullstack, architecture, Crown Jewel | `docs/skills/metaphysical-fullstack.md` |
+| streaming, SSE, flux | `docs/skills/agentese-node-registration.md` |
+
+**Output format**:
+```
+Recommended skill: docs/skills/polynomial-agent.md
+```
+
+If multiple skills apply:
+```
+Recommended skills:
+  1. docs/skills/agentese-node-registration.md (primary)
+  2. docs/skills/agentese-path.md (supporting)
+```
+
+For complex workflows, consult `docs/skills/ROUTING.md`.
+
+---
+
+## STEP 4: Health Check
+
+Run at session start:
+
+```bash
+kg probe health --all
+```
+
+If this fails, surface the failures before proceeding.
+
+---
+
+## STEP 5: Phase Detection
+
+Based on session activity, detect and announce current phase:
+
+| Activity Pattern | Phase |
+|------------------|-------|
+| Many file reads, no writes | **UNDERSTAND** |
+| Code changes, tests running | **ACT** |
+| Tests pass, writing notes | **REFLECT** |
+
+---
 
 ## Witnessing: Marks & Decisions
 
@@ -71,96 +179,49 @@ kg decide --kent "LangChain" --kent-reasoning "Scale, resources" \
 
 ### When to Witness
 
-- **After fixing something subtle** → `km` with `--tag gotcha`
-- **When choosing between options** → `kg decide --fast`
-- **When Kent + Claude synthesize** → `kg decide` with full dialectic
-- **When something feels right/wrong** → `km` with `--tag taste` or `--tag veto`
-- **Before ending a productive session** → `/crystallize`
+- **After fixing something subtle** -> `km` with `--tag gotcha`
+- **When choosing between options** -> `kg decide --fast`
+- **When Kent + Claude synthesize** -> `kg decide` with full dialectic
+- **When something feels right/wrong** -> `km` with `--tag taste` or `--tag veto`
+- **Before ending a productive session** -> `/crystallize`
 
 ### Proactive Witnessing
 
 As an agent, you should **proactively** emit marks and decisions:
 
-1. After resolving a non-trivial bug, emit: `km "Fixed X" --reasoning "Y" --tag gotcha`
-2. After making an architectural choice, emit: `kg decide --fast "choice" --reasoning "why"`
-3. When Kent expresses aesthetic preference, capture it: `km "Kent prefers X" --tag taste`
-4. When you reach synthesis together, use the full dialectic form
+1. After resolving a non-trivial bug: `km "Fixed X" --reasoning "Y" --tag gotcha`
+2. After making an architectural choice: `kg decide --fast "choice" --reasoning "why"`
+3. When Kent expresses aesthetic preference: `km "Kent prefers X" --tag taste`
+4. When you reach synthesis together: use the full dialectic form
 
-Don't wait to be asked. Witness as you go.
+DO NOT wait to be asked. Witness as you go.
 
-## If HYDRATE.md is stale
-
-Update facts (test counts, phase status). Do NOT add new sections. Compress, don't expand.
-
-## Phase Detection
-
-Based on session activity, suggest current phase:
-
-| Activity Pattern | Suggested Phase |
-|------------------|-----------------|
-| Many file reads, no writes | **UNDERSTAND** |
-| Code changes, tests running | **ACT** |
-| Tests pass, writing notes/epilogue | **REFLECT** |
-
-Include suggested phase in hydration output when pattern is clear.
-
-## Arguments
-
-If user provides arguments, treat them as focus guidance for the session.
-
-**Task-Focused Hydration**: When arguments describe a specific task (e.g., "implement wasm projector"):
-1. Run `kg docs hydrate "<task>"` to get task-relevant gotchas
-2. Surface critical gotchas at the start of your response
-3. Keep the relevant modules in mind when exploring code
-
-**File-Focused Hydration**: When arguments reference a file path (e.g., "edit services/brain/persistence.py"):
-1. Run `kg docs relevant <path>` to get file-specific gotchas
-2. Warn about critical gotchas before making changes
-
-## Task Context (Living Docs Integration)
-
-When hydrating for a task, include output from Living Docs:
-
-```bash
-# For task-focused work
-kg docs hydrate "<arguments>"
-
-# For file-specific work
-kg docs relevant <file_path>
-```
-
-This surfaces:
-- **Relevant Gotchas**: Mistakes to avoid for this task
-- **Related Modules**: Files you'll likely touch
-- **Voice Anchors**: Kent's phrases to preserve
+---
 
 ## Analysis Operad Integration
 
 > *"Analysis is not one thing but four."*
 
-When working on or modifying **specifications**, use the Analysis Operad:
+When working on **specifications**, use the Analysis Operad:
 
 ```bash
-# Before modifying a spec (run full four-mode analysis)
+# Before modifying a spec (full four-mode analysis)
 kg analyze <spec>
 
 # Quick structural check (no LLM, fast)
 kg analyze <spec> --structural
 
-# Specific modes when relevant
+# Specific modes
 kg analyze <spec> --mode cat   # Verify composition laws
 kg analyze <spec> --mode dia   # Find tensions in design
 kg analyze <spec> --mode gen   # Check compression/regenerability
-
-# Self-analysis (meta-applicability check)
-kg analyze --self
 ```
 
 **When to Analyze**:
-1. **Before modifying any spec** → Run `kg analyze <spec>` to understand issues
-2. **When spec seems bloated** → Run `kg analyze --mode gen` to check compression
-3. **When design has tensions** → Run `kg analyze --mode dia` for dialectical synthesis
-4. **After major changes** → Re-run analysis to verify no regressions
+1. **Before modifying any spec** -> Run `kg analyze <spec>`
+2. **When spec seems bloated** -> Run `kg analyze --mode gen`
+3. **When design has tensions** -> Run `kg analyze --mode dia`
+4. **After major changes** -> Re-run analysis to verify no regressions
 
 **Four Modes**:
 | Mode | Question | Use When |
@@ -170,12 +231,16 @@ kg analyze --self
 | **dialectical** | What tensions exist? | Design trade-offs |
 | **generative** | Can this regenerate impl? | Checking spec quality |
 
-**Output Interpretation**:
-- ✓ **PASS**: Mode finds no issues
-- ⚠️ **ISSUES**: Mode found problems (see summary)
-- Structural mode notes what requires LLM for full analysis
+---
 
-**Integration with Witness**: Analysis creates marks—every spec check is traced.
+## The Molasses Test
+
+Before adding to ANY meta file:
+1. Is this one atomic insight or a compound? -> If compound, distill first
+2. Will future-me understand without context? -> If no, rewrite
+3. Can this be deleted in 30 days if unused? -> If no, it's not meta--it's spec
+
+---
 
 ## End of Session
 

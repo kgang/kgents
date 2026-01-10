@@ -486,4 +486,71 @@ Context dumping: large payloads tax every turn
 
 ---
 
+## 🧠 Proactive Hydration Protocol (MANDATORY)
+
+> *"Hydrate before you implement. Surface gotchas before they surface you."*
+
+This protocol is NOT optional—it's a core part of the kgents development flow.
+
+### On Task Start
+
+Before ANY implementation task (implement, add, fix, build, create, refactor):
+
+```bash
+kg docs hydrate "<inferred task>" --no-ghosts
+```
+
+**Surface immediately**:
+- 🚨 **Critical gotchas** at the START of your response
+- ⚠️ **Warnings** kept in working memory throughout the task
+
+Example:
+```
+Kent: "Add a new AGENTESE node for the Atelier service"
+
+Claude: Let me hydrate context for this task...
+
+🚨 CRITICAL GOTCHAS:
+- @node runs at import time—module must be imported or node won't register
+- DI dependencies must match __init__ param names EXACTLY (case-sensitive)
+- Must add provider to services/providers.py AND register in container
+
+⚠️ WARNINGS:
+- Two-way mapping needed: AGENTESE path ↔ React route in NavigationTree
+- _import_node_modules() in gateway.py must include your module
+
+With these in mind, here's my approach...
+```
+
+### On File Edit
+
+Before editing any Python file:
+
+```bash
+kg docs relevant <path>
+```
+
+Surface relevant gotchas BEFORE proposing changes. Don't let them ambush you mid-edit.
+
+### Skill Routing Table
+
+When a task matches these patterns, read the corresponding skill FIRST:
+
+| Task Pattern | Skill to Read |
+|--------------|---------------|
+| agent, state machine, polynomial | docs/skills/polynomial-agent.md |
+| AGENTESE, @node, node registration, DI | docs/skills/agentese-node-registration.md |
+| persist, storage, database, dual-track | docs/skills/metaphysical-fullstack.md |
+| test, testing, T-gent, property-based | docs/skills/test-patterns.md |
+| UI, frontend, component, elastic, responsive | docs/skills/elastic-ui-patterns.md |
+| event, bus, reactive, DataBus | docs/skills/data-bus-integration.md |
+| spec, specification, writing specs | docs/skills/spec-template.md |
+| witness, mark, decision, crystallize | docs/skills/witness-for-agents.md |
+| plan, planning, forest | docs/skills/plan-file.md |
+| research, experiment, hypothesis | docs/skills/research-protocol.md |
+
+**Philosophy**: Every gotcha surfaced early is a bug prevented. Every skill consulted is an hour saved.
+
+---
+
 *Compiled: 2025-12-20 | Version: 4 | Docs Renaissance Edition*
