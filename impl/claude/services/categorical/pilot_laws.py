@@ -542,6 +542,61 @@ def _create_pilot_laws() -> list[PilotLaw]:
             predicate=lambda is_legible=True, **kw: bool(is_legible),
         ),
         # =====================================================================
+        # rap-coach-flow-lab (v2.0 - psychological safety container)
+        # =====================================================================
+        PilotLaw(
+            schema=LawSchema.COHERENCE_GATE,
+            pilot="rap-coach",
+            name="L1 Intent Declaration Law",
+            description="A take is valid only if intent is explicit BEFORE analysis",
+            predicate=lambda intent_declared=False, intent_before_recording=True, **kw: (
+                intent_declared and intent_before_recording
+            ),
+        ),
+        PilotLaw(
+            schema=LawSchema.COHERENCE_GATE,
+            pilot="rap-coach",
+            name="L2 Feedback Grounding Law",
+            description="All critique must reference a mark or trace segment",
+            predicate=lambda feedback_grounded=False, **kw: feedback_grounded,
+        ),
+        PilotLaw(
+            schema=LawSchema.COHERENCE_GATE,
+            pilot="rap-coach",
+            name="L3 Voice Continuity Law",
+            description="Crystal summaries must identify through-line of voice",
+            predicate=lambda has_throughline=False, **kw: has_throughline,
+        ),
+        PilotLaw(
+            schema=LawSchema.COURAGE_PRESERVATION,
+            pilot="rap-coach",
+            name="L4 Courage Preservation Law",
+            description="High-risk takes protected from negative weighting (floor >= 0.5)",
+            predicate=courage_preservation,
+        ),
+        PilotLaw(
+            schema=LawSchema.DRIFT_ALERT,
+            pilot="rap-coach",
+            name="L5 Repair Path Law",
+            description="If loss > threshold, propose repair path (not verdict)",
+            predicate=drift_alert,
+        ),
+        PilotLaw(
+            schema=LawSchema.GHOST_PRESERVATION,
+            pilot="rap-coach",
+            name="L6 Ghost Preservation Law",
+            description="Unchosen phrasings remain inspectable",
+            predicate=ghost_preservation,
+        ),
+        PilotLaw(
+            schema=LawSchema.COMPRESSION_HONESTY,
+            pilot="rap-coach",
+            name="L7 Compression Honesty Law",
+            description="Crystal discloses what was dropped",
+            predicate=compression_honesty,
+        ),
+
+        # =====================================================================
         # sprite-procedural-taste-lab
         # =====================================================================
         PilotLaw(

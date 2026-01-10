@@ -341,6 +341,7 @@ class TestPilotLawsRegistry:
             "trail-to-crystal",
             "wasm-survivors",
             "disney-portal",
+            "rap-coach",
             "sprite-procedural",
         }
         for pilot in expected_pilots:
@@ -718,6 +719,56 @@ class TestIntegration:
 
         # Should have at least some passing laws
         assert report.pass_count > 0
+
+    def test_rap_coach_laws(self):
+        """Test rap-coach pilot laws (v2.0 - psychological safety container)."""
+        context = {
+            # L1: Intent Declaration
+            "intent_declared": True,
+            "intent_before_recording": True,
+            # L2: Feedback Grounding
+            "feedback_grounded": True,
+            # L3: Voice Continuity
+            "has_throughline": True,
+            # L4: Courage Preservation
+            "risk_level": 0.8,
+            "penalty_applied": 0.0,
+            "risk_threshold": 0.7,
+            # L5: Repair Path (Drift Alert)
+            "current_loss": 0.2,
+            "threshold": 0.5,
+            "surfaced": True,
+            # L6: Ghost Preservation
+            "ghosts_preserved": True,
+            # L7: Compression Honesty
+            "drops_disclosed": True,
+        }
+
+        report = verify_pilot_laws("rap-coach", context)
+
+        # All 7 laws should pass with good context
+        assert report.pass_count == 7, f"Expected 7 passes, got {report.pass_count}"
+        assert report.all_passed, f"Failures: {[r.law.name for r in report.failures]}"
+
+    def test_rap_coach_courage_floor(self):
+        """Test that courage preservation enforces floor for high-risk takes."""
+        # High-risk take with penalty should fail
+        context_with_penalty = {
+            "risk_level": 0.9,
+            "penalty_applied": 0.2,
+            "risk_threshold": 0.7,
+        }
+        result = courage_preservation(**context_with_penalty)
+        assert result is False, "High-risk with penalty should fail"
+
+        # High-risk take without penalty should pass
+        context_protected = {
+            "risk_level": 0.9,
+            "penalty_applied": 0.0,
+            "risk_threshold": 0.7,
+        }
+        result = courage_preservation(**context_protected)
+        assert result is True, "High-risk without penalty should pass"
 
     def test_full_verification_pipeline(self):
         """Test full verification across all pilots."""

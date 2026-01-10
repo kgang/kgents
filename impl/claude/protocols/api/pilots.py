@@ -74,6 +74,15 @@ PILOTS: list[PilotManifest] = [
         primitives=["planner", "portal", "warmth"],
         joy_dimension="WARMTH",
     ),
+    PilotManifest(
+        id="rap-coach",
+        name="Rap Coach: Flow to Crystal",
+        description="Psychological safety container for creative practice",
+        status="coming_soon",
+        route="/rap-coach",
+        primitives=["witness", "courage", "crystal", "warmth"],
+        joy_dimension="FLOW",
+    ),
 ]
 
 

@@ -1,91 +1,167 @@
-# Sprite Procedural Taste Lab
+# Hornet Siege Art Forge
 
 Status: **production**
 
-> *"Every character has a story. The pixels are just how you hear it."*
+> *"The colony has its defenders. The hornet has its swagger. Every pixel tells their story."*
 
 ---
 
-## ⚠️ Implementation Directive
+## The Integration: Art Forge + Game Development
 
-**This spec is a BUILD order, not a design document.**
+**This pilot is the art department for Hornet Siege.** Every generation run produces assets that integrate directly into `impl/claude/pilots-web/src/pilots/wasm-survivors-game/`.
+
+The Art Forge does NOT generate abstract "characters with soul" — it generates **specific game assets** for a specific game: sprites, effects, UI elements, and animations that embody the tragedy of predator vs. collective.
+
+### Cross-Reference Architecture
+
+```
+pilots/sprite-procedural-taste-lab/PROTO_SPEC.md  (this file)
+         ↓ generates assets for ↓
+pilots/wasm-survivors-game/PROTO_SPEC.md          (game design spec)
+pilots/wasm-survivors-game/BEE_SPRITES_SPEC.md    (bee visual language)
+pilots/wasm-survivors-game/HORNET_SPRITE_SPEC.md  (hornet visual language)
+         ↓ outputs to ↓
+impl/claude/pilots-web/src/pilots/wasm-survivors-game/  (game code)
+```
+
+---
+
+## Implementation Directive
+
+**This spec is a BUILD order for game art assets.**
 
 When this PROTO_SPEC is consumed for regeneration:
-- **Implement ALL laws (L1-L6)** — complete set
-- **Implement ALL QAs (QA-1 through QA-5)** — complete set
-- **Real sprite rendering** — actual pixels, not placeholder descriptions
-- **Real animation** — visible movement, not static images
-- **Emit actual witness marks** — not just capture intent
+- **Generate GAME-READY sprites** — exact sizes, palettes, and formats from BEE/HORNET_SPRITE_SPEC
+- **Implement ALL laws (L1-L7)** — complete set
+- **Implement ALL QAs (QA-1 through QA-6)** — complete set
+- **Real pixel art** — actual rendered sprites, not descriptions
+- **Real animation frames** — sprite sheets with frame data
+- **Emit witness marks** — design decisions are traceable
 
 ### Failure Conditions (Automatic Fail)
-
-The system is **broken** if:
 
 | Condition | Impact |
 |-----------|--------|
 | **FC-1** UI describes sprites but doesn't render them | L1 violated |
-| **FC-2** Characters look generic/asset-pack quality | Soul missing |
-| **FC-3** System never proposes or pushes back | Transcription, not collaboration |
-| **FC-4** Backstory doesn't map to visible elements | L2 violated |
-| **FC-5** No actual animation playback | L3 violated |
+| **FC-2** Assets don't match game palette (COLORS in types.ts) | Integration broken |
+| **FC-3** System accepts all input without pushback | Transcription, not collaboration |
+| **FC-4** Sprites don't express personality (swagger/dignity) | Soul missing |
+| **FC-5** No animation playback | L3 violated |
+| **FC-6** Exported assets unusable in game engine | Primary purpose failed |
 
 ### Quality Gates (Mandatory)
 
 | Gate | Requirement | Failure = Block |
 |------|-------------|-----------------|
-| **QG-1** | Sprites visibly render in UI | Yes |
+| **QG-1** | Sprites visibly render at correct sizes (12-48px) | Yes |
 | **QG-2** | Zero TypeScript errors | Yes |
 | **QG-3** | All Laws have corresponding implementation | Yes |
 | **QG-4** | Animation playable (idle at minimum) | Yes |
-| **QG-5** | Design history navigable (L5) | Yes |
-| **QG-6** | Export produces usable sprite sheet | Yes |
+| **QG-5** | Design history navigable (L6) | Yes |
+| **QG-6** | Export produces game-ready sprite sheets | Yes |
+| **QG-7** | Palette matches COLORS constant from types.ts | Yes |
 
 ---
 
-## ⚠️ EXECUTOR MANDATE: Opinionated Agency
+## Narrative: The Art Department
 
-**This spec requires the executing agent to exercise aesthetic judgment, not just mechanical translation.**
+This is the **animation studio for Hornet Siege**.
 
-The agent MUST:
-- **Have opinions** about what looks good, what feels alive, what communicates character
-- **Propose unexpected directions** that honor the backstory but surprise the user
-- **Push back** when a direction feels generic or lifeless—suggest alternatives
-- **Curate quality** over quantity: one stunning character beats ten mediocre ones
-- **Synthesize coherence** across visual design, animation, and narrative
+The game tells a tragedy: an apex predator invades a colony, massacres defenders, and ultimately falls to collective intelligence. The Art Forge ensures every sprite embodies this narrative:
 
-The agent is a **creative collaborator**, not a transcription service. When the spec is ambiguous, the agent should make a bold choice and justify it. The user can redirect, but the agent should never produce something it wouldn't be proud to show.
+- **The Hornet** has swagger. It KNOWS it will lose. It hunts anyway.
+- **The Bees** are dignified defenders. They are the HEROES of their story.
+- **THE BALL** is clip-worthy spectacle — the moment when the colony wins.
+- **Effects** sell the fantasy: kills feel like PUNCHES, deaths feel EARNED.
 
----
+The Forge is where an artist (human) and system (AI) collaborate to make this tragedy visually stunning.
 
-## Narrative
+### Personality Tag
 
-This is an **animation studio for creating characters with soul**.
-
-The user describes a character—their history, personality, fears, dreams. The system proposes visual designs: body shape, clothing, color palette, idle animations, movement style. Each visual choice reflects something true about the character.
-
-A grumpy mushroom wizard doesn't just *look* grumpy—he *shuffles* with impatience, his hat droops when he's defeated, his spores puff when he's angry. The backstory lives in the movement.
-
-The lab is where character concepts become **commercial-quality animated sprites** through iterative co-evolution between user and system.
-
-## Personality Tag
-
-*"This pilot believes that great characters are discovered, not manufactured. The system proposes, the user refines, and together they find someone worth caring about."*
+*"This pilot believes that great game art is discovered through dialogue. The system proposes with opinion, the artist refines with vision, and together they forge sprites worth showing off."*
 
 ---
 
-## The Primary Artifact: Animated Character Sprites
+## Asset Categories
 
-A character in this lab is NOT an abstract concept. It is a **concrete visual artifact**:
+### Category 1: The Hornet (Player Character)
 
-| Component | Description | Example |
-|-----------|-------------|---------|
-| **Sprite Sheet** | 64x64 or 128x128 pixel art frames | 8 frames idle, 6 frames walk, 4 frames action |
-| **Color Palette** | 8-16 colors that express mood/era | Warm earth tones for a homey baker; neon accents for a cyberpunk hacker |
-| **Silhouette** | Recognizable at 16x16 thumbnail | The mushroom cap, the flowing cape, the mechanical arm |
-| **Animation Cycles** | Looping movements that reveal personality | Nervous fidgeting, confident strut, weary shuffle |
-| **Backstory Card** | 2-3 sentences of character essence | "Mira was a palace guard until she saw what the king really did. Now she protects the streets instead." |
+**Source**: `pilots/wasm-survivors-game/HORNET_SPRITE_SPEC.md`
 
-**The sprite is the deliverable.** Everything else (taste tracking, branch exploration, crystals) serves the goal of producing a sprite you'd put in a commercial game.
+| Property | Specification |
+|----------|---------------|
+| **Size** | 48x48 pixels |
+| **Palette** | 10 colors (see spec) |
+| **Animations** | IDLE (4), IDLE_AGGRO (4), MOVE (4×4), ATTACK (6), DASH (6), HIT (2), DEATH (6) |
+| **Sprite Sheet** | 384×288 pixels (8 cols × 6 rows) |
+| **Personality** | SWAGGER — confident, never panicked, magnificent in death |
+
+**Key Constraints**:
+- Mandibles visible in EVERY frame
+- Eyes #FFD700 (Warning Yellow)
+- 3+ orange/black bands on abdomen
+- Death animation maintains dignity
+
+### Category 2: The Bees (Enemy Types)
+
+**Source**: `pilots/wasm-survivors-game/BEE_SPRITES_SPEC.md`
+
+| Type | Size | Shape | Palette | Key Visual |
+|------|------|-------|---------|------------|
+| **Worker** | 12×12 | Circle | Amber #D4920A | Round, plump, golden glow |
+| **Scout** | 14×10 | Triangle | Honey #E5B84A + Cyan #00D4FF | Streamlined, speed trails |
+| **Guard** | 20×24 | Square | Dark Amber #B87A0A | Armor plates, blocky |
+| **Propolis** | 16×16 | Diamond | Resin #A08020 + Violet #6B2D5B | Visible projectile organ |
+| **Royal** | 28×32 | Octagon | Purple #6B2D5B + Gold #FFD700 | Crown accent, elite |
+
+**Animation States** (all bee types):
+- IDLE (2 frames) — Wing flutter
+- CHASE (4 frames) — Forward lean, fast wings
+- TELEGRAPH (3 frames) — Glow + pullback (CRITICAL for readability)
+- ATTACK (2 frames) — Lunge
+- RECOVERY (2 frames) — Dimmed, slower
+- DEATH (5 frames) — Spiral descent + pollen burst
+
+**Key Constraints**:
+- Each type has DISTINCT silhouette (instant recognition)
+- Warm amber palette (defenders, not monsters)
+- Death animations show heroic sacrifice, not fodder disintegration
+
+### Category 3: Visual Effects
+
+| Effect | Description | Integration Point |
+|--------|-------------|-------------------|
+| **Kill Particle** | Spiral + scatter + pollen burst | `systems/juice.ts` |
+| **XP Orb** | Amber glow, float toward player | `types.ts XPOrb` |
+| **Damage Flash** | Orange→Red, fragment burst | `PARTICLES.damageFlash` |
+| **Formation Glow** | Gold lines connecting bees | `systems/formation/render.ts` |
+| **THE BALL Heat** | Red shimmer, temperature indicator | `BallPhase` rendering |
+| **Graze Spark** | Cyan spark on near-miss | Risk-reward feedback |
+| **Venom Drip** | Purple trail from hornet mandibles | Attack satisfaction |
+
+**Palette from types.ts COLORS**:
+```typescript
+amber: '#FFB800'
+honey: '#D4A017'
+honeycomb: '#8B6914'
+hiveDark: '#1a1a0f'
+hiveLight: '#2a2a1f'
+danger: '#FF4444'
+warning: '#FFAA00'
+formation: '#FF6B6B'
+heat: '#FF3300'
+```
+
+### Category 4: UI Elements
+
+| Element | Description | Style |
+|---------|-------------|-------|
+| **Health Bar** | Amber fill, honeycomb frame | Warm, organic |
+| **XP Bar** | Pollen gold, drip effect on gain | Satisfying |
+| **Wave Indicator** | Hexagonal badge | Hive aesthetic |
+| **Upgrade Icons** | 32×32, clear silhouette | Readable at glance |
+| **Death Screen Elements** | Dignified amber, not harsh red | Ceremony, not punishment |
+| **THE BALL Warning** | Pulsing red, heat rising | Dread, not panic |
 
 ---
 
@@ -93,181 +169,155 @@ A character in this lab is NOT an abstract concept. It is a **concrete visual ar
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  1. USER DESCRIBES                                               │
-│     "A retired pirate who now runs a bakery. She's tough but    │
-│      kind, misses the sea, has a mechanical leg."               │
+│  1. ARTIST REQUESTS                                              │
+│     "I need a Guard Bee sprite. Make it feel like a tank that   │
+│      holds the line. Reference BEE_SPRITES_SPEC.md."            │
 ├─────────────────────────────────────────────────────────────────┤
-│  2. SYSTEM PROPOSES (with opinion!)                             │
+│  2. FORGE PROPOSES (with opinion!)                              │
 │     → 3 visual concepts with rationale                          │
-│     → "I gave her salt-weathered blues and a flour-dusted       │
-│        apron. The mechanical leg clicks when she walks—         │
-│        she's proud of it, not hiding it."                       │
+│     → "I gave it heavy armor plates because Guards don't chase  │
+│        — they BLOCK. The square silhouette = unmistakable at    │
+│        a glance. Darker amber says 'I've weathered attacks.'"   │
 ├─────────────────────────────────────────────────────────────────┤
-│  3. USER REFINES                                                 │
-│     "Love the leg detail! But make her warmer—she's found       │
-│      happiness in the bakery."                                  │
+│  3. ARTIST REFINES                                              │
+│     "Love the plates! But the silhouette blends with Royal at   │
+│      distance. Make it more distinctly rectangular."            │
 ├─────────────────────────────────────────────────────────────────┤
-│  4. SYSTEM ITERATES                                              │
-│     → Adjusted palette (more golden/amber tones)                │
-│     → Softened idle animation (content sway vs. restless scan)  │
-│     → "Added a slight smile and relaxed shoulders. The sea      │
-│        is in her past; the bread is her present."               │
+│  4. FORGE ITERATES (or pushes back!)                            │
+│     → Adjusted proportions (wider than tall)                    │
+│     → Or: "If we go more rectangular, we lose the 'heft' read.  │
+│        What about adding vertical armor striping instead?       │
+│        That preserves bulk while differentiating from Royal."   │
 ├─────────────────────────────────────────────────────────────────┤
-│  5. REPEAT until character feels ALIVE                          │
+│  5. REPEAT until asset is GAME-READY                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Each iteration produces viewable sprites.** Not descriptions of sprites. Actual rendered pixel art with animation.
-
----
-
-## Quality Bar: Commercial Level
-
-This pilot aims for **professional indie game quality**. Reference points:
-
-- Celeste character expressiveness
-- Stardew Valley warmth and readability
-- Hyper Light Drifter atmospheric silhouettes
-- Undertale personality-in-pixels
-
-A character is "done" when:
-1. You could put it in a game and it wouldn't look out of place
-2. A stranger could describe their personality from the sprite alone
-3. The animation makes you *feel* something
-
----
-
-## Objectives
-
-1. **Backstory → Pixels**: Every visual choice traces back to character truth. "Why is she wearing red?" → "Because she's still mourning and red is how her culture honors the dead."
-
-2. **Animation as Character**: Movement isn't decoration—it's revelation. How they stand, shift, react. A confident character and a nervous character with the same silhouette should feel completely different.
-
-3. **Iterative Refinement**: The first proposal is a starting point, not a destination. User and system converge on the character through dialogue.
-
-4. **Wild Exploration**: When the user says "surprise me," the system should propose something unexpected but justified. Not random—*imaginative*.
-
-5. **Commercial Export**: Final characters can be exported as sprite sheets ready for game engines.
+**Each iteration produces viewable sprites.** Not descriptions. Actual rendered pixel art with animation.
 
 ---
 
 ## Laws
 
-- **L1 Visual-First Law**: Every UI state shows rendered sprites, not just metadata. The character is always visible.
+### Asset Laws
 
-- **L2 Backstory-Trace Law**: Every visual element can be traced to a backstory element. Click on the mechanical leg → see "lost in the Storm of '47, rebuilt by her first mate."
+- **L1 Visual-First Law**: Every UI state shows rendered sprites, not just metadata. The asset is always visible.
 
-- **L3 Animation-Personality Law**: Idle animations must reflect emotional state. A happy character and sad character cannot have the same idle loop.
+- **L2 Game-Palette Law**: Every generated asset uses ONLY colors from the established palettes (COLORS constant, BEE_SPRITES_SPEC, HORNET_SPRITE_SPEC). No drift allowed.
 
-- **L4 Proposal-Rationale Law**: When the system proposes a design, it must explain *why*. "I chose heavy boots because she needs to feel grounded—her past was chaotic."
+- **L3 Animation-Personality Law**: Animations must reflect entity personality. Hornet has swagger (weight shift, confident stance). Bees have purpose (coordinated, heroic). Death animations have dignity.
 
-- **L5 Iteration-Memory Law**: Previous iterations are preserved. The user can say "go back to the version with the longer cape" and the system retrieves it.
+- **L4 Proposal-Rationale Law**: When the system proposes a design, it must explain *why* in terms of gameplay readability and emotional resonance. "Square silhouette = tank read at a glance."
 
-- **L6 Quality-Gate Law**: The system should flag when a design feels generic or incoherent. "This silhouette is hard to read at small sizes—consider simplifying the shoulder detail."
+- **L5 Spec-Reference Law**: Every asset proposal must cite the relevant spec (BEE_SPRITES_SPEC, HORNET_SPRITE_SPEC, PROTO_SPEC). No orphan designs.
+
+- **L6 Iteration-Memory Law**: Previous iterations are preserved. The artist can say "go back to the wider Guard variant" and the system retrieves it.
+
+- **L7 Export-Ready Law**: Final assets export in formats directly usable by the game:
+  - PNG sprite sheets with consistent frame sizes
+  - JSON animation metadata (frame timing, loop data)
+  - Palette files for validation
+
+### Integration Laws
+
+- **L-INT-1**: Generated assets must match the type definitions in `types.ts` (BeeType, EnemyType sizes, etc.)
+
+- **L-INT-2**: Color values must be exact hex matches to COLORS constant (no #FFB801 when COLORS.amber is #FFB800)
+
+- **L-INT-3**: Sprite dimensions must match spec (Worker 12×12, Hornet 48×48, etc.)
+
+- **L-INT-4**: Animation frame counts must match spec requirements (Hornet ATTACK = 6 frames, etc.)
 
 ---
 
 ## Qualitative Assertions
 
-- **QA-1** The user should feel like they're **collaborating with an artist**, not filling out a form.
+- **QA-1** The artist should feel like they're **collaborating with an opinionated art director**, not filling out an asset request form.
 
-- **QA-2** Proposed characters should have **surprising-but-fitting** details the user didn't specify but immediately recognizes as right.
+- **QA-2** Proposed assets should have **gameplay-justified details** the artist didn't specify but immediately recognizes as right. "Oh, the telegraph glow makes the attack readable!"
 
-- **QA-3** The difference between first iteration and final should be **visibly dramatic**—co-evolution produces better results than either party alone.
+- **QA-3** The difference between first iteration and final should be **visibly dramatic** — co-evolution produces better game art than either party alone.
 
-- **QA-4** Watching the idle animation should make you **want to know more** about the character.
+- **QA-4** Watching the idle animation should communicate **personality instantly**. You should KNOW the Hornet has swagger. You should FEEL the Guard's defensive stance.
 
-- **QA-5** The system's rationale should make you say **"oh, that's clever"** at least once per session.
+- **QA-5** The system's rationale should reference **gameplay impact**: "This silhouette reads at distance during swarm chaos."
+
+- **QA-6** Exported assets should **work on first import** into the game. No manual cleanup required.
 
 ---
 
 ## Anti-Success (Failure Modes)
 
-The system fails if:
-
-- **Generic output**: Characters look like they came from an asset pack. No soul, no specificity.
-
-- **Description-only**: The UI talks about sprites but doesn't show them. "Your character has warm colors" without rendering warm colors.
-
-- **User does all the work**: The system just executes instructions without proposing, pushing back, or adding creative value.
-
-- **Backstory-visual disconnect**: The character has a rich backstory but the sprite could belong to anyone. The visual doesn't tell the story.
-
-- **One-and-done**: First proposal is final. No iteration, no refinement, no co-evolution.
-
-- **Timid agent**: The system never disagrees, never suggests alternatives, never has opinions. Just transcribes.
+| Failure | What It Looks Like | Violates |
+|---------|-------------------|----------|
+| **Generic output** | Bees look like "asset pack insects" | Soul, QA-4 |
+| **Description-only** | UI says "amber-colored Guard" without rendering it | L1 |
+| **Palette drift** | Uses #DAA520 instead of #D4A017 | L2, L-INT-2 |
+| **Silent acceptance** | System never pushes back on bad directions | QA-1 |
+| **Spec ignorance** | Proposes 64×64 Hornet when spec says 48×48 | L5, L-INT-3 |
+| **One-and-done** | First proposal is final, no iteration | QA-3, L6 |
+| **Export failure** | Sprite sheet has wrong frame alignment | L7, QA-6 |
 
 ---
 
-## Technical Approach: Procedural Generation + AI Guidance
+## Technical Approach: Constrained Procedural Generation
 
-The system uses a **hybrid approach**:
+The system uses a **spec-constrained approach**:
 
-| Layer | Method | Purpose |
-|-------|--------|---------|
-| **Backstory → Traits** | LLM interpretation | "retired pirate baker" → `[seafaring, domestic, mechanical, warm]` |
-| **Traits → Visual Params** | Constrained generation | Traits map to palette, proportions, silhouette rules |
-| **Visual Params → Pixels** | Procedural pixel art | Algorithm generates actual sprite frames |
-| **Animation → Personality** | Motion libraries + blending | Idle/walk/action cycles from personality parameters |
-| **Critique → Refinement** | LLM + heuristics | Evaluate coherence, readability, expressiveness |
+| Layer | Method | Constraint Source |
+|-------|--------|-------------------|
+| **Type → Shape** | Spec lookup | BEE_SPRITES_SPEC silhouette rules |
+| **Shape → Palette** | Constrained selection | COLORS constant + spec palettes |
+| **Palette → Pixels** | Procedural pixel art | Size from spec, colors from palette |
+| **Pixels → Animation** | Frame generation | Frame counts from spec, timing from spec |
+| **Animation → Personality** | Motion signature | Swagger/dignity/heroism from narrative |
 
-The system should be able to generate **actual viewable sprites**, not placeholders. If true procedural generation is too complex for initial implementation, the system may use:
-- Curated base sprites with parameter-driven variations
-- Color/proportion transforms on template characters
-- Composite layering (body + clothing + accessories + effects)
+The system CANNOT propose:
+- Colors not in the established palettes
+- Sizes that don't match spec
+- Animation frame counts that differ from spec
+- Silhouettes that contradict type identity
 
-**The key constraint: something must render.** A character that exists only as text has failed.
-
----
-
-## Backstory Elements → Visual Mappings
-
-Examples of how narrative becomes pixels:
-
-| Backstory Element | Visual Expression |
-|-------------------|-------------------|
-| "Lost her family young" | Muted palette, protective posture, eyes that look past you |
-| "Former soldier" | Rigid stance, economic movements, scars integrated into design |
-| "Loves to cook" | Warm colors, flour dusting, comfortable roundness, happy idle sway |
-| "Hiding a secret" | Asymmetric design, one hand often near pocket/bag, glancing animation |
-| "Mechanical augmentation" | Visible gears/plates, different movement on enhanced limbs, subtle glow |
-| "Royalty in disguise" | Refined gestures despite simple clothes, unconscious grace |
-
-The system should recognize these patterns and apply them—but also **surprise the user** with connections they didn't anticipate.
+The system CAN propose:
+- Variations within constraints (different armor plate arrangements)
+- Personality interpretations (MORE swagger, DIFFERENT dignity)
+- Detail choices (which pixels highlight, shade distribution)
+- Timing variations within acceptable ranges
 
 ---
 
-## Animation Vocabulary
+## Asset Integration Workflow
 
-Characters have **movement signatures**:
-
-| Personality Trait | Idle Animation | Walk Cycle | Action Pose |
-|-------------------|----------------|------------|-------------|
-| Confident | Slight sway, hands on hips | Long stride, head high | Decisive, weight forward |
-| Nervous | Fidgeting, looking around | Quick short steps | Flinch-ready, defensive |
-| Weary | Slumped shoulders, slow blink | Heavy footfalls, head down | Reluctant, conserving energy |
-| Joyful | Bouncy, can't stand still | Almost skipping | Enthusiastic, full extension |
-| Mysterious | Minimal movement, watchful | Gliding, minimal bob | Precise, controlled |
-
-These aren't prescriptive—they're vocabulary. A confident-but-weary character might have the sway but also the slumped shoulders.
-
----
-
-## Iteration Tracking (Taste Evolution)
-
-Each character has a **design history**:
+### From Forge to Game
 
 ```
-Character: Mira the Pirate Baker
-├── v1: "Tough, sea-worn, suspicious" [rejected: too cold]
-├── v2: "Warmer palette, softer lines" [refined: keep warmth, add edge]
-├── v3: "Golden apron, steel in eyes" [accepted as base]
-│   └── v3.1: "Mechanical leg detail" [exploring]
-│   └── v3.2: "Simplified silhouette" [exploring]
-└── v4: [current working version]
+1. FORGE generates sprite sheet (PNG)
+   ↓
+2. FORGE generates animation metadata (JSON)
+   {
+     "type": "guard",
+     "frames": { "idle": [0,1], "chase": [2,3,4,5], ... },
+     "timing": { "idle": 200, "chase": 100, ... },
+     "palette": ["#B87A0A", "#4A3000", "#C4A000"]
+   }
+   ↓
+3. Export to impl/claude/pilots-web/src/pilots/wasm-survivors-game/assets/
+   ↓
+4. Update sprite rendering code to use new assets
+   ↓
+5. Witness mark records: "Guard Bee v3 integrated, swagger level increased"
 ```
 
-The user can navigate this history, branch from any point, and understand how they got here.
+### Validation Checklist (Per Asset)
+
+- [ ] Dimensions match spec
+- [ ] Colors are exact palette matches
+- [ ] Animation frame count correct
+- [ ] Sprite sheet alignment verified
+- [ ] Idle animation loops smoothly
+- [ ] Silhouette distinct from other types
+- [ ] Personality readable in 0.1 seconds
+- [ ] Exported files load in game without error
 
 ---
 
@@ -275,63 +325,73 @@ The user can navigate this history, branch from any point, and understand how th
 
 | Primitive | Role | Application |
 |-----------|------|-------------|
-| **Witness Mark** | Record design decisions | "Added scar because she's a survivor, not a victim" |
-| **Witness Crystal** | Compress character journey | "Mira evolved from cold exile to warm guardian in 7 iterations" |
-| **Galois Loss** | Measure design coherence | Flag when visual elements contradict backstory |
-| **Trail** | Navigate design history | Browse/branch from previous iterations |
+| **Witness Mark** | Record design decisions | "Made Guard wider to differentiate from Royal at distance" |
+| **Witness Crystal** | Compress asset evolution | "Guard Bee evolved from generic tank to distinctive blocker in 4 iterations" |
+| **Galois Loss** | Measure spec adherence | Flag when assets drift from established visual language |
+| **Trail** | Navigate design history | Browse/branch from previous asset versions |
 
-## Quality Algebra
+### Quality Algebra Instantiation
 
-> *See: `spec/theory/experience-quality-operad.md` for universal framework*
-
-This pilot instantiates the Experience Quality Operad via `SPRITE_LAB_QUALITY_ALGEBRA`:
-
-| Dimension | Instantiation |
-|-----------|---------------|
-| **Contrast** | visual_variety, personality_expression, backstory_alignment |
-| **Arc** | concept → exploration → refinement → crystallization |
-| **Voice** | soulful ("Has character?"), coherent ("Visuals match story?"), alive ("Animation reveals personality?") |
-| **Floor** | no_generic_output, no_description_only, visual_renders, animation_plays |
-
-**Weights**: C=0.25, A=0.25, V=0.50
-
-**Implementation**: `impl/claude/services/experience_quality/algebras/sprite_lab.py`
-
-**Domain Spec**: `spec/theory/domains/sprite-lab-quality.md`
+```
+HORNET_SIEGE_ART_ALGEBRA = {
+  contrast: [
+    "visual_variety" (not all bees look same),
+    "personality_expression" (swagger vs dignity),
+    "spec_alignment" (matches source specs)
+  ],
+  arc: [
+    "request" → "proposal" → "iteration" → "refinement" → "export"
+  ],
+  voice: [
+    "gameplay_voice" ("Is it readable in chaos?"),
+    "narrative_voice" ("Does it tell the tragedy?"),
+    "integration_voice" ("Does it work in the game?")
+  ],
+  floor: [
+    "palette_exact_match",
+    "dimension_exact_match",
+    "animation_playable",
+    "export_functional"
+  ]
+}
+```
 
 ---
 
 ## Canary Success Criteria
 
-1. A user describes a character in 2-3 sentences and receives **three distinct visual proposals** within 30 seconds, each with a visible sprite and rationale.
+1. **Request → Proposals (30s)**: Artist describes needed asset, receives 3 distinct visual concepts with rationale within 30 seconds.
 
-2. After 3-5 iterations, the character should be **dramatically better** than the first proposal—and neither user nor system could have gotten there alone.
+2. **Iteration Quality**: After 3-5 iterations, the asset is dramatically better than first proposal — and neither artist nor system could have gotten there alone.
 
-3. A stranger looking at the final sprite can **infer at least two backstory elements** correctly. ("She seems like she's been through something hard but found peace.")
+3. **Instant Recognition**: A player seeing the sprite for 0.1 seconds can identify the entity type (Worker vs Guard vs Royal).
 
-4. The user says **"I didn't think of that but it's perfect"** at least once per character.
+4. **Swagger/Dignity Test**: Watching the Hornet idle, you FEEL the confidence. Watching a Bee die, you FEEL the sacrifice.
 
-5. The exported sprite sheet is **immediately usable** in a game engine (proper transparency, consistent frame size, animation-ready). Animated GIF export lets you share characters instantly.
+5. **Game Integration**: Exported sprite sheets load into the game and render correctly on first attempt.
+
+6. **Spec Adherence**: Random palette sampling shows 100% match to established colors.
 
 ---
 
 ## Scope
 
 **In Scope:**
-- Character sprite generation (64x64 or 128x128)
-- Idle, walk, and 1-2 action animation cycles
-- Color palette generation tied to backstory
-- Silhouette design for readability
-- Iterative refinement with history
-- PNG sprite sheet export (game-engine ready)
-- Animated GIF export (shareable, looping)
+- Hornet player sprite (48×48, full animation set)
+- Five bee types (Worker, Scout, Guard, Propolis, Royal)
+- Kill/damage/effect particles
+- UI elements (health bar, XP bar, upgrade icons)
+- THE BALL visual effects
+- Sprite sheet export (PNG)
+- Animation metadata export (JSON)
+- Design iteration history
 
 **Out of Scope (for now):**
-- Full game integration (engine plugins, etc.)
-- Dialogue/voice generation
-- Environment/background art
-- Team collaboration features
-- Real-time multiplayer editing
+- 3D models
+- Full game backgrounds (handled by game renderer)
+- Sound design (separate system)
+- Marketing assets (separate effort)
+- Localization of UI text
 
 ---
 
@@ -339,18 +399,132 @@ This pilot instantiates the Experience Quality Operad via `SPRITE_LAB_QUALITY_AL
 
 When regenerating this pilot, the agent should:
 
-1. **Start with visuals**: The first thing built should be a sprite renderer, even if it's just displaying static placeholder art.
+1. **Load the specs first**: Read BEE_SPRITES_SPEC.md and HORNET_SPRITE_SPEC.md before generating any assets.
 
-2. **Make something move**: Idle animation should be visible in iteration 1. Movement brings characters to life.
+2. **Enforce constraints**: Reject/flag any proposal that violates palette, dimension, or silhouette constraints.
 
-3. **Build the dialogue**: The backstory→proposal→refinement loop is core. Even with simple visuals, the conversation should feel alive.
+3. **Start with rendering**: The first thing built should display actual pixels, even if placeholder.
 
-4. **Layer complexity**: Start with palette + silhouette, then add animation, then add procedural variation.
+4. **Make something move**: Idle animation should be visible in iteration 1.
 
-5. **Have taste**: Don't just implement—curate. If a feature feels unnecessary, skip it. If something feels missing, add it.
+5. **Build the dialogue**: The request→proposal→refinement loop is core. System must have opinions.
 
-6. **Show, don't tell**: Never describe a sprite when you could render it. Never talk about animation when you could play it.
+6. **Integrate continuously**: Test exports against the actual game early and often.
+
+7. **Have taste within constraints**: The spec provides the boundaries. Within those boundaries, be bold.
+
+8. **Show, don't tell**: Never describe a sprite when you could render it.
 
 ---
 
-*"The best characters feel like they existed before you found them. Your job is just to help them be seen."*
+## Voice Anchor
+
+> *"Daring, bold, creative, opinionated but not gaudy."*
+
+Within the constraints of established specs, the Forge should:
+- Propose unexpected details that improve gameplay readability
+- Push back when directions would hurt visual hierarchy
+- Celebrate the tragedy — the Hornet's swagger, the Bees' heroism
+- Make every pixel earn its place
+
+---
+
+## The Mirror Test
+
+Before shipping any asset, ask:
+
+| Quality | Check |
+|---------|-------|
+| **Spec-Aligned** | Does this match BEE/HORNET_SPRITE_SPEC exactly? |
+| **Game-Ready** | Will this work on first import? |
+| **Personality** | Can you FEEL the swagger/dignity/heroism? |
+| **Readable** | Identifiable in 0.1s during swarm chaos? |
+| **Collaborative** | Did system propose something artist didn't expect but loves? |
+| **Traceable** | Is the design evolution witnessed? |
+
+---
+
+*"The colony always wins. The art should show why they deserve to."*
+
+*"The hornet knows the score and hunts anyway. The sprite should know too."*
+
+---
+
+## Appendix A: Quick Reference Palettes
+
+### Hornet Palette (10 colors)
+```
+#FF6B00 - Hornet Orange
+#CC5500 - Burnt Orange
+#993D00 - Deep Orange
+#1A1A1A - Venom Black
+#2D1F3D - Bruise Purple
+#0D0D0D - Void Black
+#FFD700 - Warning Yellow
+#FFE55C - Pale Yellow
+#4A6B8C - Wing Blue
+#2A3B4C - Wing Shadow
+```
+
+### Bee Palette (by type)
+```
+Worker:   #D4920A, #FFE066, #FFF8E7
+Scout:    #E5B84A, #00D4FF, #FFD700
+Guard:    #B87A0A, #4A3000, #C4A000
+Propolis: #A08020, #6B2D5B, #D4A5D4
+Royal:    #6B2D5B, #FFD700, #FFFFFF
+```
+
+### Effect Palette (from COLORS constant)
+```
+amber:      #FFB800
+honey:      #D4A017
+honeycomb:  #8B6914
+danger:     #FF4444
+warning:    #FFAA00
+formation:  #FF6B6B
+heat:       #FF3300
+```
+
+---
+
+## Appendix B: Sprite Size Reference
+
+```
+         SPRITE SIZES (to scale, 4px = *)
+
+Hornet (48×48)     Royal (28×32)    Guard (20×24)
+************       *******          *****
+************       *******          *****
+************       *******          *****
+************       *******          *****
+************       *******          *****
+************       *******          *****
+************       *******
+************       *******
+
+Propolis (16×16)   Scout (14×10)    Worker (12×12)
+****               ***              ***
+****               ***              ***
+****               **               ***
+****
+```
+
+---
+
+## Appendix C: Animation Frame Counts
+
+| Entity | Idle | Chase | Telegraph | Attack | Recovery | Death |
+|--------|------|-------|-----------|--------|----------|-------|
+| Hornet | 4 | 4×4 | - | 6 | - | 6 |
+| Worker | 2 | 4 | 3 | 2 | 2 | 5 |
+| Scout | 2 | 4 | 3 | 2 | 2 | 5 |
+| Guard | 2 | 4 | 3 | 2 | 2 | 5 |
+| Propolis | 2 | 4 | 3 | 2 | 2 | 5 |
+| Royal | 2 | 4 | 3 | 2 | 2 | 5 |
+
+---
+
+**Filed**: 2025-12-29
+**Version**: 2.0.0 — Hornet Siege Integration Edition
+**Compression**: This spec + BEE_SPRITES_SPEC + HORNET_SPRITE_SPEC = complete art direction
