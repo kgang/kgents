@@ -395,19 +395,23 @@ def create_agent_operad() -> Operad:
     # Import here to avoid circular dependency
     from kgents_poly import PolyAgent, parallel, sequential
 
-    def _seq_compose(left: PolyAgent, right: PolyAgent) -> PolyAgent:
+    def _seq_compose(
+        left: PolyAgent[Any, Any, Any], right: PolyAgent[Any, Any, Any]
+    ) -> PolyAgent[Any, Any, Any]:
         """Sequential composition: left >> right."""
         return sequential(left, right)
 
-    def _par_compose(left: PolyAgent, right: PolyAgent) -> PolyAgent:
+    def _par_compose(
+        left: PolyAgent[Any, Any, Any], right: PolyAgent[Any, Any, Any]
+    ) -> PolyAgent[Any, Any, Any]:
         """Parallel composition: both on same input."""
         return parallel(left, right)
 
     def _branch_compose(
-        predicate: PolyAgent,
-        if_true: PolyAgent,
-        if_false: PolyAgent,
-    ) -> PolyAgent:
+        predicate: PolyAgent[Any, Any, Any],
+        if_true: PolyAgent[Any, Any, Any],
+        if_false: PolyAgent[Any, Any, Any],
+    ) -> PolyAgent[Any, Any, Any]:
         """Conditional composition."""
 
         def branch_transition(
@@ -437,9 +441,9 @@ def create_agent_operad() -> Operad:
         )
 
     def _fix_compose(
-        predicate: PolyAgent,
-        body: PolyAgent,
-    ) -> PolyAgent:
+        predicate: PolyAgent[Any, Any, Any],
+        body: PolyAgent[Any, Any, Any],
+    ) -> PolyAgent[Any, Any, Any]:
         """Fixed-point composition: repeat until predicate succeeds."""
         MAX_ITERATIONS = 10
 
