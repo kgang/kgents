@@ -236,14 +236,14 @@ Component = Foundation ∘ Protocol ∘ Architecture ∘ Spec ∘ Projection
 ## Quick Start
 
 ```bash
-# Terminal 1: Backend API
-cd impl/claude
-uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
+# Unified dev server (backend + frontend with hot reload)
+cd impl/claude && uv run kg dev
+# Backend: http://localhost:8000
+# Frontend: http://localhost:3000
 
-# Terminal 2: Web UI
-cd impl/claude/web
-npm install && npm run dev
-# Visit http://localhost:3000
+# Or run separately in two terminals:
+# Terminal 1: uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
+# Terminal 2: cd web && npm run dev
 ```
 
 ### Verify Before Committing
