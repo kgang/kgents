@@ -39,9 +39,21 @@ cat HYDRATE.md
 If the user provides arguments describing a task:
 
 ```bash
-# RUN THIS COMMAND
-kg docs hydrate "$ARGUMENTS" --no-ghosts
+# RUN THIS COMMAND - Unified hydration with observer-dependent defaults
+kg docs hydrate "$ARGUMENTS"
+
+# Options:
+# --observer <kind>  Observer type: agent (default), human, ide
+# --no-ghosts        Disable ancestral wisdom from deleted code
+# --no-semantic      Disable Brain semantic enrichment
+# --sync             Fast synchronous path (keyword only)
+# --json             Output as JSON instead of markdown
 ```
+
+**Observer Strategies**:
+- `agent` (default): Maximum precision (semantic + ghosts enabled)
+- `human`: Include surprises (ghosts yes, semantic no)
+- `ide`: Speed-first (keyword only)
 
 Parse the output and surface in this order:
 

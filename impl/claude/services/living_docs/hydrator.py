@@ -293,51 +293,82 @@ class HydrationContext:
         return "\n".join(lines)
 
     def to_dict(self) -> dict[str, object]:
-        """Convert to dictionary for JSON serialization."""
+        """
+        Convert to dictionary for JSON serialization.
+
+        Includes defensive handling for malformed objects to ensure
+        serialization never fails even with partial/corrupted data.
+        """
+
+        def _safe_teaching(t: Any) -> dict[str, Any]:
+            """Safely serialize a teaching result."""
+            try:
+                return {
+                    "symbol": getattr(t, "symbol", "unknown"),
+                    "module": getattr(t, "module", "unknown"),
+                    "insight": getattr(t.moment, "insight", "") if hasattr(t, "moment") else "",
+                    "severity": getattr(t.moment, "severity", "info")
+                    if hasattr(t, "moment")
+                    else "info",
+                    "evidence": getattr(t.moment, "evidence", None)
+                    if hasattr(t, "moment")
+                    else None,
+                }
+            except Exception:
+                return {
+                    "symbol": "unknown",
+                    "module": "unknown",
+                    "insight": "",
+                    "severity": "info",
+                    "evidence": None,
+                }
+
+        def _safe_semantic_teaching(t: Any) -> dict[str, Any]:
+            """Safely serialize a semantic teaching result."""
+            base = _safe_teaching(t)
+            base["score"] = getattr(t, "score", 0.0)
+            return base
+
+        def _safe_ghost(g: Any) -> dict[str, Any]:
+            """Safely serialize a ghost wisdom entry."""
+            try:
+                teaching = getattr(g, "teaching", None)
+                extinction = getattr(g, "extinction_event", None)
+                return {
+                    "insight": getattr(teaching, "insight", "") if teaching else "",
+                    "severity": getattr(teaching, "severity", "info") if teaching else "info",
+                    "source_module": getattr(teaching, "source_module", "") if teaching else "",
+                    "source_symbol": getattr(teaching, "source_symbol", "") if teaching else "",
+                    "successor": getattr(g, "successor", None),
+                    "extinction_reason": getattr(extinction, "reason", None)
+                    if extinction
+                    else None,
+                }
+            except Exception:
+                return {
+                    "insight": "",
+                    "severity": "info",
+                    "source_module": "",
+                    "source_symbol": "",
+                    "successor": None,
+                    "extinction_reason": None,
+                }
+
         return {
             "task": self.task,
-            "relevant_teaching": [
-                {
-                    "symbol": t.symbol,
-                    "module": t.module,
-                    "insight": t.moment.insight,
-                    "severity": t.moment.severity,
-                    "evidence": t.moment.evidence,
-                }
-                for t in self.relevant_teaching
-            ],
-            "semantic_teaching": [
-                {
-                    "symbol": t.symbol,
-                    "module": t.module,
-                    "insight": t.moment.insight,
-                    "severity": t.moment.severity,
-                    "evidence": t.moment.evidence,
-                    "score": t.score,
-                }
-                for t in self.semantic_teaching
-            ],
+            "relevant_teaching": [_safe_teaching(t) for t in self.relevant_teaching],
+            "semantic_teaching": [_safe_semantic_teaching(t) for t in self.semantic_teaching],
             "prior_evidence": [
                 ev.to_dict() if hasattr(ev, "to_dict") else ev for ev in self.prior_evidence
             ],
-            "ancestral_wisdom": [
-                {
-                    "insight": g.teaching.insight,
-                    "severity": g.teaching.severity,
-                    "source_module": g.teaching.source_module,
-                    "source_symbol": g.teaching.source_symbol,
-                    "successor": g.successor,
-                    "extinction_reason": g.extinction_event.reason if g.extinction_event else None,
-                }
-                for g in self.ancestral_wisdom
-            ],
-            "extinct_modules": self.extinct_modules,
-            "related_modules": self.related_modules,
-            "voice_anchors": self.voice_anchors,
+            "ancestral_wisdom": [_safe_ghost(g) for g in self.ancestral_wisdom],
+            "extinct_modules": list(self.extinct_modules),  # Defensive copy
+            "related_modules": list(self.related_modules),  # Defensive copy
+            "voice_anchors": list(self.voice_anchors),  # Defensive copy
             "has_semantic": self.has_semantic,
             # Unified hydration metadata
-            "tier": self.tier.value,
-            "keyword_coverage": self.keyword_coverage,
+            "tier": self.tier.value if hasattr(self.tier, "value") else str(self.tier),
+            "keyword_coverage": float(self.keyword_coverage),  # Ensure float
         }
 
 
@@ -1010,6 +1041,9 @@ async def hydrate(
     Returns:
         HydrationContext with tier indicating which enrichments were applied
 
+    Raises:
+        ValueError: If task is empty/None or quality_threshold is out of bounds
+
     Usage:
         from services.living_docs import hydrate
 
@@ -1036,9 +1070,33 @@ async def hydrate(
                 enrichments were actually applied (KEYWORD, SEMANTIC, GHOST, FULL).
                 (Evidence: test_hydrator.py::test_tier_tracking)
     """
-    # Normalize observer to enum
+    # ==========================================================================
+    # Input Validation (Hardened)
+    # ==========================================================================
+
+    # Validate task
+    if not task or not task.strip():
+        raise ValueError(
+            "Task description cannot be empty. "
+            "Provide a natural language description like 'implement brain persistence'"
+        )
+
+    # Normalize and validate observer
     if isinstance(observer, str):
+        valid_observers = {"human", "agent", "ide"}
+        if observer not in valid_observers:
+            raise ValueError(
+                f"Invalid observer '{observer}'. "
+                f"Must be one of: {', '.join(sorted(valid_observers))}"
+            )
         observer = ObserverKind(observer)
+
+    # Validate quality_threshold bounds
+    if quality_threshold is not None:
+        if not (0.0 <= quality_threshold <= 1.0):
+            raise ValueError(
+                f"quality_threshold must be between 0.0 and 1.0, got {quality_threshold}"
+            )
 
     # Get observer defaults
     defaults = OBSERVER_DEFAULTS[observer]
@@ -1158,12 +1216,22 @@ def hydrate_sync(task: str) -> HydrationContext:
     Returns:
         HydrationContext with KEYWORD tier
 
+    Raises:
+        ValueError: If task is empty/None
+
     Usage:
         from services.living_docs import hydrate_sync
 
         ctx = hydrate_sync("quick check")
         print(ctx.to_markdown())
     """
+    # Input validation (Hardened)
+    if not task or not task.strip():
+        raise ValueError(
+            "Task description cannot be empty. "
+            "Provide a natural language description like 'implement brain persistence'"
+        )
+
     hydrator = Hydrator()
     keywords = hydrator._extract_keywords(task)
     relevant_teaching = list(hydrator._find_relevant_teaching(keywords))

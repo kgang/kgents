@@ -333,3 +333,377 @@ class TestIntegration:
             # Should not raise and should produce markdown
             md = ctx.to_markdown()
             assert len(md) > 100  # Non-trivial output
+
+
+# =============================================================================
+# Unified Hydration API Tests
+# =============================================================================
+
+
+class TestUnifiedHydration:
+    """Tests for the unified hydrate() async function."""
+
+    @pytest.mark.asyncio
+    async def test_hydrate_returns_context(self) -> None:
+        """hydrate() returns HydrationContext."""
+        from services.living_docs.hydrator import hydrate
+
+        ctx = await hydrate("implement brain persistence")
+
+        assert isinstance(ctx, HydrationContext)
+        assert ctx.task == "implement brain persistence"
+
+    @pytest.mark.asyncio
+    async def test_hydrate_with_string_observer(self) -> None:
+        """hydrate() accepts string observer kind."""
+        from services.living_docs.hydrator import hydrate
+
+        ctx = await hydrate("test task", observer="ide")
+
+        assert isinstance(ctx, HydrationContext)
+
+    @pytest.mark.asyncio
+    async def test_hydrate_with_enum_observer(self) -> None:
+        """hydrate() accepts ObserverKind enum."""
+        from services.living_docs.hydrator import ObserverKind, hydrate
+
+        ctx = await hydrate("test task", observer=ObserverKind.HUMAN)
+
+        assert isinstance(ctx, HydrationContext)
+
+    @pytest.mark.asyncio
+    async def test_hydrate_explicit_options(self) -> None:
+        """hydrate() respects explicit option overrides."""
+        from services.living_docs.hydrator import hydrate
+
+        ctx = await hydrate(
+            "test task",
+            include_semantic=False,
+            include_ghosts=False,
+            quality_threshold=0.9,
+        )
+
+        assert isinstance(ctx, HydrationContext)
+        # With both disabled, should be KEYWORD tier
+        from services.living_docs.hydrator import HydrationTier
+
+        assert ctx.tier == HydrationTier.KEYWORD
+
+    @pytest.mark.asyncio
+    async def test_hydrate_graceful_degradation(self) -> None:
+        """hydrate() returns valid context even when Brain unavailable."""
+        from services.living_docs.hydrator import hydrate
+
+        # Default observer is 'agent' which enables semantic + ghosts
+        # Both will fail gracefully since Brain isn't available in tests
+        ctx = await hydrate("brain persistence")
+
+        assert isinstance(ctx, HydrationContext)
+        assert ctx.task == "brain persistence"
+        # Should still have keyword results
+        assert isinstance(ctx.relevant_teaching, list)
+
+
+class TestHydrateSyncFunction:
+    """Tests for the hydrate_sync() function."""
+
+    def test_hydrate_sync_returns_context(self) -> None:
+        """hydrate_sync() returns HydrationContext."""
+        from services.living_docs.hydrator import hydrate_sync
+
+        ctx = hydrate_sync("implement brain persistence")
+
+        assert isinstance(ctx, HydrationContext)
+        assert ctx.task == "implement brain persistence"
+
+    def test_hydrate_sync_is_keyword_tier(self) -> None:
+        """hydrate_sync() always returns KEYWORD tier."""
+        from services.living_docs.hydrator import HydrationTier, hydrate_sync
+
+        ctx = hydrate_sync("any task")
+
+        assert ctx.tier == HydrationTier.KEYWORD
+
+    def test_hydrate_sync_has_coverage(self) -> None:
+        """hydrate_sync() computes keyword coverage."""
+        from services.living_docs.hydrator import hydrate_sync
+
+        ctx = hydrate_sync("brain persistence")
+
+        assert 0.0 <= ctx.keyword_coverage <= 1.0
+
+
+class TestHydrationTier:
+    """Tests for HydrationTier tracking."""
+
+    def test_tier_in_context(self) -> None:
+        """HydrationContext includes tier field."""
+        from services.living_docs.hydrator import HydrationTier
+
+        ctx = HydrationContext(task="test")
+
+        # Default should be KEYWORD
+        assert ctx.tier == HydrationTier.KEYWORD
+
+    def test_tier_in_dict(self) -> None:
+        """tier is included in to_dict() output."""
+        from services.living_docs.hydrator import HydrationTier
+
+        ctx = HydrationContext(task="test", tier=HydrationTier.FULL)
+        d = ctx.to_dict()
+
+        assert "tier" in d
+        assert d["tier"] == "full"
+
+    def test_all_tiers_exist(self) -> None:
+        """All four tier levels exist."""
+        from services.living_docs.hydrator import HydrationTier
+
+        assert HydrationTier.KEYWORD.value == "keyword"
+        assert HydrationTier.SEMANTIC.value == "semantic"
+        assert HydrationTier.GHOST.value == "ghost"
+        assert HydrationTier.FULL.value == "full"
+
+
+class TestObserverKind:
+    """Tests for ObserverKind enum and defaults."""
+
+    def test_observer_kinds_exist(self) -> None:
+        """All observer kinds exist."""
+        from services.living_docs.hydrator import ObserverKind
+
+        assert ObserverKind.HUMAN.value == "human"
+        assert ObserverKind.AGENT.value == "agent"
+        assert ObserverKind.IDE.value == "ide"
+
+    def test_observer_defaults_exist(self) -> None:
+        """Each observer has default settings."""
+        from services.living_docs.hydrator import OBSERVER_DEFAULTS, ObserverKind
+
+        for kind in ObserverKind:
+            assert kind in OBSERVER_DEFAULTS
+            defaults = OBSERVER_DEFAULTS[kind]
+            assert "include_semantic" in defaults
+            assert "include_ghosts" in defaults
+            assert "quality_threshold" in defaults
+
+    def test_agent_defaults_are_richest(self) -> None:
+        """Agent observer gets full enrichment by default."""
+        from services.living_docs.hydrator import OBSERVER_DEFAULTS, ObserverKind
+
+        agent_defaults = OBSERVER_DEFAULTS[ObserverKind.AGENT]
+
+        assert agent_defaults["include_semantic"] is True
+        assert agent_defaults["include_ghosts"] is True
+
+    def test_ide_defaults_are_fastest(self) -> None:
+        """IDE observer gets speed-first defaults."""
+        from services.living_docs.hydrator import OBSERVER_DEFAULTS, ObserverKind
+
+        ide_defaults = OBSERVER_DEFAULTS[ObserverKind.IDE]
+
+        assert ide_defaults["include_semantic"] is False
+        assert ide_defaults["include_ghosts"] is False
+
+
+class TestCoverageScoring:
+    """Tests for keyword coverage scoring."""
+
+    def test_coverage_in_dict(self) -> None:
+        """keyword_coverage is included in to_dict() output."""
+        ctx = HydrationContext(task="test", keyword_coverage=0.75)
+        d = ctx.to_dict()
+
+        assert "keyword_coverage" in d
+        assert d["keyword_coverage"] == 0.75
+
+    def test_coverage_function(self) -> None:
+        """_compute_coverage calculates correct score."""
+        from services.living_docs.hydrator import _compute_coverage
+
+        # Create mock teaching results
+        teaching = [
+            TeachingResult(
+                moment=TeachingMoment(insight="brain related", severity="info"),
+                symbol="brain_func",
+                module="services.brain",
+            ),
+        ]
+
+        # 1 of 2 keywords covered
+        coverage = _compute_coverage(["brain", "wasm"], teaching)
+        assert coverage == 0.5
+
+        # Both keywords covered
+        teaching_full = [
+            TeachingResult(
+                moment=TeachingMoment(insight="brain and wasm", severity="info"),
+                symbol="func",
+                module="mod",
+            ),
+        ]
+        coverage_full = _compute_coverage(["brain", "wasm"], teaching_full)
+        assert coverage_full == 1.0
+
+    def test_coverage_empty_keywords(self) -> None:
+        """Empty keywords returns 1.0 (trivially covered)."""
+        from services.living_docs.hydrator import _compute_coverage
+
+        coverage = _compute_coverage([], [])
+        assert coverage == 1.0
+
+    def test_coverage_no_matches(self) -> None:
+        """No matches returns 0.0."""
+        from services.living_docs.hydrator import _compute_coverage
+
+        teaching = [
+            TeachingResult(
+                moment=TeachingMoment(insight="unrelated", severity="info"),
+                symbol="func",
+                module="mod",
+            ),
+        ]
+        coverage = _compute_coverage(["xyz", "abc"], teaching)
+        assert coverage == 0.0
+
+
+class TestUnifiedIntegration:
+    """Integration tests for unified hydration."""
+
+    @pytest.mark.asyncio
+    async def test_unified_produces_same_teaching_as_legacy(self) -> None:
+        """Unified hydrate() finds same teaching as legacy hydrate_context()."""
+        from services.living_docs.hydrator import hydrate
+
+        task = "brain persistence"
+
+        # Legacy path
+        legacy_ctx = hydrate_context(task)
+
+        # Unified path with semantic/ghosts disabled (keyword only)
+        unified_ctx = await hydrate(
+            task,
+            include_semantic=False,
+            include_ghosts=False,
+        )
+
+        # Should find same teaching moments (same keywords → same results)
+        legacy_insights = {t.moment.insight for t in legacy_ctx.relevant_teaching}
+        unified_insights = {t.moment.insight for t in unified_ctx.relevant_teaching}
+
+        assert legacy_insights == unified_insights
+
+    def test_hydrate_sync_equivalent_to_legacy(self) -> None:
+        """hydrate_sync() produces equivalent results to hydrate_context()."""
+        from services.living_docs.hydrator import hydrate_sync
+
+        task = "brain persistence"
+
+        legacy_ctx = hydrate_context(task)
+        sync_ctx = hydrate_sync(task)
+
+        # Same teaching moments
+        legacy_insights = {t.moment.insight for t in legacy_ctx.relevant_teaching}
+        sync_insights = {t.moment.insight for t in sync_ctx.relevant_teaching}
+        assert legacy_insights == sync_insights
+
+        # Same voice anchors
+        assert set(legacy_ctx.voice_anchors) == set(sync_ctx.voice_anchors)
+
+
+class TestInputValidation:
+    """Tests for input validation and hardening."""
+
+    @pytest.mark.asyncio
+    async def test_hydrate_rejects_empty_task(self) -> None:
+        """hydrate() raises ValueError for empty task."""
+        from services.living_docs.hydrator import hydrate
+
+        with pytest.raises(ValueError, match="cannot be empty"):
+            await hydrate("")
+
+        with pytest.raises(ValueError, match="cannot be empty"):
+            await hydrate("   ")
+
+    def test_hydrate_sync_rejects_empty_task(self) -> None:
+        """hydrate_sync() raises ValueError for empty task."""
+        from services.living_docs.hydrator import hydrate_sync
+
+        with pytest.raises(ValueError, match="cannot be empty"):
+            hydrate_sync("")
+
+        with pytest.raises(ValueError, match="cannot be empty"):
+            hydrate_sync("   ")
+
+    @pytest.mark.asyncio
+    async def test_hydrate_rejects_invalid_observer(self) -> None:
+        """hydrate() raises ValueError for invalid observer."""
+        from services.living_docs.hydrator import hydrate
+
+        with pytest.raises(ValueError, match="Invalid observer"):
+            await hydrate("test task", observer="robot")  # type: ignore
+
+    @pytest.mark.asyncio
+    async def test_hydrate_rejects_invalid_threshold(self) -> None:
+        """hydrate() raises ValueError for out-of-bounds threshold."""
+        from services.living_docs.hydrator import hydrate
+
+        with pytest.raises(ValueError, match="must be between 0.0 and 1.0"):
+            await hydrate("test task", quality_threshold=1.5)
+
+        with pytest.raises(ValueError, match="must be between 0.0 and 1.0"):
+            await hydrate("test task", quality_threshold=-0.1)
+
+    @pytest.mark.asyncio
+    async def test_hydrate_accepts_valid_threshold_bounds(self) -> None:
+        """hydrate() accepts threshold at valid bounds."""
+        from services.living_docs.hydrator import hydrate
+
+        # Should not raise
+        ctx_low = await hydrate(
+            "test", include_semantic=False, include_ghosts=False, quality_threshold=0.0
+        )
+        assert ctx_low.task == "test"
+
+        ctx_high = await hydrate(
+            "test", include_semantic=False, include_ghosts=False, quality_threshold=1.0
+        )
+        assert ctx_high.task == "test"
+
+
+class TestDefensiveSerialization:
+    """Tests for defensive to_dict() serialization."""
+
+    def test_to_dict_handles_normal_data(self) -> None:
+        """to_dict() works with normal data."""
+        teaching = TeachingResult(
+            moment=TeachingMoment(insight="Test insight", severity="warning"),
+            symbol="test_func",
+            module="test.module",
+        )
+        ctx = HydrationContext(
+            task="test",
+            relevant_teaching=[teaching],
+            voice_anchors=["anchor1"],
+        )
+
+        d = ctx.to_dict()
+        assert d["task"] == "test"
+        assert len(d["relevant_teaching"]) == 1
+        assert d["relevant_teaching"][0]["insight"] == "Test insight"
+
+    def test_to_dict_produces_defensive_copies(self) -> None:
+        """to_dict() returns defensive copies of lists."""
+        ctx = HydrationContext(
+            task="test",
+            related_modules=["mod1", "mod2"],
+            voice_anchors=["anchor1"],
+        )
+
+        d = ctx.to_dict()
+
+        # Modify the returned dict
+        d["related_modules"].append("mod3")  # type: ignore
+
+        # Original should be unchanged
+        assert len(ctx.related_modules) == 2

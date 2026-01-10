@@ -10,9 +10,15 @@ Minimal context for agents. For humans: start with [README.md](README.md).
 
 ```bash
 kg docs hydrate "<your task>"
+
+# Options:
+# --observer ide     Speed-first (keyword only)
+# --observer human   Include surprises (ghosts yes, semantic no)
+# --sync             Fast synchronous path
+# --json             Machine-readable output
 ```
 
-This surfaces critical gotchas, likely files, and voice anchors for YOUR specific task.
+Unified hydration with observer-dependent defaults. Surfaces gotchas, modules, and voice anchors.
 
 ---
 
