@@ -25,7 +25,10 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from services.experiment.types import GenerateConfig
 
 
 def _get_console() -> Any:

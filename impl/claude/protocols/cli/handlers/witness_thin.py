@@ -823,7 +823,7 @@ async def _expand_crystal_async(crystal_id: str) -> dict[str, Any]:
 
 # Create sync wrappers
 _crystallize = _run_async_factory(_crystallize_async)
-_get_crystals = _run_async_factory(_get_crystals_async)
+_get_crystals = _run_async_factory(_get_crystals_async_DEPRECATED_DO_NOT_USE)
 _get_crystal = _run_async_factory(_get_crystal_async)
 _expand_crystal = _run_async_factory(_expand_crystal_async)
 
@@ -2012,7 +2012,7 @@ def cmd_dashboard(args: list[str]) -> int:
     def fetch_crystals(level: int | None) -> list[dict[str, Any]]:
         """Fetch crystals synchronously."""
 
-        return asyncio.run(_bootstrap_and_run(lambda: _get_crystals_async(limit=50, level=level)))
+        return asyncio.run(_bootstrap_and_run(lambda: _get_crystals_async_DEPRECATED_DO_NOT_USE(limit=50, level=level)))
 
     # Initial fetch
     try:

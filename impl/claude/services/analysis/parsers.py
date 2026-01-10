@@ -25,9 +25,12 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from agents.operad.core import LawStatus, LawVerification
+
+if TYPE_CHECKING:
+    from agents.operad.domains.analysis import ConstitutionalReport
 from agents.operad.domains.analysis import (
     BootstrapAnalysis,
     CategoricalReport,

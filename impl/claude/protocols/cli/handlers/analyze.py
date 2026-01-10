@@ -37,6 +37,7 @@ from typing import TYPE_CHECKING
 from protocols.cli.handler_meta import handler
 
 if TYPE_CHECKING:
+    from agents.operad.domains.analysis import FullAnalysisReport
     from protocols.cli.reflector import InvocationContext
 
 

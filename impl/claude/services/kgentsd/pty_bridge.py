@@ -206,7 +206,7 @@ class StreamMessage:
     data: bytes | None = None
     exit_code: int | None = None
     term_size: tuple[int, int] | None = None
-    event: dict[str, Any] | None = None
+    event_data: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to wire format."""
@@ -223,8 +223,8 @@ class StreamMessage:
             d["exit_code"] = self.exit_code
         if self.term_size is not None:
             d["term_size"] = list(self.term_size)
-        if self.event is not None:
-            d["event"] = self.event
+        if self.event_data is not None:
+            d["event"] = self.event_data
         return d
 
     @classmethod
@@ -247,7 +247,7 @@ class StreamMessage:
             data=data,
             exit_code=d.get("exit_code"),
             term_size=term_size,
-            event=d.get("event"),
+            event_data=d.get("event"),
         )
 
     @classmethod
@@ -263,11 +263,11 @@ class StreamMessage:
         )
 
     @classmethod
-    def event(
-        cls, correlation_id: str, event: dict[str, Any], seq: int = 0
+    def create_event(
+        cls, correlation_id: str, event_data: dict[str, Any], seq: int = 0
     ) -> StreamMessage:
         """Create an event message."""
-        return cls(type="event", correlation_id=correlation_id, event=event, seq=seq)
+        return cls(type="event", correlation_id=correlation_id, event_data=event_data, seq=seq)
 
 
 class PTYBridge:

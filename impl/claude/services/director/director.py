@@ -579,5 +579,4 @@ __all__ = [
     "ExecutionPrompt",
     "CaptureResult",
     "ResolveResult",
-    "DirectorTopics",
 ]

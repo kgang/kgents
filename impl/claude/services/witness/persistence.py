@@ -69,6 +69,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any, AsyncGenerator
 
+from sqlalchemy import func, select
+
 from agents.d.schemas.witness import (
     WitnessAction,
     WitnessEscalation,

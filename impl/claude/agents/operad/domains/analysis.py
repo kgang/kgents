@@ -33,7 +33,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any, Callable, FrozenSet
+from typing import TYPE_CHECKING, Any, Callable, FrozenSet
 
 from agents.operad.core import (
     AGENT_OPERAD,
@@ -44,6 +44,9 @@ from agents.operad.core import (
     Operation,
 )
 from agents.poly import PolyAgent, from_function, parallel, sequential
+
+if TYPE_CHECKING:
+    from services.witness.mark import ConstitutionalAlignment
 
 # =============================================================================
 # Analysis Report Types

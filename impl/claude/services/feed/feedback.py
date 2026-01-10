@@ -21,9 +21,12 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from services.k_block.core.kblock import KBlock
+
+if TYPE_CHECKING:
+    from services.feed.persistence import FeedFeedbackPersistence
 
 # =============================================================================
 # Feedback Actions
