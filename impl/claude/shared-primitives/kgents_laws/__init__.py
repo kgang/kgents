@@ -27,6 +27,14 @@ Quick Start (10 minutes or less):
     report = checker.verify_all()
     print(report.summary)
 
+    # Strict verification (raises on failure)
+    from kgents_laws import verify_associativity_strict, AssociativityError
+    try:
+        verify_associativity_strict(a, b, c, test_inputs)
+    except AssociativityError as e:
+        print(e.what_failed)
+        print(e.how_to_fix)
+
 What are Categorical Laws?
 
     Laws are equations that must hold for composition to work correctly:
@@ -62,6 +70,13 @@ from datetime import UTC, datetime, timezone
 from enum import Enum, auto
 from typing import Any, Generic, TypeVar
 
+from .errors import (
+    AssociativityError,
+    CoherenceError,
+    IdentityError,
+    LawViolationError,
+)
+
 # Type variables
 T = TypeVar("T")
 A = TypeVar("A")
@@ -78,11 +93,11 @@ S = TypeVar("S")
 class LawStatus(Enum):
     """Status of a law verification."""
 
-    PASSED = auto()         # Law verified with test cases
-    FAILED = auto()         # Law violation detected
-    SKIPPED = auto()        # Law not tested
-    STRUCTURAL = auto()     # Verified by structure only
-    ERROR = auto()          # Verification threw an exception
+    PASSED = auto()  # Law verified with test cases
+    FAILED = auto()  # Law violation detected
+    SKIPPED = auto()  # Law not tested
+    STRUCTURAL = auto()  # Verified by structure only
+    ERROR = auto()  # Verification threw an exception
 
 
 @dataclass(frozen=True)
@@ -165,10 +180,7 @@ class LawReport:
             return f"All {total} law(s) verified successfully."
         else:
             failed = [f.law_name for f in self.failures]
-            return (
-                f"{self.fail_count}/{total} law(s) failed: "
-                f"{', '.join(failed)}"
-            )
+            return f"{self.fail_count}/{total} law(s) failed: {', '.join(failed)}"
 
     def __bool__(self) -> bool:
         return self.all_passed
@@ -588,6 +600,7 @@ class LawChecker:
         # Verify associativity for all triples
         if len(self.agents) >= 3:
             from itertools import combinations
+
             for a, b, c in combinations(self.agents, 3):
                 result = verify_associativity(a, b, c, self.test_inputs)
                 results.append(result)
@@ -617,6 +630,7 @@ class LawChecker:
         results = []
         if len(self.agents) >= 3:
             from itertools import combinations
+
             for a, b, c in combinations(self.agents, 3):
                 result = verify_associativity(a, b, c, self.test_inputs)
                 results.append(result)
