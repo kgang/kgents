@@ -222,3 +222,15 @@ export {
   type DerivationSibling,
   type DerivationNavigationResult,
 } from './useDerivationNavigation';
+
+// Navigation State (Re-render isolation for workspace)
+export {
+  NavigationProvider,
+  useNavigationContext,
+  useNavigationPath,
+  useSelectedId,
+  useRecentFiles,
+  useNavigate,
+  useNavigateInternal,
+  useRecentFilesActions,
+} from './useNavigationState';

@@ -18,11 +18,29 @@
  * - The App IS the Editor
  * - Graph-first Navigation
  * - Everything Must Be Real
+ *
+ * Re-render Isolation (2025-01-10):
+ * - Workspace no longer receives currentPath as a prop
+ * - Sidebars use useNavigate() for dispatch (no subscription to state)
+ * - Only EditorPane subscribes to navigation state via useNavigationPath()
+ * - This prevents sidebar re-renders when navigating between K-Blocks
  */
 
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from 'react';
 import { useSidebarState } from '../../hooks/useSidebarState';
-import { HypergraphEditor } from '../../hypergraph/HypergraphEditor';
+import {
+  useNavigate,
+  useNavigateInternal,
+  useRecentFiles,
+  useRecentFilesActions,
+} from '../../hooks/useNavigationState';
 import {
   FileSidebar,
   FileTree,
@@ -33,64 +51,45 @@ import {
 import { useBrowseItems } from '../../components/browse/hooks/useBrowseItems';
 import { ChatSidebar } from '../../components/chat/ChatSidebar';
 import { KBlockExplorer, type KBlockExplorerItem } from '../../components/kblock-explorer';
-import type { GraphNode } from '../../hypergraph/state/types';
+import { Feed, type KBlock, type FeedFilter } from '../../primitives/Feed';
+import { EditorPane } from './EditorPane';
 import './Workspace.css';
+
+// Stable empty array reference to prevent Feed re-renders
+const EMPTY_FILTERS: FeedFilter[] = [];
 
 // =============================================================================
 // Types for Left Sidebar View
 // =============================================================================
 
-type LeftSidebarView = 'files' | 'kblocks';
+type LeftSidebarView = 'files' | 'kblocks' | 'feed';
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export interface WorkspaceProps {
-  /** Current document path (null = no file open) */
-  currentPath: string | null;
-
-  /** Recent files list */
-  recentFiles: string[];
-
-  /** Callback when a file is opened */
-  onNavigate: (path: string) => void;
-
   /** Callback to upload a file */
   onUploadFile?: (file: UploadedFile) => Promise<void>;
-
-  /** Callback when recent files are cleared */
-  onClearRecent?: () => void;
-
-  /** External function to load a node by path */
-  loadNode?: (path: string) => Promise<GraphNode | null>;
-
-  /** External function to load siblings */
-  loadSiblings?: (node: GraphNode) => Promise<GraphNode[]>;
-
-  /** Callback when node is focused */
-  onNodeFocus?: (node: GraphNode) => void;
 }
 
 // =============================================================================
 // Main Component
 // =============================================================================
 
-export const Workspace = memo(function Workspace({
-  currentPath,
-  recentFiles,
-  onNavigate,
-  onUploadFile,
-  onClearRecent,
-  loadNode,
-  loadSiblings,
-  onNodeFocus,
-}: WorkspaceProps) {
+export const Workspace = memo(function Workspace({ onUploadFile }: WorkspaceProps) {
   const sidebar = useSidebarState();
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [chatHasUnread, setChatHasUnread] = useState(false);
   const [browseModalOpen, setBrowseModalOpen] = useState(false);
   const [leftSidebarView, setLeftSidebarView] = useState<LeftSidebarView>('kblocks');
+  const [isDragging, setIsDragging] = useState<'left' | 'right' | null>(null);
+
+  // Navigation hooks from context (these don't cause re-renders on path change)
+  const navigate = useNavigate();
+  const navigateInternal = useNavigateInternal();
+  const recentFiles = useRecentFiles();
+  const { clearRecent } = useRecentFilesActions();
 
   // Fetch K-Blocks from PostgreSQL for BrowseModal
   const {
@@ -142,6 +141,44 @@ export const Workspace = memo(function Workspace({
   }, [sidebar, refreshBrowseItems]);
 
   // ==========================================================================
+  // Resize Handlers
+  // ==========================================================================
+
+  const handleResizeStart = useCallback(
+    (side: 'left' | 'right') => (e: ReactMouseEvent) => {
+      e.preventDefault();
+      setIsDragging(side);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging === 'left') {
+        const newWidth = Math.max(200, Math.min(500, e.clientX));
+        sidebar.setLeftWidth(newWidth);
+      } else if (isDragging === 'right') {
+        const newWidth = Math.max(200, Math.min(500, window.innerWidth - e.clientX));
+        sidebar.setRightWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, sidebar]);
+
+  // ==========================================================================
   // Handlers
   // ==========================================================================
 
@@ -159,10 +196,10 @@ export const Workspace = memo(function Workspace({
   // Handle selection from BrowseModal
   const handleBrowseSelect = useCallback(
     (item: BrowseItem) => {
-      onNavigate(item.path);
+      navigate(item.path);
       setBrowseModalOpen(false);
     },
-    [onNavigate]
+    [navigate]
   );
 
   // Open browse modal from sidebar
@@ -175,11 +212,16 @@ export const Workspace = memo(function Workspace({
   // Handle K-Block selection from explorer
   const handleKBlockSelect = useCallback(
     (item: KBlockExplorerItem) => {
-      // Navigate to K-Block path (may be kblock:// URI or file path)
-      onNavigate(item.path);
+      // Navigate to K-Block path (kblock/{id} format)
+      navigate(item.path);
     },
-    [onNavigate]
+    [navigate]
   );
+
+  // Stable callback for Feed item clicks to prevent re-renders
+  const handleFeedItemClick = useCallback((kblock: KBlock) => {
+    console.log('[Workspace] Feed item clicked:', kblock.title);
+  }, []);
 
   // ==========================================================================
   // CSS Variables for dynamic widths
@@ -217,6 +259,14 @@ export const Workspace = memo(function Workspace({
           <span className="workspace__sidebar-toggle-label">Files</span>
         </button>
 
+        {/* Resize handle */}
+        {sidebar.state.leftOpen && (
+          <div
+            className={`workspace__resize-handle ${isDragging === 'left' ? 'workspace__resize-handle--active' : ''}`}
+            onMouseDown={handleResizeStart('left')}
+          />
+        )}
+
         {/* Content */}
         <div className="workspace__sidebar-content">
           {/* Tab Switcher */}
@@ -235,55 +285,49 @@ export const Workspace = memo(function Workspace({
             >
               Files
             </button>
+            <button
+              className={`workspace__sidebar-tab ${leftSidebarView === 'feed' ? 'workspace__sidebar-tab--active' : ''}`}
+              onClick={() => setLeftSidebarView('feed')}
+              title="Activity Feed"
+            >
+              Feed
+            </button>
             <span className="workspace__sidebar-shortcut">Ctrl+B</span>
           </div>
           <div className="workspace__sidebar-body">
             {/* K-Block Explorer (default view) */}
-            {leftSidebarView === 'kblocks' && (
-              <KBlockExplorer onSelect={handleKBlockSelect} selectedId={currentPath ?? undefined} />
-            )}
+            {leftSidebarView === 'kblocks' && <KBlockExplorer onSelect={handleKBlockSelect} />}
             {/* FileSidebar with FileTree for traditional file browsing */}
             {leftSidebarView === 'files' && (
               <FileSidebar
-                onOpenFile={onNavigate}
+                onOpenFile={navigate}
                 onUploadFile={handleUploadFileSync}
                 recentFiles={recentFiles}
-                onClearRecent={onClearRecent}
+                onClearRecent={clearRecent}
                 onOpenBrowseModal={handleOpenBrowseModal}
               >
-                <FileTree
-                  rootPaths={['spec/', 'impl/', 'docs/']}
-                  onSelectFile={onNavigate}
-                  currentFile={currentPath ?? undefined}
-                />
+                <FileTree rootPaths={['spec/', 'impl/', 'docs/']} onSelectFile={navigate} />
               </FileSidebar>
+            )}
+            {/* Feed view for activity stream */}
+            {leftSidebarView === 'feed' && (
+              <Feed
+                feedId="coherent"
+                onItemClick={handleFeedItemClick}
+                initialFilters={EMPTY_FILTERS}
+                initialRanking="algorithmic"
+                height={600}
+              />
             )}
           </div>
         </div>
       </aside>
 
       {/* =================================================================
-          Center Content (HypergraphEditor)
+          Center Content (EditorPane - subscribes to navigation state)
           ================================================================= */}
       <main className="workspace__center">
-        {currentPath ? (
-          <HypergraphEditor
-            initialPath={currentPath}
-            onNavigate={onNavigate}
-            loadNode={loadNode}
-            loadSiblings={loadSiblings}
-            onNodeFocus={onNodeFocus}
-          />
-        ) : (
-          <div className="workspace__empty-state">
-            <div className="workspace__empty-state-icon">◇</div>
-            <p className="workspace__empty-state-text">
-              Open a file from the sidebar
-              <br />
-              <kbd>Ctrl+B</kbd> files • <kbd>Ctrl+O</kbd> browse all
-            </p>
-          </div>
-        )}
+        <EditorPane />
       </main>
 
       {/* =================================================================
@@ -311,6 +355,14 @@ export const Workspace = memo(function Workspace({
           </span>
           <span className="workspace__sidebar-toggle-label">Chat</span>
         </button>
+
+        {/* Resize handle */}
+        {sidebar.state.rightOpen && (
+          <div
+            className={`workspace__resize-handle ${isDragging === 'right' ? 'workspace__resize-handle--active' : ''}`}
+            onMouseDown={handleResizeStart('right')}
+          />
+        )}
 
         {/* Content */}
         <div className="workspace__sidebar-content">

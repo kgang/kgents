@@ -40,6 +40,7 @@ const CATEGORY_LABELS: Record<CommandCategory, string> = {
   recent: 'Recent',
   navigation: 'Navigate',
   action: 'Actions',
+  workflow: 'Workflow',
   agentese: 'AGENTESE',
 };
 
@@ -47,6 +48,7 @@ const CATEGORY_ICONS: Record<CommandCategory, string> = {
   recent: '\u23F0', // ⏰
   navigation: '\u2630', // ☰
   action: '\u26A1', // ⚡
+  workflow: '\u2699', // ⚙
   agentese: '\u25C7', // ◇
 };
 

@@ -108,7 +108,6 @@ export const WitnessPanel = memo(function WitnessPanel({
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((prev) => {
       if (prev.includes(tag)) {
-        // eslint-disable-next-line max-nested-callbacks
         return prev.filter((t) => t !== tag);
       }
       return [...prev, tag];
@@ -233,14 +232,16 @@ export const WitnessPanel = memo(function WitnessPanel({
         <div className="witness-panel__field">
           <label className="witness-panel__label">Quick marks:</label>
           <div className="witness-panel__quick-marks">
-            {Object.entries(QUICK_MARKS).map(([key, { tag, action: actionTemplate, key: keyLabel }]) => (
-              <div key={key} className="witness-panel__quick-mark">
-                <kbd className="witness-panel__quick-mark-key">{keyLabel}</kbd>
-                <span className="witness-panel__quick-mark-label">
-                  {tag} ({actionTemplate})
-                </span>
-              </div>
-            ))}
+            {Object.entries(QUICK_MARKS).map(
+              ([key, { tag, action: actionTemplate, key: keyLabel }]) => (
+                <div key={key} className="witness-panel__quick-mark">
+                  <kbd className="witness-panel__quick-mark-key">{keyLabel}</kbd>
+                  <span className="witness-panel__quick-mark-label">
+                    {tag} ({actionTemplate})
+                  </span>
+                </div>
+              )
+            )}
           </div>
         </div>
 

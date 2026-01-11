@@ -70,20 +70,10 @@ const GrowthWitness = React.lazy(() =>
   import('../pages/Genesis').then((m) => ({ default: m.GrowthWitness }))
 );
 
-// Genesis Showcase - Clean Slate (replaces old showcase)
-const GenesisCleanSlate = React.lazy(() =>
-  import('../pages/Genesis/GenesisCleanSlate').then((m) => ({ default: m.GenesisCleanSlate }))
-);
-
 // Genesis Experience - NEW unified Constitutional Graph-first experience (2026-01)
 // This is the canonical /genesis route - unified 5-phase experience
 const GenesisExperience = React.lazy(() =>
   import('../pages/Genesis/GenesisExperience').then((m) => ({ default: m.GenesisExperience }))
-);
-
-// StudioPage (three-panel workspace with Feed + Editor + Witness)
-const StudioPage = React.lazy(() =>
-  import('../pages/StudioPage').then((m) => ({ default: m.StudioPage }))
 );
 
 // FeedPage (full-screen chronological truth stream)
@@ -101,6 +91,11 @@ const ContradictionWorkspacePage = React.lazy(() =>
   import('../pages/ContradictionWorkspacePage').then((m) => ({
     default: m.ContradictionWorkspacePage,
   }))
+);
+
+// TangibleSurface (Self-Reflective OS interface)
+const TangibleSurface = React.lazy(() =>
+  import('../pages/Tangible').then((m) => ({ default: m.TangibleSurface }))
 );
 
 /**
@@ -128,6 +123,15 @@ const PATH_MAPPINGS: PathMapping[] = [
     component: MetaPage,
     shell: 'app',
     description: 'Meta — Journey 5: Watching Yourself Grow (coherence timeline)',
+  },
+
+  // Self context — Tangible surface (Self-Reflective OS)
+  {
+    pattern: /^self\.tangible/,
+    component: TangibleSurface,
+    shell: 'app',
+    description:
+      'Tangible — Self-Reflective OS: Constitutional introspection and decision tracking',
   },
 
   // World context — Contradiction workspace
@@ -188,11 +192,18 @@ const LEGACY_REDIRECTS: Record<string, LegacyRedirectConfig> = {
 
   // Removed features → fallback
   '/chart': { to: '/world.document' },
-  '/proof-engine': { to: '/genesis/showcase' },
-  '/zero-seed': { to: '/genesis/showcase' },
+  '/proof-engine': { to: '/genesis' },
+  '/zero-seed': { to: '/genesis' },
+  '/genesis/showcase': { to: '/genesis' },
 
   // Meta redirect (AGENTESE canonical)
   '/meta': { to: '/self.meta' },
+
+  // Studio redirect (consolidated into Editor)
+  '/studio': {
+    to: '/world.document',
+    hint: 'Studio has been unified with the Editor. Use /world.document for the full workspace experience.',
+  },
 };
 
 /**
@@ -376,24 +387,6 @@ export function AgenteseRouter() {
                 </Suspense>
               }
             />
-            <Route
-              path="/genesis/showcase"
-              element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <GenesisCleanSlate />
-                </Suspense>
-              }
-            />
-
-            {/* StudioPage - Three-panel workspace (Feed | Editor | Witness) */}
-            <Route
-              path="/studio"
-              element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <StudioPage />
-                </Suspense>
-              }
-            />
 
             {/* FeedPage - Full-screen chronological truth stream */}
             <Route
@@ -421,6 +414,16 @@ export function AgenteseRouter() {
               element={
                 <Suspense fallback={<LoadingFallback />}>
                   <MetaPage />
+                </Suspense>
+              }
+            />
+
+            {/* Tangible Surface (Self-Reflective OS) */}
+            <Route
+              path="/self.tangible"
+              element={
+                <Suspense fallback={<LoadingFallback />}>
+                  <TangibleSurface />
                 </Suspense>
               }
             />

@@ -20,7 +20,7 @@
 import { memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Layout, BookOpen, ArrowLeft, Sparkles } from 'lucide-react';
+import { FileText, Layout, RotateCcw, ArrowLeft, Sparkles } from 'lucide-react';
 import type { CleanSlateKBlock } from '../../../api/client';
 
 // =============================================================================
@@ -32,6 +32,8 @@ interface GenesisActionsProps {
   selectedKBlock: CleanSlateKBlock | null;
   /** Go back to graph exploration */
   onBack: () => void;
+  /** Reset genesis and start fresh */
+  onReset?: () => void;
 }
 
 interface ActionCardProps {
@@ -134,6 +136,7 @@ const ActionCard = memo(function ActionCard({
 export const GenesisActions = memo(function GenesisActions({
   selectedKBlock,
   onBack,
+  onReset,
 }: GenesisActionsProps) {
   const navigate = useNavigate();
 
@@ -146,9 +149,11 @@ export const GenesisActions = memo(function GenesisActions({
     navigate('/world.document');
   }, [navigate]);
 
-  const handleSeeExamples = useCallback(() => {
-    navigate('/genesis/showcase');
-  }, [navigate]);
+  const handleReset = useCallback(() => {
+    if (onReset) {
+      onReset();
+    }
+  }, [onReset]);
 
   return (
     <div className="genesis-actions">
@@ -218,14 +223,16 @@ export const GenesisActions = memo(function GenesisActions({
             delay={1}
           />
 
-          <ActionCard
-            icon={<BookOpen size={28} />}
-            title="See Examples"
-            description="View the full Constitutional Graph. Study how the 22 K-Blocks derive from axioms."
-            color="#8b7355"
-            onClick={handleSeeExamples}
-            delay={2}
-          />
+          {onReset && (
+            <ActionCard
+              icon={<RotateCcw size={28} />}
+              title="Reset Genesis"
+              description="Clear the Constitutional Graph and start fresh. Re-seed the 22 foundational K-Blocks."
+              color="#8b7355"
+              onClick={handleReset}
+              delay={2}
+            />
+          )}
         </div>
 
         {/* Footer Quote */}

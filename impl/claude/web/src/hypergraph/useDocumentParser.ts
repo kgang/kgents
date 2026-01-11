@@ -58,6 +58,8 @@ export function useDocumentParser(options: UseDocumentParserOptions): UseDocumen
   // Track content hash to avoid re-parsing identical content
   const lastContentHashRef = useRef<string>('');
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track if this is the first parse (skip debounce for initial load)
+  const isFirstParseRef = useRef(true);
 
   // Simple hash for content comparison
   const hashContent = (text: string): string => {
@@ -113,14 +115,21 @@ export function useDocumentParser(options: UseDocumentParserOptions): UseDocumen
       return;
     }
 
-    // Debounce parsing
+    // Clear any existing debounce timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    debounceTimerRef.current = setTimeout(() => {
+    // Skip debounce for first parse (immediate load for better UX)
+    if (isFirstParseRef.current) {
+      isFirstParseRef.current = false;
       void parseContent();
-    }, debounceMs);
+    } else {
+      // Debounce subsequent parses (e.g., during editing)
+      debounceTimerRef.current = setTimeout(() => {
+        void parseContent();
+      }, debounceMs);
+    }
 
     return () => {
       if (debounceTimerRef.current) {

@@ -144,12 +144,20 @@ export type {
   KBlock as GroundingKBlock,
 } from './GroundingDialog';
 
+// Affordance Panel (contextual keyboard shortcuts)
+export { AffordancePanel } from './AffordancePanel';
+export type { AffordancePanelProps, AffordanceAction } from './AffordancePanel';
+
 // K-Block to GraphNode Conversion (Zero Seed wiring)
 export {
   kblockToGraphNode,
   isZeroSeedPath,
   extractKBlockId,
   extractZeroSeedCategory,
+  isKBlockPath,
+  extractKBlockIdFromPath,
+  isGenesisFilePath,
+  extractKBlockIdFromGenesisPath,
 } from './kblockToGraphNode';
 
 // Constitutional Graph View (files derived from principles)
@@ -163,3 +171,46 @@ export type {
   NodeStatus,
   ContextMenuAction,
 } from './ConstitutionalGraphView';
+
+// Coherence Badge (project-wide coherence metrics)
+export { CoherenceBadge } from './CoherenceBadge';
+export type { default as CoherenceBadgeProps } from './CoherenceBadge';
+
+// Constitutional Principles Summary (principle grounding overview)
+export {
+  ConstitutionalPrinciplesSummary,
+  PRINCIPLE_COLORS,
+} from './ConstitutionalPrinciplesSummary';
+export type {
+  ConstitutionalPrinciplesSummaryProps,
+  ConstitutionalPrinciple,
+  ConstitutionalPrincipleId,
+} from './ConstitutionalPrinciplesSummary';
+
+// Derivation Inspector (derivation path side panel)
+export { DerivationInspector } from './DerivationInspector';
+export type {
+  DerivationInspectorProps,
+  DerivationNode as InspectorDerivationNode,
+  Witness,
+  WitnessType as InspectorWitnessType,
+  DownstreamKBlock,
+} from './DerivationInspector';
+
+// Derivation Trail Bar (breadcrumb navigation)
+export {
+  DerivationTrailBar,
+  GaloisLossBadge,
+  DepthBadge,
+  DerivationNodeChip,
+} from './DerivationTrailBar';
+export type {
+  DerivationTrailBarProps,
+  DerivationNode as TrailDerivationNode,
+  DerivationPath,
+  WitnessType as TrailWitnessType,
+} from './DerivationTrailBar';
+
+// Witness Marker (reusable witness indicator)
+export { WitnessMarker, WitnessBadge, WITNESS_CONFIG } from './WitnessMarker';
+export type { WitnessMarkerProps, WitnessBadgeProps, WitnessType } from './WitnessMarker';

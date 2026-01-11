@@ -16,13 +16,20 @@
  * - After Genesis, location.state.showZeroSeed triggers foundation panel
  * - Displays A1, A2, G axioms with derivation edges
  *
+ * Re-render Isolation (2025-01-10):
+ * - NavigationProvider stores path in a ref, not state
+ * - Only HypergraphEditor subscribes to path changes (re-renders on navigate)
+ * - Sidebars don't re-render when navigating between K-Blocks
+ * - KBlockExplorer uses useNavigate() for dispatch, useSelectedId() for highlight
+ *
  * @see docs/UX-LAWS.md
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { normalizePath, isValidFilePath, useFileUpload, ZeroSeedFoundation } from '../hypergraph';
-import { useRecentFiles } from '../hypergraph/useRecentFiles';
+import { isRawKBlockId, kblockIdToGenesisPath } from '../hypergraph/kblockToGraphNode';
+import { NavigationProvider } from '../hooks/useNavigationState';
 import { Workspace } from '../constructions/Workspace';
 import './HypergraphEditorPage.css';
 
@@ -45,40 +52,34 @@ interface LocationState {
 
 export function HypergraphEditorPage() {
   const { '*': rawPath } = useParams();
-  const navigate = useNavigate();
+  const routerNavigate = useNavigate();
   const location = useLocation();
 
   // Extract Zero Seed context from location state (passed from Genesis)
   const locationState = location.state as LocationState | null;
-  const [showZeroSeed, setShowZeroSeed] = useState<boolean>(
-    locationState?.showZeroSeed ?? false
-  );
+  const [showZeroSeed, setShowZeroSeed] = useState<boolean>(locationState?.showZeroSeed ?? false);
   const zeroSeedContext = locationState?.zeroSeedContext;
 
   const normalizedRawPath = rawPath ? normalizePath(rawPath) : null;
-  const initialPath = normalizedRawPath && isValidFilePath(normalizedRawPath) ? normalizedRawPath : null;
+  const initialPath =
+    normalizedRawPath && isValidFilePath(normalizedRawPath) ? normalizedRawPath : null;
 
   // Validate path and redirect if invalid
   useEffect(() => {
     if (normalizedRawPath && !isValidFilePath(normalizedRawPath)) {
       console.warn('[HypergraphEditorPage] Invalid path, redirecting:', normalizedRawPath);
-      navigate('/world.document', { replace: true });
+      routerNavigate('/world.document', { replace: true });
     }
-  }, [normalizedRawPath, navigate]);
+  }, [normalizedRawPath, routerNavigate]);
 
-  const [currentPath, setCurrentPath] = useState<string | null>(initialPath);
-  const { recentFiles, addRecentFile, removeRecentFile, clearRecentFiles } = useRecentFiles();
+  // Track the current path in a ref for URL sync (doesn't cause re-renders)
+  const currentPathRef = useRef<string | null>(initialPath);
 
   // Handle navigation from Zero Seed Foundation panel
   const handleZeroSeedNavigate = useCallback(
     (nodeId: string) => {
-      // For foundational axioms (A1, A2, G), we might want to navigate to a special view
-      // For now, just log and close the panel
       console.info('[HypergraphEditorPage] Zero Seed navigate:', nodeId);
-      // If it's the user's axiom, navigate to it
       if (nodeId === zeroSeedContext?.userAxiomId) {
-        // User's K-Block - navigate to it if we have a path
-        // For now, just close the panel
         setShowZeroSeed(false);
       }
     },
@@ -88,60 +89,59 @@ export function HypergraphEditorPage() {
   // Close Zero Seed panel
   const handleCloseZeroSeed = useCallback(() => {
     setShowZeroSeed(false);
-    // Clear location state to prevent panel from reappearing on refresh
-    navigate(location.pathname, { replace: true, state: null });
-  }, [navigate, location.pathname]);
+    routerNavigate(location.pathname, { replace: true, state: null });
+  }, [routerNavigate, location.pathname]);
 
-  const handleFileReady = useCallback(
+  /**
+   * Handle navigation callback from NavigationProvider.
+   * Updates the browser URL when navigation occurs.
+   */
+  const handleNavigate = useCallback(
     (path: string) => {
-      const normalized = normalizePath(path);
-      setCurrentPath(normalized);
-      addRecentFile(normalized);
-      navigate(`/world.document/${normalized}`);
-    },
-    [addRecentFile, navigate]
-  );
+      let normalized = normalizePath(path);
 
-  const { loadNode: rawLoadNode, handleUploadFile } = useFileUpload({ onFileReady: handleFileReady });
-
-  const loadNode = useCallback(
-    async (path: string) => {
-      try {
-        const node = await rawLoadNode(path);
-        if (!node) {
-          console.info('[HypergraphEditorPage] File not found, removing from recent:', path);
-          removeRecentFile(path);
+      // Convert raw K-Block IDs to file paths for cleaner URLs
+      if (isRawKBlockId(normalized)) {
+        const filePath = kblockIdToGenesisPath(normalized);
+        if (filePath) {
+          normalized = filePath;
         }
-        return node;
-      } catch (error) {
-        console.warn('[HypergraphEditorPage] Load failed, removing from recent:', path, error);
-        removeRecentFile(path);
-        return null;
       }
+
+      currentPathRef.current = normalized;
+      routerNavigate(`/world.document/${normalized}`);
     },
-    [rawLoadNode, removeRecentFile]
+    [routerNavigate]
   );
 
-  // Sync path with URL
-  useEffect(() => {
-    const normalized = rawPath ? normalizePath(rawPath) : null;
-    if (normalized && isValidFilePath(normalized) && normalized !== currentPath) {
-      setCurrentPath(normalized);
-    } else if (!normalized && currentPath) {
-      setCurrentPath(null);
+  /**
+   * Handle internal navigation (edge clicks, derivation navigation).
+   * Updates URL silently without triggering React Router navigation.
+   */
+  const handleInternalNavigate = useCallback((path: string) => {
+    let normalized = normalizePath(path);
+
+    if (isRawKBlockId(normalized)) {
+      const filePath = kblockIdToGenesisPath(normalized);
+      if (filePath) {
+        normalized = filePath;
+      }
     }
-  }, [rawPath, currentPath]);
+
+    currentPathRef.current = normalized;
+    const newUrl = `/world.document/${normalized}`;
+    window.history.replaceState(null, '', newUrl);
+  }, []);
 
   return (
     <div className="hypergraph-editor-page">
-      <Workspace
-        currentPath={currentPath}
-        recentFiles={recentFiles}
-        onNavigate={handleFileReady}
-        onUploadFile={handleUploadFile}
-        onClearRecent={clearRecentFiles}
-        loadNode={loadNode}
-      />
+      <NavigationProvider
+        initialPath={initialPath}
+        onNavigate={handleNavigate}
+        onInternalNavigate={handleInternalNavigate}
+      >
+        <Workspace />
+      </NavigationProvider>
 
       {/* Zero Seed Foundation Panel (shown after Genesis) */}
       {zeroSeedContext && (

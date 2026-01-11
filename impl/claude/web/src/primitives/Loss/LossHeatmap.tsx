@@ -57,10 +57,9 @@ function getLossBackgroundColor(loss: number): string {
   } else if (clamped < 0.8) {
     // Alert: orange
     return `rgba(249, 115, 22, ${0.2 + clamped * 0.3})`;
-  } else {
-    // Critical: red
-    return `rgba(239, 68, 68, ${0.25 + clamped * 0.4})`;
   }
+  // Critical: red
+  return `rgba(239, 68, 68, ${0.25 + clamped * 0.4})`;
 }
 
 /**
@@ -75,9 +74,8 @@ function getLossBorderColor(loss: number): string {
     return 'var(--health-degraded, #facc15)';
   } else if (clamped < 0.8) {
     return 'var(--health-warning, #f97316)';
-  } else {
-    return 'var(--health-critical, #ef4444)';
   }
+  return 'var(--health-critical, #ef4444)';
 }
 
 // =============================================================================
@@ -94,8 +92,7 @@ export const LossHeatmap = memo(function LossHeatmap({
   const gridStyle = useMemo(
     () => ({
       display: 'grid',
-      gridTemplateColumns:
-        layout === 'grid' ? `repeat(${columns}, 1fr)` : '1fr',
+      gridTemplateColumns: layout === 'grid' ? `repeat(${columns}, 1fr)` : '1fr',
       gap: 'var(--space-sm, 0.4rem)',
     }),
     [layout, columns]

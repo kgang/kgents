@@ -44,15 +44,15 @@ interface NavItem {
  * "The Hypergraph Editor IS the app."
  *
  * Chat and Files are sidebars toggled with Ctrl+J / Ctrl+B, not separate routes.
- * Top-level pages: Editor (main), Studio (workspace), Feed (truth stream), Genesis (FTUE demo).
+ * Top-level pages: Editor (main), Feed (truth stream), Genesis (FTUE demo).
  *
  * STARK BIOME aesthetic: Subtle glyphs, minimal labels, not flashy.
  */
 const NAV_ITEMS: NavItem[] = [
   { path: '/world.document', label: 'Editor', shortcut: 'E', icon: '⎔' },
-  { path: '/studio', label: 'Studio', shortcut: 'S', icon: '⊞' },
+  { path: '/self.tangible', label: 'Tangible', shortcut: 'T', icon: '◉' },
   { path: '/self.feed', label: 'Feed', shortcut: 'F', icon: '≡' },
-  { path: '/genesis/showcase', label: 'Genesis', shortcut: 'G', icon: '✦' },
+  { path: '/genesis', label: 'Genesis', shortcut: 'G', icon: '✦' },
 ];
 
 // =============================================================================

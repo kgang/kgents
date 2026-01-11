@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { normalizeNodeId } from '../api/zeroSeed';
 
 // =============================================================================
 // Types
@@ -125,9 +126,8 @@ export function useLoss(nodeId: string | null): UseLossResult {
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/zero-seed/nodes/${encodeURIComponent(nodeId)}`
-      );
+      const normalizedId = normalizeNodeId(nodeId);
+      const response = await fetch(`/api/zero-seed/nodes/${encodeURIComponent(normalizedId)}`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch loss: ${response.status}`);
@@ -183,9 +183,7 @@ export function useLossBatch(nodeIds: string[]): {
   loading: boolean;
   error: Error | null;
 } {
-  const [signatures, setSignatures] = useState<Map<string, LossSignature>>(
-    new Map()
-  );
+  const [signatures, setSignatures] = useState<Map<string, LossSignature>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -201,9 +199,8 @@ export function useLossBatch(nodeIds: string[]): {
     Promise.all(
       nodeIds.map(async (nodeId) => {
         try {
-          const response = await fetch(
-            `/api/zero-seed/nodes/${encodeURIComponent(nodeId)}`
-          );
+          const normalizedId = normalizeNodeId(nodeId);
+          const response = await fetch(`/api/zero-seed/nodes/${encodeURIComponent(normalizedId)}`);
           if (!response.ok) return null;
           const data = await response.json();
 

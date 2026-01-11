@@ -63,6 +63,8 @@ type ActionType =
   | 'TOGGLE_ANALYSIS_QUADRANT'
   // Edge metadata panel
   | 'TOGGLE_EDGE_PANEL'
+  // Derivation inspector panel
+  | 'TOGGLE_DERIVATION_INSPECTOR'
   // Loss-gradient navigation
   | 'GO_LOWEST_LOSS'
   | 'GO_HIGHEST_LOSS'
@@ -155,6 +157,11 @@ const NORMAL_BINDINGS: Binding[] = [
     keys: ['g', 'a'],
     action: 'TOGGLE_ANALYSIS_QUADRANT',
     description: 'Toggle analysis quadrant (four-mode analysis)',
+  },
+  {
+    keys: ['g', 'I'],
+    action: 'TOGGLE_DERIVATION_INSPECTOR',
+    description: 'Toggle derivation inspector panel',
   },
 
   // --- Derivation Navigation (Constitutional graph) ---
@@ -249,6 +256,9 @@ export interface UseKeyHandlerOptions {
   // Edge metadata panel
   onToggleEdgePanel?: () => void;
 
+  // Derivation inspector panel
+  onToggleDerivationInspector?: () => void;
+
   // Loss-gradient navigation
   goLowestLoss?: () => void | Promise<void>;
   goHighestLoss?: () => void | Promise<void>;
@@ -306,6 +316,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
     onToggleDecisionStream,
     onToggleAnalysisQuadrant,
     onToggleEdgePanel,
+    onToggleDerivationInspector,
     goLowestLoss,
     goHighestLoss,
     zoomOut,
@@ -387,6 +398,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       TOGGLE_DECISION_STREAM: () => onToggleDecisionStream?.(),
       TOGGLE_ANALYSIS_QUADRANT: () => onToggleAnalysisQuadrant?.(),
       TOGGLE_EDGE_PANEL: () => onToggleEdgePanel?.(),
+      TOGGLE_DERIVATION_INSPECTOR: () => onToggleDerivationInspector?.(),
       // Loss-gradient navigation
       GO_LOWEST_LOSS: () => {
         if (goLowestLoss) {
@@ -445,6 +457,7 @@ export function useKeyHandler(options: UseKeyHandlerOptions): UseKeyHandlerResul
       onToggleDecisionStream,
       onToggleAnalysisQuadrant,
       onToggleEdgePanel,
+      onToggleDerivationInspector,
       goLowestLoss,
       goHighestLoss,
       zoomOut,

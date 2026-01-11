@@ -35,9 +35,7 @@ function mapKBlockKindToNodeKind(kind: string | null): GraphNode['kind'] {
 /**
  * Map K-Block layer to derivation tier.
  */
-function mapLayerToDerivationTier(
-  layer: number | null
-): GraphNode['derivationTier'] | undefined {
+function mapLayerToDerivationTier(layer: number | null): GraphNode['derivationTier'] | undefined {
   if (layer === null) return undefined;
 
   // L0-L1: Axioms (foundational)
@@ -97,10 +95,7 @@ function convertKBlockEdge(
  * @param path - The path used to load this K-Block (for display purposes)
  * @returns GraphNode compatible with HypergraphEditor
  */
-export function kblockToGraphNode(
-  kblock: KBlockDetailResponse,
-  path: string
-): GraphNode {
+export function kblockToGraphNode(kblock: KBlockDetailResponse, path: string): GraphNode {
   // Build title from path or extract from content
   const pathParts = path.split('/');
   const filename = pathParts[pathParts.length - 1] || kblock.id;
@@ -150,6 +145,64 @@ export function isZeroSeedPath(path: string): boolean {
 }
 
 /**
+ * Check if a path is a K-Block path.
+ *
+ * Valid K-Block paths:
+ * - kblock/{id} where id is like "genesis:L0:entity"
+ *
+ * NOTE: We use `kblock/` prefix (not `kblock://`) to avoid URL path
+ * normalization issues where `//` gets collapsed to `/`.
+ *
+ * @param path - Path to check
+ * @returns true if this is a K-Block path
+ */
+export function isKBlockPath(path: string): boolean {
+  return path.startsWith('kblock/');
+}
+
+/**
+ * Extract K-Block ID from a K-Block path.
+ *
+ * @param path - K-Block path (e.g., "kblock/genesis:L0:entity")
+ * @returns K-Block ID or null if not a valid K-Block path
+ */
+export function extractKBlockIdFromPath(path: string): string | null {
+  if (!isKBlockPath(path)) return null;
+
+  // Path format: kblock/{id}
+  const prefix = 'kblock/';
+  return path.slice(prefix.length) || null;
+}
+
+/**
+ * Check if a path is a genesis file path.
+ *
+ * Genesis file paths have the format:
+ * - spec/genesis/L{layer}/{name}.md
+ *
+ * @param path - Path to check
+ * @returns true if this is a genesis file path
+ */
+export function isGenesisFilePath(path: string): boolean {
+  return /^spec\/genesis\/L\d\/\w+\.md$/.test(path);
+}
+
+/**
+ * Extract K-Block ID from a genesis file path.
+ *
+ * @param path - Genesis file path (e.g., "spec/genesis/L0/entity.md")
+ * @returns K-Block ID (e.g., "genesis:L0:entity") or null if not a valid genesis path
+ */
+export function extractKBlockIdFromGenesisPath(path: string): string | null {
+  const match = path.match(/^spec\/genesis\/L(\d)\/(\w+)\.md$/);
+  if (match) {
+    const [, layer, name] = match;
+    return `genesis:L${layer}:${name}`;
+  }
+  return null;
+}
+
+/**
  * Extract K-Block ID from a Zero Seed path.
  *
  * @param path - Zero Seed path (e.g., "zero-seed/axioms/A1")
@@ -164,6 +217,39 @@ export function extractKBlockId(path: string): string | null {
 
   // The ID is the last part
   return parts[parts.length - 1];
+}
+
+/**
+ * Check if a string is a raw K-Block ID.
+ *
+ * Raw K-Block IDs have the format:
+ * - genesis:L{layer}:{name} (e.g., "genesis:L2:curated")
+ * - {namespace}:{category}:{name} (e.g., "user:L5:myblock")
+ *
+ * These are used in edge source/target fields and need to be
+ * converted to a loadable path format.
+ *
+ * @param path - String to check
+ * @returns true if this is a raw K-Block ID
+ */
+export function isRawKBlockId(path: string): boolean {
+  // Match patterns like "genesis:L0:entity", "genesis:L2:curated", "user:L5:myblock"
+  return /^[a-z]+:L\d+:[a-z_]+$/i.test(path);
+}
+
+/**
+ * Convert a raw K-Block ID to a genesis file path.
+ *
+ * @param kblockId - Raw K-Block ID (e.g., "genesis:L2:curated")
+ * @returns Genesis file path (e.g., "spec/genesis/L2/curated.md") or null if not a genesis K-Block
+ */
+export function kblockIdToGenesisPath(kblockId: string): string | null {
+  const match = kblockId.match(/^genesis:L(\d+):([a-z_]+)$/i);
+  if (match) {
+    const [, layer, name] = match;
+    return `spec/genesis/L${layer}/${name}.md`;
+  }
+  return null;
 }
 
 /**

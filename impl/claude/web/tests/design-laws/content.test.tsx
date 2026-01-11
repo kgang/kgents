@@ -39,7 +39,8 @@ describe('C-01: Five-Level Degradation', () => {
       icon: '📐',
       title: '📐 Design System',
       summary: '📐 Design System: Elastic UI patterns',
-      detail: '📐 Design System: Elastic UI patterns - Responsive components with density-aware behavior',
+      detail:
+        '📐 Design System: Elastic UI patterns - Responsive components with density-aware behavior',
       full: '📐 Design System: Elastic UI patterns - Responsive components with density-aware behavior. Implements L-01 through L-05 layout laws. Last updated 2025-12-25.',
     };
 
@@ -61,7 +62,8 @@ describe('C-01: Five-Level Degradation', () => {
       const content = {
         compact: '📐 Design',
         comfortable: '📐 Design System: Elastic patterns',
-        spacious: '📐 Design System: Elastic UI patterns - Responsive components with density-aware behavior',
+        spacious:
+          '📐 Design System: Elastic UI patterns - Responsive components with density-aware behavior',
       };
 
       return <div data-testid="card">{content[density]}</div>;
@@ -194,11 +196,7 @@ describe('C-03: Feed Is Primitive', () => {
     const onItemClick = vi.fn();
 
     const { container } = render(
-      <Feed
-        feedId="main"
-        onItemClick={onItemClick}
-        initialRanking="chronological"
-      />
+      <Feed feedId="main" onItemClick={onItemClick} initialRanking="chronological" />
     );
 
     // Feed should render as independent component
@@ -340,11 +338,7 @@ describe('C-04: Portal Token Interactivity', () => {
     const onPreview = vi.fn();
 
     const InteractivePortal = () => (
-      <button
-        data-testid="portal"
-        onClick={onNavigate}
-        onMouseEnter={onPreview}
-      >
+      <button data-testid="portal" onClick={onNavigate} onMouseEnter={onPreview}>
         @principle
       </button>
     );
@@ -418,10 +412,7 @@ describe('C-05: Witness Required for Commit', () => {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Why are you committing this change?"
           />
-          <button
-            data-testid="commit-button"
-            disabled={!message.trim()}
-          >
+          <button data-testid="commit-button" disabled={!message.trim()}>
             Commit
           </button>
         </div>
@@ -452,11 +443,7 @@ describe('C-05: Witness Required for Commit', () => {
 
       return (
         <div>
-          <input
-            data-testid="input"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
+          <input data-testid="input" value={message} onChange={(e) => setMessage(e.target.value)} />
           <button data-testid="commit" disabled={!isValid}>
             Commit
           </button>
@@ -524,18 +511,13 @@ describe('C-05: Witness Required for Commit', () => {
       const handleCommit = () => {
         if (!message.trim()) {
           setShowWarning(true);
-          return;
         }
         // Proceed with commit
       };
 
       return (
         <div>
-          <input
-            data-testid="input"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
+          <input data-testid="input" value={message} onChange={(e) => setMessage(e.target.value)} />
           <button data-testid="commit" onClick={handleCommit}>
             Commit
           </button>

@@ -138,11 +138,31 @@ export const AGENTESEPathDefault: StoryObj = {
   name: 'AGENTESE Path - Default',
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <AGENTESEPathToken path="self.brain" exists={true} onClick={(p) => console.log('Navigate:', p)} />
-      <AGENTESEPathToken path="world.house.manifest" exists={true} onClick={(p) => console.log('Navigate:', p)} />
-      <AGENTESEPathToken path="concept.categorical.functor" exists={true} onClick={(p) => console.log('Navigate:', p)} />
-      <AGENTESEPathToken path="time.traces.recent" exists={true} onClick={(p) => console.log('Navigate:', p)} />
-      <AGENTESEPathToken path="void.serendipity.spark" exists={true} onClick={(p) => console.log('Navigate:', p)} />
+      <AGENTESEPathToken
+        path="self.brain"
+        exists={true}
+        onClick={(p) => console.log('Navigate:', p)}
+      />
+      <AGENTESEPathToken
+        path="world.house.manifest"
+        exists={true}
+        onClick={(p) => console.log('Navigate:', p)}
+      />
+      <AGENTESEPathToken
+        path="concept.categorical.functor"
+        exists={true}
+        onClick={(p) => console.log('Navigate:', p)}
+      />
+      <AGENTESEPathToken
+        path="time.traces.recent"
+        exists={true}
+        onClick={(p) => console.log('Navigate:', p)}
+      />
+      <AGENTESEPathToken
+        path="void.serendipity.spark"
+        exists={true}
+        onClick={(p) => console.log('Navigate:', p)}
+      />
     </div>
   ),
   parameters: {
@@ -182,7 +202,8 @@ export const AGENTESEPathGhost: StoryObj = {
   parameters: {
     docs: {
       description: {
-        story: 'Ghost state for non-existent paths shows wavy strikethrough and muted colors. These paths may be planned but not yet implemented.',
+        story:
+          'Ghost state for non-existent paths shows wavy strikethrough and muted colors. These paths may be planned but not yet implemented.',
       },
     },
   },
@@ -338,7 +359,11 @@ export const PortalDefault: StoryObj = {
     <PortalToken
       edgeType="implements"
       destinations={[
-        { path: 'services/brain/core.py', title: 'Brain Core', preview: 'Central reasoning engine' },
+        {
+          path: 'services/brain/core.py',
+          title: 'Brain Core',
+          preview: 'Central reasoning engine',
+        },
         { path: 'services/brain/memory.py', title: 'Memory Service', preview: 'Crystal storage' },
         { path: 'services/brain/dialogue.py', title: 'Dialogue Manager', preview: 'Turn handling' },
       ]}
@@ -366,9 +391,24 @@ export const PortalExpanded: StoryObj = {
     <PortalToken
       edgeType="tests"
       destinations={[
-        { path: 'tests/test_brain.py', title: 'Brain Tests', preview: 'Unit tests for core reasoning', exists: true },
-        { path: 'tests/test_memory.py', title: 'Memory Tests', preview: 'Crystal storage tests', exists: true },
-        { path: 'tests/test_integration.py', title: 'Integration Tests', preview: 'End-to-end flows', exists: true },
+        {
+          path: 'tests/test_brain.py',
+          title: 'Brain Tests',
+          preview: 'Unit tests for core reasoning',
+          exists: true,
+        },
+        {
+          path: 'tests/test_memory.py',
+          title: 'Memory Tests',
+          preview: 'Crystal storage tests',
+          exists: true,
+        },
+        {
+          path: 'tests/test_integration.py',
+          title: 'Integration Tests',
+          preview: 'End-to-end flows',
+          exists: true,
+        },
       ]}
       defaultExpanded={true}
       onNavigate={(path) => console.log('Navigate to:', path)}
@@ -410,7 +450,9 @@ export const PortalUnparsed: StoryObj = {
         authoringState="UNPARSED"
         naturalLanguage="what tests this component?"
         onCure={async () => {
-          await new Promise<void>((r) => { setTimeout(r, 1000); });
+          await new Promise<void>((r) => {
+            setTimeout(r, 1000);
+          });
           return { success: true, confidence: 0.85 };
         }}
       />
@@ -460,7 +502,8 @@ export const PortalManyDestinations: StoryObj = {
   parameters: {
     docs: {
       description: {
-        story: 'When there are many destinations, a "show more" button appears. Default maxVisible is 5.',
+        story:
+          'When there are many destinations, a "show more" button appears. Default maxVisible is 5.',
       },
     },
   },
@@ -475,20 +518,30 @@ export const LinkTokenVariants: StoryObj = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: '#B4B4BE' }}>
       <p>
-        Check the <LinkToken text="kgents documentation" url="https://github.com/kgents/kgents" /> for more details.
+        Check the <LinkToken text="kgents documentation" url="https://github.com/kgents/kgents" />{' '}
+        for more details.
       </p>
       <p>
-        Internal link to <LinkToken text="spec/protocols/witness.md" url="spec/protocols/witness.md" onClick={(url) => console.log('Internal:', url)} />.
+        Internal link to{' '}
+        <LinkToken
+          text="spec/protocols/witness.md"
+          url="spec/protocols/witness.md"
+          onClick={(url) => console.log('Internal:', url)}
+        />
+        .
       </p>
       <p>
-        External link to <LinkToken text="Anthropic Claude" url="https://www.anthropic.com/claude" /> opens in new tab.
+        External link to{' '}
+        <LinkToken text="Anthropic Claude" url="https://www.anthropic.com/claude" /> opens in new
+        tab.
       </p>
     </div>
   ),
   parameters: {
     docs: {
       description: {
-        story: 'Links show URL preview on hover. External links (http/https) open in new tab with arrow indicator.',
+        story:
+          'Links show URL preview on hover. External links (http/https) open in new tab with arrow indicator.',
       },
     },
   },
@@ -523,7 +576,8 @@ export const ImageTokenWithAI: StoryObj = {
   parameters: {
     docs: {
       description: {
-        story: 'When AI description is available, it shows on hover. "Images are meaning tokens, not decoration."',
+        story:
+          'When AI description is available, it shows on hover. "Images are meaning tokens, not decoration."',
       },
     },
   },
@@ -531,12 +585,7 @@ export const ImageTokenWithAI: StoryObj = {
 
 export const ImageTokenError: StoryObj = {
   name: 'Image Token - Load Error',
-  render: () => (
-    <ImageToken
-      src="/nonexistent/image.png"
-      alt="Missing image"
-    />
-  ),
+  render: () => <ImageToken src="/nonexistent/image.png" alt="Missing image" />,
   parameters: {
     docs: {
       description: {
@@ -554,9 +603,7 @@ export const BlockquoteDefault: StoryObj = {
   name: 'Blockquote - Default',
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '600px' }}>
-      <BlockquoteToken
-        content="The noun is a lie. There is only the rate of change."
-      />
+      <BlockquoteToken content="The noun is a lie. There is only the rate of change." />
       <BlockquoteToken
         content="Specs stop being documentation and become live control surfaces."
         attribution="spec/protocols/interactive-text.md"
@@ -570,7 +617,8 @@ export const BlockquoteDefault: StoryObj = {
   parameters: {
     docs: {
       description: {
-        story: 'Blockquotes with optional attribution. Used for philosophy quotes and important citations.',
+        story:
+          'Blockquotes with optional attribution. Used for philosophy quotes and important citations.',
       },
     },
   },
@@ -602,7 +650,8 @@ export const TableDefault: StoryObj = {
   parameters: {
     docs: {
       description: {
-        story: 'GFM-style markdown table with column alignment. Hover to see row/column count badge.',
+        story:
+          'GFM-style markdown table with column alignment. Hover to see row/column count badge.',
       },
     },
   },
@@ -648,16 +697,24 @@ export const PrincipleTokenVariants: StoryObj = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', color: '#B4B4BE' }}>
       <p>
-        This follows <PrincipleToken principle="AD-009" /> which states that density and content should be isomorphic.
+        This follows <PrincipleToken principle="AD-009" /> which states that density and content
+        should be isomorphic.
       </p>
       <p>
-        The design is <PrincipleToken principle="Tasteful" /> and <PrincipleToken principle="Joy-Inducing" />.
+        The design is <PrincipleToken principle="Tasteful" /> and{' '}
+        <PrincipleToken principle="Joy-Inducing" />.
       </p>
       <p>
         Components should be <PrincipleToken principle="Composable" /> like morphisms in a category.
       </p>
       <p>
-        Custom principle: <PrincipleToken principle="CUSTOM-01" title="Custom Principle" description="User-defined architectural decision" category="operational" />
+        Custom principle:{' '}
+        <PrincipleToken
+          principle="CUSTOM-01"
+          title="Custom Principle"
+          description="User-defined architectural decision"
+          category="operational"
+        />
       </p>
     </div>
   ),
@@ -690,10 +747,10 @@ export const TaskCheckboxInteractive: StoryObj = {
     ]);
 
     const handleToggle = useCallback(async (newState: boolean, taskId?: string) => {
-      await new Promise<void>((r) => { setTimeout(r, 200); }); // Simulate API call
-      setTasks((prev) =>
-        prev.map((t) => (t.id === taskId ? { ...t, checked: newState } : t))
-      );
+      await new Promise<void>((r) => {
+        setTimeout(r, 200);
+      }); // Simulate API call
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, checked: newState } : t)));
     }, []);
 
     return (
@@ -755,7 +812,8 @@ export const TextSpanWithHeaders: StoryObj = {
   name: 'Text Span - Cosmetic Headers',
   render: () => (
     <div style={{ maxWidth: '600px' }}>
-      <TextSpan content={`# H1 Header - Main Title
+      <TextSpan
+        content={`# H1 Header - Main Title
 
 ## H2 Header - Section
 
@@ -768,13 +826,15 @@ More content here.
 #### H4 Header - Minor Section
 
 ##### H5 Header
-###### H6 Header`} />
+###### H6 Header`}
+      />
     </div>
   ),
   parameters: {
     docs: {
       description: {
-        story: 'TextSpan detects markdown headers and applies cosmetic styling without semantic HTML tags.',
+        story:
+          'TextSpan detects markdown headers and applies cosmetic styling without semantic HTML tags.',
       },
     },
   },
@@ -784,7 +844,8 @@ export const TextSpanWithHighlighting: StoryObj = {
   name: 'Text Span - Rich Highlighting',
   render: () => (
     <div style={{ maxWidth: '600px' }}>
-      <TextSpan content={`Rich highlighting detects patterns:
+      <TextSpan
+        content={`Rich highlighting detects patterns:
 
 - Strings: "hello world" and 'single quotes'
 - Numbers: 42, 3.14159, -100
@@ -794,13 +855,14 @@ export const TextSpanWithHighlighting: StoryObj = {
 - URLs: https://example.com/path?query=1
 - IPs: 192.168.1.1, ::1
 - Paths: /usr/local/bin, ./relative/path
-- Function calls: doSomething() and calculate()`} />
+- Function calls: doSomething() and calculate()`}
+      />
     </div>
   ),
   parameters: {
     docs: {
       description: {
-        story: 'TextSpan applies heuristic-based highlighting inspired by Rich\'s ReprHighlighter.',
+        story: "TextSpan applies heuristic-based highlighting inspired by Rich's ReprHighlighter.",
       },
     },
   },
@@ -813,100 +875,106 @@ export const TextSpanWithHighlighting: StoryObj = {
 export const FullDocumentMixed: StoryObj = {
   name: 'Full Document - Mixed Content',
   render: () => {
-    const sceneGraph = createSceneGraph([
-      {
-        id: 'header',
-        kind: 'TEXT',
-        content: '# kgents Interactive Document Demo\n\nThis demonstrates the full rendering system.',
-      },
-      {
-        id: 'code-1',
-        kind: 'CODE_REGION',
-        content: {
-          token_type: 'code_block',
-          source_text: '',
-          source_position: [0, 0] as [number, number],
-          token_id: 'code-1',
-          token_data: {
-            language: 'python',
-            code: `from kgents import Brain
+    const sceneGraph = createSceneGraph(
+      [
+        {
+          id: 'header',
+          kind: 'TEXT',
+          content:
+            '# kgents Interactive Document Demo\n\nThis demonstrates the full rendering system.',
+        },
+        {
+          id: 'code-1',
+          kind: 'CODE_REGION',
+          content: {
+            token_type: 'code_block',
+            source_text: '',
+            source_position: [0, 0] as [number, number],
+            token_id: 'code-1',
+            token_data: {
+              language: 'python',
+              code: `from kgents import Brain
 
 async def main():
     brain = Brain()
     response = await brain.think("Hello, world!")
     print(response)`,
+            },
+            affordances: [],
           },
-          affordances: [],
+          metadata: { meaning_token_kind: 'CODE_REGION' },
         },
-        metadata: { meaning_token_kind: 'CODE_REGION' },
-      },
-      {
-        id: 'text-1',
-        kind: 'TEXT',
-        content: '\nThe system uses AGENTESE paths for navigation:',
-      },
-      {
-        id: 'path-1',
-        kind: 'AGENTESE_PORTAL',
-        content: {
-          token_type: 'agentese_path',
-          source_text: 'self.brain.think',
-          source_position: [0, 0] as [number, number],
-          token_id: 'path-1',
-          token_data: { path: 'self.brain.think', exists: true },
-          affordances: [],
+        {
+          id: 'text-1',
+          kind: 'TEXT',
+          content: '\nThe system uses AGENTESE paths for navigation:',
         },
-        metadata: { meaning_token_kind: 'AGENTESE_PORTAL' },
-      },
-      {
-        id: 'quote-1',
-        kind: 'BLOCKQUOTE',
-        content: {
-          token_type: 'blockquote',
-          source_text: '> The proof IS the decision.',
-          source_position: [0, 0] as [number, number],
-          token_id: 'quote-1',
-          token_data: { content: 'The proof IS the decision. The mark IS the witness.' },
-          affordances: [],
-        },
-        metadata: { meaning_token_kind: 'BLOCKQUOTE' },
-      },
-      {
-        id: 'hr-1',
-        kind: 'HORIZONTAL_RULE',
-        content: '---',
-        metadata: { meaning_token_kind: 'HORIZONTAL_RULE' },
-      },
-      {
-        id: 'table-1',
-        kind: 'MARKDOWN_TABLE',
-        content: {
-          token_type: 'markdown_table',
-          source_text: '',
-          source_position: [0, 0] as [number, number],
-          token_id: 'table-1',
-          token_data: {
-            columns: [
-              { header: 'Layer', alignment: 'left' as const, index: 0 },
-              { header: 'Purpose', alignment: 'left' as const, index: 1 },
-            ],
-            rows: [
-              ['Persistence', 'StorageProvider'],
-              ['Sheaf', 'Local coherence'],
-              ['Operad', 'Composition grammar'],
-              ['Service', 'Crown Jewels'],
-              ['AGENTESE', 'Universal protocol'],
-              ['Projection', 'CLI/Web/JSON'],
-            ],
+        {
+          id: 'path-1',
+          kind: 'AGENTESE_PORTAL',
+          content: {
+            token_type: 'agentese_path',
+            source_text: 'self.brain.think',
+            source_position: [0, 0] as [number, number],
+            token_id: 'path-1',
+            token_data: { path: 'self.brain.think', exists: true },
+            affordances: [],
           },
-          affordances: [],
+          metadata: { meaning_token_kind: 'AGENTESE_PORTAL' },
         },
-        metadata: { meaning_token_kind: 'MARKDOWN_TABLE' },
-      },
-    ], 'kgents Demo Document');
+        {
+          id: 'quote-1',
+          kind: 'BLOCKQUOTE',
+          content: {
+            token_type: 'blockquote',
+            source_text: '> The proof IS the decision.',
+            source_position: [0, 0] as [number, number],
+            token_id: 'quote-1',
+            token_data: { content: 'The proof IS the decision. The mark IS the witness.' },
+            affordances: [],
+          },
+          metadata: { meaning_token_kind: 'BLOCKQUOTE' },
+        },
+        {
+          id: 'hr-1',
+          kind: 'HORIZONTAL_RULE',
+          content: '---',
+          metadata: { meaning_token_kind: 'HORIZONTAL_RULE' },
+        },
+        {
+          id: 'table-1',
+          kind: 'MARKDOWN_TABLE',
+          content: {
+            token_type: 'markdown_table',
+            source_text: '',
+            source_position: [0, 0] as [number, number],
+            token_id: 'table-1',
+            token_data: {
+              columns: [
+                { header: 'Layer', alignment: 'left' as const, index: 0 },
+                { header: 'Purpose', alignment: 'left' as const, index: 1 },
+              ],
+              rows: [
+                ['Persistence', 'StorageProvider'],
+                ['Sheaf', 'Local coherence'],
+                ['Operad', 'Composition grammar'],
+                ['Service', 'Crown Jewels'],
+                ['AGENTESE', 'Universal protocol'],
+                ['Projection', 'CLI/Web/JSON'],
+              ],
+            },
+            affordances: [],
+          },
+          metadata: { meaning_token_kind: 'MARKDOWN_TABLE' },
+        },
+      ],
+      'kgents Demo Document'
+    );
 
     return (
-      <div style={{ maxWidth: '800px', padding: '24px', background: '#141418', borderRadius: '4px' }}>
+      <div
+        style={{ maxWidth: '800px', padding: '24px', background: '#141418', borderRadius: '4px' }}
+      >
         <InteractiveDocument
           sceneGraph={sceneGraph}
           onNavigate={(path) => console.log('Navigate:', path)}
@@ -949,7 +1017,9 @@ export const DocumentWithTasks: StoryObj = {
 
     const handleToggle = async (newState: boolean, taskId?: string) => {
       if (taskId) {
-        await new Promise((r) => setTimeout(r, 150));
+        await new Promise((r) => {
+          setTimeout(r, 150);
+        });
         setTaskStates((prev) => ({ ...prev, [taskId]: newState }));
       }
     };
@@ -962,43 +1032,46 @@ export const DocumentWithTasks: StoryObj = {
       { id: 'task-5', description: 'Deploy to production' },
     ];
 
-    const sceneGraph = createSceneGraph([
-      {
-        id: 'header',
-        kind: 'TEXT',
-        content: '# Sprint Tasks\n\nCurrent sprint progress:',
-      },
-      ...tasks.map((task) => ({
-        id: task.id,
-        kind: 'TASK_TOGGLE' as const,
-        content: {
-          token_type: 'task_checkbox',
-          source_text: `- [${taskStates[task.id] ? 'x' : ' '}] ${task.description}`,
-          source_position: [0, 0] as [number, number],
-          token_id: task.id,
-          token_data: {
-            checked: taskStates[task.id],
-            description: task.description,
-          },
-          affordances: [],
+    const sceneGraph = createSceneGraph(
+      [
+        {
+          id: 'header',
+          kind: 'TEXT',
+          content: '# Sprint Tasks\n\nCurrent sprint progress:',
         },
-        metadata: { meaning_token_kind: 'TASK_TOGGLE' },
-      })),
-    ], 'Sprint Tasks');
+        ...tasks.map((task) => ({
+          id: task.id,
+          kind: 'TASK_TOGGLE' as const,
+          content: {
+            token_type: 'task_checkbox',
+            source_text: `- [${taskStates[task.id] ? 'x' : ' '}] ${task.description}`,
+            source_position: [0, 0] as [number, number],
+            token_id: task.id,
+            token_data: {
+              checked: taskStates[task.id],
+              description: task.description,
+            },
+            affordances: [],
+          },
+          metadata: { meaning_token_kind: 'TASK_TOGGLE' },
+        })),
+      ],
+      'Sprint Tasks'
+    );
 
     return (
-      <div style={{ maxWidth: '600px', padding: '24px', background: '#141418', borderRadius: '4px' }}>
-        <InteractiveDocument
-          sceneGraph={sceneGraph}
-          onToggle={handleToggle}
-        />
+      <div
+        style={{ maxWidth: '600px', padding: '24px', background: '#141418', borderRadius: '4px' }}
+      >
+        <InteractiveDocument sceneGraph={sceneGraph} onToggle={handleToggle} />
       </div>
     );
   },
   parameters: {
     docs: {
       description: {
-        story: 'Interactive task list where checkboxes can be toggled. State persists in the parent component.',
+        story:
+          'Interactive task list where checkboxes can be toggled. State persists in the parent component.',
       },
     },
   },
@@ -1007,87 +1080,92 @@ export const DocumentWithTasks: StoryObj = {
 export const DocumentWithPortals: StoryObj = {
   name: 'Full Document - Portals',
   render: () => {
-    const sceneGraph = createSceneGraph([
-      {
-        id: 'header',
-        kind: 'TEXT',
-        content: '# Brain Agent Specification\n\nThe central reasoning engine.',
-      },
-      {
-        id: 'portal-1',
-        kind: 'PORTAL',
-        content: {
-          token_type: 'portal',
-          source_text: '@[implements -> services/brain/]',
-          source_position: [0, 0] as [number, number],
-          token_id: 'portal-1',
-          token_data: {
-            edge_type: 'implements',
-            destinations: [
-              { path: 'services/brain/core.py', title: 'Core Logic', exists: true },
-              { path: 'services/brain/memory.py', title: 'Memory', exists: true },
-              { path: 'services/brain/dialogue.py', title: 'Dialogue', exists: true },
-            ],
-          },
-          affordances: [],
+    const sceneGraph = createSceneGraph(
+      [
+        {
+          id: 'header',
+          kind: 'TEXT',
+          content: '# Brain Agent Specification\n\nThe central reasoning engine.',
         },
-        metadata: { meaning_token_kind: 'PORTAL' },
-      },
-      {
-        id: 'text-1',
-        kind: 'TEXT',
-        content: '\n## Testing\n\nThe Brain agent has comprehensive tests:',
-      },
-      {
-        id: 'portal-2',
-        kind: 'PORTAL',
-        content: {
-          token_type: 'portal',
-          source_text: '@[tests -> tests/brain/]',
-          source_position: [0, 0] as [number, number],
-          token_id: 'portal-2',
-          token_data: {
-            edge_type: 'tests',
-            destinations: [
-              { path: 'tests/brain/test_core.py', title: 'Core Tests', exists: true },
-              { path: 'tests/brain/test_memory.py', title: 'Memory Tests', exists: true },
-              { path: 'tests/brain/test_integration.py', title: 'Integration', exists: true },
-            ],
+        {
+          id: 'portal-1',
+          kind: 'PORTAL',
+          content: {
+            token_type: 'portal',
+            source_text: '@[implements -> services/brain/]',
+            source_position: [0, 0] as [number, number],
+            token_id: 'portal-1',
+            token_data: {
+              edge_type: 'implements',
+              destinations: [
+                { path: 'services/brain/core.py', title: 'Core Logic', exists: true },
+                { path: 'services/brain/memory.py', title: 'Memory', exists: true },
+                { path: 'services/brain/dialogue.py', title: 'Dialogue', exists: true },
+              ],
+            },
+            affordances: [],
           },
-          affordances: [],
+          metadata: { meaning_token_kind: 'PORTAL' },
         },
-        metadata: { meaning_token_kind: 'PORTAL' },
-      },
-      {
-        id: 'text-2',
-        kind: 'TEXT',
-        content: '\n## Related Specifications',
-      },
-      {
-        id: 'portal-3',
-        kind: 'PORTAL',
-        content: {
-          token_type: 'portal',
-          source_text: '@[extends -> spec/agents/]',
-          source_position: [0, 0] as [number, number],
-          token_id: 'portal-3',
-          token_data: {
-            edge_type: 'extends',
-            destinations: [
-              { path: 'spec/agents/poly.md', title: 'PolyAgent Base', exists: true },
-              { path: 'spec/agents/k-gent.md', title: 'K-gent (Soul)', exists: true },
-              { path: 'spec/agents/m-gent.md', title: 'M-gent (Memory)', exists: false },
-            ],
-            is_discovered: true,
+        {
+          id: 'text-1',
+          kind: 'TEXT',
+          content: '\n## Testing\n\nThe Brain agent has comprehensive tests:',
+        },
+        {
+          id: 'portal-2',
+          kind: 'PORTAL',
+          content: {
+            token_type: 'portal',
+            source_text: '@[tests -> tests/brain/]',
+            source_position: [0, 0] as [number, number],
+            token_id: 'portal-2',
+            token_data: {
+              edge_type: 'tests',
+              destinations: [
+                { path: 'tests/brain/test_core.py', title: 'Core Tests', exists: true },
+                { path: 'tests/brain/test_memory.py', title: 'Memory Tests', exists: true },
+                { path: 'tests/brain/test_integration.py', title: 'Integration', exists: true },
+              ],
+            },
+            affordances: [],
           },
-          affordances: [],
+          metadata: { meaning_token_kind: 'PORTAL' },
         },
-        metadata: { meaning_token_kind: 'PORTAL' },
-      },
-    ], 'Brain Specification');
+        {
+          id: 'text-2',
+          kind: 'TEXT',
+          content: '\n## Related Specifications',
+        },
+        {
+          id: 'portal-3',
+          kind: 'PORTAL',
+          content: {
+            token_type: 'portal',
+            source_text: '@[extends -> spec/agents/]',
+            source_position: [0, 0] as [number, number],
+            token_id: 'portal-3',
+            token_data: {
+              edge_type: 'extends',
+              destinations: [
+                { path: 'spec/agents/poly.md', title: 'PolyAgent Base', exists: true },
+                { path: 'spec/agents/k-gent.md', title: 'K-gent (Soul)', exists: true },
+                { path: 'spec/agents/m-gent.md', title: 'M-gent (Memory)', exists: false },
+              ],
+              is_discovered: true,
+            },
+            affordances: [],
+          },
+          metadata: { meaning_token_kind: 'PORTAL' },
+        },
+      ],
+      'Brain Specification'
+    );
 
     return (
-      <div style={{ maxWidth: '700px', padding: '24px', background: '#141418', borderRadius: '4px' }}>
+      <div
+        style={{ maxWidth: '700px', padding: '24px', background: '#141418', borderRadius: '4px' }}
+      >
         <InteractiveDocument
           sceneGraph={sceneGraph}
           onNavigate={(path) => console.log('Navigate:', path)}
@@ -1098,7 +1176,8 @@ export const DocumentWithPortals: StoryObj = {
   parameters: {
     docs: {
       description: {
-        story: 'Document with expandable portals showing implementation, tests, and related specs. The last portal is auto-discovered (dashed border).',
+        story:
+          'Document with expandable portals showing implementation, tests, and related specs. The last portal is auto-discovered (dashed border).',
       },
     },
   },
@@ -1113,7 +1192,15 @@ export const EdgeCaseEmptyDocument: StoryObj = {
   render: () => {
     const sceneGraph = createSceneGraph([], 'Empty Document');
     return (
-      <div style={{ maxWidth: '600px', padding: '24px', background: '#141418', borderRadius: '4px', minHeight: '100px' }}>
+      <div
+        style={{
+          maxWidth: '600px',
+          padding: '24px',
+          background: '#141418',
+          borderRadius: '4px',
+          minHeight: '100px',
+        }}
+      >
         <InteractiveDocument sceneGraph={sceneGraph} />
         <p style={{ color: '#5A5A64', fontStyle: 'italic', marginTop: '16px' }}>
           (Empty document renders nothing)
@@ -1160,7 +1247,8 @@ export const EdgeCaseSpecialCharacters: StoryObj = {
   parameters: {
     docs: {
       description: {
-        story: 'Tests handling of special characters like angle brackets, ampersands, and potential XSS vectors.',
+        story:
+          'Tests handling of special characters like angle brackets, ampersands, and potential XSS vectors.',
       },
     },
   },

@@ -13,7 +13,17 @@ import { useCallback, useRef, useState, useEffect } from 'react';
 import { sovereignApi, kblocksApi } from '../api/client';
 import { useGraphNode, isValidFilePath } from './useGraphNode';
 import { useWitnessStream } from '../hooks/useWitnessStream';
-import { isZeroSeedPath, extractKBlockId, kblockToGraphNode } from './kblockToGraphNode';
+import {
+  isZeroSeedPath,
+  extractKBlockId,
+  isKBlockPath,
+  extractKBlockIdFromPath,
+  isGenesisFilePath,
+  extractKBlockIdFromGenesisPath,
+  isRawKBlockId,
+  kblockIdToGenesisPath,
+  kblockToGraphNode,
+} from './kblockToGraphNode';
 import type { GraphNode } from './state/types';
 import type { UploadedFile } from './FileExplorer';
 
@@ -55,8 +65,7 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
     // Find completed analysis events (sovereign type events with analysis completion)
     const analysisCompleted = events.filter(
       (e) =>
-        e.type === 'sovereign' &&
-        (e.action === 'analysis_completed' || e.action === 'analyzed')
+        e.type === 'sovereign' && (e.action === 'analysis_completed' || e.action === 'analyzed')
     );
 
     if (analysisCompleted.length === 0) return;
@@ -78,7 +87,7 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
       // Only return new Map if there were actual changes (prevents unnecessary re-renders)
       return hasChanges ? newStatus : prev;
     });
-  }, [events]);  // Removed uploadStatus from deps - accessed via functional setState
+  }, [events]); // Removed uploadStatus from deps - accessed via functional setState
 
   // Custom loadNode that checks local cache first, then sovereign store
   // IMPORTANT: Depend on graphNode.loadNode (stable), not graphNode (object recreated each render)
@@ -131,6 +140,150 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
         }
       }
 
+      // Handle K-Block paths (kblock/genesis:L0:entity, etc.)
+      // These are valid paths that load K-Blocks directly by ID
+      if (isKBlockPath(path)) {
+        const kblockId = extractKBlockIdFromPath(path);
+        if (!kblockId) {
+          console.warn('[useFileUpload] Invalid K-Block path (no K-Block ID):', path);
+          return null;
+        }
+
+        // Check local cache first
+        const localNode = localFilesRef.current.get(path);
+        if (localNode) {
+          console.info('[useFileUpload] Loading K-Block from cache:', path);
+          return localNode;
+        }
+
+        try {
+          console.info('[useFileUpload] Loading K-Block:', kblockId);
+          const kblock = await kblocksApi.getById(kblockId);
+          const node = kblockToGraphNode(kblock, path);
+
+          // Cache it for future use
+          localFilesRef.current.set(path, node);
+          console.info('[useFileUpload] K-Block loaded:', {
+            path,
+            title: node.title,
+            layer: kblock.layer,
+            kind: kblock.kind,
+            contentLength: node.content?.length,
+          });
+
+          return node;
+        } catch (err) {
+          console.error('[useFileUpload] Failed to load K-Block:', kblockId, err);
+          // Return a stub node so navigation still works
+          return {
+            path,
+            title: kblockId,
+            kind: 'spec',
+            confidence: 0,
+            outgoingEdges: [],
+            incomingEdges: [],
+            content: `# ${kblockId}\n\n*Error loading K-Block.*\n\nThe K-Block may not exist or the Genesis may not be initialized.`,
+          };
+        }
+      }
+
+      // Handle genesis file paths (spec/genesis/L0/entity.md, etc.)
+      // These are sovereign files that map to K-Blocks
+      if (isGenesisFilePath(path)) {
+        const kblockId = extractKBlockIdFromGenesisPath(path);
+        if (!kblockId) {
+          console.warn('[useFileUpload] Invalid genesis file path (no K-Block ID):', path);
+          return null;
+        }
+
+        // Check local cache first
+        const localNode = localFilesRef.current.get(path);
+        if (localNode) {
+          console.info('[useFileUpload] Loading genesis K-Block from cache:', path);
+          return localNode;
+        }
+
+        try {
+          console.info('[useFileUpload] Loading genesis K-Block:', kblockId, 'from path:', path);
+          const kblock = await kblocksApi.getById(kblockId);
+          const node = kblockToGraphNode(kblock, path);
+
+          // Cache it for future use
+          localFilesRef.current.set(path, node);
+          console.info('[useFileUpload] Genesis K-Block loaded:', {
+            path,
+            kblockId,
+            title: node.title,
+            layer: kblock.layer,
+            kind: kblock.kind,
+            contentLength: node.content?.length,
+          });
+
+          return node;
+        } catch (err) {
+          console.error('[useFileUpload] Failed to load genesis K-Block:', kblockId, err);
+          // Return a stub node so navigation still works
+          return {
+            path,
+            title: kblockId,
+            kind: 'spec',
+            confidence: 0,
+            outgoingEdges: [],
+            incomingEdges: [],
+            content: `# ${kblockId}\n\n*Error loading genesis K-Block.*\n\nThe K-Block may not exist or the Genesis may not be initialized.`,
+          };
+        }
+      }
+
+      // Handle raw K-Block IDs (genesis:L2:curated, etc.)
+      // These come from edge navigation where source/target are K-Block IDs
+      if (isRawKBlockId(path)) {
+        const kblockId = path; // The path IS the K-Block ID
+
+        // Try to convert to genesis file path for caching consistency
+        const genesisPath = kblockIdToGenesisPath(kblockId);
+        const cachePath = genesisPath || `kblock/${kblockId}`;
+
+        // Check local cache first
+        const localNode = localFilesRef.current.get(cachePath);
+        if (localNode) {
+          console.info('[useFileUpload] Loading raw K-Block from cache:', path, '→', cachePath);
+          return localNode;
+        }
+
+        try {
+          console.info('[useFileUpload] Loading raw K-Block ID:', kblockId);
+          const kblock = await kblocksApi.getById(kblockId);
+          const node = kblockToGraphNode(kblock, cachePath);
+
+          // Cache it for future use
+          localFilesRef.current.set(cachePath, node);
+          console.info('[useFileUpload] Raw K-Block loaded:', {
+            originalPath: path,
+            cachePath,
+            kblockId,
+            title: node.title,
+            layer: kblock.layer,
+            kind: kblock.kind,
+            contentLength: node.content?.length,
+          });
+
+          return node;
+        } catch (err) {
+          console.error('[useFileUpload] Failed to load raw K-Block:', kblockId, err);
+          // Return a stub node so navigation still works
+          return {
+            path: cachePath,
+            title: kblockId,
+            kind: 'spec',
+            confidence: 0,
+            outgoingEdges: [],
+            incomingEdges: [],
+            content: `# ${kblockId}\n\n*Error loading K-Block.*\n\nThe K-Block may not exist or the Genesis may not be initialized.`,
+          };
+        }
+      }
+
       // Validate path BEFORE any processing to prevent infinite loops
       if (!isValidFilePath(path)) {
         console.warn('[useFileUpload] Invalid path (edge label or malformed), skipping:', path);
@@ -146,7 +299,12 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
         hasContent: localNode?.content ? localNode.content.length : 0,
       });
       if (localNode) {
-        console.info('[useFileUpload] Loading from local cache:', path, 'content length:', localNode.content?.length);
+        console.info(
+          '[useFileUpload] Loading from local cache:',
+          path,
+          'content length:',
+          localNode.content?.length
+        );
         return localNode;
       }
 
@@ -156,14 +314,27 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
           console.info('[useFileUpload] Trying sovereign store for:', path);
           const entity = await sovereignApi.getEntity(path);
           if (entity && entity.content) {
-            console.info('[useFileUpload] Found in sovereign store:', path, 'content length:', entity.content.length);
+            console.info(
+              '[useFileUpload] Found in sovereign store:',
+              path,
+              'content length:',
+              entity.content.length
+            );
             const ext = path.split('.').pop()?.toLowerCase() || '';
             const kind: GraphNode['kind'] =
-              ext === 'md' ? 'doc' : ext === 'py' || ext === 'ts' || ext === 'tsx' ? 'implementation' : 'unknown';
+              ext === 'md'
+                ? 'doc'
+                : ext === 'py' || ext === 'ts' || ext === 'tsx'
+                  ? 'implementation'
+                  : 'unknown';
 
             const node: GraphNode = {
               path,
-              title: path.split('/').pop()?.replace(/\.[^.]+$/, '') || path,
+              title:
+                path
+                  .split('/')
+                  .pop()
+                  ?.replace(/\.[^.]+$/, '') || path,
               kind,
               confidence: 1.0,
               content: entity.content,
@@ -184,7 +355,7 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
       console.info('[useFileUpload] Falling back to graphNode.loadNode for:', path);
       return graphNode.loadNode(path);
     },
-    [graphNode.loadNode]  // FIX: Use stable function reference, not the whole object
+    [graphNode.loadNode] // FIX: Use stable function reference, not the whole object
   );
 
   // Handle file upload - ingest into sovereign store
@@ -201,7 +372,11 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
       const createLocalNode = (path: string): GraphNode => {
         const ext = fileName.split('.').pop()?.toLowerCase() || '';
         const kind: GraphNode['kind'] =
-          ext === 'md' ? 'doc' : ext === 'py' || ext === 'ts' || ext === 'tsx' ? 'implementation' : 'unknown';
+          ext === 'md'
+            ? 'doc'
+            : ext === 'py' || ext === 'ts' || ext === 'tsx'
+              ? 'implementation'
+              : 'unknown';
 
         return {
           path,

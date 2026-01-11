@@ -84,6 +84,10 @@ export function useRecentFiles(): UseRecentFilesReturn {
   // Add a file to recent files (de-duplicates, maintains order)
   const addRecentFile = useCallback((path: string) => {
     setRecentFiles((prev) => {
+      // If path is already at the top, don't create new reference
+      if (prev[0] === path) {
+        return prev;
+      }
       // Remove if already exists
       const filtered = prev.filter((p) => p !== path);
       // Add to front

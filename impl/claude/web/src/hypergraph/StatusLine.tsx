@@ -10,6 +10,8 @@ import React, { memo } from 'react';
 
 import type { EditorMode, Position } from './state/types';
 import type { DocumentStatus } from '../api/director';
+import type { CoherenceSummary } from '../stores/derivationStore';
+import { formatGaloisLoss, getGroundingIcon } from '../stores/derivationStore';
 import { DocumentStatusBadge } from '../components/director';
 import { NavigationConstitutionalBadge } from './NavigationConstitutionalBadge';
 
@@ -59,6 +61,9 @@ interface StatusLineProps {
 
   /** Show navigation constitutional badge */
   showConstitutionalBadge?: boolean;
+
+  /** Project-wide coherence summary from derivationStore */
+  coherenceSummary?: CoherenceSummary | null;
 }
 
 // =============================================================================
@@ -127,13 +132,15 @@ export const StatusLine = memo(function StatusLine({
   derivationTier,
   directorStatus,
   showConstitutionalBadge = true,
+  coherenceSummary,
 }: StatusLineProps) {
   const modeColor = MODE_COLORS[mode];
   const modeLabel = MODE_LABELS[mode];
 
   // Confidence indicator props
   const confidenceLevel = confidence !== undefined ? getConfidenceLevel(confidence) : null;
-  const confidenceIndicator = confidence !== undefined ? formatConfidenceIndicator(confidence) : null;
+  const confidenceIndicator =
+    confidence !== undefined ? formatConfidenceIndicator(confidence) : null;
   const confidencePercent = confidence !== undefined ? Math.round(confidence * 100) : null;
 
   return (
@@ -202,6 +209,29 @@ export const StatusLine = memo(function StatusLine({
       {showConstitutionalBadge && (
         <div className="status-line__constitutional">
           <NavigationConstitutionalBadge size="sm" expandable={true} />
+        </div>
+      )}
+
+      {/* Project Coherence Summary (from derivationStore) */}
+      {coherenceSummary && (
+        <div
+          className="status-line__coherence"
+          title={`Project Coherence: ${coherenceSummary.coherencePercent.toFixed(0)}% | Galois Loss: ${formatGaloisLoss(coherenceSummary.averageGaloisLoss)} | ${coherenceSummary.grounded}${getGroundingIcon('grounded')} ${coherenceSummary.provisional}${getGroundingIcon('provisional')} ${coherenceSummary.orphan}${getGroundingIcon('orphan')}`}
+        >
+          <span className="status-line__coherence-icons">
+            <span className="status-line__coherence-grounded">
+              {coherenceSummary.grounded}
+              {getGroundingIcon('grounded')}
+            </span>
+            <span className="status-line__coherence-provisional">
+              {coherenceSummary.provisional}
+              {getGroundingIcon('provisional')}
+            </span>
+            <span className="status-line__coherence-orphan">
+              {coherenceSummary.orphan}
+              {getGroundingIcon('orphan')}
+            </span>
+          </span>
         </div>
       )}
 

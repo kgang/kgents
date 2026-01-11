@@ -1,15 +1,16 @@
 /**
  * GroundingDialog -- Modal for grounding orphan K-Blocks to Constitutional principles
  *
- * When a K-Block has no derivation path (orphan), this dialog suggests
- * Constitutional principles based on content analysis, sorted by Galois loss.
+ * When a K-Block has no derivation path (orphan), this dialog fetches suggestions
+ * from the backend API and lets users select a principle to ground to.
  *
  * Features:
- * - K-Block info at top (path, status)
- * - Suggested principles sorted by Galois loss (lowest first)
+ * - K-Block info at top (title, content preview)
+ * - Fetches suggestions from /api/derivation/suggest
+ * - Shows 7 principles sorted by confidence
+ * - Each principle shows icon, name, loss, confidence, reasoning
  * - Radio selection for principle
- * - Optional: drag-drop target for grounding to another K-Block
- * - Loading state while grounding
+ * - Loading states for fetch and confirm
  *
  * Philosophy:
  *   "Every claim derives from axioms. Every axiom traces to Zero Seed."
@@ -25,8 +26,40 @@ import './GroundingDialog.css';
 // =============================================================================
 
 /**
- * A K-Block to be grounded.
- * Minimal interface needed for the dialog.
+ * A suggested grounding based on content analysis.
+ * Matches the backend GroundingSuggestion model.
+ */
+export interface GroundingSuggestion {
+  /** Constitutional principle name (e.g., "COMPOSABLE", "TASTEFUL") */
+  principle: string;
+  /** Predicted Galois loss if grounded to this principle (0-1, lower is better) */
+  galois_loss: number;
+  /** Confidence in this suggestion (0-1, higher is better) */
+  confidence: number;
+  /** Why this principle is suggested */
+  reasoning: string;
+}
+
+/**
+ * Props for the GroundingDialog component.
+ */
+export interface GroundingDialogProps {
+  /** K-Block identifier */
+  kblockId: string;
+  /** K-Block title for display */
+  kblockTitle: string;
+  /** K-Block content for analysis and preview */
+  kblockContent: string;
+  /** Whether the dialog is visible */
+  isOpen: boolean;
+  /** Callback when dialog is closed */
+  onClose: () => void;
+  /** Callback when grounding to a principle - called with the principle ID */
+  onConfirm: (principleId: string) => Promise<void>;
+}
+
+/**
+ * K-Block type for export compatibility.
  */
 export interface KBlock {
   /** Unique identifier */
@@ -37,38 +70,6 @@ export interface KBlock {
   isDirty?: boolean;
   /** Optional display name */
   displayName?: string;
-}
-
-/**
- * A suggested grounding based on content analysis.
- */
-export interface GroundingSuggestion {
-  /** Constitutional principle name (e.g., "COMPOSABLE", "TASTEFUL") */
-  principle: string;
-  /** Galois loss value (0-1, lower is better) */
-  galoisLoss: number;
-  /** Explanation of why this principle matches */
-  reasoning: string;
-  /** Whether this is the recommended option (lowest loss) */
-  recommended?: boolean;
-}
-
-/**
- * Props for the GroundingDialog component.
- */
-export interface GroundingDialogProps {
-  /** Whether the dialog is visible */
-  isOpen: boolean;
-  /** Callback when dialog is closed */
-  onClose: () => void;
-  /** The K-Block to ground */
-  kblock: KBlock;
-  /** Suggested principles sorted by Galois loss */
-  suggestions: GroundingSuggestion[];
-  /** Callback when grounding to a principle */
-  onGround: (principle: string) => Promise<void>;
-  /** Optional: Callback when grounding to another K-Block (drag-drop) */
-  onGroundToKBlock?: (parentKBlockId: string) => Promise<void>;
 }
 
 // =============================================================================
@@ -83,8 +84,42 @@ const PRINCIPLE_ICONS: Record<string, string> = {
   ETHICAL: '!',
   JOY_INDUCING: ':)',
   HETERARCHICAL: '<>',
-  DEFAULT: '@',
+  DEFAULT: '◈',
 };
+
+const PRINCIPLE_COLORS: Record<string, string> = {
+  COMPOSABLE: '#4a9eff', // Blue
+  TASTEFUL: '#c4a77d', // Amber/Gold
+  GENERATIVE: '#9c27b0', // Purple
+  CURATED: '#4caf50', // Green
+  ETHICAL: '#ff9800', // Orange
+  JOY_INDUCING: '#e91e63', // Magenta
+  HETERARCHICAL: '#00bcd4', // Cyan
+  DEFAULT: '#888888', // Steel gray
+};
+
+// Maximum characters to show in content preview
+const CONTENT_PREVIEW_LENGTH = 200;
+
+// =============================================================================
+// API Functions
+// =============================================================================
+
+async function fetchGroundingSuggestions(content: string): Promise<GroundingSuggestion[]> {
+  const response = await fetch('/api/derivation/suggest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch suggestions: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data.suggestions ?? [];
+}
 
 // =============================================================================
 // Subcomponents
@@ -95,6 +130,7 @@ interface SuggestionItemProps {
   isSelected: boolean;
   onSelect: () => void;
   disabled: boolean;
+  isRecommended: boolean;
 }
 
 const SuggestionItem = memo(function SuggestionItem({
@@ -102,16 +138,20 @@ const SuggestionItem = memo(function SuggestionItem({
   isSelected,
   onSelect,
   disabled,
+  isRecommended,
 }: SuggestionItemProps) {
-  const icon = PRINCIPLE_ICONS[suggestion.principle] ?? PRINCIPLE_ICONS.DEFAULT;
+  const principleKey = suggestion.principle.toUpperCase().replace(/-/g, '_');
+  const icon = PRINCIPLE_ICONS[principleKey] ?? PRINCIPLE_ICONS.DEFAULT;
+  const color = PRINCIPLE_COLORS[principleKey] ?? PRINCIPLE_COLORS.DEFAULT;
 
   return (
     <button
       type="button"
-      className={`grounding-dialog__suggestion ${isSelected ? 'grounding-dialog__suggestion--selected' : ''} ${suggestion.recommended ? 'grounding-dialog__suggestion--recommended' : ''}`}
+      className={`grounding-dialog__suggestion ${isSelected ? 'grounding-dialog__suggestion--selected' : ''} ${isRecommended ? 'grounding-dialog__suggestion--recommended' : ''}`}
       onClick={onSelect}
       disabled={disabled}
       aria-pressed={isSelected}
+      style={{ '--principle-color': color } as React.CSSProperties}
     >
       <div className="grounding-dialog__suggestion-radio">
         <span
@@ -121,12 +161,20 @@ const SuggestionItem = memo(function SuggestionItem({
 
       <div className="grounding-dialog__suggestion-content">
         <div className="grounding-dialog__suggestion-header">
-          <span className="grounding-dialog__suggestion-icon">{icon}</span>
+          <span className="grounding-dialog__suggestion-icon" style={{ color }}>
+            {icon}
+          </span>
           <span className="grounding-dialog__suggestion-name">{suggestion.principle}</span>
           <span className="grounding-dialog__suggestion-loss" title="Galois Loss (lower is better)">
-            L={suggestion.galoisLoss.toFixed(2)}
+            L={suggestion.galois_loss.toFixed(2)}
           </span>
-          {suggestion.recommended && (
+          <span
+            className="grounding-dialog__suggestion-confidence"
+            title="Confidence (higher is better)"
+          >
+            C={suggestion.confidence.toFixed(2)}
+          </span>
+          {isRecommended && (
             <span className="grounding-dialog__recommended-badge">Recommended</span>
           )}
         </div>
@@ -142,29 +190,68 @@ const SuggestionItem = memo(function SuggestionItem({
 
 /**
  * GroundingDialog -- Ground orphan K-Blocks to Constitutional principles
+ *
+ * Fetches suggestions from the API and lets user select a principle.
  */
 export const GroundingDialog = memo(function GroundingDialog({
+  kblockId,
+  kblockTitle,
+  kblockContent,
   isOpen,
   onClose,
-  kblock,
-  suggestions,
-  onGround,
-  onGroundToKBlock,
+  onConfirm,
 }: GroundingDialogProps) {
+  const [suggestions, setSuggestions] = useState<GroundingSuggestion[]>([]);
   const [selectedPrinciple, setSelectedPrinciple] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isGrounding, setIsGrounding] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-select recommended (lowest loss) on open
+  // Fetch suggestions when dialog opens
   useEffect(() => {
-    if (isOpen && suggestions.length > 0) {
-      const recommended = suggestions.find((s) => s.recommended);
-      setSelectedPrinciple(recommended?.principle ?? suggestions[0].principle);
-      setError(null);
+    if (!isOpen || !kblockContent) {
+      return;
     }
-  }, [isOpen, suggestions]);
+
+    let cancelled = false;
+
+    async function loadSuggestions() {
+      setIsLoading(true);
+      setError(null);
+      setSuggestions([]);
+      setSelectedPrinciple(null);
+
+      try {
+        const result = await fetchGroundingSuggestions(kblockContent);
+
+        if (cancelled) return;
+
+        // Sort by confidence (highest first), take top 7
+        const sorted = result.sort((a, b) => b.confidence - a.confidence).slice(0, 7);
+
+        setSuggestions(sorted);
+
+        // Auto-select the recommended (highest confidence)
+        if (sorted.length > 0) {
+          setSelectedPrinciple(sorted[0].principle);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Failed to fetch suggestions');
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadSuggestions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, kblockContent]);
 
   // Handle escape key
   useEffect(() => {
@@ -188,14 +275,14 @@ export const GroundingDialog = memo(function GroundingDialog({
     setError(null);
 
     try {
-      await onGround(selectedPrinciple);
+      await onConfirm(selectedPrinciple);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to ground K-Block');
     } finally {
       setIsGrounding(false);
     }
-  }, [selectedPrinciple, isGrounding, onGround, onClose]);
+  }, [selectedPrinciple, isGrounding, onConfirm, onClose]);
 
   // Handle keyboard submission
   const handleKeyDown = useCallback(
@@ -208,48 +295,13 @@ export const GroundingDialog = memo(function GroundingDialog({
     [handleGround]
   );
 
-  // Drag handlers for K-Block drop zone
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(true);
-  }, []);
+  // Content preview (truncated)
+  const contentPreview =
+    kblockContent.length > CONTENT_PREVIEW_LENGTH
+      ? kblockContent.slice(0, CONTENT_PREVIEW_LENGTH) + '...'
+      : kblockContent;
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-  }, []);
-
-  const handleDrop = useCallback(
-    async (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragOver(false);
-
-      if (!onGroundToKBlock) return;
-
-      // Try to get K-Block ID from drag data
-      const kblockId = e.dataTransfer.getData('application/kblock-id');
-      if (kblockId && kblockId !== kblock.id) {
-        setIsGrounding(true);
-        setError(null);
-        try {
-          await onGroundToKBlock(kblockId);
-          onClose();
-        } catch (err) {
-          setError(err instanceof Error ? err.message : 'Failed to ground to K-Block');
-        } finally {
-          setIsGrounding(false);
-        }
-      }
-    },
-    [onGroundToKBlock, kblock.id, onClose]
-  );
-
-  // Display name for the K-Block
-  const displayName = kblock.displayName ?? kblock.path ?? 'Untitled K-Block';
-  const canGround = selectedPrinciple && !isGrounding;
+  const canGround = selectedPrinciple && !isGrounding && !isLoading;
 
   if (!isOpen) return null;
 
@@ -288,48 +340,55 @@ export const GroundingDialog = memo(function GroundingDialog({
 
           {/* K-Block Info */}
           <div className="grounding-dialog__kblock-info">
-            <span className="grounding-dialog__kblock-icon">#</span>
-            <span className="grounding-dialog__kblock-path">{displayName}</span>
-            <span className="grounding-dialog__kblock-status">(currently orphan)</span>
+            <div className="grounding-dialog__kblock-header">
+              <span className="grounding-dialog__kblock-icon">#</span>
+              <span className="grounding-dialog__kblock-title">{kblockTitle}</span>
+              <span className="grounding-dialog__kblock-status">(orphan)</span>
+            </div>
+            <div className="grounding-dialog__kblock-preview">
+              <span className="grounding-dialog__preview-label">Content:</span>
+              <span className="grounding-dialog__preview-text">{contentPreview}</span>
+            </div>
           </div>
 
           {/* Content */}
           <div className="grounding-dialog__content">
-            {/* Suggestions Section */}
-            <div className="grounding-dialog__section">
-              <h3 className="grounding-dialog__section-title">
-                SUGGESTED GROUNDINGS (by content analysis):
-              </h3>
+            {/* Loading State */}
+            {isLoading && (
+              <div className="grounding-dialog__loading">
+                <span className="grounding-dialog__spinner" />
+                <span>Analyzing content for principle matches...</span>
+              </div>
+            )}
 
-              {suggestions.length === 0 ? (
-                <p className="grounding-dialog__empty">No suggestions available.</p>
-              ) : (
+            {/* Suggestions Section */}
+            {!isLoading && suggestions.length > 0 && (
+              <div className="grounding-dialog__section">
+                <h3 className="grounding-dialog__section-title">
+                  SUGGESTED GROUNDINGS (by content analysis):
+                </h3>
+
                 <div className="grounding-dialog__suggestions" role="radiogroup">
-                  {suggestions.map((suggestion) => (
+                  {suggestions.map((suggestion, index) => (
                     <SuggestionItem
                       key={suggestion.principle}
                       suggestion={suggestion}
                       isSelected={selectedPrinciple === suggestion.principle}
                       onSelect={() => setSelectedPrinciple(suggestion.principle)}
                       disabled={isGrounding}
+                      isRecommended={index === 0}
                     />
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Drop Zone (optional feature) */}
-            {onGroundToKBlock && (
-              <div
-                className={`grounding-dialog__dropzone ${isDragOver ? 'grounding-dialog__dropzone--active' : ''}`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <span className="grounding-dialog__dropzone-text">
-                  Or drag to any K-Block in the graph to derive from it.
-                </span>
               </div>
+            )}
+
+            {/* Empty State */}
+            {!isLoading && suggestions.length === 0 && !error && (
+              <p className="grounding-dialog__empty">
+                No principle suggestions available. The K-Block content may not match any known
+                principles.
+              </p>
             )}
           </div>
 
@@ -356,7 +415,7 @@ export const GroundingDialog = memo(function GroundingDialog({
                 onClick={handleGround}
                 disabled={!canGround}
               >
-                {isGrounding ? 'Grounding...' : 'Ground to Selected'}
+                {isGrounding ? 'Grounding...' : 'Ground'}
               </button>
             </div>
 

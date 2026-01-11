@@ -185,6 +185,30 @@ export function GenesisExperience() {
     }
   }, [loadStatus, loadGraph]);
 
+  const resetGenesis = useCallback(async () => {
+    try {
+      setPhase('seeding');
+      setError(null);
+      setGraph(null);
+      setSelectedId(null);
+      // Wipe existing and force re-seed
+      await genesisApi.seedCleanSlate(true, true);
+      // Reload after seeding
+      const newStatus = await loadStatus();
+      if (newStatus.is_seeded) {
+        await loadGraph();
+        setPhase('arrival');
+      } else {
+        setError('Reset completed but genesis is not complete');
+        setPhase('error');
+      }
+    } catch (err) {
+      console.error('[GenesisExperience] Failed to reset:', err);
+      setError(err instanceof Error ? err.message : 'Failed to reset genesis');
+      setPhase('error');
+    }
+  }, [loadStatus, loadGraph]);
+
   // Initial load
   useEffect(() => {
     const initialize = async () => {
@@ -380,7 +404,11 @@ export function GenesisExperience() {
             exit={{ opacity: 0 }}
             className="genesis-exp__phase"
           >
-            <GenesisActions selectedKBlock={selectedKBlock} onBack={() => setPhase('connection')} />
+            <GenesisActions
+              selectedKBlock={selectedKBlock}
+              onBack={() => setPhase('connection')}
+              onReset={resetGenesis}
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,0 +1,272 @@
+/**
+ * Constitutional Principles Summary Panel Styles
+ *
+ * Uses STARK BIOME palette with LIVING_EARTH accent colors
+ */
+
+.constitutional-summary {
+  background: var(--steel-900, #1a1a1a);
+  border: 1px solid var(--steel-800, #252525);
+  border-radius: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  overflow: hidden;
+}
+
+/* Header */
+.constitutional-summary__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--steel-950, #0f0f0f);
+  border-bottom: 1px solid var(--steel-800, #252525);
+}
+
+.constitutional-summary__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: none;
+  border: none;
+  color: var(--steel-400, #71717a);
+  cursor: pointer;
+  padding: 0;
+  font-size: 10px;
+  transition: color 0.15s ease;
+}
+
+.constitutional-summary__toggle:hover {
+  color: var(--steel-100, #e5e5e5);
+}
+
+.constitutional-summary__chevron {
+  line-height: 1;
+}
+
+.constitutional-summary__title {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--steel-400, #71717a);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.constitutional-summary__count {
+  min-width: 24px;
+  padding: 2px 6px;
+  background: var(--steel-800, #252525);
+  border-radius: 10px;
+  color: var(--steel-200, #e5e5e5);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Collapsed state */
+.constitutional-summary--collapsed .constitutional-summary__header {
+  border-bottom: none;
+}
+
+/* Principles List */
+.constitutional-summary__list {
+  padding: 4px 0;
+}
+
+.constitutional-summary__principle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  outline: none;
+}
+
+.constitutional-summary__principle:hover {
+  background: var(--steel-800, #252525);
+}
+
+.constitutional-summary__principle:focus-visible {
+  background: var(--steel-800, #252525);
+  box-shadow: inset 0 0 0 1px var(--principle-color, var(--steel-600));
+}
+
+.constitutional-summary__principle--selected {
+  background: var(--steel-800, #252525);
+  box-shadow: inset 3px 0 0 0 var(--principle-color, var(--steel-400));
+}
+
+.constitutional-summary__principle--selected:hover {
+  background: var(--steel-750, #2a2a2a);
+}
+
+.constitutional-summary__icon {
+  color: var(--principle-color, var(--steel-400));
+  font-size: 10px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.constitutional-summary__principle:hover .constitutional-summary__icon {
+  transform: scale(1.2);
+}
+
+.constitutional-summary__name {
+  flex: 1;
+  color: var(--steel-200, #e5e5e5);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.constitutional-summary__principle:hover .constitutional-summary__name {
+  color: var(--principle-color, var(--steel-100));
+}
+
+.constitutional-summary__badge {
+  min-width: 20px;
+  padding: 1px 5px;
+  background: var(--steel-800, #252525);
+  border: 1px solid var(--steel-700, #333333);
+  border-radius: 8px;
+  color: var(--steel-300, #a1a1aa);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.constitutional-summary__principle:hover .constitutional-summary__badge {
+  background: var(--principle-color, var(--steel-700));
+  border-color: var(--principle-color, var(--steel-600));
+  color: var(--steel-950, #0f0f0f);
+}
+
+.constitutional-summary__principle--selected .constitutional-summary__badge {
+  background: var(--principle-color, var(--steel-600));
+  border-color: var(--principle-color, var(--steel-500));
+  color: var(--steel-950, #0f0f0f);
+}
+
+/* Footer */
+.constitutional-summary__footer {
+  padding: 8px 12px;
+  background: var(--steel-950, #0f0f0f);
+  border-top: 1px solid var(--steel-800, #252525);
+}
+
+.constitutional-summary__stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.constitutional-summary__stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.constitutional-summary__stat-label {
+  color: var(--steel-500, #71717a);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.constitutional-summary__stat-value {
+  color: var(--steel-200, #e5e5e5);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.constitutional-summary__stat-separator {
+  color: var(--steel-700, #333333);
+  font-size: 10px;
+}
+
+.constitutional-summary__stat--grounded .constitutional-summary__stat-value {
+  color: #6b8b6b; /* mint - grounded is good */
+}
+
+.constitutional-summary__stat--orphan .constitutional-summary__stat-value {
+  color: #c4a77d; /* honey - orphan needs attention */
+}
+
+.constitutional-summary__stat--clickable {
+  cursor: pointer;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.constitutional-summary__stat--clickable:hover {
+  background: var(--steel-800, #252525);
+}
+
+.constitutional-summary__stat--clickable:focus-visible {
+  background: var(--steel-800, #252525);
+  outline: 1px solid var(--steel-600, #52525b);
+  outline-offset: 1px;
+}
+
+/* Progress bar */
+.constitutional-summary__progress {
+  height: 3px;
+  background: var(--steel-800, #252525);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.constitutional-summary__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #6b8b6b 0%, #8ba98b 100%);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Animation for smooth appearance */
+@keyframes constitutional-summary-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.constitutional-summary {
+  animation: constitutional-summary-enter 0.2s ease-out;
+}
+
+/* Scrollbar styling if list is long */
+.constitutional-summary__list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.constitutional-summary__list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.constitutional-summary__list::-webkit-scrollbar-track {
+  background: var(--steel-900, #1a1a1a);
+}
+
+.constitutional-summary__list::-webkit-scrollbar-thumb {
+  background: var(--steel-700, #333333);
+  border-radius: 2px;
+}
+
+.constitutional-summary__list::-webkit-scrollbar-thumb:hover {
+  background: var(--steel-600, #404040);
+}

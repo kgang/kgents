@@ -26,7 +26,7 @@
 
 .workspace__left {
   flex-shrink: 0;
-  width: var(--workspace-left-width, 280px);
+  width: var(--workspace-left-width, 320px);
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--steel-800, #27272a);
@@ -227,11 +227,21 @@
   letter-spacing: 0.05em;
 }
 
-.workspace__sidebar-shortcut {
+.workspace__sidebar-header .workspace__sidebar-shortcut {
   font-size: 11px;
   color: var(--steel-500, #71717a);
   font-family: var(--font-mono, monospace);
   background: var(--steel-900, #18181b);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+.workspace__sidebar-tabs .workspace__sidebar-shortcut {
+  font-size: 11px;
+  color: var(--steel-500, #71717a);
+  font-family: var(--font-mono, monospace);
+  background: var(--steel-800, #27272a);
   padding: 2px 6px;
   border-radius: 4px;
   margin-left: auto;
@@ -248,6 +258,13 @@
   padding: 8px 12px;
   border-bottom: 1px solid var(--steel-800, #27272a);
   background: var(--steel-900, #18181b);
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+
+.workspace__sidebar-shortcut {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .workspace__sidebar-tab {
@@ -288,6 +305,7 @@
 .workspace__sidebar-body {
   flex: 1;
   overflow: auto;
+  font-size: 12px;
 }
 
 /* =============================================================================
@@ -373,4 +391,53 @@
   .workspace__sidebar-unread {
     animation: none;
   }
+}
+
+/* =============================================================================
+   Resize Handles
+   ============================================================================= */
+
+.workspace__resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 20;
+  transition: background 0.15s ease;
+}
+
+.workspace__resize-handle:hover,
+.workspace__resize-handle--active {
+  background: var(--accent-gold, #f59e0b);
+}
+
+.workspace__left .workspace__resize-handle {
+  right: 0;
+}
+
+.workspace__right .workspace__resize-handle {
+  left: 0;
+}
+
+/* =============================================================================
+   Disappearing Chrome — Phase 2
+   "Still by default, alive on interaction"
+   ============================================================================= */
+
+/* Collapsed sidebar icons-only mode — 48px for vertical icon column */
+.workspace__left--collapsed {
+  width: 48px;
+}
+
+.workspace__right--collapsed {
+  width: 48px;
+}
+
+/* Subtle toggle labels when collapsed — fade back, smaller text */
+.workspace__left--collapsed .workspace__sidebar-toggle-label,
+.workspace__right--collapsed .workspace__sidebar-toggle-label {
+  opacity: 0.6;
+  font-size: 10px;
 }

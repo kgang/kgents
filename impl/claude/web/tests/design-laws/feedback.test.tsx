@@ -121,11 +121,9 @@ describe('F-01: Multiple Channel Confirmation', () => {
     const feedback = triggerFeedback();
 
     // At least 2 channels should be available
-    const channels = [
-      feedback.visual,
-      feedback.sound.enabled,
-      feedback.haptic.enabled,
-    ].filter(Boolean);
+    const channels = [feedback.visual, feedback.sound.enabled, feedback.haptic.enabled].filter(
+      Boolean
+    );
 
     expect(channels.length).toBeGreaterThanOrEqual(1); // Visual always present
   });
@@ -134,7 +132,7 @@ describe('F-01: Multiple Channel Confirmation', () => {
     const user = userEvent.setup();
 
     // Anti-pattern: Only state change, no visual feedback
-    const _BadPattern = () => {
+    const BadPattern = () => {
       const [_state, setState] = React.useState('idle');
       return <button onClick={() => setState('done')}>Action</button>;
     };
@@ -611,7 +609,9 @@ describe('F-05: Non-Blocking Notification', () => {
                 zIndex: 1000,
               }}
             >
-              <div>Saved! <button onClick={() => setShowModal(false)}>OK</button></div>
+              <div>
+                Saved! <button onClick={() => setShowModal(false)}>OK</button>
+              </div>
             </div>
           )}
         </div>

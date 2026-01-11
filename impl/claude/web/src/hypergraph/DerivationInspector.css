@@ -336,6 +336,50 @@
 }
 
 /* =============================================================================
+   Inline Witness Badges (on path nodes)
+   ============================================================================= */
+
+.derivation-path__witnesses {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 0.625rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: auto;
+}
+
+.derivation-path__witnesses:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.derivation-path__witness-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.derivation-path__witness-icon {
+  font-size: 0.6875rem;
+  filter: drop-shadow(0 0 2px var(--witness-color, #888));
+}
+
+.derivation-path__witness-count {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.0625rem 0.1875rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+/* =============================================================================
    Coherence Summary
    ============================================================================= */
 
@@ -427,25 +471,41 @@
   border-color: var(--steel-600, #444444);
 }
 
-/* Witness type accents */
+/* Witness type accents - using CSS custom properties from WITNESS_CONFIG */
+.witness-item {
+  border-left: 3px solid var(--witness-color, var(--steel-600));
+  background: var(--witness-bg, transparent);
+}
+
+/* Categorical witness types */
+.witness-item--composition {
+  --witness-color: #06b6d4;
+  --witness-bg: rgba(6, 182, 212, 0.05);
+}
+
+.witness-item--galois {
+  --witness-color: #a855f7;
+  --witness-bg: rgba(168, 85, 247, 0.05);
+}
+
 .witness-item--principle {
-  border-left: 3px solid var(--path-principle);
+  --witness-color: #3b82f6;
+  --witness-bg: rgba(59, 130, 246, 0.05);
 }
 
-.witness-item--spec {
-  border-left: 3px solid var(--path-spec);
+.witness-item--empirical {
+  --witness-color: #f59e0b;
+  --witness-bg: rgba(245, 158, 11, 0.05);
 }
 
-.witness-item--test {
-  border-left: 3px solid var(--path-test);
+.witness-item--aesthetic {
+  --witness-color: #ec4899;
+  --witness-bg: rgba(236, 72, 153, 0.05);
 }
 
-.witness-item--mark {
-  border-left: 3px solid var(--status-witness, #e91e63);
-}
-
-.witness-item--proof {
-  border-left: 3px solid var(--status-insert, #4caf50);
+.witness-item--somatic {
+  --witness-color: #a855f7;
+  --witness-bg: rgba(168, 85, 247, 0.05);
 }
 
 .witness-item__header {
@@ -490,11 +550,25 @@
 .witness-item__confidence {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 11px;
-  font-weight: 500;
-  color: var(--status-insert, #4caf50);
+  font-weight: 600;
   padding: 2px 6px;
-  background: color-mix(in srgb, var(--status-insert, #4caf50) 15%, transparent);
   border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.witness-item__confidence--high {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.witness-item__confidence--medium {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.witness-item__confidence--low {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
 }
 
 .witness-item__toggle {
@@ -512,6 +586,21 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Confidence bar in expanded details */
+.witness-item__confidence-bar {
+  height: 4px;
+  background: var(--steel-800, #252525);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.witness-item__confidence-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 
 .witness-item__reference,

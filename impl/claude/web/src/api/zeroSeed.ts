@@ -14,6 +14,34 @@
 export type NodeId = string;
 export type EdgeId = string;
 
+/**
+ * Normalize a node ID for API calls.
+ *
+ * Converts file paths back to K-Block IDs:
+ * - spec/genesis/L0/entity.md -> genesis:L0:entity
+ * - kblock/genesis:L0:entity -> genesis:L0:entity
+ *
+ * Passes through K-Block IDs unchanged:
+ * - genesis:L0:entity -> genesis:L0:entity
+ */
+export function normalizeNodeId(nodeId: NodeId): NodeId {
+  // Convert genesis file paths to K-Block IDs
+  // Format: spec/genesis/L{layer}/{name}.md -> genesis:L{layer}:{name}
+  const genesisMatch = nodeId.match(/^spec\/genesis\/L(\d)\/(\w+)\.md$/);
+  if (genesisMatch) {
+    const [, layer, name] = genesisMatch;
+    return `genesis:L${layer}:${name}`;
+  }
+
+  // Strip kblock/ prefix if present
+  if (nodeId.startsWith('kblock/')) {
+    return nodeId.slice('kblock/'.length);
+  }
+
+  // Already a K-Block ID
+  return nodeId;
+}
+
 // Layer types (L1-L7)
 export type ZeroLayer = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -201,6 +229,48 @@ export interface PolicyArrow {
 
 const API_BASE = '/api/zero-seed';
 
+// =============================================================================
+// Request Cache (prevents duplicate API calls for same node)
+// =============================================================================
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+const nodeCache = new Map<string, CacheEntry<unknown>>();
+const CACHE_TTL_MS = 5000; // 5 second TTL
+
+function getCached<T>(key: string): T | null {
+  const entry = nodeCache.get(key);
+  if (!entry) return null;
+
+  // Check if expired
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    nodeCache.delete(key);
+    return null;
+  }
+
+  return entry.data as T;
+}
+
+function setCache<T>(key: string, data: T): void {
+  nodeCache.set(key, { data, timestamp: Date.now() });
+
+  // Limit cache size (LRU-ish: just clear old entries periodically)
+  if (nodeCache.size > 100) {
+    const now = Date.now();
+    for (const [k, v] of nodeCache.entries()) {
+      if (now - v.timestamp > CACHE_TTL_MS) {
+        nodeCache.delete(k);
+      }
+    }
+  }
+}
+
+// In-flight request deduplication
+const inFlightRequests = new Map<string, Promise<unknown>>();
+
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     headers: {
@@ -220,9 +290,34 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 
 /**
  * Get axioms and values (L1-L2) with loss information.
+ * Cached for 5 seconds with in-flight deduplication.
  */
 export async function getAxiomExplorer(): Promise<AxiomExplorerResponse> {
-  return fetchJson<AxiomExplorerResponse>(`${API_BASE}/axioms`);
+  const cacheKey = 'axioms';
+
+  // Check cache first
+  const cached = getCached<AxiomExplorerResponse>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  // Check if there's already an in-flight request
+  const inFlight = inFlightRequests.get(cacheKey);
+  if (inFlight) {
+    return inFlight as Promise<AxiomExplorerResponse>;
+  }
+
+  // Make the request
+  const promise = fetchJson<AxiomExplorerResponse>(`${API_BASE}/axioms`);
+  inFlightRequests.set(cacheKey, promise);
+
+  try {
+    const result = await promise;
+    setCache(cacheKey, result);
+    return result;
+  } finally {
+    inFlightRequests.delete(cacheKey);
+  }
 }
 
 /**
@@ -268,6 +363,8 @@ export async function getTelescopeState(options?: {
 
 /**
  * Navigate to a specific node.
+ *
+ * Accepts either K-Block IDs or file paths.
  */
 export async function navigateTo(
   nodeId: NodeId,
@@ -278,14 +375,23 @@ export async function navigateTo(
   loss: number;
   gradient: GradientVector | null;
 }> {
+  const normalizedId = normalizeNodeId(nodeId);
   return fetchJson(`${API_BASE}/navigate`, {
     method: 'POST',
-    body: JSON.stringify({ node_id: nodeId, action }),
+    body: JSON.stringify({ node_id: normalizedId, action }),
   });
 }
 
 /**
  * Get a single node's details.
+ *
+ * Accepts either K-Block IDs or file paths:
+ * - genesis:L0:entity (K-Block ID)
+ * - spec/genesis/L0/entity.md (file path, converted automatically)
+ *
+ * Features:
+ * - Caches responses for 5 seconds to prevent duplicate requests
+ * - Deduplicates in-flight requests (same node requested multiple times concurrently)
  */
 export async function getNode(nodeId: NodeId): Promise<{
   node: ZeroNode;
@@ -294,7 +400,43 @@ export async function getNode(nodeId: NodeId): Promise<{
   incoming_edges: ZeroEdge[];
   outgoing_edges: ZeroEdge[];
 }> {
-  return fetchJson(`${API_BASE}/nodes/${encodeURIComponent(nodeId)}`);
+  type NodeResponse = {
+    node: ZeroNode;
+    loss: NodeLoss;
+    proof: ToulminProof | null;
+    incoming_edges: ZeroEdge[];
+    outgoing_edges: ZeroEdge[];
+  };
+
+  const normalizedId = normalizeNodeId(nodeId);
+  const cacheKey = `node:${normalizedId}`;
+
+  // Check cache first
+  const cached = getCached<NodeResponse>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  // Check if there's already an in-flight request for this node
+  const inFlight = inFlightRequests.get(cacheKey);
+  if (inFlight) {
+    return inFlight as Promise<NodeResponse>;
+  }
+
+  // Make the request and cache it
+  const promise = fetchJson<NodeResponse>(`${API_BASE}/nodes/${encodeURIComponent(normalizedId)}`);
+
+  // Track in-flight request
+  inFlightRequests.set(cacheKey, promise);
+
+  try {
+    const result = await promise;
+    setCache(cacheKey, result);
+    return result;
+  } finally {
+    // Remove from in-flight map
+    inFlightRequests.delete(cacheKey);
+  }
 }
 
 /**
@@ -334,9 +476,12 @@ export interface NodeAnalysisResponse {
 
 /**
  * Get four-mode analysis for a Zero Seed node.
+ *
+ * Accepts either K-Block IDs or file paths.
  */
 export async function getNodeAnalysis(nodeId: NodeId): Promise<NodeAnalysisResponse> {
-  return fetchJson(`${API_BASE}/nodes/${encodeURIComponent(nodeId)}/analysis`);
+  const normalizedId = normalizeNodeId(nodeId);
+  return fetchJson(`${API_BASE}/nodes/${encodeURIComponent(normalizedId)}/analysis`);
 }
 
 // =============================================================================
@@ -355,9 +500,7 @@ export interface CreateWitnessedEdgeRequest {
  *
  * The edge inherits proof and confidence from the mark.
  */
-export async function createWitnessedEdge(
-  request: CreateWitnessedEdgeRequest
-): Promise<ZeroEdge> {
+export async function createWitnessedEdge(request: CreateWitnessedEdgeRequest): Promise<ZeroEdge> {
   return fetchJson<ZeroEdge>(`${API_BASE}/edges/from-mark`, {
     method: 'POST',
     body: JSON.stringify(request),

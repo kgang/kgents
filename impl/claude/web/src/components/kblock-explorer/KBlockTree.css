@@ -1,0 +1,286 @@
+/**
+ * KBlockTree Styles
+ *
+ * "Tree view with Constitutional section (22 genesis K-Blocks) and User section"
+ * "STARK BIOME: 90% steel, 10% earned glow"
+ *
+ * Design principles:
+ * - Clear section separation
+ * - Consistent with sidebar patterns
+ * - Scrollable with sticky headers
+ */
+
+/* =============================================================================
+   Tree Container
+   ============================================================================= */
+
+.kbe-tree {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+.kbe-tree::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kbe-tree::-webkit-scrollbar-track {
+  background: var(--steel-900);
+}
+
+.kbe-tree::-webkit-scrollbar-thumb {
+  background: var(--steel-700);
+  border-radius: var(--radius-md);
+}
+
+.kbe-tree::-webkit-scrollbar-thumb:hover {
+  background: var(--steel-600);
+}
+
+/* =============================================================================
+   User Section
+   ============================================================================= */
+
+.kbe-user {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--steel-800);
+}
+
+.kbe-user__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--steel-850);
+  border-bottom: 1px solid var(--steel-800);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.kbe-user__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.kbe-user__icon {
+  color: var(--steel-400);
+  flex-shrink: 0;
+}
+
+.kbe-user__title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--steel-200);
+}
+
+.kbe-user__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-left: calc(14px + var(--space-sm));
+}
+
+.kbe-user__count {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--steel-500);
+}
+
+.kbe-user__layers {
+  display: flex;
+  flex-direction: column;
+}
+
+.kbe-user__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  gap: var(--space-sm);
+}
+
+.kbe-user__empty-text {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--steel-400);
+  text-align: center;
+}
+
+.kbe-user__empty-hint {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--steel-600);
+  text-align: center;
+}
+
+/* =============================================================================
+   Orphans Section
+   ============================================================================= */
+
+.kbe-orphans {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--space-md);
+}
+
+.kbe-orphans__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--steel-850);
+  border-bottom: 1px solid var(--steel-800);
+}
+
+.kbe-orphans__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.kbe-orphans__icon {
+  color: #f59e0b; /* Warning amber */
+  flex-shrink: 0;
+}
+
+.kbe-orphans__title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--steel-200);
+}
+
+.kbe-orphans__count {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--steel-500);
+  background: var(--steel-800);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.kbe-orphans__hint {
+  margin: 0;
+  padding-left: calc(14px + var(--space-sm));
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--steel-600);
+}
+
+.kbe-orphans__list {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-sm) 0;
+}
+
+/* =============================================================================
+   Orphan Item
+   ============================================================================= */
+
+.kbe-orphan-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast);
+  outline: none;
+  width: 100%;
+  text-align: left;
+}
+
+.kbe-orphan-item:hover {
+  background: var(--steel-850);
+}
+
+.kbe-orphan-item:active {
+  transform: scale(0.99);
+}
+
+.kbe-orphan-item--selected {
+  background: var(--steel-800);
+}
+
+.kbe-orphan-item--selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent-gold);
+}
+
+.kbe-orphan-item--focused {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: -2px;
+}
+
+.kbe-orphan-item:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: -2px;
+}
+
+.kbe-orphan-item__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: var(--steel-800);
+  border: 1px solid var(--steel-700);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.kbe-orphan-item__title {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--steel-300);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kbe-orphan-item:hover .kbe-orphan-item__title,
+.kbe-orphan-item--selected .kbe-orphan-item__title {
+  color: var(--steel-100);
+}
+
+.kbe-orphan-item__loss {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--steel-600);
+  flex-shrink: 0;
+}
+
+/* =============================================================================
+   Reduced Motion
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .kbe-orphan-item {
+    transition: none;
+  }
+}

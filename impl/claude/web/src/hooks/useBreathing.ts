@@ -177,11 +177,10 @@ export function useBreathing(options: BreathingOptions = {}): BreathingState {
       return 1;
     }
     // Exhale phase (58-100%): 8 seconds - long, calming release
-    else {
-      const progress = (cyclePosition - 0.5789) / 0.4211;
-      // Ease-out curve for gentle landing
-      return Math.cos((progress * Math.PI) / 2);
-    }
+
+    const progress = (cyclePosition - 0.5789) / 0.4211;
+    // Ease-out curve for gentle landing
+    return Math.cos((progress * Math.PI) / 2);
   }, []);
 
   // Calculate scale at given time (4-7-8 pattern)

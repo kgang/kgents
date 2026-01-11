@@ -59,9 +59,8 @@ function formatDate(isoString: string): string {
     return `${Math.floor(hours)}h ago`;
   } else if (days < 7) {
     return `${Math.floor(days)}d ago`;
-  } else {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 // =============================================================================
@@ -96,15 +95,10 @@ export const CrystalCard = memo(function CrystalCard({
     >
       {/* Header */}
       <div className="crystal-card__header">
-        <span
-          className="crystal-card__level-badge"
-          style={{ color: levelColor }}
-        >
+        <span className="crystal-card__level-badge" style={{ color: levelColor }}>
           {crystal.level}
         </span>
-        <span className="crystal-card__timestamp">
-          {formatDate(crystal.crystallizedAt)}
-        </span>
+        <span className="crystal-card__timestamp">{formatDate(crystal.crystallizedAt)}</span>
         <div className="crystal-card__confidence-ring">
           <svg width="20" height="20" viewBox="0 0 20 20">
             <circle

@@ -14,7 +14,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { graphApi } from '../api/client';
+import { graphApi, fileApi } from '../api/client';
 import type { ConceptGraphNeighborsResponse } from '../api/types/_generated/concept-graph';
 import type { GraphNode, Edge, EdgeType } from './state/types';
 
@@ -42,6 +42,7 @@ export function normalizePath(path: string): string {
  * Edge labels look like: "edge.discovered: extends → spec/j-gents/integration.md"
  * File paths look like: "spec/agents/polynomial-agent.md" or "uploads/doc.pdf"
  * Zero Seed paths look like: "zero-seed/axioms/A1"
+ * Raw K-Block IDs look like: "genesis:L2:curated"
  *
  * This prevents infinite loops when edge labels are mistakenly passed to loadNode.
  */
@@ -49,6 +50,18 @@ export function isValidFilePath(path: string): boolean {
   // Zero Seed paths are always valid (handled specially in useFileUpload)
   // Format: zero-seed/{category}/{id}
   if (path.startsWith('zero-seed/')) {
+    return true;
+  }
+
+  // K-Block paths are always valid (handled specially in useFileUpload)
+  // Format: kblock/{id} where id is like "genesis:L0:entity"
+  if (path.startsWith('kblock/')) {
+    return true;
+  }
+
+  // Raw K-Block IDs are valid (handled specially in useFileUpload)
+  // Format: genesis:L{layer}:{name} or {namespace}:L{layer}:{name}
+  if (/^[a-z]+:L\d+:[a-z_]+$/i.test(path)) {
     return true;
   }
 
@@ -70,17 +83,18 @@ export function isValidFilePath(path: string): boolean {
   }
 
   // Must not contain control characters or obvious edge label markers
-  if (path.includes(': ') && (
-    path.includes('extends') ||
-    path.includes('implements') ||
-    path.includes('references') ||
-    path.includes('derives_from') ||
-    path.includes('contradicts') ||
-    path.includes('contains') ||
-    path.includes('uses') ||
-    path.includes('defines') ||
-    path.includes('tests')
-  )) {
+  if (
+    path.includes(': ') &&
+    (path.includes('extends') ||
+      path.includes('implements') ||
+      path.includes('references') ||
+      path.includes('derives_from') ||
+      path.includes('contradicts') ||
+      path.includes('contains') ||
+      path.includes('uses') ||
+      path.includes('defines') ||
+      path.includes('tests'))
+  ) {
     return false;
   }
 
@@ -304,15 +318,32 @@ export function useGraphNode(): UseGraphNodeResult {
     }
 
     try {
-      // Query WitnessedGraph for edges connected to this path
-      const neighborsResponse = await graphApi.neighbors(normalizedPath);
+      // Determine if this is a file path that can be fetched for content
+      const isFilePath =
+        normalizedPath.startsWith('spec/') ||
+        normalizedPath.startsWith('impl/') ||
+        normalizedPath.startsWith('docs/');
 
-      // NOTE: Content is NOT loaded here anymore!
-      // Content comes through K-Block when editing (via SpecView.tsx)
-      // This enforces inbound sovereignty - we only serve content from our managed store
-      // If content is needed, use K-Block create which queries Cosmos → SovereignStore
+      // Fetch neighbors and content in parallel for performance
+      const [neighborsResult, contentResult] = await Promise.allSettled([
+        graphApi.neighbors(normalizedPath),
+        // Fetch content in parallel for file paths
+        isFilePath ? fileApi.read(normalizedPath) : Promise.resolve(null),
+      ]);
 
-      return convertNeighborsToGraphNode(normalizedPath, neighborsResponse, undefined);
+      // Extract neighbors response (required)
+      const neighborsResponse =
+        neighborsResult.status === 'fulfilled' ? neighborsResult.value : null;
+      if (!neighborsResponse) {
+        throw neighborsResult.status === 'rejected'
+          ? neighborsResult.reason
+          : new Error('Failed to load neighbors');
+      }
+
+      // Extract content (optional - graceful degradation if unavailable)
+      const contentData = contentResult.status === 'fulfilled' ? contentResult.value : null;
+
+      return convertNeighborsToGraphNode(normalizedPath, neighborsResponse, contentData?.content);
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Failed to load node';
       setError(errorMsg);

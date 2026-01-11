@@ -16,7 +16,11 @@ import { memo, useCallback, useMemo } from 'react';
 import type { FeedItemProps, KBlock } from './types';
 import { LAYER_NAMES, LAYER_COLORS, LOSS_COLORS, LOSS_THRESHOLDS } from './types';
 import { ContradictionBadge } from '../Contradiction/ContradictionBadge';
-import { useItemContradictions, getSeverityLevel, getOtherKBlock } from '../../hooks/useItemContradictions';
+import {
+  useItemContradictions,
+  getSeverityLevel,
+  getOtherKBlock,
+} from '../../hooks/useItemContradictions';
 
 // =============================================================================
 // Component
@@ -47,7 +51,11 @@ export const FeedItem = memo(function FeedItem({
   }, [onView]);
 
   // Fetch contradictions for this K-Block
-  const { contradictions, count: contradictionCount, loading: contradictionsLoading } = useItemContradictions(kblock.id);
+  const {
+    contradictions,
+    count: contradictionCount,
+    loading: contradictionsLoading,
+  } = useItemContradictions(kblock.id);
 
   // Calculate the highest severity among all contradictions
   const maxSeverity = useMemo(() => {
@@ -71,9 +79,10 @@ export const FeedItem = memo(function FeedItem({
           title: otherKBlock.title || 'Untitled',
           content: otherKBlock.content,
           layer: otherKBlock.layer || 1,
-          loss: firstContradiction.k_block_a.id === kblock.id
-            ? firstContradiction.loss_b
-            : firstContradiction.loss_a,
+          loss:
+            firstContradiction.k_block_a.id === kblock.id
+              ? firstContradiction.loss_b
+              : firstContradiction.loss_a,
           author: 'unknown',
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -109,10 +118,7 @@ export const FeedItem = memo(function FeedItem({
 
         {/* Contradiction badge (show if contradictions exist) */}
         {!contradictionsLoading && contradictionCount > 0 && (
-          <div
-            className="feed-item__contradiction"
-            onClick={handleContradictionClick}
-          >
+          <div className="feed-item__contradiction" onClick={handleContradictionClick}>
             <ContradictionBadge
               hasContradiction={true}
               severity={getSeverityLevel(maxSeverity)}
@@ -120,9 +126,7 @@ export const FeedItem = memo(function FeedItem({
               tooltip={`${contradictionCount} contradiction${contradictionCount > 1 ? 's' : ''} detected`}
             />
             {contradictionCount > 1 && (
-              <span className="feed-item__contradiction-count">
-                {contradictionCount}
-              </span>
+              <span className="feed-item__contradiction-count">{contradictionCount}</span>
             )}
           </div>
         )}
@@ -167,9 +171,7 @@ export const FeedItem = memo(function FeedItem({
               </span>
             ))}
             {kblock.tags.length > 3 && (
-              <span className="feed-item__tag feed-item__tag--more">
-                +{kblock.tags.length - 3}
-              </span>
+              <span className="feed-item__tag feed-item__tag--more">+{kblock.tags.length - 3}</span>
             )}
           </div>
         )}
@@ -179,9 +181,7 @@ export const FeedItem = memo(function FeedItem({
       <div className="feed-item__content">
         {isExpanded ? (
           // Full content (Markdown rendered)
-          <div className="feed-item__full-content">
-            {kblock.content}
-          </div>
+          <div className="feed-item__full-content">{kblock.content}</div>
         ) : (
           // Preview
           <div className="feed-item__preview">
@@ -244,9 +244,7 @@ export const FeedItem = memo(function FeedItem({
       )}
 
       {/* Expand indicator */}
-      <div className="feed-item__expand-indicator">
-        {isExpanded ? '▲' : '▼'}
-      </div>
+      <div className="feed-item__expand-indicator">{isExpanded ? '▲' : '▼'}</div>
     </div>
   );
 });
@@ -303,7 +301,6 @@ function getLossColor(loss: number): string {
     return LOSS_COLORS.WARNING;
   } else if (loss < LOSS_THRESHOLDS.CRITICAL) {
     return LOSS_COLORS.CRITICAL;
-  } else {
-    return LOSS_COLORS.EMERGENCY;
   }
+  return LOSS_COLORS.EMERGENCY;
 }

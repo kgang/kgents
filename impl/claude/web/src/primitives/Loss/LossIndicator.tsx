@@ -59,10 +59,9 @@ function getLossColor(loss: number): string {
   } else if (clamped < 0.8) {
     // 0.50-0.80: Alert orange
     return 'var(--health-warning, #f97316)';
-  } else {
-    // 0.80-1.00: Critical red
-    return 'var(--health-critical, #ef4444)';
   }
+  // 0.80-1.00: Critical red
+  return 'var(--health-critical, #ef4444)';
 }
 
 /**

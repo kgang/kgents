@@ -159,7 +159,10 @@ const MOCK_TABLE_DATA: { columns: TableColumn[]; rows: Record<string, unknown>[]
   ],
 };
 
-const MOCK_GRAPH_DATA: Record<GraphType, { labels: string[]; datasets: { label: string; data: number[] }[] }> = {
+const MOCK_GRAPH_DATA: Record<
+  GraphType,
+  { labels: string[]; datasets: { label: string; data: number[] }[] }
+> = {
   line: {
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [
@@ -169,27 +172,19 @@ const MOCK_GRAPH_DATA: Record<GraphType, { labels: string[]; datasets: { label: 
   },
   bar: {
     labels: ['Brain', 'Town', 'Witness', 'Atelier', 'Liminal'],
-    datasets: [
-      { label: 'Uptime %', data: [99.2, 87.5, 100, 95.3, 88.1] },
-    ],
+    datasets: [{ label: 'Uptime %', data: [99.2, 87.5, 100, 95.3, 88.1] }],
   },
   pie: {
     labels: ['Active', 'Dormant', 'Dreaming', 'Seeding'],
-    datasets: [
-      { label: 'Agent States', data: [42, 18, 25, 15] },
-    ],
+    datasets: [{ label: 'Agent States', data: [42, 18, 25, 15] }],
   },
   doughnut: {
     labels: ['Success', 'Refusal', 'Error', 'Cached'],
-    datasets: [
-      { label: 'Response Types', data: [156, 12, 8, 45] },
-    ],
+    datasets: [{ label: 'Response Types', data: [156, 12, 8, 45] }],
   },
   radar: {
     labels: ['Tasteful', 'Curated', 'Ethical', 'Joy-Inducing', 'Composable'],
-    datasets: [
-      { label: 'K-gent Principles', data: [92, 88, 100, 85, 78] },
-    ],
+    datasets: [{ label: 'K-gent Principles', data: [92, 88, 100, 85, 78] }],
   },
 };
 
@@ -300,13 +295,15 @@ export const TextWidgetStory: StoryObj = {
 
         {variants.map((variant) => (
           <div key={variant} style={{ marginBottom: 'var(--space-xl)' }}>
-            <h3 style={{
-              color: 'var(--text-secondary)',
-              fontSize: 'var(--font-size-sm)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              marginBottom: 'var(--space-sm)',
-            }}>
+            <h3
+              style={{
+                color: 'var(--text-secondary)',
+                fontSize: 'var(--font-size-sm)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: 'var(--space-sm)',
+              }}
+            >
               variant="{variant}"
             </h3>
             <TextWidget content={MOCK_TEXT_SAMPLES[variant]} variant={variant} />
@@ -315,38 +312,34 @@ export const TextWidgetStory: StoryObj = {
 
         {/* Truncation Demo */}
         <div style={{ marginTop: 'var(--space-2xl)' }}>
-          <h3 style={{
-            color: 'var(--text-secondary)',
-            fontSize: 'var(--font-size-sm)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            marginBottom: 'var(--space-sm)',
-          }}>
+          <h3
+            style={{
+              color: 'var(--text-secondary)',
+              fontSize: 'var(--font-size-sm)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: 'var(--space-sm)',
+            }}
+          >
             Truncation (truncateLines=2)
           </h3>
-          <TextWidget
-            content={MOCK_TEXT_SAMPLES.plain}
-            variant="plain"
-            truncateLines={2}
-          />
+          <TextWidget content={MOCK_TEXT_SAMPLES.plain} variant="plain" truncateLines={2} />
         </div>
 
         {/* Highlight Demo */}
         <div style={{ marginTop: 'var(--space-xl)' }}>
-          <h3 style={{
-            color: 'var(--text-secondary)',
-            fontSize: 'var(--font-size-sm)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            marginBottom: 'var(--space-sm)',
-          }}>
+          <h3
+            style={{
+              color: 'var(--text-secondary)',
+              fontSize: 'var(--font-size-sm)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: 'var(--space-sm)',
+            }}
+          >
             Highlighting (highlight="fox|dog")
           </h3>
-          <TextWidget
-            content={MOCK_TEXT_SAMPLES.plain}
-            variant="plain"
-            highlight="fox|dog"
-          />
+          <TextWidget content={MOCK_TEXT_SAMPLES.plain} variant="plain" highlight="fox|dog" />
         </div>
       </div>
     );
@@ -374,10 +367,12 @@ export const TableWidgetStory: StoryObj = {
 
         {/* Basic Table */}
         <div style={{ marginBottom: 'var(--space-2xl)' }}>
-          <h3 style={{
-            color: 'var(--text-secondary)',
-            marginBottom: 'var(--space-md)',
-          }}>
+          <h3
+            style={{
+              color: 'var(--text-secondary)',
+              marginBottom: 'var(--space-md)',
+            }}
+          >
             Basic Table (pageSize=5, sortable)
           </h3>
           <TableWidget
@@ -391,10 +386,12 @@ export const TableWidgetStory: StoryObj = {
 
         {/* Selectable Table */}
         <div style={{ marginBottom: 'var(--space-2xl)' }}>
-          <h3 style={{
-            color: 'var(--text-secondary)',
-            marginBottom: 'var(--space-md)',
-          }}>
+          <h3
+            style={{
+              color: 'var(--text-secondary)',
+              marginBottom: 'var(--space-md)',
+            }}
+          >
             Selectable Table (selectable=true)
           </h3>
           <TableWidget
@@ -437,22 +434,26 @@ export const GraphWidgetStory: StoryObj = {
           GraphWidget: Chart.js Visualization
         </h2>
         <p style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-xl)' }}>
-          Supports line, bar, pie, doughnut, and radar charts.
-          Currently renders placeholders (install chart.js for full interactivity).
+          Supports line, bar, pie, doughnut, and radar charts. Currently renders placeholders
+          (install chart.js for full interactivity).
         </p>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: 'var(--space-xl)',
-        }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+            gap: 'var(--space-xl)',
+          }}
+        >
           {chartTypes.map((type) => (
             <div key={type}>
-              <h3 style={{
-                color: 'var(--text-secondary)',
-                marginBottom: 'var(--space-md)',
-                textTransform: 'capitalize',
-              }}>
+              <h3
+                style={{
+                  color: 'var(--text-secondary)',
+                  marginBottom: 'var(--space-md)',
+                  textTransform: 'capitalize',
+                }}
+              >
                 {type} Chart
               </h3>
               <GraphWidget
@@ -612,11 +613,7 @@ export const SelectWidgetStory: StoryObj = {
           <h3 style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
             Disabled Select
           </h3>
-          <SelectWidget
-            options={MOCK_SELECT_OPTIONS}
-            value="brain"
-            disabled
-          />
+          <SelectWidget options={MOCK_SELECT_OPTIONS} value="brain" disabled />
         </div>
       </div>
     );
@@ -672,8 +669,8 @@ export const ConfirmWidgetStory: StoryObj = {
             confirmLabel="Delete All"
             cancelLabel="Keep Marks"
             destructive
-            onConfirm={() => alert('Deleted!')}
-            onCancel={() => alert('Cancelled')}
+            onConfirm={() => console.info('Deleted!')}
+            onCancel={() => console.info('Cancelled')}
           />
         </div>
 
@@ -861,7 +858,14 @@ export const StreamWidgetStory: StoryObj = {
 export const ErrorPanelStory: StoryObj = {
   name: '8. ErrorPanel - Error Display',
   render: () => {
-    const categories: ErrorCategory[] = ['network', 'notFound', 'permission', 'timeout', 'validation', 'unknown'];
+    const categories: ErrorCategory[] = [
+      'network',
+      'notFound',
+      'permission',
+      'timeout',
+      'validation',
+      'unknown',
+    ];
 
     return (
       <div style={{ maxWidth: '700px' }}>
@@ -876,7 +880,7 @@ export const ErrorPanelStory: StoryObj = {
           <div key={category} style={{ marginBottom: 'var(--space-lg)' }}>
             <ErrorPanel
               error={MOCK_ERROR_BY_CATEGORY[category]}
-              onRetry={() => alert(`Retrying ${category}...`)}
+              onRetry={() => console.info(`Retrying ${category}...`)}
             />
           </div>
         ))}
@@ -886,10 +890,7 @@ export const ErrorPanelStory: StoryObj = {
           <h3 style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
             With Retry Disabled
           </h3>
-          <ErrorPanel
-            error={MOCK_ERROR_BY_CATEGORY.network}
-            showRetry={false}
-          />
+          <ErrorPanel error={MOCK_ERROR_BY_CATEGORY.network} showRetry={false} />
         </div>
       </div>
     );
@@ -931,16 +932,16 @@ export const RefusalPanelStory: StoryObj = {
           RefusalPanel: Semantic Refusal Display
         </h2>
         <p style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-xl)' }}>
-          Distinct from errors - refusals are intentional agent decisions.
-          Uses purple/magenta styling to differentiate.
+          Distinct from errors - refusals are intentional agent decisions. Uses purple/magenta
+          styling to differentiate.
         </p>
 
         {refusalVariants.map((refusal, i) => (
           <div key={i} style={{ marginBottom: 'var(--space-lg)' }}>
             <RefusalPanel
               refusal={refusal}
-              onAppeal={() => alert(`Appealing to ${refusal.appealTo}...`)}
-              onOverride={() => alert(`Overriding for ${refusal.overrideCost} tokens...`)}
+              onAppeal={() => console.info(`Appealing to ${refusal.appealTo}...`)}
+              onOverride={() => console.info(`Overriding for ${refusal.overrideCost} tokens...`)}
             />
           </div>
         ))}
@@ -950,11 +951,7 @@ export const RefusalPanelStory: StoryObj = {
           <h3 style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
             Read-Only (no appeal/override)
           </h3>
-          <RefusalPanel
-            refusal={MOCK_REFUSAL}
-            showAppeal={false}
-            showOverride={false}
-          />
+          <RefusalPanel refusal={MOCK_REFUSAL} showAppeal={false} showOverride={false} />
         </div>
       </div>
     );
@@ -1015,7 +1012,10 @@ export const CachedBadgeStory: StoryObj = {
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
             {cacheVariants.map((cache, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+              <div
+                key={i}
+                style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}
+              >
                 <CachedBadge cache={cache} position="inline" />
                 <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>
                   (hover for tooltip)
@@ -1030,14 +1030,16 @@ export const CachedBadgeStory: StoryObj = {
           <h3 style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
             Absolute Position (top-right of container)
           </h3>
-          <div style={{
-            position: 'relative',
-            padding: 'var(--space-lg)',
-            background: 'var(--surface-1)',
-            border: '1px solid var(--surface-3)',
-            borderRadius: 'var(--radius-bare)',
-            minHeight: '100px',
-          }}>
+          <div
+            style={{
+              position: 'relative',
+              padding: 'var(--space-lg)',
+              background: 'var(--surface-1)',
+              border: '1px solid var(--surface-3)',
+              borderRadius: 'var(--radius-bare)',
+              minHeight: '100px',
+            }}
+          >
             <CachedBadge cache={MOCK_CACHE} position="absolute" />
             <p style={{ color: 'var(--text-secondary)' }}>
               Content area with absolute-positioned cache badge.
@@ -1093,11 +1095,13 @@ export const GalleryComponentsStory: StoryObj = {
           <h3 style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
             CategoryFilter
           </h3>
-          <div style={{
-            padding: 'var(--space-md)',
-            background: 'var(--surface-1)',
-            borderRadius: 'var(--radius-bare)',
-          }}>
+          <div
+            style={{
+              padding: 'var(--space-md)',
+              background: 'var(--surface-1)',
+              borderRadius: 'var(--radius-bare)',
+            }}
+          >
             <CategoryFilter
               categories={mockCategories}
               activeCategory={activeCategory}
@@ -1115,15 +1119,14 @@ export const GalleryComponentsStory: StoryObj = {
           <h3 style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
             OverrideControls
           </h3>
-          <div style={{
-            padding: 'var(--space-md)',
-            background: 'var(--surface-1)',
-            borderRadius: 'var(--radius-bare)',
-          }}>
-            <OverrideControls
-              overrides={overrides}
-              onChange={setOverrides}
-            />
+          <div
+            style={{
+              padding: 'var(--space-md)',
+              background: 'var(--surface-1)',
+              borderRadius: 'var(--radius-bare)',
+            }}
+          >
+            <OverrideControls overrides={overrides} onChange={setOverrides} />
           </div>
           <p style={{ color: 'var(--text-muted)', marginTop: 'var(--space-sm)' }}>
             Overrides: {JSON.stringify(overrides)}
@@ -1135,16 +1138,15 @@ export const GalleryComponentsStory: StoryObj = {
           <h3 style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
             ProjectionView (CLI/HTML/JSON tabs)
           </h3>
-          <div style={{
-            padding: 'var(--space-md)',
-            background: 'var(--surface-1)',
-            borderRadius: 'var(--radius-bare)',
-            height: '200px',
-          }}>
-            <ProjectionView
-              projections={mockPilot.projections}
-              defaultTab="cli"
-            />
+          <div
+            style={{
+              padding: 'var(--space-md)',
+              background: 'var(--surface-1)',
+              borderRadius: 'var(--radius-bare)',
+              height: '200px',
+            }}
+          >
+            <ProjectionView projections={mockPilot.projections} defaultTab="cli" />
           </div>
         </div>
 
@@ -1154,10 +1156,7 @@ export const GalleryComponentsStory: StoryObj = {
             PilotCard
           </h3>
           <div style={{ maxWidth: '400px' }}>
-            <PilotCard
-              pilot={mockPilot}
-              onClick={() => alert('Clicked!')}
-            />
+            <PilotCard pilot={mockPilot} onClick={() => console.info('Clicked!')} />
           </div>
         </div>
       </div>
@@ -1172,7 +1171,9 @@ export const GalleryComponentsStory: StoryObj = {
 export const CombinedDemoStory: StoryObj = {
   name: '12. Combined Widget Demo',
   render: () => {
-    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'refusal'>('idle');
+    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'refusal'>(
+      'idle'
+    );
     const [progress, setProgress] = useState(0);
 
     const simulateInvocation = () => {
@@ -1235,13 +1236,15 @@ export const CombinedDemoStory: StoryObj = {
         </div>
 
         {/* Status Display */}
-        <div style={{
-          padding: 'var(--space-lg)',
-          background: 'var(--surface-1)',
-          border: '1px solid var(--surface-3)',
-          borderRadius: 'var(--radius-bare)',
-          position: 'relative',
-        }}>
+        <div
+          style={{
+            padding: 'var(--space-lg)',
+            background: 'var(--surface-1)',
+            border: '1px solid var(--surface-3)',
+            borderRadius: 'var(--radius-bare)',
+            position: 'relative',
+          }}
+        >
           {status === 'idle' && (
             <TextWidget
               content="Ready to invoke agent. Click the button to start."
@@ -1256,10 +1259,7 @@ export const CombinedDemoStory: StoryObj = {
           {status === 'success' && (
             <>
               <CachedBadge cache={MOCK_CACHE} position="absolute" />
-              <TextWidget
-                content="Analysis Complete"
-                variant="heading"
-              />
+              <TextWidget content="Analysis Complete" variant="heading" />
               <div style={{ marginTop: 'var(--space-md)' }}>
                 <TableWidget
                   columns={MOCK_TABLE_DATA.columns.slice(0, 3)}
@@ -1271,16 +1271,13 @@ export const CombinedDemoStory: StoryObj = {
           )}
 
           {status === 'error' && (
-            <ErrorPanel
-              error={MOCK_ERROR_BY_CATEGORY.network}
-              onRetry={simulateInvocation}
-            />
+            <ErrorPanel error={MOCK_ERROR_BY_CATEGORY.network} onRetry={simulateInvocation} />
           )}
 
           {status === 'refusal' && (
             <RefusalPanel
               refusal={MOCK_REFUSAL}
-              onAppeal={() => alert('Appealing...')}
+              onAppeal={() => console.info('Appealing...')}
               onOverride={() => {
                 setStatus('success');
               }}

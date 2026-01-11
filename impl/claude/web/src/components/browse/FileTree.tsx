@@ -12,7 +12,7 @@
  * Philosophy: "Tasteful > feature-complete" — compact sidebar tree with visual clarity
  */
 
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import {
   ChevronRight,
   Folder,
@@ -213,8 +213,11 @@ function getNodeIcon(node: TreeNode, expanded: boolean) {
 
 /**
  * FileTree component.
+ *
+ * Wrapped in React.memo to prevent re-renders when parent state changes
+ * (e.g., when navigating to a new document, the tree structure doesn't change).
  */
-export function FileTree({
+export const FileTree = memo(function FileTree({
   rootPaths,
   onSelectFile,
   currentFile,
@@ -332,10 +335,7 @@ export function FileTree({
             <div className="file-tree__badges">
               {/* Layer badge for K-Block nodes */}
               {node.layer !== undefined && (
-                <span
-                  className="file-tree__badge file-tree__badge--layer"
-                  data-layer={node.layer}
-                >
+                <span className="file-tree__badge file-tree__badge--layer" data-layer={node.layer}>
                   L{node.layer}
                 </span>
               )}
@@ -362,4 +362,4 @@ export function FileTree({
       })}
     </div>
   );
-}
+});

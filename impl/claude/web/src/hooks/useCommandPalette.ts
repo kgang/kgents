@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 // Types
 // =============================================================================
 
-export type CommandCategory = 'navigation' | 'action' | 'agentese' | 'recent';
+export type CommandCategory = 'navigation' | 'action' | 'workflow' | 'agentese' | 'recent';
 
 export interface Command {
   /** Unique identifier */
@@ -163,7 +163,13 @@ function searchCommands(commands: Command[], query: string): Command[] {
 // Default Commands
 // =============================================================================
 
-const CATEGORY_ORDER: CommandCategory[] = ['recent', 'navigation', 'action', 'agentese'];
+const CATEGORY_ORDER: CommandCategory[] = [
+  'recent',
+  'navigation',
+  'action',
+  'workflow',
+  'agentese',
+];
 
 function createDefaultCommands(navigate: (path: string) => void): Command[] {
   return [
@@ -204,9 +210,9 @@ function createDefaultCommands(navigate: (path: string) => void): Command[] {
       category: 'navigation',
       shortcut: 'Shift+G',
       icon: '\u2726', // ✦
-      description: 'First-time user experience showcase',
-      action: () => navigate('/genesis/showcase'),
-      keywords: ['ftue', 'onboarding', 'first', 'showcase', 'demo'],
+      description: 'Constitutional Graph — witness the foundation',
+      action: () => navigate('/genesis'),
+      keywords: ['ftue', 'onboarding', 'first', 'constitutional', 'graph', 'foundation'],
     },
     {
       id: 'nav-meta',
@@ -290,6 +296,93 @@ function createDefaultCommands(navigate: (path: string) => void): Command[] {
         window.dispatchEvent(new CustomEvent('kgents:toggle-chat'));
       },
       keywords: ['chat', 'sidebar', 'conversation', 'toggle'],
+    },
+
+    // Workflow commands
+    {
+      id: 'workflow-generate-impl',
+      label: 'Generate implementation from spec',
+      category: 'workflow',
+      shortcut: 'Ctrl+Shift+G',
+      icon: '\u2699', // ⚙
+      description: 'Generate code implementation from specification',
+      action: () => {
+        console.info('[CommandPalette] Generate implementation triggered');
+        window.dispatchEvent(
+          new CustomEvent('kgents:workflow', {
+            detail: { action: 'generate-impl' },
+          })
+        );
+      },
+      keywords: ['generate', 'implementation', 'spec', 'code', 'impl'],
+    },
+    {
+      id: 'workflow-ai-interview',
+      label: 'Start AI interview on this node',
+      category: 'workflow',
+      shortcut: 'Ctrl+Shift+I',
+      icon: '\u2630', // ☰
+      description: 'Begin an AI-guided interview for the current node',
+      action: () => {
+        console.info('[CommandPalette] AI interview triggered');
+        window.dispatchEvent(
+          new CustomEvent('kgents:workflow', {
+            detail: { action: 'ai-interview' },
+          })
+        );
+      },
+      keywords: ['interview', 'ai', 'node', 'question', 'dialogue'],
+    },
+    {
+      id: 'workflow-create-derivation',
+      label: 'Create derivation child',
+      category: 'workflow',
+      shortcut: 'Ctrl+Shift+N',
+      icon: '\u2B65', // ⭥
+      description: 'Create a new derived K-Block from the current node',
+      action: () => {
+        console.info('[CommandPalette] Create derivation child triggered');
+        window.dispatchEvent(
+          new CustomEvent('kgents:workflow', {
+            detail: { action: 'create-derivation' },
+          })
+        );
+      },
+      keywords: ['derivation', 'child', 'derive', 'kblock', 'new'],
+    },
+    {
+      id: 'workflow-compare-spec',
+      label: 'Compare spec vs implementation',
+      category: 'workflow',
+      shortcut: 'Ctrl+Shift+D',
+      icon: '\u21C4', // ⇄
+      description: 'Diff specification against implementation for drift',
+      action: () => {
+        console.info('[CommandPalette] Compare spec vs implementation triggered');
+        window.dispatchEvent(
+          new CustomEvent('kgents:workflow', {
+            detail: { action: 'compare-spec' },
+          })
+        );
+      },
+      keywords: ['compare', 'spec', 'implementation', 'diff', 'drift'],
+    },
+    {
+      id: 'workflow-crystallize-session',
+      label: 'Crystallize session',
+      category: 'workflow',
+      shortcut: 'Ctrl+Shift+C',
+      icon: '\u2B22', // ⬢
+      description: 'Crystallize current session insights into memory',
+      action: () => {
+        console.info('[CommandPalette] Crystallize session triggered');
+        window.dispatchEvent(
+          new CustomEvent('kgents:workflow', {
+            detail: { action: 'crystallize-session' },
+          })
+        );
+      },
+      keywords: ['crystallize', 'session', 'memory', 'persist', 'insight'],
     },
 
     // AGENTESE commands
@@ -517,6 +610,36 @@ export function useCommandPalette(options: UseCommandPaletteOptions = {}): UseCo
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
+
+  // Global workflow shortcuts (Ctrl+Shift+G/I/N/D/C)
+  useEffect(() => {
+    const handleWorkflowShortcut = (e: KeyboardEvent) => {
+      // Only handle Ctrl+Shift or Cmd+Shift combinations
+      if (!((e.ctrlKey || e.metaKey) && e.shiftKey)) return;
+
+      const workflowShortcuts: Record<string, string> = {
+        g: 'workflow-generate-impl',
+        i: 'workflow-ai-interview',
+        n: 'workflow-create-derivation',
+        d: 'workflow-compare-spec',
+        c: 'workflow-crystallize-session',
+      };
+
+      const key = e.key.toLowerCase();
+      const commandId = workflowShortcuts[key];
+
+      if (commandId) {
+        e.preventDefault();
+        const command = commandsRef.current.find((cmd) => cmd.id === commandId);
+        if (command) {
+          void command.action();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleWorkflowShortcut);
+    return () => window.removeEventListener('keydown', handleWorkflowShortcut);
+  }, []);
 
   // Actions
   const open = useCallback(() => {

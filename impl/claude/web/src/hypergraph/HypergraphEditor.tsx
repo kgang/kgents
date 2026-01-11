@@ -48,6 +48,18 @@ import { AnalysisQuadrant } from '../components/analysis/AnalysisQuadrant';
 import { ProofPanel } from './ProofPanel';
 import { ProofStatusBadge } from './ProofStatusBadge';
 import { WitnessedTrail } from './WitnessedTrail';
+import { AffordancePanel } from './AffordancePanel';
+import { DerivationTrailBar } from './DerivationTrailBar';
+import type { DerivationPath } from './DerivationTrailBar';
+import { DerivationInspector } from './DerivationInspector';
+import type {
+  DerivationNode as InspectorDerivationNode,
+  Witness,
+  DownstreamKBlock,
+} from './DerivationInspector';
+import { CoherenceBadge } from './CoherenceBadge';
+import { useDerivationStore, selectAllKBlocks } from '../stores/derivationStore';
+import { useShallow } from 'zustand/react/shallow';
 
 import './HypergraphEditor.css';
 
@@ -120,6 +132,25 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   // Derivation navigation (Constitutional graph traversal)
   const derivationNav = useDerivationNavigation();
 
+  // Global derivation store (Zustand) for coherence tracking
+  // Actions are stable references - use direct access without selector to avoid getSnapshot issues
+  const derivationStore = useDerivationStore;
+  const computeDerivation = derivationStore.getState().computeDerivation;
+  const groundKBlock = derivationStore.getState().groundKBlock;
+  const setCurrentDerivationPath = derivationStore.getState().setCurrentDerivationPath;
+  const realizeProject = derivationStore.getState().realizeProject;
+
+  // Data selectors - primitives don't need useShallow, arrays/objects do
+  const storeDerivationPath = useDerivationStore(
+    useShallow((state) => state.currentDerivationPath)
+  );
+  const coherenceSummary = useDerivationStore(useShallow((state) => state.coherenceSummary));
+  const derivationStoreLoading = useDerivationStore((state) => state.isLoading);
+
+  // Get all K-Block IDs for project realization
+  // Use useShallow to prevent infinite loop from array reference changes
+  const allKBlocks = useDerivationStore(useShallow(selectAllKBlocks));
+
   // Witness navigation (fire-and-forget marking)
   // Stream 1: Wire navigation actions to create witness marks automatically
   // Every gD/gl/gh navigation creates a mark with principle scoring
@@ -159,6 +190,27 @@ export const HypergraphEditor = memo(function HypergraphEditor({
 
   // Edge metadata panel state
   const [edgePanelOpen, setEdgePanelOpen] = useState(false);
+
+  // Navigation loading state - shows overlay while loading new document
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Affordance panel state (? key to show)
+  const [affordancePanelVisible, setAffordancePanelVisible] = useState(false);
+
+  // Derivation trail bar state
+  const [derivationPath, setDerivationPath] = useState<DerivationPath | null>(null);
+  const [groundingDialogOpen, setGroundingDialogOpen] = useState(false);
+  // Note: groundingDialogOpen is for future grounding dialog feature (TODO)
+  void groundingDialogOpen; // Suppress unused warning
+
+  // Derivation Inspector state (gd toggle)
+  const [derivationInspectorOpen, setDerivationInspectorOpen] = useState(false);
+  const [derivationInspectorLoading, setDerivationInspectorLoading] = useState(false);
+  const [derivationInspectorData, setDerivationInspectorData] = useState<{
+    derivationNodes: InspectorDerivationNode[];
+    witnesses: Witness[];
+    downstream: DownstreamKBlock[];
+  }>({ derivationNodes: [], witnesses: [], downstream: [] });
 
   // Loss navigation state (focal distance for future telescope integration)
   const [focalDistance, setFocalDistance] = useState(1.0);
@@ -475,12 +527,280 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     witnessNavigation,
   ]);
 
+  // Track last computed path to prevent infinite loop
+  const lastComputedDerivationPathRef = useRef<string | null>(null);
+
   // Update derivation navigation context when node changes
+  // Note: derivationNav is stable across renders (hooks return stable references)
+  // so we intentionally omit it from deps to prevent duplicate API calls
   useEffect(() => {
-    if (state.currentNode?.path) {
-      derivationNav.setCurrentNode(state.currentNode.path);
+    const path = state.currentNode?.path;
+    if (path) {
+      // Guard: Don't recompute for the same path (prevents infinite loop)
+      if (lastComputedDerivationPathRef.current === path) {
+        return;
+      }
+      lastComputedDerivationPathRef.current = path;
+
+      derivationNav.setCurrentNode(path);
+      // Also compute derivation path via global store for coherence tracking
+      computeDerivation(path);
     }
-  }, [state.currentNode?.path, derivationNav]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.currentNode?.path, computeDerivation]);
+
+  // Track last fetched path to prevent duplicate API calls
+  const lastFetchedLineagePathRef = useRef<string | null>(null);
+
+  // Fetch derivation path when current node changes
+  // This populates the DerivationTrailBar with the constitutional trace
+  useEffect(() => {
+    const path = state.currentNode?.path;
+
+    async function fetchDerivationPath() {
+      if (!path) {
+        setDerivationPath(null);
+        return;
+      }
+
+      // Guard: Don't refetch for the same path (prevents duplicate calls)
+      if (lastFetchedLineagePathRef.current === path) {
+        return;
+      }
+      lastFetchedLineagePathRef.current = path;
+
+      try {
+        // Fetch derivation lineage from the API
+        const response = await fetch(`/api/zero-seed/lineage?path=${encodeURIComponent(path)}`);
+
+        if (!response.ok) {
+          // If endpoint doesn't exist yet or fails, set orphan state
+          setDerivationPath({
+            nodes: [],
+            state: 'orphan',
+            totalLoss: 0,
+            stateMessage: 'Derivation path not available',
+          });
+          return;
+        }
+
+        const lineage = await response.json();
+
+        // Transform lineage into DerivationPath format
+        if (lineage?.nodes && lineage.nodes.length > 0) {
+          setDerivationPath({
+            nodes: lineage.nodes,
+            state: lineage.state || 'grounded',
+            totalLoss: lineage.totalLoss || 0,
+            stateMessage: lineage.stateMessage,
+          });
+        } else {
+          // No lineage data - orphan state
+          setDerivationPath({
+            nodes: [],
+            state: 'orphan',
+            totalLoss: 0,
+            stateMessage: 'No derivation path found',
+          });
+        }
+      } catch (error) {
+        console.warn('[HypergraphEditor] Failed to fetch derivation path:', error);
+        setDerivationPath({
+          nodes: [],
+          state: 'orphan',
+          totalLoss: 0,
+          stateMessage: 'Failed to load derivation path',
+        });
+      }
+    }
+
+    fetchDerivationPath();
+  }, [state.currentNode?.path]);
+
+  // Fetch derivation inspector data when panel is opened or node changes
+  useEffect(() => {
+    async function fetchDerivationInspectorData() {
+      if (!derivationInspectorOpen || !state.currentNode?.path) {
+        return;
+      }
+
+      setDerivationInspectorLoading(true);
+      try {
+        // Fetch derivation trail (converts to InspectorDerivationNode format)
+        const trail = await derivationNav.getDerivationTrail(state.currentNode.path);
+        const derivationNodes: InspectorDerivationNode[] = trail.map((node, index) => ({
+          id: node.id,
+          label: node.title,
+          layer: node.layer as 1 | 2 | 3 | 4 | 5 | 6 | 7 | undefined,
+          kind: mapKindToInspectorKind(node.kind),
+          pathLoss: index * 0.05, // Approximate path loss calculation
+        }));
+
+        // Fetch witnesses (from API or derive from node metadata)
+        let witnesses: Witness[] = [];
+        try {
+          const witnessResponse = await fetch(
+            `/api/zero-seed/witnesses?path=${encodeURIComponent(state.currentNode.path)}`
+          );
+          if (witnessResponse.ok) {
+            const witnessData = await witnessResponse.json();
+            witnesses = witnessData.witnesses || [];
+          }
+        } catch {
+          // Witnesses endpoint may not exist yet - use empty array
+        }
+
+        // Fetch downstream K-Blocks
+        let downstream: DownstreamKBlock[] = [];
+        try {
+          const children = await derivationNav.getChildren(state.currentNode.path);
+          downstream = children.map((child) => ({
+            id: child.id,
+            label: child.title,
+            pathLoss: 0.05, // Approximate
+          }));
+        } catch {
+          // Children fetch may fail - use empty array
+        }
+
+        setDerivationInspectorData({ derivationNodes, witnesses, downstream });
+      } catch (error) {
+        console.warn('[HypergraphEditor] Failed to fetch derivation inspector data:', error);
+      } finally {
+        setDerivationInspectorLoading(false);
+      }
+    }
+
+    fetchDerivationInspectorData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [derivationInspectorOpen, state.currentNode?.path]);
+
+  /**
+   * Helper to map node kind to DerivationInspector kind.
+   */
+  function mapKindToInspectorKind(kind: string): InspectorDerivationNode['kind'] {
+    switch (kind.toLowerCase()) {
+      case 'axiom':
+      case 'constitution':
+        return 'constitution';
+      case 'principle':
+        return 'principle';
+      case 'spec':
+      case 'specification':
+        return 'spec';
+      case 'impl':
+      case 'implementation':
+        return 'implementation';
+      case 'test':
+        return 'test';
+      default:
+        return 'other';
+    }
+  }
+
+  /**
+   * handleToggleDerivationInspector - Toggle the derivation inspector panel.
+   * Triggered by 'gd' keyboard shortcut.
+   */
+  const handleToggleDerivationInspector = useCallback(() => {
+    setDerivationInspectorOpen((prev) => !prev);
+  }, []);
+
+  /**
+   * handleRederive - Trigger re-derivation of the current K-Block.
+   */
+  const handleRederive = useCallback(async () => {
+    if (!state.currentNode?.path) return;
+
+    setDerivationInspectorLoading(true);
+    try {
+      const response = await fetch('/api/zero-seed/rederive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: state.currentNode.path }),
+      });
+
+      if (response.ok) {
+        setFeedbackMessage({
+          type: 'success',
+          text: 'Re-derivation triggered',
+        });
+        // Refetch the derivation path
+        setDerivationInspectorOpen(false);
+        setTimeout(() => setDerivationInspectorOpen(true), 100);
+      } else {
+        throw new Error('Re-derivation failed');
+      }
+    } catch (error) {
+      console.error('[HypergraphEditor] Re-derivation failed:', error);
+      setFeedbackMessage({
+        type: 'error',
+        text: 'Re-derivation failed',
+      });
+    } finally {
+      setDerivationInspectorLoading(false);
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    }
+  }, [state.currentNode?.path]);
+
+  /**
+   * handleDerivationNavigate - Navigate to a node from the derivation inspector.
+   */
+  const handleDerivationNavigate = useCallback(
+    (kblockId: string) => {
+      if (!loadNode) return;
+
+      setIsNavigating(true);
+      setDerivationInspectorOpen(false);
+      onNavigate?.(kblockId);
+
+      loadNode(kblockId)
+        .then((node) => {
+          setIsNavigating(false);
+          if (node) {
+            focusNode(node);
+            onNodeFocus?.(node);
+          }
+        })
+        .catch(() => {
+          setIsNavigating(false);
+        });
+    },
+    [loadNode, focusNode, onNavigate, onNodeFocus]
+  );
+
+  /**
+   * handleDerivationNodeClick - Navigate to a node in the derivation trail.
+   * Called when user clicks a node chip in the DerivationTrailBar.
+   */
+  const handleDerivationNodeClick = useCallback(
+    (nodeId: string) => {
+      if (!loadNode) return;
+
+      // Start navigation
+      setIsNavigating(true);
+      onNavigate?.(nodeId);
+
+      loadNode(nodeId)
+        .then((node) => {
+          setIsNavigating(false);
+          if (node) {
+            focusNode(node);
+            onNodeFocus?.(node);
+          } else {
+            setFeedbackMessage({
+              type: 'warning',
+              text: `Node not found: ${nodeId}`,
+            });
+            setTimeout(() => setFeedbackMessage(null), 3000);
+          }
+        })
+        .catch(() => {
+          setIsNavigating(false);
+        });
+    },
+    [loadNode, focusNode, onNavigate, onNodeFocus]
+  );
 
   /**
    * Handle re-analyze action.
@@ -726,7 +1046,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   // Get last decision for footer widget
   const lastDecision = dialectic.decisions.length > 0 ? dialectic.decisions[0] : null;
 
-  // Dialectic keyboard shortcuts
+  // Dialectic keyboard shortcuts and affordance panel toggle
   useEffect(() => {
     const handleDialecticKeys = (e: KeyboardEvent) => {
       // Cmd+Shift+D - Open dialectic modal (quick decision)
@@ -740,11 +1060,17 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         e.preventDefault();
         setDecisionStreamOpen(true);
       }
+
+      // ? key - Toggle affordance panel (only in NORMAL mode, not in INSERT/COMMAND)
+      if (e.key === '?' && state.mode !== 'INSERT' && state.mode !== 'COMMAND') {
+        e.preventDefault();
+        setAffordancePanelVisible((prev) => !prev);
+      }
     };
 
     window.addEventListener('keydown', handleDialecticKeys);
     return () => window.removeEventListener('keydown', handleDialecticKeys);
-  }, []);
+  }, [state.mode]);
 
   // Handle EDGE mode confirmation - create witness mark
   const handleEdgeConfirm = useCallback(async () => {
@@ -1059,6 +1385,8 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     onToggleAnalysisQuadrant: () => setAnalysisQuadrantOpen((prev) => !prev),
     // Edge metadata panel
     onToggleEdgePanel: () => setEdgePanelOpen((prev) => !prev),
+    // Derivation inspector panel (gI toggle)
+    onToggleDerivationInspector: handleToggleDerivationInspector,
     // Loss-gradient navigation (gL/gH — shifted to uppercase)
     goLowestLoss: handleGoLowestLoss,
     goHighestLoss: handleGoHighestLoss,
@@ -1099,15 +1427,46 @@ export const HypergraphEditor = memo(function HypergraphEditor({
     });
   }, [initialPath, loadNode, focusNode, onNodeFocus]);
 
+  // Realize project coherence on initial load (if we have K-Blocks)
+  // This computes the coherenceSummary for the CoherenceBadge
+  const hasInitializedCoherenceRef = useRef(false);
+  useEffect(() => {
+    // Only run once when we have K-Blocks to analyze
+    if (hasInitializedCoherenceRef.current) return;
+    if (allKBlocks.length > 0) {
+      hasInitializedCoherenceRef.current = true;
+      const kblockIds = allKBlocks.map((kb) => kb.id);
+      realizeProject(kblockIds).catch((err) => {
+        console.warn('[HypergraphEditor] Failed to realize project coherence:', err);
+      });
+    }
+  }, [allKBlocks, realizeProject]);
+
+  // Track last loaded siblings path to prevent duplicate loads
+  const lastLoadedSiblingsPathRef = useRef<string | null>(null);
+
   // Load siblings when node changes
   useEffect(() => {
-    if (state.currentNode && loadSiblings) {
-      loadSiblings(state.currentNode).then((siblings) => {
-        const index = siblings.findIndex((s) => s.path === state.currentNode?.path);
+    const currentNode = state.currentNode;
+    const path = currentNode?.path;
+
+    if (currentNode && path && loadSiblings) {
+      // Guard: Don't reload siblings for the same path (prevents duplicate calls)
+      if (lastLoadedSiblingsPathRef.current === path) {
+        return;
+      }
+      lastLoadedSiblingsPathRef.current = path;
+
+      loadSiblings(currentNode).then((siblings) => {
+        const index = siblings.findIndex((s) => s.path === path);
         dispatch({ type: 'SET_SIBLINGS', siblings, index: index >= 0 ? index : 0 });
       });
     }
-  }, [state.currentNode, loadSiblings, dispatch]);
+    // Note: We intentionally only depend on path to prevent loops when currentNode
+    // object reference changes but path stays the same. The guard ref prevents
+    // duplicate calls for the same path.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.currentNode?.path, loadSiblings, dispatch]);
 
   // Load portal content when portals are opened (zo)
   useEffect(() => {
@@ -1154,15 +1513,28 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   const handleEdgeClick = useCallback(
     (edge: Edge) => {
       const targetPath = edge.target === state.currentNode?.path ? edge.source : edge.target;
+
+      // Start navigation - show loading state and collapse panels
+      setIsNavigating(true);
+      setEdgePanelOpen(false);
+      setProofPanelOpen(false);
+
       onNavigate?.(targetPath);
 
       if (loadNode) {
-        loadNode(targetPath).then((node) => {
-          if (node) {
-            focusNode(node);
-            onNodeFocus?.(node);
-          }
-        });
+        loadNode(targetPath)
+          .then((node) => {
+            setIsNavigating(false);
+            if (node) {
+              focusNode(node);
+              onNodeFocus?.(node);
+            }
+          })
+          .catch(() => {
+            setIsNavigating(false);
+          });
+      } else {
+        setIsNavigating(false);
       }
     },
     [state.currentNode, onNavigate, loadNode, focusNode, onNodeFocus]
@@ -1383,17 +1755,30 @@ export const HypergraphEditor = memo(function HypergraphEditor({
   const handleTokenNavigate = useCallback(
     async (path: string) => {
       console.info('[HypergraphEditor] Token navigate:', path);
+
+      // Start navigation - show loading state and collapse panels
+      setIsNavigating(true);
+      setEdgePanelOpen(false);
+      setProofPanelOpen(false);
+
       onNavigate?.(path);
 
       if (loadNode) {
-        const node = await loadNode(path);
-        if (node) {
-          focusNode(node);
-          onNodeFocus?.(node);
-        } else {
-          setFeedbackMessage({ type: 'warning', text: `Node not found: ${path}` });
-          setTimeout(() => setFeedbackMessage(null), 3000);
+        try {
+          const node = await loadNode(path);
+          setIsNavigating(false);
+          if (node) {
+            focusNode(node);
+            onNodeFocus?.(node);
+          } else {
+            setFeedbackMessage({ type: 'warning', text: `Node not found: ${path}` });
+            setTimeout(() => setFeedbackMessage(null), 3000);
+          }
+        } catch {
+          setIsNavigating(false);
         }
+      } else {
+        setIsNavigating(false);
       }
     },
     [loadNode, focusNode, onNavigate, onNodeFocus]
@@ -1425,9 +1810,31 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       {/* Header */}
       <Header node={state.currentNode} />
 
+      {/* Derivation Trail Bar - Constitutional breadcrumb */}
+      <DerivationTrailBar
+        currentKBlockId={state.currentNode?.path || null}
+        derivationPath={derivationPath}
+        onNodeClick={handleDerivationNodeClick}
+        onGroundClick={() => setGroundingDialogOpen(true)}
+        onTraceToAxiom={handleGoToGenesis}
+        derivationDepth={derivationNav.derivationDepth}
+        showKeyboardHints={true}
+        enablePathAnimation={true}
+      />
+
       {/* Actions toolbar (visible when node focused) */}
       {state.currentNode && (
         <div className="hypergraph-editor__toolbar">
+          {/* Coherence Badge - project-wide coherence metrics */}
+          <CoherenceBadge
+            summary={coherenceSummary}
+            size="sm"
+            expanded={false}
+            loading={derivationStoreLoading}
+            showGaloisLoss={true}
+            showCounts={false}
+          />
+
           {/* Proof Engine status badge */}
           <ProofStatusBadge
             layer={kblockHook.state?.zeroSeedLayer}
@@ -1445,6 +1852,14 @@ export const HypergraphEditor = memo(function HypergraphEditor({
             title="Re-analyze document with Claude"
           >
             {isAnalyzing ? 'Analyzing...' : 'Re-analyze'}
+          </button>
+
+          <button
+            className={`hypergraph-editor__action ${derivationInspectorOpen ? 'hypergraph-editor__action--active' : ''}`}
+            onClick={handleToggleDerivationInspector}
+            title="Toggle derivation inspector (gI)"
+          >
+            Derivation
           </button>
         </div>
       )}
@@ -1471,7 +1886,16 @@ export const HypergraphEditor = memo(function HypergraphEditor({
       />
 
       {/* Main content area */}
-      <div className="hypergraph-editor__main">
+      <div
+        className={`hypergraph-editor__main ${isNavigating ? 'hypergraph-editor__main--loading' : ''}`}
+      >
+        {/* Loading overlay - shown during navigation */}
+        {isNavigating && (
+          <div className="hypergraph-editor__loading-overlay">
+            <div className="hypergraph-editor__loading-spinner" />
+          </div>
+        )}
+
         {/* Left gutter (incoming edges) */}
         <EdgeGutter
           edges={state.currentNode?.incomingEdges || []}
@@ -1540,6 +1964,23 @@ export const HypergraphEditor = memo(function HypergraphEditor({
           onEdgeClick={handleEdgeClick}
           isOpen={edgePanelOpen}
           onToggle={() => setEdgePanelOpen((prev) => !prev)}
+        />
+
+        {/* Derivation Inspector Panel (collapsible right sidebar - gI toggle) */}
+        <DerivationInspector
+          kblockId={state.currentNode?.path || ''}
+          derivationPath={derivationInspectorData.derivationNodes}
+          witnesses={derivationInspectorData.witnesses}
+          downstream={derivationInspectorData.downstream}
+          onClose={() => setDerivationInspectorOpen(false)}
+          onRederive={handleRederive}
+          onViewProof={() => {
+            setDerivationInspectorOpen(false);
+            setProofPanelOpen(true);
+          }}
+          onNavigate={handleDerivationNavigate}
+          isOpen={derivationInspectorOpen}
+          loading={derivationInspectorLoading}
         />
       </div>
 
@@ -1685,6 +2126,24 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         </div>
       )}
 
+      {/* Affordance Panel (? key or hover) */}
+      <AffordancePanel
+        node={state.currentNode}
+        mode={state.mode}
+        isVisible={affordancePanelVisible}
+        onClose={() => setAffordancePanelVisible(false)}
+        derivationInfo={
+          derivationNav.derivationDepth > 0
+            ? {
+                parentCount: derivationNav.derivationDepth > 0 ? 1 : 0,
+                childCount: 0, // Not tracked by hook, could be fetched if needed
+                siblingCount: derivationNav.siblingCount,
+                layer: derivationNav.derivationDepth,
+              }
+            : undefined
+        }
+      />
+
       {/* Status line */}
       <StatusLine
         mode={state.mode}
@@ -1696,6 +2155,7 @@ export const HypergraphEditor = memo(function HypergraphEditor({
         confidence={state.currentNode?.confidence}
         derivationTier={state.currentNode?.derivationTier}
         directorStatus={director.status ?? undefined}
+        coherenceSummary={coherenceSummary}
       />
     </div>
   );
