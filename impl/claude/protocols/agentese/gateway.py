@@ -179,6 +179,20 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (k_block): {e}")
 
+        # === Self-Reflective OS Crown Jewel (self.constitution.*) ===
+        try:
+            from services.self import node as self_node  # noqa: F401  # self.constitution.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (self): {e}")
+
+        # === KGames Crown Jewel (self.tangibility.kgames.*) ===
+        try:
+            from services.kgames import (
+                node as kgames_node,  # noqa: F401  # self.tangibility.kgames.*
+            )
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (kgames): {e}")
+
         # === Standalone AGENTESE nodes (nodes/*) ===
         try:
             import nodes  # noqa: F401  # world.code.*, void.*, concept.*

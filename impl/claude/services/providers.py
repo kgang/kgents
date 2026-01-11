@@ -902,6 +902,212 @@ async def get_feed_feedback_persistence():
     return FeedFeedbackPersistence(session_factory=session_factory)
 
 
+async def get_reflection_service():
+    """
+    Get the SelfReflectionService for Constitutional introspection.
+
+    Provides access to the 22 Constitutional K-Blocks that form the
+    axiomatic foundation of kgents. Supports querying, navigation,
+    and derivation chain inspection.
+
+    Example:
+        service = await get_reflection_service()
+        graph = await service.get_constitution()
+        chain = await service.get_derivation_chain("ASHC")
+    """
+    from services.self.reflection_service import get_reflection_service as get_service
+
+    return get_service()
+
+
+async def get_codebase_scanner():
+    """
+    Get the CodebaseScanner for codebase introspection.
+
+    The scanner uses Python's ast module to extract structure from source files:
+    - Module docstrings
+    - Class and function definitions
+    - Import statements (for derivation edges)
+
+    Used by CodebaseNode for self.codebase.* AGENTESE paths.
+
+    Example:
+        scanner = await get_codebase_scanner()
+        graph = await scanner.scan_to_graph(Path("services"))
+    """
+    from pathlib import Path
+
+    from services.self.scanner import CodebaseScanner
+
+    # Default to impl/claude as project root
+    project_root = Path(__file__).parent.parent
+    return CodebaseScanner(project_root=project_root)
+
+
+async def get_git_service():
+    """
+    Get the GitHistoryService for git history integration.
+
+    Provides comprehensive git history access:
+    - Recent commits with metadata
+    - File history with blame
+    - Commit diffs
+    - Commit search
+    - Spec/impl pair detection
+
+    Used by GitNode for self.git.* AGENTESE paths.
+
+    Example:
+        service = await get_git_service()
+        commits = await service.get_recent_commits(limit=50)
+        blame = await service.get_file_blame("services/self/node.py")
+    """
+    from services.self.git_service import get_git_service as get_service
+
+    return get_service()
+
+
+async def get_decisions_service():
+    """
+    Get the DecisionsService for kg decide history.
+
+    Aggregates decisions from multiple sources:
+    - FusionService (symmetric supersession decisions)
+    - WitnessPersistence (marks with decision tags)
+
+    Used by DecisionsNode for self.decisions.* AGENTESE paths.
+
+    Example:
+        service = await get_decisions_service()
+        decisions = await service.list_decisions(limit=100)
+        matched = await service.search_decisions("LangChain")
+    """
+    from services.self.decisions_service import get_decisions_service as get_service
+
+    return get_service()
+
+
+async def get_pilot_registry():
+    """
+    Get the PilotRegistry for tangible endeavor pilots.
+
+    The registry scans pilots/*/PROTO_SPEC.md files and provides
+    structured access to pilot metadata.
+
+    Example:
+        registry = await get_pilot_registry()
+        pilots = await registry.list_pilots(tier="core")
+        spec = await registry.get_pilot_spec("trail-to-crystal-daily-lab")
+
+    See: services/pilots/registry.py
+    """
+    from services.pilots import get_pilot_registry as get_registry
+
+    return get_registry()
+
+
+async def get_axiom_discovery_service():
+    """
+    Get the AxiomDiscoveryService for endeavor axiom extraction.
+
+    Implements a 5-turn structured dialogue to extract endeavor axioms:
+    - A1: Success Definition
+    - A2: Feeling Target
+    - A3: Constraints
+    - A4: Verification
+
+    Example:
+        service = await get_axiom_discovery_service()
+        session = await service.start_discovery("I want to build a daily habit")
+        turn = await service.process_turn(session.session_id, "Feel present")
+
+    See: services/endeavor/discovery.py
+    """
+    from services.endeavor import get_axiom_discovery_service as get_service
+
+    return get_service()
+
+
+async def get_pilot_bootstrap_service():
+    """
+    Get the PilotBootstrapService for pilot matching and creation.
+
+    Given EndeavorAxioms, this service:
+    - Matches existing pilots
+    - Creates custom pilots
+    - Sets up witness infrastructure
+
+    Example:
+        service = await get_pilot_bootstrap_service()
+        match = await service.match_pilot(axioms)
+        if not match:
+            pilot = await service.bootstrap_pilot(axioms, "my-lab")
+
+    See: services/endeavor/bootstrap.py
+    """
+    from services.endeavor import get_pilot_bootstrap_service as get_service
+
+    return get_service()
+
+
+async def get_kgames_kernel():
+    """
+    Get the GameKernel for game generation and verification.
+
+    The GameKernel holds the four constitutional axioms for game quality:
+    - A1: AGENCY (L=0.02) - Player choices determine outcomes
+    - A2: ATTRIBUTION (L=0.05) - Outcomes trace to identifiable causes
+    - A3: MASTERY (L=0.08) - Skill development is externally observable
+    - A4: COMPOSITION (L=0.03) - Moments compose algebraically into arcs
+
+    Example:
+        kernel = await get_kgames_kernel()
+        result = kernel.validate_implementation(my_game)
+    """
+    from services.kgames import create_kernel
+
+    return create_kernel()
+
+
+async def get_amendment_service():
+    """
+    Get the AmendmentWorkflowService for constitutional evolution.
+
+    The amendment service enables kgents to evolve its own constitution
+    through a formal, witnessed amendment process (Week 11-12 of Self-Reflective OS).
+
+    Lifecycle:
+        DRAFT -> PROPOSED -> UNDER_REVIEW -> APPROVED/REJECTED -> APPLIED/REVERTED
+
+    All transitions are witnessed, creating an auditable trail of constitutional evolution.
+
+    Example:
+        service = await get_amendment_service()
+        amendment = await service.create_draft(
+            title="Refine TASTEFUL",
+            description="Add anti-patterns",
+            amendment_type=AmendmentType.PRINCIPLE_MODIFICATION,
+            ...
+        )
+        await service.propose(amendment.id)
+        await service.approve(amendment.id, "Clear improvement")
+        await service.apply(amendment.id)
+
+    See: services/amendment/workflow.py
+    See: plans/self-reflective-os/ (Week 11-12)
+    """
+    from services.amendment import AmendmentWorkflowService
+    from services.witness import WitnessCrystalAdapter
+
+    # Get witness crystal adapter for recording amendment events
+    try:
+        witness = WitnessCrystalAdapter()
+    except Exception:
+        witness = None
+
+    return AmendmentWorkflowService(witness=witness)
+
+
 # =============================================================================
 # Setup Function
 # =============================================================================
@@ -1012,6 +1218,12 @@ async def setup_providers() -> None:
     container.register("feed_service", get_feed_service, singleton=True)
     container.register("feed_feedback_persistence", get_feed_feedback_persistence, singleton=True)
 
+    # Self-Reflective OS (Constitutional Introspection + Codebase Scanning + Git + Decisions)
+    container.register("reflection_service", get_reflection_service, singleton=True)
+    container.register("codebase_scanner", get_codebase_scanner, singleton=True)
+    container.register("git_service", get_git_service, singleton=True)
+    container.register("decisions_service", get_decisions_service, singleton=True)
+
     # Explorer Crown Jewel (Unified Data Explorer)
     container.register("unified_query_service", get_unified_query_service, singleton=True)
 
@@ -1025,8 +1237,19 @@ async def setup_providers() -> None:
     # Code Crown Jewel (Function-Level Artifact Tracking)
     container.register("code_service", get_code_service, singleton=True)
 
+    # KGames Crown Jewel (Game Generation from Axioms)
+    container.register("kgames_kernel", get_kgames_kernel, singleton=True)
+
+    # Pilots Tangibility (Self-Reflective OS: Endeavor Actualization)
+    container.register("pilot_registry", get_pilot_registry, singleton=True)
+    container.register("axiom_discovery_service", get_axiom_discovery_service, singleton=True)
+    container.register("pilot_bootstrap_service", get_pilot_bootstrap_service, singleton=True)
+
+    # Amendment Crown Jewel (Self-Reflective OS: Constitutional Evolution)
+    container.register("amendment_service", get_amendment_service, singleton=True)
+
     logger.info(
-        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion + CLI Tool Use + Code)"
+        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion + CLI Tool Use + Code + KGames + Pilots + Amendment)"
     )
 
     # Import service nodes to trigger @node registration
@@ -1143,6 +1366,44 @@ async def setup_providers() -> None:
         logger.info("DailyLabNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"DailyLabNode not available: {e}")
+
+    # Self-Reflective OS (Constitution + Codebase + Drift + Git + Decisions)
+    try:
+        from services.self.node import (
+            CodebaseNode,  # noqa: F401
+            ConstitutionNode,  # noqa: F401
+            DecisionsNode,  # noqa: F401
+            DriftNode,  # noqa: F401
+            GitNode,  # noqa: F401
+        )
+
+        logger.info("Self-Reflective OS nodes registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"Self-Reflective OS nodes not available: {e}")
+
+    # KGames Crown Jewel (Game Generation from Axioms)
+    try:
+        from services.kgames import KGamesNode  # noqa: F401
+
+        logger.info("KGamesNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"KGamesNode not available: {e}")
+
+    # Pilots Tangibility (Self-Reflective OS: Endeavor Actualization)
+    try:
+        from services.endeavor.node import EndeavorNode, PilotsNode  # noqa: F401
+
+        logger.info("PilotsNode + EndeavorNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"Pilots Tangibility nodes not available: {e}")
+
+    # Amendment Crown Jewel (Self-Reflective OS: Constitutional Evolution)
+    try:
+        from services.amendment import AmendmentNode  # noqa: F401
+
+        logger.info("AmendmentNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"AmendmentNode not available: {e}")
 
     # Wire KgentSoul to SoulNode
     try:
@@ -1275,4 +1536,13 @@ __all__ = [
     "get_code_service",
     # Feed Feedback
     "get_feed_feedback_persistence",
+    # Self-Reflective OS
+    "get_reflection_service",
+    "get_codebase_scanner",
+    "get_git_service",
+    "get_decisions_service",
+    # KGames Crown Jewel
+    "get_kgames_kernel",
+    # Amendment Crown Jewel (Self-Reflective OS: Constitutional Evolution)
+    "get_amendment_service",
 ]

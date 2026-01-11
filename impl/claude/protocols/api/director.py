@@ -486,6 +486,104 @@ async def _run_analysis(path: str, store: "Any") -> None:
             logger.error(f"Failed to emit analysis.failed event: {bus_error}")
 
 
+async def _get_genesis_file_as_document(path: str) -> "DocumentDetailResponse":
+    """
+    Load a genesis file and return as DocumentDetailResponse.
+
+    Handles paths like: spec/genesis/L0/entity.md
+
+    Genesis files are sovereign territory - they exist as real .md files
+    with YAML frontmatter containing metadata. K-Blocks serve as rich indexes.
+    """
+    from pathlib import Path as PathLib
+
+    from services.genesis.path_resolver import GenesisPathResolver
+    from services.k_block.postgres_zero_seed_storage import get_postgres_zero_seed_storage
+
+    # Determine project root (impl/claude relative to this file)
+    project_root = PathLib(__file__).parent.parent.parent
+
+    # Convert to absolute path
+    absolute_path = project_root / path
+
+    if not absolute_path.exists():
+        raise HTTPException(status_code=404, detail=f"Genesis file not found: {path}")
+
+    # Read file content
+    content = absolute_path.read_text(encoding="utf-8")
+
+    # Parse frontmatter if present
+    metadata: dict = {}
+    body = content
+    if content.startswith("---"):
+        parts = content.split("---", 2)
+        if len(parts) >= 3:
+            import yaml
+
+            try:
+                metadata = yaml.safe_load(parts[1]) or {}
+                body = parts[2].strip()
+            except yaml.YAMLError:
+                pass  # Proceed with empty metadata
+
+    # Try to get K-Block for additional info
+    kblock_id = GenesisPathResolver.file_to_kblock_id(path)
+    kblock = None
+    if kblock_id:
+        try:
+            storage = await get_postgres_zero_seed_storage()
+            kblock = await storage.get_node(kblock_id)
+        except Exception:
+            pass  # K-Block lookup is optional
+
+    # Extract info from metadata or K-Block
+    layer = metadata.get("layer") or (kblock.zero_seed_layer if kblock else None) or 0
+    layer_name = metadata.get("layer_name") or (kblock.zero_seed_kind if kblock else None) or "genesis"
+    title = metadata.get("title") or (kblock.path.split(".")[-1] if kblock and kblock.path else path)
+    galois_loss = metadata.get("galois_loss") or 0.0
+    confidence = metadata.get("confidence") or (kblock.confidence if kblock else 1.0)
+    derives_from = metadata.get("derives_from") or (kblock.lineage if kblock else [])
+    tags = metadata.get("tags") or []
+
+    # Get file stats
+    stat = absolute_path.stat()
+
+    return DocumentDetailResponse(
+        success=True,
+        path=path,
+        title=title,
+        status=DocumentStatus.READY,  # Genesis files are foundational
+        version=1,
+        content=content,  # Include frontmatter for transparency
+        content_hash=str(hash(content))[:16],
+        word_count=len(body.split()),
+        heading_count=body.count("#"),
+        claims=[],
+        discovered_refs=[],
+        implementations=[],
+        tests=[],
+        spec_refs=[],
+        anticipated=[],
+        placeholder_paths=[],
+        uploaded_at=None,  # Genesis files are system-created
+        analyzed_at=None,
+        analysis_mark_id=None,
+        error=None,
+        extra={
+            "genesis": True,
+            "genesis_id": kblock_id,
+            "layer": layer,
+            "layer_name": layer_name,
+            "galois_loss": galois_loss,
+            "confidence": confidence,
+            "derives_from": derives_from,
+            "tags": tags,
+            "file_size": stat.st_size,
+            "modified_at": stat.st_mtime,
+        },
+    )
+
+
 async def _get_kblock_as_document(path: str) -> "DocumentDetailResponse":
     """
     Convert a Zero Seed K-Block to DocumentDetailResponse format.
@@ -916,9 +1014,14 @@ def create_director_router() -> APIRouter | None:
         Get document detail with full analysis.
 
         Returns content, analysis results, and evidence.
+        For genesis files, reads from spec/genesis/ directory.
         For Zero Seed K-Block paths, delegates to K-Blocks API.
         """
         from services.providers import get_sovereign_store
+
+        # Handle genesis file paths (spec/genesis/L0/entity.md, etc.)
+        if path.startswith("spec/genesis/"):
+            return await _get_genesis_file_as_document(path)
 
         # Handle Zero Seed K-Block paths (zero-seed/axioms/kb_xxx, zero-seed/values/kb_xxx, etc.)
         if path.startswith("zero-seed/"):
