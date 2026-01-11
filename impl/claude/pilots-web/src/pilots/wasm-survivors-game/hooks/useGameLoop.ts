@@ -31,11 +31,49 @@ interface InputState {
   spaceJustReleased?: boolean;   // Did space just come up this frame?
   spaceHoldDuration?: number;    // How long has space been held (ms)
   aimDirection?: { x: number; y: number }; // Current WASD aim direction
+  // WILD UPGRADE input keys
+  qJustPressed?: boolean;        // TEMPORAL_DEBT: Q to freeze time
+  eJustPressed?: boolean;        // HONEY_TRAP: E to place trap
+  rJustPressed?: boolean;        // ROYAL_DECREE: R to crown enemy
+  shiftHeld?: boolean;           // BLOOD_PRICE: Shift to charge
 }
 import { updateSpawner, type SpawnResult } from '../systems/spawn';
 import { processJuice, type JuiceSystem, checkClutchMoment, getEffectiveTimeScale, SHAKE } from '../systems/juice';
 import { emitWitnessMark, type WitnessContext } from '../systems/witness';
-import { type ActiveUpgrades } from '../systems/upgrades';
+// WILD UPGRADES: New system replaces old stat-based upgrades
+import {
+  type WildUpgradeState,
+  type WildUpgradeType,
+  createInitialWildUpgradeState,
+  getWildUpgradePool,
+  // ECHO
+  updateEchoSystem,
+  checkEchoAttackHits,
+  // GRAVITY WELL
+  updateGravityWell,
+  // METAMORPHOSIS
+  updateMetamorphosisState,
+  type WebTrap,
+  type MeleeSlash,
+  type PollenCloud,
+  METAMORPH_FORMS,
+  // BLOOD PRICE
+  updateBloodPrice,
+  spawnBloodGeyser,
+  // SWARM MIND
+  updateSwarmMind,
+  initializeSwarmMind,
+  // HONEY TRAP
+  updateHoneyTrap,
+  placeHoneyTrap,
+  getHoneyTrapSlow,
+  // ROYAL DECREE
+  updateRoyalDecree,
+  initializeRoyalDecree,
+  type RoyalDecreeInput,
+} from '../systems/wild-upgrades';
+// Temporal debt helpers for time manipulation
+import { processTemporalDebtInput, enableTemporalDebt, getEffectiveEnemyTimeScale } from '../systems/temporal-debt-helpers';
 // STUB: Metamorphosis system removed in bee theme migration
 // Legacy colossal_tide mechanic is NOT part of bee theme
 type MetamorphosisResult = {
@@ -117,7 +155,6 @@ import {
   type ActiveAbilities,
   createInitialAbilities,
   addAbility,
-  generateAbilityChoices,
   recordKillForTrophyScent,
   incrementSawtoothCounter,
   resetRuntimeForWave,
@@ -146,7 +183,6 @@ import {
   getThreatAuraReduction,
   // Apex Strike PREDATOR ability integration (Run 048)
   computeAbilityEffects,
-  type ComputedEffects,
 } from '../systems/abilities';
 import {
   type MeleeAttackState,
@@ -270,6 +306,8 @@ export interface GameLoopControls {
   getAllBalls: () => BallState[];  // Run 042: Multi-ball rendering
   // Abilities/Combos controls (Run 036)
   selectAbility: (abilityId: AbilityId) => void;
+  // Wild upgrades activation
+  activateWildUpgrade: (upgradeId: WildUpgradeType) => void;
   getAbilities: () => ActiveAbilities;
   getComboState: () => ComboState;
   getMeleeState: () => MeleeAttackState;
@@ -282,6 +320,14 @@ export interface GameLoopControls {
   // Ability zones (territorial marks, death markers)
   getTerritorialMarks: () => TerritorialMark[];
   getDeathMarkers: () => DeathMarker[];
+  // Wild upgrade state for rendering (ECHO ghost, SWARM hornets, ROYAL DECREE king, etc.)
+  getWildUpgradeState: () => WildUpgradeState;
+  // Metamorphosis ability entities (web traps, melee slashes, pollen clouds)
+  getMetamorphosisAbilities: () => {
+    webTraps: WebTrap[];
+    meleeSlashes: MeleeSlash[];
+    pollenClouds: PollenCloud[];
+  };
 }
 
 // =============================================================================
@@ -375,6 +421,18 @@ export function useGameLoop(
   // Venom Architect state (Special Ability: Infinite venom stacks, explode on venom-kill)
   // Map of enemyId -> VenomArchitectState
   const venomArchitectRef = useRef<Map<string, VenomArchitectState>>(new Map());
+
+  // ==========================================================================
+  // WILD UPGRADES STATE
+  // "Each upgrade should be SERIOUSLY WILD, not simple stat improvements."
+  // ==========================================================================
+  const wildUpgradeRef = useRef<WildUpgradeState>(createInitialWildUpgradeState());
+
+  // METAMORPHOSIS entity tracking (web traps, slashes, pollen clouds)
+  const webTrapsRef = useRef<WebTrap[]>([]);
+  const meleeSlashesRef = useRef<MeleeSlash[]>([]);
+  const pollenCloudsRef = useRef<PollenCloud[]>([]);
+  const lastMetamorphAttackTimeRef = useRef<number>(0);
 
   // On-Kill Ability Zones (Run 044: territorial_mark, death_marker, etc.)
   // "Where enemies die, the ground remembers."
@@ -1178,6 +1236,418 @@ export function useGameLoop(
       perfMonitor.endSystem('apex');
 
       // =======================================================================
+      // PHASE 1.7: WILD UPGRADES UPDATE
+      // "Each upgrade should be SERIOUSLY WILD, not simple stat improvements."
+      // =======================================================================
+      // Note: wild upgrades timing grouped under 'abilities' system
+
+      const wildState = wildUpgradeRef.current;
+      let wildModifiedEnemies = [...apexState.enemies];
+      const wildInput = input as InputState | null;
+
+      // Clear frame-triggered input flags after reading
+      const qJustPressed = wildInput?.qJustPressed ?? false;
+      const eJustPressed = wildInput?.eJustPressed ?? false;
+      const rJustPressed = wildInput?.rJustPressed ?? false;
+      const shiftHeld = wildInput?.shiftHeld ?? false;
+      if (wildInput) {
+        wildInput.qJustPressed = false;
+        wildInput.eJustPressed = false;
+        wildInput.rJustPressed = false;
+      }
+
+      // -------------------------------------------------------------------------
+      // TEMPORAL DEBT: Q to freeze time, then 2x payback
+      // "Borrow from the future. Pay it back."
+      // -------------------------------------------------------------------------
+      let temporalEnemyTimeScale = 1.0; // Default: enemies move at normal speed
+      if (wildState.temporalDebt.active) {
+        const temporalActivated = processTemporalDebtInput(
+          juiceSystem,
+          deltaTime,
+          apexState.player.position,
+          qJustPressed
+        );
+        if (temporalActivated) {
+          // Emit temporal freeze visual effects
+          juiceSystem.triggerShake(5, 200); // Time freeze shake
+          console.log('[TEMPORAL DEBT] Time frozen!');
+        }
+        // Get the effective enemy time scale (0 during freeze, 2 during debt)
+        temporalEnemyTimeScale = getEffectiveEnemyTimeScale(juiceSystem);
+
+        // Sync JuiceSystem temporal state to WildUpgradeState for visual rendering
+        const juiceTemporal = juiceSystem.temporalDebt;
+        wildUpgradeRef.current = {
+          ...wildUpgradeRef.current,
+          temporalDebt: {
+            ...wildUpgradeRef.current.temporalDebt,
+            isFrozen: juiceTemporal.phase === 'frozen',
+            frozenTimeRemaining: juiceTemporal.phase === 'frozen' ? juiceTemporal.phaseTimeRemaining : 0,
+            debtTimeRemaining: juiceTemporal.phase === 'debt' ? juiceTemporal.phaseTimeRemaining : 0,
+            timeScale: temporalEnemyTimeScale,
+            cooldown: juiceTemporal.cooldownRemaining,
+          }
+        };
+      }
+
+      // -------------------------------------------------------------------------
+      // ECHO: Ghost hornet repeats all actions 0.5s later
+      // "Your shadow fights too"
+      // -------------------------------------------------------------------------
+      if (wildState.echo.active) {
+        const isAttacking = meleeStateRef.current.isActive;
+        const attackDir = meleeStateRef.current.direction ?? { x: 1, y: 0 };
+        const isDashing = isStriking(apexStrikeRef.current);
+        const dashDir = apexStrikeRef.current.lockDirection;
+
+        const echoResult = updateEchoSystem(
+          wildState.echo,
+          apexState.player.position,
+          playerVelocity,
+          currentTime,
+          deltaTime,
+          isAttacking,
+          attackDir,
+          isDashing,
+          dashDir,
+          apexState.player.damage
+        );
+        wildUpgradeRef.current = { ...wildUpgradeRef.current, echo: echoResult.state };
+
+        // Process ghost attacks
+        if (echoResult.attacks.length > 0) {
+          for (const attack of echoResult.attacks) {
+            const hits = checkEchoAttackHits(
+              attack, // { position, direction, damage }
+              wildModifiedEnemies.map(e => ({
+                id: e.id,
+                position: e.position,
+                radius: e.radius ?? 15,
+                health: e.health,
+              }))
+            );
+            // Apply damage to enemies hit by ghost
+            wildModifiedEnemies = wildModifiedEnemies.map(e => {
+              const hit = hits.find(h => h.enemyId === e.id);
+              if (hit) {
+                return { ...e, health: e.health - hit.damage };
+              }
+              return e;
+            });
+          }
+        }
+      }
+
+      // -------------------------------------------------------------------------
+      // GRAVITY WELL: Enemies orbit player and collide
+      // "Become the center of destruction"
+      // -------------------------------------------------------------------------
+      if (wildState.gravityWell.active) {
+        const gravityResult = updateGravityWell(
+          wildState.gravityWell,
+          apexState.player.position,
+          wildModifiedEnemies.map(e => ({
+            id: e.id,
+            position: e.position,
+            health: e.health,
+            radius: e.radius ?? 15,
+          })),
+          currentTime,
+          deltaTime
+        );
+        wildUpgradeRef.current = { ...wildUpgradeRef.current, gravityWell: gravityResult.gravityWell };
+
+        // Apply position overrides to orbiting enemies
+        // CRITICAL: Set inGravityOrbit flag so physics skips normal movement
+        wildModifiedEnemies = wildModifiedEnemies.map(e => {
+          const override = gravityResult.enemyOverrides.get(e.id);
+          if (override) {
+            return {
+              ...e,
+              position: override.position,
+              velocity: override.velocity,
+              inGravityOrbit: true,
+            };
+          }
+          // Clear flag for enemies not in orbit
+          return e.inGravityOrbit ? { ...e, inGravityOrbit: false } : e;
+        });
+
+        // Apply explosion damage from collisions
+        wildModifiedEnemies = wildModifiedEnemies.map(e => {
+          const explosionDmg = gravityResult.explosionDamage.get(e.id);
+          if (explosionDmg) {
+            return { ...e, health: e.health - explosionDmg };
+          }
+          return e;
+        });
+
+        // Emit collision effects
+        for (const collision of gravityResult.collisions) {
+          juiceSystem.emitDamage(collision.position, collision.damage);
+          juiceSystem.triggerShake(8, 200); // Heavy shake for gravity collision
+        }
+      }
+
+      // -------------------------------------------------------------------------
+      // METAMORPHOSIS: Transform into different creatures every 30s
+      // "Become something else entirely"
+      // -------------------------------------------------------------------------
+      if (wildState.metamorphosis.active) {
+        const metamorphResult = updateMetamorphosisState(
+          wildState.metamorphosis,
+          deltaTime,
+          apexState.player.position,
+          apexInput?.aimDirection ?? { x: 1, y: 0 },
+          meleeStateRef.current.isActive, // Use melee attack as trigger
+          wildModifiedEnemies.map(e => ({
+            id: e.id,
+            position: e.position,
+            health: e.health,
+          })),
+          webTrapsRef.current,
+          meleeSlashesRef.current,
+          pollenCloudsRef.current,
+          currentTime,
+          lastMetamorphAttackTimeRef.current
+        );
+
+        wildUpgradeRef.current = { ...wildUpgradeRef.current, metamorphosis: metamorphResult.state };
+        webTrapsRef.current = metamorphResult.webTraps;
+        meleeSlashesRef.current = metamorphResult.meleeSlashes;
+        pollenCloudsRef.current = metamorphResult.pollenClouds;
+
+        if (metamorphResult.attackTriggered) {
+          lastMetamorphAttackTimeRef.current = currentTime;
+        }
+
+        // Apply metamorphosis damage events
+        for (const dmgEvent of metamorphResult.damageEvents) {
+          wildModifiedEnemies = wildModifiedEnemies.map(e => {
+            if (e.id === dmgEvent.enemyId) {
+              return { ...e, health: e.health - dmgEvent.damage };
+            }
+            return e;
+          });
+        }
+
+        // Emit form change juice
+        if (metamorphResult.formChanged && metamorphResult.newForm) {
+          const formConfig = METAMORPH_FORMS[metamorphResult.newForm];
+          juiceSystem.emitDamage(apexState.player.position, 25); // Form change visual
+          juiceSystem.triggerShake(6, 200);
+          // Log form change
+          console.log(`[METAMORPHOSIS] Transformed into ${formConfig.name}`);
+        }
+      }
+
+      // -------------------------------------------------------------------------
+      // BLOOD PRICE: Spend HP to supercharge, low HP = god mode
+      // "Power costs. Pay in blood."
+      // -------------------------------------------------------------------------
+      if (wildState.bloodPrice.active) {
+        const bloodResult = updateBloodPrice(
+          wildState.bloodPrice,
+          deltaTime,
+          apexState.player.health,
+          apexState.player.maxHealth,
+          shiftHeld,
+          wildModifiedEnemies.map(e => ({ id: e.id, position: e.position }))
+        );
+        wildUpgradeRef.current = {
+          ...wildUpgradeRef.current,
+          bloodPrice: {
+            ...wildState.bloodPrice,
+            chargeLevel: bloodResult.chargeLevel,
+            isCharging: bloodResult.isCharging,
+            godModeActive: bloodResult.godModeActive,
+          }
+        };
+
+        // Apply HP drain from charging
+        if (bloodResult.hpDrained > 0) {
+          apexState = {
+            ...apexState,
+            player: {
+              ...apexState.player,
+              health: Math.max(1, apexState.player.health - bloodResult.hpDrained),
+            },
+          };
+        }
+
+        // Apply geyser damage to enemies
+        for (const geyserDmg of bloodResult.geyserDamageEvents) {
+          wildModifiedEnemies = wildModifiedEnemies.map(e => {
+            if (e.id === geyserDmg.enemyId) {
+              return { ...e, health: e.health - geyserDmg.damage };
+            }
+            return e;
+          });
+        }
+
+        // God mode juice effects
+        if (bloodResult.godModeJustActivated) {
+          juiceSystem.emitDamage(apexState.player.position, 50); // Blood price visual
+          juiceSystem.triggerShake(10, 250); // Heavy shake for god mode
+          console.log('[BLOOD PRICE] GOD MODE ACTIVATED!');
+        }
+      }
+
+      // -------------------------------------------------------------------------
+      // SWARM MIND: Split into 5 mini-hornets
+      // "Divide and conquer"
+      // -------------------------------------------------------------------------
+      if (wildState.swarmMind.active) {
+        const swarmResult = updateSwarmMind(
+          wildState.swarmMind,
+          apexState.player.position,
+          playerVelocity,
+          wildModifiedEnemies.map(e => ({
+            id: e.id,
+            position: e.position,
+            health: e.health,
+            radius: e.radius ?? 15,
+          })),
+          deltaTime,
+          currentTime
+        );
+        wildUpgradeRef.current = { ...wildUpgradeRef.current, swarmMind: swarmResult.state };
+
+        // Apply swarm attacks to enemies
+        for (const attack of swarmResult.attacks) {
+          wildModifiedEnemies = wildModifiedEnemies.map(e => {
+            if (e.id === attack.enemyId) {
+              return { ...e, health: e.health - attack.damage };
+            }
+            return e;
+          });
+          // Emit attack juice
+          juiceSystem.emitDamage(attack.position, attack.damage);
+        }
+
+        // Handle swarm hornet deaths
+        for (const death of swarmResult.deaths) {
+          juiceSystem.emitDamage(death.position, 20); // Swarm hornet death visual
+          console.log(`[SWARM] Hornet died. ${death.remainingHornets} remaining.`);
+        }
+      }
+
+      // -------------------------------------------------------------------------
+      // HONEY TRAP: E to place sticky zones that chain enemies
+      // "Stick together. Die together."
+      // -------------------------------------------------------------------------
+      if (wildState.honeyTrap.active) {
+        // Handle trap placement input
+        if (eJustPressed) {
+          const trapResult = placeHoneyTrap(
+            wildState.honeyTrap,
+            apexState.player.position,
+            currentTime
+          );
+          if (trapResult.placed) {
+            wildUpgradeRef.current = {
+              ...wildUpgradeRef.current,
+              honeyTrap: trapResult.state,
+            };
+            juiceSystem.emitDamage(apexState.player.position, 10); // Trap placement visual
+          }
+        }
+
+        // Update honey trap state
+        const honeyResult = updateHoneyTrap(
+          wildUpgradeRef.current.honeyTrap,
+          wildModifiedEnemies.map(e => ({
+            id: e.id,
+            position: e.position,
+            health: e.health,
+          })),
+          deltaTime,
+          currentTime
+        );
+        wildUpgradeRef.current = { ...wildUpgradeRef.current, honeyTrap: honeyResult.state };
+
+        // Apply honey slow to enemies (for physics)
+        wildModifiedEnemies = wildModifiedEnemies.map(e => {
+          const slowMult = getHoneyTrapSlow(honeyResult.state, e.position);
+          if (slowMult < 1) {
+            return { ...e, honeySlowMultiplier: slowMult };
+          }
+          return e;
+        });
+
+        // Apply chain break explosions
+        for (const chainBreak of honeyResult.chainBreaks) {
+          wildModifiedEnemies = wildModifiedEnemies.map(e => {
+            if (chainBreak.affectedEnemyIds.includes(e.id)) {
+              return { ...e, health: e.health - chainBreak.damage };
+            }
+            return e;
+          });
+          juiceSystem.emitDamage(chainBreak.position, chainBreak.damage);
+          juiceSystem.triggerShake(6, 150); // Medium shake for chain break
+        }
+      }
+
+      // -------------------------------------------------------------------------
+      // ROYAL DECREE: R to crown enemy as "The King"
+      // "Heavy is the head that wears the crown"
+      // -------------------------------------------------------------------------
+      if (wildState.royalDecree.active) {
+        const royalInput: RoyalDecreeInput = {
+          playerPosition: apexState.player.position,
+          crownKeyJustPressed: rJustPressed,
+          enemies: wildModifiedEnemies.map(e => ({
+            id: e.id,
+            position: e.position,
+            health: e.health,
+            maxHealth: e.maxHealth,
+            type: e.type,
+          })),
+          deltaTime,
+          gameTime: currentTime,
+        };
+
+        const royalResult = updateRoyalDecree(wildState.royalDecree, royalInput);
+        wildUpgradeRef.current = { ...wildUpgradeRef.current, royalDecree: royalResult.state };
+
+        // Apply rewards
+        if (royalResult.rewards.xp > 0) {
+          apexState = {
+            ...apexState,
+            player: {
+              ...apexState.player,
+              xp: apexState.player.xp + royalResult.rewards.xp,
+              health: Math.min(
+                apexState.player.maxHealth,
+                apexState.player.health + royalResult.rewards.health
+              ),
+            },
+          };
+        }
+
+        // Emit royal decree events
+        for (const event of royalResult.events) {
+          if (event.type === 'crown_designated') {
+            juiceSystem.emitDamage(event.position, 30); // Crown designation visual
+            console.log(`[ROYAL DECREE] Enemy ${event.kingId} crowned as THE KING!`);
+          } else if (event.type === 'king_died') {
+            juiceSystem.triggerShake(10, 250); // Heavy shake for king death
+            console.log(`[ROYAL DECREE] The King is dead! Rewards: XP=${royalResult.rewards.xp}, HP=${royalResult.rewards.health}`);
+          }
+        }
+      }
+
+      // Remove dead enemies from wild upgrade processing
+      wildModifiedEnemies = wildModifiedEnemies.filter(e => e.health > 0);
+
+      // Update apexState with wild-modified enemies
+      apexState = {
+        ...apexState,
+        enemies: wildModifiedEnemies,
+      };
+
+      // =======================================================================
       // PHASE 2: Physics (< 5ms)
       // =======================================================================
       perfMonitor.beginSystem('physics');
@@ -1238,7 +1708,9 @@ export function useGameLoop(
       }
       // Only 'ready' phase allows normal WASD movement (already in finalVelocity)
 
-      const physicsResult = updatePhysics(apexState, finalVelocity, deltaTime);
+      // TEMPORAL DEBT: Pass enemy time scale to physics
+      // 0 = frozen (enemies stop), 1 = normal, 2 = debt (enemies 2x speed)
+      const physicsResult = updatePhysics(apexState, finalVelocity, deltaTime, temporalEnemyTimeScale);
 
       // DD-21: Emit telegraph updates for rendering
       if (physicsResult.telegraphs && physicsResult.telegraphs.length > 0) {
@@ -1498,22 +1970,13 @@ export function useGameLoop(
             const xpValue = event.xpValue ?? 10;
             const enemyType = event.enemyType ?? 'worker';
 
-            // DD-12: Vampiric - heal on kill
-            const activeUpgrades = newState.player.activeUpgrades as ActiveUpgrades | undefined;
-            const vampiricPercent = activeUpgrades?.vampiricPercent ?? 0;
-            let newHealth = newState.player.health;
-
-            if (vampiricPercent > 0) {
-              const healAmount = Math.floor(
-                newState.player.maxHealth * (vampiricPercent / 100)
-              );
-              newHealth = Math.min(
-                newState.player.maxHealth,
-                newState.player.health + healAmount
-              );
-
-              // TODO: Add emitHeal to juice system for vampiric visual feedback
-              // juiceSystem.emitHeal?.(event.position, healAmount);
+            // WILD UPGRADES: BLOOD PRICE - Spawn blood geyser on kill during god mode
+            const bloodPriceState = wildUpgradeRef.current.bloodPrice;
+            if (bloodPriceState.active && bloodPriceState.godModeActive) {
+              const geyser = spawnBloodGeyser(bloodPriceState, event.position);
+              if (geyser) {
+                juiceSystem.emitDamage(event.position, 15); // Blood geyser visual
+              }
             }
 
             newState = {
@@ -1521,7 +1984,6 @@ export function useGameLoop(
               player: {
                 ...newState.player,
                 xp: newState.player.xp + xpValue,
-                health: newHealth,
               },
               totalEnemiesKilled: newState.totalEnemiesKilled + 1,
               score: newState.score + xpValue * 10,
@@ -1567,26 +2029,7 @@ export function useGameLoop(
               }
             }
 
-            // DD-14: Burst - AoE damage on kill
-            if (activeUpgrades?.burstRadius && activeUpgrades.burstRadius > 0) {
-              const burstDamage = activeUpgrades.burstDamage ?? 10;
-              const burstRadius = activeUpgrades.burstRadius;
-
-              // Apply damage to enemies within burst radius
-              newState = {
-                ...newState,
-                enemies: newState.enemies.map((enemy) => {
-                  const dx = enemy.position.x - event.position.x;
-                  const dy = enemy.position.y - event.position.y;
-                  const distance = Math.sqrt(dx * dx + dy * dy);
-
-                  if (distance < burstRadius && distance > 0) {
-                    return { ...enemy, health: enemy.health - burstDamage };
-                  }
-                  return enemy;
-                }),
-              };
-            }
+            // NOTE: Old burst/vampiric upgrades removed - WILD UPGRADES handle on-kill effects
 
             // Async witness mark (non-blocking)
             emitWitnessMark(witnessContextRef.current, {
@@ -3642,6 +4085,11 @@ export function useGameLoop(
       consecutiveGrazes: 0,
       lastGrazeLineTime: 0,
     };
+    // Reset wild upgrades state
+    wildUpgradeRef.current = createInitialWildUpgradeState();
+    webTrapsRef.current = [];
+    meleeSlashesRef.current = [];
+    pollenCloudsRef.current = [];
   }, [initialState]);
 
   // Set game state directly (for starting with specific state)
@@ -3740,6 +4188,85 @@ export function useGameLoop(
   }, [callbacks]);
 
   /**
+   * Activate a wild upgrade - sets active: true on the upgrade in wildUpgradeRef
+   * This is called when the player selects a wild upgrade at level up
+   */
+  const activateWildUpgrade = useCallback((upgradeId: WildUpgradeType) => {
+    const current = wildUpgradeRef.current;
+    const playerPos = stateRef.current.player.position;
+
+    switch (upgradeId) {
+      case 'echo':
+        // Initialize echo ghost at player position
+        wildUpgradeRef.current = {
+          ...current,
+          echo: {
+            ...current.echo,
+            active: true,
+            ghostPosition: { ...playerPos },
+            ghostVelocity: { x: 0, y: 0 },
+          }
+        };
+        break;
+      case 'gravity_well':
+        wildUpgradeRef.current = { ...current, gravityWell: { ...current.gravityWell, active: true } };
+        break;
+      case 'metamorphosis':
+        // Start in hornet form
+        wildUpgradeRef.current = {
+          ...current,
+          metamorphosis: {
+            ...current.metamorphosis,
+            active: true,
+            currentForm: 'hornet',
+            formTimer: 0,
+            formDuration: 30000, // 30 seconds per form
+          }
+        };
+        break;
+      case 'blood_price':
+        wildUpgradeRef.current = { ...current, bloodPrice: { ...current.bloodPrice, active: true } };
+        break;
+      case 'temporal_debt':
+        // Enable temporal debt in BOTH WildUpgradeState AND JuiceSystem
+        // The JuiceSystem handles the actual time manipulation mechanics
+        wildUpgradeRef.current = { ...current, temporalDebt: { ...current.temporalDebt, active: true } };
+        enableTemporalDebt(juiceSystem);
+        break;
+      case 'swarm_mind':
+        // Initialize 5 mini-hornets around the player!
+        wildUpgradeRef.current = {
+          ...current,
+          swarmMind: initializeSwarmMind(playerPos)
+        };
+        console.log(`[SWARM MIND] Spawned 5 hornets at player position`);
+        break;
+      case 'honey_trap':
+        wildUpgradeRef.current = { ...current, honeyTrap: { ...current.honeyTrap, active: true } };
+        break;
+      case 'royal_decree':
+        // Initialize ROYAL DECREE with a random enemy as The King
+        const enemies = stateRef.current.enemies;
+        wildUpgradeRef.current = {
+          ...current,
+          royalDecree: initializeRoyalDecree(enemies.map(e => ({
+            id: e.id,
+            health: e.health,
+            maxHealth: e.maxHealth,
+          }))),
+        };
+        if (enemies.length > 0) {
+          const kingId = wildUpgradeRef.current.royalDecree.currentKingId;
+          console.log(`[ROYAL DECREE] Crowned enemy ${kingId} as THE KING!`);
+        } else {
+          console.log(`[ROYAL DECREE] No enemies to crown yet - King will be crowned when enemies appear`);
+        }
+        break;
+    }
+    console.log(`[WILD UPGRADE] Activated: ${upgradeId}`);
+  }, [juiceSystem]);
+
+  /**
    * Get current abilities state
    */
   const getAbilities = useCallback(() => {
@@ -3815,6 +4342,25 @@ export function useGameLoop(
     return deathMarkersRef.current;
   }, []);
 
+  /**
+   * Get current wild upgrade state (for rendering ECHO ghost, SWARM hornets, etc.)
+   */
+  const getWildUpgradeState = useCallback((): WildUpgradeState => {
+    return wildUpgradeRef.current;
+  }, []);
+
+  /**
+   * Get METAMORPHOSIS ability entities (web traps, melee slashes, pollen clouds)
+   * These are rendered separately from the wild upgrade state
+   */
+  const getMetamorphosisAbilities = useCallback(() => {
+    return {
+      webTraps: webTrapsRef.current,
+      meleeSlashes: meleeSlashesRef.current,
+      pollenClouds: pollenCloudsRef.current,
+    };
+  }, []);
+
   return {
     start,
     stop,
@@ -3827,6 +4373,7 @@ export function useGameLoop(
     getBallState,
     getAllBalls,
     selectAbility,
+    activateWildUpgrade,
     getAbilities,
     getComboState,
     getMeleeState,
@@ -3836,6 +4383,8 @@ export function useGameLoop(
     isDoubleStrikeReady,
     getTerritorialMarks,
     getDeathMarkers,
+    getWildUpgradeState,
+    getMetamorphosisAbilities,
   };
 }
 
@@ -3864,29 +4413,20 @@ function buildWitnessContext(state: GameState): {
 }
 
 function generateUpgradeChoicesForState(state: GameState): string[] {
-  // Use the new abilities system (Run 036: simplified abilities)
-  const ownedAbilities = state.player.upgrades as AbilityId[];
-  // Create a minimal ActiveAbilities for choice generation
-  const mockAbilities: ActiveAbilities = {
-    owned: ownedAbilities,
-    levels: {} as Record<AbilityId, number>,
-    computed: {} as ComputedEffects,
-    runtime: {
-      sawtoothCounter: 0,
-      trophyScentKills: 0,
-      updraftSpeedBonus: 0,
-      updraftExpiry: 0,
-      aggroPulseLastTime: 0,
-      moltingBurstUsed: false,
-      ablativeShellUsed: false,
-      confusionClouds: [],
-      deathMarkers: [],
-      bitterTasteDebuffs: new Map(),
-      heatRetentionActive: false,
-    },
-  };
-  // generateAbilityChoices returns AbilityId[] directly
-  return generateAbilityChoices(mockAbilities, 3);
+  // WILD UPGRADES: Get all wild upgrades that aren't already owned
+  const ownedUpgrades = (state.player.upgrades || []) as WildUpgradeType[];
+  const allWildUpgrades = getWildUpgradePool();
+
+  // Filter out already owned upgrades
+  const availableUpgrades = allWildUpgrades.filter(
+    upgrade => !ownedUpgrades.includes(upgrade.id)
+  );
+
+  // Shuffle and pick 3 (or fewer if not enough available)
+  const shuffled = [...availableUpgrades].sort(() => Math.random() - 0.5);
+  const choices = shuffled.slice(0, 3).map(upgrade => upgrade.id);
+
+  return choices;
 }
 
 // Re-export axiom types for consumers

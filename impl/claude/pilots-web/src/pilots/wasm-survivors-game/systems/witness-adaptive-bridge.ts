@@ -24,7 +24,7 @@ import type {
   SkillMetrics,
   GamePrincipleWeights,
 } from '../types';
-import type { UpgradeType } from './upgrades';
+import type { WildUpgradeType } from './wild-upgrades';
 
 // =============================================================================
 // Adaptation Types
@@ -56,9 +56,9 @@ export interface AdaptationInputs {
   /** Average survival time in seconds */
   averageSurvivalTime: number;
   /** Which upgrades the player tends to pick */
-  preferredUpgrades: UpgradeType[];
+  preferredUpgrades: WildUpgradeType[];
   /** Which upgrades the player avoids */
-  avoidedUpgrades: UpgradeType[];
+  avoidedUpgrades: WildUpgradeType[];
   /** Current run metrics */
   currentRunMetrics: {
     timeSurvived: number;
@@ -87,7 +87,7 @@ export interface AdaptationOutput {
   /** Multiplier for enemy damage */
   enemyDamageMultiplier?: number;
   /** Changes to upgrade offering weights */
-  upgradeWeightChanges?: Partial<Record<UpgradeType, number>>;
+  upgradeWeightChanges?: Partial<Record<WildUpgradeType, number>>;
   /** Whether mercy mode was activated */
   mercyModeActivated?: boolean;
   /** Whether challenge mode was activated */
@@ -327,7 +327,7 @@ export interface PlayerLearningProfile {
   /** Build preference statistics */
   buildStats: {
     /** How often each upgrade is selected */
-    upgradeSelectionRates: Partial<Record<UpgradeType, number>>;
+    upgradeSelectionRates: Partial<Record<WildUpgradeType, number>>;
     /** Which synergies have been discovered */
     discoveredSynergies: string[];
     /** Favorite build patterns */
@@ -482,7 +482,7 @@ export function calculateAdaptationInputs(
 
   // Calculate preferred/avoided upgrades from selection rates
   const selectionRates = profile?.buildStats.upgradeSelectionRates ?? {};
-  const upgradeEntries = Object.entries(selectionRates) as [UpgradeType, number][];
+  const upgradeEntries = Object.entries(selectionRates) as [WildUpgradeType, number][];
   const avgRate = upgradeEntries.length > 0
     ? upgradeEntries.reduce((sum, [, rate]) => sum + rate, 0) / upgradeEntries.length
     : 0;

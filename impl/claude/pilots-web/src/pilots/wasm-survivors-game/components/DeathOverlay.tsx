@@ -27,13 +27,9 @@ import { useState, useEffect, useMemo } from 'react';
 import type { EnemyType } from '../types';
 import { COLORS } from '../systems/juice';
 import {
-  getBuildIdentity,
-  getGhostSummary,
-  ARCHETYPES,
-  type UpgradeType,
-  type BuildIdentity,
-  type ArchetypeId,
-} from '../systems/upgrades';
+  type WildUpgradeType,
+  WILD_UPGRADES,
+} from '../systems/wild-upgrades';
 import type { ColonyLearning } from '../systems/colony-memory';
 import type { AxiomGuardReport } from '../systems/axiom-guards';
 import { HornetIcon, SkullIcon, ChartIcon, MaskIcon, GhostIcon, WarningIcon } from './Icons';
@@ -63,7 +59,7 @@ export interface ColonyLearningSummary {
  * Shows alternate paths not taken - curious "what if", not regret
  */
 export interface GhostSummary {
-  ghostArchetypes: ArchetypeId[];
+  ghostUpgrades: WildUpgradeType[];
   pivotMoments: number;
   alternateBuilds: string[];
 }
@@ -77,12 +73,11 @@ export interface DeathInfo {
   wave: number;
   gameTime: number;
   totalKills: number;
-  upgrades: UpgradeType[];
+  upgrades: WildUpgradeType[];
   score: number;
   // V5 WITNESSED: Colony learnings and ghost summary
   colonyLearnings?: ColonyLearningSummary;
   ghostSummary?: GhostSummary;
-  buildIdentity?: BuildIdentity;
 }
 
 interface DeathOverlayProps {
@@ -228,15 +223,33 @@ function getDeathCauseText(death: DeathInfo): { title: string; description: stri
 }
 
 /**
+ * Get a descriptive build name from wild upgrades.
+ * Wild upgrades are so unique that even one defines a build.
+ */
+function getBuildName(upgrades: WildUpgradeType[]): string | null {
+  if (upgrades.length === 0) return null;
+
+  // With wild upgrades, each one is so distinctive it defines the build
+  const primaryUpgrade = upgrades[0];
+  const upgrade = WILD_UPGRADES[primaryUpgrade];
+  if (!upgrade) return null;
+
+  // If multiple upgrades, note the combination
+  if (upgrades.length > 1) {
+    return `${upgrade.name} + ${upgrades.length - 1} more`;
+  }
+
+  return upgrade.name;
+}
+
+/**
  * DD-18 + CREATIVE-IDENTITY: Death narrative generation.
  *
  * The hornet doesn't "fall" or "lose" - they complete their arc with dignity.
  * Dark humor and swagger, not despair or regret.
  */
 function generateDeathNarrative(death: DeathInfo): string {
-  const buildName = death.upgrades.length > 0
-    ? getBuildIdentity(death.upgrades)
-    : null;
+  const buildName = getBuildName(death.upgrades);
 
   // Late game death (Wave 8+) - Dignified acceptance, respect for the colony
   if (death.wave >= 8) {
@@ -298,17 +311,14 @@ export function DeathOverlay({
 
   // DD-18: Get narrative and build
   const narrative = generateDeathNarrative(death);
-  const buildName = death.upgrades.length > 0
-    ? getBuildIdentity(death.upgrades)
-    : null;
+  const buildName = getBuildName(death.upgrades);
 
-  // V5 WITNESSED: Compute ghost summary - prop takes precedence, then death.ghostSummary, then compute from buildIdentity
+  // V5 WITNESSED: Compute ghost summary - prop takes precedence, then death.ghostSummary
   const ghostSummary = useMemo(() => {
     if (ghostSummaryProp) return ghostSummaryProp;
     if (death.ghostSummary) return death.ghostSummary;
-    if (death.buildIdentity) return getGhostSummary(death.buildIdentity);
     return null;
-  }, [ghostSummaryProp, death.ghostSummary, death.buildIdentity]);
+  }, [ghostSummaryProp, death.ghostSummary]);
 
   // V5 WITNESSED: Get colony learnings - prop takes precedence, then death.colonyLearnings
   const colonyLearnings = colonyLearningsProp ?? death.colonyLearnings;
@@ -725,25 +735,26 @@ export function DeathOverlay({
               </div>
 
               {/* Ghost Paths - Paths Not Taken */}
-              {ghostSummary && ghostSummary.ghostArchetypes.length > 0 && (
+              {ghostSummary && ghostSummary.ghostUpgrades.length > 0 && (
                 <div className="space-y-1">
                   <div className="text-cyan-400 font-bold flex items-center gap-2">
                     <GhostIcon size={16} color="#22D3EE" />
                     PATHS NOT TAKEN
                   </div>
                   <div className="pl-4 border-l-2 border-cyan-800/30 space-y-0.5">
-                    {ghostSummary.ghostArchetypes.map((archId, i) => {
-                      const arch = ARCHETYPES[archId];
-                      const isLast = i === ghostSummary.ghostArchetypes.length - 1;
+                    {ghostSummary.ghostUpgrades.map((upgradeId, i) => {
+                      const upgrade = WILD_UPGRADES[upgradeId];
+                      const isLast = i === ghostSummary.ghostUpgrades.length - 1;
+                      if (!upgrade) return null;
                       return (
-                        <div key={archId} className="text-gray-300">
+                        <div key={upgradeId} className="text-gray-300">
                           {isLast ? '└─' : '├─'}{' '}
                           <span
                             className="inline-block w-2 h-2 rounded-full mr-1.5"
-                            style={{ backgroundColor: arch.color }}
+                            style={{ backgroundColor: '#22D3EE' }}
                           />
-                          <span style={{ color: arch.color }}>{arch.name}</span>
-                          <span className="text-gray-500 text-xs ml-2">— {arch.fantasy}</span>
+                          <span style={{ color: '#22D3EE' }}>{upgrade.name}</span>
+                          <span className="text-gray-500 text-xs ml-2">— {upgrade.tagline}</span>
                         </div>
                       );
                     })}

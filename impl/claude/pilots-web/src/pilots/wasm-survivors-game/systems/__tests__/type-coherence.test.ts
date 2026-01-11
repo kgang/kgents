@@ -26,7 +26,7 @@ import type {
 
 // Import from actual implementation files
 import { BEE_BEHAVIORS } from '../enemies';
-import { UPGRADE_POOL } from '../upgrades';
+import { WILD_UPGRADES } from '../wild-upgrades';
 
 // =============================================================================
 // Type Schema Definitions (for documentation)
@@ -90,15 +90,21 @@ describe('Type Schema Coherence', () => {
     });
   });
 
-  describe('Upgrade Type Alignment', () => {
-    it('UPGRADE_POOL should have all defined upgrades', () => {
-      // upgrades.ts exports UPGRADE_POOL
-      const upgradeIds = UPGRADE_POOL.map(u => u.id);
+  describe('Wild Upgrade Type Alignment', () => {
+    it('WILD_UPGRADES should have all 8 wild upgrades', () => {
+      // wild-upgrades.ts exports WILD_UPGRADES
+      const upgradeIds = Object.keys(WILD_UPGRADES);
 
-      // Current implementation uses generic shooter upgrades
+      // The 8 WILD upgrades - each fundamentally changes gameplay
       const expectedUpgrades = [
-        'pierce', 'orbit', 'dash', 'multishot',
-        'vampiric', 'chain', 'burst', 'slow_field'
+        'echo',           // Ghost hornet repeating actions
+        'gravity_well',   // Enemies orbit and collide
+        'metamorphosis',  // Form-shifting mechanics
+        'blood_price',    // HP-spending power system
+        'temporal_debt',  // Time freeze with consequences
+        'swarm_mind',     // Split into multiple hornets
+        'honey_trap',     // Sticky zones and enemy chains
+        'royal_decree',   // Enemy king designation
       ];
 
       for (const upgrade of expectedUpgrades) {
@@ -106,34 +112,15 @@ describe('Type Schema Coherence', () => {
       }
     });
 
-    it.skip('UPGRADE_POOL should match PROTO_SPEC archetypes', () => {
-      // PROTO_SPEC S5 defines 6 archetypes:
-      // Executioner, Survivor, Skirmisher, Terror, Assassin, Berserker
-      //
-      // Current implementation has generic upgrades, not archetype-based.
-      // This test documents what SHOULD exist.
+    it('Each wild upgrade should have synergies with all others', () => {
+      const upgradeIds = Object.keys(WILD_UPGRADES);
 
-      const upgradeIds = UPGRADE_POOL.map(u => u.id);
+      for (const id of upgradeIds) {
+        const upgrade = WILD_UPGRADES[id as keyof typeof WILD_UPGRADES];
+        const synergyKeys = Object.keys(upgrade.synergies);
 
-      // These are the VERBS from PROTO_SPEC S5
-      const expectedVerbs = [
-        // Executioner: Crush, Inject, Critical
-        'crush', 'inject', 'critical',
-        // Survivor: Harden, Regenerate, Drain
-        'harden', 'regenerate', 'drain',
-        // Skirmisher: Burst, Evade, Hit-and-Run
-        'burst', 'evade', 'hit_and_run',
-        // Terror: Fear, Panic, Death Throes
-        'fear', 'panic', 'death_throes',
-        // Assassin: Pierce, Mark, Silent Strike
-        'pierce', 'mark', 'silent_strike',
-        // Berserker: Volley, Frenzy, Blood Rage
-        'volley', 'frenzy', 'blood_rage',
-      ];
-
-      // This will fail - documenting the gap
-      for (const verb of expectedVerbs) {
-        expect(upgradeIds).toContain(verb);
+        // Should have synergy entry for every upgrade (including self)
+        expect(synergyKeys.length).toBe(8);
       }
     });
   });
@@ -214,10 +201,10 @@ describe('PROTO_SPEC Compliance Markers', () => {
       expect(false).toBe(true);
     });
 
-    it('S5: THE UPGRADE SYSTEM - IMPLEMENTED (different theme)', () => {
-      // Upgrade system exists and works
-      // Theme doesn't match PROTO_SPEC archetypes
-      expect(UPGRADE_POOL.length).toBeGreaterThan(0);
+    it('S5: THE WILD UPGRADE SYSTEM - IMPLEMENTED', () => {
+      // Wild upgrade system with 8 unique mechanics
+      // Each upgrade fundamentally changes gameplay
+      expect(Object.keys(WILD_UPGRADES).length).toBe(8);
     });
 
     it('S6: THE BEE TAXONOMY - IMPLEMENTED', () => {

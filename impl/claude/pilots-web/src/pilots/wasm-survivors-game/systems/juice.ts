@@ -481,6 +481,101 @@ export const GRAZE_JUICE = {
   },
 } as const;
 
+/**
+ * ROYAL DECREE Juice Parameters
+ * "Heavy is the head that wears the crown"
+ * Gold, purple, and regal visual effects
+ */
+export const ROYAL_DECREE_JUICE = {
+  // Crown sparkle effect on The King
+  crownSparkle: {
+    count: 4,                   // Sparkles per burst
+    color: '#FFD700',           // Royal Gold
+    colorAlt: '#FFFFFF',        // White flash
+    spread: 360,                // Full circle
+    lifespan: 300,              // Sparkle duration ms
+    size: 5,                    // Sparkle size
+    velocity: 80,               // Gentle outward drift
+    interval: 500,              // ms between sparkle bursts
+  },
+
+  // Crown designation flash (when R is pressed)
+  designationFlash: {
+    color: '#FFD700',           // Royal Gold
+    radius: 60,                 // Flash radius
+    duration: 300,              // ms
+    ringCount: 2,               // Expanding rings
+    shakeIntensity: 6,
+    shakeDuration: 150,
+  },
+
+  // King health bar (rendered above The King)
+  kingHealthBar: {
+    width: 40,
+    height: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    healthColor: '#FFD700',     // Gold
+    lowHealthColor: '#FF4444',  // Red when low
+    borderColor: '#DAA520',     // Dark gold border
+    lowHealthThreshold: 0.3,
+  },
+
+  // Crown visual on The King
+  crown: {
+    color: '#FFD700',           // Royal Gold
+    gemColor: '#FF0000',        // Ruby gem
+    outlineColor: '#DAA520',    // Dark gold outline
+    size: 12,                   // Crown height
+    sparkleColor: '#FFFFFF',
+  },
+
+  // Royal glow around The King
+  kingGlow: {
+    color: 'rgba(255, 215, 0, 0.3)',
+    radius: 25,
+    pulseRate: 800,             // ms per pulse cycle
+  },
+
+  // King death fanfare
+  deathFanfare: {
+    particleCount: 30,          // Big burst
+    color: '#FFD700',           // Gold
+    colorAlt: '#FF6600',        // Orange
+    spread: 360,
+    velocity: 200,
+    lifespan: 600,
+    shakeIntensity: 10,
+    shakeDuration: 300,
+  },
+
+  // Reward burst (XP, health on King death)
+  rewardBurst: {
+    particleCount: 15,
+    xpColor: '#FFE066',         // Pollen Gold
+    healthColor: '#00FF88',     // Vitality Green
+    powerColor: '#FF8C00',      // Strike Orange
+    textSize: 18,
+    textDuration: 1200,
+    floatSpeed: 80,
+  },
+
+  // Crown passing effect (when crown transfers to new King)
+  crownPass: {
+    trailColor: '#FFD700',      // Gold trail
+    trailWidth: 4,
+    duration: 400,              // ms for crown to travel
+    sparkCount: 8,              // Sparks during transit
+  },
+
+  // Loyal subject indicator (enemies targeting The King)
+  subjectIndicator: {
+    arrowColor: 'rgba(255, 215, 0, 0.4)',
+    arrowSize: 8,
+    lineColor: 'rgba(255, 215, 0, 0.2)',
+    lineWidth: 1,
+  },
+} as const;
+
 // =============================================================================
 // Color Palette (from design docs)
 // =============================================================================
@@ -538,6 +633,67 @@ export const METAMORPHOSIS_COLORS = {
   colossal: '#880000',  // Deep crimson
   linked: '#FF666680',  // Semi-transparent red for linked enemies
 };
+
+// =============================================================================
+// ECHO JUICE PARAMETERS - Ghost hornet visual effects
+// "Your shadow fights too"
+// =============================================================================
+
+/**
+ * ECHO Wild Upgrade visual parameters
+ * Ghost trail, attack ripples, and ethereal effects
+ */
+export const ECHO_JUICE = {
+  // Ghost trail particles - ethereal blue wisps following the ghost
+  ghostTrail: {
+    color: '#88CCFF',           // Ethereal blue
+    colorSecondary: '#4488CC',  // Darker blue for depth
+    count: 2,                   // Particles per emission
+    size: 4,                    // Base particle size
+    lifespan: 300,              // ms - quick fade
+    velocity: 30,               // Slow drift
+    spread: Math.PI / 4,        // Narrow spread behind ghost
+    emitInterval: 50,           // ms between emissions
+  },
+
+  // Attack ripple - expanding ring when ghost attacks
+  attackRipple: {
+    color: '#88CCFF',           // Match ghost color
+    colorCenter: '#FFFFFF',     // White flash at center
+    ringCount: 2,               // Concentric rings
+    maxRadius: 60,              // Maximum ripple radius
+    duration: 300,              // ms to full expansion
+    thickness: 3,               // Ring thickness
+  },
+
+  // Dash trail - more intense trail during ghost dash
+  dashTrail: {
+    color: '#88CCFF',
+    colorCore: '#FFFFFF',
+    particleCount: 8,           // Particles along dash path
+    size: 6,                    // Larger than normal trail
+    lifespan: 400,              // Longer lasting
+    width: 20,                  // Trail width
+  },
+
+  // Kill effect - burst when ghost kills an enemy
+  kill: {
+    color: '#88CCFF',
+    burstCount: 12,             // Particles in burst
+    burstVelocity: 200,         // Fast outward burst
+    size: 5,
+    lifespan: 400,
+  },
+
+  // Ghost rendering hints
+  visual: {
+    ghostAlpha: 0.6,            // Base ghost transparency
+    pulseRate: 1500,            // ms per pulse cycle
+    pulseAmplitude: 0.15,       // Alpha oscillation amount
+    glowRadius: 20,             // Soft glow around ghost
+    glowColor: '#88CCFF44',     // Semi-transparent glow
+  },
+} as const;
 
 // =============================================================================
 // ABILITY JUICE PARAMETERS - Visual feedback for all 36 abilities
@@ -629,7 +785,8 @@ export interface Particle {
   alpha: number;
   type: 'burst' | 'trail' | 'text' | 'ring' | 'spiral' | 'drip' | 'pool' | 'fragment' | 'graze_spark'
       | 'apex_wing_blur' | 'apex_wind_dust' | 'apex_speed_line' | 'apex_air' | 'apex_impact' | 'apex_tumble' | 'apex_fury_text'
-      | 'xp_sparkle';
+      | 'xp_sparkle'
+      | 'echo_trail' | 'echo_ripple' | 'echo_dash' | 'echo_kill';
   text?: string;
   // Death spiral specific
   rotation?: number;        // Current rotation in radians
@@ -731,6 +888,48 @@ export interface ScreenEffectState {
   radius: number;
 }
 
+// =============================================================================
+// TEMPORAL DEBT STATE (Wild Upgrade)
+// =============================================================================
+
+/**
+ * Damage record for echo forward mechanic
+ */
+export interface TemporalDamageRecord {
+  enemyId: string;
+  damage: number;
+  position: Vector2;
+  timestamp: number;
+}
+
+/**
+ * TEMPORAL DEBT State
+ */
+export interface TemporalDebtState {
+  active: boolean;
+  phase: 'ready' | 'frozen' | 'debt' | 'cooldown';
+  phaseTimeRemaining: number;
+  cooldownRemaining: number;
+  frozenDamageRecords: TemporalDamageRecord[];
+  screenTintAlpha: number;
+  timeRippleProgress: number;
+  debtSpeedLinesIntensity: number;
+}
+
+/** TEMPORAL DEBT constants */
+export const TEMPORAL_DEBT = {
+  FREEZE_DURATION: 3000,
+  DEBT_DURATION: 6000,
+  COOLDOWN: 15000,
+  DEBT_TIME_SCALE: 2.0,
+  FREEZE_TIME_SCALE: 0.0,
+  SCREEN_TINT_COLOR: '#00DDFF',
+  SCREEN_TINT_MAX_ALPHA: 0.25,
+  RIPPLE_DURATION: 500,
+  FRAGMENT_COUNT: 15,
+  SPEED_LINE_COUNT: 8,
+} as const;
+
 export interface JuiceSystem {
   particles: Particle[];
   shake: ShakeState;
@@ -740,6 +939,7 @@ export interface JuiceSystem {
   killTracker: KillTracker; // NEW: Multi-kill tracking
   apexStrike: ApexStrikeState; // Apex Strike visual state
   screenEffect: ScreenEffectState; // Run 038: Screen effect for impact
+  temporalDebt: TemporalDebtState; // TEMPORAL DEBT wild upgrade
 
   // Reset method - clears all particles and effects for new game
   reset: () => void;
@@ -853,6 +1053,78 @@ export interface JuiceSystem {
   // Victory celebration when escaping THE BALL through the gap
   // Spawns victory particles, triggers freeze frame, screen flash
   emitBallEscape: (position: Vector2, gapAngle: number, escapeCount: number) => void;
+
+  // =================================================================
+  // ECHO SYSTEM - "Your shadow fights too"
+  // Ghost hornet follows player, repeating actions 0.5s later
+  // =================================================================
+
+  /** ECHO state tracking */
+  echo: {
+    /** Ghost trail particles active */
+    trailActive: boolean;
+    /** Last ghost position for trail spawning */
+    lastGhostPosition: Vector2 | null;
+    /** Accumulated time since last trail particle */
+    trailAccumulator: number;
+  };
+
+  /**
+   * Emit ghost trail particles (ethereal blue wisps)
+   * Called continuously while ghost is moving
+   */
+  emitEchoGhostTrail: (position: Vector2, velocity: Vector2) => void;
+
+  /**
+   * Emit echo ripple effect when ghost attacks
+   * Circular expanding ring with ethereal blue color
+   */
+  emitEchoAttackRipple: (position: Vector2, direction: Vector2) => void;
+
+  /**
+   * Emit echo dash trail (more intense than normal trail)
+   * Called when ghost performs a delayed dash
+   */
+  emitEchoDashTrail: (startPos: Vector2, endPos: Vector2, direction: Vector2) => void;
+
+  /**
+   * Emit ghost kill effect (ethereal burst when ghost kills an enemy)
+   */
+  emitEchoKill: (position: Vector2) => void;
+
+  /**
+   * Update ECHO visual state (call each frame when ECHO active)
+   */
+  updateEchoVisuals: (ghostPosition: Vector2, ghostVelocity: Vector2, deltaTime: number) => void;
+
+  // =================================================================
+  // HONEY TRAP JUICE - "Stick together. Die together."
+  // =================================================================
+
+  /** Emit honey trap placement effect (golden splash when trap placed) */
+  emitHoneyTrapPlace: (position: Vector2) => void;
+
+  /** Emit chain break explosion (MASSIVE satisfying explosion) */
+  emitChainBreakExplosion: (position: Vector2, memberCount: number, damage: number) => void;
+
+  /** Emit honey slow effect on enemy (amber glow) */
+  emitHoneySlow: (position: Vector2) => void;
+
+  // =================================================================
+  // TEMPORAL DEBT METHODS - "Borrow from the future. Pay it back."
+  // =================================================================
+
+  /** Get the temporal debt time scale for enemy updates (0 = frozen, 2 = debt) */
+  getTemporalEnemyTimeScale: () => number;
+
+  /** Check if temporal freeze is currently active */
+  isTemporalFreezeActive: () => boolean;
+
+  /** Update temporal debt state (called each frame) */
+  updateTemporalDebt: (deltaTime: number, playerPos: Vector2) => void;
+
+  /** Activate temporal debt (starts the freeze phase) */
+  activateTemporalDebt: (playerPos: Vector2) => void;
 }
 
 // =============================================================================
@@ -1848,6 +2120,23 @@ export function createJuiceSystem(): JuiceSystem {
       railFadeTime: 0,
       lastBumperTime: 0,
     },
+    // ECHO wild upgrade state
+    echo: {
+      trailActive: false,
+      lastGhostPosition: null as Vector2 | null,
+      trailAccumulator: 0,
+    },
+    // TEMPORAL DEBT wild upgrade state
+    temporalDebt: {
+      active: false,
+      phase: 'ready' as 'ready' | 'frozen' | 'debt' | 'cooldown',
+      phaseTimeRemaining: 0,
+      cooldownRemaining: 0,
+      frozenDamageRecords: [] as TemporalDamageRecord[],
+      screenTintAlpha: 0,
+      timeRippleProgress: 0,
+      debtSpeedLinesIntensity: 0,
+    },
   };
 
   return {
@@ -1877,6 +2166,12 @@ export function createJuiceSystem(): JuiceSystem {
     },
     get screenEffect() {
       return state.screenEffect;
+    },
+    get echo() {
+      return state.echo;
+    },
+    get temporalDebt() {
+      return state.temporalDebt;
     },
 
     /**
@@ -1952,6 +2247,25 @@ export function createJuiceSystem(): JuiceSystem {
         targetPosition: { x: 0, y: 0 },
         afterimages: [],
         lastAfterimageTime: 0,
+      };
+
+      // Reset temporal debt state
+      state.temporalDebt = {
+        active: false,
+        phase: 'ready',
+        phaseTimeRemaining: 0,
+        cooldownRemaining: 0,
+        frozenDamageRecords: [],
+        screenTintAlpha: 0,
+        timeRippleProgress: 0,
+        debtSpeedLinesIntensity: 0,
+      };
+
+      // Reset echo state
+      state.echo = {
+        trailActive: false,
+        lastGhostPosition: null,
+        trailAccumulator: 0,
       };
     },
 
@@ -3788,6 +4102,447 @@ export function createJuiceSystem(): JuiceSystem {
       }
 
       console.log(`[BALL ESCAPE] Celebration triggered! Escape #${escapeCount}, gap angle: ${(gapAngle * 180 / Math.PI).toFixed(1)}deg`);
+    },
+
+    // =================================================================
+    // ECHO SYSTEM - "Your shadow fights too"
+    // Ghost hornet follows player, repeating actions 0.5s later
+    // =================================================================
+
+    /**
+     * Emit ghost trail particles (ethereal blue wisps)
+     * Called continuously while ghost is moving
+     */
+    emitEchoGhostTrail(position: Vector2, velocity: Vector2) {
+      const config = ECHO_JUICE.ghostTrail;
+
+      // Only emit if ghost is moving
+      const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+      if (speed < 10) return;
+
+      // Calculate trail direction (opposite to movement)
+      const moveAngle = Math.atan2(velocity.y, velocity.x);
+
+      for (let i = 0; i < config.count; i++) {
+        // Spread particles behind the ghost
+        const angleOffset = (Math.random() - 0.5) * config.spread;
+        const angle = moveAngle + Math.PI + angleOffset; // Behind movement
+        const driftSpeed = config.velocity * (0.5 + Math.random() * 0.5);
+
+        // Alternate between primary and secondary color
+        const color = i % 2 === 0 ? config.color : config.colorSecondary;
+
+        state.particles.push({
+          id: `echo-trail-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 5)}`,
+          position: { ...position },
+          velocity: {
+            x: Math.cos(angle) * driftSpeed,
+            y: Math.sin(angle) * driftSpeed,
+          },
+          color,
+          size: config.size + Math.random() * 2,
+          lifetime: config.lifespan,
+          maxLifetime: config.lifespan,
+          alpha: 0.7,
+          type: 'echo_trail',
+        });
+      }
+    },
+
+    /**
+     * Emit echo ripple effect when ghost attacks
+     * Circular expanding ring with ethereal blue color
+     */
+    emitEchoAttackRipple(position: Vector2, _direction: Vector2) {
+      const config = ECHO_JUICE.attackRipple;
+
+      // Center flash particle
+      state.particles.push({
+        id: `echo-ripple-center-${Date.now()}`,
+        position: { ...position },
+        velocity: { x: 0, y: 0 },
+        color: config.colorCenter,
+        size: 8,
+        lifetime: 100,
+        maxLifetime: 100,
+        alpha: 1,
+        type: 'burst',
+      });
+
+      // Expanding ring particles (simulate with radial burst)
+      for (let ring = 0; ring < config.ringCount; ring++) {
+        const ringDelay = ring * 50; // Stagger rings
+        const particlesPerRing = 12;
+
+        for (let i = 0; i < particlesPerRing; i++) {
+          const angle = (i / particlesPerRing) * Math.PI * 2;
+          const speed = (config.maxRadius / config.duration) * 1000; // Convert to px/s
+
+          state.particles.push({
+            id: `echo-ripple-${ring}-${i}-${Date.now()}`,
+            position: { ...position },
+            velocity: {
+              x: Math.cos(angle) * speed,
+              y: Math.sin(angle) * speed,
+            },
+            color: config.color,
+            size: config.thickness,
+            lifetime: config.duration - ringDelay,
+            maxLifetime: config.duration,
+            alpha: 0.8 - ring * 0.2,
+            type: 'echo_ripple',
+          });
+        }
+      }
+
+      // Small screen shake for ghost attack
+      this.triggerShake(3, 100);
+    },
+
+    /**
+     * Emit echo dash trail (more intense than normal trail)
+     * Called when ghost performs a delayed dash
+     */
+    emitEchoDashTrail(startPos: Vector2, endPos: Vector2, _direction: Vector2) {
+      const config = ECHO_JUICE.dashTrail;
+
+      // Calculate dash vector
+      const dx = endPos.x - startPos.x;
+      const dy = endPos.y - startPos.y;
+      const length = Math.sqrt(dx * dx + dy * dy);
+
+      if (length < 1) return;
+
+      // Spawn particles along the dash path
+      for (let i = 0; i < config.particleCount; i++) {
+        const t = i / (config.particleCount - 1);
+        const x = startPos.x + dx * t;
+        const y = startPos.y + dy * t;
+
+        // Core particle (white)
+        state.particles.push({
+          id: `echo-dash-core-${Date.now()}-${i}`,
+          position: { x, y },
+          velocity: {
+            x: (Math.random() - 0.5) * 30,
+            y: (Math.random() - 0.5) * 30,
+          },
+          color: config.colorCore,
+          size: config.size * 0.6,
+          lifetime: config.lifespan * 0.7,
+          maxLifetime: config.lifespan,
+          alpha: 0.9,
+          type: 'echo_dash',
+        });
+
+        // Outer glow particle (blue)
+        state.particles.push({
+          id: `echo-dash-glow-${Date.now()}-${i}`,
+          position: { x, y },
+          velocity: {
+            x: (Math.random() - 0.5) * 50,
+            y: (Math.random() - 0.5) * 50,
+          },
+          color: config.color,
+          size: config.size,
+          lifetime: config.lifespan,
+          maxLifetime: config.lifespan,
+          alpha: 0.7,
+          type: 'echo_dash',
+        });
+      }
+
+      // Medium screen shake for ghost dash
+      this.triggerShake(4, 80);
+    },
+
+    /**
+     * Emit ghost kill effect (ethereal burst when ghost kills an enemy)
+     */
+    emitEchoKill(position: Vector2) {
+      const config = ECHO_JUICE.kill;
+
+      // Burst particles outward
+      for (let i = 0; i < config.burstCount; i++) {
+        const angle = (i / config.burstCount) * Math.PI * 2;
+        const speed = config.burstVelocity * (0.7 + Math.random() * 0.6);
+
+        state.particles.push({
+          id: `echo-kill-${Date.now()}-${i}`,
+          position: { ...position },
+          velocity: {
+            x: Math.cos(angle) * speed,
+            y: Math.sin(angle) * speed,
+          },
+          color: config.color,
+          size: config.size + Math.random() * 3,
+          lifetime: config.lifespan,
+          maxLifetime: config.lifespan,
+          alpha: 1,
+          type: 'echo_kill',
+        });
+      }
+
+      // White center flash
+      state.particles.push({
+        id: `echo-kill-flash-${Date.now()}`,
+        position: { ...position },
+        velocity: { x: 0, y: 0 },
+        color: '#FFFFFF',
+        size: 15,
+        lifetime: 100,
+        maxLifetime: 100,
+        alpha: 1,
+        type: 'burst',
+      });
+
+      // Screen shake for ghost kill
+      this.triggerShake(4, 100);
+    },
+
+    /**
+     * Update ECHO visual state (call each frame when ECHO active)
+     */
+    updateEchoVisuals(ghostPosition: Vector2, ghostVelocity: Vector2, deltaTime: number) {
+      const config = ECHO_JUICE.ghostTrail;
+
+      // Accumulate time for trail emission
+      state.echo.trailAccumulator += deltaTime;
+
+      // Emit trail particles at interval
+      if (state.echo.trailAccumulator >= config.emitInterval) {
+        state.echo.trailAccumulator = 0;
+
+        // Only emit if ghost has moved
+        if (state.echo.lastGhostPosition) {
+          const dx = ghostPosition.x - state.echo.lastGhostPosition.x;
+          const dy = ghostPosition.y - state.echo.lastGhostPosition.y;
+          const moved = Math.sqrt(dx * dx + dy * dy);
+
+          if (moved > 2) { // Moved at least 2 pixels
+            this.emitEchoGhostTrail(ghostPosition, ghostVelocity);
+          }
+        }
+
+        state.echo.lastGhostPosition = { ...ghostPosition };
+      }
+
+      state.echo.trailActive = true;
+    },
+
+    // =================================================================
+    // HONEY TRAP JUICE - "Stick together. Die together."
+    // =================================================================
+
+    /**
+     * Emit honey trap placement effect (golden splash when trap placed)
+     */
+    emitHoneyTrapPlace(position: Vector2) {
+      // Golden splash particles
+      for (let i = 0; i < 15; i++) {
+        const angle = (i / 15) * Math.PI * 2;
+        const speed = 60 + Math.random() * 40;
+
+        state.particles.push({
+          id: `honey-place-${Date.now()}-${i}`,
+          position: { ...position },
+          velocity: {
+            x: Math.cos(angle) * speed,
+            y: Math.sin(angle) * speed,
+          },
+          color: '#F4A300',
+          size: 4 + Math.random() * 3,
+          lifetime: 400,
+          maxLifetime: 400,
+          alpha: 0.9,
+          type: 'burst',
+        });
+      }
+
+      // Center glow
+      state.particles.push({
+        id: `honey-place-center-${Date.now()}`,
+        position: { ...position },
+        velocity: { x: 0, y: 0 },
+        color: '#FFD700',
+        size: 20,
+        lifetime: 200,
+        maxLifetime: 200,
+        alpha: 0.7,
+        type: 'burst',
+      });
+    },
+
+    /**
+     * Emit chain break explosion (MASSIVE satisfying explosion)
+     */
+    emitChainBreakExplosion(position: Vector2, memberCount: number, _damage: number) {
+      // Scale particles by chain size
+      const particleCount = Math.min(30 + memberCount * 5, 60);
+
+      // Main explosion burst
+      for (let i = 0; i < particleCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 100 + Math.random() * 200;
+
+        state.particles.push({
+          id: `chain-break-${Date.now()}-${i}`,
+          position: { ...position },
+          velocity: {
+            x: Math.cos(angle) * speed,
+            y: Math.sin(angle) * speed,
+          },
+          color: memberCount > 5 ? '#FF6600' : '#F4A300',
+          size: 5 + Math.random() * 4,
+          lifetime: 500 + Math.random() * 200,
+          maxLifetime: 700,
+          alpha: 1,
+          type: 'fragment',
+        });
+      }
+
+      // Expanding ring
+      state.particles.push(createRingParticle(position, '#FFD700', 80 + memberCount * 10));
+
+      // Big screen shake
+      this.triggerShake(8 + memberCount, 200);
+
+      // Freeze frame for big chains
+      if (memberCount >= 3) {
+        this.triggerFreeze('multi');
+      }
+    },
+
+    /**
+     * Emit honey slow effect on enemy (amber glow)
+     */
+    emitHoneySlow(position: Vector2) {
+      // Subtle amber drip particles
+      for (let i = 0; i < 3; i++) {
+        state.particles.push({
+          id: `honey-slow-${Date.now()}-${i}`,
+          position: {
+            x: position.x + (Math.random() - 0.5) * 10,
+            y: position.y + (Math.random() - 0.5) * 10,
+          },
+          velocity: {
+            x: (Math.random() - 0.5) * 20,
+            y: 20 + Math.random() * 30, // Drip downward
+          },
+          color: '#F4A300',
+          size: 2 + Math.random() * 2,
+          lifetime: 300,
+          maxLifetime: 300,
+          alpha: 0.6,
+          type: 'drip',
+          gravity: 150,
+        });
+      }
+    },
+
+    // =================================================================
+    // TEMPORAL DEBT METHODS - "Borrow from the future. Pay it back."
+    // =================================================================
+
+    /**
+     * Get the temporal debt time scale for enemy updates
+     * Returns: 0 = frozen, 1 = normal, 2 = debt (fast)
+     */
+    getTemporalEnemyTimeScale(): number {
+      if (!state.temporalDebt.active) return 1;
+
+      switch (state.temporalDebt.phase) {
+        case 'frozen':
+          return TEMPORAL_DEBT.FREEZE_TIME_SCALE; // 0
+        case 'debt':
+          return TEMPORAL_DEBT.DEBT_TIME_SCALE; // 2
+        default:
+          return 1;
+      }
+    },
+
+    /**
+     * Check if temporal freeze is currently active
+     */
+    isTemporalFreezeActive(): boolean {
+      return state.temporalDebt.active && state.temporalDebt.phase === 'frozen';
+    },
+
+    /**
+     * Update temporal debt state (called each frame)
+     */
+    updateTemporalDebt(deltaTime: number, _playerPos: Vector2) {
+      if (!state.temporalDebt.active) return;
+
+      const { phase, phaseTimeRemaining, cooldownRemaining } = state.temporalDebt;
+
+      switch (phase) {
+        case 'frozen':
+          // Count down freeze time
+          state.temporalDebt.phaseTimeRemaining = phaseTimeRemaining - deltaTime;
+          state.temporalDebt.screenTintAlpha = Math.min(
+            TEMPORAL_DEBT.SCREEN_TINT_MAX_ALPHA,
+            state.temporalDebt.screenTintAlpha + deltaTime * 0.002
+          );
+
+          if (state.temporalDebt.phaseTimeRemaining <= 0) {
+            // Transition to debt phase
+            state.temporalDebt.phase = 'debt';
+            state.temporalDebt.phaseTimeRemaining = TEMPORAL_DEBT.DEBT_DURATION;
+            console.log('[TEMPORAL DEBT] Freeze ended. DEBT PHASE: 2x enemy speed!');
+          }
+          break;
+
+        case 'debt':
+          // Count down debt time
+          state.temporalDebt.phaseTimeRemaining = phaseTimeRemaining - deltaTime;
+          state.temporalDebt.debtSpeedLinesIntensity = 0.5 + 0.5 * Math.sin(Date.now() * 0.01);
+          state.temporalDebt.screenTintAlpha = Math.max(
+            0,
+            state.temporalDebt.screenTintAlpha - deltaTime * 0.0005
+          );
+
+          if (state.temporalDebt.phaseTimeRemaining <= 0) {
+            // Transition to cooldown
+            state.temporalDebt.phase = 'cooldown';
+            state.temporalDebt.cooldownRemaining = TEMPORAL_DEBT.COOLDOWN;
+            state.temporalDebt.debtSpeedLinesIntensity = 0;
+            state.temporalDebt.screenTintAlpha = 0;
+            console.log('[TEMPORAL DEBT] Debt paid. Cooldown started.');
+          }
+          break;
+
+        case 'cooldown':
+          // Count down cooldown
+          state.temporalDebt.cooldownRemaining = cooldownRemaining - deltaTime;
+
+          if (state.temporalDebt.cooldownRemaining <= 0) {
+            state.temporalDebt.phase = 'ready';
+            state.temporalDebt.cooldownRemaining = 0;
+            console.log('[TEMPORAL DEBT] Ready again!');
+          }
+          break;
+      }
+    },
+
+    /**
+     * Activate temporal debt (starts the freeze phase)
+     */
+    activateTemporalDebt(playerPos: Vector2) {
+      if (state.temporalDebt.phase !== 'ready') return;
+
+      state.temporalDebt.phase = 'frozen';
+      state.temporalDebt.phaseTimeRemaining = TEMPORAL_DEBT.FREEZE_DURATION;
+      state.temporalDebt.frozenDamageRecords = [];
+      state.temporalDebt.timeRippleProgress = 0;
+
+      // Visual feedback: time ripple effect
+      state.particles.push(createRingParticle(playerPos, TEMPORAL_DEBT.SCREEN_TINT_COLOR, 200));
+
+      // Screen shake
+      this.triggerShake(10, 200);
+
+      console.log('[TEMPORAL DEBT] ACTIVATED! Time frozen for 3 seconds.');
     },
   };
 }

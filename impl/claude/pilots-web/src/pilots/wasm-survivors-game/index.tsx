@@ -42,8 +42,13 @@ import { VoiceLineOverlay } from './components/VoiceLineOverlay';
 import { HornetIcon, SkullIcon, LightningIcon, ArrowUpIcon, GamepadIcon } from './components/Icons';
 import { ARENA_WIDTH, ARENA_HEIGHT } from './systems/physics';
 import { COLORS, SHAKE } from './systems/juice';
-import { applyUpgrade as applyVerbUpgrade, type UpgradeType, createInitialActiveUpgrades, type ActiveUpgrades, getGhostSummary } from './systems/upgrades';
 import { generateAbilityChoices, type AbilityId, type ActiveAbilities, type ComputedEffects } from './systems/abilities';
+import {
+  type WildUpgradeType,
+  type WildUpgradeState,
+  createInitialWildUpgradeState,
+  getWildUpgrade,
+} from './systems/wild-upgrades';
 import { BEE_BEHAVIORS, type TelegraphData } from './systems/enemies';
 import type { AttackType } from './components/DeathOverlay';
 import type { VoiceLine, ArcPhase, EmotionalState } from './systems/contrast';
@@ -97,8 +102,9 @@ export function WASMSurvivors() {
     pendingIntents: new Map(),
   });
 
-  // Active upgrades tracking (DD-6: verb-based upgrades)
-  const activeUpgradesRef = useRef<ActiveUpgrades>(createInitialActiveUpgrades());
+  // Wild upgrades tracking (new wild upgrades system)
+  const wildUpgradeStateRef = useRef<WildUpgradeState>(createInitialWildUpgradeState());
+  const wildUpgradesRef = useRef<WildUpgradeType[]>([]);
 
   // Juice system (persisted)
   const juiceSystem = useMemo(() => createJuiceSystem(), []);
@@ -109,7 +115,7 @@ export function WASMSurvivors() {
     if (!upgradeState) return null;
     return {
       recentGhosts: witnessContextRef.current.ghosts.slice(-3),
-      currentAbilities: gameState.player.upgrades as import('./systems/abilities').AbilityId[],
+      currentAbilities: wildUpgradesRef.current,
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upgradeState]); // Only recalc when upgrade state changes, not on every gameState update
@@ -319,7 +325,7 @@ export function WASMSurvivors() {
       gameTime: finalState.gameTime,
       // DD-18: Additional fields for death narrative
       totalKills: finalState.totalEnemiesKilled,
-      upgrades: finalState.player.upgrades as import('./systems/upgrades').UpgradeType[],
+      upgrades: wildUpgradesRef.current,
       score: finalState.score,
     });
 
@@ -554,6 +560,10 @@ export function WASMSurvivors() {
     // leaving apex strike, combat state, etc. in stale state.
     gameLoop.stop();
 
+    // RESET AUDIO FIRST - prevents buzz/ambient carry-over between runs
+    // Fixes the "ambient bee buzzing carry-over" bug
+    soundEngine.resetAudio();
+
     // Start KENT Fugue music system (requires user interaction for Web Audio API)
     // UNIFIED: Only KENT fugue runs - no competing systems
     // MUST await to ensure isRunning is set before game loop starts
@@ -586,8 +596,9 @@ export function WASMSurvivors() {
       pendingIntents: new Map(),
     };
 
-    // Reset active upgrades (DD-6)
-    activeUpgradesRef.current = createInitialActiveUpgrades();
+    // Reset wild upgrades state
+    wildUpgradeStateRef.current = createInitialWildUpgradeState();
+    wildUpgradesRef.current = [];
 
     // Reset death info
     setDeathInfo(null);
@@ -601,9 +612,9 @@ export function WASMSurvivors() {
     setEmotionalState(null);
     gameLoop.setState(startedState);  // Sync game loop state with started state
     gameLoop.start();
-  }, [gameLoop, resetInput, juiceSystem, kentFugue, hornetSound]);
+  }, [gameLoop, resetInput, juiceSystem, kentFugue, hornetSound, soundEngine]);
 
-  // Handle upgrade selection (DD-6: verb-based upgrades)
+  // Handle upgrade selection (WILD UPGRADES)
   const handleUpgradeSelect = useCallback(
     (upgradeId: string, alternatives: string[]) => {
       // Record ghost (DD-2: Ghost as Honor)
@@ -624,46 +635,80 @@ export function WASMSurvivors() {
       };
       witnessContextRef.current.ghosts.push(ghost);
 
-      // Apply verb upgrade (DD-6) - pass unchosen upgrades for ghost tracking
-      const unchosenUpgrades = alternatives as UpgradeType[];
-      const { active: newActiveUpgrades, newSynergies } = applyVerbUpgrade(
-        activeUpgradesRef.current,
-        upgradeId as UpgradeType,
-        unchosenUpgrades,
-        gameState.gameTime,
-        gameState.wave
-      );
-      activeUpgradesRef.current = newActiveUpgrades;
+      // Activate wild upgrade
+      const wildUpgradeId = upgradeId as WildUpgradeType;
+      const wildUpgrade = getWildUpgrade(wildUpgradeId);
 
-      // Update game state with verb upgrade effects
+      // Add to owned wild upgrades
+      wildUpgradesRef.current = [...wildUpgradesRef.current, wildUpgradeId];
+
+      // Activate the upgrade in state
+      const newWildState = { ...wildUpgradeStateRef.current };
+      switch (wildUpgradeId) {
+        case 'echo':
+          newWildState.echo = { ...newWildState.echo, active: true };
+          break;
+        case 'gravity_well':
+          newWildState.gravityWell = { ...newWildState.gravityWell, active: true };
+          break;
+        case 'metamorphosis':
+          newWildState.metamorphosis = { ...newWildState.metamorphosis, active: true };
+          break;
+        case 'blood_price':
+          newWildState.bloodPrice = { ...newWildState.bloodPrice, active: true };
+          break;
+        case 'temporal_debt':
+          newWildState.temporalDebt = { ...newWildState.temporalDebt, active: true };
+          break;
+        case 'swarm_mind':
+          newWildState.swarmMind = { ...newWildState.swarmMind, active: true };
+          break;
+        case 'honey_trap':
+          newWildState.honeyTrap = { ...newWildState.honeyTrap, active: true };
+          break;
+        case 'royal_decree':
+          newWildState.royalDecree = { ...newWildState.royalDecree, active: true };
+          break;
+      }
+      wildUpgradeStateRef.current = newWildState;
+
+      // Check for synergies with previously owned upgrades
+      const newSynergies: string[] = [];
+      for (const ownedUpgrade of wildUpgradesRef.current.slice(0, -1)) {
+        if (wildUpgrade) {
+          const synergy = wildUpgrade.synergies[ownedUpgrade as WildUpgradeType];
+          if (synergy && synergy.name !== 'Self') {
+            newSynergies.push(synergy.name);
+          }
+        }
+      }
+
+      // Update game state with wild upgrade
       const newState: GameState = {
         ...gameState,
         status: 'playing',
         player: {
           ...gameState.player,
           upgrades: [...gameState.player.upgrades, upgradeId],
-          synergies: [...(gameState.player.synergies ?? []), ...newSynergies.map(s => s.id)],
-          // DD-6: Store active upgrade effects on player for physics system
-          activeUpgrades: newActiveUpgrades as unknown as Record<string, unknown>,
+          synergies: [...(gameState.player.synergies ?? []), ...newSynergies],
         },
       };
 
-      // TODO: Play synergy sound if new synergy discovered (DD-7)
+      // Play synergy effect if new synergy discovered
       if (newSynergies.length > 0) {
-        console.log('SYNERGY DISCOVERED:', newSynergies.map(s => s.announcement).join(', '));
+        console.log('WILD SYNERGY DISCOVERED:', newSynergies.join(', '));
         // Wire shake: Synergy discovery - 10px + flash celebration (biggest moment!)
         juiceSystem.triggerShake(SHAKE.synergyDiscovery.amplitude, SHAKE.synergyDiscovery.duration);
-        // soundEngine.playSynergy(); // When sound is ready
       }
 
       setGameState(newState);
       setPhase('playing');
       setUpgradeState(null);
       gameLoop.setState(newState);  // Sync game loop state with upgraded state
-      gameLoop.selectAbility(upgradeId as AbilityId);  // Run 040: Update abilities ref for computed effects (hasFullArc, etc.)
+      gameLoop.activateWildUpgrade(upgradeId as WildUpgradeType);  // WILD UPGRADES: Activate the upgrade mechanics
       gameLoop.resume();
     },
-    [gameState, gameLoop]
+    [gameState, gameLoop, juiceSystem]
   );
 
   // DD-29-3: Handle crystallization completion
@@ -857,6 +902,8 @@ export function WASMSurvivors() {
               isDoubleStrikeReady={gameLoop.isDoubleStrikeReady()}
               territorialMarks={gameLoop.getTerritorialMarks()}
               deathMarkers={gameLoop.getDeathMarkers()}
+              wildUpgradeState={gameLoop.getWildUpgradeState()}
+              metamorphosisAbilities={gameLoop.getMetamorphosisAbilities()}
             />
 
             {/* Part VI: Voice line overlay */}
@@ -916,6 +963,7 @@ export function WASMSurvivors() {
               chargePercent={0}
               attackCooldownPercent={1}
               killStreak={0}
+              wildUpgradeState={gameLoop.getWildUpgradeState()}
             />
             <CrystallizationOverlay
               deathPosition={gameState.player.position}
@@ -930,7 +978,15 @@ export function WASMSurvivors() {
         {phase === 'gameover' && deathInfo && (
           <DeathOverlay
             death={deathInfo}
-            ghostSummary={getGhostSummary(activeUpgradesRef.current.buildIdentity)}
+            ghostSummary={{
+              ghostUpgrades: witnessContextRef.current.ghosts
+                .flatMap(g => g.unchosen)
+                .filter((id): id is WildUpgradeType =>
+                  ['echo', 'gravity_well', 'metamorphosis', 'blood_price', 'temporal_debt', 'swarm_mind', 'honey_trap', 'royal_decree'].includes(id)
+                ),
+              pivotMoments: witnessContextRef.current.ghosts.length,
+              alternateBuilds: [],
+            }}
             onPlayAgain={handleStartGame}
           />
         )}

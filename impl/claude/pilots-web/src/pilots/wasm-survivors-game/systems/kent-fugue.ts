@@ -1041,6 +1041,22 @@ export interface FugueStateData {
 
   /** Whether percussion is muted (true during early grand opening) */
   percussionMuted: boolean;
+
+  // === MELODY-PERCUSSION INTERPLAY (Staccato Counterpoint Enhancement) ===
+
+  /** Tracks melodic state for percussion to respond to */
+  melodicState: {
+    /** Sixteenth position (0-15) of last melodic accent */
+    lastMelodicAccent: number;
+    /** Current active pitch (0-11 semitones from C#) */
+    currentMelodicPitch: number;
+    /** Melodic density (0-1) - how many notes recently played */
+    melodicDensity: number;
+    /** Whether currently in a melodic run */
+    isInRun: boolean;
+    /** Direction of current run */
+    runDirection: 'ascending' | 'descending' | 'none';
+  };
 }
 
 // =============================================================================
@@ -1366,6 +1382,15 @@ export function createFugueState(): FugueStateData {
     narrativeBeats: [],
     openingPhase: 0,               // Phase 0: Solo announcement
     percussionMuted: false,        // START WITH DRUMS IMMEDIATELY (was true)
+
+    // Melody-percussion interplay state
+    melodicState: {
+      lastMelodicAccent: -1,        // No accent yet
+      currentMelodicPitch: 0,       // C# (tonic)
+      melodicDensity: 0.5,          // Medium density
+      isInRun: false,
+      runDirection: 'none',
+    },
   };
 }
 
@@ -1601,7 +1626,8 @@ export interface PercussionNote {
  */
 function getRockPattern(
   sixteenthPosition: number,
-  measureNum: number = 0
+  measureNum: number = 0,
+  melodicContext?: { accent: number; pitch: number; density: number }
 ): { type: PercussionNote['type']; velocity: number; ghost?: boolean }[] {
   const notes: { type: PercussionNote['type']; velocity: number; ghost?: boolean }[] = [];
 
@@ -1610,12 +1636,35 @@ function getRockPattern(
   const phrasePosition = measureNum % 8;
   const seed = (measureNum * 1.618033988749 + sixteenthPosition * 0.414213562373) % 1;
 
-  // === KICK: Four-on-the-floor (positions 0, 4, 8, 12) ===
+  // Extract melodic context with defaults
+  const melodicAccent = melodicContext?.accent ?? -1;
+  const melodicPitch = melodicContext?.pitch ?? 0;
+  const melodicDensity = melodicContext?.density ?? 0.5;
+
+  // === KICK: Four-on-the-floor with melody-responsive velocity ===
   const isKickPosition = sixteenthPosition % 4 === 0;
   if (isKickPosition) {
-    // Beat 1 strongest, others slightly softer
-    const kickVel = sixteenthPosition === 0 ? 0.95 : 0.85;
+    // Base velocity: Beat 1 strongest, others softer
+    let kickVel = sixteenthPosition === 0 ? 0.95 : 0.85;
+
+    // ACCENT ALIGNMENT: Boost kick when melodic accent is nearby
+    if (melodicAccent >= 0) {
+      const accentDistance = Math.abs(sixteenthPosition - melodicAccent);
+      if (accentDistance <= 1) {
+        kickVel = Math.min(1.0, kickVel + 0.1);  // Boost for melodic alignment
+      }
+    }
+
+    // Pitch influence: Higher melody = slightly brighter kick
+    const pitchBoost = (melodicPitch / 12) * 0.05;
+    kickVel = Math.min(1.0, kickVel + pitchBoost);
+
     notes.push({ type: 'kick', velocity: kickVel });
+  }
+
+  // ACCENT ALIGNMENT: Ghost snare if melodic accent on off-beat
+  if (melodicAccent >= 0 && melodicAccent % 4 !== 0 && sixteenthPosition === melodicAccent) {
+    notes.push({ type: 'snare', velocity: 0.55, ghost: true });
   }
 
   // Subtle offbeat kick on certain bars (deep house flavor)
@@ -1628,7 +1677,7 @@ function getRockPattern(
     notes.push({ type: 'snare', velocity: 0.9 });
   }
 
-  // === HI-HAT: Driving 8th notes with procedural dynamics ===
+  // === HI-HAT: Driving 8th notes with density-responsive dynamics ===
   const is8thNote = sixteenthPosition % 2 === 0;
 
   if (is8thNote) {
@@ -1647,8 +1696,14 @@ function getRockPattern(
     }
   }
 
-  // Add 16th note hi-hats on every other phrase for energy buildup
-  if (phrasePosition >= 6 && sixteenthPosition % 2 === 1) {
+  // DENSITY MIRRORING: More 16th hi-hats when melody is dense
+  if (melodicDensity > 0.6) {
+    // Add 16th note hi-hats even outside buildup phrases
+    if (sixteenthPosition % 2 === 1) {
+      notes.push({ type: 'hihat', velocity: 0.35 + melodicDensity * 0.2 });
+    }
+  } else if (phrasePosition >= 6 && sixteenthPosition % 2 === 1) {
+    // Standard buildup hi-hats only during phrase endings
     notes.push({ type: 'hihat', velocity: 0.35 + seed * 0.1 });
   }
 
@@ -1666,7 +1721,8 @@ function getRockPattern(
  */
 function getFunkPattern(
   sixteenthPosition: number,
-  measureNum: number = 0
+  measureNum: number = 0,
+  melodicContext?: { accent: number; pitch: number; density: number }
 ): { type: PercussionNote['type']; velocity: number; ghost?: boolean }[] {
   const notes: { type: PercussionNote['type']; velocity: number; ghost?: boolean }[] = [];
 
@@ -1675,8 +1731,12 @@ function getFunkPattern(
   const phrasePosition = measureNum % 8;
   const seed = (measureNum * 1.618033988749 + sixteenthPosition * 0.414213562373) % 1;
 
-  // === KICK: Sparse 808-style pattern ===
-  // Different kick patterns per bar, all simple and driving
+  // Extract melodic context with defaults
+  const melodicAccent = melodicContext?.accent ?? -1;
+  const melodicPitch = melodicContext?.pitch ?? 0;
+  const melodicDensity = melodicContext?.density ?? 0.5;
+
+  // === KICK: Sparse 808-style pattern with melody responsiveness ===
   const kickPatterns: Record<number, number[]> = {
     0: [0, 10],           // Classic trap: 1 and "and of 3"
     1: [0, 6, 10],        // Add "and of 2"
@@ -1686,8 +1746,26 @@ function getFunkPattern(
 
   const currentKicks = kickPatterns[barVariation];
   if (currentKicks.includes(sixteenthPosition)) {
-    const kickVel = sixteenthPosition === 0 ? 0.95 : 0.8;
+    let kickVel = sixteenthPosition === 0 ? 0.95 : 0.8;
+
+    // ACCENT ALIGNMENT: Boost kick when melodic accent is nearby
+    if (melodicAccent >= 0) {
+      const accentDistance = Math.abs(sixteenthPosition - melodicAccent);
+      if (accentDistance <= 1) {
+        kickVel = Math.min(1.0, kickVel + 0.1);
+      }
+    }
+
+    // Pitch influence
+    const pitchBoost = (melodicPitch / 12) * 0.05;
+    kickVel = Math.min(1.0, kickVel + pitchBoost);
+
     notes.push({ type: 'kick', velocity: kickVel });
+  }
+
+  // ACCENT ALIGNMENT: Ghost snare if melodic accent on off-beat
+  if (melodicAccent >= 0 && melodicAccent % 4 !== 0 && sixteenthPosition === melodicAccent) {
+    notes.push({ type: 'snare', velocity: 0.5, ghost: true });
   }
 
   // === SNARE: Clean backbeat on 2 and 4 ===
@@ -1695,11 +1773,7 @@ function getFunkPattern(
     notes.push({ type: 'snare', velocity: 0.9 });
   }
 
-  // === HI-HAT: Rolling 16th notes with velocity waves ===
-  // Every 16th note gets a hi-hat for that rolling trap feel
-
-  // Velocity pattern creates a "wave" through the bar
-  // Accents on downbeats and upbeats, softer on "e" and "a"
+  // === HI-HAT: Rolling 16th notes with density-responsive velocity ===
   let hatVel: number;
   const beatPosition = sixteenthPosition % 4;
 
@@ -1709,6 +1783,11 @@ function getFunkPattern(
     hatVel = 0.55; // Upbeat
   } else {
     hatVel = 0.35; // "e" and "a" - softer for roll feel
+  }
+
+  // DENSITY MIRRORING: Boost hi-hat intensity when melody is dense
+  if (melodicDensity > 0.6) {
+    hatVel += melodicDensity * 0.15;
   }
 
   // Humanize with seed
@@ -1721,11 +1800,10 @@ function getFunkPattern(
   if (useOpenHat) {
     notes.push({ type: 'ride', velocity: 0.5 + seed * 0.1 });
   } else {
-    notes.push({ type: 'hihat', velocity: Math.max(0.25, Math.min(0.75, hatVel)) });
+    notes.push({ type: 'hihat', velocity: Math.max(0.25, Math.min(0.85, hatVel)) });
   }
 
   // Hi-hat roll buildup on last 2 bars of each 8-bar phrase
-  // Triplet feel by adding extra hats
   if (phrasePosition >= 6 && sixteenthPosition % 2 === 1 && seed > 0.5) {
     notes.push({ type: 'hihat', velocity: 0.25 + seed * 0.1 });
   }
@@ -1968,9 +2046,23 @@ export function generatePercussion(
     const isLastBar32 = barInPhrase32 === 31;
     const isSecondToLastBar32 = barInPhrase32 === 30;
 
+    // Build melodic context for percussion-melody interplay
+    const melodicContext = {
+      accent: state.melodicState.lastMelodicAccent,
+      pitch: state.melodicState.currentMelodicPitch,
+      density: state.melodicState.melodicDensity,
+    };
+
     // Get pattern for this 16th note
     let patternNotes: { type: PercussionNote['type']; velocity: number; ghost?: boolean }[];
     let fillType: string | null = null;
+
+    // FILL ANTICIPATION: Trigger early fill on melodic climax
+    const melodicClimaxFill =
+      state.phraseState.phraseContour8 > 0.85 &&
+      state.melodicState.isInRun &&
+      state.intensity > 0.5 &&
+      barInPhrase8 >= 5;  // Only in latter part of phrase
 
     // FILL SELECTION - HIERARCHICAL (bigger fills override smaller ones)
     // This ensures you ALWAYS hear the musical structure
@@ -1979,10 +2071,10 @@ export function generatePercussion(
       const fillPhase = isSecondToLastBar32 ? 0 : 1;
       patternNotes = get32BarFill(sixteenthPosition, fillPhase as 0 | 1);
       fillType = `32-bar-phase${fillPhase}`;
-    } else if (isLastBar16) {
-      // 16-bar fill - ALWAYS plays
+    } else if (isLastBar16 || melodicClimaxFill) {
+      // 16-bar fill OR melodic climax triggers early fill
       patternNotes = get16BarFill(sixteenthPosition);
-      fillType = '16-bar';
+      fillType = melodicClimaxFill ? '16-bar-climax' : '16-bar';
     } else if (isLastBar8) {
       // 8-bar fill - ALWAYS plays
       patternNotes = get8BarFill(sixteenthPosition);
@@ -1992,12 +2084,11 @@ export function generatePercussion(
       patternNotes = get4BarFill(sixteenthPosition);
       fillType = '4-bar';
     } else {
-      // NORMAL PATTERN - syncopated groove with procedural variation
-      // Pass measureNum so patterns can evolve over time
+      // NORMAL PATTERN - with melody-responsive dynamics
       if (perc.style === 'funk') {
-        patternNotes = getFunkPattern(sixteenthPosition, measureNum);
+        patternNotes = getFunkPattern(sixteenthPosition, measureNum, melodicContext);
       } else {
-        patternNotes = getRockPattern(sixteenthPosition, measureNum);
+        patternNotes = getRockPattern(sixteenthPosition, measureNum, melodicContext);
       }
     }
 
@@ -2338,18 +2429,18 @@ export function selectOrchestrationTheme(
   previousTheme: OrchestrationTheme
 ): OrchestrationTheme {
   // Theme weights based on context
-  // REBALANCED: Reduced neutral dominance (was 23%), boosted underused themes
+  // STACCATO COUNTERPOINT: Favor staccato and sequential for runs + interplay
   const weights: Record<OrchestrationTheme, number> = {
-    neutral: 6,       // Reduced from 10 - was too dominant, causing bland passages
-    ornamented: 6,    // Slightly boosted - more musical interest
-    legato: 7,        // Slightly reduced from 8
-    staccato: 5,
-    chromatic: 5,     // Boosted from 4 - chromatic color adds interest
-    sparse: 5,        // Reduced from 6 - balance with dense
-    dense: 5,         // Boosted from 4 - match sparse
-    modal: 5,         // Boosted from 3 - was critically underselected
-    sequential: 7,    // Boosted from 6 - runs are musically valuable
-    dramatic: 5,      // Boosted from 3 - was critically underselected
+    neutral: 4,       // Reduced - favor character themes
+    ornamented: 5,
+    legato: 5,        // Reduced - favor staccato
+    staccato: 10,     // BOOSTED - main binding theme for staccato runs
+    chromatic: 5,
+    sparse: 4,        // Reduced - favor density
+    dense: 5,
+    modal: 4,
+    sequential: 8,    // BOOSTED - valuable for counterpoint runs
+    dramatic: 5,
   };
 
   // Modify weights based on intensity
@@ -2748,11 +2839,12 @@ export function getThemeModifiers(
       break;
 
     case 'staccato':
-      base.durationMod = 0.75;     // Short but not too clipped
+      base.durationMod = 0.6;      // Shorter - crisp staccato
       base.articulationOverride = 'staccato';
-      base.velocityMod = 1.1;      // Slightly louder
-      base.ornamentChance = 0.01;  // Almost no ornaments
-      base.restChance = 0.1;       // Some space between staccato notes
+      base.velocityMod = 1.15;     // Brighter, more percussive
+      base.ornamentChance = 0.02;  // Almost no ornaments
+      base.restChance = 0.08;      // Reduced - favor continuous runs
+      base.runChance = 0.35;       // HIGH - favor staccato runs as main melodic element
       break;
 
     case 'chromatic':
@@ -2841,6 +2933,130 @@ export function generateMelodicRun(
       velocity: velocityProgress,
       articulation: i === length - 1 ? 'tenuto' : 'legato',
     });
+  }
+
+  return notes;
+}
+
+/**
+ * Generate a staccato melodic run (short, detached notes)
+ * Favors bright, percussive texture with clear separation between notes.
+ */
+export function generateStaccatoRun(
+  startSemitone: number,
+  direction: 'ascending' | 'descending',
+  length: number,
+  keyColoring: KeyColoring,
+  baseDuration: number
+): FugueNote[] {
+  const notes: FugueNote[] = [];
+  const step = direction === 'ascending' ? 1 : -1;
+  let currentSemitone = startSemitone;
+
+  // Staccato runs: 65% of slot for note, 35% implicit rest = detached effect
+  const noteLength = (baseDuration / length) * 0.65;
+
+  for (let i = 0; i < length; i++) {
+    // Move by scale step (2 semitones in scale space)
+    currentSemitone = findNearestScaleTone(currentSemitone + step * 2);
+    currentSemitone = applyKeyColoring(currentSemitone, keyColoring);
+
+    // Crescendo for ascending, diminuendo for descending
+    const velocityProgress = direction === 'ascending'
+      ? 0.6 + (i / length) * 0.3
+      : 0.85 - (i / length) * 0.25;
+
+    notes.push({
+      semitone: currentSemitone,
+      duration: noteLength,
+      velocity: velocityProgress,
+      articulation: 'staccato', // Always staccato for this run type
+    });
+  }
+
+  return notes;
+}
+
+/**
+ * Generate imitative counterpoint (canon-style)
+ * Voice 2+ echoes the lead voice with transformation
+ */
+export function generateImitativeCounterpoint(
+  leadMaterial: FugueNote[],
+  transposeInterval: number,
+  variationType: 'exact' | 'inverted' | 'retrograde' | 'varied'
+): FugueNote[] {
+  let notes: FugueNote[];
+
+  switch (variationType) {
+    case 'exact':
+      notes = leadMaterial.map(n => ({
+        ...n,
+        semitone: ((n.semitone + transposeInterval) % 12 + 12) % 12,
+      }));
+      break;
+    case 'inverted':
+      notes = createInversion(leadMaterial, leadMaterial[0]?.semitone ?? 0);
+      break;
+    case 'retrograde':
+      notes = createRetrograde(leadMaterial);
+      break;
+    case 'varied':
+      // Apply staccato + slight rhythm variation for counterpoint interest
+      notes = leadMaterial.map(n => ({
+        ...n,
+        semitone: ((n.semitone + transposeInterval) % 12 + 12) % 12,
+        duration: n.duration * (0.8 + Math.random() * 0.3),
+        articulation: Math.random() < 0.7 ? 'staccato' : n.articulation,
+      }));
+      break;
+    default:
+      notes = leadMaterial.map(n => ({ ...n }));
+  }
+
+  return notes;
+}
+
+/**
+ * Generate staccato counterpoint line
+ * Enforces staccato articulation while respecting consonance rules
+ */
+export function generateStaccatoCounterpoint(
+  targetLength: number,
+  harmonicRoot: number,
+  tension: number,
+  referenceVoicePitch: number,
+  direction: 'ascending' | 'descending' | 'wave' = 'wave'
+): FugueNote[] {
+  const notes: FugueNote[] = [];
+  let currentPitch = harmonicRoot;
+  let previousPitch = harmonicRoot;
+  let totalDuration = 0;
+
+  // Staccato counterpoint: short durations
+  const baseDurations = [0.25, 0.375, 0.5];
+
+  while (totalDuration < targetLength) {
+    const nextPitch = findBestCounterpointPitch(
+      currentPitch,
+      referenceVoicePitch,
+      previousPitch,
+      direction === 'wave' ? 'any' : direction === 'ascending' ? 'up' : 'down',
+      tension
+    );
+
+    const duration = baseDurations[Math.floor(Math.random() * baseDurations.length)];
+
+    notes.push({
+      semitone: nextPitch,
+      duration,
+      velocity: 0.6 + Math.random() * 0.25,
+      articulation: 'staccato', // Always staccato
+    });
+
+    previousPitch = currentPitch;
+    currentPitch = nextPitch;
+    totalDuration += duration;
   }
 
   return notes;
@@ -3796,19 +4012,19 @@ export function updateKentFugue(
           break;
         }
 
-        // === THEME-BASED MELODIC RUN ===
-        // Sequential/ornamented themes can trigger scale runs
-        if (Math.random() < themeModifiers.runChance && finalDuration > 0.4) {
+        // === THEME-BASED MELODIC RUN (STACCATO COUNTERPOINT) ===
+        // Staccato/sequential themes trigger runs as main melodic elements
+        if (Math.random() < themeModifiers.runChance && finalDuration > 0.3) {
           // Generate a melodic run instead of single note
           const runDirection = Math.random() > 0.5 ? 'ascending' : 'descending';
-          const runLength = 3 + Math.floor(Math.random() * 4); // 3-6 notes
-          const runNotes = generateMelodicRun(
-            finalSemitone,
-            runDirection,
-            runLength,
-            phraseState.keyColoring,
-            finalDuration / beatDuration
-          );
+          const runLength = 4 + Math.floor(Math.random() * 5); // 4-8 notes
+
+          // Use staccato runs when in staccato or sequential themes
+          const useStaccatoRun = activeTheme === 'staccato' || activeTheme === 'sequential';
+          const runNotes = useStaccatoRun
+            ? generateStaccatoRun(finalSemitone, runDirection, runLength, phraseState.keyColoring, finalDuration / beatDuration)
+            : generateMelodicRun(finalSemitone, runDirection, runLength, phraseState.keyColoring, finalDuration / beatDuration);
+
           let runStartTime = currentTime;
           for (const runNote of runNotes) {
             scheduledNotes.push({
@@ -3821,6 +4037,14 @@ export function updateKentFugue(
             });
             runStartTime += runNote.duration * beatDuration;
           }
+
+          // Update melodic state: we're in a run
+          newState.melodicState = {
+            ...newState.melodicState,
+            isInRun: true,
+            runDirection: runDirection,
+            melodicDensity: Math.min(1, newState.melodicState.melodicDensity + 0.2),
+          };
         }
         // === THEME-AWARE ORNAMENTATION ===
         else if (Math.random() < themeModifiers.ornamentChance && finalDuration > 0.3) {
@@ -3853,6 +4077,18 @@ export function updateKentFugue(
             articulation: finalArticulation,
             voice: register,
           });
+
+          // Update melodic state for percussion interplay
+          const sixteenthPos = Math.floor(newState.currentBeat * 4) % 16;
+          newState.melodicState = {
+            ...newState.melodicState,
+            currentMelodicPitch: finalSemitone % 12,
+            lastMelodicAccent: finalVelocity > 0.7 ? sixteenthPos : newState.melodicState.lastMelodicAccent,
+            isInRun: false,  // Single note, not a run
+            runDirection: 'none',
+            // Decay melodic density slowly
+            melodicDensity: Math.max(0.3, newState.melodicState.melodicDensity * 0.95),
+          };
         }
 
         // Update voice state

@@ -24,7 +24,7 @@ import type {
   GamePrincipleWeights,
   SkillMetrics,
 } from '../types';
-import type { UpgradeType, VerbUpgrade } from './upgrades';
+import type { WildUpgradeType, WildUpgrade } from './wild-upgrades';
 
 // =============================================================================
 // Core Types
@@ -174,13 +174,13 @@ export interface UpgradeSelection {
   /** Wave at which selection occurred */
   readonly wave: number;
   /** Upgrades that were offered */
-  readonly offered: UpgradeType[];
+  readonly offered: WildUpgradeType[];
   /** Upgrade that was selected */
-  readonly selected: UpgradeType;
+  readonly selected: WildUpgradeType;
   /** Time taken to decide (ms) */
   readonly decisionTime: number;
   /** Current upgrades owned before selection */
-  readonly currentUpgrades: UpgradeType[];
+  readonly currentUpgrades: WildUpgradeType[];
   /** Current synergies before selection */
   readonly currentSynergies: string[];
   /** Did this complete a synergy? */
@@ -376,7 +376,7 @@ export interface SkillDataPoint {
  */
 export interface UpgradePreference {
   /** Upgrade type */
-  readonly upgrade: UpgradeType;
+  readonly upgrade: WildUpgradeType;
   /** Selection weight (0-1, higher = more preferred) */
   readonly weight: number;
   /** Times offered */
@@ -607,7 +607,7 @@ export interface SpawnAdjustment {
  */
 export interface WeightedUpgrade {
   /** The upgrade */
-  readonly upgrade: VerbUpgrade;
+  readonly upgrade: WildUpgrade;
 
   /** Selection weight (higher = more likely to be offered) */
   readonly weight: number;
@@ -732,7 +732,7 @@ export interface AmberMemory {
   readonly finalState: {
     readonly wave: number;
     readonly score: number;
-    readonly upgrades: UpgradeType[];
+    readonly upgrades: WildUpgradeType[];
     readonly synergies: string[];
     readonly totalKills: number;
     readonly playTime: number;
@@ -1236,7 +1236,7 @@ export function calculateSpawnAdjustment(
 export function calculateUpgradeWeighting(
   macroState: PlayerMacroState,
   microState: RunMicroState,
-  available: VerbUpgrade[]
+  available: WildUpgrade[]
 ): WeightedUpgrade[] {
   const weighted: WeightedUpgrade[] = [];
 
@@ -1267,8 +1267,9 @@ export function calculateUpgradeWeighting(
     }
 
     // Check if player is struggling and this would help
+    // blood_price: heal via HP spending; temporal_debt: crowd control via time freeze
     if (microState.currentThreatLevel > 0.6) {
-      if (upgrade.id === 'vampiric' || upgrade.id === 'slow_field') {
+      if (upgrade.id === 'blood_price' || upgrade.id === 'temporal_debt') {
         weight *= 1.4;
         reason = 'needed';
       }
@@ -1533,25 +1534,26 @@ export function detectPlayStyle(history: RunMicroState[]): PlayStyleAnalysis {
 
 /**
  * Check if an upgrade would counter a player weakness.
+ * Maps wild upgrade mechanics to counter specific death patterns.
  */
-function checkUpgradeCountersWeakness(upgrade: VerbUpgrade, macroState: PlayerMacroState): boolean {
-  // Vampiric counters attrition deaths
-  if (upgrade.id === 'vampiric' && macroState.deathCauses.primaryCause === 'attrition') {
+function checkUpgradeCountersWeakness(upgrade: WildUpgrade, macroState: PlayerMacroState): boolean {
+  // Blood Price counters attrition deaths (heal by spending HP)
+  if (upgrade.id === 'blood_price' && macroState.deathCauses.primaryCause === 'attrition') {
     return true;
   }
 
-  // Dash counters being cornered
-  if (upgrade.id === 'dash' && macroState.deathCauses.byPlayerState.whileCornered > 3) {
+  // Echo counters being cornered (ghost provides escape/distraction)
+  if (upgrade.id === 'echo' && macroState.deathCauses.byPlayerState.whileCornered > 3) {
     return true;
   }
 
-  // Slow field counters being overwhelmed
-  if (upgrade.id === 'slow_field' && macroState.deathCauses.byPlayerState.whileOverwhelmed > 3) {
+  // Temporal Debt counters being overwhelmed (freeze time to escape)
+  if (upgrade.id === 'temporal_debt' && macroState.deathCauses.byPlayerState.whileOverwhelmed > 3) {
     return true;
   }
 
-  // Orbit counters close-range deaths
-  if (upgrade.id === 'orbit') {
+  // Gravity Well counters close-range deaths (enemies orbit instead of swarming)
+  if (upgrade.id === 'gravity_well') {
     const closeRangeDeaths = (macroState.deathCauses.byEnemyType.get('basic') || 0) +
       (macroState.deathCauses.byEnemyType.get('fast') || 0);
     if (closeRangeDeaths > macroState.deathCauses.totalDeaths * 0.5) {
@@ -1564,15 +1566,17 @@ function checkUpgradeCountersWeakness(upgrade: VerbUpgrade, macroState: PlayerMa
 
 /**
  * Check if an upgrade would complete a synergy.
+ * Wild upgrades have interesting dynamics with each other.
  */
 function checkSynergyCompletion(upgradeId: string, currentUpgrades: string[]): boolean {
-  // Synergy definitions (from upgrades.ts)
+  // Synergy definitions for wild upgrades
   const synergyPairs: [string, string][] = [
-    ['pierce', 'multishot'],
-    ['orbit', 'dash'],
-    ['dash', 'vampiric'],
-    ['chain', 'burst'],
-    ['multishot', 'burst'],
+    ['echo', 'gravity_well'],        // Ghost pulls enemies, echo attacks them
+    ['gravity_well', 'blood_price'], // Cluster enemies, then charge through
+    ['temporal_debt', 'echo'],       // Freeze time, ghost still acts
+    ['swarm_mind', 'honey_trap'],    // Swarm places traps, chains enemies
+    ['metamorphosis', 'blood_price'], // Different forms benefit from charging
+    ['royal_decree', 'gravity_well'], // King pulls others, they orbit
   ];
 
   for (const [a, b] of synergyPairs) {

@@ -16,7 +16,7 @@ import type { InputState } from '../types';
 // Types
 // =============================================================================
 
-// Extended input state with dash and Apex Strike support
+// Extended input state with dash, Apex Strike, and Temporal Debt support
 export interface ExtendedInputState extends InputState {
   dashPressed: boolean;
   dashConsumed: boolean; // True after dash triggered, false on space release
@@ -28,6 +28,21 @@ export interface ExtendedInputState extends InputState {
   spaceHoldDuration: number;    // How long has space been held (ms)
   spaceDownTimestamp: number;   // When space was pressed (for duration calc)
   aimDirection: { x: number; y: number }; // Current WASD aim direction
+
+  // TEMPORAL DEBT support (Wild Upgrade)
+  temporalDebtPressed: boolean;      // Q key just pressed this frame
+  temporalDebtConsumed: boolean;     // True after activation, false on release
+
+  // ROYAL DECREE support (Wild Upgrade)
+  royalDecreePressed: boolean;       // R key to designate The King
+  royalDecreeJustPressed: boolean;   // Did R just go down this frame?
+
+  // HONEY TRAP support (Wild Upgrade)
+  honeyTrapPressed: boolean;         // E key to place honey trap
+  honeyTrapJustPressed: boolean;     // Did E just go down this frame?
+
+  // BLOOD PRICE support (Wild Upgrade)
+  shiftHeld: boolean;                // Shift key held to charge (spend HP for power)
 }
 
 export interface UseInputOptions {
@@ -80,6 +95,17 @@ export function useInput(options: UseInputOptions = {}): UseInputReturn {
     spaceHoldDuration: 0,
     spaceDownTimestamp: 0,
     aimDirection: { x: 1, y: 0 }, // Default: right
+    // Temporal Debt fields
+    temporalDebtPressed: false,
+    temporalDebtConsumed: false,
+    // Royal Decree fields
+    royalDecreePressed: false,
+    royalDecreeJustPressed: false,
+    // Honey Trap fields
+    honeyTrapPressed: false,
+    honeyTrapJustPressed: false,
+    // Blood Price fields
+    shiftHeld: false,
   });
 
   // Track last aim direction to persist when no WASD pressed
@@ -165,6 +191,41 @@ export function useInput(options: UseInputOptions = {}): UseInputReturn {
           }
           event.preventDefault();
           break;
+        case 'q':
+          // TEMPORAL DEBT: Q key activates time freeze (Wild Upgrade)
+          if (!inputRef.current.temporalDebtPressed && !inputRef.current.temporalDebtConsumed) {
+            inputRef.current.temporalDebtPressed = true;
+            changed = true;
+          }
+          event.preventDefault();
+          break;
+        case 'r':
+          // ROYAL DECREE: R key designates The King (Wild Upgrade)
+          if (!inputRef.current.royalDecreePressed) {
+            inputRef.current.royalDecreePressed = true;
+            inputRef.current.royalDecreeJustPressed = true;
+            changed = true;
+          }
+          event.preventDefault();
+          break;
+        case 'e':
+          // HONEY TRAP: E key places honey trap (Wild Upgrade)
+          if (!inputRef.current.honeyTrapPressed) {
+            inputRef.current.honeyTrapPressed = true;
+            inputRef.current.honeyTrapJustPressed = true;
+            changed = true;
+          }
+          event.preventDefault();
+          break;
+      }
+
+      // BLOOD PRICE: Shift key tracking (not in switch since event.key is 'Shift' not lowercase)
+      if (event.key === 'Shift') {
+        if (!inputRef.current.shiftHeld) {
+          inputRef.current.shiftHeld = true;
+          changed = true;
+        }
+        // Don't prevent default - Shift has system uses we don't want to break
       }
 
       // Arrow key support
@@ -260,6 +321,24 @@ export function useInput(options: UseInputOptions = {}): UseInputReturn {
               performance.now() - inputRef.current.spaceDownTimestamp;
           }
           break;
+        case 'q':
+          // TEMPORAL DEBT: Reset state on release
+          inputRef.current.temporalDebtPressed = false;
+          inputRef.current.temporalDebtConsumed = false;
+          break;
+        case 'r':
+          // ROYAL DECREE: Reset state on release
+          inputRef.current.royalDecreePressed = false;
+          break;
+        case 'e':
+          // HONEY TRAP: Reset state on release
+          inputRef.current.honeyTrapPressed = false;
+          break;
+      }
+
+      // BLOOD PRICE: Shift key release tracking
+      if (event.key === 'Shift') {
+        inputRef.current.shiftHeld = false;
       }
 
       // Arrow key support
@@ -320,6 +399,17 @@ export function useInput(options: UseInputOptions = {}): UseInputReturn {
       spaceHoldDuration: 0,
       spaceDownTimestamp: 0,
       aimDirection: lastAimRef.current, // Preserve last aim
+      // Temporal Debt reset
+      temporalDebtPressed: false,
+      temporalDebtConsumed: false,
+      // Royal Decree reset
+      royalDecreePressed: false,
+      royalDecreeJustPressed: false,
+      // Honey Trap reset
+      honeyTrapPressed: false,
+      honeyTrapJustPressed: false,
+      // Blood Price reset
+      shiftHeld: false,
     };
     if (onInputChange) {
       onInputChange({ ...inputRef.current });
@@ -343,6 +433,8 @@ export function useInput(options: UseInputOptions = {}): UseInputReturn {
   const clearFrameFlags = useCallback(() => {
     inputRef.current.spaceJustPressed = false;
     inputRef.current.spaceJustReleased = false;
+    inputRef.current.royalDecreeJustPressed = false;
+    inputRef.current.honeyTrapJustPressed = false;
   }, []);
 
   // Update space hold duration (call each frame while processing input)
@@ -369,6 +461,17 @@ export function useInput(options: UseInputOptions = {}): UseInputReturn {
       spaceHoldDuration: 0,
       spaceDownTimestamp: 0,
       aimDirection: lastAimRef.current, // Preserve last aim
+      // Temporal Debt reset
+      temporalDebtPressed: false,
+      temporalDebtConsumed: false,
+      // Royal Decree reset
+      royalDecreePressed: false,
+      royalDecreeJustPressed: false,
+      // Honey Trap reset
+      honeyTrapPressed: false,
+      honeyTrapJustPressed: false,
+      // Blood Price reset
+      shiftHeld: false,
     };
   }, []);
 

@@ -20,7 +20,7 @@
  */
 
 import { useRef, useEffect, useCallback, useMemo } from 'react';
-import type { GameState, Enemy } from '../types';
+import type { GameState, Enemy, ActiveUpgrades } from '../types';
 import type { JuiceSystem, Particle } from '../systems/juice';
 import { ARENA_WIDTH, ARENA_HEIGHT } from '../systems/physics';
 import {
@@ -33,7 +33,7 @@ import {
   BREATHING_CONFIGS,
   renderAfterimages,
 } from '../systems/juice';
-import type { ActiveUpgrades } from '../systems/upgrades';
+// Old ActiveUpgrades removed - using WildUpgradeState instead
 import { getBeeTelegraph, BEE_BEHAVIORS } from '../systems/enemies';
 import type { BallState } from '../systems/formation';
 import { renderOutsidePunchIndicators } from '../systems/formation';
@@ -41,6 +41,16 @@ import type { MeleeAttackState } from '../systems/melee';
 import { getAttackProgress, MANDIBLE_REAVER_CONFIG } from '../systems/melee';
 import type { ApexStrikeState, GhostAfterimage } from '../systems/apex-strike';
 import { APEX_CONFIG, isLocking, hasStumbleMomentum, getStumbleMomentumProgress, getGhostOpacity } from '../systems/apex-strike';
+import type { WildUpgradeState, MetamorphForm, SwarmHornet, HoneyTrapZone, EnemyChain, WebTrap, MeleeSlash, PollenCloud } from '../systems/wild-upgrades';
+import {
+  getEchoRenderInfo,
+  getAliveSwarmHornets,
+  getSwarmHornetScale,
+  getHoneyZones,
+  getHoneyChains,
+  getMetamorphFormConfig,
+  getGravityWellIntensity,
+} from '../systems/wild-upgrades';
 
 // =============================================================================
 // Font Constants - Rajdhani gaming font
@@ -86,6 +96,14 @@ interface DeathMarker {
   expiryTime: number;
 }
 
+// ROYAL DECREE state for rendering The King
+interface RoyalDecreeRenderState {
+  currentKingId: string | null;
+  kingHealth: number;
+  kingMaxHealth: number;
+  crownPassCount: number;
+}
+
 interface GameCanvasProps {
   gameState: GameState;
   juiceSystem: JuiceSystem;
@@ -100,13 +118,21 @@ interface GameCanvasProps {
   isDoubleStrikeReady?: boolean;  // Run 040: Next attack will be a double strike (show red indicator)
   territorialMarks?: TerritorialMark[];  // Kill zones that grant damage bonus
   deathMarkers?: DeathMarker[];  // Corpse locations for abilities
+  royalDecreeState?: RoyalDecreeRenderState;  // ROYAL DECREE: The King state
+  wildUpgradeState?: WildUpgradeState;  // WILD UPGRADES: All 8 wild upgrade states for rendering
+  // METAMORPHOSIS ability entities (separate from wildUpgradeState)
+  metamorphosisAbilities?: {
+    webTraps: WebTrap[];
+    meleeSlashes: MeleeSlash[];
+    pollenClouds: PollenCloud[];
+  };
 }
 
 // =============================================================================
 // Component
 // =============================================================================
 
-export function GameCanvas({ gameState, juiceSystem, ballState, allBalls, meleeState, apexState, chargePercent = 0, attackCooldownPercent = 1, killStreak = 0, hasFullArc = false, isDoubleStrikeReady = false, territorialMarks = [], deathMarkers = [] }: GameCanvasProps) {
+export function GameCanvas({ gameState, juiceSystem, ballState, allBalls, meleeState, apexState, chargePercent = 0, attackCooldownPercent = 1, killStreak = 0, hasFullArc = false, isDoubleStrikeReady = false, territorialMarks = [], deathMarkers = [], royalDecreeState, wildUpgradeState, metamorphosisAbilities }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | null>(null);
 
@@ -126,6 +152,9 @@ export function GameCanvas({ gameState, juiceSystem, ballState, allBalls, meleeS
   const isDoubleStrikeReadyRef = useRef(isDoubleStrikeReady);
   const territorialMarksRef = useRef(territorialMarks);
   const deathMarkersRef = useRef(deathMarkers);
+  const royalDecreeStateRef = useRef(royalDecreeState);
+  const wildUpgradeStateRef = useRef(wildUpgradeState);
+  const metamorphosisAbilitiesRef = useRef(metamorphosisAbilities);
 
   // Update refs when props change (runs every render but doesn't trigger animation restart)
   gameStateRef.current = gameState;
@@ -140,6 +169,9 @@ export function GameCanvas({ gameState, juiceSystem, ballState, allBalls, meleeS
   isDoubleStrikeReadyRef.current = isDoubleStrikeReady;
   territorialMarksRef.current = territorialMarks;
   deathMarkersRef.current = deathMarkers;
+  royalDecreeStateRef.current = royalDecreeState;
+  wildUpgradeStateRef.current = wildUpgradeState;
+  metamorphosisAbilitiesRef.current = metamorphosisAbilities;
 
   // Track attack timing for smooth cooldown visualization
   const lastAttackEndTimeRef = useRef<number>(0);
@@ -313,11 +345,62 @@ export function GameCanvas({ gameState, juiceSystem, ballState, allBalls, meleeS
       ctx.stroke();
     }
 
-    // Render enemies
-    renderEnemies(ctx, gameState);
+    // ==========================================================================
+    // WILD UPGRADES: Ground-level effects (render under enemies)
+    // ==========================================================================
+    const wildState = wildUpgradeStateRef.current;
+    if (wildState) {
+      // HONEY_TRAP: Golden sticky zones
+      if (wildState.honeyTrap.active) {
+        renderHoneyTrapZones(ctx, wildState.honeyTrap, gameState.gameTime);
+      }
+
+      // GRAVITY_WELL: Orbit rings around player (under enemies so they render on top)
+      if (wildState.gravityWell.active) {
+        renderGravityWellRings(ctx, gameState.player.position, wildState.gravityWell, gameState.gameTime);
+      }
+
+      // BLOOD_PRICE: Blood geysers as red fountains
+      if (wildState.bloodPrice.active && wildState.bloodPrice.bloodGeysers.length > 0) {
+        renderBloodGeysers(ctx, wildState.bloodPrice.bloodGeysers, gameState.gameTime);
+      }
+
+      // METAMORPHOSIS: Web traps, pollen clouds (ground-level abilities)
+      if (wildState.metamorphosis.active) {
+        const abilities = metamorphosisAbilitiesRef.current;
+        if (abilities) {
+          // Render web traps (spider form ability)
+          if (abilities.webTraps.length > 0) {
+            renderWebTraps(ctx, abilities.webTraps, gameState.gameTime);
+          }
+          // Render pollen clouds (butterfly form ability)
+          if (abilities.pollenClouds.length > 0) {
+            renderPollenClouds(ctx, abilities.pollenClouds, gameState.gameTime);
+          }
+        }
+      }
+    }
+
+    // Render enemies (with ROYAL DECREE crown rendering if active)
+    // Use royalDecreeState prop if provided, otherwise extract from wildUpgradeState
+    const royalDecree = royalDecreeStateRef.current ?? (wildState?.royalDecree.active ? {
+      currentKingId: wildState.royalDecree.currentKingId,
+      kingHealth: wildState.royalDecree.kingHealth,
+      kingMaxHealth: wildState.royalDecree.kingMaxHealth,
+      crownPassCount: wildState.royalDecree.crownPassCount,
+    } : undefined);
+    renderEnemies(ctx, gameState, royalDecree);
 
     // DD-36: Attack phase visual effects (on top of enemies)
     renderAttackEffects(ctx, gameState);
+
+    // METAMORPHOSIS: Melee slashes (mantis form ability - on top of enemies)
+    if (wildState?.metamorphosis.active) {
+      const abilities = metamorphosisAbilitiesRef.current;
+      if (abilities && abilities.meleeSlashes.length > 0) {
+        renderMeleeSlashes(ctx, abilities.meleeSlashes, gameState.gameTime);
+      }
+    }
 
     // Run 036: Render THE BALL formation (on top of enemies)
     // Run 042: Render ALL balls (multi-ball support)
@@ -347,8 +430,40 @@ export function GameCanvas({ gameState, juiceSystem, ballState, allBalls, meleeS
     // Render ghost trail afterimages (BEHIND player for depth layering)
     renderGhostTrail(ctx, apexState?.ghostTrail || [], gameState.player.radius || 15);
 
-    // Render player (enhanced with visual upgrades)
-    renderPlayer(ctx, gameState, meleeState, apexState);
+    // ==========================================================================
+    // WILD UPGRADES: ECHO ghost trail (render BEFORE player for layering)
+    // ==========================================================================
+    if (wildState?.echo.active) {
+      renderEchoGhostTrail(ctx, wildState.echo, gameState.gameTime, gameState.player.radius || 15);
+    }
+
+    // Render player (enhanced with visual upgrades, modified by METAMORPHOSIS if active)
+    renderPlayer(ctx, gameState, meleeState, apexState, wildState);
+
+    // ==========================================================================
+    // WILD UPGRADES: Post-player effects
+    // ==========================================================================
+    if (wildState) {
+      // ECHO: Ghost hornet (semi-transparent copy following player actions)
+      if (wildState.echo.active) {
+        renderEchoGhost(ctx, wildState.echo, gameState.player.radius || 15, gameState.gameTime);
+      }
+
+      // SWARM_MIND: Multiple mini-hornets
+      if (wildState.swarmMind.active) {
+        renderSwarmHornets(ctx, wildState.swarmMind, gameState.gameTime);
+      }
+
+      // BLOOD_PRICE: God mode aura and charging effects
+      if (wildState.bloodPrice.active) {
+        renderBloodPriceAura(ctx, gameState.player.position, wildState.bloodPrice, gameState.gameTime);
+      }
+
+      // TEMPORAL_DEBT: Time freeze overlay
+      if (wildState.temporalDebt.active && wildState.temporalDebt.isFrozen) {
+        renderTemporalFreezeOverlay(ctx, gameState.gameTime);
+      }
+    }
 
     // Kill streak indicator disabled - was distracting
     // if (killStreak > 0) {
@@ -440,6 +555,21 @@ export function GameCanvas({ gameState, juiceSystem, ballState, allBalls, meleeS
     // DD-20: Health Vignette - render after game content, before HUD
     // (healthFraction already calculated above for intensity)
     renderVignette(ctx, healthFraction);
+
+    // ==========================================================================
+    // WILD UPGRADES: Screen-wide effects (before HUD)
+    // ==========================================================================
+    if (wildState) {
+      // BLOOD_PRICE: Red vignette when charging
+      if (wildState.bloodPrice.active && wildState.bloodPrice.isCharging) {
+        renderBloodPriceVignette(ctx, wildState.bloodPrice.chargeLevel, ARENA_WIDTH, ARENA_HEIGHT);
+      }
+
+      // TEMPORAL_DEBT: Speed lines during debt phase (2x speed)
+      if (wildState.temporalDebt.active && !wildState.temporalDebt.isFrozen && wildState.temporalDebt.debtTimeRemaining > 0) {
+        renderTemporalDebtSpeedLines(ctx, gameState.player.position, gameState.gameTime, ARENA_WIDTH, ARENA_HEIGHT);
+      }
+    }
 
     // Run 038: Apply circular inversion effect (after game content, before HUD)
     if (shouldApplyCircleInversion) {
@@ -762,6 +892,12 @@ function renderApexCrosshair(
  * Render the player (hornet) with full visual upgrades.
  * "Ukiyo-e meets arcade brutalism" - The hornet emerges from shadow.
  *
+ * WILD UPGRADES - METAMORPHOSIS: Changes player appearance based on current form
+ * - SPIDER: Dark gray bulb with 8 legs
+ * - MANTIS: Green triangle with blade arms
+ * - BUTTERFLY: Pink/purple with large wings
+ * - HORNET: Default form
+ *
  * @see pilots/wasm-survivors-game/HORNET_SPRITE_SPEC.md
  * @see pilots/wasm-survivors-game/ART_STYLE_GUIDE.md
  */
@@ -769,9 +905,46 @@ function renderPlayer(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   meleeState?: MeleeAttackState,
-  apexState?: ApexStrikeState
+  apexState?: ApexStrikeState,
+  wildState?: WildUpgradeState
 ) {
   const { player } = state;
+
+  // SWARM_MIND: Don't render main player - the 5 hornets replace you!
+  if (wildState?.swarmMind.active && wildState.swarmMind.hornets.length > 0) {
+    // Only render health bar at player position as reference
+    const healthFraction = player.health / player.maxHealth;
+    const barWidth = 30;
+    const barHeight = 4;
+    const barY = player.position.y - 25;
+
+    // Health bar background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(player.position.x - barWidth / 2, barY, barWidth, barHeight);
+
+    // Health bar fill
+    ctx.fillStyle = healthFraction > 0.25 ? '#4CAF50' : '#FF5722';
+    ctx.fillRect(player.position.x - barWidth / 2, barY, barWidth * healthFraction, barHeight);
+
+    return; // Skip main player rendering - swarm hornets handle it
+  }
+
+  // METAMORPHOSIS: Check if we should render a different form
+  const metamorphActive = wildState?.metamorphosis.active ?? false;
+  const currentForm = wildState?.metamorphosis.currentForm ?? 'hornet';
+  const isTransitioning = wildState?.metamorphosis.isTransitioning ?? false;
+  const transitionProgress = wildState?.metamorphosis.transitionProgress ?? 0;
+
+  // If METAMORPHOSIS is active and not in hornet form, render alternate form
+  if (metamorphActive && currentForm !== 'hornet') {
+    renderMetamorphForm(ctx, state, currentForm, isTransitioning, transitionProgress, meleeState);
+    return;
+  }
+
+  // If transitioning TO hornet, add shimmer effect
+  if (metamorphActive && isTransitioning) {
+    renderTransitionShimmer(ctx, player.position, player.radius ?? 15, transitionProgress, state.gameTime);
+  }
   const activeUpgrades = player.activeUpgrades as ActiveUpgrades | undefined;
   const healthFraction = player.health / player.maxHealth;
 
@@ -804,30 +977,31 @@ function renderPlayer(
   }
 
   // DD-9: Orbit visual - golden ring around player
-  if (activeUpgrades?.orbitActive && activeUpgrades.orbitRadius > 0) {
+  const orbitRadius = activeUpgrades?.orbitRadius ?? 0;
+  if (activeUpgrades?.orbitActive && orbitRadius > 0) {
     const time = Date.now() / 1000;
     const pulseAlpha = 0.3 + 0.2 * Math.sin(time * 4);
 
     ctx.strokeStyle = `rgba(255, 215, 0, ${pulseAlpha})`;
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(player.position.x, player.position.y, activeUpgrades.orbitRadius, 0, Math.PI * 2);
+    ctx.arc(player.position.x, player.position.y, orbitRadius, 0, Math.PI * 2);
     ctx.stroke();
 
     // Inner glow for orbit zone
     const orbitGradient = ctx.createRadialGradient(
       player.position.x,
       player.position.y,
-      activeUpgrades.orbitRadius - 10,
+      orbitRadius - 10,
       player.position.x,
       player.position.y,
-      activeUpgrades.orbitRadius
+      orbitRadius
     );
     orbitGradient.addColorStop(0, 'rgba(255, 215, 0, 0)');
     orbitGradient.addColorStop(1, `rgba(255, 215, 0, ${pulseAlpha * 0.3})`);
     ctx.fillStyle = orbitGradient;
     ctx.beginPath();
-    ctx.arc(player.position.x, player.position.y, activeUpgrades.orbitRadius, 0, Math.PI * 2);
+    ctx.arc(player.position.x, player.position.y, orbitRadius, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -1277,7 +1451,7 @@ const BEE_TYPE_COLORS = {
   boss: '#6B2D5B',      // Alias for royal
 } as const;
 
-function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState) {
+function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState, royalDecreeState?: RoyalDecreeRenderState) {
   for (const enemy of state.enemies) {
     // DD-29-1: Enemy breathing based on behavior state
     const behaviorState = enemy.behaviorState ?? 'chase';
@@ -1857,9 +2031,176 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: GameState) {
       ctx.fillRect(healthBarX, healthBarY, healthBarWidth * healthFraction, 3);
     }
 
+    // ==========================================================================
+    // ROYAL DECREE: Render The King's Crown
+    // If this enemy is The King, render crown, glow, and health bar
+    // ==========================================================================
+    if (royalDecreeState?.currentKingId === enemy.id) {
+      renderTheKingCrown(
+        ctx,
+        enemy,
+        royalDecreeState.kingHealth,
+        royalDecreeState.kingMaxHealth,
+        royalDecreeState.crownPassCount,
+        state.gameTime
+      );
+    }
+
     // DD-29-1: Reset globalAlpha after each enemy
     ctx.globalAlpha = 1.0;
   }
+}
+
+/**
+ * ROYAL DECREE: Render The King's Crown and Royal Effects
+ * "Heavy is the head that wears the crown"
+ */
+function renderTheKingCrown(
+  ctx: CanvasRenderingContext2D,
+  enemy: Enemy,
+  kingHealth: number,
+  kingMaxHealth: number,
+  crownPassCount: number,
+  gameTime: number
+) {
+  const { x, y } = enemy.position;
+  const radius = enemy.radius;
+
+  ctx.save();
+
+  // === ROYAL GLOW AURA ===
+  // Pulsing golden glow around The King
+  const pulsePhase = Math.sin(gameTime * 0.003) * 0.5 + 0.5;
+  const glowAlpha = 0.2 + pulsePhase * 0.15;
+  const glowRadius = radius * (1.8 + pulsePhase * 0.3);
+
+  const royalGlow = ctx.createRadialGradient(x, y, radius * 0.5, x, y, glowRadius);
+  royalGlow.addColorStop(0, `rgba(255, 215, 0, ${glowAlpha})`);
+  royalGlow.addColorStop(0.6, `rgba(255, 215, 0, ${glowAlpha * 0.5})`);
+  royalGlow.addColorStop(1, 'rgba(255, 215, 0, 0)');
+  ctx.fillStyle = royalGlow;
+  ctx.beginPath();
+  ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === GOLDEN CROWN ===
+  // Floating crown above The King
+  const crownY = y - radius - 12;
+  const crownSize = 10 + Math.min(crownPassCount, 5) * 2; // Crown grows with each pass
+  const crownBobY = Math.sin(gameTime * 0.004) * 2;
+
+  // Crown base (band)
+  ctx.fillStyle = '#FFD700';
+  ctx.strokeStyle = '#DAA520';
+  ctx.lineWidth = 1.5;
+
+  // Main crown shape with 3 points
+  ctx.beginPath();
+  const bandY = crownY + crownBobY;
+  const bandHeight = crownSize * 0.35;
+  const bandWidth = crownSize * 1.2;
+
+  // Crown band bottom
+  ctx.moveTo(x - bandWidth * 0.5, bandY);
+  ctx.lineTo(x + bandWidth * 0.5, bandY);
+
+  // Right point
+  ctx.lineTo(x + bandWidth * 0.4, bandY - crownSize * 0.45);
+  ctx.lineTo(x + bandWidth * 0.25, bandY - bandHeight);
+
+  // Center point (tallest)
+  ctx.lineTo(x, bandY - crownSize);
+  ctx.lineTo(x - bandWidth * 0.25, bandY - bandHeight);
+
+  // Left point
+  ctx.lineTo(x - bandWidth * 0.4, bandY - crownSize * 0.45);
+
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Crown jewel (ruby red gem at center)
+  ctx.fillStyle = '#FF0000';
+  ctx.beginPath();
+  ctx.arc(x, bandY - crownSize * 0.65, crownSize * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Jewel sparkle
+  const sparklePhase = (gameTime * 0.01) % (Math.PI * 2);
+  if (Math.sin(sparklePhase) > 0.8) {
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(x - 1, bandY - crownSize * 0.65 - 1, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === CROWN PASS COUNT GEMS ===
+  // Small gems on crown for each king death (max 5 visible)
+  const visibleGems = Math.min(crownPassCount, 5);
+  for (let i = 0; i < visibleGems; i++) {
+    const gemOffset = (i - (visibleGems - 1) * 0.5) * (crownSize * 0.3);
+    ctx.fillStyle = i % 2 === 0 ? '#00FF88' : '#00FFFF'; // Alternate green/cyan
+    ctx.beginPath();
+    ctx.arc(x + gemOffset, bandY - crownSize * 0.2, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === KING HEALTH BAR ===
+  // Golden health bar above the crown
+  const healthBarWidth = 44;
+  const healthBarHeight = 5;
+  const healthBarX = x - healthBarWidth / 2;
+  const healthBarY = bandY - crownSize - 10 + crownBobY;
+  const healthPercent = kingMaxHealth > 0 ? kingHealth / kingMaxHealth : 0;
+
+  // Background
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  ctx.fillRect(healthBarX - 1, healthBarY - 1, healthBarWidth + 2, healthBarHeight + 2);
+
+  // Health fill - gold when healthy, red when low
+  if (healthPercent > 0.3) {
+    ctx.fillStyle = '#FFD700';
+  } else {
+    // Pulsing red when low
+    const lowPulse = Math.sin(gameTime * 0.01) * 0.3 + 0.7;
+    ctx.fillStyle = `rgba(255, 68, 68, ${lowPulse})`;
+  }
+  ctx.fillRect(healthBarX, healthBarY, healthBarWidth * healthPercent, healthBarHeight);
+
+  // Border
+  ctx.strokeStyle = '#DAA520';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+
+  // "THE KING" label
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 9px Rajdhani, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE KING', x, healthBarY - 3);
+
+  // === SPARKLE PARTICLES ===
+  // Occasional sparkles around The King
+  const sparkleCount = 3;
+  for (let i = 0; i < sparkleCount; i++) {
+    const sparkleAngle = (gameTime * 0.002 + i * (Math.PI * 2 / sparkleCount)) % (Math.PI * 2);
+    const sparkleRadius = radius * 1.3 + Math.sin(gameTime * 0.005 + i) * 5;
+    const sparkleX = x + Math.cos(sparkleAngle) * sparkleRadius;
+    const sparkleY = y + Math.sin(sparkleAngle) * sparkleRadius;
+    const sparkleAlpha = 0.5 + Math.sin(gameTime * 0.01 + i * 2) * 0.3;
+
+    ctx.fillStyle = `rgba(255, 255, 255, ${sparkleAlpha})`;
+    ctx.beginPath();
+    // 4-pointed star sparkle
+    const starSize = 3;
+    ctx.moveTo(sparkleX, sparkleY - starSize);
+    ctx.lineTo(sparkleX + starSize * 0.3, sparkleY);
+    ctx.lineTo(sparkleX, sparkleY + starSize);
+    ctx.lineTo(sparkleX - starSize * 0.3, sparkleY);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.restore();
 }
 
 function renderProjectiles(ctx: CanvasRenderingContext2D, state: GameState) {
@@ -4906,6 +5247,1247 @@ function renderBall(ctx: CanvasRenderingContext2D, ballState: BallState, gameTim
     ctx.fillText('!! BALL CAN REVIVE!', center.x, center.y - currentRadius - 35);
   }
 
+  ctx.restore();
+}
+
+// =============================================================================
+// WILD UPGRADES RENDERING FUNCTIONS
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// ECHO: Ghost Hornet - "Your shadow fights too"
+// Semi-transparent blue-tinted hornet that follows with ethereal trail
+// -----------------------------------------------------------------------------
+
+/**
+ * Render ethereal trail particles behind the ECHO ghost
+ */
+function renderEchoGhostTrail(
+  ctx: CanvasRenderingContext2D,
+  echoState: WildUpgradeState['echo'],
+  _gameTime: number,
+  playerRadius: number
+) {
+  if (!echoState.active) return;
+
+  const renderInfo = getEchoRenderInfo(echoState);
+  const { position, alpha } = renderInfo;
+
+  // Draw trail particles leading up to ghost position
+  ctx.save();
+  const trailCount = 5;
+  for (let i = 0; i < trailCount; i++) {
+    const trailAlpha = alpha * 0.3 * (1 - i / trailCount);
+    const trailOffset = i * 8;
+    const trailX = position.x - echoState.ghostVelocity.x * trailOffset * 0.1;
+    const trailY = position.y - echoState.ghostVelocity.y * trailOffset * 0.1;
+    const trailSize = playerRadius * (0.3 - i * 0.05);
+
+    ctx.fillStyle = `rgba(136, 204, 255, ${trailAlpha})`;
+    ctx.beginPath();
+    ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/**
+ * Render the ECHO ghost hornet
+ * Semi-transparent (alpha 0.6), blue-tinted (#88CCFF)
+ */
+function renderEchoGhost(
+  ctx: CanvasRenderingContext2D,
+  echoState: WildUpgradeState['echo'],
+  playerRadius: number,
+  gameTime: number
+) {
+  if (!echoState.active) return;
+
+  const renderInfo = getEchoRenderInfo(echoState);
+  const { position, alpha, color, colorSecondary } = renderInfo;
+
+  ctx.save();
+  ctx.globalAlpha = alpha * 0.6;
+
+  // Ethereal glow around ghost
+  const glowGradient = ctx.createRadialGradient(
+    position.x, position.y, 0,
+    position.x, position.y, playerRadius * 2
+  );
+  glowGradient.addColorStop(0, `rgba(136, 204, 255, ${alpha * 0.3})`);
+  glowGradient.addColorStop(1, 'rgba(136, 204, 255, 0)');
+  ctx.fillStyle = glowGradient;
+  ctx.beginPath();
+  ctx.arc(position.x, position.y, playerRadius * 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ghost body - pointed oval (hornet shape) with blue tint
+  ctx.fillStyle = color; // #88CCFF
+  ctx.beginPath();
+  ctx.ellipse(position.x, position.y, playerRadius, playerRadius * 0.75, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ghost stripes (darker blue)
+  ctx.fillStyle = colorSecondary; // #4488CC
+  const stripeWidth = playerRadius * 0.15;
+  for (let i = -1; i <= 1; i++) {
+    ctx.fillRect(
+      position.x - playerRadius * 0.6,
+      position.y + i * stripeWidth * 1.8 - stripeWidth * 0.5,
+      playerRadius * 1.2,
+      stripeWidth
+    );
+  }
+
+  // Ghost eyes (glowing white)
+  const eyeOffsetX = playerRadius * 0.35;
+  const eyeOffsetY = -playerRadius * 0.2;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+  ctx.beginPath();
+  ctx.ellipse(position.x - eyeOffsetX, position.y + eyeOffsetY, playerRadius * 0.15, playerRadius * 0.12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(position.x + eyeOffsetX, position.y + eyeOffsetY, playerRadius * 0.15, playerRadius * 0.12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Shimmer effect
+  const shimmerPhase = (gameTime * 0.005) % (Math.PI * 2);
+  if (Math.sin(shimmerPhase) > 0.7) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.beginPath();
+    ctx.arc(position.x - playerRadius * 0.3, position.y - playerRadius * 0.3, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// -----------------------------------------------------------------------------
+// GRAVITY_WELL: Orbit Rings - "Become the center of destruction"
+// Concentric purple rings showing orbit paths
+// -----------------------------------------------------------------------------
+
+/**
+ * Render GRAVITY_WELL orbit rings around player
+ */
+function renderGravityWellRings(
+  ctx: CanvasRenderingContext2D,
+  playerPosition: { x: number; y: number },
+  gravityState: WildUpgradeState['gravityWell'],
+  gameTime: number
+) {
+  if (!gravityState.active) return;
+
+  const intensity = getGravityWellIntensity(gravityState);
+  const baseAlpha = 0.2 + intensity * 0.3;
+
+  ctx.save();
+
+  // Draw concentric orbit rings
+  const ringCount = 3;
+  const maxRadius = 150;
+  const minRadius = 40;
+
+  for (let i = 0; i < ringCount; i++) {
+    const ringRadius = minRadius + (maxRadius - minRadius) * (i / (ringCount - 1));
+    const ringRotation = (gameTime * 0.001 * (i + 1)) % (Math.PI * 2);
+    const ringAlpha = baseAlpha * (1 - i * 0.2);
+
+    // Pulsing effect
+    const pulse = 1 + Math.sin(gameTime * 0.003 + i) * 0.1;
+    const pulsingRadius = ringRadius * pulse;
+
+    // Ring stroke
+    ctx.strokeStyle = `rgba(153, 68, 255, ${ringAlpha})`;
+    ctx.lineWidth = 2 - i * 0.5;
+    ctx.setLineDash([10, 5]);
+    ctx.lineDashOffset = ringRotation * 20;
+    ctx.beginPath();
+    ctx.arc(playerPosition.x, playerPosition.y, pulsingRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Glow effect on innermost ring
+    if (i === 0 && intensity > 0) {
+      const glowGradient = ctx.createRadialGradient(
+        playerPosition.x, playerPosition.y, pulsingRadius - 10,
+        playerPosition.x, playerPosition.y, pulsingRadius + 10
+      );
+      glowGradient.addColorStop(0, 'rgba(153, 68, 255, 0)');
+      glowGradient.addColorStop(0.5, `rgba(153, 68, 255, ${intensity * 0.2})`);
+      glowGradient.addColorStop(1, 'rgba(153, 68, 255, 0)');
+      ctx.fillStyle = glowGradient;
+      ctx.beginPath();
+      ctx.arc(playerPosition.x, playerPosition.y, pulsingRadius + 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Draw orbit paths for captured enemies
+  gravityState.orbitingEnemies.forEach((orbitState, _enemyId) => {
+    const orbitAlpha = 0.4;
+    ctx.strokeStyle = `rgba(200, 100, 255, ${orbitAlpha})`;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 3]);
+
+    // Draw the orbit ellipse
+    ctx.beginPath();
+    ctx.arc(playerPosition.x, playerPosition.y, orbitState.distance, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Draw orbit direction indicator
+    const indicatorAngle = orbitState.angle;
+    const indicatorX = playerPosition.x + Math.cos(indicatorAngle) * orbitState.distance;
+    const indicatorY = playerPosition.y + Math.sin(indicatorAngle) * orbitState.distance;
+
+    ctx.fillStyle = `rgba(200, 100, 255, 0.6)`;
+    ctx.beginPath();
+    ctx.arc(indicatorX, indicatorY, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// -----------------------------------------------------------------------------
+// METAMORPHOSIS: Form Rendering - "Adapt or die"
+// Different creature forms: Spider, Mantis, Butterfly
+// -----------------------------------------------------------------------------
+
+/**
+ * Render transition shimmer effect between forms
+ */
+function renderTransitionShimmer(
+  ctx: CanvasRenderingContext2D,
+  position: { x: number; y: number },
+  radius: number,
+  progress: number,
+  gameTime: number
+) {
+  ctx.save();
+
+  // Prismatic shimmer effect
+  const shimmerAlpha = 0.5 * (1 - Math.abs(progress - 0.5) * 2);
+  const shimmerRadius = radius * (1.5 + progress * 0.5);
+
+  // Rainbow-ish glow
+  const hue = (gameTime * 0.5) % 360;
+  const shimmerGradient = ctx.createRadialGradient(
+    position.x, position.y, 0,
+    position.x, position.y, shimmerRadius
+  );
+  shimmerGradient.addColorStop(0, `hsla(${hue}, 80%, 70%, ${shimmerAlpha})`);
+  shimmerGradient.addColorStop(0.5, `hsla(${(hue + 60) % 360}, 80%, 60%, ${shimmerAlpha * 0.5})`);
+  shimmerGradient.addColorStop(1, 'transparent');
+
+  ctx.fillStyle = shimmerGradient;
+  ctx.beginPath();
+  ctx.arc(position.x, position.y, shimmerRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * Render alternate METAMORPHOSIS forms (Spider, Mantis, Butterfly)
+ */
+function renderMetamorphForm(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  form: MetamorphForm,
+  isTransitioning: boolean,
+  transitionProgress: number,
+  meleeState?: MeleeAttackState
+) {
+  const { player } = state;
+  const { x, y } = player.position;
+  const radius = player.radius ?? 15;
+  const formConfig = getMetamorphFormConfig(form);
+
+  ctx.save();
+
+  // Transition shimmer
+  if (isTransitioning) {
+    renderTransitionShimmer(ctx, player.position, radius, transitionProgress, state.gameTime);
+  }
+
+  // Form-specific glow
+  const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 2);
+  glowGradient.addColorStop(0, formConfig.glowColor);
+  glowGradient.addColorStop(1, 'transparent');
+  ctx.fillStyle = glowGradient;
+  ctx.beginPath();
+  ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  switch (form) {
+    case 'spider':
+      renderSpiderForm(ctx, x, y, radius, formConfig, state.gameTime);
+      break;
+    case 'mantis':
+      renderMantisForm(ctx, x, y, radius, formConfig, state.gameTime, meleeState);
+      break;
+    case 'butterfly':
+      renderButterflyForm(ctx, x, y, radius, formConfig, state.gameTime);
+      break;
+    default:
+      // Hornet is handled by main renderPlayer
+      break;
+  }
+
+  // Health bar (same as main player)
+  const healthFraction = player.health / player.maxHealth;
+  const healthBarWidth = radius * 2.5;
+  const healthBarHeight = 4;
+  const healthBarX = x - healthBarWidth / 2;
+  const healthBarY = y - radius - 18;
+
+  const healthBarOpacity = healthFraction > 0.75 ? 0.3 : 1.0;
+  ctx.globalAlpha = healthBarOpacity;
+
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+
+  const healthColor = healthFraction > 0.5 ? '#00FF88' : healthFraction > 0.25 ? '#FFD700' : '#FF8800';
+  ctx.fillStyle = healthColor;
+  ctx.fillRect(healthBarX, healthBarY, healthBarWidth * healthFraction, healthBarHeight);
+
+  ctx.globalAlpha = 1.0;
+  ctx.restore();
+}
+
+/**
+ * SPIDER form: Dark gray bulb with 8 legs
+ */
+function renderSpiderForm(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  config: ReturnType<typeof getMetamorphFormConfig>,
+  gameTime: number
+) {
+  // Body (bulbous)
+  ctx.fillStyle = config.color;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Darker abdomen
+  ctx.fillStyle = config.colorSecondary;
+  ctx.beginPath();
+  ctx.ellipse(x, y + radius * 0.4, radius * 0.7, radius * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 8 legs (4 on each side)
+  ctx.strokeStyle = config.color;
+  ctx.lineWidth = 2;
+  const legAngles = [-0.8, -0.4, 0.2, 0.6];
+  const legPhase = Math.sin(gameTime * 0.01) * 0.1;
+
+  for (let side = -1; side <= 1; side += 2) {
+    for (let i = 0; i < 4; i++) {
+      const baseAngle = legAngles[i] + Math.PI * (side > 0 ? 0 : 1);
+      const legAngle = baseAngle + legPhase * (i % 2 === 0 ? 1 : -1);
+      const legLength = radius * 1.5;
+
+      const legStartX = x + Math.cos(baseAngle) * radius * 0.8;
+      const legStartY = y + Math.sin(baseAngle) * radius * 0.8;
+      const legMidX = legStartX + Math.cos(legAngle - 0.3 * side) * legLength * 0.6;
+      const legMidY = legStartY + Math.sin(legAngle) * legLength * 0.6;
+      const legEndX = legMidX + Math.cos(legAngle + 0.5 * side) * legLength * 0.5;
+      const legEndY = legMidY + Math.sin(legAngle + 0.3) * legLength * 0.5;
+
+      ctx.beginPath();
+      ctx.moveTo(legStartX, legStartY);
+      ctx.lineTo(legMidX, legMidY);
+      ctx.lineTo(legEndX, legEndY);
+      ctx.stroke();
+    }
+  }
+
+  // Multiple eyes (8 small red eyes)
+  ctx.fillStyle = '#FF4444';
+  const eyePositions = [
+    { x: -0.25, y: -0.35 }, { x: 0.25, y: -0.35 },
+    { x: -0.15, y: -0.45 }, { x: 0.15, y: -0.45 },
+    { x: -0.35, y: -0.25 }, { x: 0.35, y: -0.25 },
+    { x: -0.1, y: -0.3 }, { x: 0.1, y: -0.3 },
+  ];
+  for (const pos of eyePositions) {
+    ctx.beginPath();
+    ctx.arc(x + pos.x * radius, y + pos.y * radius, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/**
+ * MANTIS form: Green triangle with blade arms
+ */
+function renderMantisForm(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  config: ReturnType<typeof getMetamorphFormConfig>,
+  gameTime: number,
+  meleeState?: MeleeAttackState
+) {
+  const isAttacking = meleeState?.isActive || meleeState?.isInWindup;
+
+  // Triangular body
+  ctx.fillStyle = config.color;
+  ctx.beginPath();
+  ctx.moveTo(x, y - radius);
+  ctx.lineTo(x - radius * 0.8, y + radius);
+  ctx.lineTo(x + radius * 0.8, y + radius);
+  ctx.closePath();
+  ctx.fill();
+
+  // Body stripe
+  ctx.fillStyle = config.colorSecondary;
+  ctx.beginPath();
+  ctx.moveTo(x, y - radius * 0.5);
+  ctx.lineTo(x - radius * 0.4, y + radius * 0.6);
+  ctx.lineTo(x + radius * 0.4, y + radius * 0.6);
+  ctx.closePath();
+  ctx.fill();
+
+  // Blade arms (extended when attacking)
+  const bladeExtension = isAttacking ? 1.5 : 1.0;
+  const bladeAngle = isAttacking ? 0.2 : 0.5;
+  const bladePhase = Math.sin(gameTime * 0.008) * 0.05;
+
+  ctx.strokeStyle = '#1A5A1A';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+
+  // Left blade
+  ctx.beginPath();
+  ctx.moveTo(x - radius * 0.6, y - radius * 0.3);
+  ctx.lineTo(x - radius * (1.2 + bladeExtension * 0.3), y - radius * (0.6 + bladeAngle + bladePhase));
+  ctx.lineTo(x - radius * (1.5 + bladeExtension * 0.4), y - radius * (0.2 + bladeAngle));
+  ctx.stroke();
+
+  // Right blade
+  ctx.beginPath();
+  ctx.moveTo(x + radius * 0.6, y - radius * 0.3);
+  ctx.lineTo(x + radius * (1.2 + bladeExtension * 0.3), y - radius * (0.6 + bladeAngle - bladePhase));
+  ctx.lineTo(x + radius * (1.5 + bladeExtension * 0.4), y - radius * (0.2 + bladeAngle));
+  ctx.stroke();
+
+  // Blade tips (sharp glint)
+  if (isAttacking) {
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(x - radius * 1.9, y - radius * 0.7, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + radius * 1.9, y - radius * 0.7, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Eyes (predatory, forward-facing)
+  ctx.fillStyle = '#FFFF00';
+  ctx.beginPath();
+  ctx.ellipse(x - radius * 0.25, y - radius * 0.5, radius * 0.12, radius * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + radius * 0.25, y - radius * 0.5, radius * 0.12, radius * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye pupils
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(x - radius * 0.25, y - radius * 0.5, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + radius * 0.25, y - radius * 0.5, 2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
+ * BUTTERFLY form: Pink/purple with large wings
+ */
+function renderButterflyForm(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  config: ReturnType<typeof getMetamorphFormConfig>,
+  gameTime: number
+) {
+  const wingPhase = Math.sin(gameTime * 0.015) * 0.3;
+
+  // Large wings (4 total - 2 on each side)
+  const wingColors = [config.color, config.colorSecondary];
+
+  // Upper wings
+  ctx.save();
+  ctx.translate(x, y);
+
+  for (let side = -1; side <= 1; side += 2) {
+    const wingTilt = wingPhase * side;
+
+    ctx.save();
+    ctx.scale(side, 1);
+    ctx.rotate(wingTilt);
+
+    // Upper wing
+    ctx.fillStyle = wingColors[0];
+    ctx.beginPath();
+    ctx.ellipse(radius * 1.2, -radius * 0.3, radius * 1.3, radius * 0.9, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wing pattern (circles)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.beginPath();
+    ctx.arc(radius * 1.1, -radius * 0.4, radius * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.arc(radius * 1.4, -radius * 0.2, radius * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Lower wing
+    ctx.fillStyle = wingColors[1];
+    ctx.beginPath();
+    ctx.ellipse(radius * 0.9, radius * 0.5, radius * 0.9, radius * 0.6, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  // Slender body
+  ctx.fillStyle = '#2A1A2A';
+  ctx.beginPath();
+  ctx.ellipse(x, y, radius * 0.25, radius * 0.9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Head
+  ctx.beginPath();
+  ctx.arc(x, y - radius * 0.8, radius * 0.25, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Antennae
+  ctx.strokeStyle = '#2A1A2A';
+  ctx.lineWidth = 1.5;
+  const antennaWave = Math.sin(gameTime * 0.01) * 0.1;
+
+  ctx.beginPath();
+  ctx.moveTo(x - radius * 0.1, y - radius);
+  ctx.quadraticCurveTo(
+    x - radius * 0.4, y - radius * 1.3 + antennaWave * 5,
+    x - radius * 0.5, y - radius * 1.5
+  );
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x + radius * 0.1, y - radius);
+  ctx.quadraticCurveTo(
+    x + radius * 0.4, y - radius * 1.3 - antennaWave * 5,
+    x + radius * 0.5, y - radius * 1.5
+  );
+  ctx.stroke();
+
+  // Eyes
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(x - radius * 0.12, y - radius * 0.85, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + radius * 0.12, y - radius * 0.85, 3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// -----------------------------------------------------------------------------
+// BLOOD_PRICE: Blood Effects - "Spend HP to supercharge"
+// Red vignette, blood geysers, god mode pulsing aura
+// -----------------------------------------------------------------------------
+
+/**
+ * Render blood geysers as red fountains at kill locations
+ */
+function renderBloodGeysers(
+  ctx: CanvasRenderingContext2D,
+  geysers: WildUpgradeState['bloodPrice']['bloodGeysers'],
+  gameTime: number
+) {
+  for (const geyser of geysers) {
+    const lifeProgress = geyser.lifetime / geyser.maxLifetime;
+    const { x, y } = geyser.position;
+
+    ctx.save();
+
+    // Geyser base pool
+    const poolAlpha = 0.6 * lifeProgress;
+    ctx.fillStyle = `rgba(139, 0, 0, ${poolAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, geyser.radius * 0.8, geyser.radius * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rising blood particles
+    const particleCount = 8;
+    for (let i = 0; i < particleCount; i++) {
+      const particlePhase = ((gameTime * 0.01 + i * 0.3) % 1);
+      const particleY = y - particlePhase * geyser.radius * 2;
+      const particleX = x + Math.sin(i * 2.3 + gameTime * 0.01) * geyser.radius * 0.3;
+      const particleAlpha = (1 - particlePhase) * lifeProgress * 0.8;
+      const particleSize = (1 - particlePhase * 0.5) * 4;
+
+      ctx.fillStyle = `rgba(200, 0, 0, ${particleAlpha})`;
+      ctx.beginPath();
+      ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Geyser glow
+    const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, geyser.radius);
+    glowGradient.addColorStop(0, `rgba(255, 0, 0, ${0.3 * lifeProgress})`);
+    glowGradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, geyser.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
+// =============================================================================
+// METAMORPHOSIS: Ability Rendering
+// =============================================================================
+
+/**
+ * Render web traps (Spider form ability)
+ * Sticky webs that immobilize enemies who walk into them
+ */
+function renderWebTraps(
+  ctx: CanvasRenderingContext2D,
+  webTraps: WebTrap[],
+  gameTime: number
+) {
+  for (const trap of webTraps) {
+    const { x, y } = trap.position;
+    const lifeProgress = trap.duration / trap.maxDuration;
+    const baseAlpha = 0.6 * lifeProgress;
+
+    ctx.save();
+
+    // Web glow (ground effect)
+    const webGlow = ctx.createRadialGradient(x, y, 0, x, y, trap.radius);
+    webGlow.addColorStop(0, `rgba(139, 69, 19, ${baseAlpha * 0.3})`);
+    webGlow.addColorStop(0.7, `rgba(139, 69, 19, ${baseAlpha * 0.1})`);
+    webGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = webGlow;
+    ctx.beginPath();
+    ctx.arc(x, y, trap.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Web strands (radial pattern)
+    ctx.strokeStyle = `rgba(200, 180, 160, ${baseAlpha * 0.8})`;
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < trap.webStrands; i++) {
+      const angle = (i / trap.webStrands) * Math.PI * 2;
+      const wobble = Math.sin(gameTime * 0.003 + i) * 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(
+        x + Math.cos(angle) * (trap.radius + wobble),
+        y + Math.sin(angle) * (trap.radius + wobble)
+      );
+      ctx.stroke();
+    }
+
+    // Concentric web rings
+    ctx.strokeStyle = `rgba(200, 180, 160, ${baseAlpha * 0.5})`;
+    ctx.lineWidth = 1;
+    for (let ring = 0.3; ring < 1; ring += 0.25) {
+      ctx.beginPath();
+      ctx.arc(x, y, trap.radius * ring, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Center marker
+    ctx.fillStyle = `rgba(139, 69, 19, ${baseAlpha})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Trapped enemy indicator - pulsing web when enemy is caught
+    if (trap.trappedEnemies.size > 0) {
+      const pulsePhase = Math.sin(gameTime * 0.01) * 0.3 + 0.7;
+      ctx.strokeStyle = `rgba(255, 100, 100, ${pulsePhase})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, trap.radius * 0.6, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+}
+
+/**
+ * Render melee slashes (Mantis form ability)
+ * Wide arc attacks that hit all enemies in a cone
+ */
+function renderMeleeSlashes(
+  ctx: CanvasRenderingContext2D,
+  meleeSlashes: MeleeSlash[],
+  _gameTime: number
+) {
+  for (const slash of meleeSlashes) {
+    const { x, y } = slash.position;
+    const lifeProgress = slash.lifetime / slash.maxLifetime;
+    const fadeAlpha = lifeProgress; // Fade out as lifetime decreases
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Calculate slash direction angle
+    const angle = Math.atan2(slash.direction.y, slash.direction.x);
+    ctx.rotate(angle);
+
+    // Slash arc (green mantis blade)
+    const halfArc = slash.arcAngle / 2;
+
+    // Outer slash glow
+    ctx.globalAlpha = fadeAlpha * 0.6;
+    const slashGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, slash.range);
+    slashGradient.addColorStop(0, 'rgba(34, 139, 34, 0.1)');
+    slashGradient.addColorStop(0.6, 'rgba(34, 139, 34, 0.4)');
+    slashGradient.addColorStop(1, 'rgba(34, 139, 34, 0)');
+
+    ctx.fillStyle = slashGradient;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, slash.range, -halfArc, halfArc);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sharp blade edge
+    ctx.globalAlpha = fadeAlpha;
+    ctx.strokeStyle = '#228B22';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, slash.range * 0.9, -halfArc, halfArc);
+    ctx.stroke();
+
+    // Inner bright edge (blade glint)
+    ctx.strokeStyle = '#90EE90';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, slash.range * 0.85, -halfArc * 0.8, halfArc * 0.8);
+    ctx.stroke();
+
+    // Motion lines
+    ctx.strokeStyle = `rgba(144, 238, 144, ${fadeAlpha * 0.5})`;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
+      const offsetAngle = (i - 1) * halfArc * 0.3;
+      const lineLength = slash.range * (0.6 + i * 0.15);
+      ctx.beginPath();
+      ctx.moveTo(10, 0);
+      ctx.lineTo(
+        Math.cos(offsetAngle) * lineLength,
+        Math.sin(offsetAngle) * lineLength
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+}
+
+/**
+ * Render pollen clouds (Butterfly form ability)
+ * DoT zones that damage enemies over time
+ */
+function renderPollenClouds(
+  ctx: CanvasRenderingContext2D,
+  pollenClouds: PollenCloud[],
+  gameTime: number
+) {
+  for (const cloud of pollenClouds) {
+    const { x, y } = cloud.position;
+    const lifeProgress = cloud.duration / cloud.maxDuration;
+    const baseAlpha = 0.6 * lifeProgress;
+
+    ctx.save();
+
+    // Cloud glow (pink/purple pollen)
+    const cloudGlow = ctx.createRadialGradient(x, y, 0, x, y, cloud.radius);
+    cloudGlow.addColorStop(0, `rgba(218, 112, 214, ${baseAlpha * 0.4})`);
+    cloudGlow.addColorStop(0.5, `rgba(186, 85, 211, ${baseAlpha * 0.3})`);
+    cloudGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = cloudGlow;
+    ctx.beginPath();
+    ctx.arc(x, y, cloud.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Floating pollen particles
+    const particleCount = Math.floor(10 + cloud.particleIntensity * 15);
+    for (let i = 0; i < particleCount; i++) {
+      const particleAngle = (i / particleCount) * Math.PI * 2 + gameTime * 0.001;
+      const particleRadius = cloud.radius * (0.3 + Math.sin(i * 2.7 + gameTime * 0.002) * 0.4);
+      const particleX = x + Math.cos(particleAngle) * particleRadius;
+      const particleY = y + Math.sin(particleAngle) * particleRadius + Math.sin(gameTime * 0.005 + i) * 5;
+      const particleSize = 2 + Math.sin(i * 1.3 + gameTime * 0.003) * 1;
+      const particleAlpha = baseAlpha * (0.5 + Math.sin(i + gameTime * 0.004) * 0.3);
+
+      // Alternate between pink and yellow pollen
+      const isYellow = i % 3 === 0;
+      ctx.fillStyle = isYellow
+        ? `rgba(255, 215, 100, ${particleAlpha})`
+        : `rgba(218, 112, 214, ${particleAlpha})`;
+
+      ctx.beginPath();
+      ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Swirling effect (rotating ring)
+    const rotationAngle = gameTime * 0.003;
+    ctx.strokeStyle = `rgba(218, 112, 214, ${baseAlpha * 0.4})`;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.arc(x, y, cloud.radius * 0.7, rotationAngle, rotationAngle + Math.PI * 1.5);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.restore();
+  }
+}
+
+/**
+ * Render BLOOD_PRICE god mode aura and charging effects around player
+ */
+function renderBloodPriceAura(
+  ctx: CanvasRenderingContext2D,
+  playerPosition: { x: number; y: number },
+  bloodState: WildUpgradeState['bloodPrice'],
+  gameTime: number
+) {
+  const { x, y } = playerPosition;
+
+  ctx.save();
+
+  // God mode pulsing red aura
+  if (bloodState.godModeActive) {
+    const pulsePhase = Math.sin(gameTime * 0.008) * 0.5 + 0.5;
+    const auraRadius = 50 + pulsePhase * 20;
+    const auraAlpha = 0.3 + pulsePhase * 0.2;
+
+    const godGlow = ctx.createRadialGradient(x, y, 0, x, y, auraRadius);
+    godGlow.addColorStop(0, `rgba(255, 0, 0, ${auraAlpha})`);
+    godGlow.addColorStop(0.5, `rgba(180, 0, 0, ${auraAlpha * 0.5})`);
+    godGlow.addColorStop(1, 'transparent');
+
+    ctx.fillStyle = godGlow;
+    ctx.beginPath();
+    ctx.arc(x, y, auraRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pulsing ring
+    ctx.strokeStyle = `rgba(255, 50, 50, ${0.5 + pulsePhase * 0.5})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, auraRadius * 0.8, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Charging indicator (when holding charge key)
+  if (bloodState.isCharging) {
+    const chargeProgress = bloodState.chargeLevel;
+    const chargeRadius = 30 + chargeProgress * 40;
+
+    // Charging circle
+    ctx.strokeStyle = `rgba(255, 0, 0, ${0.5 + chargeProgress * 0.5})`;
+    ctx.lineWidth = 3 + chargeProgress * 2;
+    ctx.beginPath();
+    ctx.arc(x, y, chargeRadius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * chargeProgress);
+    ctx.stroke();
+
+    // Inner glow intensifies with charge
+    const chargeGlow = ctx.createRadialGradient(x, y, 0, x, y, chargeRadius);
+    chargeGlow.addColorStop(0, `rgba(255, 0, 0, ${chargeProgress * 0.4})`);
+    chargeGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = chargeGlow;
+    ctx.beginPath();
+    ctx.arc(x, y, chargeRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * Render red vignette effect when BLOOD_PRICE is charging
+ */
+function renderBloodPriceVignette(
+  ctx: CanvasRenderingContext2D,
+  chargeLevel: number,
+  width: number,
+  height: number
+) {
+  const vignetteAlpha = chargeLevel * 0.4;
+
+  ctx.save();
+
+  // Red gradient from edges
+  const gradient = ctx.createRadialGradient(
+    width / 2, height / 2, Math.min(width, height) * 0.3,
+    width / 2, height / 2, Math.max(width, height) * 0.8
+  );
+  gradient.addColorStop(0, 'transparent');
+  gradient.addColorStop(0.7, `rgba(80, 0, 0, ${vignetteAlpha * 0.5})`);
+  gradient.addColorStop(1, `rgba(120, 0, 0, ${vignetteAlpha})`);
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.restore();
+}
+
+// -----------------------------------------------------------------------------
+// TEMPORAL_DEBT: Time Effects - "Freeze time, pay later"
+// Blue tint during freeze, speed lines during debt phase
+// -----------------------------------------------------------------------------
+
+/**
+ * Render frozen time overlay (blue tint, time fragments)
+ */
+function renderTemporalFreezeOverlay(
+  ctx: CanvasRenderingContext2D,
+  gameTime: number
+) {
+  ctx.save();
+
+  // Blue tint overlay
+  ctx.fillStyle = 'rgba(100, 150, 255, 0.15)';
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  // Floating time fragments (clock shards)
+  const fragmentCount = 12;
+  for (let i = 0; i < fragmentCount; i++) {
+    const fragX = (Math.sin(i * 1.7 + gameTime * 0.0001) * 0.5 + 0.5) * ctx.canvas.width;
+    const fragY = (Math.cos(i * 2.3 + gameTime * 0.00015) * 0.5 + 0.5) * ctx.canvas.height;
+    const fragSize = 8 + Math.sin(i * 3.1) * 4;
+    const fragAlpha = 0.3 + Math.sin(gameTime * 0.003 + i) * 0.2;
+    const fragRotation = gameTime * 0.001 + i;
+
+    ctx.save();
+    ctx.translate(fragX, fragY);
+    ctx.rotate(fragRotation);
+    ctx.globalAlpha = fragAlpha;
+
+    // Clock shard shape
+    ctx.fillStyle = '#88CCFF';
+    ctx.beginPath();
+    ctx.moveTo(0, -fragSize);
+    ctx.lineTo(fragSize * 0.5, 0);
+    ctx.lineTo(0, fragSize);
+    ctx.lineTo(-fragSize * 0.5, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // "TIME FROZEN" text effect
+  ctx.globalAlpha = 0.5 + Math.sin(gameTime * 0.005) * 0.2;
+  ctx.fillStyle = '#AADDFF';
+  ctx.font = 'bold 24px Rajdhani, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('TIME FROZEN', ctx.canvas.width / 2, 50);
+
+  ctx.restore();
+}
+
+/**
+ * Render speed lines during TEMPORAL_DEBT debt phase (2x speed)
+ */
+function renderTemporalDebtSpeedLines(
+  ctx: CanvasRenderingContext2D,
+  playerPosition: { x: number; y: number },
+  gameTime: number,
+  width: number,
+  _height: number
+) {
+  ctx.save();
+
+  // Speed lines radiating from player
+  const lineCount = 24;
+  ctx.strokeStyle = 'rgba(255, 150, 50, 0.3)';
+  ctx.lineWidth = 2;
+
+  for (let i = 0; i < lineCount; i++) {
+    const angle = (i / lineCount) * Math.PI * 2;
+    const phase = ((gameTime * 0.02 + i * 0.2) % 1);
+    const startDist = 50 + phase * 100;
+    const endDist = startDist + 50;
+    const lineAlpha = (1 - phase) * 0.4;
+
+    ctx.globalAlpha = lineAlpha;
+    ctx.beginPath();
+    ctx.moveTo(
+      playerPosition.x + Math.cos(angle) * startDist,
+      playerPosition.y + Math.sin(angle) * startDist
+    );
+    ctx.lineTo(
+      playerPosition.x + Math.cos(angle) * endDist,
+      playerPosition.y + Math.sin(angle) * endDist
+    );
+    ctx.stroke();
+  }
+
+  // "DEBT PHASE" indicator
+  ctx.globalAlpha = 0.6;
+  ctx.fillStyle = '#FF8844';
+  ctx.font = 'bold 14px Rajdhani, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('TEMPORAL DEBT: 2X SPEED', width / 2, 30);
+
+  ctx.restore();
+}
+
+// -----------------------------------------------------------------------------
+// SWARM_MIND: Multiple Hornets - "Split into 5 mini-hornets"
+// 5 smaller hornets instead of 1, scale up when others die
+// -----------------------------------------------------------------------------
+
+/**
+ * Render SWARM_MIND hornets
+ */
+function renderSwarmHornets(
+  ctx: CanvasRenderingContext2D,
+  swarmState: WildUpgradeState['swarmMind'],
+  gameTime: number
+) {
+  const aliveHornets = getAliveSwarmHornets(swarmState);
+  const scale = getSwarmHornetScale(swarmState);
+
+  for (const hornet of aliveHornets) {
+    renderSwarmHornet(ctx, hornet, scale, gameTime);
+  }
+}
+
+/**
+ * Render a single swarm hornet
+ */
+function renderSwarmHornet(
+  ctx: CanvasRenderingContext2D,
+  hornet: SwarmHornet,
+  scale: number,
+  gameTime: number
+) {
+  const { x, y } = hornet.position;
+  const baseRadius = 8; // Smaller than main player
+  const radius = baseRadius * scale;
+
+  ctx.save();
+
+  // Health-based color (more red when damaged)
+  const healthFrac = hornet.health / hornet.maxHealth;
+  const bodyHue = 30 + (1 - healthFrac) * 20; // Orange to red-orange
+
+  // Glow
+  const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 1.5);
+  glowGradient.addColorStop(0, `hsla(${bodyHue}, 100%, 50%, 0.3)`);
+  glowGradient.addColorStop(1, 'transparent');
+  ctx.fillStyle = glowGradient;
+  ctx.beginPath();
+  ctx.arc(x, y, radius * 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Wing blur
+  const wingPhase = Math.sin(gameTime * 0.03 + hornet.id.charCodeAt(0));
+  ctx.fillStyle = 'rgba(200, 200, 255, 0.3)';
+  ctx.beginPath();
+  ctx.ellipse(x - radius * 0.6, y - radius * 0.2, radius * 0.5, radius * 0.2, wingPhase * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + radius * 0.6, y - radius * 0.2, radius * 0.5, radius * 0.2, -wingPhase * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body
+  ctx.fillStyle = `hsl(${bodyHue}, 80%, 45%)`;
+  ctx.beginPath();
+  ctx.ellipse(x, y, radius, radius * 0.75, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Stripes
+  ctx.fillStyle = '#1A1A1A';
+  ctx.fillRect(x - radius * 0.6, y - radius * 0.1, radius * 1.2, radius * 0.2);
+  ctx.fillRect(x - radius * 0.5, y + radius * 0.25, radius * 1.0, radius * 0.15);
+
+  // Eyes
+  ctx.fillStyle = '#FFAA00';
+  ctx.beginPath();
+  ctx.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + radius * 0.3, y - radius * 0.3, radius * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Health indicator (small bar above)
+  if (healthFrac < 1) {
+    const barWidth = radius * 1.5;
+    const barHeight = 2;
+    const barX = x - barWidth / 2;
+    const barY = y - radius - 5;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(barX, barY, barWidth, barHeight);
+
+    ctx.fillStyle = healthFrac > 0.3 ? '#00FF88' : '#FF4444';
+    ctx.fillRect(barX, barY, barWidth * healthFrac, barHeight);
+  }
+
+  ctx.restore();
+}
+
+// -----------------------------------------------------------------------------
+// HONEY_TRAP: Honey Zones - "Stick together. Die together."
+// Golden circular zones, chain links, dripping honey
+// -----------------------------------------------------------------------------
+
+/**
+ * Render HONEY_TRAP zones and chains
+ */
+function renderHoneyTrapZones(
+  ctx: CanvasRenderingContext2D,
+  honeyState: WildUpgradeState['honeyTrap'],
+  gameTime: number
+) {
+  const zones = getHoneyZones(honeyState);
+  const chains = getHoneyChains(honeyState);
+
+  // Render zones first
+  for (const zone of zones) {
+    renderHoneyZone(ctx, zone, gameTime);
+  }
+
+  // Render chains on top
+  for (const chain of chains) {
+    renderHoneyChain(ctx, chain, zones, gameTime);
+  }
+}
+
+/**
+ * Render a single honey trap zone
+ */
+function renderHoneyZone(
+  ctx: CanvasRenderingContext2D,
+  zone: HoneyTrapZone,
+  gameTime: number
+) {
+  const { x, y } = zone.position;
+  // lifeRemaining: 1 = fresh, 0 = expired (fade OUT over time, not in)
+  const lifeRemaining = 1 - (zone.lifetime / zone.maxLifetime);
+
+  ctx.save();
+
+  // Honey pool gradient
+  const honeyGradient = ctx.createRadialGradient(x, y, 0, x, y, zone.radius);
+  const baseAlpha = 0.5 * lifeRemaining;
+  honeyGradient.addColorStop(0, `rgba(255, 200, 0, ${baseAlpha * 0.8})`);
+  honeyGradient.addColorStop(0.6, `rgba(255, 180, 0, ${baseAlpha * 0.5})`);
+  honeyGradient.addColorStop(1, `rgba(200, 150, 0, ${baseAlpha * 0.2})`);
+
+  ctx.fillStyle = honeyGradient;
+  ctx.beginPath();
+  ctx.arc(x, y, zone.radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Honey surface shimmer
+  const shimmerPhase = (gameTime * 0.003) % (Math.PI * 2);
+  for (let i = 0; i < 5; i++) {
+    const shimmerX = x + Math.cos(shimmerPhase + i * 1.2) * zone.radius * 0.6;
+    const shimmerY = y + Math.sin(shimmerPhase * 1.3 + i * 1.5) * zone.radius * 0.6;
+    const shimmerAlpha = (0.3 + Math.sin(shimmerPhase + i) * 0.2) * lifeRemaining;
+
+    ctx.fillStyle = `rgba(255, 255, 200, ${shimmerAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(shimmerX, shimmerY, 8, 4, shimmerPhase + i, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Dripping honey particles (edge drops)
+  const dripCount = 6;
+  for (let i = 0; i < dripCount; i++) {
+    const dripAngle = (i / dripCount) * Math.PI * 2;
+    const dripPhase = ((gameTime * 0.002 + i * 0.5) % 1);
+    const dripX = x + Math.cos(dripAngle) * (zone.radius - 5);
+    const dripY = y + Math.sin(dripAngle) * (zone.radius - 5) + dripPhase * 15;
+    const dripAlpha = (1 - dripPhase) * 0.6 * lifeRemaining;
+    const dripSize = 3 * (1 - dripPhase * 0.5);
+
+    ctx.fillStyle = `rgba(255, 200, 0, ${dripAlpha})`;
+    ctx.beginPath();
+    ctx.arc(dripX, dripY, dripSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Edge ring
+  ctx.strokeStyle = `rgba(200, 150, 0, ${0.4 * lifeRemaining})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, zone.radius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/**
+ * Render chain links between trapped enemies
+ */
+function renderHoneyChain(
+  ctx: CanvasRenderingContext2D,
+  chain: EnemyChain,
+  zones: HoneyTrapZone[],
+  gameTime: number
+) {
+  if (chain.enemyIds.length < 2) return;
+
+  ctx.save();
+
+  // Find positions of chained enemies (simplified - use zone centers if enemies not found)
+  // In real implementation, you'd pass enemy positions
+  const chainAlpha = 0.6 + Math.sin(gameTime * 0.005) * 0.2;
+
+  ctx.strokeStyle = `rgba(255, 215, 0, ${chainAlpha})`;
+  ctx.lineWidth = 3;
+  ctx.setLineDash([8, 4]);
+  ctx.lineDashOffset = gameTime * 0.01;
+
+  // Draw chain segments between enemy positions
+  // Since we don't have enemy positions here, show zone-based indicator
+  for (const zone of zones) {
+    if (zone.trappedEnemies.size >= 2) {
+      // Draw a "chain active" indicator around the zone
+      ctx.strokeStyle = `rgba(255, 215, 0, ${chainAlpha})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(zone.position.x, zone.position.y, zone.radius + 5, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Chain icon at center
+      ctx.fillStyle = `rgba(255, 215, 0, ${chainAlpha})`;
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🔗', zone.position.x, zone.position.y);
+    }
+  }
+
+  ctx.setLineDash([]);
   ctx.restore();
 }
 

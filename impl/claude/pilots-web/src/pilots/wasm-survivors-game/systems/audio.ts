@@ -1191,11 +1191,31 @@ export function updateCoordinationBuzz(level: number): void {
 
 /**
  * Stop all buzz sounds (for THE SILENCE).
+ * CRITICAL: Disconnect nodes BEFORE stopping to prevent ghost audio in the graph.
  */
 export function stopBuzz(): void {
   if (buzzOscillators.length > 0) {
     logAudioEvent('buzzStop', { oscillatorCount: buzzOscillators.length });
   }
+
+  // DISCONNECT FIRST (prevents ghost audio in audio graph)
+  buzzOscillators.forEach((osc) => {
+    try {
+      osc.disconnect();
+    } catch {
+      // Ignore if already disconnected
+    }
+  });
+
+  buzzGains.forEach((gain) => {
+    try {
+      gain.disconnect();
+    } catch {
+      // Ignore if already disconnected
+    }
+  });
+
+  // THEN STOP
   buzzOscillators.forEach((osc) => {
     try {
       osc.stop();
@@ -1203,6 +1223,7 @@ export function stopBuzz(): void {
       // Ignore if already stopped
     }
   });
+
   if (buzzOscillators.length > 0) {
     trackSoundEnd();
   }
@@ -1442,6 +1463,20 @@ let ambientHarmonicGain: GainNode | null = null;
 export function stopAmbient(): void {
   if (ambientOsc) {
     logAudioEvent('stopAmbient', {});
+    // DISCONNECT FIRST (prevents ghost audio in audio graph)
+    try {
+      ambientOsc.disconnect();
+    } catch {
+      // Ignore if already disconnected
+    }
+    if (ambientGain) {
+      try {
+        ambientGain.disconnect();
+      } catch {
+        // Ignore if already disconnected
+      }
+    }
+    // THEN STOP
     try {
       ambientOsc.stop();
     } catch {
@@ -1451,6 +1486,20 @@ export function stopAmbient(): void {
     ambientGain = null;
   }
   if (ambientHarmonicOsc) {
+    // DISCONNECT FIRST
+    try {
+      ambientHarmonicOsc.disconnect();
+    } catch {
+      // Ignore if already disconnected
+    }
+    if (ambientHarmonicGain) {
+      try {
+        ambientHarmonicGain.disconnect();
+      } catch {
+        // Ignore if already disconnected
+      }
+    }
+    // THEN STOP
     try {
       ambientHarmonicOsc.stop();
     } catch {
@@ -1908,6 +1957,35 @@ export function getAudioState(): AudioState {
     currentMood: null, // Would need to track this
     isSilent: buzzOscillators.length === 0 && ambientOsc === null,
   };
+}
+
+/**
+ * Reset the entire audio system.
+ * Call this before starting a new game to prevent audio carry-over.
+ *
+ * Addresses the "ambient bee buzzing carry-over" bug where oscillators
+ * from a previous run persisted into new games.
+ */
+export function resetAudioSystem(): void {
+  console.log('🔇 AUDIO RESET: Cleaning all audio systems');
+
+  // Stop all ambient/buzz oscillators (now with proper disconnect)
+  stopBuzz();
+  stopAmbient();
+
+  // Clear any scheduled SFX that might be pending
+  stopAllAudio();
+
+  // If audio context exists and is running, suspend then resume
+  // This ensures no lingering audio graph nodes
+  if (audioContext && audioContext.state === 'running') {
+    audioContext.suspend().then(() => {
+      audioContext?.resume();
+      console.log('🔇 AUDIO RESET: Context recycled');
+    });
+  }
+
+  logAudioEvent('audioSystemReset', {});
 }
 
 // =============================================================================

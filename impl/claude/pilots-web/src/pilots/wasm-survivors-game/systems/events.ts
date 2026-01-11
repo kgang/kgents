@@ -23,7 +23,7 @@ import type {
   WitnessMark,
   SkillMetrics,
 } from '../types';
-import type { UpgradeType, Synergy } from './upgrades';
+import type { WildUpgradeType, SynergyEffect } from './wild-upgrades';
 
 // =============================================================================
 // Event Categories & Base Types
@@ -258,7 +258,7 @@ export interface PlayerLevelUpEvent extends BaseEvent {
     level: number;
     xpTotal: number;
     /** Upgrade choices presented */
-    upgradeChoices: UpgradeType[];
+    upgradeChoices: WildUpgradeType[];
   };
 }
 
@@ -266,9 +266,9 @@ export interface UpgradeSelectedEvent extends BaseEvent {
   category: 'player';
   type: 'upgrade_selected';
   data: {
-    upgrade: UpgradeType;
+    upgrade: WildUpgradeType;
     /** Other options that were available */
-    alternatives: UpgradeType[];
+    alternatives: WildUpgradeType[];
     /** Level at which upgrade was selected */
     level: number;
     /** Total upgrades now owned */
@@ -282,9 +282,9 @@ export interface SynergyDiscoveredEvent extends BaseEvent {
   category: 'player';
   type: 'synergy_discovered';
   data: {
-    synergy: Synergy;
+    synergy: SynergyEffect;
     /** Upgrades that triggered synergy */
-    triggerUpgrades: [UpgradeType, UpgradeType];
+    triggerUpgrades: [WildUpgradeType, WildUpgradeType];
     /** Build context at discovery */
     buildContext: BuildContext;
   };
@@ -316,7 +316,7 @@ export interface PlayerDeathEvent extends BaseEvent {
     wave: number;
     gameTime: number;
     totalKills: number;
-    finalBuild: UpgradeType[];
+    finalBuild: WildUpgradeType[];
     finalSynergies: string[];
   };
 }
@@ -1605,8 +1605,8 @@ export class EventWitnessBridge {
       timestamp: mark.intent.gameTime,
       frame: 0,
       data: {
-        upgrade: 'pierce' as UpgradeType, // Would need actual data from mark
-        alternatives: (mark.intent.alternatives ?? []) as UpgradeType[],
+        upgrade: 'pierce' as WildUpgradeType, // Would need actual data from mark
+        alternatives: (mark.intent.alternatives ?? []) as WildUpgradeType[],
         level: mark.intent.context.wave,
         totalUpgrades: mark.intent.context.upgrades.length,
         buildContext: mark.intent.context,

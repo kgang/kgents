@@ -14,7 +14,22 @@ import type {
   Projectile,
   EnemyType,
 } from '../types';
-import type { ActiveUpgrades } from './upgrades';
+// Legacy computed effects interface - used for physics calculations
+// TODO: This should be derived from WildUpgradeState or abilities system in the future
+interface LegacyActiveUpgrades {
+  upgrades: string[];
+  damageMultiplier: number;
+  attackSpeedMultiplier: number;
+  moveSpeedMultiplier: number;
+  pierceCount: number;
+  orbitActive: boolean;
+  orbitDamage: number;
+  orbitRadius?: number;
+  slowRadius?: number;
+  slowPercent?: number;
+  chainBounces?: number;
+  chainRange?: number;
+}
 import { updateBeeBehavior, getBeeMovement, type TelegraphData, getBeeTelegraph } from './enemies';
 
 // =============================================================================
@@ -227,7 +242,7 @@ export function updatePhysics(
   );
 
   // DD-15: Slow Field - get active upgrades for slow field check
-  const activeUpgrades = state.player.activeUpgrades as ActiveUpgrades | undefined;
+  const activeUpgrades = state.player.activeUpgrades as LegacyActiveUpgrades | undefined;
   const slowRadius = activeUpgrades?.slowRadius ?? 0;
   const slowPercent = activeUpgrades?.slowPercent ?? 0;
 
@@ -300,8 +315,9 @@ export function updatePhysics(
     }
 
     // Apply movement (only if not in attack state - attack movement handled in behavior)
+    // GRAVITY WELL: Skip normal movement for enemies in gravity orbit (positions controlled by wild upgrade)
     // Movement is frame-rate independent: velocity * speedMultiplier * dt (where dt = deltaTime/1000)
-    if (updatedEnemy.behaviorState !== 'attack') {
+    if (updatedEnemy.behaviorState !== 'attack' && !updatedEnemy.inGravityOrbit) {
       const newX = updatedEnemy.position.x + movement.x * speedMultiplier * ENEMY_CHASE_SPEED_FACTOR * dt;
       const newY = updatedEnemy.position.y + movement.y * speedMultiplier * ENEMY_CHASE_SPEED_FACTOR * dt;
 
@@ -317,7 +333,8 @@ export function updatePhysics(
 
   // DD-9: Orbit - damage enemies within orbit radius
   let orbitDamagedEnemies = updatedEnemies;
-  if (activeUpgrades?.orbitActive && activeUpgrades.orbitRadius > 0) {
+  const orbitRadius = activeUpgrades?.orbitRadius ?? 0;
+  if (activeUpgrades?.orbitActive && orbitRadius > 0) {
     const orbitDamagePerSecond = activeUpgrades.orbitDamage ?? 15;
     const orbitDamageThisFrame = orbitDamagePerSecond * dt;
 
@@ -326,7 +343,7 @@ export function updatePhysics(
       const dy = enemy.position.y - playerY;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance < activeUpgrades.orbitRadius) {
+      if (distance < orbitRadius) {
         // Enemy is within orbit - apply damage
         const newHealth = enemy.health - orbitDamageThisFrame;
         return { ...enemy, health: newHealth };
@@ -394,7 +411,7 @@ export function checkCollisions(state: GameState): CollisionResult {
   const chainProjectiles: Projectile[] = []; // DD-13: Chain projectiles to spawn
 
   // DD-13: Get chain settings from active upgrades
-  const activeUpgrades = state.player.activeUpgrades as ActiveUpgrades | undefined;
+  const activeUpgrades = state.player.activeUpgrades as LegacyActiveUpgrades | undefined;
   const chainBounces = activeUpgrades?.chainBounces ?? 0;
   const chainRange = activeUpgrades?.chainRange ?? 80;
 

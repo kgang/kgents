@@ -290,6 +290,13 @@ export interface Enemy {
 
   /** Time until which this enemy is forced to target the player (gameTime ms) */
   aggroUntil?: number;
+
+  // ==========================================================================
+  // Gravity Well System (Wild Upgrade)
+  // ==========================================================================
+
+  /** Whether this enemy is currently orbiting the player (GRAVITY_WELL) */
+  inGravityOrbit?: boolean;
 }
 
 export interface Particle {
@@ -369,6 +376,10 @@ export interface ActiveUpgrades {
   pierceCount: number;
   orbitActive: boolean;
   orbitDamage: number;
+  // Optional radius effects
+  orbitRadius?: number;
+  slowRadius?: number;
+  slowPercent?: number;
 }
 
 // =============================================================================
@@ -632,6 +643,11 @@ export interface GameState {
   abilitiesState?: import('./systems/abilities').ActiveAbilities;
   meleeState?: import('./systems/melee').MeleeAttackState;
   comboState?: import('./systems/combos').ComboState;
+
+  // WILD UPGRADES system (Run 050+)
+  // The 8 wild upgrades that fundamentally change gameplay
+  wildUpgrades?: import('./systems/wild-upgrades').WildUpgradeType[];
+  wildUpgradeState?: import('./systems/wild-upgrades').WildUpgradeState;
 }
 
 // =============================================================================

@@ -23,7 +23,7 @@
  */
 
 import type { Vector2, Enemy } from '../types';
-import type { AbilityId, ComputedEffects } from './abilities';
+import type { AbilityId } from './abilities';
 
 // =============================================================================
 // Types
@@ -867,7 +867,7 @@ export function calculateMomentumMultiplier(momentum: Record<MomentumType, Momen
  */
 export function processGraze(
   state: InsaneComboState,
-  enemyPosition: Vector2,
+  _enemyPosition: Vector2,
   gameTime: number
 ): { state: InsaneComboState; events: ComboEvent[] } {
   const events: ComboEvent[] = [];

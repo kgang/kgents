@@ -25,13 +25,30 @@ export {
   createJuiceSystem,
   processJuice,
   checkClutchMoment,
+  getEffectiveTimeScale,
   COLORS,
+  INSANE_COMBO_JUICE,
+  TEMPORAL_DEBT,
   type JuiceSystem,
   type Particle,
   type ShakeState,
   type EscalationState,
   type ClutchMomentConfig,
+  type TemporalDebtState,
+  type TemporalDamageRecord,
 } from './juice';
+
+// TEMPORAL DEBT Helper Functions
+export {
+  getEffectiveEnemyTimeScale,
+  isTemporalDebtFreezeActive,
+  processTemporalDebtInput,
+  enableTemporalDebt,
+  canActivateTemporalDebt,
+  getTemporalDebtPhase,
+  getTemporalDebtCooldownProgress,
+  getTemporalDebtPhaseProgress,
+} from './temporal-debt-helpers';
 
 export {
   emitWitnessMark,
@@ -49,20 +66,20 @@ export {
   type SoundOptions,
 } from './sound';
 
+// Wild Upgrades System - SERIOUSLY WILD upgrades, not stat improvements
 export {
-  UPGRADE_POOL,
-  SYNERGY_POOL,
-  getUpgrade,
-  generateUpgradeChoices,
-  detectNewSynergies,
-  createInitialActiveUpgrades,
-  applyUpgrade,
-  getBuildIdentity,
-  type UpgradeType,
-  type VerbUpgrade,
-  type Synergy,
-  type ActiveUpgrades,
-} from './upgrades';
+  // Types
+  type WildUpgradeType,
+  type WildUpgrade,
+  type WildUpgradeState,
+  // Core functions
+  WILD_UPGRADES,
+  createInitialWildUpgradeState,
+  getWildUpgradePool,
+  getWildUpgrade,
+  getWildSynergy,
+  getActiveWildSynergies,
+} from './wild-upgrades';
 
 // DD-21: Bee behavior system (PROTO_SPEC S6: Bee Taxonomy)
 export {
@@ -467,23 +484,3 @@ export {
   type ComboEvent,
 } from './insane-combos';
 
-// ENHANCED PERKS - Audited perks with unique mechanics, visuals, and synergies
-export {
-  ENHANCED_PERKS,
-  getEnhancedPerk,
-  getSynergyPartners,
-  hasSynergy,
-  getActiveSynergies,
-  calculateEnhancedEffects,
-  // Types
-  type EnhancedPerk,
-  type EnhancedPerkEffect,
-  type PassiveEffect,
-  type OnKillEffect,
-  type OnHitEffect,
-  type ConditionalEffect,
-  type ParticleSystemType,
-  type ScreenEffectType,
-  type SkillScalingType,
-  type ApexIntegration,
-} from './enhanced-perks';

@@ -40,6 +40,7 @@ import {
   playHoneyDripSound,
   playFreezeFrameSound,
   getAudioState,
+  resetAudioSystem,
   // THE BALL audio sequencing (Run 049: Audio Integration)
   fadeOutAllAudio,
   playBassDropSound,
@@ -166,6 +167,12 @@ export interface UseSoundEngineResult {
   isMuted: boolean;
   /** Check if in TRUE SILENCE mode */
   isSilent: boolean;
+  /**
+   * Reset the entire audio system.
+   * Call before starting a new game to prevent audio carry-over.
+   * Fixes the "ambient bee buzzing carry-over" bug.
+   */
+  resetAudio: () => void;
 }
 
 /**
@@ -497,6 +504,11 @@ export function useSoundEngine(): UseSoundEngineResult {
     mutedRef.current = false;
   }, []);
 
+  // Reset the entire audio system (fixes bee buzz carry-over bug)
+  const resetAudio = useCallback(() => {
+    resetAudioSystem();
+  }, []);
+
   return {
     play,
     playKill,
@@ -528,6 +540,7 @@ export function useSoundEngine(): UseSoundEngineResult {
     unmute,
     isMuted: mutedRef.current,
     isSilent: getAudioState().isSilent,
+    resetAudio,
   };
 }
 
