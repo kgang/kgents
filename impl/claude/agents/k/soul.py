@@ -445,8 +445,8 @@ class KgentSoul:
 
             # Create a minimal umwelt-like object for tracing
             class _TraceUmwelt:
-                id = "kgent-soul"
-                dna = None
+                id: str = "kgent-soul"
+                dna: str | None = None
 
             async with trace_invocation(
                 f"self.soul.{mode.value}",
@@ -492,8 +492,8 @@ class KgentSoul:
 
             # Create a minimal umwelt-like object for tracing
             class _TraceUmwelt:
-                id = "kgent-soul"
-                dna = None
+                id: str = "kgent-soul"
+                dna: str | None = None
 
             async with trace_invocation(
                 f"self.soul.{mode.value}",
