@@ -11,16 +11,9 @@
 
 ---
 ## KENT's WISHES
-* kgents is a metatheory, meta-system for agent asystems
-* Full production readiness. No more boilerplate, demo-ware, or performative work.
-* Maximize token use
-* Create more specs and plans
-
-Fully realize:
-* kgents/spec/theory/agent-dp.md
-* kgents/spec/theory/analysis-operad.md
-* kgents/spec/theory/dp-native-kgents.md
-* kgents/spec/theory/galois-modularization.md
+* Better end to end user flows
+* coherent applications of theory
+* simplistic, brutalistic?, dense, intelligent design
 
 
 ## KENT's NEVERS
