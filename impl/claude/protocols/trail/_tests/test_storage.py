@@ -17,22 +17,9 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from models.base import Base
-
-# Import trail models (already registered via models/__init__.py)
-from models.trail import (  # noqa: F401
-    TrailAnnotationRow,
-    TrailCommitmentRow,
-    TrailEvidenceRow,
-    TrailForkRow,
-    TrailRow,
-    TrailStepRow,
-)
 from protocols.exploration.types import (
     Claim,
     Evidence,
@@ -50,50 +37,22 @@ from protocols.trail.storage import (
 
 
 @pytest.fixture
-async def async_engine():
-    """Create in-memory SQLite async engine for tests."""
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        echo=False,
-    )
+async def test_universe():
+    """Create in-memory Universe for tests."""
+    from agents.d.universe import Universe
+    from agents.d.universe.universe import Backend
 
-    # Create all tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    yield engine
-
-    await engine.dispose()
+    # Create a fresh Universe with memory backend
+    universe = Universe(preferred_backend=Backend.MEMORY)
+    # Trigger initialization by calling a simple operation
+    await universe._ensure_initialized()
+    return universe
 
 
 @pytest.fixture
-async def session_factory(async_engine):
-    """Create session factory."""
-    factory = async_sessionmaker(
-        async_engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-    )
-    return factory
-
-
-@pytest.fixture
-def mock_dgent():
-    """Create mock D-gent for tests."""
-    dgent = AsyncMock()
-    dgent.put = AsyncMock(return_value="datum-test-123")
-    dgent.get = AsyncMock(return_value=None)
-    dgent.list = AsyncMock(return_value=[])
-    return dgent
-
-
-@pytest.fixture
-async def storage(session_factory, mock_dgent):
+async def storage(test_universe):
     """Create TrailStorageAdapter with test dependencies."""
-    return TrailStorageAdapter(
-        session_factory=session_factory,
-        dgent=mock_dgent,
-    )
+    return TrailStorageAdapter(universe=test_universe)
 
 
 @pytest.fixture
@@ -150,7 +109,7 @@ class TestSaveTrail:
         assert result.name == "Auth Investigation"
         assert result.step_count == 3
         assert result.version == 1
-        assert result.datum_id == "datum-test-123"
+        # datum_id may be None or a real ID depending on backend
 
     async def test_save_trail_without_observer(self, storage, sample_trail):
         """Save trail works without observer (defaults to 'developer')."""

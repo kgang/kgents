@@ -231,8 +231,13 @@ class TestFlagParsing:
 class TestUnknownCommand:
     """Test handling of unknown commands."""
 
-    def test_unknown_command_exits_with_error(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_unknown_command_exits_with_error(
+        self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Unknown command prints error and exits 1."""
+        # Skip daemon check to test local command resolution
+        monkeypatch.setenv("KGENTS_NO_DAEMON", "1")
+
         from protocols.cli.hollow import main
 
         result = main(["xyznonexistent"])

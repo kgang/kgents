@@ -98,11 +98,13 @@ class TestStateMachine:
 
     def test_valid_states(self, probe: GatekeeperProbe) -> None:
         """Test all states are defined."""
-        assert "init" in probe.states
-        assert "heuristic" in probe.states
-        assert "semantic" in probe.states
-        assert "synthesis" in probe.states
-        assert "complete" in probe.states
+        # states contains ValidationState objects, check phases
+        state_phases = {s.phase for s in probe.states}
+        assert "init" in state_phases
+        assert "heuristic" in state_phases
+        assert "semantic" in state_phases
+        assert "synthesis" in state_phases
+        assert "complete" in state_phases
 
     def test_init_to_heuristic_transition(self, probe: GatekeeperProbe) -> None:
         """Test init → heuristic transition."""
@@ -172,9 +174,7 @@ class UserRepository:
         assert trace.value.passed
         # May have INFO violations (e.g., low gratitude), but should pass
         critical_or_error = [
-            v
-            for v in trace.value.value
-            if v.severity in [Severity.CRITICAL, Severity.ERROR]
+            v for v in trace.value.value if v.severity in [Severity.CRITICAL, Severity.ERROR]
         ]
         assert len(critical_or_error) == 0
         assert len(trace.entries) > 0  # Should have trace entries
@@ -192,8 +192,7 @@ def connect():
         assert not trace.value.passed
         violations = trace.value.value
         assert any(
-            v.principle == Principle.ETHICAL and v.severity == Severity.CRITICAL
-            for v in violations
+            v.principle == Principle.ETHICAL and v.severity == Severity.CRITICAL for v in violations
         )
 
     @pytest.mark.asyncio
@@ -226,8 +225,7 @@ def add_item(item, items=[]):
 
         violations = trace.value.value
         assert any(
-            v.principle == Principle.COMPOSABLE and v.severity == Severity.ERROR
-            for v in violations
+            v.principle == Principle.COMPOSABLE and v.severity == Severity.ERROR for v in violations
         )
 
     @pytest.mark.asyncio
@@ -292,7 +290,9 @@ def hello() -> str:
         assert trace.total_reward > 0.0
 
     @pytest.mark.asyncio
-    @pytest.mark.xfail(reason="BUG: Reward calculation doesn't factor violation severity into total_reward. Both clean and dirty code get same step rewards (0.1). Fix needed in gatekeeper_probe.py reward calculation.")
+    @pytest.mark.xfail(
+        reason="BUG: Reward calculation doesn't factor violation severity into total_reward. Both clean and dirty code get same step rewards (0.1). Fix needed in gatekeeper_probe.py reward calculation."
+    )
     async def test_violations_penalize_reward(self) -> None:
         """Test that violations reduce reward."""
         clean_content = '''
@@ -328,9 +328,7 @@ api_key = "key123"
         trace = await validate_content_probe(content, "ethical.py")
 
         # Should have ethical violations detected
-        ethical_violations = [
-            v for v in trace.value.value if v.principle == Principle.ETHICAL
-        ]
+        ethical_violations = [v for v in trace.value.value if v.principle == Principle.ETHICAL]
         assert len(ethical_violations) > 0
 
         # Should have lower total reward than clean code
@@ -346,9 +344,7 @@ def add_item(item, items=[]):
         trace = await validate_content_probe(content, "composable.py")
 
         # Should have composability penalty
-        comp_penalties = [
-            e.reward.composable for e in trace.entries if e.reward.composable < 0
-        ]
+        comp_penalties = [e.reward.composable for e in trace.entries if e.reward.composable < 0]
         assert len(comp_penalties) > 0
 
     @pytest.mark.asyncio
@@ -377,9 +373,7 @@ class TestAnalyzerScores:
         trace = await validate_content_probe(content, "test.py")
 
         # Final synthesis entry should mention scores
-        synthesis_entry = [
-            e for e in trace.entries if e.action.name == "synthesize"
-        ][0]
+        synthesis_entry = [e for e in trace.entries if e.action.name == "synthesize"][0]
         assert "Tastefulness=" in synthesis_entry.reasoning
 
     @pytest.mark.asyncio
@@ -388,9 +382,7 @@ class TestAnalyzerScores:
         content = "def hello(): pass"
         trace = await validate_content_probe(content, "test.py")
 
-        synthesis_entry = [
-            e for e in trace.entries if e.action.name == "synthesize"
-        ][0]
+        synthesis_entry = [e for e in trace.entries if e.action.name == "synthesize"][0]
         assert "Composability=" in synthesis_entry.reasoning
 
     @pytest.mark.asyncio
@@ -399,9 +391,7 @@ class TestAnalyzerScores:
         content = "def hello(): pass"
         trace = await validate_content_probe(content, "test.py")
 
-        synthesis_entry = [
-            e for e in trace.entries if e.action.name == "synthesize"
-        ][0]
+        synthesis_entry = [e for e in trace.entries if e.action.name == "synthesize"][0]
         assert "Gratitude=" in synthesis_entry.reasoning
 
 
@@ -430,5 +420,3 @@ class TestFileValidation:
         trace = await validate_file_probe(str(file_path))
 
         assert trace.value.passed
-
-

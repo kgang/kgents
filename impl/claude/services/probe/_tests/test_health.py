@@ -72,14 +72,15 @@ async def test_health_probe_all():
 
     results = await probe.check_all()
 
-    # Should have results for all 4 jewels
-    assert len(results) == 4
+    # Should have results for all 5 components (brain, witness, kblock, sovereign, llm)
+    assert len(results) == 5
 
     components = {r.name for r in results}
     assert "health:brain" in components
     assert "health:witness" in components
     assert "health:kblock" in components
     assert "health:sovereign" in components
+    assert "health:llm" in components
 
     # All should have valid probe type
     for result in results:

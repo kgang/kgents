@@ -25,7 +25,7 @@ def test_repository_miner_initialization():
     assert miner.repo_path == Path("/Users/kentgang/git/kgents")
 
     # Invalid repo (no .git)
-    with pytest.raises(ValueError, match="Not a git repository"):
+    with pytest.raises(ValueError, match="Not inside a git repository"):
         RepositoryMiner("/tmp/not-a-repo")
 
 

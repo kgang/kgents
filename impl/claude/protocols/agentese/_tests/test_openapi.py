@@ -438,7 +438,7 @@ class TestEdgeCases:
         """Every operation has a tag matching one of the AGENTESE contexts."""
         spec = generate_openapi_spec()
         # Core AGENTESE contexts + brain (knowledge layer extension)
-        valid_tags = {"world", "self", "concept", "void", "time", "discovery", "brain"}
+        valid_tags = {"world", "self", "concept", "void", "time", "discovery", "brain", "witness"}
 
         for path, methods in spec["paths"].items():
             for method, operation in methods.items():

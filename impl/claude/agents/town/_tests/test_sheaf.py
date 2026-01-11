@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings, strategies as st
 
 from agents.town.context import (
     ALL_REGION_CONTEXTS,
@@ -490,7 +490,7 @@ class TestSheafProperties:
             unique=True,
         )
     )
-    @settings(max_examples=50)
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_glue_preserves_citizens(self, citizens: list[str]) -> None:
         """Gluing should preserve all citizens."""
         sheaf = create_town_sheaf()

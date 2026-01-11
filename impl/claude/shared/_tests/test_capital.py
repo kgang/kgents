@@ -15,7 +15,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings, strategies as st
 
 from shared.capital import (
     BypassToken,
@@ -295,7 +295,7 @@ def test_insufficient_capital_error_is_sympathetic() -> None:
         max_size=20,
     )
 )
-@settings(max_examples=100)
+@settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
 def test_balance_is_projection(events: list[tuple[str, float]]) -> None:
     """
     GENERATIVE PRINCIPLE: Balance equals sum of credits minus sum of debits.

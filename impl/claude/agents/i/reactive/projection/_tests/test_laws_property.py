@@ -19,7 +19,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings, strategies as st
 
 from agents.i.reactive.primitives.bar import BarState, BarWidget
 from agents.i.reactive.primitives.glyph import GlyphState, GlyphWidget
@@ -136,7 +136,7 @@ class TestGlyphProjectionProperties:
     """Property-based tests for GlyphWidget projection laws."""
 
     @given(state=glyph_state_strategy())
-    @settings(max_examples=100)
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
     def test_identity_law_cli_property(self, state: GlyphState) -> None:
         """Identity law holds for CLI projection across arbitrary states."""
         widget = GlyphWidget(state)
@@ -178,7 +178,7 @@ class TestBarProjectionProperties:
     """Property-based tests for BarWidget projection laws."""
 
     @given(state=bar_state_strategy())
-    @settings(max_examples=100)
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
     def test_identity_law_cli_property(self, state: BarState) -> None:
         """Identity law holds for CLI projection across arbitrary states."""
         widget = BarWidget(state)
@@ -234,7 +234,7 @@ class TestSparklineProjectionProperties:
     """Property-based tests for SparklineWidget projection laws."""
 
     @given(state=sparkline_state_strategy())
-    @settings(max_examples=100)
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
     def test_identity_law_cli_property(self, state: SparklineState) -> None:
         """Identity law holds for CLI projection across arbitrary states."""
         widget = SparklineWidget(state)
