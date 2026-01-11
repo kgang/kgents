@@ -310,7 +310,7 @@ This is the core architectural insight—understand this, understand everything:
 
 ## Built Infrastructure (CHECK FIRST!)
 
-**20 production systems** exist. Check `docs/systems-reference.md` before building anything new.
+**50+ production services** exist. Check `docs/systems-reference.md` before building anything new.
 
 | Category | Systems |
 |----------|---------|
@@ -388,7 +388,7 @@ NOW.md          - THE LIVING DOCUMENT (what's happening now)
 spec/           - The specification (conceptual, implementation-agnostic)
 impl/           - Reference implementations
 impl/claude/    - Python backend + React frontend
-docs/skills/    - THE 17 SKILLS (read these!)
+docs/skills/    - THE 24 SKILLS (read these!)
 plans/          - Meta files only (_focus.md, meta.md)
 ```
 
