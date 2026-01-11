@@ -16,7 +16,8 @@ from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from agents.d import DgentProtocol, TableAdapter
+from agents.d.adapters import TableAdapter
+from agents.d.protocol import DgentProtocol
 from models.verification import (
     CategoricalViolation,
     HoTTType,
