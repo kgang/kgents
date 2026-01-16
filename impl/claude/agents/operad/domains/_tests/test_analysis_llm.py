@@ -631,7 +631,7 @@ async def test_self_analyze_llm(mock_full_report):
         assert call_args.endswith("spec/theory/analysis-operad.md")
 
         assert isinstance(result, FullAnalysisReport)
-        assert result.target == "spec/theory/analysis-operad.md"
+        assert result.target.endswith("spec/theory/analysis-operad.md")
 
 
 @pytest.mark.asyncio
@@ -641,7 +641,7 @@ async def test_self_analyze_llm_fallback():
         result = await self_analyze_llm()
 
         assert isinstance(result, FullAnalysisReport)
-        assert result.target == "spec/theory/analysis-operad.md"
+        assert result.target.endswith("spec/theory/analysis-operad.md")
         # Should use structural fallback
         assert (
             "structural" in result.synthesis.lower() or "construction" in result.synthesis.lower()

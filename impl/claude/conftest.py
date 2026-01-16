@@ -37,8 +37,14 @@ TESTING GOTCHAS (Read docs/skills/test-patterns.md for full patterns)
 
 6. EXIT 137 = OOM: Reduce `-n` workers or run sequentially. Not a test logic error.
 
-7. CONSTITUTION EVOLUTION: When K-Block count changes (22→23), update ALL tests
+7. CONSTITUTION EVOLUTION: When K-Block count changes (22->23), update ALL tests
    that assert counts, with comments documenting the breakdown.
+
+8. XDIST WORKER CRASHES: "node down: Not properly terminated" with 12+ workers is
+   caused by initialization storms. Session fixtures import 25+ modules. Solutions:
+   - Default: MAX_WORKERS capped at 8 (see pytest_xdist_auto_num_workers)
+   - Override: PYTEST_XDIST_MAX_WORKERS=N (0 to disable cap)
+   - Or use: PYTEST_XDIST_AUTO_NUM_WORKERS=4 for explicit worker count
 =============================================================================
 """
 
@@ -613,8 +619,17 @@ def _xdist_worker_watchdog(request: Any) -> Any:
     1. Cleans up orphan workers from previous sessions
     2. Starts a watchdog thread to enforce session timeout
     3. Ensures clean shutdown on session end
+
+    Note: Only runs on the master process (not on xdist workers) to avoid
+    each worker starting its own watchdog and potentially killing siblings.
     """
     global _watchdog_thread, _session_pid
+
+    # Skip watchdog on xdist workers - only master should manage lifecycle
+    # Workers have PYTEST_XDIST_WORKER set; master has PYTEST_XDIST_TESTRUNUID
+    if os.environ.get("PYTEST_XDIST_WORKER"):
+        yield
+        return
 
     # Get timeout from environment (default: 10 minutes)
     # Supports fractional minutes: 0.5 = 30 seconds
@@ -622,14 +637,18 @@ def _xdist_worker_watchdog(request: Any) -> Any:
     timeout_seconds = int(timeout_minutes * 60)
 
     # Phase 1: Clean up orphans from previous sessions
-    killed = _kill_orphan_xdist_workers()
-    if killed > 0:
-        import sys
+    # Skip orphan cleanup during xdist run to avoid killing just-starting workers
+    # The master process spawns workers that may look like orphans briefly
+    if not os.environ.get("PYTEST_XDIST_TESTRUNUID"):
+        # Not an xdist run, safe to clean up orphans
+        killed = _kill_orphan_xdist_workers()
+        if killed > 0:
+            import sys
 
-        print(
-            f"🧹 Cleaned up {killed} orphan xdist worker(s) from previous sessions",
-            file=sys.stderr,
-        )
+            print(
+                f"🧹 Cleaned up {killed} orphan xdist worker(s) from previous sessions",
+                file=sys.stderr,
+            )
 
     # Phase 2: Start watchdog (if timeout enabled)
     if timeout_seconds > 0:
@@ -676,6 +695,15 @@ def pytest_xdist_auto_num_workers(config: Any) -> int | None:
     1. Checking current system load average
     2. Reducing workers when system is already under load
     3. Always leaving cores for the OS and other processes
+    4. Capping workers to prevent initialization storms
+
+    The MAX_WORKERS cap (default: 8) prevents "node down: Not properly terminated"
+    errors caused by too many workers starting simultaneously:
+    - Session fixtures (_ensure_global_registries_populated) import 25+ modules
+    - All workers compete for disk I/O and CPU during import
+    - Workers that don't finish initialization in time get killed
+
+    Override via: PYTEST_XDIST_MAX_WORKERS=N (0 to disable cap)
 
     Returns:
         Number of workers to use, or None to fall back to xdist default.
@@ -689,6 +717,15 @@ def pytest_xdist_auto_num_workers(config: Any) -> int | None:
         except ValueError:
             pass
 
+    # Maximum workers to prevent initialization storms
+    # Heavy imports in session fixtures cause workers to crash when too many
+    # start simultaneously. 8 is a safe default for most machines.
+    max_workers_env = os.environ.get("PYTEST_XDIST_MAX_WORKERS", "8")
+    try:
+        max_workers = int(max_workers_env)
+    except ValueError:
+        max_workers = 8
+
     try:
         cpu_count = os.cpu_count() or 4
 
@@ -700,12 +737,14 @@ def pytest_xdist_auto_num_workers(config: Any) -> int | None:
             # If system is already loaded (>80% of cores busy), throttle hard
             if load_avg > cpu_count * 0.8:
                 # Use at most half the cores when system is busy
-                return max(1, cpu_count // 2)
+                workers = max(1, cpu_count // 2)
+                return min(workers, max_workers) if max_workers > 0 else workers
 
             # If system is moderately loaded (>50%), be conservative
             if load_avg > cpu_count * 0.5:
                 # Leave 2 cores free
-                return max(1, cpu_count - 2)
+                workers = max(1, cpu_count - 2)
+                return min(workers, max_workers) if max_workers > 0 else workers
 
         except (AttributeError, OSError):
             # Windows doesn't have getloadavg(), fall through to default
@@ -715,9 +754,15 @@ def pytest_xdist_auto_num_workers(config: Any) -> int | None:
         # For small machines (<=4 cores): leave 1 core
         # For larger machines (>4 cores): leave 2 cores
         if cpu_count <= 4:
-            return max(1, cpu_count - 1)
+            workers = max(1, cpu_count - 1)
         else:
-            return max(1, cpu_count - 2)
+            workers = max(1, cpu_count - 2)
+
+        # Apply cap to prevent initialization storms
+        if max_workers > 0:
+            workers = min(workers, max_workers)
+
+        return workers
 
     except Exception:
         # Never break pytest startup due to worker count detection
