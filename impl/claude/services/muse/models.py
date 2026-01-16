@@ -134,14 +134,17 @@ class TasteVector:
 
     def distance(self, other: TasteVector) -> float:
         """Euclidean distance between taste vectors."""
-        return (
-            (self.darkness - other.darkness) ** 2
-            + (self.complexity - other.complexity) ** 2
-            + (self.warmth - other.warmth) ** 2
-            + (self.energy - other.energy) ** 2
-            + (self.novelty - other.novelty) ** 2
-            + (self.restraint - other.restraint) ** 2
-        ) ** 0.5
+        return float(
+            (
+                (self.darkness - other.darkness) ** 2
+                + (self.complexity - other.complexity) ** 2
+                + (self.warmth - other.warmth) ** 2
+                + (self.energy - other.energy) ** 2
+                + (self.novelty - other.novelty) ** 2
+                + (self.restraint - other.restraint) ** 2
+            )
+            ** 0.5
+        )
 
     def drift_from(self, baseline: TasteVector) -> float:
         """Measure drift from historical baseline."""

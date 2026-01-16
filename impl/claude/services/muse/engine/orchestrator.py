@@ -19,7 +19,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Awaitable, Callable, Generic, TypeVar
+from typing import Any, Awaitable, Callable, Generic, TypeVar, Union
 
 from ..agents import (
     CheckpointAgent,
@@ -622,7 +622,17 @@ class MuseOrchestrator(Generic[T]):
             self._event_handlers[event_type] = []
         self._event_handlers[event_type].append(handler)
 
-    def _fire_event(self, event: SessionEvent) -> None:
+    def _fire_event(
+        self,
+        event: Union[
+            SessionEvent,
+            IterationEvent,
+            SelectionEvent,
+            ContradictionEvent,
+            BreakthroughEvent,
+            CheckpointEvent,
+        ],
+    ) -> None:
         """Fire an event to all registered handlers."""
         event_type = type(event)
         if event_type in self._event_handlers:
