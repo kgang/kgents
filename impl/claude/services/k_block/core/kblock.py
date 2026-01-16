@@ -123,6 +123,7 @@ def get_witness_bridge() -> WitnessBridgeProtocol | None:
     """
     return _witness_bridge
 
+
 # -----------------------------------------------------------------------------
 # Type Aliases
 # -----------------------------------------------------------------------------
@@ -478,10 +479,14 @@ class KBlock:
     # -------------------------------------------------------------------------
 
     # Zero Seed layer (1-7) if this K-Block represents a Zero Seed node
-    zero_seed_layer: int | None = None  # 1=axiom, 2=value, 3=goal, 4=spec, 5=action, 6=reflection, 7=representation
+    zero_seed_layer: int | None = (
+        None  # 1=axiom, 2=value, 3=goal, 4=spec, 5=action, 6=reflection, 7=representation
+    )
 
     # Zero Seed kind (human-readable category)
-    zero_seed_kind: str | None = None  # "axiom", "value", "goal", "spec", "action", "reflection", "representation"
+    zero_seed_kind: str | None = (
+        None  # "axiom", "value", "goal", "spec", "action", "reflection", "representation"
+    )
 
     # Lineage: parent node IDs (forms the derivation DAG)
     # For a node N, lineage contains IDs of nodes that N derives from
@@ -489,7 +494,9 @@ class KBlock:
 
     # Proof tracking
     has_proof: bool = False
-    toulmin_proof: dict[str, Any] | None = None  # Toulmin proof structure (claim, warrant, backing, etc.)
+    toulmin_proof: dict[str, Any] | None = (
+        None  # Toulmin proof structure (claim, warrant, backing, etc.)
+    )
 
     # Confidence in this Zero Seed node [0.0, 1.0]
     confidence: float = 1.0
@@ -747,8 +754,10 @@ class KBlock:
         Returns:
             A new K-Block with f applied to content
         """
+
         def lift(x: str) -> KBlock:
             return KBlock.pure(f(x), path=self.path)
+
         return self.bind(lift)
 
     # ---------------------------------------------------------------------
@@ -945,12 +954,10 @@ class KBlock:
 
         # Deserialize edges if present
         incoming_edges = [
-            KBlockEdge.from_dict(edge_data)
-            for edge_data in data.get("incoming_edges", [])
+            KBlockEdge.from_dict(edge_data) for edge_data in data.get("incoming_edges", [])
         ]
         outgoing_edges = [
-            KBlockEdge.from_dict(edge_data)
-            for edge_data in data.get("outgoing_edges", [])
+            KBlockEdge.from_dict(edge_data) for edge_data in data.get("outgoing_edges", [])
         ]
 
         # Parse kind with backward compatibility (default to FILE)
@@ -962,8 +969,7 @@ class KBlock:
 
         # Deserialize bind_lineage (Amendment D)
         bind_lineage = [
-            LineageEdge.from_dict(edge_data)
-            for edge_data in data.get("bind_lineage", [])
+            LineageEdge.from_dict(edge_data) for edge_data in data.get("bind_lineage", [])
         ]
 
         return cls(
@@ -1110,14 +1116,11 @@ def zero_node_from_kblock(kblock: KBlock) -> "ZeroNode":
 
     if kblock.kind != KBlockKind.ZERO_NODE:
         raise ValueError(
-            f"Cannot convert KBlock with kind={kblock.kind} to ZeroNode. "
-            f"Expected kind=ZERO_NODE."
+            f"Cannot convert KBlock with kind={kblock.kind} to ZeroNode. Expected kind=ZERO_NODE."
         )
 
     if kblock.zero_seed_layer is None:
-        raise ValueError(
-            "Cannot convert KBlock to ZeroNode: zero_seed_layer is None"
-        )
+        raise ValueError("Cannot convert KBlock to ZeroNode: zero_seed_layer is None")
 
     # Parse proof if present
     proof = None

@@ -73,30 +73,34 @@ def sample_mark() -> Mark:
 @pytest.fixture
 def high_alignment_mark(sample_mark: Mark) -> Mark:
     """Create a mark with high constitutional alignment."""
-    alignment = ConstitutionalAlignment.from_scores({
-        "ETHICAL": 0.95,
-        "COMPOSABLE": 0.90,
-        "JOY_INDUCING": 0.85,
-        "TASTEFUL": 0.88,
-        "CURATED": 0.82,
-        "HETERARCHICAL": 0.80,
-        "GENERATIVE": 0.85,
-    })
+    alignment = ConstitutionalAlignment.from_scores(
+        {
+            "ETHICAL": 0.95,
+            "COMPOSABLE": 0.90,
+            "JOY_INDUCING": 0.85,
+            "TASTEFUL": 0.88,
+            "CURATED": 0.82,
+            "HETERARCHICAL": 0.80,
+            "GENERATIVE": 0.85,
+        }
+    )
     return sample_mark.with_constitutional(alignment)
 
 
 @pytest.fixture
 def low_alignment_mark(sample_mark: Mark) -> Mark:
     """Create a mark with low constitutional alignment (violations)."""
-    alignment = ConstitutionalAlignment.from_scores({
-        "ETHICAL": 0.40,
-        "COMPOSABLE": 0.35,
-        "JOY_INDUCING": 0.45,
-        "TASTEFUL": 0.30,
-        "CURATED": 0.42,
-        "HETERARCHICAL": 0.38,
-        "GENERATIVE": 0.35,
-    })
+    alignment = ConstitutionalAlignment.from_scores(
+        {
+            "ETHICAL": 0.40,
+            "COMPOSABLE": 0.35,
+            "JOY_INDUCING": 0.45,
+            "TASTEFUL": 0.30,
+            "CURATED": 0.42,
+            "HETERARCHICAL": 0.38,
+            "GENERATIVE": 0.35,
+        }
+    )
     return sample_mark.with_constitutional(alignment)
 
 
@@ -174,40 +178,48 @@ class TestConstitutionalAlignment:
     def test_weighted_total_respects_principle_weights(self) -> None:
         """Test that weighted total respects ETHICAL=2.0, COMPOSABLE=1.5, JOY=1.2."""
         # High ETHICAL should boost total more than high TASTEFUL
-        ethical_high = ConstitutionalAlignment.from_scores({
-            "ETHICAL": 1.0,
-            "COMPOSABLE": 0.5,
-            "JOY_INDUCING": 0.5,
-            "TASTEFUL": 0.5,
-            "CURATED": 0.5,
-            "HETERARCHICAL": 0.5,
-            "GENERATIVE": 0.5,
-        })
+        ethical_high = ConstitutionalAlignment.from_scores(
+            {
+                "ETHICAL": 1.0,
+                "COMPOSABLE": 0.5,
+                "JOY_INDUCING": 0.5,
+                "TASTEFUL": 0.5,
+                "CURATED": 0.5,
+                "HETERARCHICAL": 0.5,
+                "GENERATIVE": 0.5,
+            }
+        )
 
-        tasteful_high = ConstitutionalAlignment.from_scores({
-            "ETHICAL": 0.5,
-            "COMPOSABLE": 0.5,
-            "JOY_INDUCING": 0.5,
-            "TASTEFUL": 1.0,
-            "CURATED": 0.5,
-            "HETERARCHICAL": 0.5,
-            "GENERATIVE": 0.5,
-        })
+        tasteful_high = ConstitutionalAlignment.from_scores(
+            {
+                "ETHICAL": 0.5,
+                "COMPOSABLE": 0.5,
+                "JOY_INDUCING": 0.5,
+                "TASTEFUL": 1.0,
+                "CURATED": 0.5,
+                "HETERARCHICAL": 0.5,
+                "GENERATIVE": 0.5,
+            }
+        )
 
         # ETHICAL has weight 2.0 vs TASTEFUL weight 1.0
         assert ethical_high.weighted_total > tasteful_high.weighted_total
 
     def test_serialization_roundtrip(self) -> None:
         """Test to_dict/from_dict roundtrip."""
-        original = ConstitutionalAlignment.from_scores({
-            "ETHICAL": 0.85,
-            "COMPOSABLE": 0.75,
-            "JOY_INDUCING": 0.8,
-            "TASTEFUL": 0.7,
-            "CURATED": 0.65,
-            "HETERARCHICAL": 0.72,
-            "GENERATIVE": 0.78,
-        }, galois_loss=0.15, tier="CATEGORICAL")
+        original = ConstitutionalAlignment.from_scores(
+            {
+                "ETHICAL": 0.85,
+                "COMPOSABLE": 0.75,
+                "JOY_INDUCING": 0.8,
+                "TASTEFUL": 0.7,
+                "CURATED": 0.65,
+                "HETERARCHICAL": 0.72,
+                "GENERATIVE": 0.78,
+            },
+            galois_loss=0.15,
+            tier="CATEGORICAL",
+        )
 
         data = original.to_dict()
         restored = ConstitutionalAlignment.from_dict(data)
@@ -299,9 +311,7 @@ class TestConstitutionalCrystalMeta:
         assert meta.violations_count > 0
         assert meta.trust_earned == 0  # Low alignment earns no trust
 
-    def test_from_marks_mixed(
-        self, high_alignment_mark: Mark, low_alignment_mark: Mark
-    ) -> None:
+    def test_from_marks_mixed(self, high_alignment_mark: Mark, low_alignment_mark: Mark) -> None:
         """Test aggregation with mixed alignment marks."""
         meta = ConstitutionalCrystalMeta.from_marks([high_alignment_mark, low_alignment_mark])
 
@@ -370,9 +380,7 @@ class TestConstitutionalTrustComputer:
         assert "No constitutional history" in result.reasoning
 
     @pytest.mark.asyncio
-    async def test_high_alignment_earns_high_trust(
-        self, high_alignment_mark: Mark
-    ) -> None:
+    async def test_high_alignment_earns_high_trust(self, high_alignment_mark: Mark) -> None:
         """Test that high alignment over time earns high trust level."""
         # Create many high-alignment crystals to accumulate trust capital
         crystals = []
@@ -407,9 +415,7 @@ class TestConstitutionalTrustComputer:
         assert result.trust_capital >= 1.0  # 50 * 0.02 = 1.0
 
     @pytest.mark.asyncio
-    async def test_low_alignment_stays_low_trust(
-        self, low_alignment_mark: Mark
-    ) -> None:
+    async def test_low_alignment_stays_low_trust(self, low_alignment_mark: Mark) -> None:
         """Test that low alignment keeps trust level low."""
         marks = [low_alignment_mark]
         meta = ConstitutionalCrystalMeta.from_marks(marks)
@@ -535,7 +541,6 @@ class TestConstitutionalIntegration:
         restored = Mark.from_dict(data)
 
         assert restored.constitutional is not None
-        assert (
-            restored.constitutional.weighted_total
-            == pytest.approx(high_alignment_mark.constitutional.weighted_total, rel=0.01)
+        assert restored.constitutional.weighted_total == pytest.approx(
+            high_alignment_mark.constitutional.weighted_total, rel=0.01
         )

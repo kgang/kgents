@@ -206,9 +206,7 @@ class PortalTool(Tool[PortalRequest, PortalEmission]):
         except FileNotFoundError as e:
             raise ToolError(f"Destination not found: {request.destination}", self.name) from e
         except PermissionError as e:
-            raise ToolError(
-                f"Permission denied: {request.destination}", self.name
-            ) from e
+            raise ToolError(f"Permission denied: {request.destination}", self.name) from e
         except Exception as e:
             raise ToolError(f"Portal emission failed: {e}", self.name) from e
 
@@ -329,9 +327,7 @@ class PortalWriteTool(Tool[PortalWriteRequest, PortalWriteResponse]):
             )
 
         except PermissionError as e:
-            raise ToolError(
-                f"Permission denied: {portal.destination}", self.name
-            ) from e
+            raise ToolError(f"Permission denied: {portal.destination}", self.name) from e
         except Exception as e:
             raise ToolError(f"Portal write failed: {e}", self.name) from e
 

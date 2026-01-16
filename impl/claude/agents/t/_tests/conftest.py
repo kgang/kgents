@@ -35,8 +35,10 @@ def identity_agent() -> Callable[[Any], Any]:
 
     Useful for testing probes in isolation without agent complexity.
     """
+
     def agent(input: Any) -> Any:
         return input
+
     return agent
 
 
@@ -47,8 +49,10 @@ def constant_agent() -> Callable[[Any], str]:
 
     Useful for predictable agent behavior in probe tests.
     """
+
     def agent(input: Any) -> str:
         return "constant"
+
     return agent
 
 
@@ -59,8 +63,10 @@ def doubling_agent() -> Callable[[int], int]:
 
     Useful for testing probe behavior with transformations.
     """
+
     def agent(input: int) -> int:
         return input * 2
+
     return agent
 
 
@@ -71,8 +77,10 @@ async def async_identity_agent() -> Callable[[Any], Any]:
 
     Useful for testing async probe invocations.
     """
+
     async def agent(input: Any) -> Any:
         return input
+
     return agent
 
 
@@ -285,12 +293,14 @@ def assert_valid_trace():
     """
     Helper to assert a PolicyTrace is valid.
     """
+
     def validator(trace: PolicyTrace[Any]) -> None:
         """Validate that trace has required properties."""
         assert trace.value is not None, "Trace must have a value"
         assert isinstance(trace.entries, list), "Trace entries must be a list"
-        assert all(isinstance(e, TraceEntry) for e in trace.entries), \
+        assert all(isinstance(e, TraceEntry) for e in trace.entries), (
             "All entries must be TraceEntry instances"
+        )
 
         # Check that entries form a valid chain
         for i in range(len(trace.entries) - 1):
@@ -306,6 +316,7 @@ def assert_constitutional_score_valid():
     """
     Helper to assert a ConstitutionalScore is valid.
     """
+
     def validator(score: ConstitutionalScore) -> None:
         """Validate that score has valid ranges."""
         # All scores should be >= 0
@@ -356,14 +367,7 @@ def pytest_configure(config):
     Configure pytest with custom markers.
     """
     config.addinivalue_line(
-        "markers",
-        "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+        "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
     )
-    config.addinivalue_line(
-        "markers",
-        "integration: marks tests as integration tests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "property: marks tests as property-based tests"
-    )
+    config.addinivalue_line("markers", "integration: marks tests as integration tests")
+    config.addinivalue_line("markers", "property: marks tests as property-based tests")

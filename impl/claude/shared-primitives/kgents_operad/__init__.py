@@ -97,9 +97,9 @@ C = TypeVar("C")
 class LawStatus(Enum):
     """Status of a law verification."""
 
-    PASSED = auto()      # Law verified with concrete test cases
-    FAILED = auto()      # Law violation detected
-    SKIPPED = auto()     # Law not tested (e.g., not found)
+    PASSED = auto()  # Law verified with concrete test cases
+    FAILED = auto()  # Law violation detected
+    SKIPPED = auto()  # Law not tested (e.g., not found)
     STRUCTURAL = auto()  # Verified by type structure only
 
 
@@ -273,8 +273,7 @@ class Operad:
         if op_name not in self.operations:
             available = list(self.operations.keys())
             raise KeyError(
-                f"Unknown operation: '{op_name}'. "
-                f"Available operations: {available}"
+                f"Unknown operation: '{op_name}'. Available operations: {available}"
             )
         return self.operations[op_name](*agents)
 

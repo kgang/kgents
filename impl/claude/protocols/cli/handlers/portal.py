@@ -177,7 +177,9 @@ def cmd_show(args: list[str]) -> int:
         console = _get_console()
         if console:
             console.print()
-            console.print("[dim]Tip: Use 'kg portal expand <file> <edge>' to see destinations[/dim]")
+            console.print(
+                "[dim]Tip: Use 'kg portal expand <file> <edge>' to see destinations[/dim]"
+            )
         else:
             print()
             print("Tip: Use 'kg portal expand <file> <edge>' to see destinations")
@@ -308,11 +310,13 @@ def cmd_tree(args: list[str]) -> int:
         return 1
 
     try:
-        tree = _run_async(_bootstrap_and_build_tree(
-            file_path,
-            max_depth=max_depth,
-            expand_all=expand_all,
-        ))
+        tree = _run_async(
+            _bootstrap_and_build_tree(
+                file_path,
+                max_depth=max_depth,
+                expand_all=expand_all,
+            )
+        )
 
         _print_header(f"Portal Tree: {file_path.name}")
 

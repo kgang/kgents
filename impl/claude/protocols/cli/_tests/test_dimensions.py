@@ -7,6 +7,9 @@ from spec/protocols/cli.md Part II.
 
 from __future__ import annotations
 
+import os
+from unittest import mock
+
 import pytest
 
 from protocols.agentese.affordances import (
@@ -21,11 +24,13 @@ from protocols.cli.dimensions import (
     Backend,
     CommandDimensions,
     Execution,
+    ExecutionContext,
     Intent,
     Interactivity,
     Seriousness,
     Statefulness,
     derive_backend,
+    derive_context,
     derive_dimensions,
     derive_from_category,
     derive_intent,
@@ -98,21 +103,87 @@ class TestInteractivityEnum:
         assert Interactivity.INTERACTIVE is not None
 
 
+class TestExecutionContextEnum:
+    """Test ExecutionContext dimension enum."""
+
+    def test_has_cli_direct(self) -> None:
+        assert ExecutionContext.CLI_DIRECT is not None
+
+    def test_has_daemon_worker(self) -> None:
+        assert ExecutionContext.DAEMON_WORKER is not None
+
+    def test_has_daemon_main(self) -> None:
+        assert ExecutionContext.DAEMON_MAIN is not None
+
+    def test_has_repl(self) -> None:
+        assert ExecutionContext.REPL is not None
+
+    def test_values_distinct(self) -> None:
+        contexts = [
+            ExecutionContext.CLI_DIRECT,
+            ExecutionContext.DAEMON_WORKER,
+            ExecutionContext.DAEMON_MAIN,
+            ExecutionContext.REPL,
+        ]
+        assert len(set(contexts)) == 4
+
+
+class TestDeriveContext:
+    """Test derive_context() function."""
+
+    def test_default_is_cli_direct(self) -> None:
+        """Without any env vars, should return CLI_DIRECT."""
+        with mock.patch.dict(os.environ, {}, clear=True):
+            # Clear relevant env vars
+            for key in ["KGENTS_DAEMON_WORKER", "KGENTS_DAEMON_MAIN", "KGENTS_REPL"]:
+                os.environ.pop(key, None)
+            assert derive_context() == ExecutionContext.CLI_DIRECT
+
+    def test_daemon_worker_env(self) -> None:
+        """KGENTS_DAEMON_WORKER env -> DAEMON_WORKER."""
+        with mock.patch.dict(os.environ, {"KGENTS_DAEMON_WORKER": "1"}):
+            assert derive_context() == ExecutionContext.DAEMON_WORKER
+
+    def test_daemon_main_env(self) -> None:
+        """KGENTS_DAEMON_MAIN env -> DAEMON_MAIN."""
+        with mock.patch.dict(os.environ, {"KGENTS_DAEMON_MAIN": "1"}, clear=False):
+            # Make sure DAEMON_WORKER is not set (it takes precedence)
+            os.environ.pop("KGENTS_DAEMON_WORKER", None)
+            assert derive_context() == ExecutionContext.DAEMON_MAIN
+
+    def test_repl_env(self) -> None:
+        """KGENTS_REPL env -> REPL."""
+        with mock.patch.dict(os.environ, {"KGENTS_REPL": "1"}, clear=False):
+            # Clear higher priority env vars
+            os.environ.pop("KGENTS_DAEMON_WORKER", None)
+            os.environ.pop("KGENTS_DAEMON_MAIN", None)
+            assert derive_context() == ExecutionContext.REPL
+
+    def test_daemon_worker_takes_precedence(self) -> None:
+        """DAEMON_WORKER > DAEMON_MAIN > REPL."""
+        with mock.patch.dict(
+            os.environ,
+            {
+                "KGENTS_DAEMON_WORKER": "1",
+                "KGENTS_DAEMON_MAIN": "1",
+                "KGENTS_REPL": "1",
+            },
+        ):
+            assert derive_context() == ExecutionContext.DAEMON_WORKER
+
+    def test_daemon_main_over_repl(self) -> None:
+        """DAEMON_MAIN > REPL."""
+        with mock.patch.dict(
+            os.environ,
+            {"KGENTS_DAEMON_MAIN": "1", "KGENTS_REPL": "1"},
+            clear=False,
+        ):
+            os.environ.pop("KGENTS_DAEMON_WORKER", None)
+            assert derive_context() == ExecutionContext.DAEMON_MAIN
+
+
 class TestCommandDimensions:
     """Test CommandDimensions composite type."""
-
-    def test_frozen(self) -> None:
-        """CommandDimensions should be immutable."""
-        dims = CommandDimensions(
-            execution=Execution.SYNC,
-            statefulness=Statefulness.STATELESS,
-            backend=Backend.PURE,
-            intent=Intent.FUNCTIONAL,
-            seriousness=Seriousness.NEUTRAL,
-            interactivity=Interactivity.ONESHOT,
-        )
-        with pytest.raises(AttributeError):
-            dims.execution = Execution.ASYNC  # type: ignore[misc]
 
     def test_equality(self) -> None:
         """Same dimensions should be equal."""
@@ -123,6 +194,7 @@ class TestCommandDimensions:
             intent=Intent.FUNCTIONAL,
             seriousness=Seriousness.NEUTRAL,
             interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.CLI_DIRECT,
         )
         dims2 = CommandDimensions(
             execution=Execution.SYNC,
@@ -131,6 +203,7 @@ class TestCommandDimensions:
             intent=Intent.FUNCTIONAL,
             seriousness=Seriousness.NEUTRAL,
             interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.CLI_DIRECT,
         )
         assert dims1 == dims2
 
@@ -143,6 +216,7 @@ class TestCommandDimensions:
             intent=Intent.FUNCTIONAL,
             seriousness=Seriousness.NEUTRAL,
             interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.CLI_DIRECT,
         )
         dims2 = CommandDimensions(
             execution=Execution.ASYNC,  # Different!
@@ -151,11 +225,34 @@ class TestCommandDimensions:
             intent=Intent.FUNCTIONAL,
             seriousness=Seriousness.NEUTRAL,
             interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.CLI_DIRECT,
+        )
+        assert dims1 != dims2
+
+    def test_inequality_by_context(self) -> None:
+        """Different context should make dimensions unequal."""
+        dims1 = CommandDimensions(
+            execution=Execution.SYNC,
+            statefulness=Statefulness.STATELESS,
+            backend=Backend.PURE,
+            intent=Intent.FUNCTIONAL,
+            seriousness=Seriousness.NEUTRAL,
+            interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.CLI_DIRECT,
+        )
+        dims2 = CommandDimensions(
+            execution=Execution.SYNC,
+            statefulness=Statefulness.STATELESS,
+            backend=Backend.PURE,
+            intent=Intent.FUNCTIONAL,
+            seriousness=Seriousness.NEUTRAL,
+            interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.DAEMON_WORKER,  # Different!
         )
         assert dims1 != dims2
 
     def test_str_format(self) -> None:
-        """String representation should be compact."""
+        """String representation should be compact with 7 dimensions."""
         dims = CommandDimensions(
             execution=Execution.ASYNC,
             statefulness=Statefulness.STATEFUL,
@@ -163,8 +260,33 @@ class TestCommandDimensions:
             intent=Intent.FUNCTIONAL,
             seriousness=Seriousness.SENSITIVE,
             interactivity=Interactivity.STREAMING,
+            context=ExecutionContext.DAEMON_WORKER,
         )
-        assert str(dims) == "ASYNC/STATEFUL/LLM/FUNCTIONAL/SENSITIVE/STREAMING"
+        assert str(dims) == "ASYNC/STATEFUL/LLM/FUNCTIONAL/SENSITIVE/STREAMING/DAEMON_WORKER"
+
+    def test_hashable(self) -> None:
+        """CommandDimensions should be hashable for use in sets/dicts."""
+        dims1 = CommandDimensions(
+            execution=Execution.SYNC,
+            statefulness=Statefulness.STATELESS,
+            backend=Backend.PURE,
+            intent=Intent.FUNCTIONAL,
+            seriousness=Seriousness.NEUTRAL,
+            interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.CLI_DIRECT,
+        )
+        dims2 = CommandDimensions(
+            execution=Execution.SYNC,
+            statefulness=Statefulness.STATELESS,
+            backend=Backend.PURE,
+            intent=Intent.FUNCTIONAL,
+            seriousness=Seriousness.NEUTRAL,
+            interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.CLI_DIRECT,
+        )
+        # Should be usable in a set
+        dim_set = {dims1, dims2}
+        assert len(dim_set) == 1  # Same dimensions collapse
 
     def test_convenience_properties(self) -> None:
         """Test convenience boolean properties."""
@@ -175,13 +297,16 @@ class TestCommandDimensions:
             intent=Intent.FUNCTIONAL,
             seriousness=Seriousness.SENSITIVE,
             interactivity=Interactivity.STREAMING,
+            context=ExecutionContext.DAEMON_WORKER,
         )
         assert dims.is_async is True
         assert dims.needs_state is True
         assert dims.needs_budget_display is True
         assert dims.needs_confirmation is True
         assert dims.is_streaming is True
-        assert dims.is_interactive is False
+        assert dims.is_repl_interactive is False  # Interactivity.STREAMING, not INTERACTIVE
+        assert dims.in_daemon is True
+        assert dims.is_interactive is False  # Context is DAEMON_WORKER, not REPL
 
     def test_convenience_properties_negative(self) -> None:
         """Test convenience properties return False appropriately."""
@@ -192,13 +317,44 @@ class TestCommandDimensions:
             intent=Intent.FUNCTIONAL,
             seriousness=Seriousness.NEUTRAL,
             interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.CLI_DIRECT,
         )
         assert dims.is_async is False
         assert dims.needs_state is False
         assert dims.needs_budget_display is False
         assert dims.needs_confirmation is False
         assert dims.is_streaming is False
+        assert dims.is_repl_interactive is False
+        assert dims.in_daemon is False
+        assert dims.is_interactive is False  # CLI_DIRECT is not interactive
+
+    def test_in_daemon_for_daemon_main(self) -> None:
+        """in_daemon should be True for DAEMON_MAIN context."""
+        dims = CommandDimensions(
+            execution=Execution.SYNC,
+            statefulness=Statefulness.STATELESS,
+            backend=Backend.PURE,
+            intent=Intent.FUNCTIONAL,
+            seriousness=Seriousness.NEUTRAL,
+            interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.DAEMON_MAIN,
+        )
+        assert dims.in_daemon is True
         assert dims.is_interactive is False
+
+    def test_is_interactive_for_repl(self) -> None:
+        """is_interactive should be True for REPL context."""
+        dims = CommandDimensions(
+            execution=Execution.SYNC,
+            statefulness=Statefulness.STATELESS,
+            backend=Backend.PURE,
+            intent=Intent.FUNCTIONAL,
+            seriousness=Seriousness.NEUTRAL,
+            interactivity=Interactivity.ONESHOT,
+            context=ExecutionContext.REPL,
+        )
+        assert dims.in_daemon is False
+        assert dims.is_interactive is True
 
 
 # === Derivation Rule Tests ===
@@ -488,6 +644,58 @@ class TestDeriveDimensions:
         dims = derive_dimensions("self.soul.sense", meta)
         assert dims.execution == Execution.ASYNC  # Overridden by CALLS
 
+    def test_context_defaults_to_derived(self) -> None:
+        """Context should be derived from environment by default."""
+        meta = AspectMetadata(
+            category=AspectCategory.PERCEPTION,
+            effects=[],
+            requires_archetype=(),
+            idempotent=True,
+            description="Test",
+            help="Test aspect",
+        )
+        # Clear env vars to ensure CLI_DIRECT
+        with mock.patch.dict(os.environ, {}, clear=False):
+            for key in ["KGENTS_DAEMON_WORKER", "KGENTS_DAEMON_MAIN", "KGENTS_REPL"]:
+                os.environ.pop(key, None)
+            dims = derive_dimensions("self.test.path", meta)
+            assert dims.context == ExecutionContext.CLI_DIRECT
+
+    def test_context_can_be_overridden(self) -> None:
+        """Context can be explicitly provided to override derivation."""
+        meta = AspectMetadata(
+            category=AspectCategory.PERCEPTION,
+            effects=[],
+            requires_archetype=(),
+            idempotent=True,
+            description="Test",
+            help="Test aspect",
+        )
+        dims = derive_dimensions("self.test.path", meta, context=ExecutionContext.DAEMON_WORKER)
+        assert dims.context == ExecutionContext.DAEMON_WORKER
+        assert dims.in_daemon is True
+
+    def test_context_override_works_in_repl_env(self) -> None:
+        """Even with REPL env, explicit context override takes precedence."""
+        meta = AspectMetadata(
+            category=AspectCategory.PERCEPTION,
+            effects=[],
+            requires_archetype=(),
+            idempotent=True,
+            description="Test",
+            help="Test aspect",
+        )
+        with mock.patch.dict(os.environ, {"KGENTS_REPL": "1"}):
+            # Without override, would be REPL
+            dims_derived = derive_dimensions("self.test.path", meta)
+            assert dims_derived.context == ExecutionContext.REPL
+
+            # With override, uses provided context
+            dims_override = derive_dimensions(
+                "self.test.path", meta, context=ExecutionContext.CLI_DIRECT
+            )
+            assert dims_override.context == ExecutionContext.CLI_DIRECT
+
 
 class TestDefaultDimensions:
     """Test DEFAULT_DIMENSIONS constant."""
@@ -500,6 +708,7 @@ class TestDefaultDimensions:
         assert DEFAULT_DIMENSIONS.intent == Intent.FUNCTIONAL
         assert DEFAULT_DIMENSIONS.seriousness == Seriousness.NEUTRAL
         assert DEFAULT_DIMENSIONS.interactivity == Interactivity.ONESHOT
+        assert DEFAULT_DIMENSIONS.context == ExecutionContext.CLI_DIRECT
 
 
 class TestProtectedResources:

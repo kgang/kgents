@@ -304,8 +304,7 @@ def requires_approval(state: TrustState, action: Action) -> tuple[bool, str]:
 
     if action.risk_tier > state.level.auto_approve_up_to_tier:
         return True, (
-            f"Trust level {state.level.value} cannot auto-approve "
-            f"Tier {action.risk_tier} actions"
+            f"Trust level {state.level.value} cannot auto-approve Tier {action.risk_tier} actions"
         )
 
     return False, "Action can be executed autonomously"

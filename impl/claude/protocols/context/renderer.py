@@ -230,6 +230,7 @@ class OutlineRenderer:
                 text = node.snippet.visible_text
                 # Highlight based on snippet type
                 from .outline import SnippetType
+
                 match node.snippet.snippet_type:
                     case SnippetType.PROSE:
                         lines.append(f"{indent}{text}")
@@ -317,9 +318,13 @@ class OutlineRenderer:
         # Trail and budget in footer
         parts.append('<div class="outline-footer">')
         if outline.trail_steps:
-            parts.append(f'<span class="trail-count">Trail: {len(outline.trail_steps)} steps</span>')
+            parts.append(
+                f'<span class="trail-count">Trail: {len(outline.trail_steps)} steps</span>'
+            )
         if outline.is_budget_low:
-            parts.append(f'<span class="budget-warning">Budget: {outline.budget_remaining:.0%}</span>')
+            parts.append(
+                f'<span class="budget-warning">Budget: {outline.budget_remaining:.0%}</span>'
+            )
         parts.append("</div>")
 
         parts.append("</div>")

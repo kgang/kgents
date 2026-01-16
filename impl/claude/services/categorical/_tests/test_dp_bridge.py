@@ -63,7 +63,9 @@ def trace_entries(draw: st.DrawFn) -> TraceEntry:
 
 
 @st.composite
-def policy_traces(draw: st.DrawFn, value_strategy: st.SearchStrategy[Any] = st.integers()) -> PolicyTrace[Any]:
+def policy_traces(
+    draw: st.DrawFn, value_strategy: st.SearchStrategy[Any] = st.integers()
+) -> PolicyTrace[Any]:
     """Generate random policy traces."""
     value = draw(value_strategy)
     entries = draw(st.lists(trace_entries(), min_size=0, max_size=5))
@@ -199,7 +201,9 @@ class TestPolicyTraceMonadLaws:
         assert new_trace.log[-1] == entry
         assert new_trace.log[:-1] == trace.log
 
-    @given(st.lists(st.floats(min_value=-10, max_value=10, allow_nan=False), min_size=1, max_size=10))
+    @given(
+        st.lists(st.floats(min_value=-10, max_value=10, allow_nan=False), min_size=1, max_size=10)
+    )
     def test_total_value_discounting(self, values: list[float]) -> None:
         """
         Total value should correctly apply discounting.
@@ -208,7 +212,7 @@ class TestPolicyTraceMonadLaws:
             TraceEntry(
                 state_before=f"s{i}",
                 action=f"a{i}",
-                state_after=f"s{i+1}",
+                state_after=f"s{i + 1}",
                 value=v,
             )
             for i, v in enumerate(values)
@@ -285,23 +289,20 @@ class TestValueFunction:
 
     def test_custom_evaluators(self) -> None:
         """Custom evaluators should be used when provided."""
+
         def ethical_evaluator(name: str, state: str, action: str | None) -> float:
             return 1.0 if "ethical" in name.lower() else 0.5
 
-        vf = ValueFunction[str, str](
-            principle_evaluators={Principle.ETHICAL: ethical_evaluator}
-        )
+        vf = ValueFunction[str, str](principle_evaluators={Principle.ETHICAL: ethical_evaluator})
 
         ethical_score = vf.evaluate("EthicalAgent", "ready")
         regular_score = vf.evaluate("RegularAgent", "ready")
 
         ethical_principle = next(
-            ps for ps in ethical_score.principle_scores
-            if ps.principle == Principle.ETHICAL
+            ps for ps in ethical_score.principle_scores if ps.principle == Principle.ETHICAL
         )
         regular_principle = next(
-            ps for ps in regular_score.principle_scores
-            if ps.principle == Principle.ETHICAL
+            ps for ps in regular_score.principle_scores if ps.principle == Principle.ETHICAL
         )
 
         assert ethical_principle.score == 1.0
@@ -329,9 +330,7 @@ class TestValueFunction:
         # All scores 0.6
         uniform = ValueScore(
             agent_name="Uniform",
-            principle_scores=tuple(
-                PrincipleScore(p, 0.6, "", 1.0) for p in Principle
-            ),
+            principle_scores=tuple(PrincipleScore(p, 0.6, "", 1.0) for p in Principle),
         )
 
         # Some high (0.9), some low (0.3), same average
@@ -492,9 +491,11 @@ class TestOptimalSubstructureSheafLaws:
         assert result.actions == ("a1", "a2")
         assert result.value == 3.0  # 1.0 + 2.0
 
-    @given(st.floats(min_value=0.1, max_value=10, allow_nan=False),
-           st.floats(min_value=0.1, max_value=10, allow_nan=False),
-           st.floats(min_value=0.1, max_value=10, allow_nan=False))
+    @given(
+        st.floats(min_value=0.1, max_value=10, allow_nan=False),
+        st.floats(min_value=0.1, max_value=10, allow_nan=False),
+        st.floats(min_value=0.1, max_value=10, allow_nan=False),
+    )
     def test_glue_is_associative(self, v1: float, v2: float, v3: float) -> None:
         """
         Sheaf associativity: (A * B) * C = A * (B * C)
@@ -552,11 +553,17 @@ class TestOptimalSubstructureSheafLaws:
 
         # Record optimal subsolutions
         sub1 = structure.solve_subproblem(
-            start="A", end="B", actions=("a1",), value=1.0,
+            start="A",
+            end="B",
+            actions=("a1",),
+            value=1.0,
             trace=PolicyTrace.pure("B"),
         )
         sub2 = structure.solve_subproblem(
-            start="B", end="C", actions=("a2",), value=2.0,
+            start="B",
+            end="C",
+            actions=("a2",),
+            value=2.0,
             trace=PolicyTrace.pure("C"),
         )
 

@@ -99,10 +99,16 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "flow": "protocols.cli.flow.commands:cmd_flow",
     # ==========================================================================
+    # Getting Started (New User Entry Points)
+    # ==========================================================================
+    "start": "protocols.cli.handlers.start:cmd_start",
+    # ==========================================================================
     # Bootstrap Commands
     # ==========================================================================
     "init": "protocols.cli.handlers.init:cmd_init",
     "wipe": "protocols.cli.handlers.wipe:cmd_wipe",
+    "reset": "protocols.cli.handlers.reset:cmd_reset",
+    "doctor": "protocols.cli.handlers.doctor:cmd_doctor",
     "migrate": "protocols.cli.handlers.migrate:cmd_migrate",
     # ==========================================================================
     # Note: Town, Park, Atelier CLI removed 2025-12-21 (Post-Extinction cleanup)
@@ -132,19 +138,29 @@ COMMAND_REGISTRY: dict[str, str] = {
     "play": "protocols.cli.handlers.play:cmd_play",
     # ==========================================================================
     # Wave 4: Joy-Inducing Commands (CLI Quick Wins)
-    # Note: joy, challenge, oblique, constrain, yes-and, surprise-me, tension
-    # removed 2025-12-23 (handlers never implemented)
+    # Restored 2026-01-16 (CLI Renaissance Phase 1)
+    # "Surprise and serendipity; discovery should feel rewarding."
+    # ==========================================================================
+    "oblique": "protocols.cli.handlers.joy:cmd_oblique",
+    "surprise": "protocols.cli.handlers.joy:cmd_surprise",
+    "yes-and": "protocols.cli.handlers.joy:cmd_yes_and",
+    "challenge": "protocols.cli.handlers.joy:cmd_challenge",
+    "constrain": "protocols.cli.handlers.joy:cmd_constrain",
+    # ==========================================================================
+    # Inquiry Commands
     # ==========================================================================
     "why": "protocols.cli.handlers.why:cmd_why",
     # ==========================================================================
     # v3: Shortcut Management
+    # ARCHIVED 2026-01-16 (CLI Renaissance Phase 2): Low usage, unclear purpose
     # ==========================================================================
-    "shortcut": "protocols.cli.shortcuts:cmd_shortcut",
+    # "shortcut": "protocols.cli.shortcuts:cmd_shortcut",
     # ==========================================================================
     # v3: Query and Subscribe Commands
     # ==========================================================================
     "query": "protocols.cli.handlers.query:cmd_query",
-    "subscribe": "protocols.cli.handlers.subscribe:cmd_subscribe",
+    # ARCHIVED 2026-01-16 (CLI Renaissance Phase 2): Daemon-only, not user-facing
+    # "subscribe": "protocols.cli.handlers.subscribe:cmd_subscribe",
     # ==========================================================================
     # Coffee: Morning Coffee Liminal Transition Protocol (time.coffee.*)
     # ==========================================================================
@@ -158,7 +174,7 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Completions: Shell completions generator (Wave 3)
     # ==========================================================================
     "completions": "protocols.cli.completions:cmd_completions",
-    "q": "protocols.cli.handlers.query:cmd_query",
+    # ARCHIVED: 'q' alias removed - ambiguous (could mean "quit"), use 'query' instead
     # ==========================================================================
     # Living Docs: Documentation Generator (Phase 4-5)
     # Uses thin routing shim - all logic in services/living_docs/
@@ -187,8 +203,9 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     # FILE_OPERAD: Navigate Operads as Documents (Session 2)
     # Portal tokens enable inline expansion of cross-operad links
+    # ARCHIVED 2026-01-16 (CLI Renaissance Phase 2): Opaque name, low discoverability
     # ==========================================================================
-    "op": "protocols.file_operad.cli:cmd_op",
+    # "op": "protocols.file_operad.cli:cmd_op",
     # ==========================================================================
     # TYPED-HYPERGRAPH: Navigate context as typed-hypergraph (self.context.*)
     # Lazy navigation, observer-dependent edges, replayable trails
@@ -209,7 +226,7 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Bootstrap axioms → derived agents, confidence propagation, principle draws
     # ==========================================================================
     "derivation": "protocols.cli.handlers.derivation:cmd_derivation",
-    "derive": "protocols.cli.handlers.derivation:cmd_derivation",  # alias
+    # ARCHIVED: 'derive' alias removed - duplicate of 'derivation', use 'derivation' instead
     # ==========================================================================
     # SOVEREIGN: Inbound Sovereignty - possess, don't reference (concept.sovereign.*)
     # Bootstrap, ingest, sync, diff - all data enters witnessed
@@ -1059,6 +1076,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     }
     is_shortcut = command.startswith("/")
     is_query = command.startswith("?")
+    # Phase 3.3 CLI Renaissance: Detect >> composition syntax
+    # See protocols/cli/compose_paths.py for composition semantics
+    # Categorical law: (f >> g) >> h = f >> (g >> h)
     is_composition = ">>" in " ".join(remaining)
 
     # Check for legacy commands (before command registry check)

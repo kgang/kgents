@@ -280,7 +280,7 @@ class PhilosopherAgent:
     4. Track philosopher evolution across episodes
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the philosopher agent."""
         self.profiles = dict(CANONICAL_PHILOSOPHERS)
         self.variations: dict[str, list[PhilosopherProfile]] = {}
@@ -400,7 +400,7 @@ class DilemmaAgent:
     4. Create concrete, relatable situations
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the dilemma agent."""
         self.constraints = DilemmaConstraints()
         self.generated: list[EthicalDilemma] = []

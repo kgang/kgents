@@ -466,9 +466,7 @@ class CodeNode(BaseLogosNode):
         help="Display code artifact layer status",
         examples=["kg code", "kg code manifest"],
     )
-    async def manifest(
-        self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any
-    ) -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest Code layer status to observer.
 

@@ -698,7 +698,7 @@ class TestCrystallizer:
         """Test that responses with no extractable fields return None."""
         crystallizer = Crystallizer(None)
 
-        response = 'This is just raw text with no JSON structure at all'
+        response = "This is just raw text with no JSON structure at all"
         result = crystallizer._parse_llm_response(response)
 
         # Should return None (no valid extraction)

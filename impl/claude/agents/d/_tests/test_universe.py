@@ -342,9 +342,7 @@ class MockGaloisLossComputer:
 async def test_galois_integration():
     """Test Universe with Galois loss computation."""
     galois = MockGaloisLossComputer()
-    universe = Universe(
-        namespace="test-galois", preferred_backend="memory", galois=galois
-    )
+    universe = Universe(namespace="test-galois", preferred_backend="memory", galois=galois)
     await universe._ensure_initialized()
 
     # Register schema
@@ -391,9 +389,7 @@ async def test_galois_not_configured():
 async def test_compute_loss_nonexistent_object():
     """Test compute_loss on nonexistent object returns None."""
     galois = MockGaloisLossComputer()
-    universe = Universe(
-        namespace="test-galois-missing", preferred_backend="memory", galois=galois
-    )
+    universe = Universe(namespace="test-galois-missing", preferred_backend="memory", galois=galois)
     await universe._ensure_initialized()
 
     # Compute loss for nonexistent object

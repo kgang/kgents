@@ -66,9 +66,7 @@ class TestPolicyTraceEmission:
         assert trace is not None
 
         # Find resolution entry
-        resolution_entries = [
-            e for e in trace.entries if e.action.name == "resolve"
-        ]
+        resolution_entries = [e for e in trace.entries if e.action.name == "resolve"]
         assert len(resolution_entries) == 1
 
         entry = resolution_entries[0]
@@ -84,9 +82,7 @@ class TestPolicyTraceEmission:
         await simple_logos.invoke("world.test.manifest", observer)
 
         trace = getattr(observer, "last_trace")
-        affordance_entries = [
-            e for e in trace.entries if e.action.name == "check_affordance"
-        ]
+        affordance_entries = [e for e in trace.entries if e.action.name == "check_affordance"]
         assert len(affordance_entries) == 1
 
         entry = affordance_entries[0]
@@ -177,9 +173,7 @@ class TestAliasExpansionTracing:
         await simple_logos.invoke("test.manifest", observer)
 
         trace = getattr(observer, "last_trace")
-        alias_entries = [
-            e for e in trace.entries if e.action.name == "expand_alias"
-        ]
+        alias_entries = [e for e in trace.entries if e.action.name == "expand_alias"]
 
         assert len(alias_entries) == 1
         entry = alias_entries[0]
@@ -196,9 +190,7 @@ class TestAliasExpansionTracing:
         await simple_logos.invoke("world.test.manifest", observer)
 
         trace = getattr(observer, "last_trace")
-        alias_entries = [
-            e for e in trace.entries if e.action.name == "expand_alias"
-        ]
+        alias_entries = [e for e in trace.entries if e.action.name == "expand_alias"]
 
         assert len(alias_entries) == 0
 

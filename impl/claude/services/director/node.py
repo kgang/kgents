@@ -132,7 +132,11 @@ class DirectorManifestRendering:
         ("analyze", {"path": "spec/protocols/k-block.md"}, "Analyze document"),
         ("status", {"path": "spec/protocols/k-block.md"}, "Get document status"),
         ("prompt", {"path": "spec/protocols/k-block.md"}, "Generate execution prompt"),
-        ("capture", {"path": "spec/new.md", "generated_files": {"impl/new.py": "code"}}, "Capture execution"),
+        (
+            "capture",
+            {"path": "spec/new.md", "generated_files": {"impl/new.py": "code"}},
+            "Capture execution",
+        ),
     ],
 )
 class DocumentDirectorNode(BaseLogosNode):

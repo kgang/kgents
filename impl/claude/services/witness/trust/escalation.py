@@ -182,8 +182,8 @@ class Level1Criteria(EscalationCriteria[ObservationStats]):
             observations=(
                 f"hours={stats.hours_observing}",
                 f"total_obs={stats.total_observations}",
-                f"false_positives={stats.false_positives}"
-            )
+                f"false_positives={stats.false_positives}",
+            ),
         )
 
         # Check hours
@@ -192,17 +192,19 @@ class Level1Criteria(EscalationCriteria[ObservationStats]):
         if not hours_met:
             reasons.append(f"Need {self.min_hours - stats.hours_observing:.1f} more hours")
 
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("check_hours", (stats.hours_observing, self.min_hours)),
-            state_after=initial_state.with_observation(f"hours_met={hours_met}"),
-            reward=ConstitutionalScore(
-                ethical=1.0 if hours_met else 0.3,  # Ethical: gradual trust buildup
-                composable=0.8,  # Composable: criterion is independent
-                tasteful=1.0  # Tasteful: clear threshold
-            ),
-            reasoning=f"Hours criterion: {stats.hours_observing:.1f}h {'≥' if hours_met else '<'} {self.min_hours}h"
-        ))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction("check_hours", (stats.hours_observing, self.min_hours)),
+                state_after=initial_state.with_observation(f"hours_met={hours_met}"),
+                reward=ConstitutionalScore(
+                    ethical=1.0 if hours_met else 0.3,  # Ethical: gradual trust buildup
+                    composable=0.8,  # Composable: criterion is independent
+                    tasteful=1.0,  # Tasteful: clear threshold
+                ),
+                reasoning=f"Hours criterion: {stats.hours_observing:.1f}h {'≥' if hours_met else '<'} {self.min_hours}h",
+            )
+        )
 
         # Check observations
         obs_met = stats.total_observations >= self.min_observations
@@ -212,17 +214,21 @@ class Level1Criteria(EscalationCriteria[ObservationStats]):
                 f"Need {self.min_observations - stats.total_observations} more observations"
             )
 
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("check_observations", (stats.total_observations, self.min_observations)),
-            state_after=initial_state.with_observation(f"obs_met={obs_met}"),
-            reward=ConstitutionalScore(
-                ethical=1.0 if obs_met else 0.3,  # Ethical: sufficient evidence
-                composable=0.8,
-                tasteful=1.0
-            ),
-            reasoning=f"Observations criterion: {stats.total_observations} {'≥' if obs_met else '<'} {self.min_observations}"
-        ))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction(
+                    "check_observations", (stats.total_observations, self.min_observations)
+                ),
+                state_after=initial_state.with_observation(f"obs_met={obs_met}"),
+                reward=ConstitutionalScore(
+                    ethical=1.0 if obs_met else 0.3,  # Ethical: sufficient evidence
+                    composable=0.8,
+                    tasteful=1.0,
+                ),
+                reasoning=f"Observations criterion: {stats.total_observations} {'≥' if obs_met else '<'} {self.min_observations}",
+            )
+        )
 
         # Check false positive rate
         fpr_met = stats.false_positive_rate <= self.max_false_positive_rate
@@ -232,37 +238,41 @@ class Level1Criteria(EscalationCriteria[ObservationStats]):
                 f"False positive rate {stats.false_positive_rate:.1%} > {self.max_false_positive_rate:.1%}"
             )
 
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("check_false_positive_rate", (stats.false_positive_rate, self.max_false_positive_rate)),
-            state_after=initial_state.with_observation(f"fpr_met={fpr_met}"),
-            reward=ConstitutionalScore(
-                ethical=1.0 if fpr_met else 0.0,  # Ethical: accuracy is CRITICAL for trust
-                composable=0.8,
-                tasteful=1.0
-            ),
-            reasoning=f"False positive rate: {stats.false_positive_rate:.1%} {'≤' if fpr_met else '>'} {self.max_false_positive_rate:.1%}"
-        ))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction(
+                    "check_false_positive_rate",
+                    (stats.false_positive_rate, self.max_false_positive_rate),
+                ),
+                state_after=initial_state.with_observation(f"fpr_met={fpr_met}"),
+                reward=ConstitutionalScore(
+                    ethical=1.0 if fpr_met else 0.0,  # Ethical: accuracy is CRITICAL for trust
+                    composable=0.8,
+                    tasteful=1.0,
+                ),
+                reasoning=f"False positive rate: {stats.false_positive_rate:.1%} {'≤' if fpr_met else '>'} {self.max_false_positive_rate:.1%}",
+            )
+        )
 
         is_met = hours_met and obs_met and fpr_met
         reason = "Criteria met" if is_met else "; ".join(reasons)
 
         # Final verdict trace entry
-        final_state = ProbeState(
-            phase="L0_to_L1_verdict",
-            observations=(f"verdict={is_met}",)
+        final_state = ProbeState(phase="L0_to_L1_verdict", observations=(f"verdict={is_met}",))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction("render_verdict", (is_met,)),
+                state_after=final_state,
+                reward=ConstitutionalScore(
+                    ethical=1.0 if is_met else 0.5,  # Ethical: clear decision
+                    composable=1.0,  # Composable: produces clear yes/no
+                    tasteful=1.0,
+                ),
+                reasoning=f"Final verdict: {'ESCALATE to L1' if is_met else 'DENY escalation'}",
+            )
         )
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("render_verdict", (is_met,)),
-            state_after=final_state,
-            reward=ConstitutionalScore(
-                ethical=1.0 if is_met else 0.5,  # Ethical: clear decision
-                composable=1.0,  # Composable: produces clear yes/no
-                tasteful=1.0
-            ),
-            reasoning=f"Final verdict: {'ESCALATE to L1' if is_met else 'DENY escalation'}"
-        ))
         trace.value = is_met
 
         return EscalationResult(
@@ -315,8 +325,8 @@ class Level2Criteria(EscalationCriteria[OperationStats]):
             observations=(
                 f"total_ops={stats.total_operations}",
                 f"failed_ops={stats.failed_operations}",
-                f"op_types={stats.unique_operation_types}"
-            )
+                f"op_types={stats.unique_operation_types}",
+            ),
         )
 
         # Check operations
@@ -325,17 +335,21 @@ class Level2Criteria(EscalationCriteria[OperationStats]):
         if not ops_met:
             reasons.append(f"Need {self.min_operations - stats.total_operations} more operations")
 
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("check_operations", (stats.total_operations, self.min_operations)),
-            state_after=initial_state.with_observation(f"ops_met={ops_met}"),
-            reward=ConstitutionalScore(
-                ethical=1.0 if ops_met else 0.3,  # Ethical: proven capability
-                composable=0.8,
-                tasteful=1.0
-            ),
-            reasoning=f"Operations criterion: {stats.total_operations} {'≥' if ops_met else '<'} {self.min_operations}"
-        ))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction(
+                    "check_operations", (stats.total_operations, self.min_operations)
+                ),
+                state_after=initial_state.with_observation(f"ops_met={ops_met}"),
+                reward=ConstitutionalScore(
+                    ethical=1.0 if ops_met else 0.3,  # Ethical: proven capability
+                    composable=0.8,
+                    tasteful=1.0,
+                ),
+                reasoning=f"Operations criterion: {stats.total_operations} {'≥' if ops_met else '<'} {self.min_operations}",
+            )
+        )
 
         # Check failure rate
         fr_met = stats.failure_rate <= self.max_failure_rate
@@ -343,17 +357,21 @@ class Level2Criteria(EscalationCriteria[OperationStats]):
         if not fr_met:
             reasons.append(f"Failure rate {stats.failure_rate:.1%} > {self.max_failure_rate:.1%}")
 
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("check_failure_rate", (stats.failure_rate, self.max_failure_rate)),
-            state_after=initial_state.with_observation(f"fr_met={fr_met}"),
-            reward=ConstitutionalScore(
-                ethical=1.0 if fr_met else 0.0,  # Ethical: reliability is CRITICAL
-                composable=0.8,
-                tasteful=1.0
-            ),
-            reasoning=f"Failure rate: {stats.failure_rate:.1%} {'≤' if fr_met else '>'} {self.max_failure_rate:.1%}"
-        ))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction(
+                    "check_failure_rate", (stats.failure_rate, self.max_failure_rate)
+                ),
+                state_after=initial_state.with_observation(f"fr_met={fr_met}"),
+                reward=ConstitutionalScore(
+                    ethical=1.0 if fr_met else 0.0,  # Ethical: reliability is CRITICAL
+                    composable=0.8,
+                    tasteful=1.0,
+                ),
+                reasoning=f"Failure rate: {stats.failure_rate:.1%} {'≤' if fr_met else '>'} {self.max_failure_rate:.1%}",
+            )
+        )
 
         # Check operation types
         types_met = stats.unique_operation_types >= self.min_operation_types
@@ -365,37 +383,41 @@ class Level2Criteria(EscalationCriteria[OperationStats]):
                 f"Need {self.min_operation_types - stats.unique_operation_types} more operation types"
             )
 
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("check_operation_types", (stats.unique_operation_types, self.min_operation_types)),
-            state_after=initial_state.with_observation(f"types_met={types_met}"),
-            reward=ConstitutionalScore(
-                ethical=0.8,  # Ethical: diversity shows adaptability
-                composable=1.0 if types_met else 0.5,  # Composable: diverse ops can compose better
-                tasteful=1.0
-            ),
-            reasoning=f"Operation types: {stats.unique_operation_types} {'≥' if types_met else '<'} {self.min_operation_types}"
-        ))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction(
+                    "check_operation_types",
+                    (stats.unique_operation_types, self.min_operation_types),
+                ),
+                state_after=initial_state.with_observation(f"types_met={types_met}"),
+                reward=ConstitutionalScore(
+                    ethical=0.8,  # Ethical: diversity shows adaptability
+                    composable=1.0
+                    if types_met
+                    else 0.5,  # Composable: diverse ops can compose better
+                    tasteful=1.0,
+                ),
+                reasoning=f"Operation types: {stats.unique_operation_types} {'≥' if types_met else '<'} {self.min_operation_types}",
+            )
+        )
 
         is_met = ops_met and fr_met and types_met
         reason = "Criteria met" if is_met else "; ".join(reasons)
 
         # Final verdict trace entry
-        final_state = ProbeState(
-            phase="L1_to_L2_verdict",
-            observations=(f"verdict={is_met}",)
+        final_state = ProbeState(phase="L1_to_L2_verdict", observations=(f"verdict={is_met}",))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction("render_verdict", (is_met,)),
+                state_after=final_state,
+                reward=ConstitutionalScore(
+                    ethical=1.0 if is_met else 0.5, composable=1.0, tasteful=1.0
+                ),
+                reasoning=f"Final verdict: {'ESCALATE to L2' if is_met else 'DENY escalation'}",
+            )
         )
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("render_verdict", (is_met,)),
-            state_after=final_state,
-            reward=ConstitutionalScore(
-                ethical=1.0 if is_met else 0.5,
-                composable=1.0,
-                tasteful=1.0
-            ),
-            reasoning=f"Final verdict: {'ESCALATE to L2' if is_met else 'DENY escalation'}"
-        ))
         trace.value = is_met
 
         return EscalationResult(
@@ -451,8 +473,8 @@ class Level3Criteria(EscalationCriteria[SuggestionStats]):
                 f"total_suggestions={stats.total_suggestions}",
                 f"confirmed={stats.confirmed_suggestions}",
                 f"suggestion_types={stats.unique_suggestion_types}",
-                f"days_at_L2={stats.days_at_level2}"
-            )
+                f"days_at_L2={stats.days_at_level2}",
+            ),
         )
 
         # Check days at L2
@@ -463,17 +485,21 @@ class Level3Criteria(EscalationCriteria[SuggestionStats]):
                 f"Need {self.min_days_at_level2 - stats.days_at_level2} more days at Level 2"
             )
 
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("check_days_at_L2", (stats.days_at_level2, self.min_days_at_level2)),
-            state_after=initial_state.with_observation(f"days_met={days_met}"),
-            reward=ConstitutionalScore(
-                ethical=1.0 if days_met else 0.3,  # Ethical: time proves stability
-                composable=0.8,
-                tasteful=1.0
-            ),
-            reasoning=f"Days at L2: {stats.days_at_level2} {'≥' if days_met else '<'} {self.min_days_at_level2}"
-        ))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction(
+                    "check_days_at_L2", (stats.days_at_level2, self.min_days_at_level2)
+                ),
+                state_after=initial_state.with_observation(f"days_met={days_met}"),
+                reward=ConstitutionalScore(
+                    ethical=1.0 if days_met else 0.3,  # Ethical: time proves stability
+                    composable=0.8,
+                    tasteful=1.0,
+                ),
+                reasoning=f"Days at L2: {stats.days_at_level2} {'≥' if days_met else '<'} {self.min_days_at_level2}",
+            )
+        )
 
         # Check suggestions
         sug_met = stats.total_suggestions >= self.min_suggestions
@@ -483,17 +509,21 @@ class Level3Criteria(EscalationCriteria[SuggestionStats]):
                 f"Need {self.min_suggestions - stats.total_suggestions} more suggestions"
             )
 
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("check_suggestions", (stats.total_suggestions, self.min_suggestions)),
-            state_after=initial_state.with_observation(f"sug_met={sug_met}"),
-            reward=ConstitutionalScore(
-                ethical=1.0 if sug_met else 0.3,  # Ethical: sufficient sample
-                composable=0.8,
-                tasteful=1.0
-            ),
-            reasoning=f"Suggestions criterion: {stats.total_suggestions} {'≥' if sug_met else '<'} {self.min_suggestions}"
-        ))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction(
+                    "check_suggestions", (stats.total_suggestions, self.min_suggestions)
+                ),
+                state_after=initial_state.with_observation(f"sug_met={sug_met}"),
+                reward=ConstitutionalScore(
+                    ethical=1.0 if sug_met else 0.3,  # Ethical: sufficient sample
+                    composable=0.8,
+                    tasteful=1.0,
+                ),
+                reasoning=f"Suggestions criterion: {stats.total_suggestions} {'≥' if sug_met else '<'} {self.min_suggestions}",
+            )
+        )
 
         # Check acceptance rate
         ar_met = stats.acceptance_rate >= self.min_acceptance_rate
@@ -503,17 +533,21 @@ class Level3Criteria(EscalationCriteria[SuggestionStats]):
                 f"Acceptance rate {stats.acceptance_rate:.1%} < {self.min_acceptance_rate:.1%}"
             )
 
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("check_acceptance_rate", (stats.acceptance_rate, self.min_acceptance_rate)),
-            state_after=initial_state.with_observation(f"ar_met={ar_met}"),
-            reward=ConstitutionalScore(
-                ethical=1.0 if ar_met else 0.0,  # Ethical: high acceptance = trusted judgment
-                composable=0.8,
-                joy_inducing=1.0 if ar_met else 0.3  # Joy: good suggestions delight users
-            ),
-            reasoning=f"Acceptance rate: {stats.acceptance_rate:.1%} {'≥' if ar_met else '<'} {self.min_acceptance_rate:.1%}"
-        ))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction(
+                    "check_acceptance_rate", (stats.acceptance_rate, self.min_acceptance_rate)
+                ),
+                state_after=initial_state.with_observation(f"ar_met={ar_met}"),
+                reward=ConstitutionalScore(
+                    ethical=1.0 if ar_met else 0.0,  # Ethical: high acceptance = trusted judgment
+                    composable=0.8,
+                    joy_inducing=1.0 if ar_met else 0.3,  # Joy: good suggestions delight users
+                ),
+                reasoning=f"Acceptance rate: {stats.acceptance_rate:.1%} {'≥' if ar_met else '<'} {self.min_acceptance_rate:.1%}",
+            )
+        )
 
         # Check suggestion types
         types_met = stats.unique_suggestion_types >= self.min_suggestion_types
@@ -525,37 +559,41 @@ class Level3Criteria(EscalationCriteria[SuggestionStats]):
                 f"Need {self.min_suggestion_types - stats.unique_suggestion_types} more suggestion types"
             )
 
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("check_suggestion_types", (stats.unique_suggestion_types, self.min_suggestion_types)),
-            state_after=initial_state.with_observation(f"types_met={types_met}"),
-            reward=ConstitutionalScore(
-                ethical=0.8,
-                composable=1.0 if types_met else 0.5,  # Composable: diverse suggestions compose better
-                curated=1.0 if types_met else 0.5  # Curated: variety shows sophistication
-            ),
-            reasoning=f"Suggestion types: {stats.unique_suggestion_types} {'≥' if types_met else '<'} {self.min_suggestion_types}"
-        ))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction(
+                    "check_suggestion_types",
+                    (stats.unique_suggestion_types, self.min_suggestion_types),
+                ),
+                state_after=initial_state.with_observation(f"types_met={types_met}"),
+                reward=ConstitutionalScore(
+                    ethical=0.8,
+                    composable=1.0
+                    if types_met
+                    else 0.5,  # Composable: diverse suggestions compose better
+                    curated=1.0 if types_met else 0.5,  # Curated: variety shows sophistication
+                ),
+                reasoning=f"Suggestion types: {stats.unique_suggestion_types} {'≥' if types_met else '<'} {self.min_suggestion_types}",
+            )
+        )
 
         is_met = days_met and sug_met and ar_met and types_met
         reason = "Criteria met" if is_met else "; ".join(reasons)
 
         # Final verdict trace entry
-        final_state = ProbeState(
-            phase="L2_to_L3_verdict",
-            observations=(f"verdict={is_met}",)
+        final_state = ProbeState(phase="L2_to_L3_verdict", observations=(f"verdict={is_met}",))
+        trace.append(
+            TraceEntry(
+                state_before=initial_state,
+                action=ProbeAction("render_verdict", (is_met,)),
+                state_after=final_state,
+                reward=ConstitutionalScore(
+                    ethical=1.0 if is_met else 0.5, composable=1.0, tasteful=1.0
+                ),
+                reasoning=f"Final verdict: {'ESCALATE to L3 (AUTONOMOUS)' if is_met else 'DENY escalation'}",
+            )
         )
-        trace.append(TraceEntry(
-            state_before=initial_state,
-            action=ProbeAction("render_verdict", (is_met,)),
-            state_after=final_state,
-            reward=ConstitutionalScore(
-                ethical=1.0 if is_met else 0.5,
-                composable=1.0,
-                tasteful=1.0
-            ),
-            reasoning=f"Final verdict: {'ESCALATE to L3 (AUTONOMOUS)' if is_met else 'DENY escalation'}"
-        ))
         trace.value = is_met
 
         return EscalationResult(

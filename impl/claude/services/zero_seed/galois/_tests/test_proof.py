@@ -263,9 +263,7 @@ class TestGaloisWitnessedProof:
         assert sample_proof.witness_mode == WitnessMode.SESSION
         # Loss 0.18 is in [0.1, 0.4) -> SESSION
 
-    def test_rebuttals_from_loss_none_if_low(
-        self, sample_proof: GaloisWitnessedProof
-    ) -> None:
+    def test_rebuttals_from_loss_none_if_low(self, sample_proof: GaloisWitnessedProof) -> None:
         """Should not generate rebuttals for low-loss components."""
         # Both warrant (0.08) and backing (0.10) are < 0.3
         assert len(sample_proof.rebuttals_from_loss) == 0

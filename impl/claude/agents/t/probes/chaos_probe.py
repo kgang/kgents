@@ -64,10 +64,10 @@ B = TypeVar("B")
 class ChaosType(Enum):
     """Types of chaos to inject."""
 
-    FAILURE = auto()     # Controlled exceptions
-    NOISE = auto()       # Semantic perturbation
-    LATENCY = auto()     # Temporal delays
-    FLAKINESS = auto()   # Probabilistic failures
+    FAILURE = auto()  # Controlled exceptions
+    NOISE = auto()  # Semantic perturbation
+    LATENCY = auto()  # Temporal delays
+    FLAKINESS = auto()  # Probabilistic failures
 
 
 class ChaosState(Enum):
@@ -91,6 +91,7 @@ class ChaosConfig:
         fail_count: For FAILURE type, how many failures before recovery (-1 = always fail)
         variance: For LATENCY type, variance in delay
     """
+
     chaos_type: ChaosType = ChaosType.FAILURE
     intensity: float = 0.3
     seed: int | None = None
@@ -144,12 +145,14 @@ class ChaosProbe(TruthFunctor[ChaosState, A, B], Generic[A, B]):
     @property
     def states(self) -> FrozenSet[ChaosState]:
         """Return DP state space."""
-        return frozenset([
-            ChaosState.READY,
-            ChaosState.INJECTING,
-            ChaosState.OBSERVING,
-            ChaosState.SYNTHESIZING,
-        ])
+        return frozenset(
+            [
+                ChaosState.READY,
+                ChaosState.INJECTING,
+                ChaosState.OBSERVING,
+                ChaosState.SYNTHESIZING,
+            ]
+        )
 
     def actions(self, state: ChaosState) -> FrozenSet[ProbeAction]:
         """Return available actions from state."""
@@ -172,10 +175,7 @@ class ChaosProbe(TruthFunctor[ChaosState, A, B], Generic[A, B]):
         return state
 
     def reward(
-        self,
-        state: ChaosState,
-        action: ProbeAction,
-        next_state: ChaosState
+        self, state: ChaosState, action: ProbeAction, next_state: ChaosState
     ) -> ConstitutionalScore:
         """
         Constitutional reward for chaos injection.
@@ -232,14 +232,16 @@ class ChaosProbe(TruthFunctor[ChaosState, A, B], Generic[A, B]):
         action = ProbeAction("inject_chaos", (self.config.chaos_type,))
         next_state = self.transition(self._current_state, action)
 
-        trace_entries.append(TraceEntry(
-            state_before=probe_state,
-            action=action,
-            state_after=probe_state.transition_to("injecting"),
-            reward=self.reward(self._current_state, action, next_state),
-            reasoning=f"Injecting {self.config.chaos_type.name} chaos with intensity {self.config.intensity}",
-            timestamp=datetime.now(timezone.utc),
-        ))
+        trace_entries.append(
+            TraceEntry(
+                state_before=probe_state,
+                action=action,
+                state_after=probe_state.transition_to("injecting"),
+                reward=self.reward(self._current_state, action, next_state),
+                reasoning=f"Injecting {self.config.chaos_type.name} chaos with intensity {self.config.intensity}",
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
 
         self._current_state = next_state
         probe_state = probe_state.transition_to("injecting")
@@ -261,14 +263,16 @@ class ChaosProbe(TruthFunctor[ChaosState, A, B], Generic[A, B]):
 
         probe_state = probe_state.with_observation(observation)
 
-        trace_entries.append(TraceEntry(
-            state_before=probe_state,
-            action=action,
-            state_after=probe_state.transition_to("observing"),
-            reward=self.reward(self._current_state, action, next_state),
-            reasoning=observation,
-            timestamp=datetime.now(timezone.utc),
-        ))
+        trace_entries.append(
+            TraceEntry(
+                state_before=probe_state,
+                action=action,
+                state_after=probe_state.transition_to("observing"),
+                reward=self.reward(self._current_state, action, next_state),
+                reasoning=observation,
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
 
         self._current_state = next_state
         probe_state = probe_state.transition_to("observing")
@@ -285,14 +289,16 @@ class ChaosProbe(TruthFunctor[ChaosState, A, B], Generic[A, B]):
             timestamp=datetime.now(timezone.utc),
         )
 
-        trace_entries.append(TraceEntry(
-            state_before=probe_state,
-            action=action,
-            state_after=probe_state.transition_to("synthesizing"),
-            reward=self.reward(self._current_state, action, next_state),
-            reasoning=f"Verdict: {'PASSED' if self._survived else 'FAILED'}",
-            timestamp=datetime.now(timezone.utc),
-        ))
+        trace_entries.append(
+            TraceEntry(
+                state_before=probe_state,
+                action=action,
+                state_after=probe_state.transition_to("synthesizing"),
+                reward=self.reward(self._current_state, action, next_state),
+                reasoning=f"Verdict: {'PASSED' if self._survived else 'FAILED'}",
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
 
         self._current_state = ChaosState.READY  # Reset for next run
 

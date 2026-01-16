@@ -128,7 +128,7 @@ async def test_tell_story_empty(storage: ZeroSeedStorage):
     story = await service.tell_story(timeline)
 
     # Story should acknowledge beginning or emergence
-    assert ("journey" in story.lower() or "garden" in story.lower())
+    assert "journey" in story.lower() or "garden" in story.lower()
     assert len(story) > 0
 
 

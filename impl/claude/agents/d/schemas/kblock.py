@@ -25,11 +25,11 @@ from .proof import GaloisWitnessedProof
 
 # Heuristics for K-block sizing and aggregation
 KBLOCK_SIZE_HEURISTICS = {
-    "min_functions": 3,    # Minimum functions for a coherent K-block
-    "max_functions": 20,   # Maximum functions before mandatory split
-    "min_tokens": 500,     # Minimum tokens for a coherent K-block
-    "max_tokens": 5000,    # Maximum tokens before mandatory split
-    "target_tokens": 2000, # Sweet spot ("short essay" length)
+    "min_functions": 3,  # Minimum functions for a coherent K-block
+    "max_functions": 20,  # Maximum functions before mandatory split
+    "min_tokens": 500,  # Minimum tokens for a coherent K-block
+    "max_tokens": 5000,  # Maximum tokens before mandatory split
+    "target_tokens": 2000,  # Sweet spot ("short essay" length)
     "chars_per_token": 4,  # Rough estimate: 4 chars ≈ 1 token
 }
 
@@ -175,8 +175,12 @@ class KBlockCrystal:
             dominant_layer=data.get("dominant_layer", 5),
             layer_distribution=data.get("layer_distribution", {}),
             proof=GaloisWitnessedProof.from_dict(data["proof"]),
-            created_at=datetime.fromisoformat(data["created_at"]) if "created_at" in data else datetime.now(UTC),
-            last_recomputed=datetime.fromisoformat(data["last_recomputed"]) if "last_recomputed" in data else datetime.now(UTC),
+            created_at=datetime.fromisoformat(data["created_at"])
+            if "created_at" in data
+            else datetime.now(UTC),
+            last_recomputed=datetime.fromisoformat(data["last_recomputed"])
+            if "last_recomputed" in data
+            else datetime.now(UTC),
         )
 
     @property
@@ -216,10 +220,7 @@ class KBlockCrystal:
 # Schema for Universe registration
 from agents.d.universe import DataclassSchema
 
-KBLOCK_CRYSTAL_SCHEMA = DataclassSchema(
-    name="code.kblock",
-    type_cls=KBlockCrystal
-)
+KBLOCK_CRYSTAL_SCHEMA = DataclassSchema(name="code.kblock", type_cls=KBlockCrystal)
 
 
 __all__ = [

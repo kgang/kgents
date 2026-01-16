@@ -35,11 +35,14 @@ except ImportError:
     HAS_FASTAPI = False
     APIRouter = None  # type: ignore[misc, assignment]
     HTTPException = None  # type: ignore[misc, assignment]
+
     # Create stub BaseModel for type hints when pydantic not available
     class BaseModel:  # type: ignore[no-redef]
         pass
+
     def Field(*args: Any, **kwargs: Any) -> Any:  # type: ignore[no-redef]
         return None
+
 
 logger = logging.getLogger(__name__)
 
@@ -210,9 +213,7 @@ def create_edges_router() -> "APIRouter | None":
                             if target_node
                             else edge.target_id
                         )
-                        target_path = (
-                            target_node.path if target_node else edge.target_id
-                        )
+                        target_path = target_node.path if target_node else edge.target_id
 
                         summary = EdgeSummary(
                             id=edge.id,
@@ -391,9 +392,7 @@ def create_edges_router() -> "APIRouter | None":
                 ),
                 source_preview=source_node.content[:200] if source_node.content else None,
                 target_preview=(
-                    target_node.content[:200]
-                    if target_node and target_node.content
-                    else None
+                    target_node.content[:200] if target_node and target_node.content else None
                 ),
             )
 

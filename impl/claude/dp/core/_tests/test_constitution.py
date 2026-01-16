@@ -66,7 +66,9 @@ def test_constitution_custom_evaluator():
     const.set_evaluator(
         Principle.COMPOSABLE,
         lambda s, a, ns: 1.0 if a == "compose" else 0.0,
-        lambda s, a, ns: f"Action '{a}' is compositional" if a == "compose" else "Not compositional"
+        lambda s, a, ns: f"Action '{a}' is compositional"
+        if a == "compose"
+        else "Not compositional",
     )
 
     # Test with compositional action
@@ -127,7 +129,7 @@ def test_constitution_score_clamping():
 
     # Set evaluator that returns out-of-bounds values
     const.set_evaluator(Principle.COMPOSABLE, lambda s, a, ns: 2.0)  # > 1.0
-    const.set_evaluator(Principle.ETHICAL, lambda s, a, ns: -1.0)    # < 0.0
+    const.set_evaluator(Principle.ETHICAL, lambda s, a, ns: -1.0)  # < 0.0
 
     value_score = const.evaluate("state1", "action1", "state2")
 
@@ -135,9 +137,7 @@ def test_constitution_score_clamping():
     composable = next(
         ps for ps in value_score.principle_scores if ps.principle == Principle.COMPOSABLE
     )
-    ethical = next(
-        ps for ps in value_score.principle_scores if ps.principle == Principle.ETHICAL
-    )
+    ethical = next(ps for ps in value_score.principle_scores if ps.principle == Principle.ETHICAL)
 
     # Should be clamped to [0, 1]
     assert composable.score == 1.0
@@ -186,10 +186,7 @@ def test_constitution_state_action_independence():
     const = Constitution()
 
     # Set state-dependent evaluator
-    const.set_evaluator(
-        Principle.COMPOSABLE,
-        lambda s, a, ns: 1.0 if s == "good_state" else 0.0
-    )
+    const.set_evaluator(Principle.COMPOSABLE, lambda s, a, ns: 1.0 if s == "good_state" else 0.0)
 
     reward1 = const.reward("good_state", "action", "next_state")
     reward2 = const.reward("bad_state", "action", "next_state")

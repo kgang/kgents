@@ -496,14 +496,17 @@ class SovereignNode(BaseLogosNode):
 
                 # Basic integrity check: can we read content and hash matches
                 import hashlib
+
                 actual_hash = hashlib.sha256(entity.content).hexdigest()
                 if actual_hash != entity.content_hash:
-                    issues.append({
-                        "path": entity_path,
-                        "issue": "hash_mismatch",
-                        "expected": entity.content_hash,
-                        "actual": actual_hash,
-                    })
+                    issues.append(
+                        {
+                            "path": entity_path,
+                            "issue": "hash_mismatch",
+                            "expected": entity.content_hash,
+                            "actual": actual_hash,
+                        }
+                    )
 
                 entities_checked = 1
 
@@ -522,14 +525,17 @@ class SovereignNode(BaseLogosNode):
                     entity = await self._store.get_current(path)
                     if entity:
                         import hashlib
+
                         actual_hash = hashlib.sha256(entity.content).hexdigest()
                         if actual_hash != entity.content_hash:
-                            issues.append({
-                                "path": path,
-                                "issue": "hash_mismatch",
-                                "expected": entity.content_hash,
-                                "actual": actual_hash,
-                            })
+                            issues.append(
+                                {
+                                    "path": path,
+                                    "issue": "hash_mismatch",
+                                    "expected": entity.content_hash,
+                                    "actual": actual_hash,
+                                }
+                            )
                         entities_checked += 1
 
                 return {
@@ -537,7 +543,9 @@ class SovereignNode(BaseLogosNode):
                     "verified": len(issues) == 0,
                     "issues": issues,
                     "entities_checked": entities_checked,
-                    "message": f"Verified {entities_checked} entities" if not issues else f"Found {len(issues)} issues",
+                    "message": f"Verified {entities_checked} entities"
+                    if not issues
+                    else f"Found {len(issues)} issues",
                 }
 
         elif aspect == "export":
@@ -578,6 +586,7 @@ class SovereignNode(BaseLogosNode):
                 bundle_data = await self._store.export_bundle(paths, format=format_type)
 
                 import json
+
                 if isinstance(bundle_data, bytes):
                     # ZIP format returns bytes
                     return {

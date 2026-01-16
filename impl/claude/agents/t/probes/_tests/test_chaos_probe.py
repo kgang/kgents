@@ -181,6 +181,7 @@ async def test_chaos_probe_latency_type(mock_agent):
 
     # Measure time
     import time
+
     start = time.time()
     trace = await probe.verify(mock_agent, "test input")
     elapsed = time.time() - start

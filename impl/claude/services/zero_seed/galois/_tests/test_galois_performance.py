@@ -114,12 +114,10 @@ class TestGaloisLossComputation:
 
         def batch_loss():
             proofs = [
-                MockProof(f"Proof {i}: All laws hold. System is coherent.")
-                for i in range(10)
+                MockProof(f"Proof {i}: All laws hold. System is coherent.") for i in range(10)
             ]
             restructurings = [
-                MockRestructuring(f"Restructured {i}: All rules are satisfied.")
-                for i in range(10)
+                MockRestructuring(f"Restructured {i}: All rules are satisfied.") for i in range(10)
             ]
 
             losses = []
@@ -255,12 +253,8 @@ class TestSemanticDistance:
         """
 
         def batch_distances():
-            texts_a = [
-                f"Statement {i}: The system has property X" for i in range(50)
-            ]
-            texts_b = [
-                f"Statement {i}: The system owns attribute X" for i in range(50)
-            ]
+            texts_a = [f"Statement {i}: The system has property X" for i in range(50)]
+            texts_b = [f"Statement {i}: The system owns attribute X" for i in range(50)]
 
             distances = []
             for ta, tb in zip(texts_a, texts_b):
@@ -342,9 +336,7 @@ class TestGaloisOperations:
 
                 coherence = 1.0 - loss
 
-                results.append(
-                    {"loss": loss, "layer": layer, "coherence": coherence}
-                )
+                results.append({"loss": loss, "layer": layer, "coherence": coherence})
 
             return results
 

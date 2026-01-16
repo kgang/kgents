@@ -140,7 +140,9 @@ class GhostReconciliationService:
         Returns:
             ReconciliationResult with final content and metadata
         """
-        logger.info(f"Reconciling ghost {request.ghost_path} with strategy {request.strategy.value}")
+        logger.info(
+            f"Reconciling ghost {request.ghost_path} with strategy {request.strategy.value}"
+        )
 
         # Fast path: REPLACE strategy just uses upload content
         if request.strategy == ReconciliationStrategy.REPLACE:
@@ -336,16 +338,24 @@ class GhostReconciliationService:
         if strategy == ReconciliationStrategy.MERGE_UPLOADED_WINS:
             return upload_content, MergeConflict(
                 region=section,
-                ghost_content=ghost_content[:100] + "..." if len(ghost_content) > 100 else ghost_content,
-                upload_content=upload_content[:100] + "..." if len(upload_content) > 100 else upload_content,
+                ghost_content=ghost_content[:100] + "..."
+                if len(ghost_content) > 100
+                else ghost_content,
+                upload_content=upload_content[:100] + "..."
+                if len(upload_content) > 100
+                else upload_content,
                 resolution="Used upload content",
                 reasoning="Strategy MERGE_UPLOADED_WINS: upload takes precedence",
             )
         elif strategy == ReconciliationStrategy.MERGE_GHOST_WINS:
             return ghost_content, MergeConflict(
                 region=section,
-                ghost_content=ghost_content[:100] + "..." if len(ghost_content) > 100 else ghost_content,
-                upload_content=upload_content[:100] + "..." if len(upload_content) > 100 else upload_content,
+                ghost_content=ghost_content[:100] + "..."
+                if len(ghost_content) > 100
+                else ghost_content,
+                upload_content=upload_content[:100] + "..."
+                if len(upload_content) > 100
+                else upload_content,
                 resolution="Used ghost content",
                 reasoning="Strategy MERGE_GHOST_WINS: ghost takes precedence",
             )
@@ -353,8 +363,12 @@ class GhostReconciliationService:
             # INTERACTIVE or unknown — default to upload but mark conflict
             return upload_content, MergeConflict(
                 region=section,
-                ghost_content=ghost_content[:100] + "..." if len(ghost_content) > 100 else ghost_content,
-                upload_content=upload_content[:100] + "..." if len(upload_content) > 100 else upload_content,
+                ghost_content=ghost_content[:100] + "..."
+                if len(ghost_content) > 100
+                else ghost_content,
+                upload_content=upload_content[:100] + "..."
+                if len(upload_content) > 100
+                else upload_content,
                 resolution="Used upload content (default)",
                 reasoning="Interactive strategy fell back to upload",
             )

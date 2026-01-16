@@ -276,9 +276,7 @@ class TestFusionServiceWithoutLLM:
         kent.principle_alignment["ETHICAL"] = 0.2  # Below threshold
 
         # Re-determine result
-        result, reasoning = await service._determine_result(
-            kent, fusion.claude_position, None
-        )
+        result, reasoning = await service._determine_result(kent, fusion.claude_position, None)
 
         assert result == FusionResult.VETO
         assert "disgust veto" in reasoning
@@ -373,14 +371,20 @@ class TestConstitutionalCompliance:
         # This is tested via the synthesis attempt logic
         # Without LLM, synthesis isn't possible, so we verify the logic exists
         assert FusionResult.SYNTHESIS in service.TRUST_DELTAS
-        assert service.TRUST_DELTAS[FusionResult.SYNTHESIS] > service.TRUST_DELTAS[FusionResult.KENT_PREVAILS]
+        assert (
+            service.TRUST_DELTAS[FusionResult.SYNTHESIS]
+            > service.TRUST_DELTAS[FusionResult.KENT_PREVAILS]
+        )
 
     def test_trust_delta_values(self):
         """Trust deltas should follow constitution principles."""
         service = DialecticalFusionService()
 
         # Synthesis should build most trust
-        assert service.TRUST_DELTAS[FusionResult.SYNTHESIS] >= service.TRUST_DELTAS[FusionResult.CONSENSUS]
+        assert (
+            service.TRUST_DELTAS[FusionResult.SYNTHESIS]
+            >= service.TRUST_DELTAS[FusionResult.CONSENSUS]
+        )
 
         # Veto should lose trust
         assert service.TRUST_DELTAS[FusionResult.VETO] < 0

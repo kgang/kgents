@@ -311,9 +311,7 @@ class ChatEvidence:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ChatEvidence:
         """Create from dictionary."""
-        prior = BetaPrior(
-            alpha=data.get("prior_alpha", 1.0), beta=data.get("prior_beta", 1.0)
-        )
+        prior = BetaPrior(alpha=data.get("prior_alpha", 1.0), beta=data.get("prior_beta", 1.0))
 
         return cls(
             id=data.get("id", generate_evidence_id()),

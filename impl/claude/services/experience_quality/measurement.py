@@ -214,13 +214,26 @@ def measure_contrast(
     # Map to ContrastMeasurement
     # The standard seven dimensions map directly; custom dimensions use fallbacks
     return ContrastMeasurement(
-        breath=measurements.get("breath", measurements.get("energy", measurements.get("intensity", 0.5))),
+        breath=measurements.get(
+            "breath", measurements.get("energy", measurements.get("intensity", 0.5))
+        ),
         scarcity=measurements.get("scarcity", measurements.get("resource", 0.5)),
         tempo=measurements.get("tempo", measurements.get("speed", 0.5)),
-        stakes=measurements.get("stakes", measurements.get("difficulty", measurements.get("risk", 0.5))),
-        anticipation=measurements.get("anticipation", measurements.get("tension", measurements.get("focus", 0.5))),
-        reward=measurements.get("reward", measurements.get("progress", measurements.get("mood", 0.5))),
-        identity=measurements.get("identity", measurements.get("creativity", measurements.get("choice", measurements.get("social", 0.5)))),
+        stakes=measurements.get(
+            "stakes", measurements.get("difficulty", measurements.get("risk", 0.5))
+        ),
+        anticipation=measurements.get(
+            "anticipation", measurements.get("tension", measurements.get("focus", 0.5))
+        ),
+        reward=measurements.get(
+            "reward", measurements.get("progress", measurements.get("mood", 0.5))
+        ),
+        identity=measurements.get(
+            "identity",
+            measurements.get(
+                "creativity", measurements.get("choice", measurements.get("social", 0.5))
+            ),
+        ),
     )
 
 

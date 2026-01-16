@@ -292,6 +292,7 @@ def measure_with_algebra(
         ExperienceQuality measurement.
     """
     from .measurement import measure_quality
+
     return measure_quality(experience, algebra=algebra)
 
 

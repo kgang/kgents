@@ -12,6 +12,34 @@ This implements Phase 1 of the test evolution plan:
 Meta-Bootstrap: Test failures are algedonic signals.
 Phase 2: Flinches now route through FlinchStore (D-gent backed)
 with JSONL fallback for zero regression.
+
+=============================================================================
+TESTING GOTCHAS (Read docs/skills/test-patterns.md for full patterns)
+=============================================================================
+
+1. TIMING TESTS: Use `preferred_backend="memory"` to avoid Postgres index
+   lock contention (15-17s) under parallel xdist. Test capture() latency,
+   not DB initialization.
+
+2. HYPOTHESIS SLOW: Property tests generating PolyAgent chains take 1.3-1.5s
+   per input. Use `suppress_health_check=[HealthCheck.too_slow]` - slowness
+   IS thoroughness for categorical law tests.
+
+3. DOMAIN OPERADS: ProbeOperad uses 'witness' not 'trace'. Add domain operads
+   to DOMAIN_OPERADS list in test_registry_ci_gate.py - they have their own
+   vocabulary.
+
+4. HEURISTIC ASSERTIONS: Don't assert exact values for ML/heuristic outputs
+   (Galois layer assignment). Assert valid ranges: `0 <= layer <= 7`.
+
+5. LEGACY REMOVAL CASCADE: Removing from LEGACY_COMMANDS breaks downstream
+   tests in: TestLegacyMappings, TestRouterIntegration, TestLongestPrefixMatching.
+
+6. EXIT 137 = OOM: Reduce `-n` workers or run sequentially. Not a test logic error.
+
+7. CONSTITUTION EVOLUTION: When K-Block count changes (22→23), update ALL tests
+   that assert counts, with comments documenting the breakdown.
+=============================================================================
 """
 
 from dataclasses import dataclass
@@ -423,6 +451,205 @@ def pytest_addoption(parser: Any) -> None:
         opt_addoption(parser)
     except ImportError:
         pass  # Plugin not available
+
+
+# =============================================================================
+# Zombie Worker Cleanup & Session Watchdog
+# =============================================================================
+#
+# Problem: pytest-xdist workers (`python3 -u -c import sys;exec(...)`) become
+# orphaned when pytest is interrupted. They accumulate across sessions, consuming
+# CPU and memory, and can cause subsequent pytest runs to hang.
+#
+# Solution (3-layer defense):
+# 1. SESSION START: Kill orphan workers from previous runs
+# 2. SESSION WATCHDOG: Auto-kill entire session after timeout (default: 10 min)
+# 3. ATEXIT HANDLER: Best-effort cleanup on normal/abnormal exit
+#
+# Override timeout: PYTEST_SESSION_TIMEOUT_MINUTES=15
+# Disable watchdog: PYTEST_SESSION_TIMEOUT_MINUTES=0
+# =============================================================================
+
+import atexit
+import os
+import signal
+import subprocess
+import threading
+import time
+
+# Watchdog state (module-level for atexit access)
+_watchdog_thread: threading.Thread | None = None
+_watchdog_stop_event = threading.Event()
+_session_pid: int | None = None
+
+
+def _kill_orphan_xdist_workers() -> int:
+    """
+    Kill orphan pytest-xdist workers from previous sessions.
+
+    Returns number of processes killed.
+
+    These workers are identifiable by their command signature:
+        python3 -u -c import sys;exec(eval(sys.stdin.readline()))
+
+    They become orphaned when:
+    - pytest is killed with Ctrl+C
+    - pytest times out
+    - Parent process crashes
+    """
+    killed = 0
+    try:
+        # Find all xdist worker processes
+        result = subprocess.run(
+            ["pgrep", "-f", r"import sys;exec\(eval\(sys.stdin.readline\(\)\)\)"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+
+        if result.returncode == 0 and result.stdout.strip():
+            pids = result.stdout.strip().split("\n")
+            current_pid = os.getpid()
+            current_ppid = os.getppid()
+
+            for pid_str in pids:
+                try:
+                    pid = int(pid_str.strip())
+                    # Don't kill our own children (they're from this session)
+                    # Check if this pid's parent is our pytest process
+                    ppid_result = subprocess.run(
+                        ["ps", "-o", "ppid=", "-p", str(pid)],
+                        capture_output=True,
+                        text=True,
+                        timeout=2,
+                    )
+                    if ppid_result.returncode == 0:
+                        parent_pid = int(ppid_result.stdout.strip())
+                        # If parent is init (1) or doesn't match current session, it's orphaned
+                        if parent_pid == 1 or (
+                            parent_pid != current_pid and parent_pid != current_ppid
+                        ):
+                            os.kill(pid, signal.SIGKILL)
+                            killed += 1
+                except (ValueError, ProcessLookupError, PermissionError):
+                    continue
+
+    except (subprocess.TimeoutExpired, FileNotFoundError, Exception):
+        # pgrep not available or other error - skip cleanup
+        pass
+
+    return killed
+
+
+def _watchdog_worker(timeout_seconds: int, session_pid: int) -> None:
+    """
+    Background thread that monitors session duration.
+
+    If the session exceeds timeout_seconds, it kills the entire process tree.
+    """
+    start_time = time.time()
+
+    while not _watchdog_stop_event.is_set():
+        elapsed = time.time() - start_time
+
+        if elapsed >= timeout_seconds:
+            # Time's up - kill the session
+            import sys
+
+            print(
+                f"\n\n{'=' * 60}\n"
+                f"⏰ PYTEST SESSION TIMEOUT ({timeout_seconds // 60} minutes)\n"
+                f"Killing pytest and all workers to prevent zombie accumulation.\n"
+                f"Override: PYTEST_SESSION_TIMEOUT_MINUTES=N (0 to disable)\n"
+                f"{'=' * 60}\n",
+                file=sys.stderr,
+            )
+
+            # Kill our own process group (includes all xdist workers)
+            try:
+                os.killpg(os.getpgid(session_pid), signal.SIGTERM)
+            except (ProcessLookupError, PermissionError):
+                pass
+
+            # Give processes 2 seconds to cleanup, then SIGKILL
+            time.sleep(2)
+
+            try:
+                os.killpg(os.getpgid(session_pid), signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                pass
+
+            # Last resort: kill ourselves
+            os._exit(1)
+
+        # Check every 5 seconds
+        _watchdog_stop_event.wait(5)
+
+
+def _cleanup_on_exit() -> None:
+    """atexit handler: Stop watchdog and kill any remaining workers."""
+    global _watchdog_thread
+
+    # Signal watchdog to stop
+    _watchdog_stop_event.set()
+
+    if _watchdog_thread is not None:
+        _watchdog_thread.join(timeout=1)
+
+    # Best-effort cleanup of any workers we spawned
+    # (They should die with us, but be safe)
+    _kill_orphan_xdist_workers()
+
+
+# Register atexit handler once at module load
+atexit.register(_cleanup_on_exit)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _xdist_worker_watchdog(request: Any) -> Any:
+    """
+    Session fixture that manages xdist worker lifecycle.
+
+    1. Cleans up orphan workers from previous sessions
+    2. Starts a watchdog thread to enforce session timeout
+    3. Ensures clean shutdown on session end
+    """
+    global _watchdog_thread, _session_pid
+
+    # Get timeout from environment (default: 10 minutes)
+    # Supports fractional minutes: 0.5 = 30 seconds
+    timeout_minutes = float(os.environ.get("PYTEST_SESSION_TIMEOUT_MINUTES", "10"))
+    timeout_seconds = int(timeout_minutes * 60)
+
+    # Phase 1: Clean up orphans from previous sessions
+    killed = _kill_orphan_xdist_workers()
+    if killed > 0:
+        import sys
+
+        print(
+            f"🧹 Cleaned up {killed} orphan xdist worker(s) from previous sessions",
+            file=sys.stderr,
+        )
+
+    # Phase 2: Start watchdog (if timeout enabled)
+    if timeout_seconds > 0:
+        _session_pid = os.getpid()
+        _watchdog_stop_event.clear()
+
+        _watchdog_thread = threading.Thread(
+            target=_watchdog_worker,
+            args=(timeout_seconds, _session_pid),
+            daemon=True,  # Die with main process
+            name="pytest-session-watchdog",
+        )
+        _watchdog_thread.start()
+
+    yield
+
+    # Phase 3: Clean shutdown
+    _watchdog_stop_event.set()
+    if _watchdog_thread is not None:
+        _watchdog_thread.join(timeout=1)
 
 
 # =============================================================================

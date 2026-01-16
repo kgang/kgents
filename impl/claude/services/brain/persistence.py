@@ -270,9 +270,8 @@ class BrainPersistence:
             datum_id=None,  # Will be set by Universe
         )
 
-        # Create Crystal wrapper and store via Universe
-        crystal = CrystalWrapper.create(brain_crystal, BRAIN_CRYSTAL_SCHEMA)
-        datum_id = await self.universe.store(crystal)
+        # Store BrainCrystal via Universe with explicit schema name
+        datum_id = await self.universe.store(brain_crystal, schema_name="brain.crystal")
 
         # Check if we have embeddings
         has_embedding = self.embedder is not None
@@ -344,7 +343,8 @@ class BrainPersistence:
         # Filter by tags if specified
         if tags:
             all_crystals = [
-                c for c in all_crystals
+                c
+                for c in all_crystals
                 if isinstance(c, BrainCrystal) and any(tag in c.tags for tag in tags)
             ]
 
@@ -427,6 +427,7 @@ class BrainPersistence:
 
         # Random selection from all crystals
         import random
+
         crystal_obj = random.choice(all_crystals)
 
         if not isinstance(crystal_obj, BrainCrystal):
@@ -542,10 +543,7 @@ class BrainPersistence:
         all_crystals = await self.universe.query(q)
 
         # Filter to crystals with the specified tag
-        tagged_crystals = [
-            c for c in all_crystals
-            if isinstance(c, BrainCrystal) and tag in c.tags
-        ]
+        tagged_crystals = [c for c in all_crystals if isinstance(c, BrainCrystal) and tag in c.tags]
 
         results = []
         for crystal_obj in tagged_crystals[:limit]:

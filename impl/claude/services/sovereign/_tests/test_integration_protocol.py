@@ -259,9 +259,7 @@ async def test_step7_contradiction_detection(integration_service):
 This should not contradict anything yet.
 """
 
-    contradictions = await integration_service._find_contradictions(
-        content, "spec/test.md"
-    )
+    contradictions = await integration_service._find_contradictions(content, "spec/test.md")
 
     # No contradictions expected for isolated content
     assert isinstance(contradictions, list)

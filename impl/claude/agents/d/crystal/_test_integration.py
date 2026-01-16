@@ -190,6 +190,7 @@ def test_query_fluent_api() -> None:
 
 def test_end_to_end() -> None:
     """Test complete end-to-end workflow."""
+
     # Define versioned schemas
     @dataclass(frozen=True)
     class MarkV1:

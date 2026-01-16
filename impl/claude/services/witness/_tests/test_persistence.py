@@ -19,7 +19,9 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 # Skip entire module until tests are updated for new Universe API
-pytestmark = pytest.mark.skip(reason="Tests need refactoring for Universe-based WitnessPersistence API")
+pytestmark = pytest.mark.skip(
+    reason="Tests need refactoring for Universe-based WitnessPersistence API"
+)
 
 from agents.d.universe import Universe
 from models.witness import (

@@ -181,7 +181,11 @@ class MarkAdapter(EntityAdapter):
         mark_id = mark.context.get("id", "unknown") if mark.context else "unknown"
 
         # Extract timestamp from context
-        timestamp = mark.context.get("created_at", datetime.utcnow().isoformat()) if mark.context else datetime.utcnow().isoformat()
+        timestamp = (
+            mark.context.get("created_at", datetime.utcnow().isoformat())
+            if mark.context
+            else datetime.utcnow().isoformat()
+        )
 
         return UnifiedEvent(
             id=mark_id,
@@ -366,7 +370,9 @@ class TrailAdapter(EntityAdapter):
         title = trail.name
 
         # Summary from description
-        summary = trail.description[:120] + "..." if len(trail.description) > 120 else trail.description
+        summary = (
+            trail.description[:120] + "..." if len(trail.description) > 120 else trail.description
+        )
 
         # Extract ID from trail (would be set by Universe)
         trail_id = "trail-" + trail.name[:20]  # Simplified ID

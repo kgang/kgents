@@ -163,9 +163,7 @@ class PostgresLemmaDatabase:
             List of related verified lemmas (most relevant first)
         """
         # Extract keywords from property
-        keywords = set(
-            re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", property_stmt.lower())
-        )
+        keywords = set(re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", property_stmt.lower()))
 
         if not keywords:
             return []
@@ -173,9 +171,7 @@ class PostgresLemmaDatabase:
         async with self._session_factory() as session:
             # Get all lemmas (we'll filter in Python for keyword matching)
             # TODO: Use Postgres full-text search for better performance
-            stmt = select(VerifiedLemmaModel).order_by(
-                VerifiedLemmaModel.usage_count.desc()
-            )
+            stmt = select(VerifiedLemmaModel).order_by(VerifiedLemmaModel.usage_count.desc())
             result = await session.execute(stmt)
             models = result.scalars().all()
 
@@ -377,16 +373,12 @@ class PostgresLemmaDatabase:
                 )
 
             # Total usage
-            usage_result = await session.execute(
-                select(func.sum(VerifiedLemmaModel.usage_count))
-            )
+            usage_result = await session.execute(select(func.sum(VerifiedLemmaModel.usage_count)))
             total_usage = usage_result.scalar() or 0
 
             # Most used
             most_used_stmt = (
-                select(VerifiedLemmaModel)
-                .order_by(VerifiedLemmaModel.usage_count.desc())
-                .limit(1)
+                select(VerifiedLemmaModel).order_by(VerifiedLemmaModel.usage_count.desc()).limit(1)
             )
             most_used_result = await session.execute(most_used_stmt)
             most_used = most_used_result.scalar_one_or_none()
@@ -403,9 +395,7 @@ class PostgresLemmaDatabase:
     async def count(self) -> int:
         """Count total lemmas."""
         async with self._session_factory() as session:
-            result = await session.execute(
-                select(func.count()).select_from(VerifiedLemmaModel)
-            )
+            result = await session.execute(select(func.count()).select_from(VerifiedLemmaModel))
             return result.scalar() or 0
 
     # =========================================================================

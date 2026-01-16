@@ -325,6 +325,7 @@ class LLMTracer:
 
         # Register schema
         from agents.d.schemas.llm_trace import LLM_INVOCATION_SCHEMA
+
         self._universe.register_schema(LLM_INVOCATION_SCHEMA)
 
     @asynccontextmanager

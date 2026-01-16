@@ -75,9 +75,11 @@ def test_generate_command_parsing():
     from protocols.cli.commands.experiment import cmd_generate
 
     # Mock the async run to avoid actually running experiments
-    with patch("protocols.cli.commands.experiment._run_generate") as mock_run, patch(
-        "protocols.cli.commands.experiment.get_experiment_store"
-    ) as mock_store, patch("asyncio.run") as mock_asyncio:
+    with (
+        patch("protocols.cli.commands.experiment._run_generate") as mock_run,
+        patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store,
+        patch("asyncio.run") as mock_asyncio,
+    ):
         # Setup mock experiment
         mock_exp = MagicMock()
         mock_exp.to_dict.return_value = {"id": "exp-123"}
@@ -95,9 +97,11 @@ def test_generate_with_adaptive():
     """Test generate command with adaptive stopping."""
     from protocols.cli.commands.experiment import cmd_generate
 
-    with patch("protocols.cli.commands.experiment._run_generate") as mock_run, patch(
-        "protocols.cli.commands.experiment.get_experiment_store"
-    ) as mock_store, patch("asyncio.run") as mock_asyncio:
+    with (
+        patch("protocols.cli.commands.experiment._run_generate") as mock_run,
+        patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store,
+        patch("asyncio.run") as mock_asyncio,
+    ):
         mock_exp = MagicMock()
         mock_exp.to_dict.return_value = {"id": "exp-123"}
         mock_asyncio.return_value = mock_exp
@@ -112,9 +116,12 @@ def test_generate_json_output(mock_experiment):
     """Test generate command with JSON output."""
     from protocols.cli.commands.experiment import cmd_generate
 
-    with patch("protocols.cli.commands.experiment._run_generate") as mock_run, patch(
-        "protocols.cli.commands.experiment.get_experiment_store"
-    ) as mock_store, patch("asyncio.run") as mock_asyncio, patch("builtins.print") as mock_print:
+    with (
+        patch("protocols.cli.commands.experiment._run_generate") as mock_run,
+        patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store,
+        patch("asyncio.run") as mock_asyncio,
+        patch("builtins.print") as mock_print,
+    ):
         mock_asyncio.return_value = mock_experiment
 
         args = ["--spec", "def foo(): pass", "--json"]
@@ -130,9 +137,10 @@ def test_history_command():
     """Test history command."""
     from protocols.cli.commands.experiment import cmd_history
 
-    with patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store, patch(
-        "asyncio.run"
-    ) as mock_asyncio:
+    with (
+        patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store,
+        patch("asyncio.run") as mock_asyncio,
+    ):
         # Mock store returning empty list
         mock_asyncio.return_value = []
 
@@ -146,9 +154,10 @@ def test_history_today_filter(mock_experiment):
     """Test history command with --today filter."""
     from protocols.cli.commands.experiment import cmd_history
 
-    with patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store, patch(
-        "asyncio.run"
-    ) as mock_asyncio:
+    with (
+        patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store,
+        patch("asyncio.run") as mock_asyncio,
+    ):
         mock_asyncio.return_value = [mock_experiment]
 
         args = ["--today"]
@@ -161,9 +170,10 @@ def test_history_type_filter(mock_experiment):
     """Test history command with --type filter."""
     from protocols.cli.commands.experiment import cmd_history
 
-    with patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store, patch(
-        "asyncio.run"
-    ) as mock_asyncio:
+    with (
+        patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store,
+        patch("asyncio.run") as mock_asyncio,
+    ):
         mock_asyncio.return_value = [mock_experiment]
 
         args = ["--type", "generate"]
@@ -176,9 +186,11 @@ def test_history_json_output(mock_experiment):
     """Test history command with JSON output."""
     from protocols.cli.commands.experiment import cmd_history
 
-    with patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store, patch(
-        "asyncio.run"
-    ) as mock_asyncio, patch("builtins.print") as mock_print:
+    with (
+        patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store,
+        patch("asyncio.run") as mock_asyncio,
+        patch("builtins.print") as mock_print,
+    ):
         mock_asyncio.return_value = [mock_experiment]
 
         args = ["--json"]
@@ -193,9 +205,10 @@ def test_resume_command():
     """Test resume command."""
     from protocols.cli.commands.experiment import cmd_resume
 
-    with patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store, patch(
-        "asyncio.run"
-    ) as mock_asyncio:
+    with (
+        patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store,
+        patch("asyncio.run") as mock_asyncio,
+    ):
         # Mock finding an experiment
         mock_exp = MagicMock()
         mock_exp.config.type.value = "generate"
@@ -213,9 +226,10 @@ def test_resume_not_found():
     """Test resume command with non-existent experiment."""
     from protocols.cli.commands.experiment import cmd_resume
 
-    with patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store, patch(
-        "asyncio.run"
-    ) as mock_asyncio:
+    with (
+        patch("protocols.cli.commands.experiment.get_experiment_store") as mock_store,
+        patch("asyncio.run") as mock_asyncio,
+    ):
         # Mock not finding experiment
         mock_asyncio.return_value = None
 

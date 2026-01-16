@@ -131,9 +131,9 @@ class TestExceptionException:
         content = container_path.read_text()
 
         # The container should raise DependencyNotFoundError for missing required deps
-        assert "DependencyNotFoundError" in content, \
+        assert "DependencyNotFoundError" in content, (
             "Container should define DependencyNotFoundError for missing required deps"
+        )
 
         # The error should include actionable guidance
-        assert "Fix:" in content, \
-            "Container error messages should include actionable Fix guidance"
+        assert "Fix:" in content, "Container error messages should include actionable Fix guidance"

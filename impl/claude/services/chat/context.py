@@ -131,9 +131,7 @@ class Turn:
             "trailing": self.trailing,
             "derived_from": self.derived_from,
             "started_at": self.started_at.isoformat(),
-            "completed_at": self.completed_at.isoformat()
-            if self.completed_at
-            else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
             "tools_used": self.tools_used,
             "metadata": self.metadata,
         }
@@ -239,7 +237,9 @@ class Turn:
             evidence_delta=evidence_delta,
             confidence=self.metadata.get("confidence", 0.8),
             started_at=self.started_at.isoformat(),
-            completed_at=self.completed_at.isoformat() if self.completed_at else datetime.now().isoformat(),
+            completed_at=self.completed_at.isoformat()
+            if self.completed_at
+            else datetime.now().isoformat(),
         )
 
     @classmethod

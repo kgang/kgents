@@ -1,11 +1,17 @@
 """
-CLI Command Dimension System - The 6-Dimensional Product Space.
+CLI Command Dimension System - The 7-Dimensional Product Space.
 
-Every CLI command exists in a 6-dimensional product space:
+Every CLI command exists in a 7-dimensional product space:
 
-    CommandSpace = Execution x Statefulness x Backend x Intent x Seriousness x Interactivity
+    CommandSpace = Execution x Statefulness x Backend x Intent x Seriousness x Interactivity x Context
 
 This module implements the dimension types and derivation rules from spec/protocols/cli.md Part II.
+
+The 7th dimension (ExecutionContext) captures WHERE the command is executing:
+- CLI_DIRECT: Normal CLI invocation
+- DAEMON_WORKER: Inside daemon thread pool
+- DAEMON_MAIN: Daemon main thread
+- REPL: Interactive mode (-i)
 
 The Core Insight:
     "Just as screen density replaced scattered isMobile checks,
@@ -24,7 +30,9 @@ This is Simplifying Isomorphism (AD-008) applied to CLI architecture.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import os
+import sys
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
@@ -121,16 +129,67 @@ class Interactivity(Enum):
     INTERACTIVE = auto()  # REPL mode
 
 
+class ExecutionContext(Enum):
+    """
+    Execution context dimension: WHERE the command is executing.
+
+    This replaces scattered event loop and daemon detection checks
+    with a single source of truth.
+
+    Derived from environment variables and Python flags:
+    - KGENTS_DAEMON_WORKER env -> DAEMON_WORKER
+    - KGENTS_DAEMON_MAIN env -> DAEMON_MAIN
+    - sys.flags.interactive or KGENTS_REPL env -> REPL
+    - Otherwise -> CLI_DIRECT
+    """
+
+    CLI_DIRECT = auto()  # Normal CLI invocation
+    DAEMON_WORKER = auto()  # Inside daemon thread pool
+    DAEMON_MAIN = auto()  # Daemon main thread
+    REPL = auto()  # Interactive mode (-i)
+
+
+def derive_context() -> ExecutionContext:
+    """
+    Derive execution context from environment.
+
+    Priority order:
+    1. KGENTS_DAEMON_WORKER env -> DAEMON_WORKER
+    2. KGENTS_DAEMON_MAIN env -> DAEMON_MAIN
+    3. sys.flags.interactive or KGENTS_REPL env -> REPL
+    4. Default -> CLI_DIRECT
+
+    Returns:
+        ExecutionContext enum value
+    """
+    if os.environ.get("KGENTS_DAEMON_WORKER"):
+        return ExecutionContext.DAEMON_WORKER
+    if os.environ.get("KGENTS_DAEMON_MAIN"):
+        return ExecutionContext.DAEMON_MAIN
+    if sys.flags.interactive or os.environ.get("KGENTS_REPL"):
+        return ExecutionContext.REPL
+    return ExecutionContext.CLI_DIRECT
+
+
 # === The Composite Type ===
 
 
-@dataclass(frozen=True)
+@dataclass
 class CommandDimensions:
     """
-    The 6-dimensional command space.
+    The 7-dimensional command space.
 
     This is the SINGLE SOURCE OF TRUTH for CLI behavior.
     No scattered conditionals should exist outside dimension derivation.
+
+    The 7 dimensions:
+    1. execution: SYNC or ASYNC
+    2. statefulness: STATELESS or STATEFUL
+    3. backend: PURE, LLM, or EXTERNAL
+    4. intent: FUNCTIONAL or INSTRUCTIONAL
+    5. seriousness: SENSITIVE, PLAYFUL, or NEUTRAL
+    6. interactivity: ONESHOT, STREAMING, or INTERACTIVE
+    7. context: CLI_DIRECT, DAEMON_WORKER, DAEMON_MAIN, or REPL
 
     Example:
         dimensions = derive_dimensions(path, meta)
@@ -143,6 +202,10 @@ class CommandDimensions:
             case Seriousness.SENSITIVE: await request_consent(...)
             case Seriousness.PLAYFUL: error_style = ErrorStyle.GENTLE
             case Seriousness.NEUTRAL: pass
+
+        if dimensions.in_daemon:
+            # Handle daemon-specific behavior
+            ...
     """
 
     execution: Execution
@@ -151,6 +214,7 @@ class CommandDimensions:
     intent: Intent
     seriousness: Seriousness
     interactivity: Interactivity
+    context: ExecutionContext = field(default_factory=derive_context)
 
     def __str__(self) -> str:
         """Compact representation for tracing."""
@@ -162,7 +226,36 @@ class CommandDimensions:
                 self.intent.name,
                 self.seriousness.name,
                 self.interactivity.name,
+                self.context.name,
             ]
+        )
+
+    def __hash__(self) -> int:
+        """Hash for use in sets/dicts."""
+        return hash(
+            (
+                self.execution,
+                self.statefulness,
+                self.backend,
+                self.intent,
+                self.seriousness,
+                self.interactivity,
+                self.context,
+            )
+        )
+
+    def __eq__(self, other: object) -> bool:
+        """Equality comparison."""
+        if not isinstance(other, CommandDimensions):
+            return NotImplemented
+        return (
+            self.execution == other.execution
+            and self.statefulness == other.statefulness
+            and self.backend == other.backend
+            and self.intent == other.intent
+            and self.seriousness == other.seriousness
+            and self.interactivity == other.interactivity
+            and self.context == other.context
         )
 
     @property
@@ -191,9 +284,19 @@ class CommandDimensions:
         return self.interactivity == Interactivity.STREAMING
 
     @property
-    def is_interactive(self) -> bool:
-        """Convenience: does this enter REPL mode?"""
+    def is_repl_interactive(self) -> bool:
+        """Convenience: does this enter REPL mode (Interactivity dimension)?"""
         return self.interactivity == Interactivity.INTERACTIVE
+
+    @property
+    def in_daemon(self) -> bool:
+        """Convenience: is this running in a daemon context?"""
+        return self.context in (ExecutionContext.DAEMON_WORKER, ExecutionContext.DAEMON_MAIN)
+
+    @property
+    def is_interactive(self) -> bool:
+        """Convenience: is this running in interactive/REPL context?"""
+        return self.context == ExecutionContext.REPL
 
 
 # === Protected Resources ===
@@ -371,6 +474,7 @@ def derive_interactivity(
 def derive_dimensions(
     path: str,
     meta: "AspectMetadata",
+    context: ExecutionContext | None = None,
 ) -> CommandDimensions:
     """
     Derive complete dimensions from path and aspect metadata.
@@ -386,10 +490,12 @@ def derive_dimensions(
     5. Derive intent from category
     6. Derive seriousness from path and effects
     7. Derive interactivity from metadata flags
+    8. Derive context from environment (or use provided value)
 
     Args:
         path: The AGENTESE path (e.g., "self.memory.capture")
         meta: AspectMetadata from the @aspect decorator
+        context: Optional override for execution context (defaults to derive_context())
 
     Returns:
         Complete CommandDimensions for the path
@@ -407,6 +513,8 @@ def derive_dimensions(
         >>> dims.execution == Execution.ASYNC
         True
         >>> dims.backend == Backend.LLM
+        True
+        >>> dims.context == ExecutionContext.CLI_DIRECT  # Default
         True
     """
     from protocols.agentese.affordances import DeclaredEffect, Effect
@@ -436,8 +544,11 @@ def derive_dimensions(
 
     # Get interactivity from extended metadata (v3.2 fields)
     streaming = getattr(meta, "streaming", False)
-    interactive = getattr(meta, "interactive", False)
-    interactivity = derive_interactivity(streaming, interactive)
+    interactive_flag = getattr(meta, "interactive", False)
+    interactivity = derive_interactivity(streaming, interactive_flag)
+
+    # Step 8: Use provided context or derive from environment
+    resolved_context = context if context is not None else derive_context()
 
     return CommandDimensions(
         execution=execution,
@@ -446,6 +557,7 @@ def derive_dimensions(
         intent=intent,
         seriousness=seriousness,
         interactivity=interactivity,
+        context=resolved_context,
     )
 
 
@@ -459,6 +571,7 @@ DEFAULT_DIMENSIONS = CommandDimensions(
     intent=Intent.FUNCTIONAL,
     seriousness=Seriousness.NEUTRAL,
     interactivity=Interactivity.ONESHOT,
+    context=ExecutionContext.CLI_DIRECT,
 )
 
 
@@ -470,6 +583,7 @@ __all__ = [
     "Intent",
     "Seriousness",
     "Interactivity",
+    "ExecutionContext",
     # Composite type
     "CommandDimensions",
     # Constants
@@ -481,5 +595,6 @@ __all__ = [
     "derive_seriousness",
     "derive_intent",
     "derive_interactivity",
+    "derive_context",
     "derive_dimensions",
 ]

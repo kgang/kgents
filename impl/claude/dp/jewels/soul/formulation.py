@@ -215,7 +215,9 @@ class SoulContext:
         interaction_quality: Quality of recent interactions (0.0-1.0)
     """
 
-    target_trait: int = 0  # Which trait to optimize (0=curiosity, 1=boldness, 2=playfulness, 3=wisdom)
+    target_trait: int = (
+        0  # Which trait to optimize (0=curiosity, 1=boldness, 2=playfulness, 3=wisdom)
+    )
     environmental_pressure: float = 0.0  # External push for change
     value_alignment: float = 0.8  # Default: good alignment
     interaction_quality: float = 0.6  # Default: decent interactions
@@ -343,18 +345,10 @@ def soul_transition(state: SoulState, action: SoulAction) -> SoulState:
 
     elif action == SoulAction.DRIFT:
         # Random walk in trait space (exploration)
-        curiosity = max(
-            0.0, min(1.0, curiosity + random.uniform(-0.2, 0.2))
-        )
-        boldness = max(
-            0.0, min(1.0, boldness + random.uniform(-0.2, 0.2))
-        )
-        playfulness = max(
-            0.0, min(1.0, playfulness + random.uniform(-0.2, 0.2))
-        )
-        wisdom = max(
-            0.0, min(1.0, wisdom + random.uniform(-0.2, 0.2))
-        )
+        curiosity = max(0.0, min(1.0, curiosity + random.uniform(-0.2, 0.2)))
+        boldness = max(0.0, min(1.0, boldness + random.uniform(-0.2, 0.2)))
+        playfulness = max(0.0, min(1.0, playfulness + random.uniform(-0.2, 0.2)))
+        wisdom = max(0.0, min(1.0, wisdom + random.uniform(-0.2, 0.2)))
 
         # Drifting weakens attractor (divergence)
         attractor = max(0.0, attractor - 0.2)
@@ -365,7 +359,9 @@ def soul_transition(state: SoulState, action: SoulAction) -> SoulState:
         valence = max(-1.0, min(1.0, valence + random.uniform(-0.1, 0.1)))
 
     # Quantize to grid (for finite state space)
-    def quantize(val: float, min_val: float = 0.0, max_val: float = 1.0, granularity: int = 3) -> float:
+    def quantize(
+        val: float, min_val: float = 0.0, max_val: float = 1.0, granularity: int = 3
+    ) -> float:
         """Snap to nearest grid point."""
         if granularity <= 1:
             return max(min_val, min(max_val, val))
@@ -417,9 +413,7 @@ def soul_available_actions(state: SoulState) -> FrozenSet[SoulAction]:
         actions.add(SoulAction.EXPRESS)
 
     # SUPPRESS only if traits are substantial
-    trait_sum = (
-        state.curiosity + state.boldness + state.playfulness + state.wisdom
-    )
+    trait_sum = state.curiosity + state.boldness + state.playfulness + state.wisdom
     if trait_sum > 0.5:
         actions.add(SoulAction.SUPPRESS)
 
@@ -555,9 +549,7 @@ def soul_reward(
     reward += 0.4 * balance_score
 
     # Reward smooth transitions (small changes)
-    transition_smoothness = 1.0 - abs(
-        next_state.attractor_strength - state.attractor_strength
-    )
+    transition_smoothness = 1.0 - abs(next_state.attractor_strength - state.attractor_strength)
     reward += 0.3 * transition_smoothness
 
     # CURATED: Intentionality
@@ -664,18 +656,20 @@ class SoulFormulation(ProblemFormulation[SoulState, SoulAction]):
 
         # Generate initial state set (simplified for now)
         # In production, would use a grid generator like BrainFormulation
-        initial_states = frozenset({
-            SoulState(
-                curiosity=0.5,
-                boldness=0.5,
-                playfulness=0.5,
-                wisdom=0.5,
-                arousal=0.0,
-                valence=0.0,
-                attractor_strength=0.3,
-                resonance_depth=0.4,
-            )
-        })
+        initial_states = frozenset(
+            {
+                SoulState(
+                    curiosity=0.5,
+                    boldness=0.5,
+                    playfulness=0.5,
+                    wisdom=0.5,
+                    arousal=0.0,
+                    valence=0.0,
+                    attractor_strength=0.3,
+                    resonance_depth=0.4,
+                )
+            }
+        )
 
         super().__init__(
             name="Soul",

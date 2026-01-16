@@ -83,9 +83,7 @@ class KBlockEdge:
             "contradicts",
         }
         if self.edge_type not in valid_types:
-            raise ValueError(
-                f"Invalid edge_type '{self.edge_type}'. Must be one of: {valid_types}"
-            )
+            raise ValueError(f"Invalid edge_type '{self.edge_type}'. Must be one of: {valid_types}")
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize edge to dictionary."""

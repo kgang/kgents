@@ -15,6 +15,13 @@
 #
 # pgvector: The pgvector/pgvector:pg16 image includes the vector extension
 # pre-installed for semantic search on trail embeddings.
+#
+# Test Database:
+#   A separate Postgres instance on port 5433 is provided for tests.
+#   Tests auto-detect and use this when PYTEST_CURRENT_TEST is set.
+#   This isolates test operations from your development data.
+#
+#   Manual override: KGENTS_TEST_DATABASE_URL=postgresql+asyncpg://...
 
 services:
   postgres:
@@ -30,6 +37,25 @@ services:
       - kgents-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U kgents -d kgents"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Test database - completely isolated from dev data
+  # Auto-used when running pytest (PYTEST_CURRENT_TEST is set)
+  postgres-test:
+    image: pgvector/pgvector:pg16
+    container_name: kgents-postgres-test
+    environment:
+      POSTGRES_USER: kgents
+      POSTGRES_PASSWORD: kgents
+      POSTGRES_DB: kgents_test
+    ports:
+      - "5433:5432"
+    # No persistent volume - tests get fresh state each time
+    # (can add tmpfs for speed if needed)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kgents -d kgents_test"]
       interval: 5s
       timeout: 5s
       retries: 5

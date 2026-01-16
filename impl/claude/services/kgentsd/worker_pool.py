@@ -45,9 +45,10 @@ T = TypeVar("T")
 
 class TaskType(Enum):
     """Task classification for pool routing."""
-    CPU_BOUND = auto()   # LLM, crystallization, heavy computation
-    IO_BOUND = auto()    # Database, file I/O, network
-    ASYNC = auto()       # Async coroutines (no pool, runs in event loop)
+
+    CPU_BOUND = auto()  # LLM, crystallization, heavy computation
+    IO_BOUND = auto()  # Database, file I/O, network
+    ASYNC = auto()  # Async coroutines (no pool, runs in event loop)
 
 
 @dataclass

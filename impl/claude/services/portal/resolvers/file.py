@@ -74,21 +74,15 @@ class FileResolver:
 
         # Check existence
         if not file_path.exists():
-            raise ResourceNotFound(
-                f"File not found: {file_path}"
-            )
+            raise ResourceNotFound(f"File not found: {file_path}")
 
         # Check if it's a file (not a directory)
         if not file_path.is_file():
-            raise ResourceNotFound(
-                f"Path is not a file: {file_path}"
-            )
+            raise ResourceNotFound(f"Path is not a file: {file_path}")
 
         # Check readability
         if not os.access(file_path, os.R_OK):
-            raise PermissionDenied(
-                f"File not readable: {file_path}"
-            )
+            raise PermissionDenied(f"File not readable: {file_path}")
 
         # Read file
         content: str | bytes

@@ -426,13 +426,17 @@ def check_multiple_operations(
         confidence, tier = derivation_cache[agent_name]
 
         if confidence >= threshold:
-            results.append(ConfidenceGateResult.allowed_result(
-                operation, agent_name, confidence, threshold, tier
-            ))
+            results.append(
+                ConfidenceGateResult.allowed_result(
+                    operation, agent_name, confidence, threshold, tier
+                )
+            )
         else:
-            results.append(ConfidenceGateResult.denied_result(
-                operation, agent_name, confidence, threshold, tier=tier
-            ))
+            results.append(
+                ConfidenceGateResult.denied_result(
+                    operation, agent_name, confidence, threshold, tier=tier
+                )
+            )
 
     return results
 
@@ -450,11 +454,35 @@ def get_agent_capabilities(
     Useful for UI to show/hide actions.
     """
     if not registry.exists(agent_name):
-        return {op: False for op in ["read", "annotate", "write", "link", "sandbox", "delete", "execute", "promote"]}
+        return {
+            op: False
+            for op in [
+                "read",
+                "annotate",
+                "write",
+                "link",
+                "sandbox",
+                "delete",
+                "execute",
+                "promote",
+            ]
+        }
 
     derivation = registry.get(agent_name)
     if derivation is None:
-        return {op: False for op in ["read", "annotate", "write", "link", "sandbox", "delete", "execute", "promote"]}
+        return {
+            op: False
+            for op in [
+                "read",
+                "annotate",
+                "write",
+                "link",
+                "sandbox",
+                "delete",
+                "execute",
+                "promote",
+            ]
+        }
 
     confidence = derivation.total_confidence
 

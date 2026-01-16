@@ -300,7 +300,7 @@ class ServiceContainer:
                     f"Missing required dependency '{name}' for {cls.__name__}.\n\n"
                     f"This usually means the provider wasn't registered during startup.\n\n"
                     f"Fix: In services/providers.py, add:\n"
-                    f"    container.register(\"{name}\", get_{name}, singleton=True)\n\n"
+                    f'    container.register("{name}", get_{name}, singleton=True)\n\n'
                     f"If this dependency should be optional, update the node's __init__:\n"
                     f"    def __init__(self, {name}: ... | None = None): ..."
                 )
@@ -317,21 +317,16 @@ class ServiceContainer:
                 try:
                     kwargs[name] = await self.resolve(name)
                 except Exception as e:
-                    logger.debug(
-                        f"Failed to resolve optional dependency {name}: {e}"
-                    )
+                    logger.debug(f"Failed to resolve optional dependency {name}: {e}")
             else:
                 logger.debug(
-                    f"Optional dependency '{name}' not registered for {cls.__name__}, "
-                    f"using default"
+                    f"Optional dependency '{name}' not registered for {cls.__name__}, using default"
                 )
 
         # Instantiate with resolved dependencies
         return cls(**kwargs)
 
-    def _inspect_dependencies(
-        self, cls: type[T]
-    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    def _inspect_dependencies(self, cls: type[T]) -> tuple[tuple[str, ...], tuple[str, ...]]:
         """
         Inspect __init__ to find dependency parameter names.
 

@@ -45,6 +45,7 @@ async def test_identity_probe_pass():
 @pytest.mark.asyncio
 async def test_identity_probe_fail():
     """Test identity probe with law-violating tool."""
+
     # Create a tool that violates identity by having state
     class StatefulTool:
         def __init__(self):

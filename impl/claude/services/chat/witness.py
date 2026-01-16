@@ -85,8 +85,14 @@ class ChatMark:
     @property
     def summary(self) -> str:
         """One-line summary of this turn."""
-        user_preview = self.user_message[:40] + "..." if len(self.user_message) > 40 else self.user_message
-        assistant_preview = self.assistant_response[:40] + "..." if len(self.assistant_response) > 40 else self.assistant_response
+        user_preview = (
+            self.user_message[:40] + "..." if len(self.user_message) > 40 else self.user_message
+        )
+        assistant_preview = (
+            self.assistant_response[:40] + "..."
+            if len(self.assistant_response) > 40
+            else self.assistant_response
+        )
         return f"Turn {self.turn_number}: '{user_preview}' -> '{assistant_preview}'"
 
     def to_dict(self) -> dict[str, Any]:

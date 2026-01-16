@@ -56,21 +56,25 @@ def generate_edge_id() -> EdgeId:
 AXIOM_LAYERS = frozenset({1, 2})
 
 # Kinds that belong to Layer 1 (Assumptions)
-AXIOM_KINDS = frozenset({
-    "axiom",
-    "assumption",
-    "postulate",
-    "somatic",  # Felt sense - irreducible ground
-})
+AXIOM_KINDS = frozenset(
+    {
+        "axiom",
+        "assumption",
+        "postulate",
+        "somatic",  # Felt sense - irreducible ground
+    }
+)
 
 # Kinds that belong to Layer 2 (Values)
-VALUE_KINDS = frozenset({
-    "value",
-    "principle",
-    "affinity",
-    "aesthetic",
-    "ethical",
-})
+VALUE_KINDS = frozenset(
+    {
+        "value",
+        "principle",
+        "affinity",
+        "aesthetic",
+        "ethical",
+    }
+)
 
 
 # =============================================================================
@@ -538,9 +542,7 @@ class ZeroNode:
         """Validate layer and proof constraints."""
         # Layer Integrity (from M)
         if not (1 <= self.layer <= 7):
-            raise LayerViolationError(
-                f"Layer must be 1-7, got {self.layer}"
-            )
+            raise LayerViolationError(f"Layer must be 1-7, got {self.layer}")
 
         # Axiom Unprovenness (from M)
         if self.layer <= 2 and self.proof is not None:
@@ -690,7 +692,9 @@ class ZeroEdge:
     context: str = ""  # Why this edge exists
     confidence: float = 1.0  # [0, 1] strength
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    mark_id: MarkIdType = field(default_factory=lambda: MarkIdType(""))  # Witness mark (REQUIRED by M)
+    mark_id: MarkIdType = field(
+        default_factory=lambda: MarkIdType("")
+    )  # Witness mark (REQUIRED by M)
 
     # For contradiction edges
     is_resolved: bool = False
@@ -717,9 +721,7 @@ class ZeroEdge:
         - Gets a new mark_id (from composition mark)
         """
         if self.target != other.source:
-            raise CompositionError(
-                f"Cannot compose: {self.target} != {other.source}"
-            )
+            raise CompositionError(f"Cannot compose: {self.target} != {other.source}")
 
         return ZeroEdge(
             id=generate_edge_id(),
@@ -781,9 +783,7 @@ class ZeroEdge:
     def __repr__(self) -> str:
         """Concise representation."""
         return (
-            f"ZeroEdge({str(self.source)[:8]}... "
-            f"--{self.kind.value}--> "
-            f"{str(self.target)[:8]}...)"
+            f"ZeroEdge({str(self.source)[:8]}... --{self.kind.value}--> {str(self.target)[:8]}...)"
         )
 
 

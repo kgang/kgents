@@ -44,7 +44,9 @@ def test_constitutional_topics_in_bus():
     # Direct string check to avoid import issues with sqlalchemy
     import pathlib
 
-    bus_file = pathlib.Path(__file__).parent.parent.parent.parent / "services" / "witness" / "bus.py"
+    bus_file = (
+        pathlib.Path(__file__).parent.parent.parent.parent / "services" / "witness" / "bus.py"
+    )
     content = bus_file.read_text()
 
     # Check that constitutional topics are defined

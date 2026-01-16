@@ -265,7 +265,7 @@ class BoundaryDetector:
                 function_ids=frozenset(f.id for f in chunk),
                 boundary_type="MANUAL_SPLIT",
                 confidence=0.5,
-                rationale=f"Manual split (chunk {i+1})",
+                rationale=f"Manual split (chunk {i + 1})",
                 estimated_tokens=self.estimate_tokens(chunk),
             )
             for i, chunk in enumerate(chunks)
@@ -427,9 +427,7 @@ class BoundaryDetector:
     # Strategy Implementations
     # -------------------------------------------------------------------------
 
-    def _detect_file_boundaries(
-        self, functions: list[FunctionCrystal]
-    ) -> list[KBlockCandidate]:
+    def _detect_file_boundaries(self, functions: list[FunctionCrystal]) -> list[KBlockCandidate]:
         """
         FILE strategy: One K-block per file.
 
@@ -453,9 +451,7 @@ class BoundaryDetector:
 
         return candidates
 
-    def _detect_class_boundaries(
-        self, functions: list[FunctionCrystal]
-    ) -> list[KBlockCandidate]:
+    def _detect_class_boundaries(self, functions: list[FunctionCrystal]) -> list[KBlockCandidate]:
         """
         CLASS strategy: One K-block per class.
 
@@ -488,9 +484,7 @@ class BoundaryDetector:
 
         return candidates
 
-    def _detect_import_boundaries(
-        self, functions: list[FunctionCrystal]
-    ) -> list[KBlockCandidate]:
+    def _detect_import_boundaries(self, functions: list[FunctionCrystal]) -> list[KBlockCandidate]:
         """
         IMPORT strategy: Cluster by shared imports.
 
@@ -506,7 +500,7 @@ class BoundaryDetector:
                     function_ids=frozenset(f.id for f in cluster),
                     boundary_type="IMPORT_CLUSTER",
                     confidence=0.7,
-                    rationale=f"Import cluster {i+1} ({len(cluster)} functions)",
+                    rationale=f"Import cluster {i + 1} ({len(cluster)} functions)",
                     estimated_tokens=self.estimate_tokens(cluster),
                 )
             )
@@ -531,16 +525,14 @@ class BoundaryDetector:
                     function_ids=frozenset(f.id for f in scc),
                     boundary_type="SCC",
                     confidence=0.8,
-                    rationale=f"Strongly connected component {i+1}",
+                    rationale=f"Strongly connected component {i + 1}",
                     estimated_tokens=self.estimate_tokens(scc),
                 )
             )
 
         return candidates
 
-    def _detect_hybrid_boundaries(
-        self, functions: list[FunctionCrystal]
-    ) -> list[KBlockCandidate]:
+    def _detect_hybrid_boundaries(self, functions: list[FunctionCrystal]) -> list[KBlockCandidate]:
         """
         HYBRID strategy: Combine multiple signals adaptively.
 
@@ -569,12 +561,8 @@ class BoundaryDetector:
                     # Further split by call graph
                     for class_candidate in class_splits:
                         if class_candidate.is_too_large:
-                            class_funcs = [
-                                f for f in funcs if f.id in class_candidate.function_ids
-                            ]
-                            callgraph_splits = self._detect_callgraph_boundaries(
-                                class_funcs
-                            )
+                            class_funcs = [f for f in funcs if f.id in class_candidate.function_ids]
+                            callgraph_splits = self._detect_callgraph_boundaries(class_funcs)
                             refined.extend(callgraph_splits)
                         else:
                             refined.append(class_candidate)

@@ -348,9 +348,7 @@ class VoidNode(BaseLogosNode):
         help="Display void layer status (axioms and values)",
         examples=["kg void", "kg void manifest"],
     )
-    async def manifest(
-        self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any
-    ) -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest void layer status to observer.
 

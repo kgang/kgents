@@ -80,7 +80,9 @@ class GaloisWitnessedProof:
             principles=tuple(d.get("principles", [])),
             galois_loss=d.get("galois_loss", 0.0),
             loss_decomposition=d.get("loss_decomposition", {}),
-            created_at=datetime.fromisoformat(d["created_at"]) if "created_at" in d else datetime.now(UTC),
+            created_at=datetime.fromisoformat(d["created_at"])
+            if "created_at" in d
+            else datetime.now(UTC),
         )
 
 

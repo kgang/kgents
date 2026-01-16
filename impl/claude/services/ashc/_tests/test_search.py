@@ -133,13 +133,15 @@ def lemma_db() -> InMemoryLemmaDatabase:
     """Create an in-memory lemma database."""
     db = InMemoryLemmaDatabase()
     # Seed with some lemmas
-    db.store(VerifiedLemma(
-        id=LemmaId("lem-001"),
-        statement="∀ x: int. x + 0 == x",
-        proof="lemma AddZero() ensures forall x: int :: x + 0 == x {}",
-        checker="mock",
-        obligation_id=ObligationId("obl-seed-001"),
-    ))
+    db.store(
+        VerifiedLemma(
+            id=LemmaId("lem-001"),
+            statement="∀ x: int. x + 0 == x",
+            proof="lemma AddZero() ensures forall x: int :: x + 0 == x {}",
+            checker="mock",
+            obligation_id=ObligationId("obl-seed-001"),
+        )
+    )
     return db
 
 
@@ -536,7 +538,7 @@ class TestFailedTacticsTracking:
 
         async def capture_complete(request: Any, **kwargs: Any) -> MagicMock:
             # Extract prompt from messages
-            if hasattr(request, 'messages') and len(request.messages) > 1:
+            if hasattr(request, "messages") and len(request.messages) > 1:
                 prompts_captured.append(request.messages[1].content)
             return mock_response
 
@@ -698,20 +700,24 @@ class TestInMemoryLemmaDatabase:
         db = InMemoryLemmaDatabase()
 
         # Store lemmas with different keywords
-        db.store(VerifiedLemma(
-            id=LemmaId("lem-add"),
-            statement="∀ x: int. x + 0 == x",
-            proof="",
-            checker="mock",
-            obligation_id=ObligationId("obl-1"),
-        ))
-        db.store(VerifiedLemma(
-            id=LemmaId("lem-mul"),
-            statement="∀ y: int. y * 1 == y",
-            proof="",
-            checker="mock",
-            obligation_id=ObligationId("obl-2"),
-        ))
+        db.store(
+            VerifiedLemma(
+                id=LemmaId("lem-add"),
+                statement="∀ x: int. x + 0 == x",
+                proof="",
+                checker="mock",
+                obligation_id=ObligationId("obl-1"),
+            )
+        )
+        db.store(
+            VerifiedLemma(
+                id=LemmaId("lem-mul"),
+                statement="∀ y: int. y * 1 == y",
+                proof="",
+                checker="mock",
+                obligation_id=ObligationId("obl-2"),
+            )
+        )
 
         # Search for addition-related
         related = db.find_related("∀ x: int. x + 1 == x + 1")
@@ -726,13 +732,15 @@ class TestInMemoryLemmaDatabase:
 
         # Store many lemmas
         for i in range(10):
-            db.store(VerifiedLemma(
-                id=LemmaId(f"lem-{i}"),
-                statement=f"∀ x: int. x + {i} == x + {i}",
-                proof="",
-                checker="mock",
-                obligation_id=ObligationId(f"obl-{i}"),
-            ))
+            db.store(
+                VerifiedLemma(
+                    id=LemmaId(f"lem-{i}"),
+                    statement=f"∀ x: int. x + {i} == x + {i}",
+                    proof="",
+                    checker="mock",
+                    obligation_id=ObligationId(f"obl-{i}"),
+                )
+            )
 
         related = db.find_related("∀ x: int. something", limit=3)
 
@@ -871,7 +879,7 @@ class TestTemperatureConfiguration:
         mock_response.choices = [mock_choice]
 
         async def capture_complete(request: Any, **kwargs: Any) -> MagicMock:
-            if hasattr(request, 'temperature'):
+            if hasattr(request, "temperature"):
                 captured_temp.append(request.temperature)
             return mock_response
 

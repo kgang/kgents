@@ -38,7 +38,7 @@ Every kgents agent follows a vertical slice architecture where **completeness of
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  3. SERVICE MODULE (Crown Jewels)                                │
-│     services/brain/  ─or─  services/town/  ─or─  services/park/  │
+│     services/brain/  ─or─  services/town/  ─or─  services/witness/│
 │     Business logic + Frontend components + D-gent integration    │
 └─────────────────────────────────────────────────────────────────┘
                               │

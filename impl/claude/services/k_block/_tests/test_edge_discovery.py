@@ -549,7 +549,9 @@ Uses PolyAgent pattern.
     )
 
     # Should only find explicit edges
-    assert all(e.kind in (EdgeKind.REFERENCES, EdgeKind.IMPLEMENTS, EdgeKind.EXTENDS) for e in edges)
+    assert all(
+        e.kind in (EdgeKind.REFERENCES, EdgeKind.IMPLEMENTS, EdgeKind.EXTENDS) for e in edges
+    )
 
 
 def test_confidence_bounds(service: EdgeDiscoveryService):

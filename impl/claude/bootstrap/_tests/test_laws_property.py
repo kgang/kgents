@@ -4,6 +4,16 @@ Property-based category law verification.
 Philosophy: Laws must hold for ALL agents, not just handpicked examples.
 
 Phase 3/6 of test evolution plan: Hypothesis-powered law verification.
+
+Teaching (Test Patterns):
+    HYPOTHESIS SLOWNESS IS THOROUGHNESS: Property tests generating PolyAgent
+    chains with 3+ agents take 1.3-1.5s per input. This triggers Hypothesis
+    HealthCheck.too_slow, but the slowness IS the thoroughness.
+
+    Use `suppress_health_check=[HealthCheck.too_slow]` in @settings - don't
+    weaken the tests by reducing generator complexity.
+
+    See: docs/skills/test-patterns.md (Pattern 2: Hypothesis Health Check)
 """
 
 from __future__ import annotations
@@ -17,7 +27,7 @@ from bootstrap import ID, compose
 
 # Optional hypothesis import with graceful fallback
 try:
-    from hypothesis import assume, given, settings
+    from hypothesis import HealthCheck, assume, given, settings
 
     from testing.strategies import agent_chains, simple_agents
 
@@ -90,7 +100,7 @@ class TestIdentityLawProperty:
         assert direct == via_id, f"Right identity failed: {agent.name}"
 
     @given(agent=simple_agents())  # type: ignore[untyped-decorator]
-    @settings(max_examples=50)  # type: ignore[untyped-decorator]
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])  # type: ignore[untyped-decorator]
     @pytest.mark.asyncio
     async def test_identity_both_sides_property(self, agent: Any) -> None:
         """For all f: Id >> f >> Id == f."""
@@ -112,7 +122,7 @@ class TestAssociativityProperty:
     """
 
     @given(agents=agent_chains(min_length=3, max_length=3))  # type: ignore[untyped-decorator]
-    @settings(max_examples=50)  # type: ignore[untyped-decorator]
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])  # type: ignore[untyped-decorator]
     @pytest.mark.asyncio
     async def test_associativity_property(self, agents: Any) -> None:
         """For all f, g, h: (f >> g) >> h == f >> (g >> h)."""

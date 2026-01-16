@@ -40,44 +40,20 @@ Holographic memory operations via M-gent (Memory Agent).
 ```bash
 kg brain                           # Show brain status
 kg brain capture "thought"         # Capture content to memory
-kg brain recall "query"            # Semantic search
-kg brain navigate                  # Browse memory cartography
+kg brain search "query"            # Semantic search
 kg brain manifest                  # Display brain health metrics
 ```
 
 **AGENTESE Paths:**
 - `self.memory` - Main entry point
 - `self.memory.capture` - Capture content
-- `self.memory.recall` - Semantic search
+- `self.memory.search` - Semantic search
 - `self.memory.manifest` - Health metrics
 
 **See also:** `kg witness`
 
----
-
-### `kg town`
-
-Agent Town simulation.
-
-```bash
-kg town                            # Town overview
-```
-
-**AGENTESE Paths:**
-- `world.town` - Town entry point
-
----
-
-### `kg atelier`
-
-Collaborative creative workshops.
-
-```bash
-kg atelier                         # Workshop status
-```
-
-**AGENTESE Paths:**
-- `world.atelier` - Main entry
+> **Note (2025-12)**: Commands `kg town` and `kg atelier` were removed in the Post-Extinction cleanup.
+> Town simulation is available via the web interface. Atelier functionality moved to `kg witness`.
 
 ---
 
@@ -284,7 +260,7 @@ Any AGENTESE path can be invoked directly:
 
 ```bash
 kg self.memory.manifest            # Direct aspect invocation
-kg world.town.manifest             # Another example
+kg time.coffee.manifest            # Another example
 kg concept.principles              # View the 7 principles
 ```
 
@@ -310,10 +286,10 @@ The CLI maps to five AGENTESE contexts:
 | Context | Prefix | Domain |
 |---------|--------|--------|
 | **Self** | `self.*` | Internal state (memory, soul) |
-| **World** | `world.*` | External resources (town, atelier) |
+| **World** | `world.*` | External resources (entities, tools) |
 | **Concept** | `concept.*` | Abstract concepts (principles, design) |
 | **Void** | `void.*` | Entropy/shadow (joy, serendipity) |
-| **Time** | `time.*` | Temporal traces (coffee) |
+| **Time** | `time.*` | Temporal traces (coffee, witness) |
 
 Query any context:
 ```bash
@@ -349,7 +325,7 @@ kg witness mark "Implemented functor" -p composable
 ```bash
 kg brain                           # Quick status
 kg brain capture "insight here"    # Capture
-kg brain recall "functors"         # Semantic search
+kg brain search "functors"         # Semantic search
 kg brain manifest                  # Full health report
 ```
 
@@ -375,4 +351,730 @@ The CLI surface projects the rich AGENTESE semantics into terminal-native form.
 
 ---
 
-*Last updated: 2025-12-21*
+## Development Tools
+
+*Evidence-driven development commands for rigorous workflows.*
+
+### `kg audit`
+
+Validate specs against principles and implementation.
+
+> *"Evidence over intuition. Traces over reflexes."*
+
+```bash
+kg audit <spec>                    # Quick audit of a spec file
+kg audit <spec> --full             # Full audit with all checks
+kg audit <spec> --principles       # Check principle alignment only
+kg audit <spec> --impl             # Check implementation links only
+kg audit <spec> --json             # Output as JSON
+```
+
+**Options:**
+- `--full` - Run all audit checks
+- `--principles` - Verify alignment with 7 principles
+- `--impl` - Verify implementation links exist
+- `--drift` - Check for spec/impl drift
+- `--json` - JSON output format
+- `--strict` - Exit 1 if issues found
+
+**AGENTESE Path:** `concept.audit.*`
+
+---
+
+### `kg probe`
+
+Fast categorical law verification.
+
+```bash
+kg probe health                    # Health check (Tier 1)
+kg probe health --all              # All health checks
+kg probe laws                      # Verify categorical laws
+kg probe identity                  # Identity law check
+kg probe compose                   # Composition law check
+kg probe --json                    # JSON output
+```
+
+**Probe Types:**
+| Probe | Purpose |
+|-------|---------|
+| `health` | System health indicators |
+| `laws` | Categorical law verification |
+| `identity` | Identity law (Id >> f = f) |
+| `compose` | Associativity law |
+
+**AGENTESE Path:** `concept.probe.*`
+
+---
+
+### `kg analyze`
+
+Deep codebase analysis.
+
+```bash
+kg analyze <path>                  # Analyze file/directory
+kg analyze <path> --depth 3        # Limit analysis depth
+kg analyze <path> --coverage       # Include test coverage
+kg analyze --json                  # JSON output
+```
+
+**Options:**
+- `--depth <n>` - Maximum analysis depth
+- `--coverage` - Include coverage analysis
+- `--complexity` - Calculate complexity metrics
+- `--json` - JSON output
+
+**AGENTESE Path:** `world.codebase.analyze`
+
+---
+
+### `kg explore`
+
+Interactive codebase exploration.
+
+```bash
+kg explore                         # Start exploration
+kg explore <path>                  # Start at specific location
+kg explore --related               # Show related files
+kg explore --deps                  # Show dependencies
+```
+
+**Navigation:**
+- Follow imports and dependencies
+- View test relationships
+- Discover related modules
+
+**AGENTESE Path:** `world.codebase.explore`
+
+---
+
+### `kg experiment`
+
+Evidence-gathering experiments with Bayesian stopping.
+
+> *"Uncertainty triggers experiments, not guessing."*
+
+```bash
+kg experiment generate --spec "..." # Run generation experiment
+kg experiment generate --spec "..." --adaptive --confidence 0.95
+kg experiment history              # Show experiment history
+kg experiment history --today      # Today's experiments only
+kg experiment history --type parse # Filter by type
+kg experiment resume <id>          # Resume an experiment
+```
+
+**Generate Options:**
+- `--spec <spec>` - Code specification to implement (required)
+- `--n <n>` - Number of trials (default: 10)
+- `--adaptive` - Use Bayesian adaptive stopping
+- `--confidence <f>` - Confidence threshold (default: 0.95)
+- `--max-trials <n>` - Maximum trials (default: 100)
+- `--json` - JSON output
+
+**History Options:**
+- `--today` - Show only today's experiments
+- `--type <type>` - Filter by experiment type
+- `--limit <n>` - Limit results (default: 20)
+- `--json` - JSON output
+
+**Philosophy:** Every experiment gathers evidence. Bayesian stopping prevents wasteful over-testing.
+
+---
+
+### `kg compose`
+
+Chain kg operations with unified witnessing.
+
+> *"Composition over repetition."*
+
+```bash
+# Execute inline
+kg compose "probe health && audit system"
+
+# Save a composition
+kg compose --save "pre-commit" "probe health && audit system"
+
+# Run saved composition
+kg compose --run "pre-commit"
+
+# List saved compositions
+kg compose list
+
+# Show composition history
+kg compose history
+
+# Import/export compositions
+kg compose import <file>
+kg compose export <name> <file>
+```
+
+**Execution Options:**
+- Commands separated by `&&` (all must succeed) or `;` (continue on failure)
+- `--continue` - Continue on failure
+- `--verbose` - Show detailed output
+- `--json` - JSON output
+- `--dry-run` - Preview without executing
+- `--timeout <ms>` - Timeout per command
+
+**Pre-saved Compositions:**
+| Name | Commands | Use When |
+|------|----------|----------|
+| `pre-commit` | probe health + audit system | Before any commit |
+| `validate-spec` | audit + annotate --show | Before modifying spec |
+| `full-check` | audit system + probe all | After refactor, pre-PR |
+
+**AGENTESE Path:** `concept.compose.*`
+
+---
+
+### `kg annotate`
+
+Link principles to implementations and capture gotchas.
+
+```bash
+kg annotate <spec> --impl --section "X" --link "path:Symbol"
+kg annotate <spec> --gotcha --section "X" --note "Warning message"
+kg annotate <spec> --show           # Show existing annotations
+```
+
+**Options:**
+- `--impl` - Create implementation link
+- `--gotcha` - Record a gotcha/warning
+- `--section <name>` - Target section in spec
+- `--link <path:symbol>` - Implementation link
+- `--note <text>` - Gotcha note text
+- `--show` - Display existing annotations
+
+**AGENTESE Path:** `concept.annotate.*`
+
+---
+
+### `kg derivation`
+
+Record proof of specification adherence.
+
+```bash
+kg derivation show <spec>          # Show derivation chain
+kg derivation add <spec> --claim "..." --evidence "..."
+kg derivation verify <spec>        # Verify derivation chain
+```
+
+**AGENTESE Path:** `concept.derivation.*`
+
+---
+
+## AGENTESE Context Commands
+
+*Direct access to the five AGENTESE contexts.*
+
+### `kg self`
+
+Internal state and memory operations.
+
+```bash
+kg self                            # Show self overview
+kg self status                     # Detailed status
+kg self memory                     # Memory operations (alias: kg brain)
+kg self dream                      # Dream/hypnagogia state
+kg self soul                       # K-gent soul operations
+kg self capabilities               # List capabilities
+kg self dashboard                  # Interactive dashboard
+```
+
+**Soul Aspects:**
+```bash
+kg self soul reflect               # K-gent reflection
+kg self soul advise                # Get advice
+kg self soul challenge             # Challenge current thinking
+kg self soul explore               # Explore a topic
+kg self soul vibe                  # Current vibe check
+kg self soul stream                # Stream of consciousness
+kg self soul why                   # Recursive why inquiry
+kg self soul tension               # Surface tensions
+```
+
+**AGENTESE Paths:** `self.status`, `self.memory`, `self.dream`, `self.soul`, `self.capabilities`, `self.dashboard`
+
+---
+
+### `kg world`
+
+External entities, agents, and resources.
+
+```bash
+kg world                           # Show world overview
+kg world agents                    # Agent operations
+kg world agents list               # List registered agents
+kg world agents run <agent>        # Run a specific agent
+kg world agents inspect <agent>    # Inspect agent details
+kg world daemon start              # Start cortex daemon
+kg world daemon stop               # Stop daemon
+kg world daemon status             # Daemon status
+kg world fixture list              # List HotData fixtures
+kg world dev start                 # Start live reload dev mode
+kg world town start                # Start Agent Town simulation
+kg world town step                 # Advance simulation one step
+kg world viz sparkline 1 2 3 4 5   # Render sparkline
+kg world codebase manifest         # Architecture overview
+kg world codebase health           # Codebase health check
+kg world codebase drift            # Check for spec/impl drift
+```
+
+**AGENTESE Paths:** `world.agents`, `world.daemon`, `world.fixture`, `world.dev`, `world.town`, `world.viz`, `world.codebase`
+
+---
+
+### `kg concept`
+
+Abstract definitions, laws, and principles.
+
+```bash
+kg concept                         # Show concepts overview
+kg concept laws                    # Show categorical laws
+kg concept laws identity           # Identity law
+kg concept laws associativity      # Associativity law
+kg concept principles              # The 7 principles
+kg concept dialectic               # Dialectical operations
+kg concept gaps                    # Find conceptual gaps
+kg concept continuous              # Continuous concepts
+kg concept creativity              # Creativity support
+```
+
+**AGENTESE Paths:** `concept.laws`, `concept.principles`, `concept.dialectic`, `concept.gaps`, `concept.continuous`, `concept.creativity`
+
+---
+
+### `kg void`
+
+Entropy, shadow, and serendipity operations.
+
+> *"The accursed share - joy, surprise, the unexpected."*
+
+```bash
+kg void                            # Show void overview
+kg void tithe                      # Make an entropy tithe
+kg void shadow                     # Personal shadow work
+kg void collective-shadow          # Collective shadow
+kg void archetype                  # Archetype exploration
+kg void whatif                     # What-if scenarios
+kg void mirror                     # Mirror reflection
+kg void serendipity                # Serendipitous discovery
+kg void project                    # Shadow projection
+```
+
+**AGENTESE Paths:** `void.tithe`, `void.shadow`, `void.collective-shadow`, `void.archetype`, `void.whatif`, `void.mirror`, `void.serendipity`, `void.project`
+
+---
+
+### `kg time`
+
+Temporal operations, traces, and history.
+
+```bash
+kg time                            # Show time overview
+kg time trace                      # Current trace
+kg time trace witness              # Emit trace as witness mark
+kg time turns                      # List turns/interactions
+kg time dag                        # Show temporal DAG
+kg time fork                       # Create temporal fork
+kg time telemetry                  # Telemetry data
+kg time pending                    # Pending approvals
+kg time approve <id>               # Approve pending item
+kg time reject <id>                # Reject pending item
+```
+
+**AGENTESE Paths:** `time.trace`, `time.turns`, `time.dag`, `time.fork`, `time.telemetry`, `time.pending`, `time.approve`, `time.reject`
+
+---
+
+## Utility Commands
+
+*Helpers, navigation, and system operations.*
+
+### `kg do`
+
+Natural language intent router.
+
+> *"Complex intents become execution plans."*
+
+```bash
+kg do "check input.py and fix any issues"
+kg do "analyze the codebase and generate hypotheses"
+kg do "find all parsers and verify they follow principles"
+kg do "clean up the temp folder" --dry-run
+kg do "..." --yes                  # Execute without confirmation
+kg do "..." --export=plan.yaml     # Export as flowfile
+```
+
+**Options:**
+- `--yes, -y` - Execute without confirmation
+- `--dry-run` - Show plan only, don't execute
+- `--export=<path>` - Export plan as flowfile
+- `--verbose` - Show detailed reasoning
+- `--format=<fmt>` - Output format: rich, json
+
+**Intent Categories:**
+| Category | Keywords |
+|----------|----------|
+| Creation | create, new, scaffold, generate |
+| Verification | check, verify, validate, test |
+| Repair | fix, repair, correct |
+| Analysis | think, analyze, review |
+| Search | find, search, discover |
+| Execution | run, execute, deploy |
+
+**Safety:**
+- Plans shown before execution (unless --yes)
+- Destructive operations require explicit confirmation
+- Default is NO for elevated-risk operations
+
+---
+
+### `kg why`
+
+Recursive why inquiry - dig to bedrock assumptions.
+
+> *"The Five Whys technique adapted for self-inquiry."*
+
+```bash
+kg why "We need microservices"
+kg why --depth 7 "Users want dark mode"
+kg why --llm "The tests should always pass"
+kg why --socratic "This design is correct"
+kg why "..." --json
+```
+
+**Options:**
+- `--depth <n>` - Number of why iterations (default: 5, max: 10)
+- `--socratic` - Use Socratic questioning style
+- `--llm` - Use K-gent for deeper analysis (costs tokens)
+- `--json` - JSON output
+
+**AGENTESE Path:** `self.soul.why`
+
+---
+
+### `kg play`
+
+Interactive playground for learning kgents.
+
+> *"Zero-to-delight in under 5 minutes."*
+
+```bash
+kg play                            # Interactive menu
+kg play hello                      # Hello World tutorial
+kg play compose                    # Composition tutorial
+kg play functor                    # Functor/Maybe tutorial
+kg play soul                       # K-gent dialogue tutorial
+kg play repl                       # Free exploration REPL
+```
+
+**Tutorials:**
+| Tutorial | Description |
+|----------|-------------|
+| `hello` | Your first agent (Agent[str, str]) |
+| `compose` | Pipe agents together (>>) |
+| `functor` | Lift to Maybe (handle optionals) |
+| `soul` | Chat with K-gent |
+| `repl` | Free exploration mode |
+
+---
+
+### `kg flow`
+
+Flowfile-based agent composition.
+
+```bash
+kg flow run <flowfile>             # Execute a flowfile
+kg flow run <flowfile> --var x=y   # With variables
+kg flow validate <flowfile>        # Validate flowfile syntax
+kg flow explain <flowfile>         # Explain what flow does
+kg flow visualize <flowfile>       # ASCII visualization
+kg flow new <name>                 # Create new flowfile
+kg flow list                       # List available flows
+kg flow save <name>                # Save current flow
+```
+
+**Options:**
+- `--format <fmt>` - Output format
+- `--json` - JSON output
+- `--var <key=value>` - Set flow variable
+- `--output <path>` - Output file
+
+**AGENTESE Path:** `concept.flow.*`
+
+---
+
+### `kg shortcut`
+
+Manage CLI shortcuts for AGENTESE paths.
+
+```bash
+kg shortcut                        # List all shortcuts
+kg shortcut list                   # Same as above
+kg shortcut add <name> <path>      # Add user shortcut
+kg shortcut remove <name>          # Remove user shortcut
+kg shortcut show <name>            # Show shortcut expansion
+```
+
+**Standard Shortcuts:**
+| Shortcut | Expands To |
+|----------|------------|
+| `/forest` | `self.forest.manifest` |
+| `/soul` | `self.soul.dialogue` |
+| `/brain` | `self.memory.manifest` |
+| `/chaos` | `void.entropy.sip` |
+| `/town` | `world.town.manifest` |
+| `/arch` | `world.codebase.manifest` |
+| `/status` | `self.status.manifest` |
+
+User shortcuts stored in `.kgents/shortcuts.yaml`
+
+---
+
+### `kg subscribe`
+
+Subscribe to AGENTESE events.
+
+```bash
+kg subscribe self.memory.*         # Memory change events
+kg subscribe world.town.**         # All town events (recursive)
+kg subscribe void.entropy.*        # Entropy events
+kg subscribe "..." --json          # JSON output
+kg subscribe "..." --verbose       # Show event data
+```
+
+**Patterns:**
+- `*` - matches single segment
+- `**` - matches multiple segments (recursive)
+
+**Event Types:**
+| Type | Description |
+|------|-------------|
+| `INVOKED` | Path was invoked |
+| `CHANGED` | State changed |
+| `ERROR` | Error occurred |
+| `REFUSED` | Consent refusal |
+
+Press Ctrl+C to stop subscription.
+
+---
+
+### `kg portal`
+
+Navigate source files through hyperedge expansion.
+
+> *"You don't go to the document. The document comes to you."*
+
+```bash
+kg portal <file>                   # Show portals for file
+kg portal show <file>              # Same as above
+kg portal expand <file> <edge>     # Expand an edge
+kg portal tree <file>              # Full portal tree
+kg portal tree <file> --depth 5    # With depth limit
+kg portal edges                    # List edge types
+```
+
+**Edge Types:**
+| Edge | Description |
+|------|-------------|
+| `imports` | What this file imports |
+| `tests` | Test files for this module |
+| `implements` | Specs this implements |
+| `contains` | Submodules/children |
+| `calls` | Functions called |
+| `related` | Sibling modules |
+| `parent` | Parent module |
+
+---
+
+### `kg context`
+
+Typed-hypergraph navigation.
+
+```bash
+kg context                         # Where am I?
+kg context focus <path>            # Jump to node
+kg context navigate <edge>         # Follow hyperedge
+kg context backtrack               # Go back one step
+kg context trail                   # Show navigation history
+kg context trail save <name>       # Save trail
+kg context trail load <name>       # Load saved trail
+kg context trail share             # Export as JSON
+kg context trail witness           # Convert to witness mark
+kg context subgraph                # Extract reachable subgraph
+kg context outline                 # Render as editable outline
+kg context lens <file> <focus>     # Create semantic lens
+kg context copy <path> [selection] # Copy with provenance
+kg context paste <path> [pos]      # Paste with link creation
+```
+
+**Lens Focus Specifiers:**
+- `function_name` - Focus on a function
+- `class:ClassName` - Focus on a class
+- `lines:start-end` - Focus on line range
+
+**AGENTESE Paths:** `self.context.*`
+
+---
+
+### `kg archaeology`
+
+Unearth historical decisions and patterns.
+
+```bash
+kg archaeology                     # Show archaeology overview
+kg archaeology dig <query>         # Search historical decisions
+kg archaeology timeline            # Show decision timeline
+kg archaeology patterns            # Identify patterns
+```
+
+**AGENTESE Path:** `time.archaeology.*`
+
+---
+
+### `kg evidence`
+
+Query and manage evidence across the system.
+
+```bash
+kg evidence show                   # Show recent evidence
+kg evidence search <query>         # Search evidence
+kg evidence link <source> <target> # Create evidence link
+kg evidence verify <claim>         # Verify a claim
+```
+
+**AGENTESE Path:** `concept.evidence.*`
+
+---
+
+### `kg graph`
+
+Query the WitnessedGraph (unified edge composition).
+
+```bash
+kg graph                           # Show graph stats
+kg graph manifest                  # Same as above
+kg graph neighbors <path>          # Edges connected to path
+kg graph evidence <spec>           # Evidence supporting spec
+kg graph trace <start> <end>       # Path between nodes
+kg graph search <query>            # Search edges
+```
+
+**Graph Sources:**
+- **Sovereign**: Code structure (imports, calls, inherits)
+- **Witness**: Mark-based evidence (tags, decisions)
+- **SpecLedger**: Spec relations (harmony, contradiction)
+
+**AGENTESE Path:** `concept.graph.*`
+
+---
+
+### `kg completions`
+
+Generate shell completions.
+
+```bash
+kg completions bash                # Bash completions
+kg completions zsh                 # Zsh completions
+kg completions fish                # Fish completions
+```
+
+**Installation:**
+```bash
+# Bash
+kg completions bash >> ~/.bashrc && source ~/.bashrc
+
+# Zsh
+kg completions zsh >> ~/.zshrc && source ~/.zshrc
+
+# Fish
+kg completions fish > ~/.config/fish/completions/kg.fish
+```
+
+---
+
+## System Commands
+
+*Database, migration, and maintenance operations.*
+
+### `kg dawn`
+
+Dawn Cockpit - daily operating surface TUI.
+
+> *"The cockpit just makes it easy."*
+
+```bash
+kg dawn                            # Launch TUI
+kg dawn --cli                      # CLI mode (no TUI)
+kg dawn focus                      # List focus items
+kg dawn focus add <target>         # Add focus item
+kg dawn focus done <id>            # Archive focus item
+kg dawn focus promote <id>         # Move toward TODAY
+kg dawn focus demote <id>          # Move toward SOMEDAY
+kg dawn snippets                   # List snippets
+kg dawn snippets copy <id>         # Copy snippet
+kg dawn hygiene                    # Check stale items
+```
+
+**Focus Options:**
+- `-l, --label <label>` - Custom label
+- `-b, --bucket <bucket>` - Bucket: TODAY, WEEK, SOMEDAY
+
+**TUI Key Bindings:**
+| Key | Action |
+|-----|--------|
+| Tab | Switch panes |
+| Up/Down | Navigate |
+| Enter | Copy/Open |
+| 1-9 | Quick select |
+| a | Add focus item |
+| d | Mark done |
+| h | Hygiene check |
+| r | Refresh |
+| q | Quit |
+
+**AGENTESE Path:** `time.dawn.*`
+
+---
+
+### `kg migrate`
+
+Database migrations via Alembic.
+
+```bash
+kg migrate                         # Apply all pending migrations
+kg migrate up                      # Same as above
+kg migrate status                  # Show current revision
+kg migrate history                 # Show migration history
+kg migrate down                    # Rollback one migration
+kg migrate down -1                 # Same as above
+```
+
+**AGENTESE Path:** `time.trace.migrate`
+
+---
+
+### `kg wipe`
+
+Remove kgents databases with confirmation.
+
+```bash
+kg wipe local                      # Remove project DB
+kg wipe global                     # Remove global DB
+kg wipe all                        # Remove both
+kg wipe local --force              # Skip confirmation
+kg wipe all --dry-run              # Show what would be deleted
+```
+
+**Scopes:**
+| Scope | Location |
+|-------|----------|
+| `local` | `.kgents/cortex.db` |
+| `global` | `~/.local/share/kgents/` |
+| `all` | Both local and global |
+
+**Safety:** Requires typing "yes" to confirm unless `--force` is specified.
+
+---
+
+*Last updated: 2026-01-16*

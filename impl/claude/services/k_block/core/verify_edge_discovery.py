@@ -18,11 +18,10 @@ import sys
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location(
-    "edge_discovery",
-    Path(__file__).parent / "edge_discovery.py"
+    "edge_discovery", Path(__file__).parent / "edge_discovery.py"
 )
 module = importlib.util.module_from_spec(spec)
-sys.modules['edge_discovery'] = module
+sys.modules["edge_discovery"] = module
 spec.loader.exec_module(module)
 
 EdgeDiscoveryService = module.EdgeDiscoveryService
@@ -33,7 +32,7 @@ def print_section(title: str):
     """Print section header."""
     print(f"\n{'=' * 80}")
     print(f"  {title}")
-    print('=' * 80)
+    print("=" * 80)
 
 
 def print_edges(edges, title: str):
@@ -87,7 +86,9 @@ External link: [GitHub](https://github.com/example) (should be skipped)
 
     # Verify expected edge types
     kinds = {e.kind for e in edges_explicit}
-    assert EdgeKind.IMPLEMENTS in kinds or EdgeKind.REFERENCES in kinds, "Should find IMPLEMENTS/REFERENCES"
+    assert EdgeKind.IMPLEMENTS in kinds or EdgeKind.REFERENCES in kinds, (
+        "Should find IMPLEMENTS/REFERENCES"
+    )
     assert EdgeKind.TESTS in kinds, "Should find TESTS edge"
     print("\n✓ All expected explicit edge types found")
 

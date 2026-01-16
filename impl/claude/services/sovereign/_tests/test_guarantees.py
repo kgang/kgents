@@ -195,9 +195,7 @@ class TestLaw1_NoEntityWithoutWitness:
         """Ingest should create a birth mark before storing content."""
         store, witness, ingestor = store_with_witness
 
-        event = IngestEvent.from_content(
-            b"# Test content", "spec/test.md", source="test"
-        )
+        event = IngestEvent.from_content(b"# Test content", "spec/test.md", source="test")
 
         result = await ingestor.ingest(event, author="test-user")
 
@@ -217,9 +215,7 @@ class TestLaw1_NoEntityWithoutWitness:
         """Birth mark should be saved to witness persistence."""
         store, witness, ingestor = store_with_witness
 
-        event = IngestEvent.from_content(
-            b"# Test", "spec/test.md", source="test"
-        )
+        event = IngestEvent.from_content(b"# Test", "spec/test.md", source="test")
 
         result = await ingestor.ingest(event, author="test-user")
 
@@ -234,16 +230,12 @@ class TestLaw1_NoEntityWithoutWitness:
         assert call_kwargs["author"] == "test-user"
 
     @pytest.mark.asyncio
-    async def test_unwitnessed_fallback_creates_placeholder_id(
-        self, store: SovereignStore
-    ) -> None:
+    async def test_unwitnessed_fallback_creates_placeholder_id(self, store: SovereignStore) -> None:
         """When no witness is available, ingest should create placeholder ID."""
         # Create ingestor WITHOUT witness
         ingestor = Ingestor(store, witness=None)
 
-        event = IngestEvent.from_content(
-            b"# Test", "spec/test.md", source="test"
-        )
+        event = IngestEvent.from_content(b"# Test", "spec/test.md", source="test")
 
         result = await ingestor.ingest(event)
 
@@ -293,8 +285,7 @@ Implements: `spec/principles.md`
 
         # Find edge mark calls (not the birth mark)
         edge_calls = [
-            call for call in witness.save_mark.call_args_list
-            if "edge.discovered" in str(call)
+            call for call in witness.save_mark.call_args_list if "edge.discovered" in str(call)
         ]
         assert len(edge_calls) >= 2
 
@@ -320,7 +311,8 @@ Reference: `spec/other.md`
 
         # Find edge mark calls
         edge_calls = [
-            call for call in witness.save_mark.call_args_list[1:]
+            call
+            for call in witness.save_mark.call_args_list[1:]
             if "edge.discovered" in call.kwargs.get("action", "")
         ]
 
@@ -344,7 +336,8 @@ References: `spec/target.md`
 
         # Find edge mark calls
         edge_calls = [
-            call for call in witness.save_mark.call_args_list
+            call
+            for call in witness.save_mark.call_args_list
             if "edge.discovered" in call.kwargs.get("action", "")
         ]
 
@@ -387,9 +380,7 @@ class TestLaw3_NoExportWithoutWitness:
         store, witness, ingestor = store_with_witness
 
         # First ingest something
-        event = IngestEvent.from_content(
-            b"# Test content", "spec/test.md", source="test"
-        )
+        event = IngestEvent.from_content(b"# Test content", "spec/test.md", source="test")
         await ingestor.ingest(event)
 
         # Reset mock to track export calls
@@ -405,9 +396,7 @@ class TestLaw3_NoExportWithoutWitness:
         assert "content_hash" in export_data
 
     @pytest.mark.asyncio
-    async def test_mark_includes_entity_paths(
-        self, store: SovereignStore
-    ) -> None:
+    async def test_mark_includes_entity_paths(self, store: SovereignStore) -> None:
         """Export mark should include entity paths being exported."""
         # First ingest something
         await store.store_version("spec/test.md", b"# Test", "mark-123")
@@ -419,20 +408,17 @@ class TestLaw3_NoExportWithoutWitness:
         assert export_data["path"] == "spec/test.md"
 
     @pytest.mark.asyncio
-    async def test_bundle_includes_entity_info(
-        self, store: SovereignStore
-    ) -> None:
+    async def test_bundle_includes_entity_info(self, store: SovereignStore) -> None:
         """Export bundle should include entity information."""
         # Ingest multiple entities
         await store.store_version("spec/a.md", b"# A", "mark-1")
         await store.store_version("spec/b.md", b"# B", "mark-2")
 
         # Export bundle
-        bundle_bytes = await store.export_bundle(
-            ["spec/a.md", "spec/b.md"], format="json"
-        )
+        bundle_bytes = await store.export_bundle(["spec/a.md", "spec/b.md"], format="json")
 
         import json
+
         bundle = json.loads(bundle_bytes.decode("utf-8"))
 
         assert bundle["type"] == "sovereign_export"
@@ -460,9 +446,7 @@ class TestTheorem1_IntegrityGuarantee:
     """
 
     @pytest.mark.asyncio
-    async def test_verify_integrity_passes_for_valid_entity(
-        self, store: SovereignStore
-    ) -> None:
+    async def test_verify_integrity_passes_for_valid_entity(self, store: SovereignStore) -> None:
         """Integrity check should pass for uncorrupted entity."""
         content = b"# Valid Content\n"
         path = "spec/test.md"
@@ -582,9 +566,7 @@ class TestTheorem2_ProvenanceGuarantee:
         store, witness, ingestor = store_with_witness
 
         # Ingest initial version
-        event1 = IngestEvent.from_content(
-            b"# Version 1", "spec/test.md", source="test"
-        )
+        event1 = IngestEvent.from_content(b"# Version 1", "spec/test.md", source="test")
         result1 = await ingestor.ingest(event1, author="alice")
         birth_mark_id = result1.ingest_mark_id
 
@@ -608,9 +590,7 @@ class TestTheorem2_ProvenanceGuarantee:
         assert witness.save_mark.call_count >= 2
 
     @pytest.mark.asyncio
-    async def test_chain_includes_all_versions(
-        self, store: SovereignStore
-    ) -> None:
+    async def test_chain_includes_all_versions(self, store: SovereignStore) -> None:
         """Version history should be complete and ordered."""
         path = "spec/test.md"
 
@@ -655,9 +635,7 @@ class TestTheorem10_RenameIntegrity:
     """
 
     @pytest.mark.asyncio
-    async def test_rename_creates_proper_mark(
-        self, store: SovereignStore
-    ) -> None:
+    async def test_rename_creates_proper_mark(self, store: SovereignStore) -> None:
         """Rename should update metadata with rename information."""
         old_path = "spec/old.md"
         new_path = "spec/new.md"
@@ -685,9 +663,7 @@ class TestTheorem10_RenameIntegrity:
         assert metadata.get("renamed_at") is not None
 
     @pytest.mark.asyncio
-    async def test_rename_preserves_content_and_hash(
-        self, store: SovereignStore
-    ) -> None:
+    async def test_rename_preserves_content_and_hash(self, store: SovereignStore) -> None:
         """Rename should preserve content and integrity."""
         old_path = "spec/old.md"
         new_path = "spec/renamed.md"
@@ -727,9 +703,7 @@ class TestTheorem11_DeleteSafety:
     """
 
     @pytest.mark.asyncio
-    async def test_delete_removes_entity(
-        self, store: SovereignStore
-    ) -> None:
+    async def test_delete_removes_entity(self, store: SovereignStore) -> None:
         """Basic delete should remove entity."""
         path = "spec/test.md"
 
@@ -742,9 +716,7 @@ class TestTheorem11_DeleteSafety:
         assert not await store.exists(path)
 
     @pytest.mark.asyncio
-    async def test_can_check_references_before_delete(
-        self, store: SovereignStore
-    ) -> None:
+    async def test_can_check_references_before_delete(self, store: SovereignStore) -> None:
         """Should be able to check for references before deleting."""
         # Create entity with references
         await store.store_version("spec/target.md", b"# Target", "mark-1")
@@ -777,9 +749,7 @@ class TestTheorem11_DeleteSafety:
         assert refs[0]["from_path"] == "spec/source.md"
 
     @pytest.mark.asyncio
-    async def test_delete_with_references_can_be_detected(
-        self, store: SovereignStore
-    ) -> None:
+    async def test_delete_with_references_can_be_detected(self, store: SovereignStore) -> None:
         """
         Deleting entity with references should be blocked (Theorem 11).
 

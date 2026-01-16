@@ -6,6 +6,13 @@ These tests verify the gotchas documented in persistence.py:
 2. test_capture_performance - Fire-and-forget trace recording
 3. test_access_tracking - search() updates access_count via touch()
 
+Teaching (Test Patterns):
+    TIMING TESTS use `preferred_backend="memory"` to avoid Postgres index
+    creation lock contention (15-17s) under parallel xdist execution.
+    We're testing capture() latency, not Postgres performance.
+
+    See: docs/skills/test-patterns.md (Pattern 1: Memory Backend)
+
 See: services/brain/persistence.py (Teaching section)
 """
 
@@ -17,20 +24,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from agents.d import Datum
+from agents.d.universe import Universe
 
 # =============================================================================
 # Fixtures
 # =============================================================================
-
-
-@pytest.fixture
-def mock_dgent():
-    """Create a mock D-gent protocol."""
-    dgent = MagicMock()
-    dgent.put = AsyncMock(return_value="datum-123")
-    dgent.get = AsyncMock(return_value=None)  # Default: datum not found
-    dgent.delete = AsyncMock(return_value=True)
-    return dgent
 
 
 @pytest.fixture
@@ -60,13 +58,17 @@ def mock_table_adapter():
 
 
 @pytest.fixture
-def brain_persistence(mock_table_adapter, mock_dgent):
-    """Create a BrainPersistence instance with mocks."""
+def brain_persistence(mock_table_adapter):
+    """Create a BrainPersistence instance with mocks.
+
+    Uses memory backend to avoid Postgres lock contention in parallel CI.
+    """
     from services.brain.persistence import BrainPersistence
 
+    universe = Universe(namespace="test", preferred_backend="memory")
     return BrainPersistence(
+        universe=universe,
         table_adapter=mock_table_adapter,
-        dgent=mock_dgent,
         embedder=None,
     )
 
@@ -80,84 +82,27 @@ class TestHealGhosts:
     """
     Tests for heal_ghosts() behavior.
 
-    Gotcha: Dual-track storage means Crystal table AND D-gent must both succeed.
-            If one fails after the other succeeds, you get "ghost" memories.
-            heal_ghosts() finds these and recreates the missing D-gent datums.
+    Note: With Universe, ghosts shouldn't exist - all crystals are stored
+    as complete datum+schema pairs. heal_ghosts() exists for backward
+    compatibility but always returns 0.
     """
 
     @pytest.mark.asyncio
-    async def test_heal_ghosts_recreates_missing_datum(self, mock_table_adapter, mock_dgent):
-        """heal_ghosts() recreates D-gent datums for crystals with missing datums."""
+    async def test_heal_ghosts_always_returns_zero_with_universe(self, mock_table_adapter):
+        """heal_ghosts() returns 0 with Universe (no ghosts possible)."""
         from services.brain.persistence import BrainPersistence
 
-        # Create a mock crystal with a datum_id that points to missing datum
-        mock_crystal = MagicMock()
-        mock_crystal.datum_id = "datum-orphan-123"
-        mock_crystal.summary = "This crystal lost its datum"
-
-        # Configure session to return the orphan crystal
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = [mock_crystal]
-        mock_table_adapter._session.execute = AsyncMock(return_value=mock_result)
-
-        # D-gent returns None for the orphan datum (it's missing)
-        mock_dgent.get = AsyncMock(return_value=None)
-
+        universe = Universe(namespace="test")
         persistence = BrainPersistence(
+            universe=universe,
             table_adapter=mock_table_adapter,
-            dgent=mock_dgent,
             embedder=None,
         )
 
-        # Call heal_ghosts
+        # With Universe, heal_ghosts always returns 0
         healed_count = await persistence.heal_ghosts()
 
-        # Verify: D-gent.put was called to recreate the datum
-        assert healed_count == 1
-        mock_dgent.put.assert_called_once()
-
-        # Verify: The recreated datum has correct structure
-        recreated_datum = mock_dgent.put.call_args[0][0]
-        assert recreated_datum.id == "datum-orphan-123"
-        assert b"This crystal lost its datum" in recreated_datum.content
-        assert recreated_datum.metadata.get("healed") == "true"
-
-    @pytest.mark.asyncio
-    async def test_heal_ghosts_skips_healthy_crystals(self, mock_table_adapter, mock_dgent):
-        """heal_ghosts() does not touch crystals with valid D-gent datums."""
-        from services.brain.persistence import BrainPersistence
-
-        # Create a healthy crystal with existing datum
-        mock_crystal = MagicMock()
-        mock_crystal.datum_id = "datum-healthy-456"
-        mock_crystal.summary = "Healthy crystal"
-
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = [mock_crystal]
-        mock_table_adapter._session.execute = AsyncMock(return_value=mock_result)
-
-        # D-gent returns a valid datum (not missing)
-        mock_dgent.get = AsyncMock(
-            return_value=Datum(
-                id="datum-healthy-456",
-                content=b"Healthy content",
-                created_at=time.time(),
-                causal_parent=None,
-                metadata={},
-            )
-        )
-
-        persistence = BrainPersistence(
-            table_adapter=mock_table_adapter,
-            dgent=mock_dgent,
-            embedder=None,
-        )
-
-        healed_count = await persistence.heal_ghosts()
-
-        # No healing needed
         assert healed_count == 0
-        mock_dgent.put.assert_not_called()
 
 
 # =============================================================================
@@ -174,16 +119,20 @@ class TestCapturePerformance:
     """
 
     @pytest.mark.asyncio
-    async def test_capture_returns_without_waiting_for_trace(self, mock_table_adapter, mock_dgent):
-        """capture() returns quickly without blocking on trace recording."""
+    async def test_capture_returns_without_waiting_for_trace(self, mock_table_adapter):
+        """capture() returns quickly without blocking on trace recording.
+
+        Note: Uses in-memory backend to avoid Postgres index creation lock
+        contention during parallel CI execution. We're testing capture()
+        behavior (fire-and-forget trace), not Postgres performance.
+        """
         from services.brain.persistence import BrainPersistence
 
-        # Track timing
-        mock_dgent.put = AsyncMock(return_value="datum-123")
-
+        # Use memory backend to avoid Postgres lock contention in parallel CI
+        universe = Universe(namespace="test", preferred_backend="memory")
         persistence = BrainPersistence(
+            universe=universe,
             table_adapter=mock_table_adapter,
-            dgent=mock_dgent,
             embedder=None,
         )
 
@@ -198,13 +147,15 @@ class TestCapturePerformance:
         assert result.crystal_id is not None
 
     @pytest.mark.asyncio
-    async def test_capture_succeeds_even_if_trace_would_fail(self, mock_table_adapter, mock_dgent):
+    async def test_capture_succeeds_even_if_trace_would_fail(self, mock_table_adapter):
         """capture() succeeds even if trace recording is unavailable."""
         from services.brain.persistence import BrainPersistence
 
+        # Use memory backend to avoid Postgres lock contention in parallel CI
+        universe = Universe(namespace="test", preferred_backend="memory")
         persistence = BrainPersistence(
+            universe=universe,
             table_adapter=mock_table_adapter,
-            dgent=mock_dgent,
             embedder=None,
         )
 
@@ -225,79 +176,57 @@ class TestCapturePerformance:
 # =============================================================================
 
 
-class TestAccessTracking:
+class TestSearch:
     """
-    Tests for access tracking behavior.
+    Tests for search() behavior.
 
-    Gotcha: search() updates access_count via touch(). High-frequency searches
-            will cause write amplification. Consider batching access updates.
+    Note: search() now uses Universe for querying, not SQLAlchemy table_adapter.
+    Access tracking is deferred (TODO: implement via Universe updates).
     """
 
     @pytest.mark.asyncio
-    async def test_search_calls_touch_on_matched_crystals(self, mock_table_adapter, mock_dgent):
-        """search() calls crystal.touch() for each matched crystal."""
+    async def test_search_returns_matching_crystals(self, mock_table_adapter):
+        """search() returns crystals matching the query via Universe."""
         from services.brain.persistence import BrainPersistence
 
-        # Create mock crystals
-        mock_crystal1 = MagicMock()
-        mock_crystal1.id = "crystal-1"
-        mock_crystal1.summary = "python programming"
-        mock_crystal1.datum_id = None
-        mock_crystal1.created_at = None
-        mock_crystal1.touch = MagicMock()
-
-        mock_crystal2 = MagicMock()
-        mock_crystal2.id = "crystal-2"
-        mock_crystal2.summary = "python data science"
-        mock_crystal2.datum_id = None
-        mock_crystal2.created_at = None
-        mock_crystal2.touch = MagicMock()
-
-        # Configure session to return crystals
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = [mock_crystal1, mock_crystal2]
-        mock_table_adapter._session.execute = AsyncMock(return_value=mock_result)
-
+        universe = Universe(namespace="test")
         persistence = BrainPersistence(
+            universe=universe,
             table_adapter=mock_table_adapter,
-            dgent=mock_dgent,
             embedder=None,
         )
+
+        # Capture some content first
+        await persistence.capture(content="Python programming is great for data science")
+        await persistence.capture(content="JavaScript is used for web development")
 
         # Search for python-related content
         results = await persistence.search(query="python", limit=10)
 
-        # Both crystals match "python" - both should have touch() called
-        assert len(results) == 2
-        mock_crystal1.touch.assert_called_once()
-        mock_crystal2.touch.assert_called_once()
+        # Should find the Python crystal
+        assert len(results) >= 1
+        assert any("python" in r.content.lower() for r in results)
 
     @pytest.mark.asyncio
-    async def test_search_commits_after_touching(self, mock_table_adapter, mock_dgent):
-        """search() commits the session after touch() calls to persist access updates."""
+    async def test_search_returns_empty_for_no_matches(self, mock_table_adapter):
+        """search() returns empty list when no crystals match."""
         from services.brain.persistence import BrainPersistence
 
-        mock_crystal = MagicMock()
-        mock_crystal.id = "crystal-1"
-        mock_crystal.summary = "test content"
-        mock_crystal.datum_id = None
-        mock_crystal.created_at = None
-        mock_crystal.touch = MagicMock()
-
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = [mock_crystal]
-        mock_table_adapter._session.execute = AsyncMock(return_value=mock_result)
-
+        universe = Universe(namespace="test")
         persistence = BrainPersistence(
+            universe=universe,
             table_adapter=mock_table_adapter,
-            dgent=mock_dgent,
             embedder=None,
         )
 
-        await persistence.search(query="test", limit=10)
+        # Capture content that won't match
+        await persistence.capture(content="JavaScript is used for web development")
 
-        # Session should be committed to persist the access_count update
-        mock_table_adapter._session.commit.assert_called()
+        # Search for something not in the content
+        results = await persistence.search(query="quantum", limit=10)
+
+        # Should return empty
+        assert len(results) == 0
 
 
-__all__ = ["TestHealGhosts", "TestCapturePerformance", "TestAccessTracking"]
+__all__ = ["TestHealGhosts", "TestCapturePerformance", "TestSearch"]

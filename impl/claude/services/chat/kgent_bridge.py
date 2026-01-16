@@ -150,9 +150,7 @@ class KgentBridge:
                     "K-gent requires LLM credentials for chat. "
                     "Please configure MORPHEUS_URL or Claude CLI authentication."
                 )
-                yield self._format_sse(
-                    StreamChunk(type="content", content=fallback_response)
-                )
+                yield self._format_sse(StreamChunk(type="content", content=fallback_response))
                 yield self._format_sse(
                     StreamChunk(
                         type="done",
@@ -173,9 +171,7 @@ class KgentBridge:
 
             async for chunk in self._stream_from_soul(context):
                 accumulated_text += chunk
-                yield self._format_sse(
-                    StreamChunk(type="content", content=accumulated_text)
-                )
+                yield self._format_sse(StreamChunk(type="content", content=accumulated_text))
 
             # Create response (assistant output)
             completed_at = datetime.now().isoformat()
@@ -202,7 +198,9 @@ class KgentBridge:
                     observer_id="chat",
                     role="assistant",
                     capabilities=frozenset({"dialogue", "observe", "reason"}),
-                    perceptions=frozenset({"user_message", "session_state", "conversation_history"}),
+                    perceptions=frozenset(
+                        {"user_message", "session_state", "conversation_history"}
+                    ),
                     trust_level=1,  # Bounded: can respond but with governance
                 ),
                 tags=("chat", "turn", "dialogue"),
@@ -241,9 +239,7 @@ class KgentBridge:
             logger = logging.getLogger(__name__)
             logger.exception("Error in K-gent bridge streaming")
 
-            yield self._format_sse(
-                StreamChunk(type="error", error=f"K-gent error: {str(e)}")
-            )
+            yield self._format_sse(StreamChunk(type="error", error=f"K-gent error: {str(e)}"))
 
     async def _stream_from_soul(self, context: ChatContext) -> AsyncIterator[str]:
         """

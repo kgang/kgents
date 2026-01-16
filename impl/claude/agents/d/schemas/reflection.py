@@ -98,7 +98,9 @@ class ReflectionCrystal:
             derived_from=tuple(data.get("derived_from", [])),
             layer=data.get("layer", 6),
             proof=GaloisWitnessedProof.from_dict(data["proof"]) if data.get("proof") else None,
-            created_at=datetime.fromisoformat(data["created_at"]) if "created_at" in data else datetime.now(UTC),
+            created_at=datetime.fromisoformat(data["created_at"])
+            if "created_at" in data
+            else datetime.now(UTC),
         )
 
 
@@ -178,9 +180,10 @@ class InterpretationCrystal:
         """Deserialize from dict."""
         time_range_data = data.get("time_range", [])
         time_range = (
-            datetime.fromisoformat(time_range_data[0]),
-            datetime.fromisoformat(time_range_data[1])
-        ) if time_range_data and len(time_range_data) == 2 else (datetime.now(UTC), datetime.now(UTC))
+            (datetime.fromisoformat(time_range_data[0]), datetime.fromisoformat(time_range_data[1]))
+            if time_range_data and len(time_range_data) == 2
+            else (datetime.now(UTC), datetime.now(UTC))
+        )
 
         return cls(
             id=data["id"],
@@ -192,21 +195,19 @@ class InterpretationCrystal:
             supporting_ids=tuple(data.get("supporting_ids", [])),
             layer=data.get("layer", 7),
             proof=GaloisWitnessedProof.from_dict(data["proof"]) if data.get("proof") else None,
-            created_at=datetime.fromisoformat(data["created_at"]) if "created_at" in data else datetime.now(UTC),
+            created_at=datetime.fromisoformat(data["created_at"])
+            if "created_at" in data
+            else datetime.now(UTC),
         )
 
 
 # Schema registration for Universe
 from agents.d.universe import DataclassSchema
 
-REFLECTION_CRYSTAL_SCHEMA = DataclassSchema(
-    name="reflection.crystal",
-    type_cls=ReflectionCrystal
-)
+REFLECTION_CRYSTAL_SCHEMA = DataclassSchema(name="reflection.crystal", type_cls=ReflectionCrystal)
 
 INTERPRETATION_CRYSTAL_SCHEMA = DataclassSchema(
-    name="interpretation.crystal",
-    type_cls=InterpretationCrystal
+    name="interpretation.crystal", type_cls=InterpretationCrystal
 )
 
 

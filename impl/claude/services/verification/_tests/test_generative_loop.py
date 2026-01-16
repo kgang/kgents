@@ -348,7 +348,8 @@ class TestCompressionMorphismPreservation:
 
         # Only INCLUSION and PROJECTION edges become constraints
         constrainable_edges = [
-            e for e in topology.edges.values()
+            e
+            for e in topology.edges.values()
             if e.mapping_type in (MappingType.INCLUSION, MappingType.PROJECTION)
         ]
         if constrainable_edges:

@@ -81,6 +81,12 @@ class VoidRouter(ContextRouter):
             aspects=["prompt", "surprise"],
         )
         self.register(
+            "oblique",
+            "Draw an Oblique Strategy card (Brian Eno)",
+            _handle_oblique,
+            aspects=["draw", "list"],
+        )
+        self.register(
             "project",
             "Projection analysis (where are you projecting?)",
             _handle_project,
@@ -136,10 +142,17 @@ def _handle_mirror(args: list[str], ctx: "InvocationContext | None" = None) -> i
 
 
 def _handle_serendipity(args: list[str], ctx: "InvocationContext | None" = None) -> int:
-    """Handle void serendipity -> delegating to surprise_me handler."""
-    from protocols.cli.handlers.surprise_me import cmd_surprise_me
+    """Handle void serendipity -> delegating to surprise handler."""
+    from protocols.cli.handlers.joy import cmd_surprise
 
-    return cmd_surprise_me(args, ctx)
+    return cmd_surprise(args, ctx)
+
+
+def _handle_oblique(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+    """Handle void oblique -> delegating to oblique handler."""
+    from protocols.cli.handlers.joy import cmd_oblique
+
+    return cmd_oblique(args, ctx)
 
 
 def _handle_project(args: list[str], ctx: "InvocationContext | None" = None) -> int:

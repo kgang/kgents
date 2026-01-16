@@ -256,7 +256,9 @@ class TestSessionIntegration:
             response="Here's a comprehensive and helpful answer!",
         )
 
-        session.add_turn("Do task 2", "Here's a comprehensive and helpful answer!", turn_result=turn_result_good)
+        session.add_turn(
+            "Do task 2", "Here's a comprehensive and helpful answer!", turn_result=turn_result_good
+        )
 
         # Evidence should accumulate successes
         assert session.evidence.tools_succeeded > initial_succeeded

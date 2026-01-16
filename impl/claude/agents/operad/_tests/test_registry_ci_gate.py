@@ -15,6 +15,16 @@ Phase 1 Operad Unification (2025-12-17):
 - Target: 100% canonical usage
 
 Note: ATELIER_OPERAD removed 2025-12-21.
+
+Teaching (Test Patterns):
+    DOMAIN OPERADS have their own vocabulary. Not every operad must have
+    all UNIVERSAL_OPERATIONS (seq, par, branch, fix, trace). Domain operads
+    like ProbeOperad use 'witness' instead of 'trace' for policy semantics.
+
+    When adding a new domain operad that doesn't follow universal vocabulary,
+    add it to DOMAIN_OPERADS list to skip universal operation checks.
+
+    See: docs/skills/test-patterns.md (Pattern 3: Domain Operad Vocabulary)
 """
 
 from __future__ import annotations
@@ -133,6 +143,7 @@ DOMAIN_OPERADS = [
     "GARDEN",  # Garden Protocol - plan composition (PlanState, not PolyAgent)
     "GalleryOperad",  # Gallery - pilot browsing/comparison (domain vocabulary)
     "WitnessOperad",  # Witness Crown Jewel - domain-specific verify signatures
+    "ProbeOperad",  # Probe/Policy - uses 'witness' instead of 'trace' (domain vocabulary)
 ]
 
 # Legacy operads (not yet migrated to canonical pattern)

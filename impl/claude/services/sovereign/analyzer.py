@@ -114,7 +114,9 @@ class SovereignAnalyzer:
         if not force:
             existing_state = await self.store.get_analysis_state(path)
             if existing_state and existing_state.is_complete:
-                logger.debug(f"Entity {path} already analyzed (status={existing_state.status.value})")
+                logger.debug(
+                    f"Entity {path} already analyzed (status={existing_state.status.value})"
+                )
                 return AnalysisResult(
                     path=path,
                     status=existing_state.status,

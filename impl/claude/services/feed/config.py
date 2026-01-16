@@ -119,9 +119,7 @@ def get_feed_config() -> FeedConfig:
         recency_weight=_parse_float_env("KGENTS_FEED_RECENCY_WEIGHT", 0.2),
         coherence_weight=_parse_float_env("KGENTS_FEED_COHERENCE_WEIGHT", 0.1),
         enable_personalization=_parse_bool_env("KGENTS_FEED_ENABLE_PERSONALIZATION", True),
-        min_interactions_for_personalization=_parse_int_env(
-            "KGENTS_FEED_MIN_INTERACTIONS", 5
-        ),
+        min_interactions_for_personalization=_parse_int_env("KGENTS_FEED_MIN_INTERACTIONS", 5),
     )
 
 

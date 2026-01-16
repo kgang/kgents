@@ -32,7 +32,11 @@ def main():
 
     patterns = miner.mine_commit_patterns(max_commits=200)
     print(f"Total commits analyzed: {patterns.total_commits}")
-    print(f"Date range: {patterns.date_range[0].date()} to {patterns.date_range[1].date()}" if patterns.date_range else "N/A")
+    print(
+        f"Date range: {patterns.date_range[0].date()} to {patterns.date_range[1].date()}"
+        if patterns.date_range
+        else "N/A"
+    )
     print(f"Average commit size: {patterns.avg_commit_size:.1f} lines")
     print(f"Median commit size: {patterns.median_commit_size:.1f} lines")
     print(f"Quality score: {patterns.quality_score:.2f}")

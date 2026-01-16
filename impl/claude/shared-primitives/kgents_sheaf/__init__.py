@@ -264,8 +264,7 @@ class Sheaf(Generic[T]):
         """
         if name not in self.views:
             raise KeyError(
-                f"Unknown view: '{name}'. "
-                f"Available views: {list(self.views.keys())}"
+                f"Unknown view: '{name}'. Available views: {list(self.views.keys())}"
             )
         self._content = content
         return self.views[name].render(content, **kwargs)
@@ -283,8 +282,7 @@ class Sheaf(Generic[T]):
         """
         self._content = content
         return {
-            name: view.render(content, **kwargs)
-            for name, view in self.views.items()
+            name: view.render(content, **kwargs) for name, view in self.views.items()
         }
 
     def propagate(
@@ -332,9 +330,7 @@ class Sheaf(Generic[T]):
 
             # Check that view's cached content matches input
             if view._last_content != content:
-                conflicts.append(
-                    f"{view_name}: content mismatch (stale cache)"
-                )
+                conflicts.append(f"{view_name}: content mismatch (stale cache)")
 
         # If we have a glue function, verify round-trip
         if self.glue_fn is not None:
@@ -353,7 +349,8 @@ class Sheaf(Generic[T]):
             conflicts=conflicts,
             coverage=len(checked) / len(self.views) if self.views else 1.0,
             message=(
-                "All views coherent" if not conflicts
+                "All views coherent"
+                if not conflicts
                 else f"{len(conflicts)} conflict(s)"
             ),
         )
@@ -372,8 +369,7 @@ class Sheaf(Generic[T]):
         """
         if self.glue_fn is not None:
             views_data = rendered_views or {
-                name: view._last_rendered
-                for name, view in self.views.items()
+                name: view._last_rendered for name, view in self.views.items()
             }
             return self.glue_fn(views_data)
 

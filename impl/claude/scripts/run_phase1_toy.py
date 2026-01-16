@@ -33,6 +33,7 @@ from dataclasses import dataclass
 @dataclass
 class ProbeResult:
     """Result from a single probe test."""
+
     name: str
     base_answer: str
     modified_answer: str
@@ -44,6 +45,7 @@ class ProbeResult:
 @dataclass
 class CoherenceResult:
     """Result from sheaf coherence check."""
+
     is_coherent: bool
     claims: list
     violations: list
@@ -67,11 +69,12 @@ class MockLLM:
     async def solve(self, prompt: str) -> str:
         """Solve a problem and return the answer."""
         # Normalize: collapse whitespace, remove brackets, lowercase
-        normalized = ' '.join(prompt.lower().split())
+        normalized = " ".join(prompt.lower().split())
         # Remove bracketed insertions (our perturbation markers)
         import re
-        normalized = re.sub(r'\[.*?\]', '', normalized)
-        normalized = ' '.join(normalized.split())  # Re-collapse after removal
+
+        normalized = re.sub(r"\[.*?\]", "", normalized)
+        normalized = " ".join(normalized.split())  # Re-collapse after removal
 
         # Handle simple math (robust to whitespace variations)
         if "2 + 2" in normalized or "2+2" in normalized or "2  +  2" in normalized:
@@ -135,7 +138,7 @@ class MiddleInvarianceProbe:
             modified_answer=perturbed_mode,
             passed=passed,
             score=score,
-            details=f"Perturbed prompt: {perturbed_prompt[:50]}..."
+            details=f"Perturbed prompt: {perturbed_prompt[:50]}...",
         )
 
     async def middle_deletion_test(self, prompt: str, n: int = 3) -> ProbeResult:
@@ -152,7 +155,7 @@ class MiddleInvarianceProbe:
                 modified_answer="N/A",
                 passed=True,
                 score=1.0,
-                details="Prompt too short (< 3 sentences)"
+                details="Prompt too short (< 3 sentences)",
             )
 
         # Remove middle sentence
@@ -173,7 +176,7 @@ class MiddleInvarianceProbe:
             modified_answer=reduced_mode,
             passed=passed,
             score=score,
-            details=f"Reduced prompt: {reduced_prompt}"
+            details=f"Reduced prompt: {reduced_prompt}",
         )
 
     async def edge_perturbation_test(self, prompt: str, n: int = 3) -> ProbeResult:
@@ -197,7 +200,7 @@ class MiddleInvarianceProbe:
             modified_answer=perturbed_mode,
             passed=True,  # Always pass in Phase A (informational only)
             score=1.0 if differs else 0.5,  # 0.5 = inconclusive with mock
-            details="Control test: edge perturbation (informational)"
+            details="Control test: edge perturbation (informational)",
         )
 
 
@@ -218,7 +221,7 @@ class MonadVariatorProbe:
         Measure: Should not change answer.
         """
         # Double all spaces
-        spaced_prompt = prompt.replace(' ', '  ')
+        spaced_prompt = prompt.replace(" ", "  ")
 
         base_answers = [await self.llm.solve(prompt) for _ in range(n)]
         spaced_answers = [await self.llm.solve(spaced_prompt) for _ in range(n)]
@@ -235,7 +238,7 @@ class MonadVariatorProbe:
             modified_answer=spaced_mode,
             passed=passed,
             score=score,
-            details=f"Spaced prompt: '{spaced_prompt}'"
+            details=f"Spaced prompt: '{spaced_prompt}'",
         )
 
 
@@ -258,7 +261,7 @@ class SheafDetector:
         # Check for contradictions (simple heuristic)
         violations = []
         for i, claim_a in enumerate(claims):
-            for j, claim_b in enumerate(claims[i+1:], i+1):
+            for j, claim_b in enumerate(claims[i + 1 :], i + 1):
                 if self._contradicts_simple(claim_a, claim_b):
                     violations.append((i, j, claim_a, claim_b))
 
@@ -266,17 +269,14 @@ class SheafDetector:
         score = 1.0 - (len(violations) / max(len(claims), 1))
 
         return CoherenceResult(
-            is_coherent=is_coherent,
-            claims=claims,
-            violations=violations,
-            score=score
+            is_coherent=is_coherent, claims=claims, violations=violations, score=score
         )
 
     def _extract_claims_simple(self, trace: str) -> list:
         """Simple claim extraction via sentence splitting."""
-        sentences = [s.strip() for s in trace.split('.') if s.strip()]
+        sentences = [s.strip() for s in trace.split(".") if s.strip()]
         # Filter to statements that look like claims
-        claims = [s for s in sentences if any(c.isdigit() for c in s) or '=' in s]
+        claims = [s for s in sentences if any(c.isdigit() for c in s) or "=" in s]
         return claims if claims else sentences[:3]  # Fallback to first 3 sentences
 
     def _contradicts_simple(self, claim_a: str, claim_b: str) -> bool:

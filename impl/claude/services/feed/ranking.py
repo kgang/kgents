@@ -104,9 +104,7 @@ class PrinciplesScore:
         if not self.kblock_principles:
             return 0.0  # K-Block doesn't reference any principles
 
-        matched = sum(
-            1 for p in self.kblock_principles if p in self.user_principles
-        )
+        matched = sum(1 for p in self.kblock_principles if p in self.user_principles)
         return matched / len(self.user_principles)
 
 
@@ -136,6 +134,7 @@ class RecencyScore:
 
         # Exponential decay: score halves every half_life_days
         import math
+
         score = math.pow(2.0, -age_days / self.half_life_days)
         return max(0.0, min(1.0, score))
 

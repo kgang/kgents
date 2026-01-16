@@ -138,9 +138,13 @@ class GhostFunctionCrystal:
             spec_id=data.get("spec_id"),
             resolved=data.get("resolved", False),
             resolved_to=data.get("resolved_to"),
-            resolved_at=datetime.fromisoformat(data["resolved_at"]) if data.get("resolved_at") else None,
+            resolved_at=datetime.fromisoformat(data["resolved_at"])
+            if data.get("resolved_at")
+            else None,
             proof=GaloisWitnessedProof.from_dict(data["proof"]) if data.get("proof") else None,
-            created_at=datetime.fromisoformat(data["created_at"]) if "created_at" in data else datetime.now(UTC),
+            created_at=datetime.fromisoformat(data["created_at"])
+            if "created_at" in data
+            else datetime.now(UTC),
         )
 
     @property
@@ -162,10 +166,7 @@ class GhostFunctionCrystal:
 # Schema for Universe registration
 from agents.d.universe import DataclassSchema
 
-GHOST_FUNCTION_SCHEMA = DataclassSchema(
-    name="code.ghost",
-    type_cls=GhostFunctionCrystal
-)
+GHOST_FUNCTION_SCHEMA = DataclassSchema(name="code.ghost", type_cls=GhostFunctionCrystal)
 
 
 __all__ = [

@@ -62,14 +62,19 @@ def is_gibberish(insight: str) -> bool:
         return True
 
     # Looks like JSON fragment
-    if insight.strip().startswith(('{', '[', '"insight"')):
+    if insight.strip().startswith(("{", "[", '"insight"')):
         return True
 
     # Contains error patterns (case-insensitive)
     error_patterns = [
-        'error', 'exception', 'traceback',
-        'system:', '```json', '```\n{',
-        'jsondecodeerror', 'keyerror',
+        "error",
+        "exception",
+        "traceback",
+        "system:",
+        "```json",
+        "```\n{",
+        "jsondecodeerror",
+        "keyerror",
     ]
     insight_lower = insight.lower()
     if any(p in insight_lower for p in error_patterns):
@@ -92,9 +97,7 @@ def get_quality_summary(crystals: list["Crystal"]) -> dict[str, int]:
         if c.confidence < DEFAULT_MIN_CONFIDENCE and c.confidence >= LOW_CONFIDENCE_THRESHOLD
     )
     gibberish = sum(
-        1
-        for c in crystals
-        if c.confidence < LOW_CONFIDENCE_THRESHOLD or is_gibberish(c.insight)
+        1 for c in crystals if c.confidence < LOW_CONFIDENCE_THRESHOLD or is_gibberish(c.insight)
     )
 
     return {

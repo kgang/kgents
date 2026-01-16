@@ -153,11 +153,13 @@ class TestJoyFunctor:
 
     def test_create_functor_with_weights(self) -> None:
         """Can create a functor with domain weights."""
-        functor = JoyFunctor({
-            JoyMode.WARMTH: 0.5,
-            JoyMode.SURPRISE: 0.3,
-            JoyMode.FLOW: 0.2,
-        })
+        functor = JoyFunctor(
+            {
+                JoyMode.WARMTH: 0.5,
+                JoyMode.SURPRISE: 0.3,
+                JoyMode.FLOW: 0.2,
+            }
+        )
         assert functor.domain_weights[JoyMode.WARMTH] == 0.5
         assert functor.domain_weights[JoyMode.SURPRISE] == 0.3
         assert functor.domain_weights[JoyMode.FLOW] == 0.2
@@ -172,11 +174,13 @@ class TestJoyFunctor:
     def test_observe_returns_dominant_mode(self) -> None:
         """Observation returns the weighted-dominant mode."""
         # Flow-heavy functor
-        functor = JoyFunctor({
-            JoyMode.FLOW: 0.8,
-            JoyMode.WARMTH: 0.1,
-            JoyMode.SURPRISE: 0.1,
-        })
+        functor = JoyFunctor(
+            {
+                JoyMode.FLOW: 0.8,
+                JoyMode.WARMTH: 0.1,
+                JoyMode.SURPRISE: 0.1,
+            }
+        )
 
         # Even with high warmth signal, flow dominates due to weights
         obs = functor.observe(
@@ -388,21 +392,11 @@ class TestUniversalDelightPrimitive:
 
     def test_primitive_to_joy_mode(self) -> None:
         """Primitives map to expected joy modes."""
-        assert (
-            UniversalDelightPrimitive.RECOGNITION.to_joy_mode() == JoyMode.WARMTH
-        )
-        assert (
-            UniversalDelightPrimitive.MASTERY.to_joy_mode() == JoyMode.FLOW
-        )
-        assert (
-            UniversalDelightPrimitive.CLOSURE.to_joy_mode() == JoyMode.FLOW
-        )
-        assert (
-            UniversalDelightPrimitive.DISCOVERY.to_joy_mode() == JoyMode.SURPRISE
-        )
-        assert (
-            UniversalDelightPrimitive.CONNECTION.to_joy_mode() == JoyMode.WARMTH
-        )
+        assert UniversalDelightPrimitive.RECOGNITION.to_joy_mode() == JoyMode.WARMTH
+        assert UniversalDelightPrimitive.MASTERY.to_joy_mode() == JoyMode.FLOW
+        assert UniversalDelightPrimitive.CLOSURE.to_joy_mode() == JoyMode.FLOW
+        assert UniversalDelightPrimitive.DISCOVERY.to_joy_mode() == JoyMode.SURPRISE
+        assert UniversalDelightPrimitive.CONNECTION.to_joy_mode() == JoyMode.WARMTH
 
 
 # =============================================================================

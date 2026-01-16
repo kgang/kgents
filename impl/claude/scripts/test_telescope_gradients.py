@@ -28,10 +28,10 @@ async def test_telescope_gradients():
     for route in router.routes:
         # Route path includes the prefix, so check for ending
         if route.path.endswith("/telescope"):
-            if hasattr(route, 'methods') and "GET" in route.methods:
+            if hasattr(route, "methods") and "GET" in route.methods:
                 telescope_endpoint = route.endpoint
                 break
-            elif hasattr(route, 'endpoint'):
+            elif hasattr(route, "endpoint"):
                 telescope_endpoint = route.endpoint
                 break
 

@@ -36,9 +36,7 @@ class SimpleProbe:
         self.name = name
         self.duration_ms = duration_ms
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         result = ProbeResult(
             name=self.name,
             probe_type=ProbeType.IDENTITY,
@@ -55,9 +53,7 @@ class ConditionalProbe:
     def __init__(self, property_name: str):
         self.property_name = property_name
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         has_property = hasattr(target, self.property_name)
         result = ProbeResult(
             name=f"check_{self.property_name}",
@@ -76,9 +72,7 @@ class CountingProbe:
         self.name = name
         self.count = 0
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         self.count += 1
         result = ProbeResult(
             name=f"{self.name}_call_{self.count}",

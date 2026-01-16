@@ -513,7 +513,7 @@ async def _get_genesis_file_as_document(path: str) -> "DocumentDetailResponse":
     content = absolute_path.read_text(encoding="utf-8")
 
     # Parse frontmatter if present
-    metadata: dict = {}
+    metadata: dict[str, Any] = {}
     body = content
     if content.startswith("---"):
         parts = content.split("---", 2)
@@ -538,8 +538,12 @@ async def _get_genesis_file_as_document(path: str) -> "DocumentDetailResponse":
 
     # Extract info from metadata or K-Block
     layer = metadata.get("layer") or (kblock.zero_seed_layer if kblock else None) or 0
-    layer_name = metadata.get("layer_name") or (kblock.zero_seed_kind if kblock else None) or "genesis"
-    title = metadata.get("title") or (kblock.path.split(".")[-1] if kblock and kblock.path else path)
+    layer_name = (
+        metadata.get("layer_name") or (kblock.zero_seed_kind if kblock else None) or "genesis"
+    )
+    title = metadata.get("title") or (
+        kblock.path.split(".")[-1] if kblock and kblock.path else path
+    )
     galois_loss = metadata.get("galois_loss") or 0.0
     confidence = metadata.get("confidence") or (kblock.confidence if kblock else 1.0)
     derives_from = metadata.get("derives_from") or (kblock.lineage if kblock else [])

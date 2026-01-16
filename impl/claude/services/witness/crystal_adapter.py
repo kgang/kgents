@@ -175,9 +175,7 @@ class WitnessCrystalAdapter:
 
         # Extract timestamp from context (injected by Universe.get)
         created_at = witness_mark.context.get("created_at")
-        timestamp = (
-            datetime.fromtimestamp(created_at, tz=UTC) if created_at else datetime.now(UTC)
-        )
+        timestamp = datetime.fromtimestamp(created_at, tz=UTC) if created_at else datetime.now(UTC)
 
         # Convert to MarkResult (matches persistence.py interface)
         return MarkResult(

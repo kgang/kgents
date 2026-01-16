@@ -69,7 +69,9 @@ async def demo_self_analysis():
     logger.info("\n--- Categorical Analysis ---")
     logger.info(f"Laws Extracted: {len(report.categorical.laws_extracted)}")
     logger.info(f"Laws Verified: {report.categorical.laws_passed}/{report.categorical.laws_total}")
-    logger.info(f"Fixed Point: {report.categorical.fixed_point.description if report.categorical.fixed_point else 'None'}")
+    logger.info(
+        f"Fixed Point: {report.categorical.fixed_point.description if report.categorical.fixed_point else 'None'}"
+    )
     logger.info(f"Summary: {report.categorical.summary}")
 
     logger.info("\n--- Epistemic Analysis ---")

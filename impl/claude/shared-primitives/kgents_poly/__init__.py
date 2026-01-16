@@ -269,6 +269,7 @@ class PolyAgent(Generic[S, A, B]):
             >>> _, result = upper.invoke("ready", "hello")
             >>> print(result)  # "HELLO"
         """
+
         def new_transition(state: S, input: A) -> tuple[S, C]:
             new_state, output = self._transition(state, input)
             return new_state, f(output)
@@ -408,6 +409,7 @@ def stateful(
         >>> state, output = light.invoke("red", "tick")
         >>> print(state, output)  # green, go
     """
+
     def _default_directions(s: S) -> frozenset[Any]:
         return frozenset({Any})
 

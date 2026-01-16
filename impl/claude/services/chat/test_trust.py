@@ -81,7 +81,7 @@ def test_trust_profile_record_approval():
 
     # Record 3 approvals
     for i in range(3):
-        profile.record_approval("Edit", context=f"Approval {i+1}")
+        profile.record_approval("Edit", context=f"Approval {i + 1}")
 
     state = profile.get_tool_state("Edit")
     assert state.approval_count == 3
@@ -288,7 +288,7 @@ def test_full_trust_escalation_flow(trust_manager):
     # 2. Record approvals
     for i in range(5):
         trust_manager.record_approval(
-            user_id, tool_name, approved=True, context=f"Edit approval {i+1}"
+            user_id, tool_name, approved=True, context=f"Edit approval {i + 1}"
         )
 
     # 3. Should suggest escalation

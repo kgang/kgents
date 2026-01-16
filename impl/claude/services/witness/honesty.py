@@ -132,7 +132,9 @@ class CompressionHonesty:
         return cls(
             galois_loss=float(cast(float, galois_loss_raw) if galois_loss_raw else 0.0),
             dropped_tags=list(cast(list[str], dropped_tags_raw)) if dropped_tags_raw else [],
-            dropped_summaries=list(cast(list[str], dropped_summaries_raw)) if dropped_summaries_raw else [],
+            dropped_summaries=list(cast(list[str], dropped_summaries_raw))
+            if dropped_summaries_raw
+            else [],
             preserved_ratio=float(cast(float, preserved_ratio_raw) if preserved_ratio_raw else 1.0),
             warm_disclosure=str(warm_disclosure_raw) if warm_disclosure_raw else "",
         )
@@ -202,6 +204,7 @@ class CrystalHonestyCalculator:
                 from services.zero_seed.galois.distance import (
                     CosineEmbeddingDistance,
                 )
+
                 # Use fast cosine distance for efficiency
                 # (BidirectionalEntailment is more accurate but slower)
                 metric = CosineEmbeddingDistance()
@@ -209,9 +212,7 @@ class CrystalHonestyCalculator:
                 if isinstance(metric, DistanceMetricProtocol):
                     self._distance_metric = metric
             except ImportError:
-                logger.warning(
-                    "Could not import Galois distance metric, using heuristic"
-                )
+                logger.warning("Could not import Galois distance metric, using heuristic")
                 self._distance_metric = None
         return self._distance_metric
 
@@ -258,12 +259,8 @@ class CrystalHonestyCalculator:
         preserved_ratio = len(kept_marks) / len(original_marks) if original_marks else 1.0
 
         # Collect dropped tags with friendly names
-        dropped_tags_raw = list({
-            tag for m in dropped_marks for tag in m.tags if tag
-        })
-        dropped_tags = [
-            TAG_FRIENDLY_NAMES.get(tag, tag) for tag in dropped_tags_raw
-        ]
+        dropped_tags_raw = list({tag for m in dropped_marks for tag in m.tags if tag})
+        dropped_tags = [TAG_FRIENDLY_NAMES.get(tag, tag) for tag in dropped_tags_raw]
 
         # Create summaries of dropped content (first 3, truncated)
         dropped_summaries = []
@@ -274,9 +271,7 @@ class CrystalHonestyCalculator:
             dropped_summaries.append(content)
 
         # Compute Galois loss (semantic drift)
-        galois_loss = await self._compute_galois_loss(
-            original_marks, crystal, kept_marks
-        )
+        galois_loss = await self._compute_galois_loss(original_marks, crystal, kept_marks)
 
         # Generate warm disclosure
         warm_disclosure = self.generate_warm_disclosure(
@@ -326,9 +321,7 @@ class CrystalHonestyCalculator:
 
         try:
             # Original content
-            original_text = " ".join(
-                m.response.content for m in original_marks
-            )
+            original_text = " ".join(m.response.content for m in original_marks)
 
             # Reconstituted content (from crystal)
             reconstituted_text = f"{crystal.insight} {crystal.significance}"

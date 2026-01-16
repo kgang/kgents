@@ -349,8 +349,7 @@ class TestWarmthPrinciple:
             disclosure_lower = disclosure.lower()
             for forbidden in self.FORBIDDEN_PATTERNS:
                 assert forbidden not in disclosure_lower, (
-                    f"Disclosure '{disclosure}' contains "
-                    f"forbidden pattern '{forbidden}'"
+                    f"Disclosure '{disclosure}' contains forbidden pattern '{forbidden}'"
                 )
 
     def test_excellent_tier_uses_positive_language(self):
@@ -492,16 +491,20 @@ class TestEdgeCases:
 
         marks = []
         for i in range(20):
-            marks.append(Mark(
-                id=generate_mark_id(),
-                origin="daily_lab",
-                domain="journal",
-                stimulus=Stimulus(kind="daily_note", content=f"Note {i}", source="test"),
-                response=Response(kind="thought", content=f"Content {i} with substance", success=True),
-                umwelt=UmweltSnapshot.witness(),
-                timestamp=datetime.now(),
-                tags=("eureka",) if i == 0 else ("friction",),
-            ))
+            marks.append(
+                Mark(
+                    id=generate_mark_id(),
+                    origin="daily_lab",
+                    domain="journal",
+                    stimulus=Stimulus(kind="daily_note", content=f"Note {i}", source="test"),
+                    response=Response(
+                        kind="thought", content=f"Content {i} with substance", success=True
+                    ),
+                    umwelt=UmweltSnapshot.witness(),
+                    timestamp=datetime.now(),
+                    tags=("eureka",) if i == 0 else ("friction",),
+                )
+            )
 
         # Keep only 1 of 20
         kept_marks = marks[:1]

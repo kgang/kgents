@@ -108,12 +108,8 @@ class FeedEngagementStats(TimestampMixin, Base):
     )  # (engagements * 2 + views * 0.5 - dismissals) / total
 
     # Temporal signals
-    last_viewed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    last_engaged_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_viewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_engaged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Average dwell time (in seconds)
     avg_dwell_time_sec: Mapped[float | None] = mapped_column(Float, nullable=True)

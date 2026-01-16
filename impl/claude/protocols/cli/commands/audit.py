@@ -105,9 +105,7 @@ def _print_principle_scores(scores: Any, console: Any = None) -> None:
         if scores.passes_gates():
             console.print("[green]✓ Passes validation gates (all >= 0.4, 5+ >= 0.7)[/green]")
         else:
-            console.print(
-                "[red]✗ Fails validation gates (need all >= 0.4, 5+ >= 0.7)[/red]"
-            )
+            console.print("[red]✗ Fails validation gates (need all >= 0.4, 5+ >= 0.7)[/red]")
         console.print()
     else:
         # Plain text output
@@ -202,6 +200,7 @@ async def _audit_principles_async(spec_path: Path) -> Any:
     """Run principle audit."""
     _ensure_imports()
     from services.audit.principles import score_principles_async
+
     scores = await score_principles_async(spec_path)
     return scores
 
@@ -210,6 +209,7 @@ async def _audit_drift_async(spec_path: Path, impl_path: Path | None = None) -> 
     """Run drift audit."""
     _ensure_imports()
     from services.audit.drift import detect_drift_async
+
     drift_items = await detect_drift_async(spec_path, impl_path)
     return drift_items
 
@@ -253,20 +253,14 @@ def _generate_action_items(result: Any) -> list[str]:
 
         # Critical failures (< 0.4)
         if scores.tasteful < 0.4:
-            items.append(
-                "CRITICAL: Add clear purpose statement and justification for existence"
-            )
+            items.append("CRITICAL: Add clear purpose statement and justification for existence")
         elif scores.tasteful < 0.7:
-            items.append(
-                "Strengthen purpose statement - explain 'why this exists' more clearly"
-            )
+            items.append("Strengthen purpose statement - explain 'why this exists' more clearly")
 
         if scores.curated < 0.4:
             items.append("CRITICAL: Add intentional selection rationale and heritage citations")
         elif scores.curated < 0.7:
-            items.append(
-                "Improve curation - add heritage citations and evolution strategy"
-            )
+            items.append("Improve curation - add heritage citations and evolution strategy")
 
         if scores.ethical < 0.4:
             items.append("CRITICAL: Add transparency, privacy, and human agency considerations")
@@ -287,9 +281,7 @@ def _generate_action_items(result: Any) -> list[str]:
                 "CRITICAL: Document category laws (identity, associativity) and ensure single outputs"
             )
         elif scores.composable < 0.7:
-            items.append(
-                "Improve composability - add type signatures and composition operators"
-            )
+            items.append("Improve composability - add type signatures and composition operators")
 
         if scores.heterarchical < 0.4:
             items.append("CRITICAL: Describe dual loop (autonomous + functional) patterns")
@@ -301,9 +293,7 @@ def _generate_action_items(result: Any) -> list[str]:
         if scores.generative < 0.4:
             items.append("CRITICAL: Show how implementation can be derived from spec (compression)")
         elif scores.generative < 0.7:
-            items.append(
-                "Improve generativity - add grammar/rules section or mention derivation"
-            )
+            items.append("Improve generativity - add grammar/rules section or mention derivation")
 
     # Drift errors
     if result.drift_errors:
@@ -419,7 +409,7 @@ def cmd_audit(args: list[str], ctx: "InvocationContext | None" = None) -> int:
 
     if not spec_arg:
         print("Error: Spec path required")
-        print('Usage: kg audit <spec> [--principles] [--impl] [--full]')
+        print("Usage: kg audit <spec> [--principles] [--impl] [--full]")
         return 1
 
     spec_path = Path(spec_arg)
@@ -621,9 +611,7 @@ def cmd_audit_system(args: list[str], ctx: "InvocationContext | None" = None) ->
             else:
                 print("\n=== System Health Dashboard ===")
                 for name, result in results:
-                    mean_score = (
-                        result.principle_scores.mean() if result.principle_scores else 0.0
-                    )
+                    mean_score = result.principle_scores.mean() if result.principle_scores else 0.0
                     drift_errors = len(result.drift_errors) if result.drift_items else 0
                     print(
                         f"  {name:<12} Principles: {mean_score:.2f}  Drift: {drift_errors} errors"
@@ -643,6 +631,7 @@ def cmd_audit_system(args: list[str], ctx: "InvocationContext | None" = None) ->
         else:
             print(f"Error during system audit: {e}", file=sys.stderr)
             import traceback
+
             traceback.print_exc()
         return 1
 

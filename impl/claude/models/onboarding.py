@@ -69,9 +69,7 @@ class OnboardingSession(TimestampMixin, Base):
     completed: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     # Completion timestamp (null until completed)
-    completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # ==========================================================================
     # FTUE Axiom Tracking
@@ -80,27 +78,19 @@ class OnboardingSession(TimestampMixin, Base):
     # F1: Identity Seed (first K-Block)
     # Tracks: first_kblock_id (existing field, renamed conceptually to f1)
     first_kblock_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    f1_completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    f1_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # F2: Connection Pattern (first edge)
     f2_edge_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    f2_completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    f2_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # F3: Judgment Experience (first judgment)
     f3_judgment_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    f3_completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    f3_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # FG: Growth Witness (witnessed emergence)
     fg_witness_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    fg_completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    fg_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # The user's first declaration text (preserved for history)
     first_declaration: Mapped[str | None] = mapped_column(Text, nullable=True)

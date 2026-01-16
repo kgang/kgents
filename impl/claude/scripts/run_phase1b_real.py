@@ -35,6 +35,7 @@ from pathlib import Path
 @dataclass
 class ProbeResult:
     """Result from a single probe test."""
+
     name: str
     base_answer: str
     modified_answer: str
@@ -46,6 +47,7 @@ class ProbeResult:
 @dataclass
 class CoherenceResult:
     """Result from sheaf coherence check."""
+
     is_coherent: bool
     claims: list
     violations: list
@@ -55,6 +57,7 @@ class CoherenceResult:
 @dataclass
 class ProblemResult:
     """Full result for one problem."""
+
     problem_id: str
     question: str
     expected_answer: str
@@ -81,7 +84,9 @@ class ClaudeCLI:
     Claude CLI automatically hydrates with directory context (CLAUDE.md, etc.)
     """
 
-    def __init__(self, model: str = "claude-sonnet-4-20250514", verbose: bool = True, timeout: float = 120.0):
+    def __init__(
+        self, model: str = "claude-sonnet-4-20250514", verbose: bool = True, timeout: float = 120.0
+    ):
         self.model = model
         self.verbose = verbose
         self.timeout = timeout
@@ -91,7 +96,9 @@ class ClaudeCLI:
         # Verify claude CLI exists
         self.claude_path = shutil.which("claude")
         if not self.claude_path:
-            raise RuntimeError("Claude CLI not found. Install with: npm install -g @anthropic-ai/claude-code")
+            raise RuntimeError(
+                "Claude CLI not found. Install with: npm install -g @anthropic-ai/claude-code"
+            )
 
     def _log(self, msg: str):
         if self.verbose:
@@ -104,9 +111,12 @@ class ClaudeCLI:
 
         proc = await asyncio.create_subprocess_exec(
             self.claude_path,
-            "-p", prompt,
-            "--output-format", "text",
-            "--model", self.model,
+            "-p",
+            prompt,
+            "--output-format",
+            "text",
+            "--model",
+            self.model,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -138,11 +148,11 @@ Question: {question}"""
         # Extract answer
         if "ANSWER:" in response:
             answer = response.split("ANSWER:")[-1].strip()
-            answer = answer.split('\n')[0].strip().strip('.')
+            answer = answer.split("\n")[0].strip().strip(".")
             return answer
 
         # Fallback: last line
-        lines = response.strip().split('\n')
+        lines = response.strip().split("\n")
         return lines[-1].strip()
 
     async def generate_cot(self, question: str) -> str:
@@ -171,7 +181,7 @@ class MiddleInvarianceProbe:
         for i in range(n):
             ans = await self.llm.solve(prompt)
             base_answers.append(ans)
-            print(f"      Base sample {i+1}: {ans}")
+            print(f"      Base sample {i + 1}: {ans}")
 
         # Perturb middle
         mid_start = len(prompt) // 5
@@ -188,7 +198,7 @@ class MiddleInvarianceProbe:
         for i in range(n):
             ans = await self.llm.solve(perturbed_prompt)
             perturbed_answers.append(ans)
-            print(f"      Perturbed sample {i+1}: {ans}")
+            print(f"      Perturbed sample {i + 1}: {ans}")
 
         base_mode = Counter(base_answers).most_common(1)[0][0]
         perturbed_mode = Counter(perturbed_answers).most_common(1)[0][0]
@@ -214,7 +224,7 @@ class MiddleInvarianceProbe:
                 modified_answer="N/A",
                 passed=True,
                 score=1.0,
-                details="Prompt too short"
+                details="Prompt too short",
             )
 
         reduced_prompt = ". ".join(sentences[:1] + sentences[2:])
@@ -255,15 +265,15 @@ class MiddleInvarianceProbe:
             modified_answer=perturbed_mode,
             passed=True,
             score=score,
-            details="Control: edge perturbation"
+            details="Control: edge perturbation",
         )
 
     def _normalize(self, answer: str) -> str:
         ans = answer.lower().strip()
-        ans = re.sub(r'[^\w\s]', '', ans)
-        for prefix in ['the answer is', 'answer:', 'answer is', 'equals', '=']:
+        ans = re.sub(r"[^\w\s]", "", ans)
+        for prefix in ["the answer is", "answer:", "answer is", "equals", "="]:
             if ans.startswith(prefix):
-                ans = ans[len(prefix):].strip()
+                ans = ans[len(prefix) :].strip()
         return ans
 
 
@@ -280,7 +290,7 @@ class MonadVariatorProbe:
 
     async def whitespace_invariance_test(self, prompt: str, n: int = 3) -> ProbeResult:
         """Add extra whitespace throughout."""
-        spaced_prompt = prompt.replace(' ', '  ')
+        spaced_prompt = prompt.replace(" ", "  ")
 
         base_answers = [await self.llm.solve(prompt) for _ in range(n)]
         spaced_answers = [await self.llm.solve(spaced_prompt) for _ in range(n)]
@@ -301,7 +311,7 @@ class MonadVariatorProbe:
 
     def _normalize(self, answer: str) -> str:
         ans = answer.lower().strip()
-        ans = re.sub(r'[^\w\s]', '', ans)
+        ans = re.sub(r"[^\w\s]", "", ans)
         return ans
 
 
@@ -322,7 +332,7 @@ class SheafDetector:
 
         violations = []
         for i, claim_a in enumerate(claims):
-            for j, claim_b in enumerate(claims[i+1:], i+1):
+            for j, claim_b in enumerate(claims[i + 1 :], i + 1):
                 if self._contradicts_heuristic(claim_a, claim_b):
                     violations.append((i, j, claim_a, claim_b))
 
@@ -330,25 +340,24 @@ class SheafDetector:
         score = 1.0 - (len(violations) / max(len(claims), 1))
 
         return CoherenceResult(
-            is_coherent=is_coherent,
-            claims=claims,
-            violations=violations,
-            score=max(0.0, score)
+            is_coherent=is_coherent, claims=claims, violations=violations, score=max(0.0, score)
         )
 
     def _extract_claims(self, trace: str) -> list:
-        sentences = re.split(r'[.!?]\s+', trace)
+        sentences = re.split(r"[.!?]\s+", trace)
         claims = []
         for s in sentences:
             s = s.strip()
             if not s:
                 continue
-            if re.search(r'\d', s) or any(w in s.lower() for w in ['is', 'equals', 'therefore', 'so', 'thus']):
+            if re.search(r"\d", s) or any(
+                w in s.lower() for w in ["is", "equals", "therefore", "so", "thus"]
+            ):
                 claims.append(s)
         return claims[:10]
 
     def _contradicts_heuristic(self, claim_a: str, claim_b: str) -> bool:
-        pattern = r'(\w+)\s*[=:]\s*(\d+)'
+        pattern = r"(\w+)\s*[=:]\s*(\d+)"
         matches_a = re.findall(pattern, claim_a)
         matches_b = re.findall(pattern, claim_b)
         for var_a, val_a in matches_a:
@@ -404,7 +413,7 @@ async def run_phase_b():
 
     for i, problem in enumerate(problems):
         print("=" * 80)
-        print(f"PROBLEM {i+1}/{len(problems)}: {problem['id']}")
+        print(f"PROBLEM {i + 1}/{len(problems)}: {problem['id']}")
         print("=" * 80)
         print(f"Question: {problem['question'][:100]}...")
         print(f"Expected: {problem['answer']}")
@@ -413,48 +422,54 @@ async def run_phase_b():
         try:
             # Get base answer and trace
             print("  Getting base answer...")
-            actual_answer = await llm.solve(problem['question'])
+            actual_answer = await llm.solve(problem["question"])
             print(f"  Actual: {actual_answer}")
 
             print("  Getting CoT trace...")
-            trace = await llm.generate_cot(problem['question'])
+            trace = await llm.generate_cot(problem["question"])
             print(f"  Trace: {trace[:200]}...")
             print()
 
-            correct = actual_answer.strip().lower() == problem['answer'].strip().lower()
+            correct = actual_answer.strip().lower() == problem["answer"].strip().lower()
             print(f"  Correct: {correct}")
             print()
 
             # Run probes
             print("  Running middle perturbation probe...")
-            mp = await middle_probe.middle_perturbation_test(problem['question'], n=n)
-            print(f"    Score: {mp.score:.2f} (base={mp.base_answer}, modified={mp.modified_answer})")
+            mp = await middle_probe.middle_perturbation_test(problem["question"], n=n)
+            print(
+                f"    Score: {mp.score:.2f} (base={mp.base_answer}, modified={mp.modified_answer})"
+            )
             print()
 
             print("  Running middle deletion probe...")
-            md = await middle_probe.middle_deletion_test(problem['question'], n=n)
+            md = await middle_probe.middle_deletion_test(problem["question"], n=n)
             print(f"    Score: {md.score:.2f}")
             print()
 
             print("  Running edge perturbation probe (control)...")
-            ep = await middle_probe.edge_perturbation_test(problem['question'], n=n)
-            print(f"    Score: {ep.score:.2f} (base={ep.base_answer}, modified={ep.modified_answer})")
+            ep = await middle_probe.edge_perturbation_test(problem["question"], n=n)
+            print(
+                f"    Score: {ep.score:.2f} (base={ep.base_answer}, modified={ep.modified_answer})"
+            )
             print()
 
             print("  Running whitespace invariance probe...")
-            ws = await variator_probe.whitespace_invariance_test(problem['question'], n=n)
+            ws = await variator_probe.whitespace_invariance_test(problem["question"], n=n)
             print(f"    Score: {ws.score:.2f}")
             print()
 
             print("  Running sheaf coherence probe...")
             sc = await sheaf_detector.detect(trace)
-            print(f"    Claims: {len(sc.claims)}, Violations: {len(sc.violations)}, Score: {sc.score:.2f}")
+            print(
+                f"    Claims: {len(sc.claims)}, Violations: {len(sc.violations)}, Score: {sc.score:.2f}"
+            )
             print()
 
             result = ProblemResult(
-                problem_id=problem['id'],
-                question=problem['question'],
-                expected_answer=problem['answer'],
+                problem_id=problem["id"],
+                question=problem["question"],
+                expected_answer=problem["answer"],
                 actual_answer=actual_answer,
                 correct=correct,
                 trace=trace,
@@ -466,11 +481,11 @@ async def run_phase_b():
             )
             results.append(result)
 
-            print(f"  ✓ Problem {i+1} complete (API calls so far: {llm.call_count})")
+            print(f"  ✓ Problem {i + 1} complete (API calls so far: {llm.call_count})")
             print()
 
         except Exception as e:
-            print(f"  ❌ Error on problem {i+1}: {e}")
+            print(f"  ❌ Error on problem {i + 1}: {e}")
             print()
             continue
 
@@ -534,27 +549,35 @@ async def run_phase_b():
     print()
 
     # Save results
-    output_path = Path(__file__).parent.parent / "data" / f"phase1b_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(output_path, 'w') as f:
-        json.dump({
-            "timestamp": datetime.now().isoformat(),
-            "n_problems": len(results),
-            "n_samples": n,
-            "accuracy": accuracy,
-            "averages": {
-                "middle_perturbation": avg_mp,
-                "middle_deletion": avg_md,
-                "edge_perturbation": avg_ep,
-                "whitespace_invariance": avg_ws,
-                "sheaf_coherence": avg_sc,
+    output_path = (
+        Path(__file__).parent.parent
+        / "data"
+        / f"phase1b_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
+    with open(output_path, "w") as f:
+        json.dump(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "n_problems": len(results),
+                "n_samples": n,
+                "accuracy": accuracy,
+                "averages": {
+                    "middle_perturbation": avg_mp,
+                    "middle_deletion": avg_md,
+                    "edge_perturbation": avg_ep,
+                    "whitespace_invariance": avg_ws,
+                    "sheaf_coherence": avg_sc,
+                },
+                "correlations": {
+                    "middle_perturbation": corr_mp,
+                    "sheaf_coherence": corr_sc,
+                },
+                "api_calls": llm.call_count,
+                "results": [asdict(r) for r in results],
             },
-            "correlations": {
-                "middle_perturbation": corr_mp,
-                "sheaf_coherence": corr_sc,
-            },
-            "api_calls": llm.call_count,
-            "results": [asdict(r) for r in results],
-        }, f, indent=2)
+            f,
+            indent=2,
+        )
     print(f"Results saved to: {output_path}")
     print()
 

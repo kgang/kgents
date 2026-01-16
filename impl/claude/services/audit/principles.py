@@ -35,14 +35,9 @@ def _load_spec(spec_path: Path) -> str:
             f"Hint: Ensure the file is UTF-8 encoded."
         ) from e
     except PermissionError as e:
-        raise PermissionError(
-            f"Permission denied reading spec file: {spec_path}"
-        ) from e
+        raise PermissionError(f"Permission denied reading spec file: {spec_path}") from e
     except Exception as e:
-        raise RuntimeError(
-            f"Unexpected error reading spec file: {spec_path}\n"
-            f"Error: {e}"
-        ) from e
+        raise RuntimeError(f"Unexpected error reading spec file: {spec_path}\nError: {e}") from e
 
 
 def _count_sections(content: str) -> int:

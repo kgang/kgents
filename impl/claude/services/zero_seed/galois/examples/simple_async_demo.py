@@ -179,11 +179,7 @@ async def demo_batch():
         )
         results.append(result)
         cached_marker = "✓" if result.cached else "✗"
-        print(
-            f"  {i}. Loss: {result.loss:.4f}, "
-            f"Cached: {cached_marker}, "
-            f"Method: {result.method}"
-        )
+        print(f"  {i}. Loss: {result.loss:.4f}, Cached: {cached_marker}, Method: {result.method}")
 
     # Check duplicate was cached
     if results[3].cached:

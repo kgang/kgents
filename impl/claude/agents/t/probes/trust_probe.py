@@ -213,13 +213,15 @@ class TrustProbe(TruthFunctor[TrustState, Proposal, TrustDecision], Generic[A, B
     @property
     def states(self) -> FrozenSet[TrustState]:
         """Return DP state space."""
-        return frozenset([
-            TrustState.READY,
-            TrustState.PROPOSING,
-            TrustState.DECIDING,
-            TrustState.TRUSTED,
-            TrustState.REJECTED,
-        ])
+        return frozenset(
+            [
+                TrustState.READY,
+                TrustState.PROPOSING,
+                TrustState.DECIDING,
+                TrustState.TRUSTED,
+                TrustState.REJECTED,
+            ]
+        )
 
     def actions(self, state: TrustState) -> FrozenSet[ProbeAction]:
         """Return available actions from state."""
@@ -255,10 +257,7 @@ class TrustProbe(TruthFunctor[TrustState, Proposal, TrustDecision], Generic[A, B
         return state
 
     def reward(
-        self,
-        state: TrustState,
-        action: ProbeAction,
-        next_state: TrustState
+        self, state: TrustState, action: ProbeAction, next_state: TrustState
     ) -> ConstitutionalScore:
         """
         Constitutional reward for trust decisions.
@@ -278,9 +277,8 @@ class TrustProbe(TruthFunctor[TrustState, Proposal, TrustDecision], Generic[A, B
 
         # Regenerability evaluation
         if action.name == "evaluate_regenerability":
-            regenerable = (
-                self._galois_loss is not None
-                and self._galois_loss < (1.0 - self.config.threshold)
+            regenerable = self._galois_loss is not None and self._galois_loss < (
+                1.0 - self.config.threshold
             )
             return ConstitutionalScore(
                 generative=1.0 if regenerable else 0.3,
@@ -290,9 +288,8 @@ class TrustProbe(TruthFunctor[TrustState, Proposal, TrustDecision], Generic[A, B
 
         # Approval decision
         elif action.name == "approve":
-            regenerable = (
-                self._galois_loss is not None
-                and self._galois_loss < (1.0 - self.config.threshold)
+            regenerable = self._galois_loss is not None and self._galois_loss < (
+                1.0 - self.config.threshold
             )
             return ConstitutionalScore(
                 generative=1.0 if regenerable else 0.3,
@@ -305,27 +302,23 @@ class TrustProbe(TruthFunctor[TrustState, Proposal, TrustDecision], Generic[A, B
         elif action.name == "bypass":
             return ConstitutionalScore(
                 generative=0.5,  # Bypass reduces generative score
-                ethical=0.5,     # Bypass is ethically questionable
+                ethical=0.5,  # Bypass is ethically questionable
                 composable=0.8,  # Still composable
-                tasteful=0.6,    # Less tasteful
+                tasteful=0.6,  # Less tasteful
             )
 
         # Rejection
         elif action.name == "reject":
             return ConstitutionalScore(
                 generative=0.7,  # Rejection preserves integrity
-                ethical=0.9,     # Ethical to reject unregenerable
+                ethical=0.9,  # Ethical to reject unregenerable
                 composable=0.9,
                 tasteful=0.8,
             )
 
         return base
 
-    async def verify(
-        self,
-        agent: Any,
-        input: Proposal
-    ) -> PolicyTrace[TruthVerdict[TrustDecision]]:
+    async def verify(self, agent: Any, input: Proposal) -> PolicyTrace[TruthVerdict[TrustDecision]]:
         """
         Verify proposal with trust gating and regenerability test.
 
@@ -354,14 +347,16 @@ class TrustProbe(TruthFunctor[TrustState, Proposal, TrustDecision], Generic[A, B
         action = ProbeAction("propose", (input.agent, input.action))
         next_dp_state = self.transition(self._current_state, action)
 
-        trace_entries.append(TraceEntry(
-            state_before=probe_state,
-            action=action,
-            state_after=probe_state.transition_to("proposing"),
-            reward=self.reward(self._current_state, action, next_dp_state),
-            reasoning=f"Proposal from {input.agent}: {input.action}",
-            timestamp=datetime.now(timezone.utc),
-        ))
+        trace_entries.append(
+            TraceEntry(
+                state_before=probe_state,
+                action=action,
+                state_after=probe_state.transition_to("proposing"),
+                reward=self.reward(self._current_state, action, next_dp_state),
+                reasoning=f"Proposal from {input.agent}: {input.action}",
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
 
         self._current_state = next_dp_state
         probe_state = probe_state.transition_to("proposing")
@@ -380,24 +375,23 @@ class TrustProbe(TruthFunctor[TrustState, Proposal, TrustDecision], Generic[A, B
         )
         probe_state = probe_state.with_observation(observation)
 
-        trace_entries.append(TraceEntry(
-            state_before=probe_state,
-            action=action,
-            state_after=probe_state.transition_to("deciding"),
-            reward=self.reward(self._current_state, action, next_dp_state),
-            reasoning=observation,
-            timestamp=datetime.now(timezone.utc),
-        ))
+        trace_entries.append(
+            TraceEntry(
+                state_before=probe_state,
+                action=action,
+                state_after=probe_state.transition_to("deciding"),
+                reward=self.reward(self._current_state, action, next_dp_state),
+                reasoning=observation,
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
 
         self._current_state = next_dp_state
         probe_state = probe_state.transition_to("deciding")
 
         # State 3: DECIDING -> TRUSTED/REJECTED (make decision)
         # Check if proposal passes standard checks
-        passes_standard = (
-            regenerable
-            and input.risk <= self.config.risk_threshold
-        )
+        passes_standard = regenerable and input.risk <= self.config.risk_threshold
 
         # Check if bypass is available and valid
         can_bypass = (
@@ -457,16 +451,18 @@ class TrustProbe(TruthFunctor[TrustState, Proposal, TrustDecision], Generic[A, B
                 ),
             )
 
-        trace_entries.append(TraceEntry(
-            state_before=probe_state,
-            action=action,
-            state_after=probe_state.transition_to(
-                "trusted" if self._decision.approved else "rejected"
-            ),
-            reward=self.reward(self._current_state, action, next_dp_state),
-            reasoning=self._decision.reason,
-            timestamp=datetime.now(timezone.utc),
-        ))
+        trace_entries.append(
+            TraceEntry(
+                state_before=probe_state,
+                action=action,
+                state_after=probe_state.transition_to(
+                    "trusted" if self._decision.approved else "rejected"
+                ),
+                reward=self.reward(self._current_state, action, next_dp_state),
+                reasoning=self._decision.reason,
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
 
         self._current_state = next_dp_state
 

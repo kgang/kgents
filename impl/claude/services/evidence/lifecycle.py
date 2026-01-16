@@ -336,12 +336,8 @@ class EvidenceLifecycle:
                 "message": "Need at least 2 snapshots to compare",
             }
 
-        older_snapshot = (
-            self._load_snapshot(older) if older else snapshots[-2]
-        )
-        newer_snapshot = (
-            self._load_snapshot(newer) if newer else snapshots[-1]
-        )
+        older_snapshot = self._load_snapshot(older) if older else snapshots[-2]
+        newer_snapshot = self._load_snapshot(newer) if newer else snapshots[-1]
 
         comparison = self._compare_snapshots(older_snapshot, newer_snapshot)
 
@@ -495,10 +491,14 @@ At $80/hour, this translates to the monthly value above.
             recs.append("- **Increase witness usage**: Create more marks, especially gotchas")
 
         if snapshot.gotcha_marks < 10:
-            recs.append("- **Document gotchas**: Run `km 'gotcha' --tag gotcha` when you discover pitfalls")
+            recs.append(
+                "- **Document gotchas**: Run `km 'gotcha' --tag gotcha` when you discover pitfalls"
+            )
 
         if snapshot.mark_commit_links < 5:
-            recs.append("- **Link marks to work**: Reference commit SHAs in marks, or mark right before commits")
+            recs.append(
+                "- **Link marks to work**: Reference commit SHAs in marks, or mark right before commits"
+            )
 
         if snapshot.monthly_value < self.config.target_monthly:
             gap = self.config.target_monthly - snapshot.monthly_value

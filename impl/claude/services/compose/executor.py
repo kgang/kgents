@@ -240,15 +240,19 @@ class CompositionExecutor:
                 # Import and call command handler
                 if subcommand == "audit":
                     from protocols.cli.commands.audit import cmd_audit
+
                     exit_code = cmd_audit(args)
                 elif subcommand == "annotate":
                     from protocols.cli.handlers.annotate import cmd_annotate
+
                     exit_code = cmd_annotate(args)
                 elif subcommand == "experiment":
                     from protocols.cli.commands.experiment import cmd_experiment
+
                     exit_code = cmd_experiment(args)
                 elif subcommand == "probe":
                     from protocols.cli.handlers.probe_thin import cmd_probe
+
                     exit_code = cmd_probe(args)
                 else:
                     return (f"Unknown subcommand: {subcommand}", 1)

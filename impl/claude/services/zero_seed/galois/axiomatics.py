@@ -123,9 +123,7 @@ class GaloisLoss:
             Total loss in [0, 1] range.
         """
         return (
-            0.5 * self.semantic_drift
-            + 0.3 * self.structural_drift
-            + 0.2 * self.operational_drift
+            0.5 * self.semantic_drift + 0.3 * self.structural_drift + 0.2 * self.operational_drift
         )
 
     @property
@@ -494,10 +492,7 @@ class EntityAxiom(Axiom):
         Returns:
             True if every entity is represented by at least one node.
         """
-        return all(
-            any(node.represents(entity) for node in graph_nodes)
-            for entity in universe
-        )
+        return all(any(node.represents(entity) for node in graph_nodes) for entity in universe)
 
 
 @dataclass(frozen=True)
@@ -750,10 +745,7 @@ class AxiomGovernance:
         Returns:
             Dictionary mapping axiom name to health status.
         """
-        return {
-            name: health.is_healthy
-            for name, health in self.active_axioms.items()
-        }
+        return {name: health.is_healthy for name, health in self.active_axioms.items()}
 
     def identify_retiring(self) -> list[str]:
         """Identify axioms that should be retired.
@@ -761,11 +753,7 @@ class AxiomGovernance:
         Returns:
             List of axiom names that should be retired.
         """
-        return [
-            name
-            for name, health in self.active_axioms.items()
-            if health.should_retire()
-        ]
+        return [name for name, health in self.active_axioms.items() if health.should_retire()]
 
     def retire(self, axiom_name: str) -> AxiomHealth | None:
         """Retire an axiom.
@@ -817,8 +805,7 @@ GALOIS_LAWS = [
         name="G2",
         statement="forall P, Q in ZeroGraph: P -> Q => layer(P) <= layer(Q)",
         interpretation=(
-            "Layer monotonicity: If P implies Q, then Q's layer is at least "
-            "as deep as P's layer."
+            "Layer monotonicity: If P implies Q, then Q's layer is at least as deep as P's layer."
         ),
     ),
     GaloisLaw(
@@ -955,7 +942,8 @@ class MirrorTestOracle:
             return 1.0
 
         preserved_count = sum(
-            1 for anchor in self.voice_anchors
+            1
+            for anchor in self.voice_anchors
             if self._preserves_anchor(original, transformed, anchor)
         )
         return preserved_count / len(self.voice_anchors)
@@ -994,10 +982,7 @@ class MirrorTestOracle:
         if len(words) < 2:
             return anchor.lower() in transformed.lower()
 
-        words_in_transformed = sum(
-            1 for word in words
-            if word in transformed.lower()
-        )
+        words_in_transformed = sum(1 for word in words if word in transformed.lower())
         return words_in_transformed >= len(words) * 0.5
 
 
@@ -1096,9 +1081,7 @@ class GaloisAxiomDiscovery:
         nodes = await self._load_constitution(constitution_paths)
 
         for node in nodes:
-            layer = compute_layer(
-                node, self.restructure, self.reconstitute, self.loss_fn
-            )
+            layer = compute_layer(node, self.restructure, self.reconstitute, self.loss_fn)
 
             if layer == 1:  # Immediate fixed point
                 yield node
@@ -1122,20 +1105,20 @@ class GaloisAxiomDiscovery:
         results: list[DiscoveryResult] = []
 
         for node in nodes:
-            layer = compute_layer(
-                node, self.restructure, self.reconstitute, self.loss_fn
-            )
+            layer = compute_layer(node, self.restructure, self.reconstitute, self.loss_fn)
 
             # Compute computational loss
             modular = self.restructure(node.content)
             reconstituted = self.reconstitute(modular)
             loss = self.loss_fn(node.content, reconstituted)
 
-            results.append(DiscoveryResult(
-                node=node,
-                layer=layer,
-                computational_loss=loss.total,
-            ))
+            results.append(
+                DiscoveryResult(
+                    node=node,
+                    layer=layer,
+                    computational_loss=loss.total,
+                )
+            )
 
         return results
 
@@ -1191,11 +1174,7 @@ class GaloisAxiomDiscovery:
         # Coherence: Are corpus explanations mutually consistent?
         coherence = self._compute_coherence(candidate, corpus)
 
-        is_valid = (
-            coverage > 0.95 and
-            parsimony > 0.90 and
-            coherence > 0.85
-        )
+        is_valid = coverage > 0.95 and parsimony > 0.90 and coherence > 0.85
 
         return is_valid, {
             "coverage": coverage,
@@ -1237,9 +1216,7 @@ class GaloisAxiomDiscovery:
 
             # Stage 3: Corpus validation (optional)
             if corpus_paths:
-                _, corpus_metrics = await self.validate_corpus(
-                    result.node, corpus_paths
-                )
+                _, corpus_metrics = await self.validate_corpus(result.node, corpus_paths)
                 result.corpus_metrics = corpus_metrics
 
             results.append(result)
@@ -1303,15 +1280,17 @@ class GaloisAxiomDiscovery:
             # Extract dependencies (cross-references like `See: ...` or links)
             deps = self._extract_dependencies(section_content)
 
-            nodes.append(ZeroNode(
-                content=f"# {title}\n\n{section_content}",
-                dependencies=deps,
-                metadata={
-                    "id": f"{source}::{title}",
-                    "source": source,
-                    "title": title,
-                },
-            ))
+            nodes.append(
+                ZeroNode(
+                    content=f"# {title}\n\n{section_content}",
+                    dependencies=deps,
+                    metadata={
+                        "id": f"{source}::{title}",
+                        "source": source,
+                        "title": title,
+                    },
+                )
+            )
 
         return nodes
 
@@ -1361,9 +1340,7 @@ class GaloisAxiomDiscovery:
                 contents.append(content)
             elif path.is_dir():
                 for py_file in path.rglob("*.py"):
-                    content = await asyncio.to_thread(
-                        py_file.read_text, encoding="utf-8"
-                    )
+                    content = await asyncio.to_thread(py_file.read_text, encoding="utf-8")
                     contents.append(content)
 
         return contents
@@ -1404,7 +1381,8 @@ class GaloisAxiomDiscovery:
         """
         # Heuristic: axiom is parsimonious if it's referenced/used
         reference_count = sum(
-            1 for content in corpus
+            1
+            for content in corpus
             if axiom.metadata.get("title", "") in content
             or any(dep in content for dep in axiom.dependencies)
         )

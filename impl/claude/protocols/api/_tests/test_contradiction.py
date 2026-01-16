@@ -265,9 +265,7 @@ def test_get_contradiction_not_found(client):
 
 
 @pytest.mark.asyncio
-async def test_resolve_contradiction_synthesize(
-    client, mock_k_block_storage, mock_witness
-):
+async def test_resolve_contradiction_synthesize(client, mock_k_block_storage, mock_witness):
     """Test SYNTHESIZE resolution strategy."""
     # First, detect a contradiction to create one
     with (
@@ -325,9 +323,7 @@ async def test_resolve_contradiction_synthesize(
 
         from protocols.api.contradiction import ContradictionResponse
 
-        _contradictions["contradiction_kb-001_kb-002"] = ContradictionResponse(
-            **test_contradiction
-        )
+        _contradictions["contradiction_kb-001_kb-002"] = ContradictionResponse(**test_contradiction)
 
         # Now resolve with SYNTHESIZE
         resolve_response = client.post(

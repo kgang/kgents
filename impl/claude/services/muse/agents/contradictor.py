@@ -110,7 +110,7 @@ class ContradictorAgent:
     4. Champions promising ghosts
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the contradictor."""
         self.outcomes: list[ContradictionOutcome] = []
         self.effective_contradictions: list[EffectiveContradiction] = []
@@ -132,7 +132,7 @@ class ContradictorAgent:
     def contradict(
         self,
         selection: Any,
-        session: SessionState | None = None,
+        session: SessionState[Any] | None = None,
         move: ContradictionMove | None = None,
     ) -> Contradiction:
         """
@@ -169,7 +169,7 @@ class ContradictorAgent:
         self,
         deviation: str,
         justification: str,
-        session: SessionState | None = None,
+        session: SessionState[Any] | None = None,
     ) -> Contradiction:
         """
         Challenge a deviation from established patterns.
@@ -237,8 +237,8 @@ class ContradictorAgent:
 
     def champion_ghost(
         self,
-        ghost: Ghost,
-        session: SessionState | None = None,
+        ghost: Ghost[Any],
+        session: SessionState[Any] | None = None,
     ) -> Contradiction | None:
         """
         Champion a promising ghost that was rejected.
@@ -283,7 +283,7 @@ class ContradictorAgent:
     # Helper Methods
     # -------------------------------------------------------------------------
 
-    def _select_move(self, session: SessionState | None) -> ContradictionMove:
+    def _select_move(self, session: SessionState[Any] | None) -> ContradictionMove:
         """Select a contradiction move based on weights."""
         moves = list(self.move_weights.keys())
         weights = list(self.move_weights.values())
@@ -307,7 +307,7 @@ class ContradictorAgent:
         self,
         move: ContradictionMove,
         selection: Any,
-        session: SessionState | None,
+        session: SessionState[Any] | None,
     ) -> str:
         """Generate challenge text based on move."""
         selection_str = str(selection)[:50]
@@ -346,7 +346,7 @@ class ContradictorAgent:
         self,
         move: ContradictionMove,
         selection: Any,
-        session: SessionState | None,
+        session: SessionState[Any] | None,
     ) -> str:
         """Gather evidence to support the contradiction."""
         if move == ContradictionMove.PRIOR_KENT and session:
@@ -361,7 +361,7 @@ class ContradictorAgent:
     def _calculate_strength(
         self,
         move: ContradictionMove,
-        session: SessionState | None,
+        session: SessionState[Any] | None,
     ) -> float:
         """Calculate how forceful the contradiction should be."""
         base_strength = 0.5
@@ -387,7 +387,7 @@ class ContradictorAgent:
     def _find_prior_pattern(
         self,
         deviation: str,
-        session: SessionState | None,
+        session: SessionState[Any] | None,
     ) -> str:
         """Find prior pattern that was deviated from."""
         if session:

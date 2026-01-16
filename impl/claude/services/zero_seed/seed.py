@@ -260,6 +260,7 @@ async def seed_zero_seed(
         # 1. Create Zero Seed K-Block (t=0)
         # Use a fixed ID for Zero Seed so we can find it later
         from services.k_block.core.kblock import KBlockId
+
         zero_seed_kblock_id_obj = KBlockId(ZERO_SEED_ID)
 
         zero_seed_content = _format_zero_seed_content(zero_seed)

@@ -143,21 +143,21 @@ async def analyze_structural(content: str, path: str) -> AnalysisCrystal:
     concepts: list[str] = []
 
     # Extract markdown links
-    link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+    link_pattern = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
     for match in link_pattern.finditer(content):
         target = match.group(2)
-        if not target.startswith(('http://', 'https://', '#')):
+        if not target.startswith(("http://", "https://", "#")):
             refs_found.append(target)
 
     # Extract code block languages (indicators of deps)
-    code_pattern = re.compile(r'```(\w+)')
+    code_pattern = re.compile(r"```(\w+)")
     for match in code_pattern.finditer(content):
         lang = match.group(1)
         if lang and lang not in concepts:
             concepts.append(lang)
 
     # Extract headings as concepts
-    heading_pattern = re.compile(r'^#{1,3}\s+(.+)$', re.MULTILINE)
+    heading_pattern = re.compile(r"^#{1,3}\s+(.+)$", re.MULTILINE)
     for match in heading_pattern.finditer(content):
         heading = match.group(1).strip()
         if heading and len(heading) < 50:  # Reasonable concept length
@@ -165,9 +165,9 @@ async def analyze_structural(content: str, path: str) -> AnalysisCrystal:
 
     # Create a basic summary (first non-empty line that isn't a heading)
     summary = ""
-    for line in content.split('\n'):
+    for line in content.split("\n"):
         stripped = line.strip()
-        if stripped and not stripped.startswith('#') and not stripped.startswith('```'):
+        if stripped and not stripped.startswith("#") and not stripped.startswith("```"):
             summary = stripped[:200]  # Cap at 200 chars
             break
 
@@ -273,6 +273,7 @@ class AnalysisReactor:
 
         try:
             from services.witness.bus import get_synergy_bus
+
             return get_synergy_bus()
         except ImportError:
             logger.warning("WitnessSynergyBus not available")
@@ -290,6 +291,7 @@ class AnalysisReactor:
 
         try:
             from services.witness.bus import WitnessTopics
+
             self._unsubscribe = bus.subscribe(
                 WitnessTopics.SOVEREIGN_INGESTED,
                 self._on_ingested,
@@ -353,6 +355,7 @@ class AnalysisReactor:
         if bus:
             try:
                 from services.witness.bus import WitnessTopics
+
                 await bus.publish(
                     WitnessTopics.SOVEREIGN_ANALYSIS_STARTED,
                     {
@@ -416,6 +419,7 @@ class AnalysisReactor:
         if bus:
             try:
                 from services.witness.bus import WitnessTopics
+
                 await bus.publish(
                     WitnessTopics.SOVEREIGN_ANALYSIS_COMPLETED,
                     {
@@ -454,6 +458,7 @@ class AnalysisReactor:
         if bus:
             try:
                 from services.witness.bus import WitnessTopics
+
                 await bus.publish(
                     WitnessTopics.SOVEREIGN_ANALYSIS_FAILED,
                     {

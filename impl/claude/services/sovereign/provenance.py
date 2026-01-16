@@ -337,45 +337,49 @@ async def verify_provenance_integrity(
         # Check: Has versions (Law 0)
         if chain.total_versions == 0:
             violations.append("No versions found (Law 0 violation)")
-        checks.append({
-            "check": "has_versions",
-            "passed": chain.total_versions > 0,
-            "detail": f"{chain.total_versions} versions",
-        })
+        checks.append(
+            {
+                "check": "has_versions",
+                "passed": chain.total_versions > 0,
+                "detail": f"{chain.total_versions} versions",
+            }
+        )
 
         # Check: Has birth mark (Law 1)
         if not chain.birth_mark_id:
             violations.append("No birth mark found (Law 1 violation)")
-        checks.append({
-            "check": "has_birth_mark",
-            "passed": chain.birth_mark_id is not None,
-            "detail": f"birth_mark={chain.birth_mark_id}",
-        })
+        checks.append(
+            {
+                "check": "has_birth_mark",
+                "passed": chain.birth_mark_id is not None,
+                "detail": f"birth_mark={chain.birth_mark_id}",
+            }
+        )
 
         # Check: All versions have marks
-        missing_marks = [
-            step.version for step in chain.steps if step.version and not step.mark_id
-        ]
+        missing_marks = [step.version for step in chain.steps if step.version and not step.mark_id]
         if missing_marks:
-            violations.append(
-                f"Versions without marks: {missing_marks} (Law 1 violation)"
-            )
-        checks.append({
-            "check": "all_versions_have_marks",
-            "passed": len(missing_marks) == 0,
-            "detail": f"{len(missing_marks)} missing",
-        })
+            violations.append(f"Versions without marks: {missing_marks} (Law 1 violation)")
+        checks.append(
+            {
+                "check": "all_versions_have_marks",
+                "passed": len(missing_marks) == 0,
+                "detail": f"{len(missing_marks)} missing",
+            }
+        )
 
         # Check: Version sequence is valid
         versions = [step.version for step in chain.steps if step.version]
         expected = list(range(1, len(versions) + 1))
         if sorted(versions) != expected:
             violations.append(f"Invalid version sequence: {versions} != {expected}")
-        checks.append({
-            "check": "valid_version_sequence",
-            "passed": sorted(versions) == expected,
-            "detail": f"versions={versions}",
-        })
+        checks.append(
+            {
+                "check": "valid_version_sequence",
+                "passed": sorted(versions) == expected,
+                "detail": f"versions={versions}",
+            }
+        )
 
         # Check: Birth mark is retrievable (if witness available)
         if witness and chain.birth_mark_id:
@@ -383,18 +387,22 @@ async def verify_provenance_integrity(
                 mark = await witness.get_mark(chain.birth_mark_id)
                 if not mark:
                     violations.append(f"Birth mark not found: {chain.birth_mark_id}")
-                checks.append({
-                    "check": "birth_mark_retrievable",
-                    "passed": mark is not None,
-                    "detail": f"mark_id={chain.birth_mark_id}",
-                })
+                checks.append(
+                    {
+                        "check": "birth_mark_retrievable",
+                        "passed": mark is not None,
+                        "detail": f"mark_id={chain.birth_mark_id}",
+                    }
+                )
             except Exception as e:
                 violations.append(f"Error retrieving birth mark: {e}")
-                checks.append({
-                    "check": "birth_mark_retrievable",
-                    "passed": False,
-                    "detail": str(e),
-                })
+                checks.append(
+                    {
+                        "check": "birth_mark_retrievable",
+                        "passed": False,
+                        "detail": str(e),
+                    }
+                )
 
         return {
             "path": path,

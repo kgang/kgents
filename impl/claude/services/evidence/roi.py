@@ -175,19 +175,13 @@ class ROICalculator:
         )
 
         # Partition commits
-        before_commits = [
-            c for c in all_commits if c.authored_date < witness_start_date
-        ]
-        after_commits = [
-            c for c in all_commits if c.authored_date >= witness_start_date
-        ]
+        before_commits = [c for c in all_commits if c.authored_date < witness_start_date]
+        after_commits = [c for c in all_commits if c.authored_date >= witness_start_date]
 
         # Count bug-fix commits (heuristic: "fix" in message)
         def is_bug_fix(commit) -> bool:
             msg_lower = commit.message.lower()
-            return any(
-                keyword in msg_lower for keyword in ["fix", "bug", "error", "crash"]
-            )
+            return any(keyword in msg_lower for keyword in ["fix", "bug", "error", "crash"])
 
         bugs_before = sum(1 for c in before_commits if is_bug_fix(c))
         bugs_after = sum(1 for c in after_commits if is_bug_fix(c))
@@ -197,9 +191,7 @@ class ROICalculator:
 
         # Calculate reduction
         if bug_rate_before > 0:
-            reduction_percent = (
-                (bug_rate_before - bug_rate_after) / bug_rate_before
-            ) * 100
+            reduction_percent = ((bug_rate_before - bug_rate_after) / bug_rate_before) * 100
             bugs_prevented = (bug_rate_before - bug_rate_after) * len(after_commits)
         else:
             reduction_percent = 0.0
@@ -262,8 +254,7 @@ class ROICalculator:
 
             # Check if full proof exists
             has_proof = all(
-                key in metadata
-                for key in ["kent_view", "claude_view", "synthesis", "why"]
+                key in metadata for key in ["kent_view", "claude_view", "synthesis", "why"]
             )
             if has_proof:
                 decisions_with_proofs += 1
@@ -282,9 +273,7 @@ class ROICalculator:
             if metadata.get("supersedes"):
                 supersession_count += 1
 
-        proof_ratio = (
-            decisions_with_proofs / total_decisions if total_decisions > 0 else 0.0
-        )
+        proof_ratio = decisions_with_proofs / total_decisions if total_decisions > 0 else 0.0
 
         avg_decision_hours = (
             total_decision_time_hours / total_decisions if total_decisions > 0 else 0.0
@@ -292,9 +281,7 @@ class ROICalculator:
 
         # Dollar value: time saved vs. baseline
         # Each proof saves (BASELINE - 2 hours)
-        time_saved_hours = decisions_with_proofs * (
-            self.BASELINE_DECISION_HOURS - 2.0
-        )
+        time_saved_hours = decisions_with_proofs * (self.BASELINE_DECISION_HOURS - 2.0)
         decision_dollar_value = time_saved_hours * hourly_rate
 
         return DecisionROI(
@@ -335,9 +322,7 @@ class ROICalculator:
         quality_roi = await self.calculate_quality_roi(
             witness_start_date=witness_start_date, hourly_rate=hourly_rate
         )
-        decision_roi = await self.calculate_decision_roi(
-            since=since, hourly_rate=hourly_rate
-        )
+        decision_roi = await self.calculate_decision_roi(since=since, hourly_rate=hourly_rate)
 
         # Total monthly value
         total_hours = time_roi.hours_saved

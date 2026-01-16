@@ -529,14 +529,10 @@ class GaloisWitnessedProof(BaseModel):
     )
 
     # Evidence tier (original classification, may differ from loss-based)
-    tier: EvidenceTier = Field(
-        default=EvidenceTier.EMPIRICAL, description="Original evidence tier"
-    )
+    tier: EvidenceTier = Field(default=EvidenceTier.EMPIRICAL, description="Original evidence tier")
 
     # Constitution principles
-    principles: tuple[str, ...] = Field(
-        default_factory=tuple, description="Referenced principles"
-    )
+    principles: tuple[str, ...] = Field(default_factory=tuple, description="Referenced principles")
 
     # Galois metrics
     galois_loss: float = Field(
@@ -640,9 +636,7 @@ class GaloisWitnessedProof(BaseModel):
         """
         return ProofLossDecomposition.from_dict(self.loss_decomposition)
 
-    def with_alternatives(
-        self, alternatives: list[Alternative]
-    ) -> "GaloisWitnessedProof":
+    def with_alternatives(self, alternatives: list[Alternative]) -> "GaloisWitnessedProof":
         """
         Return new proof with ghost alternatives added.
 

@@ -170,6 +170,7 @@ class TestFunctorComposition:
         result = await lifted.invoke(Right([1, 2, 3]))
         assert result == Right([2, 4, 6])
 
+
 class TestCompositionMatrix:
     """Test composition matrix: verify key functor pairs compose."""
 

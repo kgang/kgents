@@ -122,10 +122,7 @@ class PostgresZeroSeedStorage:
         # Persist to PostgreSQL
         await self._persist_kblock(kblock, created_by)
 
-        logger.info(
-            f"Created Zero Seed node: {node_id} (L{layer}, {kind}, "
-            f"lineage={len(lineage)})"
-        )
+        logger.info(f"Created Zero Seed node: {node_id} (L{layer}, {kind}, lineage={len(lineage)})")
 
         return kblock, node_id
 
@@ -174,7 +171,9 @@ class PostgresZeroSeedStorage:
             session.add(db_kblock)
             await session.commit()
 
-            logger.debug(f"Persisted K-Block {kblock.id} to PostgreSQL (L{zero_seed_layer}, {zero_seed_kind})")
+            logger.debug(
+                f"Persisted K-Block {kblock.id} to PostgreSQL (L{zero_seed_layer}, {zero_seed_kind})"
+            )
 
     def _deserialize_kblock(self, db_kblock: KBlockModel) -> KBlock:
         """
@@ -204,12 +203,10 @@ class PostgresZeroSeedStorage:
             toulmin_proof=db_kblock.toulmin_proof,
             confidence=db_kblock.confidence,
             incoming_edges=[
-                KBlockEdge.from_dict(edge_data)
-                for edge_data in db_kblock.incoming_edges
+                KBlockEdge.from_dict(edge_data) for edge_data in db_kblock.incoming_edges
             ],
             outgoing_edges=[
-                KBlockEdge.from_dict(edge_data)
-                for edge_data in db_kblock.outgoing_edges
+                KBlockEdge.from_dict(edge_data) for edge_data in db_kblock.outgoing_edges
             ],
             not_ingested=bool(db_kblock.not_ingested),
             analysis_required=bool(db_kblock.analysis_required),
@@ -495,9 +492,7 @@ class PostgresZeroSeedStorage:
         if target_id in self._kblocks:
             self._kblocks[target_id].incoming_edges.append(edge)
 
-        logger.info(
-            f"Added edge {edge_id}: {source_id[:8]}... -> {target_id[:8]}... ({edge_type})"
-        )
+        logger.info(f"Added edge {edge_id}: {source_id[:8]}... -> {target_id[:8]}... ({edge_type})")
 
         return edge_id
 

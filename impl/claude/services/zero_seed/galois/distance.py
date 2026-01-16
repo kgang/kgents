@@ -155,8 +155,7 @@ class CosineEmbeddingDistance:
 
             # Cosine similarity
             cosine_sim = float(
-                np.dot(emb_a_np, emb_b_np)
-                / (np.linalg.norm(emb_a_np) * np.linalg.norm(emb_b_np))
+                np.dot(emb_a_np, emb_b_np) / (np.linalg.norm(emb_a_np) * np.linalg.norm(emb_b_np))
             )
 
             # Convert to distance (0 = same, 1 = opposite)
@@ -528,9 +527,7 @@ class MetricComparisonResult:
         if len(self.distances) < 2:
             return 0.0
         mean = self.mean_distance
-        return sum((d - mean) ** 2 for d in self.distances.values()) / len(
-            self.distances
-        )
+        return sum((d - mean) ** 2 for d in self.distances.values()) / len(self.distances)
 
 
 async def compare_metrics(
@@ -689,9 +686,7 @@ class CanonicalSemanticDistance:
     From Amendment B: "Canonical Semantic Distance"
     """
 
-    _primary: BidirectionalEntailmentDistance | None = field(
-        default=None, repr=False
-    )
+    _primary: BidirectionalEntailmentDistance | None = field(default=None, repr=False)
     _bertscore: BERTScoreDistance | None = field(default=None, repr=False)
     _cosine: CosineEmbeddingDistance | None = field(default=None, repr=False)
 

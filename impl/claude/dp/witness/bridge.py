@@ -150,7 +150,9 @@ def trace_entry_to_mark(entry: TraceEntry, origin: str = "dp_bridge") -> dict[st
     }
 
 
-def policy_trace_to_marks(trace: PolicyTrace[Any], origin: str = "dp_bridge") -> list[dict[str, Any]]:
+def policy_trace_to_marks(
+    trace: PolicyTrace[Any], origin: str = "dp_bridge"
+) -> list[dict[str, Any]]:
     """
     Convert a full PolicyTrace to a list of Mark-compatible dictionaries.
 

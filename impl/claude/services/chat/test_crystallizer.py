@@ -113,10 +113,7 @@ def test_significance_code_block_contribution(crystallizer):
     # Session with code blocks
     code_session = ChatSession(id=generate_session_id())
     for i in range(CRYSTALLIZATION_TURN_THRESHOLD + 1):
-        code_session.add_turn(
-            f"Question {i}",
-            f"Answer {i}\n```python\ndef func():\n    pass\n```"
-        )
+        code_session.add_turn(f"Question {i}", f"Answer {i}\n```python\ndef func():\n    pass\n```")
 
     no_code_score = crystallizer.compute_significance(no_code_session)
     code_score = crystallizer.compute_significance(code_session)
@@ -153,10 +150,7 @@ def test_minimum_turns_required(crystallizer):
     session = ChatSession(id=generate_session_id())
     for i in range(CRYSTALLIZATION_TURN_THRESHOLD - 1):
         # Even with code, should not crystallize due to turn count
-        session.add_turn(
-            f"Question {i}",
-            f"Detailed answer {i}\n```python\ncode here\n```" * 10
-        )
+        session.add_turn(f"Question {i}", f"Detailed answer {i}\n```python\ncode here\n```" * 10)
 
     should, score, reason = crystallizer.should_crystallize(session)
 
@@ -245,6 +239,7 @@ async def test_crystallization_proof_structure(crystallizer, significant_session
 
     # Proof should be empirical (based on measurements)
     from services.witness import EvidenceTier
+
     assert mark.proof.tier == EvidenceTier.EMPIRICAL
 
     # Should reference principles
@@ -264,14 +259,14 @@ async def test_multiple_crystallizations(crystallizer, mark_store):
     for i in range(CRYSTALLIZATION_TURN_THRESHOLD + 2):
         session1.add_turn(
             f"Question {i}: Detailed query with lots of content",
-            f"Answer {i}: " + ("Very detailed response. " * 50) + "\n```code\n```"
+            f"Answer {i}: " + ("Very detailed response. " * 50) + "\n```code\n```",
         )
 
     session2 = ChatSession(id=generate_session_id())
     for i in range(CRYSTALLIZATION_TURN_THRESHOLD + 2):
         session2.add_turn(
             f"Question {i}: Another detailed query with lots of content",
-            f"Answer {i}: " + ("Very detailed response. " * 50) + "\n```code\n```"
+            f"Answer {i}: " + ("Very detailed response. " * 50) + "\n```code\n```",
         )
 
     # Crystallize both

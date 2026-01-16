@@ -230,7 +230,9 @@ async def test_property_agent_failure_detection() -> None:
     print(f"✓ PropertyAgent: Detected {result.failed_cases} violations (as expected)")
 
 
-@pytest.mark.skip(reason="MockAgent replaced by NullProbe which has different API (verify vs invoke)")
+@pytest.mark.skip(
+    reason="MockAgent replaced by NullProbe which has different API (verify vs invoke)"
+)
 async def test_property_agent_not_none() -> None:
     """Test PropertyAgent with not_none property."""
     print("\n=== Testing PropertyAgent (Not None) ===")

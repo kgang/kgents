@@ -142,6 +142,7 @@ def extract_principle_evidence(
     if hasattr(output, "posterior_mean"):
         # Type narrow with cast for mypy
         from typing import cast
+
         return _extract_from_adaptive(cast("AdaptiveEvidence", output))
 
     # Check for ASHCOutput pattern: has evidence.runs
@@ -220,9 +221,7 @@ def _analyze_run(
 
     # Lint results → Tasteful
     if run.lint_results.passed:
-        _add_evidence(
-            principle_evidence, principle_scores, "Tasteful", f"{run.run_id}:lint", 0.8
-        )
+        _add_evidence(principle_evidence, principle_scores, "Tasteful", f"{run.run_id}:lint", 0.8)
 
     # If there are specific test patterns in the implementation/prompt
     prompt = run.prompt_used.lower()
@@ -294,9 +293,7 @@ def _extract_from_adaptive(evidence: AdaptiveEvidence) -> tuple[PrincipleDraw, .
                 principle="Composable",
                 draw_strength=min(0.95, base_confidence),
                 evidence_type=EvidenceType.EMPIRICAL,
-                evidence_sources=tuple(
-                    r.run_id for r in evidence.runs[:5] if r.success
-                ),
+                evidence_sources=tuple(r.run_id for r in evidence.runs[:5] if r.success),
                 last_verified=now,
             )
         )
@@ -508,9 +505,7 @@ def sync_from_principle_registry(
             # Normal modulation
             adjusted_strength = draw.draw_strength * cred
 
-        updated_draws.append(
-            replace(draw, draw_strength=adjusted_strength)
-        )
+        updated_draws.append(replace(draw, draw_strength=adjusted_strength))
 
     return replace(derivation, principle_draws=tuple(updated_draws))
 

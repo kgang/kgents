@@ -81,9 +81,7 @@ class BrainState:
         if not (0.0 <= self.memory_load <= 1.0):
             raise ValueError(f"memory_load must be in [0, 1], got {self.memory_load}")
         if not (0.0 <= self.relevance_decay <= 1.0):
-            raise ValueError(
-                f"relevance_decay must be in [0, 1], got {self.relevance_decay}"
-            )
+            raise ValueError(f"relevance_decay must be in [0, 1], got {self.relevance_decay}")
 
 
 # =============================================================================
@@ -293,9 +291,7 @@ class BrainFormulation:
         )
 
     @staticmethod
-    def output_fn(
-        state: BrainState, action: BrainAction, next_state: BrainState
-    ) -> str:
+    def output_fn(state: BrainState, action: BrainAction, next_state: BrainState) -> str:
         """
         Output function: what Brain returns.
 
@@ -409,7 +405,9 @@ class BrainFormulation:
 # =============================================================================
 
 
-def create_brain_agent(granularity: int = 5, gamma: float = 0.95) -> ValueAgent[BrainState, BrainAction, str]:
+def create_brain_agent(
+    granularity: int = 5, gamma: float = 0.95
+) -> ValueAgent[BrainState, BrainAction, str]:
     """
     Create a Brain ValueAgent from the formulation.
 

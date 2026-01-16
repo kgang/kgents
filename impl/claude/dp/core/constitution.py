@@ -55,22 +55,26 @@ class Constitution:
     """
 
     # Principle weights (default from Principle.weight)
-    principle_weights: dict[Principle, float] = field(default_factory=lambda: {
-        Principle.ETHICAL: 2.0,      # Safety first
-        Principle.COMPOSABLE: 1.5,   # Architectural importance
-        Principle.JOY_INDUCING: 1.2, # Kent's aesthetic priority
-        Principle.TASTEFUL: 1.0,
-        Principle.CURATED: 1.0,
-        Principle.HETERARCHICAL: 1.0,
-        Principle.GENERATIVE: 1.0,
-    })
+    principle_weights: dict[Principle, float] = field(
+        default_factory=lambda: {
+            Principle.ETHICAL: 2.0,  # Safety first
+            Principle.COMPOSABLE: 1.5,  # Architectural importance
+            Principle.JOY_INDUCING: 1.2,  # Kent's aesthetic priority
+            Principle.TASTEFUL: 1.0,
+            Principle.CURATED: 1.0,
+            Principle.HETERARCHICAL: 1.0,
+            Principle.GENERATIVE: 1.0,
+        }
+    )
 
     # Custom evaluators: (state, action, next_state) -> score in [0, 1]
     # If not provided, defaults to neutral 0.5 score
     evaluators: dict[Principle, Callable[[Any, Any, Any], float]] = field(default_factory=dict)
 
     # Evidence generators: (state, action, next_state) -> explanation string
-    evidence_generators: dict[Principle, Callable[[Any, Any, Any], str]] = field(default_factory=dict)
+    evidence_generators: dict[Principle, Callable[[Any, Any, Any], str]] = field(
+        default_factory=dict
+    )
 
     def _get_weight(self, principle: Principle) -> float:
         """Get the weight for a principle (with fallback to Principle.weight)."""
@@ -128,9 +132,7 @@ class Constitution:
         principle_scores: list[PrincipleScore] = []
 
         for principle in Principle:
-            score, evidence = self._evaluate_principle(
-                principle, state, action, next_state
-            )
+            score, evidence = self._evaluate_principle(principle, state, action, next_state)
             weight = self._get_weight(principle)
 
             principle_scores.append(

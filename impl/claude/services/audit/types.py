@@ -20,10 +20,10 @@ from typing import Any
 class AuditSeverity(Enum):
     """Severity of audit findings."""
 
-    INFO = "info"           # Informational only
-    WARNING = "warning"     # Should fix but not critical
-    ERROR = "error"         # Must fix, breaks principles
-    CRITICAL = "critical"   # Fundamental violation
+    INFO = "info"  # Informational only
+    WARNING = "warning"  # Should fix but not critical
+    ERROR = "error"  # Must fix, breaks principles
+    CRITICAL = "critical"  # Fundamental violation
 
 
 @dataclass(frozen=True)
@@ -37,18 +37,25 @@ class PrincipleScores:
     See: spec/principles.md
     """
 
-    tasteful: float        # Clear purpose, no feature creep
-    curated: float         # Intentional selection
-    ethical: float         # Human agency preserved, transparent
-    joy_inducing: float    # Delightful interactions
-    composable: float      # Category laws hold, single outputs
-    heterarchical: float   # Dual loop, flux topology
-    generative: float      # Spec is compression
+    tasteful: float  # Clear purpose, no feature creep
+    curated: float  # Intentional selection
+    ethical: float  # Human agency preserved, transparent
+    joy_inducing: float  # Delightful interactions
+    composable: float  # Category laws hold, single outputs
+    heterarchical: float  # Dual loop, flux topology
+    generative: float  # Spec is compression
 
     def __post_init__(self) -> None:
         """Validate all scores are in [0, 1]."""
-        for field_name in ["tasteful", "curated", "ethical", "joy_inducing",
-                           "composable", "heterarchical", "generative"]:
+        for field_name in [
+            "tasteful",
+            "curated",
+            "ethical",
+            "joy_inducing",
+            "composable",
+            "heterarchical",
+            "generative",
+        ]:
             value = getattr(self, field_name)
             if not (0.0 <= value <= 1.0):
                 raise ValueError(f"{field_name} score must be in [0, 1], got {value}")
@@ -114,9 +121,9 @@ class DriftItem:
     Represents one mismatch between spec and implementation.
     """
 
-    component: str          # What component (e.g., "polynomial.positions")
-    spec_says: str          # What spec claims
-    impl_does: str          # What impl actually does
+    component: str  # What component (e.g., "polynomial.positions")
+    spec_says: str  # What spec claims
+    impl_does: str  # What impl actually does
     severity: AuditSeverity
     file_path: str | None = None  # Impl file where drift found
     line_number: int | None = None
@@ -173,7 +180,8 @@ class AuditResult:
     def drift_errors(self) -> list[DriftItem]:
         """Get only ERROR and CRITICAL drift items."""
         return [
-            d for d in self.drift_items
+            d
+            for d in self.drift_items
             if d.severity in (AuditSeverity.ERROR, AuditSeverity.CRITICAL)
         ]
 

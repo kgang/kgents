@@ -167,7 +167,9 @@ class FilePortals:
         return nodes
 
 
-def analyze_python_file(file_path: str | Path, project_root: str | Path | None = None) -> FilePortals:
+def analyze_python_file(
+    file_path: str | Path, project_root: str | Path | None = None
+) -> FilePortals:
     """
     Analyze a Python file and extract portal edges.
 
@@ -265,7 +267,11 @@ def _resolve_import(module_name: str, file_path: Path, project_root: Path) -> st
         return str(package_path.relative_to(project_root))
 
     # Try as module (file.py)
-    module_path = project_root / "/".join(parts[:-1]) / f"{parts[-1]}.py" if len(parts) > 1 else project_root / f"{parts[0]}.py"
+    module_path = (
+        project_root / "/".join(parts[:-1]) / f"{parts[-1]}.py"
+        if len(parts) > 1
+        else project_root / f"{parts[0]}.py"
+    )
     if module_path.exists():
         return str(module_path.relative_to(project_root))
 

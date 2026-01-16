@@ -85,7 +85,9 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
     if modes is None:
         print("Error: Invalid mode specified")
         print()
-        print("Valid modes: categorical (cat), epistemic (epi), dialectical (dia), generative (gen), constitutional (const)")
+        print(
+            "Valid modes: categorical (cat), epistemic (epi), dialectical (dia), generative (gen), constitutional (const)"
+        )
         print()
         return 1
 
@@ -239,6 +241,7 @@ async def cmd_analyze(args: list[str], ctx: "InvocationContext | None" = None) -
     except Exception as e:
         print(f"Error during analysis: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -277,7 +280,18 @@ def _parse_modes(args: list[str]) -> str | list[str] | None:
     modes = [m.strip().lower() for m in mode_arg.split(",")]
 
     # Validate modes
-    valid_modes = {"categorical", "cat", "epistemic", "epi", "dialectical", "dia", "generative", "gen", "constitutional", "const"}
+    valid_modes = {
+        "categorical",
+        "cat",
+        "epistemic",
+        "epi",
+        "dialectical",
+        "dia",
+        "generative",
+        "gen",
+        "constitutional",
+        "const",
+    }
     for mode in modes:
         if mode not in valid_modes:
             return None
@@ -297,10 +311,12 @@ async def _handle_self_analysis(args: list[str]) -> int:
 
         if use_structural:
             from agents.operad.domains.analysis import self_analyze
+
             print("Mode: Structural (no LLM)")
             report = self_analyze()
         else:
             from agents.operad.domains.analysis import self_analyze_llm
+
             print("Mode: LLM-backed (Claude)")
             print("This will honestly evaluate the spec, including any issues...")
             print()
@@ -333,6 +349,7 @@ async def _handle_self_analysis(args: list[str]) -> int:
     except Exception as e:
         print(f"Error during self-analysis: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -502,7 +519,9 @@ def _print_rich_full(report, target: str) -> None:
     gen = report.generative
     status = "✓ PASS" if gen.is_regenerable else "✗ FAIL"
     print(f"   Status: {status}")
-    print(f"   Compression: {gen.compression_ratio:.2f} ({'compressed' if gen.is_compressed else 'not compressed'})")
+    print(
+        f"   Compression: {gen.compression_ratio:.2f} ({'compressed' if gen.is_compressed else 'not compressed'})"
+    )
     print(f"   Regenerable: {'Yes' if gen.is_regenerable else 'No'}")
     print(f"   Minimal Kernel: {len(gen.minimal_kernel)} axioms")
     print(f"   Summary: {gen.summary}")
@@ -566,7 +585,11 @@ def _print_rich_modes(results: dict, target: str) -> None:
             print(f"  Qualifier: {report.toulmin.qualifier}")
             print()
             print("Grounding Chain:")
-            grounded = "✓ terminates at axiom" if report.grounding.terminates_at_axiom else "✗ not grounded"
+            grounded = (
+                "✓ terminates at axiom"
+                if report.grounding.terminates_at_axiom
+                else "✗ not grounded"
+            )
             print(f"  {grounded}")
             for layer, node, edge in report.grounding.steps:
                 print(f"    L{layer}: {node} ({edge})")
@@ -692,7 +715,9 @@ async def _emit_analysis_marks(report: "FullAnalysisReport", target: str, mode: 
         # Build reasoning with key findings
         findings = []
         if report.categorical.has_violations:
-            findings.append(f"categorical: {report.categorical.laws_passed}/{report.categorical.laws_total} laws")
+            findings.append(
+                f"categorical: {report.categorical.laws_passed}/{report.categorical.laws_total} laws"
+            )
         if not report.epistemic.is_grounded:
             findings.append(f"epistemic: L{report.epistemic.layer} not grounded")
         if report.dialectical.problematic_count > 0:

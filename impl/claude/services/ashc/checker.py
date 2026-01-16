@@ -1068,9 +1068,13 @@ verus! {{
                 errors.append(line.strip())
             elif "assertion failed" in line_lower:
                 errors.append(line.strip())
-            elif "precondition" in line_lower and ("not satisfied" in line_lower or "failed" in line_lower):
+            elif "precondition" in line_lower and (
+                "not satisfied" in line_lower or "failed" in line_lower
+            ):
                 errors.append(line.strip())
-            elif "postcondition" in line_lower and ("not satisfied" in line_lower or "failed" in line_lower):
+            elif "postcondition" in line_lower and (
+                "not satisfied" in line_lower or "failed" in line_lower
+            ):
                 errors.append(line.strip())
 
         return errors

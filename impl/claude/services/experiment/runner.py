@@ -257,8 +257,7 @@ class ExperimentRunner:
             # Add timeout to prevent hanging (default: 2 minutes)
             timeout_seconds = 120.0
             result = await asyncio.wait_for(
-                self._void_harness.generate_detailed(config.spec),
-                timeout=timeout_seconds
+                self._void_harness.generate_detailed(config.spec), timeout=timeout_seconds
             )
 
             duration_ms = (time.monotonic() - start) * 1000

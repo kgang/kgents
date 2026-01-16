@@ -73,7 +73,9 @@ def main():
     print(f"  Called by: {len(func.called_by)}")
     print(f"  Layer: L{func.layer} (Actions)")
     print(f"  Proof coherence: {func.proof.coherence:.2%}" if func.proof else "  No proof")
-    print(f"  ✓ Serialization round-trip: {FunctionCrystal.from_dict(func.to_dict()).id == func.id}")
+    print(
+        f"  ✓ Serialization round-trip: {FunctionCrystal.from_dict(func.to_dict()).id == func.id}"
+    )
     print()
 
     # 2. Create a KBlockCrystal
@@ -119,10 +121,18 @@ def main():
     print(f"  Boundary confidence: {kblock.boundary_confidence:.2%}")
     print()
     print("  Size analysis:")
-    print(f"    - Needs split? {kblock.needs_split} (>{KBLOCK_SIZE_HEURISTICS['max_tokens']} tokens)")
-    print(f"    - Undersized? {kblock.is_undersized} (<{KBLOCK_SIZE_HEURISTICS['min_tokens']} tokens)")
-    print(f"    - Optimal size? {kblock.is_optimal_size} (~{KBLOCK_SIZE_HEURISTICS['target_tokens']} tokens)")
-    print(f"  ✓ Serialization round-trip: {KBlockCrystal.from_dict(kblock.to_dict()).id == kblock.id}")
+    print(
+        f"    - Needs split? {kblock.needs_split} (>{KBLOCK_SIZE_HEURISTICS['max_tokens']} tokens)"
+    )
+    print(
+        f"    - Undersized? {kblock.is_undersized} (<{KBLOCK_SIZE_HEURISTICS['min_tokens']} tokens)"
+    )
+    print(
+        f"    - Optimal size? {kblock.is_optimal_size} (~{KBLOCK_SIZE_HEURISTICS['target_tokens']} tokens)"
+    )
+    print(
+        f"  ✓ Serialization round-trip: {KBlockCrystal.from_dict(kblock.to_dict()).id == kblock.id}"
+    )
     print()
 
     # 3. Create GhostFunctionCrystals
@@ -165,7 +175,9 @@ def main():
     print(f"    Source: {ghost_call.source_id}")
     print(f"    Implemented? {ghost_call.was_implemented}")
     print(f"    Dismissed? {ghost_call.was_dismissed}")
-    print(f"  ✓ Serialization round-trip: {GhostFunctionCrystal.from_dict(ghost_call.to_dict()).id == ghost_call.id}")
+    print(
+        f"  ✓ Serialization round-trip: {GhostFunctionCrystal.from_dict(ghost_call.to_dict()).id == ghost_call.id}"
+    )
     print()
 
     # 4. Schema registration

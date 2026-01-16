@@ -497,12 +497,17 @@ class ConstitutionalCrystalMeta:
             all_trajectories = all_trajectories[::step][:100]
 
         # Aggregate other metrics
-        total_weight = sum(len(m.alignment_trajectory) for m in metas if m.alignment_trajectory) or 1
-        average_alignment = sum(
-            m.average_alignment * len(m.alignment_trajectory)
-            for m in metas
-            if m.alignment_trajectory
-        ) / total_weight
+        total_weight = (
+            sum(len(m.alignment_trajectory) for m in metas if m.alignment_trajectory) or 1
+        )
+        average_alignment = (
+            sum(
+                m.average_alignment * len(m.alignment_trajectory)
+                for m in metas
+                if m.alignment_trajectory
+            )
+            / total_weight
+        )
 
         violations_count = sum(m.violations_count for m in metas)
         trust_earned = sum(m.trust_earned for m in metas)
@@ -837,7 +842,9 @@ class Crystal:
             "confidence": self.confidence,
             "token_estimate": self.token_estimate,
             "session_id": self.session_id,
-            "constitutional_meta": self.constitutional_meta.to_dict() if self.constitutional_meta else None,
+            "constitutional_meta": self.constitutional_meta.to_dict()
+            if self.constitutional_meta
+            else None,
         }
 
     @classmethod

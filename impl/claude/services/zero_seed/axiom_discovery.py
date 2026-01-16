@@ -230,7 +230,7 @@ def extract_value_phrases(text: str) -> list[str]:
         phrases.extend(matches)
 
     # Pattern 2: Sentence-level principles (capitalized sentences)
-    sentences = re.split(r'[.!?]', text)
+    sentences = re.split(r"[.!?]", text)
     for sent in sentences:
         sent = sent.strip()
         # Short, declarative sentences are often principles
@@ -292,7 +292,9 @@ def cluster_similar_phrases(phrases: list[str], threshold: float = 0.5) -> list[
     return sorted(results, key=lambda x: -x[1])
 
 
-def extract_candidates(marks: list[Mark], min_occurrences: int = MIN_PATTERN_OCCURRENCES) -> list[CandidateAxiom]:
+def extract_candidates(
+    marks: list[Mark], min_occurrences: int = MIN_PATTERN_OCCURRENCES
+) -> list[CandidateAxiom]:
     """
     Extract candidate axioms from a list of decision marks.
 
@@ -327,11 +329,13 @@ def extract_candidates(marks: list[Mark], min_occurrences: int = MIN_PATTERN_OCC
             # Capitalize for presentation
             display = phrase.capitalize()
             source_ids = phrase_to_marks.get(phrase.lower(), [])[:5]  # Limit source tracking
-            candidates.append(CandidateAxiom(
-                content=display,
-                frequency=count,
-                source_mark_ids=tuple(source_ids),
-            ))
+            candidates.append(
+                CandidateAxiom(
+                    content=display,
+                    frequency=count,
+                    source_mark_ids=tuple(source_ids),
+                )
+            )
 
     return candidates[:MAX_CANDIDATES]
 
@@ -393,6 +397,7 @@ class AxiomDiscoveryService:
             DiscoveryReport with discovered axioms and statistics
         """
         import time
+
         start = time.monotonic()
 
         # Step 1: Extract candidates
@@ -410,14 +415,16 @@ class AxiomDiscoveryService:
                 if str(mark.id) in candidate.source_mark_ids:
                     source_decisions.append(extract_decision_content(mark))
 
-            discovered.append(DiscoveredAxiom(
-                content=candidate.content,
-                loss=result.loss,
-                stability=result.stability,
-                iterations=result.iterations,
-                confidence=1.0 - result.loss,
-                source_decisions=source_decisions[:3],  # Limit storage
-            ))
+            discovered.append(
+                DiscoveredAxiom(
+                    content=candidate.content,
+                    loss=result.loss,
+                    stability=result.stability,
+                    iterations=result.iterations,
+                    confidence=1.0 - result.loss,
+                    source_decisions=source_decisions[:3],  # Limit storage
+                )
+            )
 
         # Sort by loss (best axioms first)
         discovered.sort(key=lambda a: a.loss)
@@ -478,6 +485,7 @@ class AxiomDiscoveryService:
             DiscoveryReport with discovered axioms
         """
         import time
+
         start = time.monotonic()
 
         # Extract all phrases
@@ -498,14 +506,16 @@ class AxiomDiscoveryService:
         discovered: list[DiscoveredAxiom] = []
         for phrase, count in candidates:
             result = await self.validate_fixed_point(phrase)
-            discovered.append(DiscoveredAxiom(
-                content=phrase,
-                loss=result.loss,
-                stability=result.stability,
-                iterations=result.iterations,
-                confidence=1.0 - result.loss,
-                source_decisions=[],  # No mark sources for text input
-            ))
+            discovered.append(
+                DiscoveredAxiom(
+                    content=phrase,
+                    loss=result.loss,
+                    stability=result.stability,
+                    iterations=result.iterations,
+                    confidence=1.0 - result.loss,
+                    source_decisions=[],  # No mark sources for text input
+                )
+            )
 
         discovered.sort(key=lambda a: a.loss)
         elapsed = (time.monotonic() - start) * 1000

@@ -32,7 +32,7 @@ class DerivationNode:
     layer: int
     kind: str
     parent_ids: list[str] = field(default_factory=list)  # Nodes this derives from
-    child_ids: list[str] = field(default_factory=list)   # Nodes that derive from this
+    child_ids: list[str] = field(default_factory=list)  # Nodes that derive from this
 
     def __repr__(self) -> str:
         return (
@@ -59,11 +59,7 @@ class DerivationDAG:
         self._nodes: dict[str, DerivationNode] = {}
 
     def add_node(
-        self,
-        kblock_id: str,
-        layer: int,
-        kind: str,
-        parent_ids: list[str] | None = None
+        self, kblock_id: str, layer: int, kind: str, parent_ids: list[str] | None = None
     ) -> DerivationNode:
         """
         Add a node to the DAG.
@@ -240,11 +236,7 @@ class DerivationDAG:
                 stack.extend(node.parent_ids)
 
         # All leaves must be L1 axioms
-        return all(
-            self._nodes[leaf_id].layer == 1
-            for leaf_id in leaves
-            if leaf_id in self._nodes
-        )
+        return all(self._nodes[leaf_id].layer == 1 for leaf_id in leaves if leaf_id in self._nodes)
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize DAG to dict."""
@@ -288,8 +280,7 @@ class DerivationDAG:
             layer_counts[node.layer] = layer_counts.get(node.layer, 0) + 1
 
         return (
-            f"DerivationDAG(nodes={len(self._nodes)}, "
-            f"layers={dict(sorted(layer_counts.items()))})"
+            f"DerivationDAG(nodes={len(self._nodes)}, layers={dict(sorted(layer_counts.items()))})"
         )
 
 

@@ -113,7 +113,7 @@ def _handle_fixture(args: list[str], ctx: "InvocationContext | None" = None) -> 
 
 def _handle_dev(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """Handle world dev -> delegating to existing dev handler."""
-    from protocols.cli.handlers.dev import cmd_dev  # type: ignore[import-untyped]
+    from protocols.cli.handlers.dev import cmd_dev
 
     result: int = cmd_dev(args)
     return result

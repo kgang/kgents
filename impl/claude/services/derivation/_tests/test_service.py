@@ -171,9 +171,7 @@ async def test_get_derivation_tree(service, universe):
     value_id = await universe.store(value, schema_name="concept.value")
 
     # Create two functions that derive from it
-    proof1 = GaloisWitnessedProof(
-        data="d1", warrant="w1", claim="c1", backing="b1"
-    )
+    proof1 = GaloisWitnessedProof(data="d1", warrant="w1", claim="c1", backing="b1")
     func1 = FunctionCrystal(
         id="func-tree-1",
         qualified_name="test.func1",
@@ -185,9 +183,7 @@ async def test_get_derivation_tree(service, universe):
     )
     func1_id = await universe.store(func1, schema_name="code.function")
 
-    proof2 = GaloisWitnessedProof(
-        data="d2", warrant="w2", claim="c2", backing="b2"
-    )
+    proof2 = GaloisWitnessedProof(data="d2", warrant="w2", claim="c2", backing="b2")
     func2 = FunctionCrystal(
         id="func-tree-2",
         qualified_name="test.func2",
@@ -226,9 +222,7 @@ async def test_link_derivation(service, universe):
     )
     value_id = await universe.store(value, schema_name="concept.value")
 
-    proof = GaloisWitnessedProof(
-        data="d", warrant="w", claim="c", backing="b"
-    )
+    proof = GaloisWitnessedProof(data="d", warrant="w", claim="c", backing="b")
     func = FunctionCrystal(
         id="func-link",
         qualified_name="test.func",

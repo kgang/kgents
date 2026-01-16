@@ -253,7 +253,11 @@ class MonadVariatorProbe:
             user=f"Translate to Spanish: {prompt}",
             temperature=0.0,
         )
-        spanish = spanish_response.text if hasattr(spanish_response, "text") else spanish_response.get("text", str(spanish_response))
+        spanish = (
+            spanish_response.text
+            if hasattr(spanish_response, "text")
+            else spanish_response.get("text", str(spanish_response))
+        )
 
         # Translate back to English
         back_to_english_response = await self.llm.generate(
@@ -261,7 +265,11 @@ class MonadVariatorProbe:
             user=f"Translate to English: {spanish}",
             temperature=0.0,
         )
-        back_to_english = back_to_english_response.text if hasattr(back_to_english_response, "text") else back_to_english_response.get("text", str(back_to_english_response))
+        back_to_english = (
+            back_to_english_response.text
+            if hasattr(back_to_english_response, "text")
+            else back_to_english_response.get("text", str(back_to_english_response))
+        )
 
         # Get translated answers
         translated_answers = [await self._solve(back_to_english) for _ in range(n)]

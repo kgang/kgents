@@ -123,9 +123,7 @@ class CollectionService:
     async def get(self, collection_id: str) -> SovereignCollectionRow | None:
         """Get a collection by ID."""
         result = await self.session.execute(
-            select(SovereignCollectionRow).where(
-                SovereignCollectionRow.id == collection_id
-            )
+            select(SovereignCollectionRow).where(SovereignCollectionRow.id == collection_id)
         )
         return result.scalar_one_or_none()
 
@@ -428,9 +426,7 @@ class PlaceholderService:
         """
         # Check if placeholder exists
         result = await self.session.execute(
-            select(SovereignPlaceholderRow).where(
-                SovereignPlaceholderRow.path == path
-            )
+            select(SovereignPlaceholderRow).where(SovereignPlaceholderRow.path == path)
         )
         placeholder = result.scalar_one_or_none()
 
@@ -457,9 +453,7 @@ class PlaceholderService:
     async def get(self, path: str) -> SovereignPlaceholderRow | None:
         """Get placeholder by path."""
         result = await self.session.execute(
-            select(SovereignPlaceholderRow).where(
-                SovereignPlaceholderRow.path == path
-            )
+            select(SovereignPlaceholderRow).where(SovereignPlaceholderRow.path == path)
         )
         return result.scalar_one_or_none()
 

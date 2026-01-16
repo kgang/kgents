@@ -137,7 +137,10 @@ class TestGaloisWitnessedProof:
     def test_coherence_property(self) -> None:
         """Coherence = 1 - galois_loss."""
         proof = GaloisWitnessedProof(
-            data="Test", warrant="Test", claim="Test", backing="Test",
+            data="Test",
+            warrant="Test",
+            claim="Test",
+            backing="Test",
             galois_loss=0.3,
         )
 
@@ -290,7 +293,9 @@ class TestValueCrystal:
 # =============================================================================
 
 
-@pytest.mark.skipif(PromptCrystal is None or PromptParam is None, reason="PromptCrystal not available")
+@pytest.mark.skipif(
+    PromptCrystal is None or PromptParam is None, reason="PromptCrystal not available"
+)
 class TestPromptParam:
     """Tests for PromptParam parameter definitions."""
 
@@ -535,9 +540,7 @@ class TestFunctionCrystal:
             signature="def compute_loss(data: str) -> float",
             docstring="Compute Galois loss for data.",
             body_hash="abc123",
-            parameters=(
-                ParamInfo(name="data", type_annotation="str"),
-            ),
+            parameters=(ParamInfo(name="data", type_annotation="str"),),
             return_type="float",
             imports=frozenset({"math.log", "typing.Any"}),
             calls=frozenset({"extract_terms", "normalize"}),
@@ -1164,9 +1167,7 @@ class TestLLMInvocationMark:
             response="Analysis complete.",
             causal_parent_id=None,
             triggered_by="user_input",
-            state_changes=(
-                StateChange("crystal", "c1", "created", None, "hash1"),
-            ),
+            state_changes=(StateChange("crystal", "c1", "created", None, "hash1"),),
             crystals_created=("c1",),
             crystals_modified=(),
             galois_loss=0.08,
@@ -1300,9 +1301,7 @@ class TestLLMInvocationMark:
             response="response",
             causal_parent_id="parent",
             triggered_by="cascade",
-            state_changes=(
-                StateChange("crystal", "c1", "created", None, "h1"),
-            ),
+            state_changes=(StateChange("crystal", "c1", "created", None, "h1"),),
             crystals_created=("c1",),
             crystals_modified=(),
             galois_loss=0.1,
@@ -1340,7 +1339,7 @@ class TestLayerEnforcement:
         )
 
         # AxiomCrystal has no 'proof' attribute
-        assert not hasattr(axiom, 'proof')
+        assert not hasattr(axiom, "proof")
 
     @pytest.mark.skipif(ValueCrystal is None, reason="ValueCrystal not available")
     def test_l2_no_proof_required(self) -> None:
@@ -1351,7 +1350,7 @@ class TestLayerEnforcement:
         )
 
         # ValueCrystal has no 'proof' attribute
-        assert not hasattr(value, 'proof')
+        assert not hasattr(value, "proof")
 
     @pytest.mark.skipif(PromptCrystal is None, reason="PromptCrystal not available")
     def test_l3_requires_proof(self, sample_proof: GaloisWitnessedProof) -> None:
@@ -1366,7 +1365,7 @@ class TestLayerEnforcement:
             proof=sample_proof,
         )
 
-        assert hasattr(prompt, 'proof')
+        assert hasattr(prompt, "proof")
         assert prompt.proof is not None
 
     @pytest.mark.skipif(FunctionCrystal is None, reason="FunctionCrystal not available")
@@ -1381,7 +1380,7 @@ class TestLayerEnforcement:
             proof=sample_proof,
         )
 
-        assert hasattr(func, 'proof')
+        assert hasattr(func, "proof")
         assert func.proof is not None
 
     @pytest.mark.skipif(ReflectionCrystal is None, reason="ReflectionCrystal not available")
@@ -1397,7 +1396,7 @@ class TestLayerEnforcement:
             proof=None,
         )
 
-        assert hasattr(refl, 'proof')
+        assert hasattr(refl, "proof")
         assert refl.proof is None
 
     @pytest.mark.skipif(InterpretationCrystal is None, reason="InterpretationCrystal not available")
@@ -1417,7 +1416,7 @@ class TestLayerEnforcement:
             proof=None,
         )
 
-        assert hasattr(interp, 'proof')
+        assert hasattr(interp, "proof")
         assert interp.proof is None
 
 
@@ -1431,7 +1430,7 @@ class TestDerivationChains:
 
     @pytest.mark.skipif(
         AxiomCrystal is None or ValueCrystal is None or PromptCrystal is None,
-        reason="Required crystals not available"
+        reason="Required crystals not available",
     )
     def test_axiom_to_value_to_prompt(self, sample_proof: GaloisWitnessedProof) -> None:
         """Can trace L1 → L2 → L3 derivation."""
@@ -1468,7 +1467,7 @@ class TestDerivationChains:
 
     @pytest.mark.skipif(
         PromptCrystal is None or SpecCrystal is None or FunctionCrystal is None,
-        reason="Required crystals not available"
+        reason="Required crystals not available",
     )
     def test_prompt_to_spec_to_function(self, sample_proof: GaloisWitnessedProof) -> None:
         """Can trace L3 → L4 → L5 derivation."""

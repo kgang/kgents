@@ -34,9 +34,7 @@ def reset_state() -> None:
 class TestPortalTool:
     """Tests for PortalTool adapter."""
 
-    async def test_emits_portal_for_existing_file(
-        self, tmp_path: pytest.TempPathFactory
-    ) -> None:
+    async def test_emits_portal_for_existing_file(self, tmp_path: pytest.TempPathFactory) -> None:
         """PortalTool emits portal with content preview."""
         file = tmp_path / "test.txt"  # type: ignore
         content = "line1\nline2\nline3\nline4\nline5"
@@ -63,17 +61,13 @@ class TestPortalTool:
         file.write_text("short")
 
         tool = PortalTool()
-        result = await tool.invoke(
-            PortalRequest(destination=str(file), preview_lines=10)
-        )
+        result = await tool.invoke(PortalRequest(destination=str(file), preview_lines=10))
 
         assert result.line_count == 1
         assert result.content_preview is None  # Full content fits in preview
         assert result.content_full == "short"
 
-    async def test_tracks_open_portal_in_registry(
-        self, tmp_path: pytest.TempPathFactory
-    ) -> None:
+    async def test_tracks_open_portal_in_registry(self, tmp_path: pytest.TempPathFactory) -> None:
         """PortalTool registers open portal in session state."""
         file = tmp_path / "tracked.txt"  # type: ignore
         file.write_text("tracked content")
@@ -94,17 +88,13 @@ class TestPortalTool:
         file.write_text("content")
 
         tool = PortalTool()
-        result = await tool.invoke(
-            PortalRequest(destination=str(file), access="readwrite")
-        )
+        result = await tool.invoke(PortalRequest(destination=str(file), access="readwrite"))
 
         portals = get_open_portals()
         assert portals[result.portal_id].access == "readwrite"
         assert result.access == "readwrite"
 
-    async def test_emits_portal_for_missing_file(
-        self, tmp_path: pytest.TempPathFactory
-    ) -> None:
+    async def test_emits_portal_for_missing_file(self, tmp_path: pytest.TempPathFactory) -> None:
         """PortalTool emits portal with exists=False for missing file."""
         tool = PortalTool()
         result = await tool.invoke(
@@ -124,9 +114,7 @@ class TestPortalTool:
         file.write_text("# Spec")
 
         tool = PortalTool()
-        result = await tool.invoke(
-            PortalRequest(destination=str(file), edge_type="implements")
-        )
+        result = await tool.invoke(PortalRequest(destination=str(file), edge_type="implements"))
 
         assert result.edge_type == "implements"
 
@@ -138,15 +126,11 @@ class TestPortalTool:
         file.write_text("content")
 
         tool = PortalTool()
-        result = await tool.invoke(
-            PortalRequest(destination=str(file), auto_expand=False)
-        )
+        result = await tool.invoke(PortalRequest(destination=str(file), auto_expand=False))
 
         assert result.auto_expand is False
 
-    async def test_portal_emission_serialization(
-        self, tmp_path: pytest.TempPathFactory
-    ) -> None:
+    async def test_portal_emission_serialization(self, tmp_path: pytest.TempPathFactory) -> None:
         """PortalEmission serializes correctly."""
         file = tmp_path / "test.txt"  # type: ignore
         file.write_text("content")
@@ -181,9 +165,7 @@ class TestPortalTool:
 class TestPortalWriteTool:
     """Tests for PortalWriteTool adapter."""
 
-    async def test_writes_through_open_portal(
-        self, tmp_path: pytest.TempPathFactory
-    ) -> None:
+    async def test_writes_through_open_portal(self, tmp_path: pytest.TempPathFactory) -> None:
         """PortalWriteTool writes content through open portal."""
         file = tmp_path / "writable.txt"  # type: ignore
         file.write_text("original")
@@ -210,25 +192,19 @@ class TestPortalWriteTool:
         write_tool = PortalWriteTool()
 
         with pytest.raises(CausalityViolation) as exc_info:
-            await write_tool.invoke(
-                PortalWriteRequest(portal_id="nonexistent", content="content")
-            )
+            await write_tool.invoke(PortalWriteRequest(portal_id="nonexistent", content="content"))
 
         assert "Portal not open" in str(exc_info.value)
         assert exc_info.value.tool_name == "portal.write"
 
-    async def test_raises_on_read_only_portal(
-        self, tmp_path: pytest.TempPathFactory
-    ) -> None:
+    async def test_raises_on_read_only_portal(self, tmp_path: pytest.TempPathFactory) -> None:
         """PortalWriteTool raises CausalityViolation for read-only portal."""
         file = tmp_path / "readonly.txt"  # type: ignore
         file.write_text("original")
 
         # Open portal with read-only access
         portal_tool = PortalTool()
-        emission = await portal_tool.invoke(
-            PortalRequest(destination=str(file), access="read")
-        )
+        emission = await portal_tool.invoke(PortalRequest(destination=str(file), access="read"))
 
         # Attempt write
         write_tool = PortalWriteTool()
@@ -240,9 +216,7 @@ class TestPortalWriteTool:
         assert "read-only" in str(exc_info.value)
         assert file.read_text() == "original"  # Not modified
 
-    async def test_updates_portal_content_hash(
-        self, tmp_path: pytest.TempPathFactory
-    ) -> None:
+    async def test_updates_portal_content_hash(self, tmp_path: pytest.TempPathFactory) -> None:
         """PortalWriteTool updates portal state after write."""
         file = tmp_path / "tracked.txt"  # type: ignore
         file.write_text("original")
@@ -266,9 +240,7 @@ class TestPortalWriteTool:
         assert portals[emission.portal_id].content_hash != original_hash
         assert portals[emission.portal_id].content_hash == result.new_content_hash
 
-    async def test_write_preserves_portal_metadata(
-        self, tmp_path: pytest.TempPathFactory
-    ) -> None:
+    async def test_write_preserves_portal_metadata(self, tmp_path: pytest.TempPathFactory) -> None:
         """PortalWriteTool preserves edge_type and other metadata."""
         file = tmp_path / "test.txt"  # type: ignore
         file.write_text("original")
@@ -276,9 +248,7 @@ class TestPortalWriteTool:
         # Open portal with specific edge type
         portal_tool = PortalTool()
         emission = await portal_tool.invoke(
-            PortalRequest(
-                destination=str(file), edge_type="implements", access="readwrite"
-            )
+            PortalRequest(destination=str(file), edge_type="implements", access="readwrite")
         )
 
         portals = get_open_portals()
@@ -286,9 +256,7 @@ class TestPortalWriteTool:
 
         # Write through portal
         write_tool = PortalWriteTool()
-        await write_tool.invoke(
-            PortalWriteRequest(portal_id=emission.portal_id, content="updated")
-        )
+        await write_tool.invoke(PortalWriteRequest(portal_id=emission.portal_id, content="updated"))
 
         # Metadata unchanged
         assert portals[emission.portal_id].edge_type == "implements"
@@ -359,24 +327,18 @@ class TestPortalAccessControl:
         write_tool = PortalWriteTool()
 
         # First write
-        await write_tool.invoke(
-            PortalWriteRequest(portal_id=emission.portal_id, content="v2")
-        )
+        await write_tool.invoke(PortalWriteRequest(portal_id=emission.portal_id, content="v2"))
         assert file.read_text() == "v2"
 
         # Second write
-        await write_tool.invoke(
-            PortalWriteRequest(portal_id=emission.portal_id, content="v3")
-        )
+        await write_tool.invoke(PortalWriteRequest(portal_id=emission.portal_id, content="v3"))
         assert file.read_text() == "v3"
 
 
 class TestPortalEdgeCases:
     """Tests for portal edge cases and error handling."""
 
-    async def test_portal_to_directory_raises_error(
-        self, tmp_path: pytest.TempPathFactory
-    ) -> None:
+    async def test_portal_to_directory_raises_error(self, tmp_path: pytest.TempPathFactory) -> None:
         """PortalTool raises error for directory paths."""
         tool = PortalTool()
 
@@ -399,9 +361,7 @@ class TestPortalEdgeCases:
 
         datetime.fromisoformat(result.emitted_at)
 
-    async def test_portal_unique_ids_per_emission(
-        self, tmp_path: pytest.TempPathFactory
-    ) -> None:
+    async def test_portal_unique_ids_per_emission(self, tmp_path: pytest.TempPathFactory) -> None:
         """Each portal emission gets a unique ID."""
         file = tmp_path / "test.txt"  # type: ignore
         file.write_text("content")

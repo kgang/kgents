@@ -32,7 +32,7 @@ def main() -> None:
     print()
     print("Sample states:")
     for i, state in enumerate(list(states)[:4]):
-        print(f"  {i+1}. {state}")
+        print(f"  {i + 1}. {state}")
     print()
 
     # Pick an example state
@@ -70,7 +70,9 @@ def main() -> None:
     print()
     print("Per-principle scores:")
     for ps in value_score.principle_scores:
-        print(f"  {ps.principle.name:15s}: {ps.score:.3f} (weight={ps.weight}) → {ps.weighted_score:.3f}")
+        print(
+            f"  {ps.principle.name:15s}: {ps.score:.3f} (weight={ps.weight}) → {ps.weighted_score:.3f}"
+        )
         print(f"    Evidence: {ps.evidence}")
     print()
 

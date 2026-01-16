@@ -129,4 +129,5 @@ class Datum:
             New Datum with changes applied
         """
         from dataclasses import replace
+
         return replace(self, **changes)

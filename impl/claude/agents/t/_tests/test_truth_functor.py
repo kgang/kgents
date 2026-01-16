@@ -243,10 +243,7 @@ class TestProbeAction:
 
     def test_action_with_parameters(self):
         """Test action with parameters."""
-        action = ProbeAction(
-            "test_composition",
-            parameters=("f", "g", "h")
-        )
+        action = ProbeAction("test_composition", parameters=("f", "g", "h"))
 
         assert action.name == "test_composition"
         assert action.parameters == ("f", "g", "h")

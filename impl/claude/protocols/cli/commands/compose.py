@@ -54,7 +54,9 @@ def _print_composition_result(
         use_rich = False
 
     # Header
-    status_color = "green" if composition.all_succeeded else "red" if composition.any_failed else "yellow"
+    status_color = (
+        "green" if composition.all_succeeded else "red" if composition.any_failed else "yellow"
+    )
     status_symbol = "✓" if composition.all_succeeded else "✗" if composition.any_failed else "⊙"
 
     if use_rich and console:
@@ -62,7 +64,9 @@ def _print_composition_result(
         console.print(f"\n[bold {status_color}]{title}[/bold {status_color}]")
         console.print(f"[dim]Status: {composition.status.value}[/dim]")
         console.print(f"[dim]Duration: {composition.duration_ms:.0f}ms[/dim]")
-        console.print(f"[dim]Steps: {composition.success_count} succeeded, {composition.failure_count} failed, {composition.skipped_count} skipped[/dim]")
+        console.print(
+            f"[dim]Steps: {composition.success_count} succeeded, {composition.failure_count} failed, {composition.skipped_count} skipped[/dim]"
+        )
         if composition.trace_id:
             console.print(f"[dim]Trace: {composition.trace_id[:12]}...[/dim]")
         console.print()
@@ -70,7 +74,9 @@ def _print_composition_result(
         print(f"\n{status_symbol} Composition: {composition.name or composition.id[:12]}")
         print(f"Status: {composition.status.value}")
         print(f"Duration: {composition.duration_ms:.0f}ms")
-        print(f"Steps: {composition.success_count} succeeded, {composition.failure_count} failed, {composition.skipped_count} skipped")
+        print(
+            f"Steps: {composition.success_count} succeeded, {composition.failure_count} failed, {composition.skipped_count} skipped"
+        )
         if composition.trace_id:
             print(f"Trace: {composition.trace_id[:12]}...")
         print()
@@ -192,7 +198,15 @@ def cmd_compose(args: list[str], ctx: InvocationContext | None = None) -> int:
 
     # Import from YAML
     if import_file:
-        return _cmd_import(import_file, export_file, dry_run, json_mode, verbose, continue_on_failure, timeout_seconds)
+        return _cmd_import(
+            import_file,
+            export_file,
+            dry_run,
+            json_mode,
+            verbose,
+            continue_on_failure,
+            timeout_seconds,
+        )
 
     # Export to YAML
     if export_file and commands:
@@ -219,7 +233,9 @@ def cmd_compose(args: list[str], ctx: InvocationContext | None = None) -> int:
             _print_help()
         return 1
 
-    return _cmd_execute(commands, save_name, json_mode, verbose, continue_on_failure, timeout_seconds, dry_run)
+    return _cmd_execute(
+        commands, save_name, json_mode, verbose, continue_on_failure, timeout_seconds, dry_run
+    )
 
 
 def _cmd_execute(
@@ -248,7 +264,9 @@ def _cmd_execute(
                 from rich.table import Table
 
                 console = Console()
-                console.print(f"\n[bold cyan]Dry Run: {composition.name or composition.id[:12]}[/bold cyan]")
+                console.print(
+                    f"\n[bold cyan]Dry Run: {composition.name or composition.id[:12]}[/bold cyan]"
+                )
                 console.print(f"[dim]Would execute {len(composition.steps)} steps[/dim]\n")
 
                 table = Table(show_header=True, header_style="bold")
@@ -273,6 +291,7 @@ def _cmd_execute(
 
     # Execute
     try:
+
         async def _execute_and_save() -> "Composition":
             comp = await execute_composition(
                 composition,
@@ -471,7 +490,7 @@ def _cmd_list(json_mode: bool) -> int:
 
     if not named:
         print("No saved compositions.")
-        print("\nSave a composition with: kg compose --save <name> \"cmd1\" \"cmd2\"")
+        print('\nSave a composition with: kg compose --save <name> "cmd1" "cmd2"')
         return 0
 
     try:
@@ -492,7 +511,7 @@ def _cmd_list(json_mode: bool) -> int:
                 console.print(f"  [cyan]{name}[/cyan]")
                 console.print(f"    {len(comp.commands)} commands")
                 for i, cmd in enumerate(comp.commands[:3]):
-                    console.print(f"      {i+1}. {cmd[:50]}")
+                    console.print(f"      {i + 1}. {cmd[:50]}")
                 if len(comp.commands) > 3:
                     console.print(f"      ... and {len(comp.commands) - 3} more")
         console.print()
@@ -505,7 +524,7 @@ def _cmd_list(json_mode: bool) -> int:
                 print(f"  {name}")
                 print(f"    {len(comp.commands)} commands")
                 for i, cmd in enumerate(comp.commands[:3]):
-                    print(f"      {i+1}. {cmd[:50]}")
+                    print(f"      {i + 1}. {cmd[:50]}")
                 if len(comp.commands) > 3:
                     print(f"      ... and {len(comp.commands) - 3} more")
         print()

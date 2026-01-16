@@ -181,9 +181,7 @@ class TestWitnessedExport:
         paths = []
         for i in range(3):
             path = f"spec/test{i}.md"
-            event = IngestEvent.from_content(
-                f"# Test {i}".encode(), path, source="test"
-            )
+            event = IngestEvent.from_content(f"# Test {i}".encode(), path, source="test")
             await ingestor.ingest(event)
             paths.append(path)
 
@@ -389,6 +387,7 @@ class TestLaw3Enforcement:
 
         # Verify mark in bundle
         import json
+
         bundle = json.loads(bundle_bytes.decode("utf-8"))
 
         assert bundle["export_mark_id"] == mark_result.mark_id

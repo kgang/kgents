@@ -115,9 +115,7 @@ class TestPrincipleScore:
 
     def test_roundtrip_serialization(self):
         """to_dict/from_dict roundtrip preserves values."""
-        original = PrincipleScore(
-            tasteful=0.1, curated=0.2, ethical=0.3, joy_inducing=0.4
-        )
+        original = PrincipleScore(tasteful=0.1, curated=0.2, ethical=0.3, joy_inducing=0.4)
         roundtrip = PrincipleScore.from_dict(original.to_dict())
         assert roundtrip.tasteful == original.tasteful
         assert roundtrip.curated == original.curated

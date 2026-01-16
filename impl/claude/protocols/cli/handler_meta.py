@@ -236,8 +236,10 @@ def handler(
 
 
 # Commands classified as Tier 1 (pure async, no PTY)
+# ARCHIVED 2026-01-16 (CLI Renaissance Phase 2): q, derive, shortcut, op
 TIER_1_COMMANDS: frozenset[str] = frozenset(
     {
+        "start",
         "brain",
         "witness",
         "probe",
@@ -245,7 +247,7 @@ TIER_1_COMMANDS: frozenset[str] = frozenset(
         "annotate",
         "compose",
         "derivation",
-        "derive",
+        # "derive",  # ARCHIVED: alias of derivation
         "sovereign",
         "graph",
         "explore",
@@ -253,11 +255,13 @@ TIER_1_COMMANDS: frozenset[str] = frozenset(
         "archaeology",
         "evidence",
         "query",
-        "q",
-        "shortcut",
+        # "q",  # ARCHIVED: ambiguous alias
+        # "shortcut",  # ARCHIVED: low usage
         "completions",
         "init",
         "wipe",
+        "reset",
+        "doctor",
         "migrate",
         "self",
         "world",
@@ -268,18 +272,25 @@ TIER_1_COMMANDS: frozenset[str] = frozenset(
         "do",
         "portal",
         "context",
-        "op",
+        # "op",  # ARCHIVED: opaque name
         "experiment",
         "analyze",
+        # Joy Commands (CLI Renaissance 2026-01-16)
+        "oblique",
+        "surprise",
+        "yes-and",
+        "challenge",
+        "constrain",
     }
 )
 
 # Commands classified as Tier 2 (PTY-bridged, interactive but no TUI)
+# ARCHIVED 2026-01-16 (CLI Renaissance Phase 2): subscribe
 TIER_2_COMMANDS: frozenset[str] = frozenset(
     {
         "soul",
         "play",
-        "subscribe",
+        # "subscribe",  # ARCHIVED: daemon-only, not user-facing
         "why",
     }
 )
@@ -288,8 +299,8 @@ TIER_2_COMMANDS: frozenset[str] = frozenset(
 # These are TUI apps that require signal handlers in main thread
 TIER_3_COMMANDS: frozenset[str] = frozenset(
     {
-        "dawn",   # Textual TUI - requires main thread for signals
-        "coffee", # Textual TUI - requires main thread for signals
+        "dawn",  # Textual TUI - requires main thread for signals
+        "coffee",  # Textual TUI - requires main thread for signals
     }
 )
 

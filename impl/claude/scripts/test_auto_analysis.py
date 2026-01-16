@@ -63,6 +63,7 @@ Tests at: impl/test/test_example.py
 
     # Set status to ANALYZING
     from services.sovereign.analysis import AnalysisState, AnalysisStatus
+
     await store.set_analysis_state(
         test_path,
         AnalysisState(

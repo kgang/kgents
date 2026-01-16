@@ -907,10 +907,7 @@ class TestPolynomialLaws:
     def test_deterministic_transitions(self) -> None:
         """Same (state, action) always gives same result."""
         # Execute same transition multiple times
-        results = [
-            chat_transition(FlowState.STREAMING, "message")
-            for _ in range(10)
-        ]
+        results = [chat_transition(FlowState.STREAMING, "message") for _ in range(10)]
 
         # All results should be identical
         first = results[0]

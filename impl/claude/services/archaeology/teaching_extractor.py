@@ -34,6 +34,7 @@ class CommitTeaching:
     Wraps TeachingMoment with additional metadata about the source commit
     and affected features.
     """
+
     teaching: TeachingMoment
     commit: Commit
     features: tuple[str, ...]  # Which features this teaching applies to
@@ -65,11 +66,11 @@ class CommitTeachingExtractor:
 
         for commit in commits:
             teaching = (
-                self._extract_from_fix(commit) or
-                self._extract_from_revert(commit) or
-                self._extract_from_breaking(commit) or
-                self._extract_from_refactor(commit) or
-                self._extract_from_feat_with_test(commit)
+                self._extract_from_fix(commit)
+                or self._extract_from_revert(commit)
+                or self._extract_from_breaking(commit)
+                or self._extract_from_refactor(commit)
+                or self._extract_from_feat_with_test(commit)
             )
 
             if teaching:
@@ -123,8 +124,7 @@ class CommitTeachingExtractor:
         )
 
         features = tuple(
-            feature for file in commit.files_changed
-            for feature in match_file_to_features(file)
+            feature for file in commit.files_changed for feature in match_file_to_features(file)
         )
 
         return CommitTeaching(
@@ -165,8 +165,7 @@ class CommitTeachingExtractor:
         )
 
         features = tuple(
-            feature for file in commit.files_changed
-            for feature in match_file_to_features(file)
+            feature for file in commit.files_changed for feature in match_file_to_features(file)
         )
 
         return CommitTeaching(
@@ -203,8 +202,7 @@ class CommitTeachingExtractor:
         )
 
         features = tuple(
-            feature for file in commit.files_changed
-            for feature in match_file_to_features(file)
+            feature for file in commit.files_changed for feature in match_file_to_features(file)
         )
 
         return CommitTeaching(
@@ -245,8 +243,7 @@ class CommitTeachingExtractor:
         )
 
         features = tuple(
-            feature for file in commit.files_changed
-            for feature in match_file_to_features(file)
+            feature for file in commit.files_changed for feature in match_file_to_features(file)
         )
 
         return CommitTeaching(
@@ -266,10 +263,7 @@ class CommitTeachingExtractor:
             return None
 
         # Check if commit includes tests
-        has_tests = any(
-            "test" in f.lower() or "_tests" in f
-            for f in commit.files_changed
-        )
+        has_tests = any("test" in f.lower() or "_tests" in f for f in commit.files_changed)
 
         if not has_tests:
             return None
@@ -292,8 +286,7 @@ class CommitTeachingExtractor:
         )
 
         features = tuple(
-            feature for file in commit.files_changed
-            for feature in match_file_to_features(file)
+            feature for file in commit.files_changed for feature in match_file_to_features(file)
         )
 
         return CommitTeaching(
@@ -332,10 +325,7 @@ def extract_teachings_from_commits(
 
     if max_age_days is not None:
         cutoff = datetime.now(timezone.utc) - timedelta(days=max_age_days)
-        filtered = [
-            c for c in filtered
-            if c.timestamp.replace(tzinfo=timezone.utc) >= cutoff
-        ]
+        filtered = [c for c in filtered if c.timestamp.replace(tzinfo=timezone.utc) >= cutoff]
 
     return extractor.extract_all(filtered)
 
@@ -394,10 +384,12 @@ def generate_teaching_report(teachings: Sequence[CommitTeaching]) -> str:
             lines.append("")
 
     # By feature
-    lines.extend([
-        "## By Feature",
-        "",
-    ])
+    lines.extend(
+        [
+            "## By Feature",
+            "",
+        ]
+    )
 
     by_feature: dict[str, list[CommitTeaching]] = {}
     for t in teachings:

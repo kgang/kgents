@@ -212,16 +212,12 @@ async def test_phase1_runs_categorical_and_epistemic_in_parallel(
     service = AnalysisService(mock_llm)
 
     # Mock the individual analysis methods
-    with patch.object(
-        service, "analyze_categorical", new_callable=AsyncMock
-    ) as mock_cat, patch.object(
-        service, "analyze_epistemic", new_callable=AsyncMock
-    ) as mock_epi, patch.object(
-        service, "analyze_dialectical", new_callable=AsyncMock
-    ) as mock_dia, patch.object(
-        service, "analyze_generative", new_callable=AsyncMock
-    ) as mock_gen:
-
+    with (
+        patch.object(service, "analyze_categorical", new_callable=AsyncMock) as mock_cat,
+        patch.object(service, "analyze_epistemic", new_callable=AsyncMock) as mock_epi,
+        patch.object(service, "analyze_dialectical", new_callable=AsyncMock) as mock_dia,
+        patch.object(service, "analyze_generative", new_callable=AsyncMock) as mock_gen,
+    ):
         # Set return values
         mock_cat.return_value = sample_categorical_report
         mock_epi.return_value = sample_epistemic_report
@@ -230,9 +226,7 @@ async def test_phase1_runs_categorical_and_epistemic_in_parallel(
         )
         mock_gen.return_value = GenerativeReport(
             target=str(temp_spec_file),
-            grammar=OperadGrammar(
-                primitives=frozenset(), operations=frozenset(), laws=frozenset()
-            ),
+            grammar=OperadGrammar(primitives=frozenset(), operations=frozenset(), laws=frozenset()),
             compression_ratio=1.0,
             regeneration=RegenerationTest(
                 axioms_used=(), structures_regenerated=(), missing_elements=(), passed=False
@@ -277,24 +271,18 @@ async def test_phase1_parallelism_timing_evidence(
         await asyncio.sleep(0.1)  # 100ms delay
         return sample_epistemic_report
 
-    with patch.object(
-        service, "analyze_categorical", side_effect=slow_categorical
-    ), patch.object(
-        service, "analyze_epistemic", side_effect=slow_epistemic
-    ), patch.object(
-        service, "analyze_dialectical", new_callable=AsyncMock
-    ) as mock_dia, patch.object(
-        service, "analyze_generative", new_callable=AsyncMock
-    ) as mock_gen:
-
+    with (
+        patch.object(service, "analyze_categorical", side_effect=slow_categorical),
+        patch.object(service, "analyze_epistemic", side_effect=slow_epistemic),
+        patch.object(service, "analyze_dialectical", new_callable=AsyncMock) as mock_dia,
+        patch.object(service, "analyze_generative", new_callable=AsyncMock) as mock_gen,
+    ):
         mock_dia.return_value = DialecticalReport(
             target=str(temp_spec_file), tensions=(), summary=""
         )
         mock_gen.return_value = GenerativeReport(
             target=str(temp_spec_file),
-            grammar=OperadGrammar(
-                primitives=frozenset(), operations=frozenset(), laws=frozenset()
-            ),
+            grammar=OperadGrammar(primitives=frozenset(), operations=frozenset(), laws=frozenset()),
             compression_ratio=1.0,
             regeneration=RegenerationTest(
                 axioms_used=(), structures_regenerated=(), missing_elements=(), passed=False
@@ -338,16 +326,12 @@ async def test_phase2_runs_dialectical_and_generative_in_parallel(
     """
     service = AnalysisService(mock_llm)
 
-    with patch.object(
-        service, "analyze_categorical", new_callable=AsyncMock
-    ) as mock_cat, patch.object(
-        service, "analyze_epistemic", new_callable=AsyncMock
-    ) as mock_epi, patch.object(
-        service, "analyze_dialectical", new_callable=AsyncMock
-    ) as mock_dia, patch.object(
-        service, "analyze_generative", new_callable=AsyncMock
-    ) as mock_gen:
-
+    with (
+        patch.object(service, "analyze_categorical", new_callable=AsyncMock) as mock_cat,
+        patch.object(service, "analyze_epistemic", new_callable=AsyncMock) as mock_epi,
+        patch.object(service, "analyze_dialectical", new_callable=AsyncMock) as mock_dia,
+        patch.object(service, "analyze_generative", new_callable=AsyncMock) as mock_gen,
+    ):
         mock_cat.return_value = sample_categorical_report
         mock_epi.return_value = sample_epistemic_report
         mock_dia.return_value = sample_dialectical_report
@@ -375,12 +359,10 @@ async def test_phase2_parallelism_timing_evidence(
     service = AnalysisService(mock_llm)
 
     # Mock fast phase 1
-    with patch.object(
-        service, "analyze_categorical", new_callable=AsyncMock
-    ) as mock_cat, patch.object(
-        service, "analyze_epistemic", new_callable=AsyncMock
-    ) as mock_epi:
-
+    with (
+        patch.object(service, "analyze_categorical", new_callable=AsyncMock) as mock_cat,
+        patch.object(service, "analyze_epistemic", new_callable=AsyncMock) as mock_epi,
+    ):
         mock_cat.return_value = sample_categorical_report
         mock_epi.return_value = sample_epistemic_report
 
@@ -393,10 +375,10 @@ async def test_phase2_parallelism_timing_evidence(
             await asyncio.sleep(0.1)  # 100ms delay
             return sample_generative_report
 
-        with patch.object(
-            service, "analyze_dialectical", side_effect=slow_dialectical
-        ), patch.object(service, "analyze_generative", side_effect=slow_generative):
-
+        with (
+            patch.object(service, "analyze_dialectical", side_effect=slow_dialectical),
+            patch.object(service, "analyze_generative", side_effect=slow_generative),
+        ):
             import time
 
             start = time.monotonic()
@@ -431,16 +413,12 @@ async def test_dialectical_receives_categorical_context_when_violations_exist(
     """
     service = AnalysisService(mock_llm)
 
-    with patch.object(
-        service, "analyze_categorical", new_callable=AsyncMock
-    ) as mock_cat, patch.object(
-        service, "analyze_epistemic", new_callable=AsyncMock
-    ) as mock_epi, patch.object(
-        service, "analyze_dialectical", new_callable=AsyncMock
-    ) as mock_dia, patch.object(
-        service, "analyze_generative", new_callable=AsyncMock
-    ) as mock_gen:
-
+    with (
+        patch.object(service, "analyze_categorical", new_callable=AsyncMock) as mock_cat,
+        patch.object(service, "analyze_epistemic", new_callable=AsyncMock) as mock_epi,
+        patch.object(service, "analyze_dialectical", new_callable=AsyncMock) as mock_dia,
+        patch.object(service, "analyze_generative", new_callable=AsyncMock) as mock_gen,
+    ):
         # Phase 1: Categorical has violations
         mock_cat.return_value = sample_categorical_report_with_violations
         mock_epi.return_value = sample_epistemic_report
@@ -451,9 +429,7 @@ async def test_dialectical_receives_categorical_context_when_violations_exist(
         )
         mock_gen.return_value = GenerativeReport(
             target=str(temp_spec_file),
-            grammar=OperadGrammar(
-                primitives=frozenset(), operations=frozenset(), laws=frozenset()
-            ),
+            grammar=OperadGrammar(primitives=frozenset(), operations=frozenset(), laws=frozenset()),
             compression_ratio=1.0,
             regeneration=RegenerationTest(
                 axioms_used=(), structures_regenerated=(), missing_elements=(), passed=False
@@ -492,16 +468,12 @@ async def test_dialectical_receives_no_context_when_no_violations(
     """
     service = AnalysisService(mock_llm)
 
-    with patch.object(
-        service, "analyze_categorical", new_callable=AsyncMock
-    ) as mock_cat, patch.object(
-        service, "analyze_epistemic", new_callable=AsyncMock
-    ) as mock_epi, patch.object(
-        service, "analyze_dialectical", new_callable=AsyncMock
-    ) as mock_dia, patch.object(
-        service, "analyze_generative", new_callable=AsyncMock
-    ) as mock_gen:
-
+    with (
+        patch.object(service, "analyze_categorical", new_callable=AsyncMock) as mock_cat,
+        patch.object(service, "analyze_epistemic", new_callable=AsyncMock) as mock_epi,
+        patch.object(service, "analyze_dialectical", new_callable=AsyncMock) as mock_dia,
+        patch.object(service, "analyze_generative", new_callable=AsyncMock) as mock_gen,
+    ):
         # Phase 1: No violations
         mock_cat.return_value = sample_categorical_report
         mock_epi.return_value = sample_epistemic_report
@@ -511,9 +483,7 @@ async def test_dialectical_receives_no_context_when_no_violations(
         )
         mock_gen.return_value = GenerativeReport(
             target=str(temp_spec_file),
-            grammar=OperadGrammar(
-                primitives=frozenset(), operations=frozenset(), laws=frozenset()
-            ),
+            grammar=OperadGrammar(primitives=frozenset(), operations=frozenset(), laws=frozenset()),
             compression_ratio=1.0,
             regeneration=RegenerationTest(
                 axioms_used=(), structures_regenerated=(), missing_elements=(), passed=False
@@ -587,14 +557,12 @@ async def test_composition_order_is_correct(
         call_order.append("generative_end")
         return sample_generative_report
 
-    with patch.object(
-        service, "analyze_categorical", side_effect=track_cat
-    ), patch.object(service, "analyze_epistemic", side_effect=track_epi), patch.object(
-        service, "analyze_dialectical", side_effect=track_dia
-    ), patch.object(
-        service, "analyze_generative", side_effect=track_gen
+    with (
+        patch.object(service, "analyze_categorical", side_effect=track_cat),
+        patch.object(service, "analyze_epistemic", side_effect=track_epi),
+        patch.object(service, "analyze_dialectical", side_effect=track_dia),
+        patch.object(service, "analyze_generative", side_effect=track_gen),
     ):
-
         await service.analyze_full(str(temp_spec_file))
 
         # Verify order:
@@ -639,16 +607,12 @@ async def test_synthesis_receives_all_four_reports(
     """
     service = AnalysisService(mock_llm)
 
-    with patch.object(
-        service, "analyze_categorical", new_callable=AsyncMock
-    ) as mock_cat, patch.object(
-        service, "analyze_epistemic", new_callable=AsyncMock
-    ) as mock_epi, patch.object(
-        service, "analyze_dialectical", new_callable=AsyncMock
-    ) as mock_dia, patch.object(
-        service, "analyze_generative", new_callable=AsyncMock
-    ) as mock_gen:
-
+    with (
+        patch.object(service, "analyze_categorical", new_callable=AsyncMock) as mock_cat,
+        patch.object(service, "analyze_epistemic", new_callable=AsyncMock) as mock_epi,
+        patch.object(service, "analyze_dialectical", new_callable=AsyncMock) as mock_dia,
+        patch.object(service, "analyze_generative", new_callable=AsyncMock) as mock_gen,
+    ):
         mock_cat.return_value = sample_categorical_report
         mock_epi.return_value = sample_epistemic_report
         mock_dia.return_value = sample_dialectical_report
@@ -679,16 +643,12 @@ async def test_synthesis_reflects_report_states(
     """
     service = AnalysisService(mock_llm)
 
-    with patch.object(
-        service, "analyze_categorical", new_callable=AsyncMock
-    ) as mock_cat, patch.object(
-        service, "analyze_epistemic", new_callable=AsyncMock
-    ) as mock_epi, patch.object(
-        service, "analyze_dialectical", new_callable=AsyncMock
-    ) as mock_dia, patch.object(
-        service, "analyze_generative", new_callable=AsyncMock
-    ) as mock_gen:
-
+    with (
+        patch.object(service, "analyze_categorical", new_callable=AsyncMock) as mock_cat,
+        patch.object(service, "analyze_epistemic", new_callable=AsyncMock) as mock_epi,
+        patch.object(service, "analyze_dialectical", new_callable=AsyncMock) as mock_dia,
+        patch.object(service, "analyze_generative", new_callable=AsyncMock) as mock_gen,
+    ):
         # Categorical has violations
         mock_cat.return_value = sample_categorical_report_with_violations
         mock_epi.return_value = sample_epistemic_report
@@ -697,9 +657,7 @@ async def test_synthesis_reflects_report_states(
         )
         mock_gen.return_value = GenerativeReport(
             target=str(temp_spec_file),
-            grammar=OperadGrammar(
-                primitives=frozenset(), operations=frozenset(), laws=frozenset()
-            ),
+            grammar=OperadGrammar(primitives=frozenset(), operations=frozenset(), laws=frozenset()),
             compression_ratio=1.0,
             regeneration=RegenerationTest(
                 axioms_used=(), structures_regenerated=(), missing_elements=(), passed=False
@@ -711,7 +669,11 @@ async def test_synthesis_reflects_report_states(
         result = await service.analyze_full(str(temp_spec_file))
 
         # Synthesis should mention violations or issues
-        assert "⚠️" in result.synthesis or "ISSUES" in result.synthesis or "failed" in result.synthesis.lower()
+        assert (
+            "⚠️" in result.synthesis
+            or "ISSUES" in result.synthesis
+            or "failed" in result.synthesis.lower()
+        )
 
 
 # =============================================================================
@@ -744,16 +706,12 @@ async def test_error_in_phase1_still_runs_phase2(
         summary="Error: Categorical analysis failed",
     )
 
-    with patch.object(
-        service, "analyze_categorical", new_callable=AsyncMock
-    ) as mock_cat, patch.object(
-        service, "analyze_epistemic", new_callable=AsyncMock
-    ) as mock_epi, patch.object(
-        service, "analyze_dialectical", new_callable=AsyncMock
-    ) as mock_dia, patch.object(
-        service, "analyze_generative", new_callable=AsyncMock
-    ) as mock_gen:
-
+    with (
+        patch.object(service, "analyze_categorical", new_callable=AsyncMock) as mock_cat,
+        patch.object(service, "analyze_epistemic", new_callable=AsyncMock) as mock_epi,
+        patch.object(service, "analyze_dialectical", new_callable=AsyncMock) as mock_dia,
+        patch.object(service, "analyze_generative", new_callable=AsyncMock) as mock_gen,
+    ):
         # Categorical returns error report (not raises)
         mock_cat.return_value = error_categorical
         mock_epi.return_value = sample_epistemic_report
@@ -762,9 +720,7 @@ async def test_error_in_phase1_still_runs_phase2(
         )
         mock_gen.return_value = GenerativeReport(
             target=str(temp_spec_file),
-            grammar=OperadGrammar(
-                primitives=frozenset(), operations=frozenset(), laws=frozenset()
-            ),
+            grammar=OperadGrammar(primitives=frozenset(), operations=frozenset(), laws=frozenset()),
             compression_ratio=1.0,
             regeneration=RegenerationTest(
                 axioms_used=(), structures_regenerated=(), missing_elements=(), passed=False
@@ -810,16 +766,12 @@ async def test_error_in_phase2_still_produces_report(
         summary="Error: Dialectical analysis failed",
     )
 
-    with patch.object(
-        service, "analyze_categorical", new_callable=AsyncMock
-    ) as mock_cat, patch.object(
-        service, "analyze_epistemic", new_callable=AsyncMock
-    ) as mock_epi, patch.object(
-        service, "analyze_dialectical", new_callable=AsyncMock
-    ) as mock_dia, patch.object(
-        service, "analyze_generative", new_callable=AsyncMock
-    ) as mock_gen:
-
+    with (
+        patch.object(service, "analyze_categorical", new_callable=AsyncMock) as mock_cat,
+        patch.object(service, "analyze_epistemic", new_callable=AsyncMock) as mock_epi,
+        patch.object(service, "analyze_dialectical", new_callable=AsyncMock) as mock_dia,
+        patch.object(service, "analyze_generative", new_callable=AsyncMock) as mock_gen,
+    ):
         mock_cat.return_value = sample_categorical_report
         mock_epi.return_value = sample_epistemic_report
         # Dialectical returns error report (not raises)
@@ -858,16 +810,12 @@ async def test_full_analysis_with_real_file_loads_content(
     """
     service = AnalysisService(mock_llm)
 
-    with patch.object(
-        service, "analyze_categorical", new_callable=AsyncMock
-    ) as mock_cat, patch.object(
-        service, "analyze_epistemic", new_callable=AsyncMock
-    ) as mock_epi, patch.object(
-        service, "analyze_dialectical", new_callable=AsyncMock
-    ) as mock_dia, patch.object(
-        service, "analyze_generative", new_callable=AsyncMock
-    ) as mock_gen:
-
+    with (
+        patch.object(service, "analyze_categorical", new_callable=AsyncMock) as mock_cat,
+        patch.object(service, "analyze_epistemic", new_callable=AsyncMock) as mock_epi,
+        patch.object(service, "analyze_dialectical", new_callable=AsyncMock) as mock_dia,
+        patch.object(service, "analyze_generative", new_callable=AsyncMock) as mock_gen,
+    ):
         mock_cat.return_value = sample_categorical_report
         mock_epi.return_value = sample_epistemic_report
         mock_dia.return_value = sample_dialectical_report
@@ -894,4 +842,6 @@ async def test_missing_file_returns_error_report(mock_llm: Mock):
     result = await service.analyze_full("/nonexistent/path/to/spec.md")
 
     # Should return a report with errors, not raise
-    assert "Error" in result.categorical.summary or "not found" in result.categorical.summary.lower()
+    assert (
+        "Error" in result.categorical.summary or "not found" in result.categorical.summary.lower()
+    )

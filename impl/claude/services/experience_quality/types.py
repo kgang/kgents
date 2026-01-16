@@ -251,12 +251,9 @@ class ArcMeasurement:
     def from_dict(cls, data: dict[str, Any]) -> ArcMeasurement:
         """Create from dictionary."""
         phases = frozenset(EmotionalPhase(p) for p in data.get("phases_visited", []))
-        durations = {
-            EmotionalPhase(k): v for k, v in data.get("phase_durations", {}).items()
-        }
+        durations = {EmotionalPhase(k): v for k, v in data.get("phase_durations", {}).items()}
         transitions = tuple(
-            (EmotionalPhase(a), EmotionalPhase(b))
-            for a, b in data.get("transitions", [])
+            (EmotionalPhase(a), EmotionalPhase(b)) for a, b in data.get("transitions", [])
         )
         return cls(
             phases_visited=phases,
@@ -525,16 +522,12 @@ class ExperienceQuality:
         if not 0.0 <= self.contrast <= 1.0:
             object.__setattr__(self, "contrast", max(0.0, min(1.0, self.contrast)))
         if not 0.0 <= self.arc_coverage <= 1.0:
-            object.__setattr__(
-                self, "arc_coverage", max(0.0, min(1.0, self.arc_coverage))
-            )
+            object.__setattr__(self, "arc_coverage", max(0.0, min(1.0, self.arc_coverage)))
 
     @property
     def voice_alignment(self) -> float:
         """Voice alignment as continuous signal."""
-        return (
-            sum([self.voice_adversarial, self.voice_creative, self.voice_advocate]) / 3
-        )
+        return sum([self.voice_adversarial, self.voice_creative, self.voice_advocate]) / 3
 
     @property
     def overall(self) -> float:
@@ -1047,9 +1040,7 @@ class QualityAlgebra:
             "description": self.description,
             "contrast_dims": [d.to_dict() for d in self.contrast_dims],
             "arc_phases": [p.to_dict() for p in self.arc_phases],
-            "arc_canonical_transitions": [
-                list(t) for t in self.arc_canonical_transitions
-            ],
+            "arc_canonical_transitions": [list(t) for t in self.arc_canonical_transitions],
             "voices": [v.to_dict() for v in self.voices],
             "voice_combination": self.voice_combination,
             "floor_checks": [f.to_dict() for f in self.floor_checks],
@@ -1065,24 +1056,16 @@ class QualityAlgebra:
             domain=data.get("domain", ""),
             description=data.get("description", ""),
             contrast_dims=tuple(
-                ContrastDimension.from_dict(d)
-                for d in data.get("contrast_dims", [])
+                ContrastDimension.from_dict(d) for d in data.get("contrast_dims", [])
             ),
-            arc_phases=tuple(
-                PhaseDefinition.from_dict(p)
-                for p in data.get("arc_phases", [])
-            ),
+            arc_phases=tuple(PhaseDefinition.from_dict(p) for p in data.get("arc_phases", [])),
             arc_canonical_transitions=tuple(
                 tuple(t) for t in data.get("arc_canonical_transitions", [])
             ),
-            voices=tuple(
-                VoiceDefinition.from_dict(v)
-                for v in data.get("voices", [])
-            ),
+            voices=tuple(VoiceDefinition.from_dict(v) for v in data.get("voices", [])),
             voice_combination=data.get("voice_combination", "AND"),
             floor_checks=tuple(
-                FloorCheckDefinition.from_dict(f)
-                for f in data.get("floor_checks", [])
+                FloorCheckDefinition.from_dict(f) for f in data.get("floor_checks", [])
             ),
             contrast_weight=data.get("contrast_weight", 0.35),
             arc_weight=data.get("arc_weight", 0.35),

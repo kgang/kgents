@@ -146,7 +146,7 @@ class TestParallelComposition:
         result = await composed.verify(mock_agent, "input")
 
         # NullProbes don't set confidence explicitly, but verify the structure
-        assert hasattr(result.value, 'confidence')
+        assert hasattr(result.value, "confidence")
 
     @pytest.mark.asyncio
     async def test_parallel_merges_traces(self):

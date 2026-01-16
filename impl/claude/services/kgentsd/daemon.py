@@ -924,58 +924,171 @@ class WitnessDaemon:
 # =============================================================================
 
 
+def _kill_orphan_kgentsd_processes(tracked_pid: int | None = None) -> int:
+    """
+    Kill orphaned kgentsd processes not tracked by the PID file.
+
+    Teaching (Test Patterns):
+        Orphaned kgentsd processes occur when:
+        - Multiple concurrent starts race before PID file is written
+        - Parent process dies without calling stop_daemon()
+        - System crash leaves detached daemons running
+
+        These processes consume 100% CPU and accumulate across sessions.
+
+    Args:
+        tracked_pid: The PID in the PID file (if any) - don't kill this one
+
+    Returns:
+        Number of orphans killed
+    """
+    import subprocess
+
+    killed = 0
+    try:
+        # Find all kgentsd processes
+        result = subprocess.run(
+            ["pgrep", "-f", "kgentsd start"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+
+        if result.returncode == 0 and result.stdout.strip():
+            pids = result.stdout.strip().split("\n")
+
+            for pid_str in pids:
+                try:
+                    pid = int(pid_str.strip())
+                    # Don't kill the tracked daemon
+                    if tracked_pid is not None and pid == tracked_pid:
+                        continue
+
+                    # Check if it's a "uv run" wrapper (not the actual daemon)
+                    # The actual daemon doesn't have "uv run" in its command
+                    ps_result = subprocess.run(
+                        ["ps", "-o", "command=", "-p", str(pid)],
+                        capture_output=True,
+                        text=True,
+                        timeout=2,
+                    )
+                    if ps_result.returncode == 0:
+                        cmd = ps_result.stdout.strip()
+                        if "uv run" in cmd:
+                            continue  # Skip uv wrapper
+
+                    # Kill the orphan
+                    os.kill(pid, signal.SIGKILL)
+                    killed += 1
+                    logger.info(f"Killed orphan kgentsd process: {pid}")
+
+                except (ValueError, ProcessLookupError, PermissionError):
+                    continue
+
+    except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
+        logger.debug(f"Orphan cleanup skipped: {e}")
+
+    return killed
+
+
 def start_daemon(config: DaemonConfig | None = None) -> int:
     """
     Start the witness daemon in a background process.
 
+    Teaching (Lifecycle Management):
+        This function uses a multi-phase startup to prevent orphan accumulation:
+        1. Clean up any orphaned kgentsd processes from previous sessions
+        2. Check if daemon is already running via PID file
+        3. Use lock file for atomic start (prevent concurrent starts)
+        4. Spawn daemon as detached subprocess
+        5. Wait for PID file to confirm successful start
+
     Returns:
         PID of the spawned daemon process
     """
+    import fcntl
     import subprocess
+    import time
 
     if config is None:
         config = DaemonConfig()
 
-    # Check if already running
+    # Phase 1: Clean up orphaned kgentsd processes from previous sessions
+    tracked_pid = read_pid_file(config.pid_file)
+    orphans_killed = _kill_orphan_kgentsd_processes(tracked_pid)
+    if orphans_killed > 0:
+        logger.info(f"Cleaned up {orphans_killed} orphan kgentsd process(es)")
+
+    # Phase 2: Check if already running
     is_running, existing_pid = check_daemon_status(config)
     if is_running:
         logger.info(f"Daemon already running (PID: {existing_pid})")
         return existing_pid  # type: ignore[return-value]
 
-    # Spawn daemon as subprocess
-    env = os.environ.copy()
-    if config.repo_path:
-        env["KGENTS_WITNESS_REPO"] = str(config.repo_path)
-    if config.enabled_watchers != DEFAULT_WATCHERS:
-        env["KGENTS_WITNESS_WATCHERS"] = ",".join(config.enabled_watchers)
-    if config.github_owner:
-        env["KGENTS_GITHUB_OWNER"] = config.github_owner
-    if config.github_repo:
-        env["KGENTS_GITHUB_REPO"] = config.github_repo
-    if config.github_token:
-        env["KGENTS_GITHUB_TOKEN"] = config.github_token
+    # Phase 3: Use lock file for atomic start (prevent race condition)
+    lock_file = config.pid_file.with_suffix(".lock")
+    lock_file.parent.mkdir(parents=True, exist_ok=True)
 
-    # Run the daemon module
-    proc = subprocess.Popen(
-        [sys.executable, "-m", "services.kgentsd.daemon"],
-        start_new_session=True,  # Detach from parent
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        env=env,
-        cwd=str(config.repo_path) if config.repo_path else None,
-    )
+    try:
+        lock_fd = open(lock_file, "w")
+        try:
+            # Try to acquire exclusive lock (non-blocking)
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            # Another process is starting the daemon
+            logger.info("Another process is starting the daemon, waiting...")
+            # Wait for other process to finish, then check status
+            fcntl.flock(lock_fd, fcntl.LOCK_EX)  # Blocking wait
+            is_running, existing_pid = check_daemon_status(config)
+            if is_running and existing_pid:
+                lock_fd.close()
+                return existing_pid
+            # Other process failed, we'll try to start
 
-    # Wait briefly for PID file to be written
-    import time
+        # Re-check after acquiring lock (double-check pattern)
+        is_running, existing_pid = check_daemon_status(config)
+        if is_running and existing_pid:
+            lock_fd.close()
+            return existing_pid
 
-    for _ in range(10):
-        pid = read_pid_file(config.pid_file)
-        if pid is not None:
-            return pid
-        time.sleep(0.1)
+        # Phase 4: Spawn daemon as subprocess
+        env = os.environ.copy()
+        if config.repo_path:
+            env["KGENTS_WITNESS_REPO"] = str(config.repo_path)
+        if config.enabled_watchers != DEFAULT_WATCHERS:
+            env["KGENTS_WITNESS_WATCHERS"] = ",".join(config.enabled_watchers)
+        if config.github_owner:
+            env["KGENTS_GITHUB_OWNER"] = config.github_owner
+        if config.github_repo:
+            env["KGENTS_GITHUB_REPO"] = config.github_repo
+        if config.github_token:
+            env["KGENTS_GITHUB_TOKEN"] = config.github_token
 
-    # Return subprocess PID as fallback
-    return proc.pid
+        # Run the daemon module
+        proc = subprocess.Popen(
+            [sys.executable, "-m", "services.kgentsd.daemon"],
+            start_new_session=True,  # Detach from parent
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env=env,
+            cwd=str(config.repo_path) if config.repo_path else None,
+        )
+
+        # Phase 5: Wait for PID file to be written
+        for _ in range(10):
+            pid = read_pid_file(config.pid_file)
+            if pid is not None:
+                lock_fd.close()
+                return pid
+            time.sleep(0.1)
+
+        # Return subprocess PID as fallback
+        lock_fd.close()
+        return proc.pid
+
+    except Exception as e:
+        logger.error(f"Failed to start daemon: {e}")
+        raise
 
 
 def stop_daemon(config: DaemonConfig | None = None) -> bool:

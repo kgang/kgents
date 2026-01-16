@@ -220,9 +220,7 @@ class TestAmendmentA:
         low ETHICAL score causes immediate rejection.
         """
         eval = ConstitutionalEvaluation(scores=ethical_failing_scores)
-        assert eval.weighted_total == 0.0, (
-            "ETHICAL floor failure should return 0.0 weighted_total"
-        )
+        assert eval.weighted_total == 0.0, "ETHICAL floor failure should return 0.0 weighted_total"
 
     def test_weighted_total_normal_when_ethical_passes(self, ethical_passing_scores):
         """weighted_total should compute normally when ETHICAL passes."""

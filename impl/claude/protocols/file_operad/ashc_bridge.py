@@ -177,12 +177,14 @@ class LawVerificationEvidence(FileOperadEvidence):
     def to_dict(self) -> dict[str, Any]:
         """Serialize with law-specific fields."""
         base = super().to_dict()
-        base.update({
-            "law_name": self.law_name,
-            "law_equation": self.law_equation,
-            "verification_result": self.verification_result.name,
-            "verification_output": self.verification_output,
-        })
+        base.update(
+            {
+                "law_name": self.law_name,
+                "law_equation": self.law_equation,
+                "verification_result": self.verification_result.name,
+                "verification_output": self.verification_output,
+            }
+        )
         return base
 
 

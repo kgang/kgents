@@ -312,6 +312,7 @@ class TestCalibrationSet:
 
     def test_validate_calibration_with_mock(self) -> None:
         """Validate calibration with mock loss computer."""
+
         # Mock that returns loss based on expected layer
         def mock_loss(content: str) -> float:
             for cal_content, layer in CALIBRATION_CORPUS:

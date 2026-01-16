@@ -426,8 +426,19 @@ class AgentesRouter:
         classified: ClassifiedInput,
         ctx: "InvocationContext | None",
     ) -> Any:
-        """Handle a composition (a >> b >> c)."""
-        from protocols.agentese import path as agentese_path
+        """
+        Handle a composition (a >> b >> c).
+
+        Phase 3.3 CLI Renaissance: Command Composition via AGENTESE paths.
+        This implements the spec promise "path >> path works uniformly".
+
+        Categorical Laws:
+            - Associativity: (f >> g) >> h = f >> (g >> h)
+            - Identity: Id >> f = f = f >> Id
+
+        See protocols/cli/compose_paths.py for composition semantics.
+        """
+        from protocols.cli.compose_paths import compose_chain
 
         # Build composed path
         parts = classified.composition_parts
@@ -444,12 +455,10 @@ class AgentesRouter:
                 "type": "composition",
             }
 
-        # Create and execute composition
-        composed: Any = agentese_path(expanded_parts[0])
-        for p in expanded_parts[1:]:
-            composed = composed >> p
-
-        result = await composed.run(self.observer, self.logos)
+        # Execute composition using compose_chain
+        # This implements: p1 >> p2 >> ... >> pn
+        # Associativity law guarantees consistent behavior regardless of grouping
+        result = await compose_chain(expanded_parts, self.observer, self.logos)
         return result
 
     def _parse_kwargs(self, args: list[str]) -> dict[str, Any]:

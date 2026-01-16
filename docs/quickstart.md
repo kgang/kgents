@@ -23,7 +23,7 @@ uv sync
 # Verify life
 kg --help   # (or 'kgents --help')
 
-# Run the test suite (11,170+ tests, ~2 min)
+# Run the test suite (25,000+ tests, ~2 min)
 cd impl/claude && uv run pytest -q
 
 # Verify types (strict mypy)
@@ -32,7 +32,28 @@ uv run mypy .
 
 **Requirements**: Python 3.12+ | [uv](https://github.com/astral-sh/uv) for dependency management
 
+**Warning**: Python 3.12+ is strictly enforced. The codebase uses modern typing features (e.g., `type` statements, `|` unions) that fail on earlier versions.
+
 **If tests fail**: Check Python version (`python --version`). Most failures come from 3.11 or earlier.
+
+---
+
+## Storage Setup
+
+All Crown Jewels (Brain, Witness, etc.) use PostgreSQL for persistence:
+
+```bash
+# Start PostgreSQL (includes pgvector for semantic search)
+cd impl/claude && docker compose up -d
+
+# Configure environment
+export KGENTS_DATABASE_URL="postgresql+asyncpg://kgents:kgents@localhost:5432/kgents"
+
+# Verify connection
+kg brain status  # Should show "Backend: 🐘 PostgreSQL"
+```
+
+**Note**: Without database configuration, services fall back to in-memory storage (data lost on restart).
 
 ---
 
@@ -226,7 +247,7 @@ async for event in event_stream:
 
 | Resource | What You'll Learn |
 |----------|-------------------|
-| [Skills](skills/) | The 13 essential skills (start here) |
+| [Skills](skills/) | The 34 essential skills (start here) |
 | [Architecture](architecture-overview.md) | How the pieces fit |
 | [Systems Reference](systems-reference.md) | Built infrastructure inventory |
 | [Principles](../spec/principles.md) | The seven principles + 12 ADs |

@@ -617,9 +617,7 @@ class TestConstitutionalRewards:
         trace = await probe.verify(identity_agent, "test")
 
         # Should have synthesis entry with reward
-        synthesis_entries = [
-            e for e in trace.entries if e.action.name == "synthesize"
-        ]
+        synthesis_entries = [e for e in trace.entries if e.action.name == "synthesize"]
 
         assert len(synthesis_entries) > 0
         assert synthesis_entries[0].reward.composable > 0

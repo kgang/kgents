@@ -404,6 +404,12 @@ async def get_witness() -> "WitnessPersistence":
     return await get_witness_persistence()
 
 
+# Alias for nodes that declare dependency as "brain" instead of "brain_persistence"
+async def get_brain() -> "BrainPersistence":
+    """Alias for get_brain_persistence (for nodes declaring 'brain' dependency)."""
+    return await get_brain_persistence()
+
+
 async def get_bus() -> "WitnessSynergyBus":
     """
     Get the WitnessSynergyBus for cross-jewel event publishing.
@@ -987,6 +993,54 @@ async def get_decisions_service():
     return get_service()
 
 
+async def get_witness_timeline_service():
+    """
+    Get the WitnessTimelineService for development timeline view.
+
+    Provides unified access to all witness activity:
+    - Marks (execution artifacts)
+    - Crystals (compressed memory)
+    - Decisions (dialectical fusions)
+
+    Used by WitnessTimelineNode for self.timeline.* AGENTESE paths.
+
+    Example:
+        service = await get_witness_timeline_service()
+        events = await service.view(limit=50)
+        results = await service.search("refactoring")
+
+    See: services/self/witness_timeline_service.py
+    """
+    from services.self.witness_timeline_service import (
+        get_witness_timeline_service as get_service,
+    )
+
+    return get_service()
+
+
+async def get_inspection_service():
+    """
+    Get the InspectionService for universal deep inspection.
+
+    Provides deep inspection of any system element:
+    - Files (Python modules, specs, plans)
+    - K-Blocks (Constitutional and codebase)
+    - Marks and Crystals
+
+    Used by InspectionNode for self.inspect.* AGENTESE paths.
+
+    Example:
+        service = await get_inspection_service()
+        result = await service.inspect_file("services/witness/mark.py")
+        kblock = await service.inspect_kblock("COMPOSABLE")
+
+    See: services/self/inspection_service.py
+    """
+    from services.self.inspection_service import get_inspection_service as get_service
+
+    return get_service()
+
+
 async def get_pilot_registry():
     """
     Get the PilotRegistry for tangible endeavor pilots.
@@ -1166,6 +1220,9 @@ async def setup_providers() -> None:
     container.register(
         "witness", get_witness, singleton=True
     )  # Alias for nodes declaring "witness"
+    container.register(
+        "brain", get_brain, singleton=True
+    )  # Alias for nodes declaring "brain" (maps to brain_persistence)
     container.register("bus", get_bus, singleton=True)  # WitnessSynergyBus
     container.register(
         "daily_lab", get_daily_lab, singleton=True
@@ -1223,6 +1280,8 @@ async def setup_providers() -> None:
     container.register("codebase_scanner", get_codebase_scanner, singleton=True)
     container.register("git_service", get_git_service, singleton=True)
     container.register("decisions_service", get_decisions_service, singleton=True)
+    container.register("witness_timeline_service", get_witness_timeline_service, singleton=True)
+    container.register("inspection_service", get_inspection_service, singleton=True)
 
     # Explorer Crown Jewel (Unified Data Explorer)
     container.register("unified_query_service", get_unified_query_service, singleton=True)
@@ -1519,6 +1578,7 @@ __all__ = [
     # Document Director Crown Jewel
     "get_director",
     "get_witness",
+    "get_brain",
     "get_bus",
     # Daily Lab Crown Jewel
     "get_daily_lab",
@@ -1541,6 +1601,8 @@ __all__ = [
     "get_codebase_scanner",
     "get_git_service",
     "get_decisions_service",
+    "get_witness_timeline_service",
+    "get_inspection_service",
     # KGames Crown Jewel
     "get_kgames_kernel",
     # Amendment Crown Jewel (Self-Reflective OS: Constitutional Evolution)

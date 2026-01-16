@@ -58,11 +58,11 @@ class HelloWorldState(Enum):
     still applies - it just has a unique optimal path.
     """
 
-    EMPTY = auto()                  # Starting state: no work done
+    EMPTY = auto()  # Starting state: no work done
     REQUIREMENT_UNDERSTOOD = auto()  # Task comprehended
-    DESIGN_CHOSEN = auto()          # Approach decided (language, style)
-    CODE_WRITTEN = auto()           # Implementation complete
-    TESTED = auto()                 # Verified working (terminal state)
+    DESIGN_CHOSEN = auto()  # Approach decided (language, style)
+    CODE_WRITTEN = auto()  # Implementation complete
+    TESTED = auto()  # Verified working (terminal state)
 
     def __str__(self) -> str:
         return self.name.lower().replace("_", " ")
@@ -81,23 +81,23 @@ class HelloWorldAction(Enum):
     """
 
     # Understanding the task
-    UNDERSTAND_MINIMAL = auto()      # "Just print hello world"
-    UNDERSTAND_CONTEXTUAL = auto()   # "Why? What language? What style?"
+    UNDERSTAND_MINIMAL = auto()  # "Just print hello world"
+    UNDERSTAND_CONTEXTUAL = auto()  # "Why? What language? What style?"
 
     # Choosing design
-    DESIGN_PYTHON_SIMPLE = auto()    # print("Hello, World!")
+    DESIGN_PYTHON_SIMPLE = auto()  # print("Hello, World!")
     DESIGN_PYTHON_FUNCTION = auto()  # def greet(): ...
-    DESIGN_PYTHON_CLASS = auto()     # class Greeter: ...
+    DESIGN_PYTHON_CLASS = auto()  # class Greeter: ...
     DESIGN_PYTHON_OVER_ENGINEERED = auto()  # AbstractGreeterFactory...
 
     # Writing code
-    WRITE_MINIMAL = auto()           # Bare minimum
-    WRITE_DOCUMENTED = auto()        # With docstring
-    WRITE_TYPED = auto()             # With type hints
+    WRITE_MINIMAL = auto()  # Bare minimum
+    WRITE_DOCUMENTED = auto()  # With docstring
+    WRITE_TYPED = auto()  # With type hints
 
     # Testing
-    TEST_MANUAL = auto()             # Just run it
-    TEST_AUTOMATED = auto()          # With pytest
+    TEST_MANUAL = auto()  # Just run it
+    TEST_AUTOMATED = auto()  # With pytest
 
     def __str__(self) -> str:
         return self.name.lower().replace("_", " ")
@@ -154,25 +154,33 @@ def available_actions(state: HelloWorldState) -> FrozenSet[HelloWorldAction]:
     A: S → P(A)  (actions as function of state)
     """
     action_map = {
-        HelloWorldState.EMPTY: frozenset([
-            HelloWorldAction.UNDERSTAND_MINIMAL,
-            HelloWorldAction.UNDERSTAND_CONTEXTUAL,
-        ]),
-        HelloWorldState.REQUIREMENT_UNDERSTOOD: frozenset([
-            HelloWorldAction.DESIGN_PYTHON_SIMPLE,
-            HelloWorldAction.DESIGN_PYTHON_FUNCTION,
-            HelloWorldAction.DESIGN_PYTHON_CLASS,
-            HelloWorldAction.DESIGN_PYTHON_OVER_ENGINEERED,
-        ]),
-        HelloWorldState.DESIGN_CHOSEN: frozenset([
-            HelloWorldAction.WRITE_MINIMAL,
-            HelloWorldAction.WRITE_DOCUMENTED,
-            HelloWorldAction.WRITE_TYPED,
-        ]),
-        HelloWorldState.CODE_WRITTEN: frozenset([
-            HelloWorldAction.TEST_MANUAL,
-            HelloWorldAction.TEST_AUTOMATED,
-        ]),
+        HelloWorldState.EMPTY: frozenset(
+            [
+                HelloWorldAction.UNDERSTAND_MINIMAL,
+                HelloWorldAction.UNDERSTAND_CONTEXTUAL,
+            ]
+        ),
+        HelloWorldState.REQUIREMENT_UNDERSTOOD: frozenset(
+            [
+                HelloWorldAction.DESIGN_PYTHON_SIMPLE,
+                HelloWorldAction.DESIGN_PYTHON_FUNCTION,
+                HelloWorldAction.DESIGN_PYTHON_CLASS,
+                HelloWorldAction.DESIGN_PYTHON_OVER_ENGINEERED,
+            ]
+        ),
+        HelloWorldState.DESIGN_CHOSEN: frozenset(
+            [
+                HelloWorldAction.WRITE_MINIMAL,
+                HelloWorldAction.WRITE_DOCUMENTED,
+                HelloWorldAction.WRITE_TYPED,
+            ]
+        ),
+        HelloWorldState.CODE_WRITTEN: frozenset(
+            [
+                HelloWorldAction.TEST_MANUAL,
+                HelloWorldAction.TEST_AUTOMATED,
+            ]
+        ),
     }
     return action_map.get(state, frozenset())
 
@@ -204,18 +212,15 @@ def reward(
         # Understanding: Contextual is slightly better (tasteful)
         HelloWorldAction.UNDERSTAND_MINIMAL: 0.3,
         HelloWorldAction.UNDERSTAND_CONTEXTUAL: 0.5,  # More thoughtful
-
         # Design: Simple is best for "hello world" (tasteful penalty for over-engineering)
-        HelloWorldAction.DESIGN_PYTHON_SIMPLE: 0.9,    # Maximum for trivial task
+        HelloWorldAction.DESIGN_PYTHON_SIMPLE: 0.9,  # Maximum for trivial task
         HelloWorldAction.DESIGN_PYTHON_FUNCTION: 0.7,  # Reasonable but unnecessary
-        HelloWorldAction.DESIGN_PYTHON_CLASS: 0.4,     # Over-engineering for this task
+        HelloWorldAction.DESIGN_PYTHON_CLASS: 0.4,  # Over-engineering for this task
         HelloWorldAction.DESIGN_PYTHON_OVER_ENGINEERED: -0.5,  # TASTEFUL VIOLATION
-
         # Writing: Documented is good, typed is overkill for this
         HelloWorldAction.WRITE_MINIMAL: 0.6,
         HelloWorldAction.WRITE_DOCUMENTED: 0.8,  # Good practice, joy-inducing
-        HelloWorldAction.WRITE_TYPED: 0.5,       # Overkill for hello world
-
+        HelloWorldAction.WRITE_TYPED: 0.5,  # Overkill for hello world
         # Testing: Manual is fine for trivial task
         HelloWorldAction.TEST_MANUAL: 0.7,
         HelloWorldAction.TEST_AUTOMATED: 0.5,  # Over-engineering for trivial task
@@ -242,7 +247,9 @@ def create_kgent_value_function() -> ValueFunction[HelloWorldState, HelloWorldAc
     This is where the 7 principles become computationally active.
     """
 
-    def evaluate_tasteful(name: str, state: HelloWorldState, action: HelloWorldAction | None) -> float:
+    def evaluate_tasteful(
+        name: str, state: HelloWorldState, action: HelloWorldAction | None
+    ) -> float:
         """Tasteful: Each agent serves a clear, justified purpose."""
         if action == HelloWorldAction.DESIGN_PYTHON_OVER_ENGINEERED:
             return 0.0  # Absolute violation
@@ -252,7 +259,9 @@ def create_kgent_value_function() -> ValueFunction[HelloWorldState, HelloWorldAc
             return 0.3  # Over-engineering for trivial task
         return 0.7  # Default reasonable
 
-    def evaluate_composable(name: str, state: HelloWorldState, action: HelloWorldAction | None) -> float:
+    def evaluate_composable(
+        name: str, state: HelloWorldState, action: HelloWorldAction | None
+    ) -> float:
         """Composable: Agents are morphisms in a category."""
         if action == HelloWorldAction.DESIGN_PYTHON_FUNCTION:
             return 1.0  # Functions compose well
@@ -262,7 +271,9 @@ def create_kgent_value_function() -> ValueFunction[HelloWorldState, HelloWorldAc
             return 0.6  # Classes are less composable
         return 0.7
 
-    def evaluate_joy_inducing(name: str, state: HelloWorldState, action: HelloWorldAction | None) -> float:
+    def evaluate_joy_inducing(
+        name: str, state: HelloWorldState, action: HelloWorldAction | None
+    ) -> float:
         """Joy-inducing: Delight in interaction."""
         if action == HelloWorldAction.WRITE_DOCUMENTED:
             return 1.0  # Documentation is delightful
@@ -272,12 +283,16 @@ def create_kgent_value_function() -> ValueFunction[HelloWorldState, HelloWorldAc
             return 0.1  # Frustrating complexity
         return 0.7
 
-    def evaluate_ethical(name: str, state: HelloWorldState, action: HelloWorldAction | None) -> float:
+    def evaluate_ethical(
+        name: str, state: HelloWorldState, action: HelloWorldAction | None
+    ) -> float:
         """Ethical: Agents augment human capability."""
         # All actions for hello world are ethical
         return 0.9
 
-    def evaluate_curated(name: str, state: HelloWorldState, action: HelloWorldAction | None) -> float:
+    def evaluate_curated(
+        name: str, state: HelloWorldState, action: HelloWorldAction | None
+    ) -> float:
         """Curated: Intentional selection over exhaustive cataloging."""
         if action == HelloWorldAction.UNDERSTAND_CONTEXTUAL:
             return 0.9  # Thoughtful selection
@@ -285,12 +300,16 @@ def create_kgent_value_function() -> ValueFunction[HelloWorldState, HelloWorldAc
             return 0.2  # Not curated - kitchen sink
         return 0.7
 
-    def evaluate_heterarchical(name: str, state: HelloWorldState, action: HelloWorldAction | None) -> float:
+    def evaluate_heterarchical(
+        name: str, state: HelloWorldState, action: HelloWorldAction | None
+    ) -> float:
         """Heterarchical: Agents exist in flux, not fixed hierarchy."""
         # For hello world, all approaches are fine
         return 0.8
 
-    def evaluate_generative(name: str, state: HelloWorldState, action: HelloWorldAction | None) -> float:
+    def evaluate_generative(
+        name: str, state: HelloWorldState, action: HelloWorldAction | None
+    ) -> float:
         """Generative: Spec is compression."""
         if action == HelloWorldAction.DESIGN_PYTHON_SIMPLE:
             return 1.0  # Maximum compression
@@ -417,11 +436,7 @@ async def run_hello_world_dp() -> dict:
                 break
 
         if action_enum:
-            score = value_function.evaluate(
-                f"Step {i + 1}",
-                entry.state_before,
-                action_enum
-            )
+            score = value_function.evaluate(f"Step {i + 1}", entry.state_before, action_enum)
             print("  Principle scores:")
             for ps in score.principle_scores:
                 print(f"    {ps.principle.name}: {ps.score:.2f}")

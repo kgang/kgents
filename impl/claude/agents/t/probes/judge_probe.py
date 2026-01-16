@@ -177,20 +177,24 @@ class JudgeProbe(TruthFunctor[JudgePhase, tuple[str, str], JudgmentResult], Gene
     @property
     def states(self) -> FrozenSet[JudgePhase]:
         """Return DP state space."""
-        return frozenset([
-            JudgePhase.READY,
-            JudgePhase.EVALUATING,
-            JudgePhase.JUDGED,
-        ])
+        return frozenset(
+            [
+                JudgePhase.READY,
+                JudgePhase.EVALUATING,
+                JudgePhase.JUDGED,
+            ]
+        )
 
     def actions(self, state: JudgePhase) -> FrozenSet[ProbeAction]:
         """Return available actions from state."""
         if state == JudgePhase.READY:
-            return frozenset([
-                ProbeAction("evaluate_correctness"),
-                ProbeAction("evaluate_safety"),
-                ProbeAction("evaluate_style"),
-            ])
+            return frozenset(
+                [
+                    ProbeAction("evaluate_correctness"),
+                    ProbeAction("evaluate_safety"),
+                    ProbeAction("evaluate_style"),
+                ]
+            )
         elif state == JudgePhase.EVALUATING:
             return frozenset([ProbeAction("synthesize")])
         return frozenset()
@@ -274,14 +278,16 @@ class JudgeProbe(TruthFunctor[JudgePhase, tuple[str, str], JudgmentResult], Gene
 
         correctness_score = self._evaluate_correctness(intent, output)
 
-        trace_entries.append(TraceEntry(
-            state_before=probe_state,
-            action=action_correct,
-            state_after=probe_state.transition_to("evaluating"),
-            reward=self.reward(self._current_state, action_correct, next_state),
-            reasoning=f"Correctness: {correctness_score:.2f}",
-            timestamp=datetime.now(timezone.utc),
-        ))
+        trace_entries.append(
+            TraceEntry(
+                state_before=probe_state,
+                action=action_correct,
+                state_after=probe_state.transition_to("evaluating"),
+                reward=self.reward(self._current_state, action_correct, next_state),
+                reasoning=f"Correctness: {correctness_score:.2f}",
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
 
         self._current_state = next_state
         probe_state = probe_state.transition_to("evaluating")
@@ -290,27 +296,31 @@ class JudgeProbe(TruthFunctor[JudgePhase, tuple[str, str], JudgmentResult], Gene
         action_safety = ProbeAction("evaluate_safety")
         safety_score = self._evaluate_safety(output)
 
-        trace_entries.append(TraceEntry(
-            state_before=probe_state,
-            action=action_safety,
-            state_after=probe_state,
-            reward=self.reward(self._current_state, action_safety, self._current_state),
-            reasoning=f"Safety: {safety_score:.2f}",
-            timestamp=datetime.now(timezone.utc),
-        ))
+        trace_entries.append(
+            TraceEntry(
+                state_before=probe_state,
+                action=action_safety,
+                state_after=probe_state,
+                reward=self.reward(self._current_state, action_safety, self._current_state),
+                reasoning=f"Safety: {safety_score:.2f}",
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
 
         # Evaluate style
         action_style = ProbeAction("evaluate_style")
         style_score = self._evaluate_style(output)
 
-        trace_entries.append(TraceEntry(
-            state_before=probe_state,
-            action=action_style,
-            state_after=probe_state,
-            reward=self.reward(self._current_state, action_style, self._current_state),
-            reasoning=f"Style: {style_score:.2f}",
-            timestamp=datetime.now(timezone.utc),
-        ))
+        trace_entries.append(
+            TraceEntry(
+                state_before=probe_state,
+                action=action_style,
+                state_after=probe_state,
+                reward=self.reward(self._current_state, action_style, self._current_state),
+                reasoning=f"Style: {style_score:.2f}",
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
 
         # State 2: EVALUATING -> JUDGED (synthesize)
         action_synth = ProbeAction("synthesize")
@@ -353,14 +363,16 @@ class JudgeProbe(TruthFunctor[JudgePhase, tuple[str, str], JudgmentResult], Gene
         else:
             self._false_positive_rate = max(0.0, self._false_positive_rate - 0.05)
 
-        trace_entries.append(TraceEntry(
-            state_before=probe_state,
-            action=action_synth,
-            state_after=probe_state.transition_to("judged"),
-            reward=self.reward(self._current_state, action_synth, next_state),
-            reasoning=f"Verdict: {'PASSED' if passed else 'FAILED'} (score={weighted_score:.2f}, threshold={self.config.threshold:.2f})",
-            timestamp=datetime.now(timezone.utc),
-        ))
+        trace_entries.append(
+            TraceEntry(
+                state_before=probe_state,
+                action=action_synth,
+                state_after=probe_state.transition_to("judged"),
+                reward=self.reward(self._current_state, action_synth, next_state),
+                reasoning=f"Verdict: {'PASSED' if passed else 'FAILED'} (score={weighted_score:.2f}, threshold={self.config.threshold:.2f})",
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
 
         self._current_state = JudgePhase.READY  # Reset for next run
 

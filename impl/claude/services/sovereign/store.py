@@ -984,12 +984,14 @@ class SovereignStore:
             for v in versions:
                 v_entity = await self.get_version(path, v)
                 if v_entity:
-                    version_info.append({
-                        "version": v,
-                        "content_hash": v_entity.content_hash,
-                        "ingested_at": v_entity.metadata.get("ingested_at"),
-                        "source": v_entity.metadata.get("source"),
-                    })
+                    version_info.append(
+                        {
+                            "version": v,
+                            "content_hash": v_entity.content_hash,
+                            "ingested_at": v_entity.metadata.get("ingested_at"),
+                            "source": v_entity.metadata.get("source"),
+                        }
+                    )
             export_data["versions"] = version_info
 
         return export_data
@@ -1124,12 +1126,14 @@ class SovereignStore:
 
             for edge in edges:
                 if edge.get("target") == path:
-                    references.append({
-                        "from_path": entity_path,
-                        "edge_type": edge.get("edge_type", "references"),
-                        "line": edge.get("line_number"),
-                        "context": edge.get("context"),
-                    })
+                    references.append(
+                        {
+                            "from_path": entity_path,
+                            "edge_type": edge.get("edge_type", "references"),
+                            "line": edge.get("line_number"),
+                            "context": edge.get("context"),
+                        }
+                    )
 
         return references
 
@@ -1169,30 +1173,34 @@ class SovereignStore:
         # Store outgoing edge
         outgoing = await self.get_overlay(from_path, "edges") or {"edges": []}
         outgoing_edges: list[dict[str, Any]] = outgoing.get("edges", [])
-        outgoing_edges.append({
-            "id": edge_id,
-            "target": to_path,
-            "type": edge_type,
-            "mark_id": mark_id,
-            "context": context,
-            "created_at": datetime.now(UTC).isoformat(),
-            "direction": "outgoing",
-        })
+        outgoing_edges.append(
+            {
+                "id": edge_id,
+                "target": to_path,
+                "type": edge_type,
+                "mark_id": mark_id,
+                "context": context,
+                "created_at": datetime.now(UTC).isoformat(),
+                "direction": "outgoing",
+            }
+        )
         outgoing["edges"] = outgoing_edges
         await self.store_overlay(from_path, "edges", outgoing)
 
         # Store incoming edge
         incoming = await self.get_overlay(to_path, "edges") or {"edges": []}
         incoming_edges: list[dict[str, Any]] = incoming.get("edges", [])
-        incoming_edges.append({
-            "id": edge_id,
-            "source": from_path,
-            "type": edge_type,
-            "mark_id": mark_id,
-            "context": context,
-            "created_at": datetime.now(UTC).isoformat(),
-            "direction": "incoming",
-        })
+        incoming_edges.append(
+            {
+                "id": edge_id,
+                "source": from_path,
+                "type": edge_type,
+                "mark_id": mark_id,
+                "context": context,
+                "created_at": datetime.now(UTC).isoformat(),
+                "direction": "incoming",
+            }
+        )
         incoming["edges"] = incoming_edges
         await self.store_overlay(to_path, "edges", incoming)
 
@@ -1334,9 +1342,7 @@ class SovereignStore:
             export_format=format,
         )
 
-        logger.info(
-            f"Exported {bundle.entity_count} entities with witness mark {export_mark_id}"
-        )
+        logger.info(f"Exported {bundle.entity_count} entities with witness mark {export_mark_id}")
         return bundle
 
 

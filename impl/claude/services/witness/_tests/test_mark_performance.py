@@ -42,6 +42,7 @@ class TestMarkCreation:
 
         Target: < 50ms (p99)
         """
+
         def create_mark():
             now = datetime.now(timezone.utc)
             return Mark(
@@ -63,6 +64,7 @@ class TestMarkCreation:
 
         Target: < 1ms per ID
         """
+
         def generate_id():
             return generate_mark_id()
 

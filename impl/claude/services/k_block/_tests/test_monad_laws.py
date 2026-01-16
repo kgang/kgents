@@ -145,9 +145,7 @@ class TestMonadLaws:
 
         # Right side: m >>= (x -> f(x) >>= (y -> g(y) >>= h))
         def fgh(content: str) -> KBlock:
-            return append_suffix(content).bind(
-                lambda y: prepend_prefix(y).bind(wrap_brackets)
-            )
+            return append_suffix(content).bind(lambda y: prepend_prefix(y).bind(wrap_brackets))
 
         right = m.bind(fgh)
 
@@ -428,6 +426,7 @@ class TestEdgeCases:
 
     def test_bind_returning_complex_kblock(self):
         """Bind with function returning pre-existing K-Block works."""
+
         def complex_transform(content: str) -> KBlock:
             # Create a K-Block with some properties
             block = KBlock.pure(content + "_complex")
@@ -473,12 +472,14 @@ class MockWitnessBridge:
         """Record the call and return a mock mark ID."""
         self.mark_id_counter += 1
         mark_id = f"mock-mark-{self.mark_id_counter}"
-        self.calls.append({
-            "from_id": from_block.id,
-            "to_id": to_block.id,
-            "operation": operation,
-            "mark_id": mark_id,
-        })
+        self.calls.append(
+            {
+                "from_id": from_block.id,
+                "to_id": to_block.id,
+                "operation": operation,
+                "mark_id": mark_id,
+            }
+        )
         return mark_id
 
 

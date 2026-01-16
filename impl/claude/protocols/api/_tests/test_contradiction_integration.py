@@ -128,36 +128,34 @@ async def test_full_contradiction_workflow(client, mock_k_block_storage, mock_wi
                 _contradictions,
             )
 
-            _contradictions["contradiction_kb-stateful_kb-stateless"] = (
-                ContradictionResponse(
-                    id="contradiction_kb-stateful_kb-stateless",
-                    type="PRODUCTIVE",
-                    severity=0.35,
-                    k_block_a=KBlockSummary(
-                        id="kb-stateless",
-                        content="All agents should be stateless and functional.",
-                        layer=2,
-                        title="Stateless Agents",
-                    ),
-                    k_block_b=KBlockSummary(
-                        id="kb-stateful",
-                        content="Agents must maintain mutable state for memory.",
-                        layer=2,
-                        title="Stateful Agents",
-                    ),
-                    super_additive_loss=0.35,
-                    loss_a=0.15,
-                    loss_b=0.15,
-                    loss_combined=0.65,
-                    detected_at=datetime.now(UTC).isoformat(),
-                    suggested_strategy="SYNTHESIZE",
-                    classification={
-                        "type": "PRODUCTIVE",
-                        "strength": 0.35,
-                        "confidence": 0.7,
-                        "reasoning": "Integration test seeded contradiction",
-                    },
-                )
+            _contradictions["contradiction_kb-stateful_kb-stateless"] = ContradictionResponse(
+                id="contradiction_kb-stateful_kb-stateless",
+                type="PRODUCTIVE",
+                severity=0.35,
+                k_block_a=KBlockSummary(
+                    id="kb-stateless",
+                    content="All agents should be stateless and functional.",
+                    layer=2,
+                    title="Stateless Agents",
+                ),
+                k_block_b=KBlockSummary(
+                    id="kb-stateful",
+                    content="Agents must maintain mutable state for memory.",
+                    layer=2,
+                    title="Stateful Agents",
+                ),
+                super_additive_loss=0.35,
+                loss_a=0.15,
+                loss_b=0.15,
+                loss_combined=0.65,
+                detected_at=datetime.now(UTC).isoformat(),
+                suggested_strategy="SYNTHESIZE",
+                classification={
+                    "type": "PRODUCTIVE",
+                    "strength": 0.35,
+                    "confidence": 0.7,
+                    "reasoning": "Integration test seeded contradiction",
+                },
             )
 
         contradiction_id = "contradiction_kb-stateful_kb-stateless"
@@ -215,9 +213,7 @@ async def test_full_contradiction_workflow(client, mock_k_block_storage, mock_wi
 
 
 @pytest.mark.asyncio
-async def test_contradiction_not_detected_below_threshold(
-    client, mock_k_block_storage
-):
+async def test_contradiction_not_detected_below_threshold(client, mock_k_block_storage):
     """Test that low-loss pairs don't trigger false contradictions."""
     with patch(
         "services.k_block.zero_seed_storage.get_zero_seed_storage",

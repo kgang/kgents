@@ -58,9 +58,9 @@ class TestBidirectionalEntailmentDistance:
 
         for text_a, text_b in test_pairs:
             distance = metric.distance(text_a, text_b)
-            assert (
-                0.0 <= distance <= 1.0
-            ), f"Distance {distance} out of range for {text_a!r}, {text_b!r}"
+            assert 0.0 <= distance <= 1.0, (
+                f"Distance {distance} out of range for {text_a!r}, {text_b!r}"
+            )
 
     def test_symmetric_property(self) -> None:
         """Distance should be symmetric: d(A, B) = d(B, A)."""

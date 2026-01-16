@@ -21,6 +21,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from agents.d.universe import Universe
 from models import Base, Crystal, ExtinctionEvent, ExtinctionTeaching, TeachingCrystal
 from models.base import get_engine
 
@@ -48,18 +49,8 @@ async def db_session():
 
 
 @pytest.fixture
-def mock_dgent():
-    """Create a mock D-gent protocol."""
-    dgent = MagicMock()
-    dgent.put = AsyncMock(return_value="datum-123")
-    dgent.get = AsyncMock(return_value=None)
-    dgent.delete = AsyncMock(return_value=True)
-    return dgent
-
-
-@pytest.fixture
-async def brain_persistence(db_session: AsyncSession, mock_dgent):
-    """Create a BrainPersistence instance with real DB session and mock D-gent."""
+async def brain_persistence(db_session: AsyncSession):
+    """Create a BrainPersistence instance with real DB session and Universe."""
     from agents.d import TableAdapter
     from services.brain.persistence import BrainPersistence
 
@@ -77,10 +68,11 @@ async def brain_persistence(db_session: AsyncSession, mock_dgent):
             pass
 
     table_adapter = TableAdapter(Crystal, SessionFactoryWrapper(db_session))
+    universe = Universe(namespace="test")
 
     return BrainPersistence(
+        universe=universe,
         table_adapter=table_adapter,
-        dgent=mock_dgent,
         embedder=None,
     )
 

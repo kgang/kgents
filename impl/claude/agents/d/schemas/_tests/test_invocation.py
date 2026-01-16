@@ -16,7 +16,7 @@ def test_state_change_creation():
         entity_id="c123",
         change_type="created",
         before_hash=None,
-        after_hash="abc123"
+        after_hash="abc123",
     )
 
     assert change.entity_type == "crystal"
@@ -32,7 +32,7 @@ def test_state_change_serialization():
         entity_id="kb456",
         change_type="updated",
         before_hash="old123",
-        after_hash="new456"
+        after_hash="new456",
     )
 
     # Serialize
@@ -66,7 +66,7 @@ def test_llm_invocation_mark_creation():
         crystals_created=(),
         crystals_modified=(),
         galois_loss=0.1,
-        invocation_type="analysis"
+        invocation_type="analysis",
     )
 
     assert mark.id == "inv_001"
@@ -86,14 +86,14 @@ def test_llm_invocation_mark_with_ripples():
             entity_id="c1",
             change_type="created",
             before_hash=None,
-            after_hash="hash1"
+            after_hash="hash1",
         ),
         StateChange(
             entity_type="kblock",
             entity_id="kb1",
             change_type="updated",
             before_hash="old",
-            after_hash="new"
+            after_hash="new",
         ),
     )
 
@@ -116,7 +116,7 @@ def test_llm_invocation_mark_with_ripples():
         crystals_modified=("c3",),
         galois_loss=0.05,
         invocation_type="generation",
-        tags=frozenset(["cascade", "high-quality"])
+        tags=frozenset(["cascade", "high-quality"]),
     )
 
     assert mark.ripple_magnitude == 5  # 2 changes + 2 created + 1 modified
@@ -134,7 +134,7 @@ def test_llm_invocation_mark_serialization():
             entity_id="m1",
             change_type="created",
             before_hash=None,
-            after_hash="h1"
+            after_hash="h1",
         ),
     )
 
@@ -157,7 +157,7 @@ def test_llm_invocation_mark_serialization():
         crystals_modified=(),
         galois_loss=0.02,
         invocation_type="classification",
-        tags=frozenset(["fast", "routing"])
+        tags=frozenset(["fast", "routing"]),
     )
 
     # Serialize
@@ -203,7 +203,7 @@ def test_llm_invocation_computed_properties():
         crystals_created=("c1", "c2", "c3"),
         crystals_modified=("c4",),
         galois_loss=0.15,
-        invocation_type="generation"
+        invocation_type="generation",
     )
 
     # Total tokens
@@ -246,7 +246,7 @@ def test_llm_invocation_trigger_types():
             crystals_created=(),
             crystals_modified=(),
             galois_loss=0.0,
-            invocation_type="generation"
+            invocation_type="generation",
         )
 
         assert mark.triggered_by == trigger
@@ -275,7 +275,7 @@ def test_llm_invocation_types():
             crystals_created=(),
             crystals_modified=(),
             galois_loss=0.0,
-            invocation_type=itype
+            invocation_type=itype,
         )
 
         assert mark.invocation_type == itype

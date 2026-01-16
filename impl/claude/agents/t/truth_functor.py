@@ -55,6 +55,7 @@ class AnalysisMode(Enum):
     - DIALECTICAL: Inject contradictions to test robustness
     - GENERATIVE: Test regenerability and compression
     """
+
     CATEGORICAL = auto()
     EPISTEMIC = auto()
     DIALECTICAL = auto()
@@ -79,6 +80,7 @@ class ConstitutionalScore:
 
     The weighted_total gives ethical highest importance (2.0x weight).
     """
+
     tasteful: float = 0.0
     curated: float = 0.0
     ethical: float = 0.0
@@ -148,6 +150,7 @@ class TruthVerdict(Generic[B]):
         galois_loss: Optional Galois connection loss
         timestamp: When verdict was reached
     """
+
     value: B
     passed: bool
     confidence: float
@@ -170,6 +173,7 @@ class ProbeState:
         laws_verified: Set of law names successfully verified
         compression_ratio: Measure of generative compression
     """
+
     phase: str
     observations: tuple[Any, ...]
     laws_verified: FrozenSet[str] = frozenset()
@@ -213,6 +217,7 @@ class ProbeAction:
         ProbeAction("inject_contradiction", ("axiom_1", "axiom_2"))
         ProbeAction("measure_compression", ())
     """
+
     name: str
     parameters: tuple[Any, ...] = ()
 
@@ -225,6 +230,7 @@ class TraceEntry:
     Records the (s, a, s', r) tuple from DP formulation, plus reasoning.
     This is the atomic unit of proof.
     """
+
     state_before: ProbeState
     action: ProbeAction
     state_after: ProbeState
@@ -249,6 +255,7 @@ class PolicyTrace(Generic[B]):
         trace.append(TraceEntry(...))
         total = trace.total_reward  # Sum of constitutional scores
     """
+
     value: B
     entries: list[TraceEntry] = field(default_factory=list)
 
@@ -398,6 +405,7 @@ class ComposedProbe(TruthFunctor):
 
     This is a product type in the category of probes.
     """
+
     left: TruthFunctor
     right: TruthFunctor
     op: str  # "seq" | "par"
@@ -419,11 +427,7 @@ class ComposedProbe(TruthFunctor):
 
         Represented as tuples (left_state, right_state).
         """
-        return frozenset(
-            (ls, rs)
-            for ls in self.left.states
-            for rs in self.right.states
-        )
+        return frozenset((ls, rs) for ls in self.left.states for rs in self.right.states)
 
     def actions(self, state: Any) -> FrozenSet[ProbeAction]:
         """

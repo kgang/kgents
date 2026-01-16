@@ -155,9 +155,7 @@ class CLIStreamMessage:
         return cls(type="input", correlation_id=correlation_id, data=data, seq=seq)
 
     @classmethod
-    def resize(
-        cls, correlation_id: str, rows: int, cols: int, seq: int = 0
-    ) -> CLIStreamMessage:
+    def resize(cls, correlation_id: str, rows: int, cols: int, seq: int = 0) -> CLIStreamMessage:
         """Create a resize message (client → daemon)."""
         return cls(
             type="resize",
@@ -169,9 +167,7 @@ class CLIStreamMessage:
     @classmethod
     def exit(cls, correlation_id: str, exit_code: int, seq: int = 0) -> CLIStreamMessage:
         """Create an exit message (daemon → client)."""
-        return cls(
-            type="exit", correlation_id=correlation_id, exit_code=exit_code, seq=seq
-        )
+        return cls(type="exit", correlation_id=correlation_id, exit_code=exit_code, seq=seq)
 
     @classmethod
     def create_event(
@@ -188,9 +184,7 @@ class CLIStreamMessage:
             event_data: Event payload (e.g., {"type": "progress", "percent": 50})
             seq: Sequence number
         """
-        return cls(
-            type="event", correlation_id=correlation_id, event=event_data, seq=seq
-        )
+        return cls(type="event", correlation_id=correlation_id, event=event_data, seq=seq)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> CLIStreamMessage:
@@ -260,7 +254,9 @@ def encode_message(data: dict[str, Any]) -> bytes:
             try:
                 json.dumps({key: value})
             except TypeError:
-                logger.error(f"Non-serializable value in key '{key}': {type(value).__name__} = {repr(value)[:200]}")
+                logger.error(
+                    f"Non-serializable value in key '{key}': {type(value).__name__} = {repr(value)[:200]}"
+                )
         raise
     length = struct.pack(">I", len(payload))
     return length + payload
@@ -534,7 +530,9 @@ class CLISocketServer:
         - Tier 3: True subprocess with PTY (fork-exec, for external commands)
         - Default: Fall back to Tier 2 if handler exists, else Tier 3
         """
-        logger.warning("PTY session requested but PTY mode is deprecated. Using simple mode instead.")
+        logger.warning(
+            "PTY session requested but PTY mode is deprecated. Using simple mode instead."
+        )
         # PTY code has been removed. Client should never set pty=True.
         # If you need TUI functionality, run daemon in foreground: kgentsd summon -f
         return

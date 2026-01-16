@@ -136,11 +136,7 @@ class TestMockChecker:
     @pytest.mark.asyncio
     async def test_fluent_api(self) -> None:
         """Pattern methods return self for fluent chaining."""
-        checker = (
-            MockChecker()
-            .always_succeed_on(r"good")
-            .always_fail_on(r"bad")
-        )
+        checker = MockChecker().always_succeed_on(r"good").always_fail_on(r"bad")
 
         good_result = await checker.check("this is good")
         bad_result = await checker.check("this is bad")
@@ -408,7 +404,11 @@ lemma WrongPostcondition(x: int)
         assert not result.success
         # Should have actionable error about postcondition
         error_text = " ".join(result.errors)
-        assert "postcondition" in error_text.lower() or "ensures" in error_text.lower() or "error" in error_text.lower()
+        assert (
+            "postcondition" in error_text.lower()
+            or "ensures" in error_text.lower()
+            or "error" in error_text.lower()
+        )
 
     @requires_dafny
     @pytest.mark.asyncio
@@ -481,9 +481,7 @@ lemma UnicodeTest()
             "lemma C() ensures 3 == 3 {}",
         ]
 
-        results = await asyncio.gather(*[
-            checker.check(p) for p in proofs
-        ])
+        results = await asyncio.gather(*[checker.check(p) for p in proofs])
 
         assert all(r.success for r in results)
 
@@ -594,7 +592,8 @@ class TestLean4CheckerIntegration:
     async def test_verifies_trivial_proof(self) -> None:
         """Lean4 accepts obviously true proofs."""
         checker = Lean4Checker()
-        proof = "theorem trivial : ∀ x : Nat, x = x := fun _ => rfl"
+        # Note: "trivial" is a Lean4 built-in, use a different name
+        proof = "theorem simple_eq : ∀ x : Nat, x = x := fun _ => rfl"
 
         result = await checker.check(proof)
 

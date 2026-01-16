@@ -36,8 +36,8 @@ class TrustLevel(Enum):
     3. NEVER - Always require approval (explicit user choice)
     """
 
-    NEVER = "never"      # Always require approval (user choice)
-    ASK = "ask"          # Default: ask each time
+    NEVER = "never"  # Always require approval (user choice)
+    ASK = "ask"  # Default: ask each time
     TRUSTED = "trusted"  # Auto-approve (user opted in)
 
     def allows_auto_approve(self) -> bool:
@@ -372,10 +372,7 @@ class TrustProfile:
         """Serialize to dict for storage."""
         return {
             "user_id": self.user_id,
-            "trusted_tools": {
-                name: state.to_dict()
-                for name, state in self.trusted_tools.items()
-            },
+            "trusted_tools": {name: state.to_dict() for name, state in self.trusted_tools.items()},
             "trust_history": [event.to_dict() for event in self.trust_history],
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
@@ -392,8 +389,7 @@ class TrustProfile:
                 for name, state_data in data.get("trusted_tools", {}).items()
             },
             trust_history=[
-                TrustEvent.from_dict(event_data)
-                for event_data in data.get("trust_history", [])
+                TrustEvent.from_dict(event_data) for event_data in data.get("trust_history", [])
             ],
             created_at=datetime.fromisoformat(data["created_at"]),
             updated_at=datetime.fromisoformat(data["updated_at"]),

@@ -80,6 +80,7 @@ async def test_dp_llm_analysis():
     except Exception as e:
         logger.error(f"✗ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         raise
 
@@ -118,6 +119,7 @@ async def test_witness_llm_integration():
     except Exception as e:
         logger.error(f"✗ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         raise
 

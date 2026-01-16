@@ -76,7 +76,11 @@ class MemoryBackend:
 
             # Tags filter (must have ALL tags)
             if q.tags:
-                datum_tags = set(datum.metadata.get("tags", "").split(",")) if datum.metadata.get("tags") else set()
+                datum_tags = (
+                    set(datum.metadata.get("tags", "").split(","))
+                    if datum.metadata.get("tags")
+                    else set()
+                )
                 if not q.tags.issubset(datum_tags):
                     continue
 

@@ -13,10 +13,7 @@ from agents.d.schemas.reflection import InterpretationCrystal, ReflectionCrystal
 def test_reflection_crystal_creation():
     """Test creating a reflection crystal."""
     proof = GaloisWitnessedProof(
-        data="Test data",
-        warrant="Test warrant",
-        claim="Test claim",
-        backing="Test backing"
+        data="Test data", warrant="Test warrant", claim="Test claim", backing="Test backing"
     )
 
     reflection = ReflectionCrystal(
@@ -26,7 +23,7 @@ def test_reflection_crystal_creation():
         insight="Combined insights from artifacts t1 and t2",
         recommendations=("rec1", "rec2"),
         derived_from=("d1",),
-        proof=proof
+        proof=proof,
     )
 
     assert reflection.id == "r1"
@@ -39,10 +36,7 @@ def test_reflection_crystal_creation():
 def test_reflection_crystal_serialization():
     """Test reflection crystal to_dict and from_dict."""
     proof = GaloisWitnessedProof(
-        data="Test data",
-        warrant="Test warrant",
-        claim="Test claim",
-        backing="Test backing"
+        data="Test data", warrant="Test warrant", claim="Test claim", backing="Test backing"
     )
 
     reflection = ReflectionCrystal(
@@ -52,7 +46,7 @@ def test_reflection_crystal_serialization():
         insight="Artifact t1 differs from t2 in approach",
         recommendations=("Consider hybrid approach",),
         derived_from=("d1", "d2"),
-        proof=proof
+        proof=proof,
     )
 
     # Serialize
@@ -81,7 +75,7 @@ def test_interpretation_crystal_creation():
         data="Historical data",
         warrant="Trend analysis",
         claim="Increasing complexity",
-        backing="Code metrics over 6 months"
+        backing="Code metrics over 6 months",
     )
 
     interp = InterpretationCrystal(
@@ -92,7 +86,7 @@ def test_interpretation_crystal_creation():
         content="Code complexity increasing over time",
         confidence=0.85,
         supporting_ids=("s1", "s2", "s3"),
-        proof=proof
+        proof=proof,
     )
 
     assert interp.id == "i1"
@@ -111,7 +105,7 @@ def test_interpretation_crystal_serialization():
         data="Pattern data",
         warrant="Recurring structure",
         claim="Common pattern identified",
-        backing="Analysis of 50+ files"
+        backing="Analysis of 50+ files",
     )
 
     interp = InterpretationCrystal(
@@ -122,7 +116,7 @@ def test_interpretation_crystal_serialization():
         content="All agents follow polynomial pattern",
         confidence=0.95,
         supporting_ids=("s1", "s2"),
-        proof=proof
+        proof=proof,
     )
 
     # Serialize
@@ -148,9 +142,7 @@ def test_interpretation_crystal_serialization():
 
 def test_reflection_types():
     """Test different reflection types."""
-    proof = GaloisWitnessedProof(
-        data="Test", warrant="Test", claim="Test", backing="Test"
-    )
+    proof = GaloisWitnessedProof(data="Test", warrant="Test", claim="Test", backing="Test")
 
     types = ["synthesis", "comparison", "delta", "audit"]
 
@@ -162,7 +154,7 @@ def test_reflection_types():
             insight=f"{rtype} insight",
             recommendations=(),
             derived_from=(),
-            proof=proof
+            proof=proof,
         )
         assert reflection.reflection_type == rtype
 
@@ -170,9 +162,7 @@ def test_reflection_types():
 def test_interpretation_types():
     """Test different interpretation types."""
     now = datetime.now(UTC)
-    proof = GaloisWitnessedProof(
-        data="Test", warrant="Test", claim="Test", backing="Test"
-    )
+    proof = GaloisWitnessedProof(data="Test", warrant="Test", claim="Test", backing="Test")
 
     types = ["trend", "pattern", "prediction"]
 
@@ -185,6 +175,6 @@ def test_interpretation_types():
             content=f"{itype} content",
             confidence=0.8,
             supporting_ids=(),
-            proof=proof
+            proof=proof,
         )
         assert interp.insight_type == itype

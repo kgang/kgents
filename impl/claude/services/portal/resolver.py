@@ -29,14 +29,14 @@ class ResolvedResource:
     See: spec/protocols/portal-resource-system.md §4.1
     """
 
-    uri: str                          # Original URI
-    resource_type: str                # "chat", "file", etc.
-    exists: bool                      # Whether resource exists
-    title: str                        # Display title
-    preview: str                      # Short preview text
-    content: Any                      # Full content (type varies by resource)
-    actions: list[str]                # Available actions (["expand", "edit", ...])
-    metadata: dict[str, Any]          # Resource-specific metadata
+    uri: str  # Original URI
+    resource_type: str  # "chat", "file", etc.
+    exists: bool  # Whether resource exists
+    title: str  # Display title
+    preview: str  # Short preview text
+    content: Any  # Full content (type varies by resource)
+    actions: list[str]  # Available actions (["expand", "edit", ...])
+    metadata: dict[str, Any]  # Resource-specific metadata
 
 
 class PortalResolver(Protocol):
@@ -112,9 +112,7 @@ class PortalResolverRegistry:
         resource_type = resolver.resource_type
 
         if resource_type in self._resolvers:
-            raise ValueError(
-                f"Resolver already registered for type '{resource_type}'"
-            )
+            raise ValueError(f"Resolver already registered for type '{resource_type}'")
 
         self._resolvers[resource_type] = resolver
 

@@ -163,7 +163,8 @@ class TestManifest:
         """manifest() result has a valid graph."""
         result = await node.manifest(observer)
         assert isinstance(result.graph, ConstitutionalGraph)
-        assert result.graph.total_blocks == 22
+        # 23 K-Blocks: 4 axioms + 7 kernel + 1 constitution + 7 principles + 4 architectural
+        assert result.graph.total_blocks == 23
 
 
 # =============================================================================
@@ -179,7 +180,8 @@ class TestView:
         """view() returns a ConstitutionalGraph."""
         result = await node.view(observer)
         assert isinstance(result, ConstitutionalGraph)
-        assert result.total_blocks == 22
+        # 23 K-Blocks: 4 axioms + 7 kernel + 1 constitution + 7 principles + 4 architectural
+        assert result.total_blocks == 23
 
     @pytest.mark.asyncio
     async def test_view_with_layer_filter(self, node: ConstitutionNode, observer: Observer) -> None:

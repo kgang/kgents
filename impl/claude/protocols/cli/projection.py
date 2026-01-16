@@ -693,8 +693,10 @@ def _run_async(coro: Any) -> Any:
     except RuntimeError:
         # No running event loop in this thread
         # Check if we're inside daemon context (thread pool)
-        inside_daemon = os.environ.get("KGENTS_INSIDE_DAEMON") is None and \
-                       os.environ.get("KGENTS_DAEMON_WORKER") is not None
+        inside_daemon = (
+            os.environ.get("KGENTS_INSIDE_DAEMON") is None
+            and os.environ.get("KGENTS_DAEMON_WORKER") is not None
+        )
 
         if inside_daemon:
             # Running in daemon worker thread - create a fresh loop

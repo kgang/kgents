@@ -265,10 +265,13 @@ Reply with just a number:""",
 
         try:
             # Format edges for analysis
-            edges_desc = "\n".join(
-                f"  - {getattr(e, 'kind', 'edge')} -> {getattr(e, 'target', 'unknown')}"
-                for e in node.outgoing_edges
-            ) or "  (no outgoing edges)"
+            edges_desc = (
+                "\n".join(
+                    f"  - {getattr(e, 'kind', 'edge')} -> {getattr(e, 'target', 'unknown')}"
+                    for e in node.outgoing_edges
+                )
+                or "  (no outgoing edges)"
+            )
 
             prompt = f"""Analyze this node for composition violations:
 
@@ -355,7 +358,7 @@ Reply with just a number:"""
             prompt = f"""Analyze this operation for hidden safety risks:
 
 Node: {node.title}
-Action: {action or 'examine'}
+Action: {action or "examine"}
 Content: {node.content[:400]}
 Layer: {node.layer}
 
@@ -552,6 +555,7 @@ Quality score (0.0 = poor, 1.0 = excellent):"""
         try:
             # Extract first number from text
             import re
+
             match = re.search(r"[\d.]+", text.strip())
             if match:
                 value = float(match.group())

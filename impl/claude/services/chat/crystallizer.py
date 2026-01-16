@@ -134,13 +134,13 @@ class ChatCrystallizer:
 
         # Turn count contribution (logarithmic scaling)
         import math
+
         if session.turn_count >= CRYSTALLIZATION_TURN_THRESHOLD:
             score += math.log10(session.turn_count) * 10
 
         # Message length contribution
         total_length = sum(
-            len(turn.user_message) + len(turn.assistant_response)
-            for turn in session.turns
+            len(turn.user_message) + len(turn.assistant_response) for turn in session.turns
         )
         if total_length >= CRYSTALLIZATION_LENGTH_THRESHOLD:
             score += (total_length / 1000) * 2  # 2 points per 1000 chars
@@ -175,7 +175,11 @@ class ChatCrystallizer:
         """
         # Must meet minimum turn threshold
         if session.turn_count < CRYSTALLIZATION_TURN_THRESHOLD:
-            return False, 0.0, f"Below turn threshold ({session.turn_count} < {CRYSTALLIZATION_TURN_THRESHOLD})"
+            return (
+                False,
+                0.0,
+                f"Below turn threshold ({session.turn_count} < {CRYSTALLIZATION_TURN_THRESHOLD})",
+            )
 
         # Compute significance
         score = self.compute_significance(session)
@@ -184,7 +188,11 @@ class ChatCrystallizer:
         if score >= SIGNIFICANCE_THRESHOLD:
             return True, score, f"Significant exploration (score: {score:.1f})"
 
-        return False, score, f"Below significance threshold ({score:.1f} < {SIGNIFICANCE_THRESHOLD})"
+        return (
+            False,
+            score,
+            f"Below significance threshold ({score:.1f} < {SIGNIFICANCE_THRESHOLD})",
+        )
 
     async def maybe_crystallize(self, session: ChatSession) -> CrystallizationResult | None:
         """
@@ -238,7 +246,11 @@ class ChatCrystallizer:
         # Extract first user message as context
         if session.turns:
             first_message = session.turns[0].user_message[:100]
-            return f"Chat exploration: {first_message}..." if len(first_message) >= 100 else f"Chat exploration: {first_message}"
+            return (
+                f"Chat exploration: {first_message}..."
+                if len(first_message) >= 100
+                else f"Chat exploration: {first_message}"
+            )
         return f"Chat session {session.id}"
 
     def _create_kblock(self, session: ChatSession, summary: str) -> KBlock:
@@ -263,14 +275,16 @@ class ChatCrystallizer:
 
         # Add conversation turns
         for turn in session.turns:
-            lines.extend([
-                f"## Turn {turn.turn_number}",
-                "",
-                f"**User**: {turn.user_message}",
-                "",
-                f"**Assistant**: {turn.assistant_response}",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"## Turn {turn.turn_number}",
+                    "",
+                    f"**User**: {turn.user_message}",
+                    "",
+                    f"**Assistant**: {turn.assistant_response}",
+                    "",
+                ]
+            )
 
             # Add tool usage if present
             if turn.tools_used:
@@ -320,8 +334,7 @@ class ChatCrystallizer:
         )
 
         logger.info(
-            f"Stored K-Block {k_block.id} to cosmos at {k_block.path} "
-            f"(version: {version_id})"
+            f"Stored K-Block {k_block.id} to cosmos at {k_block.path} (version: {version_id})"
         )
 
     def _create_evidence(

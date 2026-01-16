@@ -59,17 +59,23 @@ def example_custom_evaluators():
     const.set_evaluator(
         Principle.COMPOSABLE,
         evaluate_composable,
-        lambda s, a, ns: f"Action '{a}' is compositional" if a in {"pipe", "map", "filter", "compose"} else "Not compositional"
+        lambda s, a, ns: f"Action '{a}' is compositional"
+        if a in {"pipe", "map", "filter", "compose"}
+        else "Not compositional",
     )
     const.set_evaluator(
         Principle.JOY_INDUCING,
         evaluate_joyful,
-        lambda s, a, ns: f"Action '{a}' creates delight" if a in {"surprise", "delight", "celebrate"} else "Neutral"
+        lambda s, a, ns: f"Action '{a}' creates delight"
+        if a in {"surprise", "delight", "celebrate"}
+        else "Neutral",
     )
     const.set_evaluator(
         Principle.ETHICAL,
         evaluate_ethical,
-        lambda s, a, ns: "Augments human capability" if a not in {"replace_human", "automate_judgment"} else "Replaces human"
+        lambda s, a, ns: "Augments human capability"
+        if a not in {"replace_human", "automate_judgment"}
+        else "Replaces human",
     )
 
     # Evaluate different actions
@@ -88,7 +94,9 @@ def example_custom_evaluators():
         # Show principle breakdown
         for ps in value_score.principle_scores:
             if ps.principle in {Principle.COMPOSABLE, Principle.JOY_INDUCING, Principle.ETHICAL}:
-                print(f"  {ps.principle.name}: {ps.score:.2f} (weight={ps.weight:.1f}) - {ps.evidence}")
+                print(
+                    f"  {ps.principle.name}: {ps.score:.2f} (weight={ps.weight:.1f}) - {ps.evidence}"
+                )
         print()
 
 
@@ -114,7 +122,9 @@ def example_custom_weights():
     print(f"  Total score: {value_score.total_score:.3f}")
     print("  Breakdown:")
     for ps in value_score.principle_scores:
-        print(f"    {ps.principle.name}: score={ps.score:.2f}, weight={ps.weight:.1f}, weighted={ps.weighted_score:.2f}")
+        print(
+            f"    {ps.principle.name}: score={ps.score:.2f}, weight={ps.weight:.1f}, weighted={ps.weighted_score:.2f}"
+        )
     print()
 
 

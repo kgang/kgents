@@ -725,9 +725,25 @@ class TestWarmthCalibration:
         # Check for warm patterns (case insensitive)
         # These are conversational, personal, encouraging patterns
         warm_patterns = [
-            "your", "together", "let's", "what's on", "noticed", "okay",
-            "here's", "you", "we", "that", "stand out", "look back", "week",
-            "patterns", "quiet", "captured", "keep", "clear", "setting aside",
+            "your",
+            "together",
+            "let's",
+            "what's on",
+            "noticed",
+            "okay",
+            "here's",
+            "you",
+            "we",
+            "that",
+            "stand out",
+            "look back",
+            "week",
+            "patterns",
+            "quiet",
+            "captured",
+            "keep",
+            "clear",
+            "setting aside",
             "to keep this",  # For compression honesty prompt
         ]
         cold_patterns = ["Error", "Invalid", "Must", "Required", "Failed"]

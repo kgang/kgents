@@ -30,6 +30,15 @@ from .cli_types import (
     OutputLevel,
     PersonaMode,
 )
+from .compose_paths import (
+    # Phase 3.3 CLI Renaissance: Command Composition
+    compose_chain,
+    compose_from_string,
+    compose_paths,
+    is_composition,
+    parse_composition,
+    verify_associativity,
+)
 from .dimensions import (
     # Constants
     DEFAULT_DIMENSIONS,
@@ -121,4 +130,11 @@ __all__ = [
     "TerminalOutput",
     "project_command",
     "route_to_path",
+    # Composition (Phase 3.3 CLI Renaissance)
+    "parse_composition",
+    "compose_paths",
+    "compose_chain",
+    "compose_from_string",
+    "is_composition",
+    "verify_associativity",
 ]

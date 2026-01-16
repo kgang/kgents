@@ -295,11 +295,7 @@ def _assert_all_topics_mapped() -> None:
     Raises:
         AssertionError: If any non-wildcard topic is unmapped
     """
-    all_attrs = [
-        attr
-        for attr in dir(WitnessTopics)
-        if not attr.startswith("_") and attr.isupper()
-    ]
+    all_attrs = [attr for attr in dir(WitnessTopics) if not attr.startswith("_") and attr.isupper()]
 
     unmapped: list[str] = []
     for attr in all_attrs:

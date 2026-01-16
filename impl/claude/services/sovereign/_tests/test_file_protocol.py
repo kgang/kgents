@@ -64,7 +64,9 @@ Links to:
 
 
 @pytest.mark.asyncio
-async def test_integration_creates_witness_mark(integration_service, temp_workspace, sample_markdown):
+async def test_integration_creates_witness_mark(
+    integration_service, temp_workspace, sample_markdown
+):
     """Step 1: Integration creates a witness mark."""
     uploads, kgents_root = temp_workspace
 
@@ -133,7 +135,9 @@ async def test_integration_discovers_edges(integration_service, temp_workspace, 
 
 
 @pytest.mark.asyncio
-async def test_integration_extracts_portal_tokens(integration_service, temp_workspace, sample_markdown):
+async def test_integration_extracts_portal_tokens(
+    integration_service, temp_workspace, sample_markdown
+):
     """Step 5: Integration extracts portal tokens."""
     uploads, kgents_root = temp_workspace
 
@@ -155,7 +159,9 @@ async def test_integration_extracts_portal_tokens(integration_service, temp_work
 
 
 @pytest.mark.asyncio
-async def test_integration_identifies_concepts(integration_service, temp_workspace, sample_markdown):
+async def test_integration_identifies_concepts(
+    integration_service, temp_workspace, sample_markdown
+):
     """Step 6: Integration identifies axioms, laws, concepts."""
     uploads, kgents_root = temp_workspace
 

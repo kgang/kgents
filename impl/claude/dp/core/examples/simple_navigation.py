@@ -50,10 +50,13 @@ def main() -> None:
         states=frozenset({"start", "middle", "goal"}),
         actions=lambda s: frozenset({"forward", "backward"}) if s != "goal" else frozenset(),
         transition=lambda s, a: (
-            "middle" if s == "start" and a == "forward" else
-            "goal" if s == "middle" and a == "forward" else
-            "start" if s == "middle" and a == "backward" else
-            s
+            "middle"
+            if s == "start" and a == "forward"
+            else "goal"
+            if s == "middle" and a == "forward"
+            else "start"
+            if s == "middle" and a == "backward"
+            else s
         ),
         output_fn=lambda s, a, ns: f"Moved from {s} to {ns} via {a}",
         constitution=constitution,

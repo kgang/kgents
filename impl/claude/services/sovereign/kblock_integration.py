@@ -138,7 +138,9 @@ async def verify_kblock_isolation(
             is_isolated = False
             details = "VIOLATION: DIRTY but content == base_content"
         else:
-            details = f"OK: Local changes isolated. {len(conflict_with)} other editors on same path."
+            details = (
+                f"OK: Local changes isolated. {len(conflict_with)} other editors on same path."
+            )
             if conflict_with:
                 details += f" (Conflicts with: {', '.join(conflict_with[:3])})"
 

@@ -220,7 +220,7 @@ class ConceptAgent:
     4. Ensure tangible output is defined
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the concept agent."""
         self.concepts: list[VideoConcept] = []
         self.domains = list(VideoDomain)
@@ -335,7 +335,7 @@ class ScriptAgent:
     4. Ensure structure completeness
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the script agent."""
         self.scripts: list[VideoScript] = []
         self.drafts: list[ScriptDraft] = []
@@ -475,7 +475,7 @@ class ThumbnailAgent:
     4. Ensure promise-thumbnail alignment
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the thumbnail agent."""
         self.thumbnails: list[ThumbnailConcept] = []
 

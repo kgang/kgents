@@ -22,6 +22,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from agents.d.universe import Universe
 from models import Base, Crystal, TeachingCrystal
 from models.base import get_engine
 
@@ -49,25 +50,10 @@ async def db_session():
 
 
 @pytest.fixture
-def mock_dgent():
-    """Create a mock D-gent protocol."""
-    dgent = MagicMock()
-    dgent.put = AsyncMock(return_value="datum-123")
-    dgent.get = AsyncMock(return_value=None)
-    dgent.delete = AsyncMock(return_value=True)
-    return dgent
-
-
-@pytest.fixture
-async def brain_persistence(db_session: AsyncSession, mock_dgent):
-    """Create a BrainPersistence instance with real DB session and mock D-gent."""
-    from sqlalchemy.ext.asyncio import async_sessionmaker
-
+async def brain_persistence(db_session: AsyncSession):
+    """Create a BrainPersistence instance with real DB session and Universe."""
     from agents.d import TableAdapter
     from services.brain.persistence import BrainPersistence
-
-    # Create a session factory from the existing session's engine
-    engine = db_session.get_bind()
 
     # Wrap the existing session in a factory-like context manager
     class SessionFactoryWrapper:
@@ -85,10 +71,11 @@ async def brain_persistence(db_session: AsyncSession, mock_dgent):
 
     # Create TableAdapter with session factory
     table_adapter = TableAdapter(Crystal, SessionFactoryWrapper(db_session))
+    universe = Universe(namespace="test")
 
     return BrainPersistence(
+        universe=universe,
         table_adapter=table_adapter,
-        dgent=mock_dgent,
         embedder=None,
     )
 
@@ -129,9 +116,7 @@ class TestCrystallizeTeaching:
         assert crystal.is_alive is True
 
     @pytest.mark.asyncio
-    async def test_crystallize_deduplication(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_crystallize_deduplication(self, brain_persistence, db_session: AsyncSession):
         """Same (module, symbol, insight) returns existing crystal."""
         # First crystallization
         result1 = await brain_persistence.crystallize_teaching(
@@ -155,9 +140,7 @@ class TestCrystallizeTeaching:
         assert result2.is_new is False
 
         # Only one crystal in DB
-        stmt = select(TeachingCrystal).where(
-            TeachingCrystal.source_module == "services.test"
-        )
+        stmt = select(TeachingCrystal).where(TeachingCrystal.source_module == "services.test")
         results = await db_session.execute(stmt)
         crystals = results.scalars().all()
         assert len(crystals) == 1
@@ -186,9 +169,7 @@ class TestCrystallizeTeaching:
         assert result2.is_new is True
 
     @pytest.mark.asyncio
-    async def test_crystallize_without_evidence(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_crystallize_without_evidence(self, brain_persistence, db_session: AsyncSession):
         """Crystallization works without evidence, but marks as unverified."""
         result = await brain_persistence.crystallize_teaching(
             insight="Gotcha without proof",
@@ -210,9 +191,7 @@ class TestTeachingQueries:
     """Tests for teaching crystal query methods."""
 
     @pytest.mark.asyncio
-    async def test_get_alive_teaching(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_get_alive_teaching(self, brain_persistence, db_session: AsyncSession):
         """get_alive_teaching() returns only living crystals."""
         # Create alive crystals
         await brain_persistence.crystallize_teaching(
@@ -270,9 +249,7 @@ class TestTeachingQueries:
         assert critical[0].severity == "critical"
 
     @pytest.mark.asyncio
-    async def test_get_teaching_by_module(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_get_teaching_by_module(self, brain_persistence, db_session: AsyncSession):
         """get_teaching_by_module() finds crystals by module prefix."""
         await brain_persistence.crystallize_teaching(
             insight="Brain gotcha",
@@ -299,9 +276,7 @@ class TestTeachingQueries:
         assert all("services.brain" in t.source_module for t in brain_teaching)
 
     @pytest.mark.asyncio
-    async def test_get_ancestral_wisdom(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_get_ancestral_wisdom(self, brain_persistence, db_session: AsyncSession):
         """get_ancestral_wisdom() returns teaching from deleted code."""
         # Create alive crystal
         await brain_persistence.crystallize_teaching(
@@ -338,9 +313,7 @@ class TestTeachingQueries:
         assert all(a.is_ancestor for a in ancestors)
 
     @pytest.mark.asyncio
-    async def test_count_teaching_crystals(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_count_teaching_crystals(self, brain_persistence, db_session: AsyncSession):
         """count_teaching_crystals() returns accurate stats."""
         # Create alive crystals of different severities
         await brain_persistence.crystallize_teaching(
@@ -393,9 +366,7 @@ class TestTeachingCrystallizer:
     """Tests for the TeachingCrystallizer high-level API."""
 
     @pytest.mark.asyncio
-    async def test_crystallizer_stats(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_crystallizer_stats(self, brain_persistence, db_session: AsyncSession):
         """TeachingCrystallizer tracks crystallization stats."""
         from services.living_docs.crystallizer import TeachingCrystallizer
         from services.living_docs.teaching import TeachingCollector
@@ -408,7 +379,9 @@ class TestTeachingCrystallizer:
 
         mock_results = [
             MagicMock(
-                moment=TeachingMoment(insight="Gotcha 1", severity="critical", evidence="test.py::test_1"),
+                moment=TeachingMoment(
+                    insight="Gotcha 1", severity="critical", evidence="test.py::test_1"
+                ),
                 symbol="Symbol1",
                 module="services.test",
             ),

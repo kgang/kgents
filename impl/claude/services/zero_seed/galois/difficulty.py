@@ -99,9 +99,7 @@ class DifficultyMeasure:
         """
         return {
             "A_D1_non_negative": self.difficulty >= 0,
-            "A_D2_trivial_low": (
-                self.success_rate < 0.99 or self.difficulty < 0.1
-            ),
+            "A_D2_trivial_low": (self.success_rate < 0.99 or self.difficulty < 0.1),
             # A_D3 requires composition (checked externally)
             "A_D3_sub_additive": True,  # Placeholder - checked in composition
             # A_D4 requires impossible detection (checked externally)
@@ -117,10 +115,7 @@ class DifficultyMeasure:
         return self.difficulty > threshold
 
     def __str__(self) -> str:
-        return (
-            f"D(P)={self.difficulty:.3f} "
-            f"(H={self.entropy:.3f} bits, S={self.success_rate:.2%})"
-        )
+        return f"D(P)={self.difficulty:.3f} (H={self.entropy:.3f} bits, S={self.success_rate:.2%})"
 
 
 @dataclass

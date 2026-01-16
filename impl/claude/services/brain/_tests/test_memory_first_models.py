@@ -338,9 +338,7 @@ class TestExtinctionTeachingJoin:
         await db_session.commit()
 
         # Verify via query (avoiding lazy load issues in async context)
-        stmt = select(ExtinctionTeaching).where(
-            ExtinctionTeaching.extinction_id == "join-ext"
-        )
+        stmt = select(ExtinctionTeaching).where(ExtinctionTeaching.extinction_id == "join-ext")
         result = await db_session.execute(stmt)
         links = result.scalars().all()
 
@@ -367,9 +365,7 @@ class TestExtinctionTeachingJoin:
         await db_session.commit()
 
         # Access extinction via query (avoiding lazy load issues in async context)
-        stmt = select(ExtinctionTeaching).where(
-            ExtinctionTeaching.teaching_id == "reverse-teach"
-        )
+        stmt = select(ExtinctionTeaching).where(ExtinctionTeaching.teaching_id == "reverse-teach")
         result = await db_session.execute(stmt)
         links = result.scalars().all()
 

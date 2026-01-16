@@ -256,9 +256,7 @@ class CollaborationNode(BaseLogosNode):
         category=AspectCategory.PERCEPTION,
         description="View collaboration status and configuration",
     )
-    async def manifest(
-        self, observer: "Observer", **kwargs: Any
-    ) -> Renderable:
+    async def manifest(self, observer: "Observer", **kwargs: Any) -> Renderable:
         """Get collaboration manifest."""
         pending = await self._protocol.get_pending_proposals()
 
@@ -298,9 +296,7 @@ class CollaborationNode(BaseLogosNode):
         description="Agent proposes an edit for human approval",
         effects=[Effect.WRITES],
     )
-    async def propose(
-        self, observer: "Observer", **kwargs: Any
-    ) -> Renderable:
+    async def propose(self, observer: "Observer", **kwargs: Any) -> Renderable:
         """Create a new edit proposal."""
         # Extract request params
         agent_id = kwargs.get("agent_id", "unknown-agent")
@@ -383,9 +379,7 @@ class CollaborationNode(BaseLogosNode):
         description="Human accepts or rejects a proposal",
         effects=[Effect.WRITES],
     )
-    async def respond(
-        self, observer: "Observer", **kwargs: Any
-    ) -> Renderable:
+    async def respond(self, observer: "Observer", **kwargs: Any) -> Renderable:
         """Accept or reject a proposal."""
         proposal_id = kwargs.get("proposal_id", "")
         action = kwargs.get("action", "").lower()
@@ -456,9 +450,7 @@ class CollaborationNode(BaseLogosNode):
         description="Record human keystroke to block agent edits",
         effects=[Effect.WRITES],
     )
-    async def keystroke(
-        self, observer: "Observer", **kwargs: Any
-    ) -> Renderable:
+    async def keystroke(self, observer: "Observer", **kwargs: Any) -> Renderable:
         """Record a human keystroke."""
         location = kwargs.get("location", "")
 
@@ -493,9 +485,7 @@ class CollaborationNode(BaseLogosNode):
         category=AspectCategory.PERCEPTION,
         description="Get all pending proposals",
     )
-    async def pending(
-        self, observer: "Observer", **kwargs: Any
-    ) -> Renderable:
+    async def pending(self, observer: "Observer", **kwargs: Any) -> Renderable:
         """Get pending proposals."""
         location = kwargs.get("location")  # Optional filter
         proposals = await self._protocol.get_pending_proposals(location)
@@ -510,9 +500,9 @@ class CollaborationNode(BaseLogosNode):
 
         return BasicRendering(
             summary=f"{len(proposals)} Pending Proposal(s)",
-            content="\n".join(
-                f"- {p.agent_name}: {p.description}" for p in proposals
-            ) if proposals else "No pending proposals",
+            content="\n".join(f"- {p.agent_name}: {p.description}" for p in proposals)
+            if proposals
+            else "No pending proposals",
             metadata=PendingResponse(
                 proposals=proposal_dicts,
                 count=len(proposals),
@@ -527,9 +517,7 @@ class CollaborationNode(BaseLogosNode):
         category=AspectCategory.PERCEPTION,
         description="Get current collaboration status",
     )
-    async def status(
-        self, observer: "Observer", **kwargs: Any
-    ) -> Renderable:
+    async def status(self, observer: "Observer", **kwargs: Any) -> Renderable:
         """Get collaboration status."""
         tracker = self._protocol.keystroke_tracker
         is_typing = await tracker.is_human_typing()
@@ -601,9 +589,7 @@ class CollaborationNode(BaseLogosNode):
             while True:
                 # Check for new proposals (with timeout for heartbeat)
                 try:
-                    proposal = await asyncio.wait_for(
-                        proposal_queue.get(), timeout=5.0
-                    )
+                    proposal = await asyncio.wait_for(proposal_queue.get(), timeout=5.0)
                     yield {"type": "proposal_update", "data": proposal.to_dict()}
                 except asyncio.TimeoutError:
                     # Send heartbeat

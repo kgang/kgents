@@ -199,9 +199,7 @@ class EvidenceCorrelator:
 
         # Filter to commits after decision and before end
         relevant_commits = [
-            c
-            for c in commits
-            if decision_timestamp <= c.timestamp <= end_timestamp
+            c for c in commits if decision_timestamp <= c.timestamp <= end_timestamp
         ]
 
         if not relevant_commits:
@@ -226,9 +224,7 @@ class EvidenceCorrelator:
         # High deletion ratio suggests rework
         total_insertions = sum(p.insertions for p in patterns)
         total_deletions = sum(p.deletions for p in patterns)
-        rework_ratio = (
-            total_deletions / total_insertions if total_insertions > 0 else 0.0
-        )
+        rework_ratio = total_deletions / total_insertions if total_insertions > 0 else 0.0
 
         return DecisionCommitChain(
             decision_mark_id=decision_mark_id,
@@ -266,9 +262,7 @@ class EvidenceCorrelator:
         # Get gotcha marks (marks with "gotcha" or "evidence:gotcha" tags)
         marks = await self.witness.get_marks(limit=100)
         gotcha_marks = [
-            m
-            for m in marks
-            if any(tag in ("gotcha", "evidence:gotcha") for tag in m.tags)
+            m for m in marks if any(tag in ("gotcha", "evidence:gotcha") for tag in m.tags)
         ]
 
         if not gotcha_marks:
@@ -278,9 +272,7 @@ class EvidenceCorrelator:
         gotcha = gotcha_marks[0]
 
         # Extract file patterns from gotcha action/reasoning
-        file_patterns = self._extract_file_paths(
-            f"{gotcha.action} {gotcha.reasoning or ''}"
-        )
+        file_patterns = self._extract_file_paths(f"{gotcha.action} {gotcha.reasoning or ''}")
 
         # Get all commits
         commits = parse_git_log(repo_path=self.repo_path, max_commits=max_commits)
@@ -314,9 +306,7 @@ class EvidenceCorrelator:
         before_count = len(bugs_before)
         after_count = len(bugs_after)
 
-        reduction = (
-            (before_count - after_count) / before_count if before_count > 0 else 0.0
-        )
+        reduction = (before_count - after_count) / before_count if before_count > 0 else 0.0
 
         return GotchaVsBugCorrelation(
             gotcha_timestamp=gotcha_time,
@@ -393,7 +383,7 @@ class EvidenceCorrelator:
                         commit_timestamp=commit.timestamp,
                         correlation_type=CorrelationType.SAME_TIMESTAMP,
                         correlation_strength=strength * 0.8,  # Scale down vs explicit
-                        evidence=f"Mark and commit within {int(time_delta/60)}min",
+                        evidence=f"Mark and commit within {int(time_delta / 60)}min",
                     )
                 )
 

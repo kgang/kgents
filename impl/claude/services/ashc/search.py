@@ -133,9 +133,7 @@ class InMemoryLemmaDatabase:
         # Score lemmas by keyword overlap
         scored: list[tuple[int, VerifiedLemma]] = []
         for lemma in self._lemmas:
-            lemma_keywords = set(
-                re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", lemma.statement.lower())
-            )
+            lemma_keywords = set(re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", lemma.statement.lower()))
             overlap = len(keywords & lemma_keywords)
             if overlap > 0:
                 # Bias toward more-used lemmas (stigmergic reinforcement)
@@ -586,7 +584,9 @@ class ProofSearcher:
         # Type composition (AD-013)
         if ":" in obligation.property and "invoke" in prop_lower:
             hints.append("Pattern: Type-directed proof via substitution")
-            hints.append("Pattern: Show input satisfies precondition, output satisfies postcondition")
+            hints.append(
+                "Pattern: Show input satisfies precondition, output satisfies postcondition"
+            )
 
         # Composition patterns
         if ">>" in obligation.property or "composition" in prop_lower:

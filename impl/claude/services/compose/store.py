@@ -136,7 +136,9 @@ class CompositionStore:
                 existing.last_success_count = _count_successes(composition)
                 existing.last_failure_count = _count_failures(composition)
                 existing.execution_count += 1
-                logger.debug(f"Updated composition {composition.id} (execution #{existing.execution_count})")
+                logger.debug(
+                    f"Updated composition {composition.id} (execution #{existing.execution_count})"
+                )
             else:
                 # Create new
                 row = _composition_to_row(composition)

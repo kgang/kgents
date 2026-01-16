@@ -12,10 +12,10 @@ from services.constitutional import Domain, Principle, PrincipleScore, constitut
 
 def print_score(domain: str, action: str, score: PrincipleScore):
     """Pretty print a constitutional score."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Domain: {domain.upper()}")
     print(f"Action: {action}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  TASTEFUL:      {score.tasteful:.2f}")
     print(f"  CURATED:       {score.curated:.2f}")
     print(f"  ETHICAL:       {score.ethical:.2f}")
@@ -31,9 +31,9 @@ def chat_examples():
     """Chat domain examples."""
     from services.chat.evidence import TurnResult
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("CHAT DOMAIN EXAMPLES")
-    print("="*60)
+    print("=" * 60)
 
     # Perfect turn
     result = TurnResult(
@@ -68,9 +68,9 @@ def chat_examples():
 
 def navigation_examples():
     """Navigation domain examples."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("NAVIGATION DOMAIN EXAMPLES")
-    print("="*60)
+    print("=" * 60)
 
     # Derivation navigation
     context = {"nav_type": "derivation"}
@@ -90,9 +90,9 @@ def navigation_examples():
 
 def portal_examples():
     """Portal domain examples."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("PORTAL DOMAIN EXAMPLES")
-    print("="*60)
+    print("=" * 60)
 
     # Deep expansion with evidence
     context = {"depth": 3, "edge_type": "evidence", "expansion_count": 2}
@@ -107,9 +107,9 @@ def portal_examples():
 
 def edit_examples():
     """Edit domain examples."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EDIT DOMAIN EXAMPLES")
-    print("="*60)
+    print("=" * 60)
 
     # Small spec-aligned change
     context = {"lines_changed": 20, "spec_aligned": True}
@@ -124,9 +124,9 @@ def edit_examples():
 
 def serialization_example():
     """Demonstrate serialization."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SERIALIZATION EXAMPLE")
-    print("="*60)
+    print("=" * 60)
 
     context = {"nav_type": "derivation"}
     score = constitutional_reward("navigate", context, "navigation")
@@ -146,9 +146,9 @@ def serialization_example():
 
 def backward_compatibility_example():
     """Demonstrate backward compatibility with chat."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("BACKWARD COMPATIBILITY")
-    print("="*60)
+    print("=" * 60)
 
     from services.chat.evidence import TurnResult
     from services.chat.reward import constitutional_reward as chat_reward
@@ -173,9 +173,9 @@ def backward_compatibility_example():
 
 def main():
     """Run all examples."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("CONSTITUTIONAL REWARD SYSTEM - USAGE EXAMPLES")
-    print("="*60)
+    print("=" * 60)
 
     chat_examples()
     navigation_examples()
@@ -184,9 +184,9 @@ def main():
     serialization_example()
     backward_compatibility_example()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY")
-    print("="*60)
+    print("=" * 60)
     print("\n✓ Chat domain: TurnResult-based scoring")
     print("✓ Navigation domain: nav_type-based scoring")
     print("✓ Portal domain: depth/edge_type/expansion_count scoring")

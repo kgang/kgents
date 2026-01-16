@@ -131,7 +131,10 @@ class Composition:
             "id": self.id,
             "name": self.name,
             "status": self.status.value,
-            "steps": [{"index": s.index, "command": s.command, "depends_on": s.depends_on} for s in self.steps],
+            "steps": [
+                {"index": s.index, "command": s.command, "depends_on": s.depends_on}
+                for s in self.steps
+            ],
             "results": [
                 {
                     "step_index": r.step_index,

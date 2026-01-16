@@ -163,7 +163,9 @@ async def _handle_manifest(args: list[str]) -> int:
             print()
             print("Recent Evidence:")
             for e in recent:
-                print(f"  {e.level.level_label} | {e.source_type} | {e.created_at.strftime('%Y-%m-%d %H:%M')}")
+                print(
+                    f"  {e.level.level_label} | {e.source_type} | {e.created_at.strftime('%Y-%m-%d %H:%M')}"
+                )
 
         return 0
     except Exception as e:

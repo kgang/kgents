@@ -31,7 +31,7 @@ async def test_mock_analysis():
 
     # Find the endpoint function
     for route in router.routes:
-        if hasattr(route, 'path') and '/analysis' in route.path:
+        if hasattr(route, "path") and "/analysis" in route.path:
             endpoint = route.endpoint
             break
     else:
@@ -42,15 +42,20 @@ async def test_mock_analysis():
     try:
         response = await endpoint(node_id="test-node-001", use_llm=False)
         print(f"✓ Got response for node: {response.node_id}")
-        print(f"  Categorical: {response.categorical.status} - {response.categorical.summary[:60]}...")
+        print(
+            f"  Categorical: {response.categorical.status} - {response.categorical.summary[:60]}..."
+        )
         print(f"  Epistemic: {response.epistemic.status} - {response.epistemic.summary[:60]}...")
-        print(f"  Dialectical: {response.dialectical.status} - {response.dialectical.summary[:60]}...")
+        print(
+            f"  Dialectical: {response.dialectical.status} - {response.dialectical.summary[:60]}..."
+        )
         print(f"  Generative: {response.generative.status} - {response.generative.summary[:60]}...")
         print("✓ Mock analysis endpoint works!")
         return True
     except Exception as e:
         print(f"❌ FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -76,7 +81,7 @@ async def test_llm_analysis():
 
     # Find the endpoint function
     for route in router.routes:
-        if hasattr(route, 'path') and '/analysis' in route.path:
+        if hasattr(route, "path") and "/analysis" in route.path:
             endpoint = route.endpoint
             break
     else:
@@ -121,6 +126,7 @@ async def test_llm_analysis():
     except Exception as e:
         print(f"❌ FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -154,10 +160,16 @@ async def test_transformation():
 
         print("\n✓ Got FullAnalysisReport:")
         print(f"  Target: {report.target}")
-        print(f"  Categorical: {report.categorical.laws_total} laws, {report.categorical.laws_passed} passed")
-        print(f"  Epistemic: Layer {report.epistemic.layer}, Grounded={report.epistemic.is_grounded}")
+        print(
+            f"  Categorical: {report.categorical.laws_total} laws, {report.categorical.laws_passed} passed"
+        )
+        print(
+            f"  Epistemic: Layer {report.epistemic.layer}, Grounded={report.epistemic.is_grounded}"
+        )
         print(f"  Dialectical: {len(report.dialectical.tensions)} tensions")
-        print(f"  Generative: Ratio={report.generative.compression_ratio:.2f}, Regenerable={report.generative.is_regenerable}")
+        print(
+            f"  Generative: Ratio={report.generative.compression_ratio:.2f}, Regenerable={report.generative.is_regenerable}"
+        )
 
         # Transform
         response = _transform_analysis_report("test-node", report)
@@ -182,6 +194,7 @@ async def test_transformation():
     except Exception as e:
         print(f"❌ FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -205,6 +218,7 @@ async def main():
         except Exception as e:
             print(f"\n❌ Test '{name}' crashed: {e}")
             import traceback
+
             traceback.print_exc()
             results.append((name, False))
 

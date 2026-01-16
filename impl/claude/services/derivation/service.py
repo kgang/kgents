@@ -57,28 +57,29 @@ from services.k_block.core.edge import KBlockEdge
 # =============================================================================
 
 LAYER_NAMES = {
-    1: "axiom",         # L1: AxiomCrystal (foundational truths)
-    2: "value",         # L2: ValueCrystal (derived principles)
-    3: "prompt",        # L3: PromptCrystal (LLM templates)
-    4: "spec",          # L4: SpecCrystal (specifications)
-    5: "code",          # L5: FunctionCrystal, TestCrystal (implementations)
-    6: "reflection",    # L6: ReflectionCrystal (meta-analysis)
-    7: "interpretation", # L7: InterpretationCrystal (meaning-making)
+    1: "axiom",  # L1: AxiomCrystal (foundational truths)
+    2: "value",  # L2: ValueCrystal (derived principles)
+    3: "prompt",  # L3: PromptCrystal (LLM templates)
+    4: "spec",  # L4: SpecCrystal (specifications)
+    5: "code",  # L5: FunctionCrystal, TestCrystal (implementations)
+    6: "reflection",  # L6: ReflectionCrystal (meta-analysis)
+    7: "interpretation",  # L7: InterpretationCrystal (meaning-making)
 }
 
 EDGE_KIND_TO_TYPE = {
-    "GROUNDS": "derives_from",   # L1/L2 → L3+ (axiomatic grounding)
-    "JUSTIFIES": "derives_from", # General justification
-    "SPECIFIES": "derives_from", # Spec defines something
+    "GROUNDS": "derives_from",  # L1/L2 → L3+ (axiomatic grounding)
+    "JUSTIFIES": "derives_from",  # General justification
+    "SPECIFIES": "derives_from",  # Spec defines something
     "IMPLEMENTS": "implements",  # Code implements spec
-    "TESTS": "tests",            # Test covers code
-    "DERIVES": "derives_from",   # General derivation
+    "TESTS": "tests",  # Test covers code
+    "DERIVES": "derives_from",  # General derivation
 }
 
 
 # =============================================================================
 # Data Structures
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class CrystalRef:
@@ -181,6 +182,7 @@ class DriftReport:
 # =============================================================================
 # DerivationService
 # =============================================================================
+
 
 class DerivationService:
     """
@@ -345,8 +347,7 @@ class DerivationService:
 
         # Find all implementations of this spec
         impl_edges = [
-            edge for edge in self._edges.get(spec_id, [])
-            if edge.edge_type == "implements"
+            edge for edge in self._edges.get(spec_id, []) if edge.edge_type == "implements"
         ]
 
         for edge in impl_edges:
@@ -553,6 +554,7 @@ class DerivationService:
         # Compute loss (simple token overlap for MVP)
         # TODO: Use full Galois computation with restructure/reconstitute
         from agents.d.galois import token_overlap_distance
+
         return token_overlap_distance(source_content, target_content)
 
     def _extract_content(self, crystal: Any) -> str:
@@ -591,7 +593,8 @@ class DerivationService:
 
             # Find edges where current is the target (parent)
             child_edges = [
-                edge for edges in self._edges.values()
+                edge
+                for edges in self._edges.values()
                 for edge in edges
                 if edge.target_id == current
             ]

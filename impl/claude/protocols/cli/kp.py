@@ -38,12 +38,12 @@ def main(argv: list[str] | None = None) -> int:
 
     # Pass all args to probe command
     if "--help" in argv or "-h" in argv:
-        print('kp - Quick Probe: kp [health|identity|associativity|coherence|budget] [options]')
+        print("kp - Quick Probe: kp [health|identity|associativity|coherence|budget] [options]")
         print()
         print("Examples:")
-        print('  kp health                    # Check all Crown Jewels')
-        print('  kp health --jewel brain      # Check specific jewel')
-        print('  kp health --json             # JSON output')
+        print("  kp health                    # Check all Crown Jewels")
+        print("  kp health --jewel brain      # Check specific jewel")
+        print("  kp health --json             # JSON output")
         print()
         print("For full help: kg probe --help")
         return 0

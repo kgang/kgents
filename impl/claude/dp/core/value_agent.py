@@ -132,7 +132,9 @@ class ValueAgent(Generic[S, A, B]):
     gamma: float = 0.99
 
     # Cached value table (computed lazily)
-    _value_table: dict[S, float] = field(default_factory=dict, repr=False, hash=False, compare=False)
+    _value_table: dict[S, float] = field(
+        default_factory=dict, repr=False, hash=False, compare=False
+    )
 
     # Cached solver (created lazily)
     _solver: DPSolver[S, A] | None = field(default=None, repr=False, hash=False, compare=False)
@@ -150,7 +152,7 @@ class ValueAgent(Generic[S, A, B]):
 
         The solver is created lazily and cached.
         """
-        cached_solver: DPSolver[S, A] | None = object.__getattribute__(self, '_solver')
+        cached_solver: DPSolver[S, A] | None = object.__getattribute__(self, "_solver")
         if cached_solver is not None:
             return cached_solver
 
@@ -172,7 +174,7 @@ class ValueAgent(Generic[S, A, B]):
         )
 
         # Cache the solver (mutating frozen dataclass field carefully)
-        object.__setattr__(self, '_solver', solver)
+        object.__setattr__(self, "_solver", solver)
         return solver
 
     def value(self, state: S) -> PolicyTrace[S]:
@@ -195,21 +197,18 @@ class ValueAgent(Generic[S, A, B]):
             ValueError: If state is not in the agent's state space
         """
         if state not in self.states:
-            raise ValueError(
-                f"State {state} not in {self.name}'s state space: {self.states}"
-            )
+            raise ValueError(f"State {state} not in {self.name}'s state space: {self.states}")
 
         # Get or compute value using solver
         solver = self._get_solver()
         optimal_value, trace = solver.solve(initial_state=state)
 
         # Cache the computed value
-        value_table = object.__getattribute__(self, '_value_table')
+        value_table = object.__getattribute__(self, "_value_table")
         value_table[state] = optimal_value
 
         logger.debug(
-            f"{self.name}.value({state}) = {optimal_value:.3f} "
-            f"with {len(trace.log)} steps"
+            f"{self.name}.value({state}) = {optimal_value:.3f} with {len(trace.log)} steps"
         )
 
         return trace
@@ -233,19 +232,17 @@ class ValueAgent(Generic[S, A, B]):
             ValueError: If state is not in the agent's state space
         """
         if state not in self.states:
-            raise ValueError(
-                f"State {state} not in {self.name}'s state space: {self.states}"
-            )
+            raise ValueError(f"State {state} not in {self.name}'s state space: {self.states}")
 
         available_actions = self.actions(state)
         if not available_actions:
             return None
 
         # Get value table (compute if needed)
-        if state not in object.__getattribute__(self, '_value_table'):
+        if state not in object.__getattribute__(self, "_value_table"):
             self.value(state)  # Compute and cache
 
-        value_table = object.__getattribute__(self, '_value_table')
+        value_table = object.__getattribute__(self, "_value_table")
 
         # Find action that maximizes Q(s, a) = R(s, a) + γ · V(s')
         best_action: A | None = None
@@ -265,10 +262,7 @@ class ValueAgent(Generic[S, A, B]):
                 best_q_value = q_value
                 best_action = action
 
-        logger.debug(
-            f"{self.name}.policy({state}) = {best_action} "
-            f"(Q={best_q_value:.3f})"
-        )
+        logger.debug(f"{self.name}.policy({state}) = {best_action} (Q={best_q_value:.3f})")
 
         return best_action
 
@@ -295,9 +289,7 @@ class ValueAgent(Generic[S, A, B]):
             ValueError: If state not in state space or action not valid
         """
         if state not in self.states:
-            raise ValueError(
-                f"State {state} not in {self.name}'s state space"
-            )
+            raise ValueError(f"State {state} not in {self.name}'s state space")
 
         # Use policy if no action provided
         if action is None:
@@ -308,8 +300,7 @@ class ValueAgent(Generic[S, A, B]):
         # Validate action
         if action not in self.actions(state):
             raise ValueError(
-                f"Action {action} not valid in state {state}. "
-                f"Valid actions: {self.actions(state)}"
+                f"Action {action} not valid in state {state}. Valid actions: {self.actions(state)}"
             )
 
         # Execute transition
@@ -408,8 +399,7 @@ class ValueAgent(Generic[S, A, B]):
             else:
                 # If next_state not in other's space, no future value
                 logger.debug(
-                    f"State {next_state} not in {other_agent.name}'s space, "
-                    "using zero future value"
+                    f"State {next_state} not in {other_agent.name}'s space, using zero future value"
                 )
                 future = 0.0
 
@@ -455,11 +445,7 @@ class ValueAgent(Generic[S, A, B]):
 
     def __repr__(self) -> str:
         """String representation."""
-        return (
-            f"ValueAgent(name='{self.name}', "
-            f"|states|={len(self.states)}, "
-            f"gamma={self.gamma})"
-        )
+        return f"ValueAgent(name='{self.name}', |states|={len(self.states)}, gamma={self.gamma})"
 
 
 __all__ = ["ValueAgent"]

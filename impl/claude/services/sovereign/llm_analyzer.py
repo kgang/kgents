@@ -166,8 +166,7 @@ class AnalysisCrystal:
     def from_dict(cls, data: dict[str, Any]) -> AnalysisCrystal:
         """Create from dictionary."""
         suggested_connections = [
-            SuggestedConnection.from_dict(c)
-            for c in data.get("suggested_connections", [])
+            SuggestedConnection.from_dict(c) for c in data.get("suggested_connections", [])
         ]
 
         return cls(
@@ -270,7 +269,8 @@ class DocumentAnalysisAgent(LLMAgent[str, AnalysisCrystal]):
         Returns:
             AgentContext with system prompt and user message
         """
-        system_prompt = """You are a document analyzer for a knowledge management system.
+        system_prompt = (
+            """You are a document analyzer for a knowledge management system.
 
 Your task is to analyze documents and extract structured information.
 
@@ -296,7 +296,9 @@ DOCUMENT TYPES:
 
 OUTPUT FORMAT:
 Return ONLY valid JSON matching this schema (no markdown, no explanation):
-""" + ANALYSIS_SCHEMA
+"""
+            + ANALYSIS_SCHEMA
+        )
 
         user_message = f"""Analyze this document and return structured JSON:
 
@@ -399,9 +401,7 @@ Return ONLY the JSON object, no markdown code blocks, no explanation."""
             "document_type": str(data.get("document_type", "unknown")).lower(),
             "claims": self._ensure_string_list(data.get("claims")),
             "references": self._ensure_string_list(data.get("references")),
-            "suggested_connections": self._normalize_connections(
-                data.get("suggested_connections")
-            ),
+            "suggested_connections": self._normalize_connections(data.get("suggested_connections")),
             "placeholders": self._ensure_string_list(data.get("placeholders")),
             "analyzed_by": "claude",
         }
@@ -423,9 +423,7 @@ Return ONLY the JSON object, no markdown code blocks, no explanation."""
             return [str(item) for item in value if item]
         return []
 
-    def _normalize_connections(
-        self, connections: Any
-    ) -> list[dict[str, Any]]:
+    def _normalize_connections(self, connections: Any) -> list[dict[str, Any]]:
         """Normalize suggested_connections to list of dicts."""
         if connections is None:
             return []
@@ -435,11 +433,13 @@ Return ONLY the JSON object, no markdown code blocks, no explanation."""
         normalized = []
         for conn in connections:
             if isinstance(conn, dict):
-                normalized.append({
-                    "target": str(conn.get("target", "")),
-                    "reason": str(conn.get("reason", "")),
-                    "confidence": float(conn.get("confidence", 0.5)),
-                })
+                normalized.append(
+                    {
+                        "target": str(conn.get("target", "")),
+                        "reason": str(conn.get("reason", "")),
+                        "confidence": float(conn.get("confidence", 0.5)),
+                    }
+                )
         return normalized
 
 

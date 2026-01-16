@@ -195,23 +195,23 @@ Each Crown Jewel service has its own README:
 
 ## Documentation Health Notes
 
+**Status: All issues resolved** (2026-01-16)
+
+### Resolved Issues
+
+1. **Missing Skills** - All 4 missing skills have been created:
+   - `test-patterns.md` - T-gent Types I-V, DI over mocking, property-based testing
+   - `building-agent.md` - Agent composition, `>>` operator, factory patterns
+   - `crown-jewel-patterns.md` - 14 battle-tested patterns for services
+   - `unified-storage.md` - D-gent Universe and DataBus integration
+
+2. **Misplaced Skill** - `nphase-integration.md` moved from `impl/claude/docs/skills/` to `docs/skills/`
+
+3. **Stale References** - `services/park/` reference in `metaphysical-fullstack.md` updated to `services/witness/`
+
 ### Authoritative Locations
 
-- **Skills**: `docs/skills/` is the ONLY authoritative location
-  - `impl/claude/docs/skills/` has 1 file (nphase-integration.md) - consider moving to main skills
-
-### Missing Skills (Referenced but Not Found)
-
-These skills are referenced in documentation but do not exist:
-
-| Missing Skill | Referenced From |
-|---------------|-----------------|
-| `test-patterns.md` | README.md, skills/README.md, skills/agentese-path.md |
-| `building-agent.md` | README.md, skills/README.md, skills/projection-target.md |
-| `crown-jewel-patterns.md` | skills/README.md |
-| `unified-storage.md` | docs/README.md |
-
-**Action**: Either create these skills or update references.
+- **Skills**: `docs/skills/` is the ONLY authoritative location (34 files)
 
 ### README Files Statistics
 
@@ -221,15 +221,9 @@ These skills are referenced in documentation but do not exist:
 
 Most project READMEs are well-maintained service documentation.
 
-### Stale Documentation Indicators
+### Theory Files Note
 
-Documents referencing removed features (Gestalt, Park, Emergence, Coalition, Drills):
-- `docs/theory/12-multi-agent.md`
-- `docs/theory/13-heterarchy.md`
-- `docs/systems-reference.md` (may have stale references)
-- Several other theory and reference docs
-
-**Action**: Review these files for stale content.
+Files `docs/theory/12-multi-agent.md` and `docs/theory/13-heterarchy.md` use generic terms like "emergence" and "coalition" in theoretical context (not references to deleted systems).
 
 ---
 
@@ -243,7 +237,7 @@ Documents referencing removed features (Gestalt, Park, Emergence, Coalition, Dri
 | Add AGENTESE path | `docs/skills/agentese-node-registration.md` |
 | Debug DI errors | `docs/skills/agentese-node-registration.md` (Enlightened Resolution) |
 | Check what exists | `docs/systems-reference.md` |
-| Write tests | `docs/skills/test-patterns.md` (NOTE: missing) |
+| Write tests | `docs/skills/test-patterns.md` |
 | Plan work | `docs/skills/plan-file.md` |
 | Write specs | `docs/skills/spec-template.md` |
 

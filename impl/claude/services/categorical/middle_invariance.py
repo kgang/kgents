@@ -163,7 +163,11 @@ class MiddleInvarianceProbe:
         mid_end = 4 * len(prompt) // 5
         noise_text = " [Note: intermediate detail follows.] "
         perturbed_prompt = (
-            prompt[:mid_start] + noise_text + prompt[mid_start:mid_end] + " [End intermediate detail.] " + prompt[mid_end:]
+            prompt[:mid_start]
+            + noise_text
+            + prompt[mid_start:mid_end]
+            + " [End intermediate detail.] "
+            + prompt[mid_end:]
         )
 
         # Get perturbed answers

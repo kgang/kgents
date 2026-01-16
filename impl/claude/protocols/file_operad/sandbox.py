@@ -520,7 +520,11 @@ class SandboxStore:
         """Save the store to a JSON file."""
         import json
 
-        save_path = Path(path) if path else (self._persistence_path or _get_default_sandbox_persistence_path())
+        save_path = (
+            Path(path)
+            if path
+            else (self._persistence_path or _get_default_sandbox_persistence_path())
+        )
         save_path.parent.mkdir(parents=True, exist_ok=True)
 
         data = {
@@ -566,7 +570,9 @@ class SandboxStore:
             return cls.load(path)
         except FileNotFoundError:
             store = cls()
-            store._persistence_path = Path(path) if path else _get_default_sandbox_persistence_path()
+            store._persistence_path = (
+                Path(path) if path else _get_default_sandbox_persistence_path()
+            )
             return store
 
     def sync(self) -> Path | None:

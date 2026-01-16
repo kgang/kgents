@@ -254,9 +254,7 @@ class PTYSession:
                 while elapsed < timeout:
                     pid, status = os.waitpid(self._pid, os.WNOHANG)
                     if pid != 0:
-                        self._exit_code = (
-                            os.WEXITSTATUS(status) if os.WIFEXITED(status) else -1
-                        )
+                        self._exit_code = os.WEXITSTATUS(status) if os.WIFEXITED(status) else -1
                         return self._exit_code
                     import time
 
@@ -266,9 +264,7 @@ class PTYSession:
             else:
                 # Blocking wait
                 _, status = os.waitpid(self._pid, 0)
-                self._exit_code = (
-                    os.WEXITSTATUS(status) if os.WIFEXITED(status) else -1
-                )
+                self._exit_code = os.WEXITSTATUS(status) if os.WIFEXITED(status) else -1
                 return self._exit_code
         except ChildProcessError:
             self._exit_code = -1
@@ -383,9 +379,7 @@ class PTYStreamExecutor:
             # Check for data using select in thread pool
             # (select on PTY fd doesn't work well with asyncio)
             try:
-                has_data = await loop.run_in_executor(
-                    None, lambda: self.session.has_data(0.05)
-                )
+                has_data = await loop.run_in_executor(None, lambda: self.session.has_data(0.05))
 
                 if has_data:
                     data = await loop.run_in_executor(None, self.session.read)

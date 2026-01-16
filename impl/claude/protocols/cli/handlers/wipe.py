@@ -2,7 +2,7 @@
 Wipe Command - Remove kgents databases with confirmation.
 
 Supports wiping:
-- local: Project-specific DB (.kgents/cortex.db)
+- local: Project-specific DB (.kgents/)
 - global: Global DB (~/.local/share/kgents/)
 - all: Both local and global
 
@@ -30,7 +30,7 @@ def _print_help() -> None:
     print("USAGE: kgents wipe <scope> [options]")
     print()
     print("SCOPE:")
-    print("  local     Remove project DB (.kgents/cortex.db)")
+    print("  local     Remove project DB (.kgents/)")
     print("  global    Remove global DB (~/.local/share/kgents/)")
     print("  all       Remove both local and global")
     print()
@@ -228,6 +228,6 @@ def cmd_wipe(args: list[str]) -> int:
         print()
         print("\033[32m[kgents]\033[0m Wipe complete.")
         if scope in ("global", "all"):
-            print("         A new cortex will be created on next command.")
+            print("         A new database will be created on next command.")
 
     return 0 if success else 1

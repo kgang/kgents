@@ -260,7 +260,7 @@ class CoherenceError(LawViolationError):
 
     def _build_message(self) -> str:
         """Build the full error message following L8 template."""
-        checked_views_str = ', '.join(self.checked_views)
+        checked_views_str = ", ".join(self.checked_views)
         lines = [
             self.what_failed,
             "",

@@ -25,9 +25,9 @@ from services.categorical import (
 
 
 def print_section(title: str) -> None:
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  {title}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
 
 async def debug_problem(problem: Problem, n_samples: int = 2) -> None:
@@ -69,13 +69,16 @@ async def debug_problem(problem: Problem, n_samples: int = 2) -> None:
         extracted = probe._extract_answer(text)
         base_responses.append(text)
         base_extracted.append(extracted)
-        print(f"\n  Sample {i+1} raw response:\n    {text[:200]}...")
-        print(f"  Sample {i+1} extracted answer: '{extracted}'")
+        print(f"\n  Sample {i + 1} raw response:\n    {text[:200]}...")
+        print(f"  Sample {i + 1} extracted answer: '{extracted}'")
 
     from collections import Counter
+
     base_mode = Counter(base_extracted).most_common(1)[0][0]
     print(f"\n  BASE MODE (consensus): '{base_mode}'")
-    print(f"  Matches expected '{problem.answer}'? {base_mode == problem.answer or problem.answer in base_mode}")
+    print(
+        f"  Matches expected '{problem.answer}'? {base_mode == problem.answer or problem.answer in base_mode}"
+    )
 
     # Test identity with prefixes
     print("\n--- Testing Left Identity (Prefixes) ---")
@@ -157,7 +160,7 @@ async def debug_problem(problem: Problem, n_samples: int = 2) -> None:
     claims = await detector.extract_claims(trace)
     print(f"Found {len(claims)} claims:\n")
     for i, claim in enumerate(claims):
-        print(f"  Claim {i+1}: {claim.content}")
+        print(f"  Claim {i + 1}: {claim.content}")
         print(f"           Context: {claim.context}\n")
 
     # Check contradictions
@@ -165,15 +168,15 @@ async def debug_problem(problem: Problem, n_samples: int = 2) -> None:
         print("--- Checking Contradictions ---")
         violations = []
         for i, claim_a in enumerate(claims):
-            for j, claim_b in enumerate(claims[i+1:], start=i+1):
-                print(f"\n  Checking: Claim {i+1} vs Claim {j+1}")
+            for j, claim_b in enumerate(claims[i + 1 :], start=i + 1):
+                print(f"\n  Checking: Claim {i + 1} vs Claim {j + 1}")
                 contradicts, explanation = await detector.check_contradiction(claim_a, claim_b)
                 print(f"    Contradicts? {contradicts}")
                 print(f"    Explanation: {explanation[:100]}...")
                 if contradicts:
                     violations.append((i, j, explanation))
 
-        coherence_score = 1.0 - (len(violations) / (len(claims) * (len(claims)-1) / 2))
+        coherence_score = 1.0 - (len(violations) / (len(claims) * (len(claims) - 1) / 2))
         print(f"\n  COHERENCE SCORE: {coherence_score:.2f} ({len(violations)} violations)")
     else:
         print("  Not enough claims to check coherence")

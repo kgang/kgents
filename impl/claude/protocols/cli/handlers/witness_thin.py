@@ -1015,7 +1015,9 @@ def cmd_crystals(args: list[str]) -> int:
                     print(
                         f"Showing {len(crystals)} crystals (hiding {hidden_count} with confidence < {threshold:.1f})"
                     )
-                    print("Use --all to show all crystals or --min-confidence N to adjust threshold")
+                    print(
+                        "Use --all to show all crystals or --min-confidence N to adjust threshold"
+                    )
 
         level_name = f"Level {level}" if level is not None else "All"
         if console:
@@ -2012,7 +2014,11 @@ def cmd_dashboard(args: list[str]) -> int:
     def fetch_crystals(level: int | None) -> list[dict[str, Any]]:
         """Fetch crystals synchronously."""
 
-        return asyncio.run(_bootstrap_and_run(lambda: _get_crystals_async_DEPRECATED_DO_NOT_USE(limit=50, level=level)))
+        return asyncio.run(
+            _bootstrap_and_run(
+                lambda: _get_crystals_async_DEPRECATED_DO_NOT_USE(limit=50, level=level)
+            )
+        )
 
     # Initial fetch
     try:
@@ -2303,7 +2309,9 @@ async def _cmd_mark_async(args: list[str]) -> int:
         return 1
 
     try:
-        result = await _create_mark_async(action, reasoning, principles, tags, parent_mark_id=parent_mark_id)
+        result = await _create_mark_async(
+            action, reasoning, principles, tags, parent_mark_id=parent_mark_id
+        )
 
         if json_output:
             print(json.dumps(result))

@@ -134,23 +134,23 @@ class TestGlobalHelp:
         assert "town" in result
         assert "atelier" in result
 
-    def test_global_help_includes_forest(self) -> None:
-        """Global help includes Forest Protocol family."""
+    def test_global_help_includes_development(self) -> None:
+        """Global help includes Development family (renamed from Forest Protocol)."""
         from protocols.cli.help_global import render_global_help
 
         result = render_global_help(use_rich=False)
 
-        assert "Forest Protocol" in result
+        assert "Development" in result
         assert "forest" in result
-        assert "garden" in result
+        assert "audit" in result
 
-    def test_global_help_includes_witness(self) -> None:
-        """Global help includes Witness Protocol family."""
+    def test_global_help_includes_memory_witness(self) -> None:
+        """Global help includes Memory & Witness family (reorganized)."""
         from protocols.cli.help_global import render_global_help
 
         result = render_global_help(use_rich=False)
 
-        assert "Witness Protocol" in result
+        assert "Memory & Witness" in result
         assert "witness" in result
         assert "decide" in result
 

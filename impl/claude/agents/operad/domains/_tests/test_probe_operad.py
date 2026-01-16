@@ -35,9 +35,7 @@ from services.probe.types import ProbeResult, ProbeStatus, ProbeType
 class AlwaysPassProbe:
     """Test probe that always passes."""
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         result = ProbeResult(
             name="always_pass",
             probe_type=ProbeType.IDENTITY,
@@ -51,9 +49,7 @@ class AlwaysPassProbe:
 class AlwaysFailProbe:
     """Test probe that always fails."""
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         result = ProbeResult(
             name="always_fail",
             probe_type=ProbeType.IDENTITY,
@@ -71,9 +67,7 @@ class CounterProbe:
         self.name = name
         self.count = 0
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         self.count += 1
         result = ProbeResult(
             name=f"{self.name}_{self.count}",

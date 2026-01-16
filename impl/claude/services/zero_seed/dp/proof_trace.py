@@ -339,9 +339,7 @@ def proof_to_trace(
     # Store Galois loss and other metadata via wrapper
     # The trace itself carries the entry; metadata is accessed separately
 
-    logger.debug(
-        f"Converted proof to trace: value={value:.3f}, galois_loss={loss:.3f}"
-    )
+    logger.debug(f"Converted proof to trace: value={value:.3f}, galois_loss={loss:.3f}")
 
     return trace
 
@@ -502,10 +500,7 @@ def proofs_to_traces(
     if galois_losses is None:
         galois_losses = [p.galois_loss for p in proofs]
 
-    return [
-        proof_to_trace(proof, loss)
-        for proof, loss in zip(proofs, galois_losses)
-    ]
+    return [proof_to_trace(proof, loss) for proof, loss in zip(proofs, galois_losses)]
 
 
 def traces_to_proofs(
@@ -527,10 +522,7 @@ def traces_to_proofs(
     if galois_losses is None:
         galois_losses = [0.0] * len(traces)
 
-    return [
-        trace_to_proof(trace, loss, principles)
-        for trace, loss in zip(traces, galois_losses)
-    ]
+    return [trace_to_proof(trace, loss, principles) for trace, loss in zip(traces, galois_losses)]
 
 
 # =============================================================================

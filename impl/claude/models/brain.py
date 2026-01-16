@@ -173,9 +173,7 @@ class TeachingCrystal(TimestampMixin, Base):
     severity: Mapped[str] = mapped_column(
         String(16), nullable=False
     )  # "info" | "warning" | "critical"
-    evidence: Mapped[str | None] = mapped_column(
-        Text, nullable=True
-    )  # test_file.py::test_name
+    evidence: Mapped[str | None] = mapped_column(Text, nullable=True)  # test_file.py::test_name
 
     # Provenance
     source_module: Mapped[str] = mapped_column(
@@ -211,9 +209,7 @@ class TeachingCrystal(TimestampMixin, Base):
     )
 
     # Relationship to full crystal
-    crystal: Mapped["Crystal | None"] = relationship(
-        "Crystal", foreign_keys=[crystal_id]
-    )
+    crystal: Mapped["Crystal | None"] = relationship("Crystal", foreign_keys=[crystal_id])
 
     # Relationship to extinction events (many-to-many via join table)
     extinction_links: Mapped[list["ExtinctionTeaching"]] = relationship(

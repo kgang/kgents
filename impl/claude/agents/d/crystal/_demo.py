@@ -87,8 +87,8 @@ def demo_schema_evolution() -> None:
         version=3,
         contract=MarkV3,
         migrations={
-            1: lambda d: {**d, "tags": ()},           # v1 -> v2
-            2: lambda d: {**d, "principles": ()},     # v2 -> v3
+            1: lambda d: {**d, "tags": ()},  # v1 -> v2
+            2: lambda d: {**d, "principles": ()},  # v2 -> v3
         },
     )
 
@@ -172,12 +172,7 @@ def demo_query_api() -> None:
     print()
 
     # Fluent API
-    q4 = (
-        Query()
-        .with_tags("eureka")
-        .with_schema("witness.mark")
-        .with_limit(10)
-    )
+    q4 = Query().with_tags("eureka").with_schema("witness.mark").with_limit(10)
     print(f"Fluent query: {q4}")
 
 

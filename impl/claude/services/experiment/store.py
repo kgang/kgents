@@ -95,11 +95,7 @@ class ExperimentStore:
             List of experiments, most recent first
         """
         async with get_async_session() as session:
-            stmt = (
-                select(ExperimentModel)
-                .order_by(ExperimentModel.created_at.desc())
-                .limit(limit)
-            )
+            stmt = select(ExperimentModel).order_by(ExperimentModel.created_at.desc()).limit(limit)
             result = await session.execute(stmt)
             models = result.scalars().all()
 

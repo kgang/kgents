@@ -226,8 +226,12 @@ class FunctionCrystal:
             is_ghost=data.get("is_ghost", False),
             ghost_reason=data.get("ghost_reason"),
             proof=GaloisWitnessedProof.from_dict(data["proof"]),
-            created_at=datetime.fromisoformat(data["created_at"]) if "created_at" in data else datetime.now(UTC),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if "updated_at" in data else datetime.now(UTC),
+            created_at=datetime.fromisoformat(data["created_at"])
+            if "created_at" in data
+            else datetime.now(UTC),
+            updated_at=datetime.fromisoformat(data["updated_at"])
+            if "updated_at" in data
+            else datetime.now(UTC),
             author=data.get("author", "system"),
         )
 
@@ -323,11 +327,15 @@ class TestCrystal:
             target_id=data["target_id"],
             test_type=data.get("test_type", "unit"),
             last_result=data.get("last_result", "skip"),
-            last_run=datetime.fromisoformat(data["last_run"]) if "last_run" in data else datetime.now(UTC),
+            last_run=datetime.fromisoformat(data["last_run"])
+            if "last_run" in data
+            else datetime.now(UTC),
             assertion_count=data.get("assertion_count", 0),
             spec_id=data.get("spec_id"),
             proof=GaloisWitnessedProof.from_dict(data["proof"]),
-            created_at=datetime.fromisoformat(data["created_at"]) if "created_at" in data else datetime.now(UTC),
+            created_at=datetime.fromisoformat(data["created_at"])
+            if "created_at" in data
+            else datetime.now(UTC),
         )
 
     @property
@@ -344,15 +352,9 @@ class TestCrystal:
 # Schema for Universe registration
 from agents.d.universe import DataclassSchema
 
-FUNCTION_CRYSTAL_SCHEMA = DataclassSchema(
-    name="code.function",
-    type_cls=FunctionCrystal
-)
+FUNCTION_CRYSTAL_SCHEMA = DataclassSchema(name="code.function", type_cls=FunctionCrystal)
 
-TEST_CRYSTAL_SCHEMA = DataclassSchema(
-    name="code.test",
-    type_cls=TestCrystal
-)
+TEST_CRYSTAL_SCHEMA = DataclassSchema(name="code.test", type_cls=TestCrystal)
 
 
 __all__ = [

@@ -77,7 +77,7 @@ def test_name_normalization_logic():
 
     def normalize_for_match(name: str) -> str:
         """Normalize name for case/space/hyphen-insensitive matching."""
-        return re.sub(r'[\s\-]', '', name).lower()
+        return re.sub(r"[\s\-]", "", name).lower()
 
     # Test cases from the actual design laws
     test_cases = [
@@ -89,8 +89,9 @@ def test_name_normalization_logic():
     ]
 
     for actual, test_input in test_cases:
-        assert normalize_for_match(actual) == normalize_for_match(test_input), \
+        assert normalize_for_match(actual) == normalize_for_match(test_input), (
             f"Failed to match '{actual}' with '{test_input}'"
+        )
 
 
 @pytest.mark.tier1
@@ -106,8 +107,9 @@ def test_all_design_laws_exist():
         "contradiction-surfacing",
     }
 
-    assert law_ids == expected_ids, \
+    assert law_ids == expected_ids, (
         f"Missing or unexpected law IDs: expected {expected_ids}, got {law_ids}"
+    )
 
 
 @pytest.mark.tier1

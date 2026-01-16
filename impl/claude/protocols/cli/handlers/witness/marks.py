@@ -351,7 +351,9 @@ async def _cmd_mark_async(args: list[str]) -> int:
         return 1
 
     try:
-        result = await _create_mark_async(action, reasoning, principles, tags, parent_mark_id=parent_mark_id)
+        result = await _create_mark_async(
+            action, reasoning, principles, tags, parent_mark_id=parent_mark_id
+        )
 
         if json_output:
             print(json.dumps(result))

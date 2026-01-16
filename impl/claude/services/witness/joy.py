@@ -243,11 +243,13 @@ class UniversalDelightPrimitive(Enum):
 # Pilot-Specific Calibration: Trail-to-Crystal
 # =============================================================================
 
-TRAIL_TO_CRYSTAL_JOY = JoyFunctor({
-    JoyMode.FLOW: 0.5,  # Primary: "Lighter than a to-do list"
-    JoyMode.WARMTH: 0.35,  # Secondary: "Kind companion reviewing your day"
-    JoyMode.SURPRISE: 0.15,  # Tertiary: Unexpected insights in crystals
-})
+TRAIL_TO_CRYSTAL_JOY = JoyFunctor(
+    {
+        JoyMode.FLOW: 0.5,  # Primary: "Lighter than a to-do list"
+        JoyMode.WARMTH: 0.35,  # Secondary: "Kind companion reviewing your day"
+        JoyMode.SURPRISE: 0.15,  # Tertiary: Unexpected insights in crystals
+    }
+)
 """
 Trail-to-Crystal Joy Calibration.
 

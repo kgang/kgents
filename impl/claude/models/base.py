@@ -92,23 +92,25 @@ _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 
 
+def _is_running_under_pytest() -> bool:
+    """Check if we're running under pytest."""
+    return bool(os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("PYTEST_XDIST_WORKER"))
+
+
 def _get_test_isolation_suffix() -> str:
     """
-    Generate a suffix for test database isolation.
+    Generate a suffix for test database isolation (SQLite only).
 
     Enables multiple Claude agents to run tests simultaneously without
-    SQLite locking conflicts or Postgres connection pool exhaustion.
+    SQLite locking conflicts.
 
     Isolation hierarchy (Heterarchical principle - resources flow where needed):
     1. PYTEST_XDIST_WORKER - pytest-xdist worker ID (e.g., "gw0", "gw1")
     2. PYTEST_CURRENT_TEST - running under pytest at all
     3. (empty) - not a test, use shared database
 
-    This follows the Graceful Degradation principle:
-    - Production: shared database
-    - Single pytest: isolated temp database
-    - pytest-xdist: per-worker isolated databases
-    - Multi-agent: each agent's pytest gets unique isolation
+    Note: For Postgres, we use a separate test database container instead.
+    See docker-compose.yml postgres-test service.
     """
     # pytest-xdist sets this for each worker
     if worker := os.environ.get("PYTEST_XDIST_WORKER"):
@@ -123,27 +125,43 @@ def _get_test_isolation_suffix() -> str:
     return ""
 
 
+# Default test database URL (matches docker-compose.yml postgres-test service)
+_TEST_POSTGRES_URL = "postgresql+asyncpg://kgents:kgents@localhost:5433/kgents_test"
+
+
 def get_database_url() -> str:
     """
     Resolve database URL from environment or XDG defaults.
 
     Mirrors the logic in migrations/env.py for consistency.
 
-    Priority:
+    Priority (for tests - PYTEST_CURRENT_TEST set):
+    1. KGENTS_TEST_DATABASE_URL - explicit test database override
+    2. Default test Postgres on port 5433 (docker-compose postgres-test)
+    3. Fallback to isolated SQLite if test Postgres unavailable
+
+    Priority (for production):
     1. KGENTS_DATABASE_URL environment variable (canonical)
     2. KGENTS_POSTGRES_URL (legacy, auto-converted to async format)
     3. XDG_DATA_HOME/kgents/membrane.db
     4. ~/.local/share/kgents/membrane.db
 
-    For tests: Automatically isolates databases to prevent conflicts when
-    multiple agents run tests simultaneously. See _get_test_isolation_suffix().
-
     Postgres URL format: postgresql+asyncpg://user:pass@host:port/db
     SQLite URL format: sqlite+aiosqlite:///path/to/db.db
     """
-    # Check for canonical URL first (production use)
+    # TEST MODE: Use isolated test database
+    if _is_running_under_pytest():
+        # Allow explicit override for test database
+        if test_url := os.environ.get("KGENTS_TEST_DATABASE_URL"):
+            return test_url
+
+        # Use the test Postgres container by default
+        # This completely isolates tests from dev data
+        return _TEST_POSTGRES_URL
+
+    # PRODUCTION MODE: Normal resolution
+    # Check for canonical URL first
     if url := os.environ.get("KGENTS_DATABASE_URL"):
-        # Don't isolate explicit URLs - user knows what they're doing
         return url
 
     # Check legacy Postgres URL and convert to async format

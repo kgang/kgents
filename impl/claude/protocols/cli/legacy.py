@@ -10,6 +10,21 @@ This module enables users to continue using familiar commands
 while the underlying system uses AGENTESE paths.
 
 Per spec/protocols/agentese-v3.md §12 (CLI Unification).
+
+Teaching (Test Patterns):
+    LEGACY REMOVAL CASCADE: Removing a command from LEGACY_COMMANDS breaks
+    downstream tests across MULTIPLE test classes:
+
+        - TestLegacyMappings (expand_legacy expectations)
+        - TestRouterIntegration (classify_input expectations)
+        - TestLongestPrefixMatching (resolve_legacy expectations)
+
+    BEFORE removing a legacy command:
+        grep -rn "command_name" protocols/cli/_tests/test_thin_handler_legacy_migration.py
+
+    The cascade: legacy.py → expand_legacy() → classify_input() → all tests
+
+    See: docs/skills/test-patterns.md (Pattern 5: Legacy Removal Cascade)
 """
 
 from __future__ import annotations

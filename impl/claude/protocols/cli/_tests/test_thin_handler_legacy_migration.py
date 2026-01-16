@@ -60,47 +60,55 @@ class TestBrainLegacyMappings:
 
 
 class TestWitnessLegacyMappings:
-    """Test witness command legacy mappings to self.witness.*"""
+    """Test witness command is NO LONGER a legacy mapping.
+
+    TEACHING: As of 2025-12-23, witness was REMOVED from legacy mappings.
+    It now uses thin handler in COMMAND_REGISTRY (witness_thin.py) which
+    properly routes subcommands to the witness service layer without going
+    through AGENTESE aspects. See protocols/cli/legacy.py for details.
+    """
 
     def test_witness_default(self) -> None:
-        """witness → self.witness.manifest"""
+        """witness is NOT a legacy command (uses thin handler instead)."""
         from protocols.cli.legacy import expand_legacy
 
+        # witness is NOT in LEGACY_COMMANDS, so it returns unchanged
         path, remaining = expand_legacy(["witness"])
-        assert path == "self.witness.manifest"
+        assert path == "witness"  # Not expanded - uses thin handler
         assert remaining == []
 
     def test_witness_mark(self) -> None:
-        """witness mark → self.witness.mark"""
+        """witness mark is NOT a legacy command (uses thin handler instead)."""
         from protocols.cli.legacy import expand_legacy
 
+        # witness mark is NOT in LEGACY_COMMANDS, so it returns unchanged
         path, remaining = expand_legacy(["witness", "mark"])
-        assert path == "self.witness.mark"
-        assert remaining == []
+        assert path == "witness"  # Not expanded - uses thin handler
+        assert remaining == ["mark"]
 
     def test_witness_show(self) -> None:
-        """witness show → self.witness.show"""
+        """witness show is NOT a legacy command (uses thin handler instead)."""
         from protocols.cli.legacy import expand_legacy
 
         path, remaining = expand_legacy(["witness", "show"])
-        assert path == "self.witness.show"
-        assert remaining == []
+        assert path == "witness"  # Not expanded - uses thin handler
+        assert remaining == ["show"]
 
     def test_witness_recent_alias(self) -> None:
-        """witness recent → self.witness.show (alias)"""
+        """witness recent is NOT a legacy command (uses thin handler instead)."""
         from protocols.cli.legacy import expand_legacy
 
         path, remaining = expand_legacy(["witness", "recent"])
-        assert path == "self.witness.show"
-        assert remaining == []
+        assert path == "witness"  # Not expanded - uses thin handler
+        assert remaining == ["recent"]
 
     def test_witness_crystallize(self) -> None:
-        """witness crystallize → self.witness.crystallize"""
+        """witness crystallize is NOT a legacy command (uses thin handler instead)."""
         from protocols.cli.legacy import expand_legacy
 
         path, remaining = expand_legacy(["witness", "crystallize"])
-        assert path == "self.witness.crystallize"
-        assert remaining == []
+        assert path == "witness"  # Not expanded - uses thin handler
+        assert remaining == ["crystallize"]
 
 
 class TestCoffeeLegacyMappings:
@@ -213,13 +221,18 @@ class TestRouterIntegration:
         assert str(result.input_type) == "legacy"
         assert result.agentese_path == "self.memory.capture"
 
-    def test_witness_routes_as_legacy(self) -> None:
-        """Router should classify witness commands as LEGACY."""
+    def test_witness_not_legacy_uses_thin_handler(self) -> None:
+        """Router should NOT classify witness commands as LEGACY - uses thin handler.
+
+        TEACHING: As of 2025-12-23, witness was REMOVED from legacy mappings.
+        It now uses thin handler in COMMAND_REGISTRY (witness_thin.py).
+        """
         from protocols.cli.agentese_router import classify_input
 
         result = classify_input(["witness", "mark"])
-        assert str(result.input_type) == "legacy"
-        assert result.agentese_path == "self.witness.mark"
+        # Witness is NOT legacy - it uses thin handler like docs/graph
+        # The hollow.py COMMAND_REGISTRY handles "witness" before router
+        assert str(result.input_type) != "legacy"
 
     def test_coffee_routes_as_legacy(self) -> None:
         """Router should classify coffee commands as LEGACY."""
@@ -262,14 +275,17 @@ class TestLongestPrefixMatching:
         assert result.expanded == "self.memory.capture"
         assert result.remaining_args == ["extra"]
 
-    def test_witness_show_over_witness(self) -> None:
-        """Should match 'witness show' not just 'witness'."""
+    def test_witness_is_not_legacy(self) -> None:
+        """Witness is NOT in legacy mappings - uses thin handler.
+
+        TEACHING: As of 2025-12-23, witness was REMOVED from legacy mappings.
+        """
         from protocols.cli.legacy import resolve_legacy
 
         result = resolve_legacy(["witness", "show", "--json"])
-        assert result.is_legacy
-        assert result.expanded == "self.witness.show"
-        assert result.remaining_args == ["--json"]
+        assert not result.is_legacy  # Witness is NOT legacy
+        assert result.expanded == "witness"  # Not expanded
+        assert result.remaining_args == ["show", "--json"]
 
     def test_coffee_garden_over_coffee(self) -> None:
         """Should match 'coffee garden' not just 'coffee'."""

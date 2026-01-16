@@ -111,6 +111,7 @@ class Query:
             New Query with updated limit
         """
         from dataclasses import replace
+
         return replace(self, limit=limit)
 
     def with_offset(self, offset: int) -> "Query":
@@ -124,6 +125,7 @@ class Query:
             New Query with updated offset
         """
         from dataclasses import replace
+
         return replace(self, offset=offset)
 
     def next_page(self) -> "Query":
@@ -134,6 +136,7 @@ class Query:
             New Query with offset += limit
         """
         from dataclasses import replace
+
         return replace(self, offset=self.offset + self.limit)
 
     def with_schema(self, schema: str) -> "Query":
@@ -147,6 +150,7 @@ class Query:
             New Query with schema filter
         """
         from dataclasses import replace
+
         return replace(self, schema=schema)
 
     def with_tags(self, *tags: str) -> "Query":
@@ -162,6 +166,7 @@ class Query:
             New Query with merged tags
         """
         from dataclasses import replace
+
         return replace(self, tags=self.tags | frozenset(tags))
 
     def with_time_range(
@@ -180,6 +185,7 @@ class Query:
             New Query with time range
         """
         from dataclasses import replace
+
         return replace(
             self,
             since=since if since is not None else self.since,

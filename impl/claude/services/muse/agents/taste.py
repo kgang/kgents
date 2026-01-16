@@ -213,7 +213,7 @@ class TasteVectorAgent:
             suggestions=suggestions,
         )
 
-    def drift_check(self, session: SessionState | None = None) -> DriftReport:
+    def drift_check(self, session: SessionState[Any] | None = None) -> DriftReport:
         """
         Check for taste drift from historical baseline.
 
@@ -257,7 +257,7 @@ class TasteVectorAgent:
 
     def evolve(
         self,
-        selections: list[tuple[CreativeOption, str]],
+        selections: list[tuple[CreativeOption[Any], str]],
         session_id: str = "",
     ) -> TasteVector:
         """
@@ -328,7 +328,7 @@ class TasteVectorAgent:
 
     def _check_violations(self, work: Any) -> list[str]:
         """Check for never/always violations."""
-        violations = []
+        violations: list[str] = []
 
         # This would use actual content analysis in production
         # For now, return empty (no violations detected)

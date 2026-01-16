@@ -91,11 +91,7 @@ def test_value_computation_with_goal():
         name="Navigator",
         states=frozenset({"start", "middle", "goal"}),
         actions=lambda s: frozenset({"forward"}) if s != "goal" else frozenset(),
-        transition=lambda s, a: (
-            "middle" if s == "start" else
-            "goal" if s == "middle" else
-            s
-        ),
+        transition=lambda s, a: ("middle" if s == "start" else "goal" if s == "middle" else s),
         output_fn=lambda s, a, ns: f"moved to {ns}",
         constitution=constitution,
     )
@@ -329,7 +325,7 @@ def test_value_caching():
     # since solver might still call transitions during policy extraction,
     # but the value table should be cached)
     # The key insight: _value_table should be populated
-    assert "start" in object.__getattribute__(agent, '_value_table')
+    assert "start" in object.__getattribute__(agent, "_value_table")
 
 
 def test_composition_creates_new_agent():

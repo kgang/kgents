@@ -73,6 +73,7 @@ class TestPgvectorImport:
     def test_pgvector_import_succeeds(self) -> None:
         """pgvector module can be imported (required dependency)."""
         from pgvector.sqlalchemy import Vector
+
         assert Vector is not None
 
 
@@ -281,7 +282,9 @@ class TestPostgresBackendLogic:
         mock_result = MagicMock()
         mock_result.fetchall = MagicMock(return_value=[])
         mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.get_bind = MagicMock(return_value=MagicMock(dialect=MagicMock(name="postgresql")))
+        mock_session.get_bind = MagicMock(
+            return_value=MagicMock(dialect=MagicMock(name="postgresql"))
+        )
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
         mock_session_factory.return_value = mock_session
@@ -337,7 +340,9 @@ class TestPostgresBackendLogic:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_remove_returns_false_when_not_found(self, mock_session_factory: MagicMock) -> None:
+    async def test_remove_returns_false_when_not_found(
+        self, mock_session_factory: MagicMock
+    ) -> None:
         """Remove returns False when row not found."""
         backend = PostgresVectorBackend(
             session_factory=mock_session_factory,

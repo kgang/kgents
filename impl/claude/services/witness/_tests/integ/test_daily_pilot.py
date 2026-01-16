@@ -142,15 +142,27 @@ def assert_neutral_gap_message(message: str) -> None:
     """Assert that gap messages are neutral, not shaming."""
     # Punitive/shaming patterns to avoid
     shame_patterns = [
-        "failed", "missing", "error", "warning", "lost",
-        "unproductive", "wasted", "lazy", "forgot", "should have",
-        "didn't", "neglected", "abandoned", "slacked"
+        "failed",
+        "missing",
+        "error",
+        "warning",
+        "lost",
+        "unproductive",
+        "wasted",
+        "lazy",
+        "forgot",
+        "should have",
+        "didn't",
+        "neglected",
+        "abandoned",
+        "slacked",
     ]
 
     message_lower = message.lower()
     for pattern in shame_patterns:
-        assert pattern not in message_lower, \
+        assert pattern not in message_lower, (
             f"Gap message contains shaming language '{pattern}': {message}"
+        )
 
 
 # =============================================================================
@@ -496,10 +508,7 @@ class TestL3NoiseQuarantineLaw:
         source_marks = [mark_store.get(MarkId(str(mid))) for mid in source_mark_ids]
 
         # At least one non-friction mark should be included
-        non_friction = [
-            m for m in source_marks
-            if m and "friction" not in m.tags
-        ]
+        non_friction = [m for m in source_marks if m and "friction" not in m.tags]
         assert len(non_friction) >= 1, "Signal marks should be included"
 
     def test_compression_drops_noise_not_signal(
@@ -532,7 +541,11 @@ class TestL3NoiseQuarantineLaw:
         # If any were dropped, friction should be among them
         # Note: TAG_FRIENDLY_NAMES converts "friction" to "resistance points"
         if crystal.honesty.dropped_count > 0:
-            assert "friction" in dropped_tags or "resistance points" in dropped_tags or len(dropped_tags) == 0
+            assert (
+                "friction" in dropped_tags
+                or "resistance points" in dropped_tags
+                or len(dropped_tags) == 0
+            )
 
 
 class TestL4CompressionHonestyLaw:
@@ -583,11 +596,20 @@ class TestL4CompressionHonestyLaw:
         # WARMTH-calibrated messages may use: "set aside", "compressed", "distilled", "editing"
         disclosure_lower = crystal.disclosure.lower()
         compression_indicators = [
-            "set aside", "compressed", "distilled", "editing", "dropped",
-            "condensed", "rests", "traces remain", "full trace"
+            "set aside",
+            "compressed",
+            "distilled",
+            "editing",
+            "dropped",
+            "condensed",
+            "rests",
+            "traces remain",
+            "full trace",
         ]
         has_compression_indicator = any(ind in disclosure_lower for ind in compression_indicators)
-        assert has_compression_indicator, f"Disclosure should indicate compression: {crystal.disclosure}"
+        assert has_compression_indicator, (
+            f"Disclosure should indicate compression: {crystal.disclosure}"
+        )
 
     def test_galois_loss_is_computed(
         self,
@@ -689,8 +711,9 @@ class TestQA1RitualLighterThanTodoList:
         lab.capture.quick("Performance test mark")
         elapsed_ms = (time.perf_counter() - start) * 1000
 
-        assert elapsed_ms < MAX_MARK_CAPTURE_MS, \
+        assert elapsed_ms < MAX_MARK_CAPTURE_MS, (
             f"Mark capture took {elapsed_ms:.1f}ms, budget is {MAX_MARK_CAPTURE_MS}ms"
+        )
 
     def test_tagged_capture_is_fast(
         self,
@@ -703,8 +726,9 @@ class TestQA1RitualLighterThanTodoList:
         lab.capture.eureka("Tagged performance test", reasoning="With reasoning")
         elapsed_ms = (time.perf_counter() - start) * 1000
 
-        assert elapsed_ms < MAX_MARK_CAPTURE_MS, \
+        assert elapsed_ms < MAX_MARK_CAPTURE_MS, (
             f"Tagged capture took {elapsed_ms:.1f}ms, budget is {MAX_MARK_CAPTURE_MS}ms"
+        )
 
     def test_crystal_generation_is_fast(
         self,
@@ -725,8 +749,9 @@ class TestQA1RitualLighterThanTodoList:
         elapsed_ms = (time.perf_counter() - start) * 1000
 
         assert crystal is not None
-        assert elapsed_ms < MAX_CRYSTAL_GENERATION_MS, \
+        assert elapsed_ms < MAX_CRYSTAL_GENERATION_MS, (
             f"Crystal generation took {elapsed_ms:.1f}ms, budget is {MAX_CRYSTAL_GENERATION_MS}ms"
+        )
 
     def test_trail_100_marks_navigable(
         self,
@@ -794,14 +819,22 @@ class TestQA2HonestGapsSurfacedWithoutShame:
     def test_warmth_prompts_dont_shame(self) -> None:
         """WARMTH prompts never shame gaps or absence."""
         shame_patterns = [
-            "missing", "failed", "error", "lazy", "unproductive",
-            "wasted", "forgot", "should have", "didn't"
+            "missing",
+            "failed",
+            "error",
+            "lazy",
+            "unproductive",
+            "wasted",
+            "forgot",
+            "should have",
+            "didn't",
         ]
 
         for prompt_key, prompt_value in WARMTH_PROMPTS.items():
             for pattern in shame_patterns:
-                assert pattern not in prompt_value.lower(), \
+                assert pattern not in prompt_value.lower(), (
                     f"WARMTH prompt '{prompt_key}' contains shaming: '{pattern}'"
+                )
 
     def test_no_marks_day_is_okay(
         self,
@@ -875,8 +908,7 @@ class TestQA3UserFeelsWitnessedNotSurveilled:
 
             # Should NOT have demanding language
             for pattern in demanding_patterns:
-                assert pattern not in prompt_lower, \
-                    f"Prompt too demanding: '{prompt_value}'"
+                assert pattern not in prompt_lower, f"Prompt too demanding: '{prompt_value}'"
 
 
 class TestQA4CrystalFeelsLikeMemoryArtifact:

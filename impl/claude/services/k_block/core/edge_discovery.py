@@ -121,11 +121,7 @@ class DiscoveredEdge:
     def __post_init__(self) -> None:
         """Validate confidence is in [0, 1]."""
         if not 0.0 <= self.confidence <= 1.0:
-            object.__setattr__(
-                self,
-                "confidence",
-                max(0.0, min(1.0, self.confidence))
-            )
+            object.__setattr__(self, "confidence", max(0.0, min(1.0, self.confidence)))
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
@@ -157,7 +153,9 @@ class DiscoveredEdge:
             "source_id": self.source_id,
             "target_id": self.target_id,
             "edge_type": self.kind.value,
-            "context": f"{self.reasoning}\n\nContext: {self.context}" if self.context else self.reasoning,
+            "context": f"{self.reasoning}\n\nContext: {self.context}"
+            if self.context
+            else self.reasoning,
             "confidence": self.confidence,
             "mark_id": None,  # Will be set when witnessed
             "created_at": datetime.now(timezone.utc).isoformat(),
@@ -213,14 +211,15 @@ class ConceptSignature:
         common_terms = set(self.terms.keys()) & set(other.terms.keys())
         if common_terms:
             # Dot product of normalized term vectors
-            dot_product = sum(
-                self.terms[term] * other.terms[term]
-                for term in common_terms
-            )
+            dot_product = sum(self.terms[term] * other.terms[term] for term in common_terms)
             # Normalize by magnitudes
-            self_magnitude = sum(count ** 2 for count in self.terms.values()) ** 0.5
-            other_magnitude = sum(count ** 2 for count in other.terms.values()) ** 0.5
-            term_sim = dot_product / (self_magnitude * other_magnitude) if self_magnitude and other_magnitude else 0.0
+            self_magnitude = sum(count**2 for count in self.terms.values()) ** 0.5
+            other_magnitude = sum(count**2 for count in other.terms.values()) ** 0.5
+            term_sim = (
+                dot_product / (self_magnitude * other_magnitude)
+                if self_magnitude and other_magnitude
+                else 0.0
+            )
         else:
             term_sim = 0.0
 
@@ -303,9 +302,7 @@ class EdgeDiscoveryService:
 
         return edges
 
-    def _discover_explicit_edges(
-        self, content: str, source_path: str
-    ) -> list[DiscoveredEdge]:
+    def _discover_explicit_edges(self, content: str, source_path: str) -> list[DiscoveredEdge]:
         """
         Discover explicit edges from markdown links and portal tokens.
 
@@ -327,7 +324,7 @@ class EdgeDiscoveryService:
             kind = self._classify_link_kind(link_text, link_target, source_path)
 
             # Find line number
-            line_num = content[:match.start()].count("\n") + 1
+            line_num = content[: match.start()].count("\n") + 1
 
             edges.append(
                 DiscoveredEdge(
@@ -336,7 +333,7 @@ class EdgeDiscoveryService:
                     kind=kind,
                     confidence=0.95,  # Explicit links are high confidence
                     reasoning=f"Explicit markdown link: [{link_text}]({link_target})",
-                    context=content[max(0, match.start() - 30):match.end() + 30],
+                    context=content[max(0, match.start() - 30) : match.end() + 30],
                     line_number=line_num,
                 )
             )
@@ -350,7 +347,7 @@ class EdgeDiscoveryService:
             if "." in token and not token.endswith((".md", ".py", ".ts")):
                 continue  # Concept token, not a file reference
 
-            line_num = content[:match.start()].count("\n") + 1
+            line_num = content[: match.start()].count("\n") + 1
 
             edges.append(
                 DiscoveredEdge(
@@ -359,7 +356,7 @@ class EdgeDiscoveryService:
                     kind=EdgeKind.REFERENCES,
                     confidence=0.90,
                     reasoning=f"Portal token reference: [[{token}]]",
-                    context=content[max(0, match.start() - 30):match.end() + 30],
+                    context=content[max(0, match.start() - 30) : match.end() + 30],
                     line_number=line_num,
                 )
             )
@@ -494,7 +491,9 @@ class EdgeDiscoveryService:
         edges: list[DiscoveredEdge] = []
 
         # Extract negative assertions from content
-        negation_pattern = r"(?:not|no|never|isn't|aren't|doesn't|don't|can't|cannot)\s+([A-Za-z_]+)"
+        negation_pattern = (
+            r"(?:not|no|never|isn't|aren't|doesn't|don't|can't|cannot)\s+([A-Za-z_]+)"
+        )
         negations = set(re.findall(negation_pattern, content.lower()))
 
         if not negations:
@@ -513,7 +512,9 @@ class EdgeDiscoveryService:
                 # - "X can Y" (can compose)
                 # - "Y can X" (compose can)
                 # - "X is Y" (composition is associative)
-                positive_pattern = rf"\b{negated_term}\b|\b(?:can|is|are|does|do)\s+{negated_term}\b"
+                positive_pattern = (
+                    rf"\b{negated_term}\b|\b(?:can|is|are|does|do)\s+{negated_term}\b"
+                )
                 if re.search(positive_pattern, target_content.lower()):
                     # Make sure it's a positive assertion (not also negated in target)
                     negation_in_target = rf"(?:not|no|never|isn't|aren't|doesn't|don't|can't|cannot)\s+{negated_term}\b"
@@ -532,9 +533,7 @@ class EdgeDiscoveryService:
 
         return edges
 
-    def _extract_signature(
-        self, content: str, layer: int | None = None
-    ) -> ConceptSignature:
+    def _extract_signature(self, content: str, layer: int | None = None) -> ConceptSignature:
         """
         Extract concept signature from content.
 
@@ -553,14 +552,40 @@ class EdgeDiscoveryService:
 
         # Extract key terms (filter stopwords, weight by frequency)
         stopwords = {
-            "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
-            "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
-            "this", "that", "these", "those", "it", "its", "can", "will", "would",
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "from",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "this",
+            "that",
+            "these",
+            "those",
+            "it",
+            "its",
+            "can",
+            "will",
+            "would",
         }
-        words = re.findall(r'\b[a-z_][a-z0-9_]{2,}\b', content.lower())
+        words = re.findall(r"\b[a-z_][a-z0-9_]{2,}\b", content.lower())
         signature.terms = Counter(
-            word for word in words
-            if word not in stopwords and not word.startswith("_")
+            word for word in words if word not in stopwords and not word.startswith("_")
         )
 
         # Extract layer-specific keywords
@@ -591,24 +616,18 @@ class EdgeDiscoveryService:
         """
         return {
             # Agent names (capitalized, often with suffix)
-            "agents": r'\b([A-Z][a-z]*(?:Agent|Gent|Operad|Sheaf|Flux))\b',
-
+            "agents": r"\b([A-Z][a-z]*(?:Agent|Gent|Operad|Sheaf|Flux))\b",
             # Axioms/Laws (AXIOM/LAW + identifier)
-            "axioms": r'(?:AXIOM|LAW)\s+([A-Z0-9]+)',
-
+            "axioms": r"(?:AXIOM|LAW)\s+([A-Z0-9]+)",
             # Principles (from spec/principles.md)
-            "principles": r'\b(Tasteful|Curated|Ethical|Joy-Inducing|Composable|Heterarchical|Generative)\b',
-
+            "principles": r"\b(Tasteful|Curated|Ethical|Joy-Inducing|Composable|Heterarchical|Generative)\b",
             # Category theory constructs
-            "categorical": r'\b(Functor|Monad|Operad|Sheaf|Profunctor|Polynomial)\b',
-
+            "categorical": r"\b(Functor|Monad|Operad|Sheaf|Profunctor|Polynomial)\b",
             # kgents-specific constructs
-            "constructs": r'\b(K-Block|D-gent|M-gent|K-gent|AGENTESE|Witness|Crystal|Portal)\b',
+            "constructs": r"\b(K-Block|D-gent|M-gent|K-gent|AGENTESE|Witness|Crystal|Portal)\b",
         }
 
-    def _classify_link_kind(
-        self, link_text: str, link_target: str, source_path: str
-    ) -> EdgeKind:
+    def _classify_link_kind(self, link_text: str, link_target: str, source_path: str) -> EdgeKind:
         """
         Classify markdown link kind based on text/target.
 

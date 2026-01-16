@@ -91,37 +91,43 @@ class HeterarchicalEdgePolicy:
     """
 
     # Edges that MUST have justification
-    STRICT_EDGES = frozenset({
-        EdgeKind.CONTRADICTS,
-        EdgeKind.SUPERSEDES,
-    })
+    STRICT_EDGES = frozenset(
+        {
+            EdgeKind.CONTRADICTS,
+            EdgeKind.SUPERSEDES,
+        }
+    )
 
     # Edges that SHOULD have justification (flagged if missing)
-    SUGGESTED_EDGES = frozenset({
-        EdgeKind.GROUNDS,  # L1 → L2
-        EdgeKind.JUSTIFIES,  # L2 → L3
-    })
+    SUGGESTED_EDGES = frozenset(
+        {
+            EdgeKind.GROUNDS,  # L1 → L2
+            EdgeKind.JUSTIFIES,  # L2 → L3
+        }
+    )
 
     # Edges where justification is optional (not flagged)
-    OPTIONAL_EDGES = frozenset({
-        EdgeKind.IMPLEMENTS,
-        EdgeKind.EXTENDS,
-        EdgeKind.DERIVES_FROM,
-        EdgeKind.REFINES,
-        EdgeKind.SPECIFIES,
-        EdgeKind.REFLECTS_ON,
-        EdgeKind.REPRESENTS,
-        EdgeKind.CRYSTALLIZES,
-        EdgeKind.SOURCES,
-        EdgeKind.SYNTHESIZES,
-        # Inverse edges
-        EdgeKind.GROUNDED_BY,
-        EdgeKind.JUSTIFIED_BY,
-        EdgeKind.SPECIFIED_BY,
-        EdgeKind.IMPLEMENTED_BY,
-        EdgeKind.REFLECTED_BY,
-        EdgeKind.REPRESENTED_BY,
-    })
+    OPTIONAL_EDGES = frozenset(
+        {
+            EdgeKind.IMPLEMENTS,
+            EdgeKind.EXTENDS,
+            EdgeKind.DERIVES_FROM,
+            EdgeKind.REFINES,
+            EdgeKind.SPECIFIES,
+            EdgeKind.REFLECTS_ON,
+            EdgeKind.REPRESENTS,
+            EdgeKind.CRYSTALLIZES,
+            EdgeKind.SOURCES,
+            EdgeKind.SYNTHESIZES,
+            # Inverse edges
+            EdgeKind.GROUNDED_BY,
+            EdgeKind.JUSTIFIED_BY,
+            EdgeKind.SPECIFIED_BY,
+            EdgeKind.IMPLEMENTED_BY,
+            EdgeKind.REFLECTED_BY,
+            EdgeKind.REPRESENTED_BY,
+        }
+    )
 
     def validate(self, edge: ZeroEdge, source_layer: int, target_layer: int) -> EdgeValidation:
         """

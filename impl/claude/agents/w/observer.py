@@ -43,9 +43,7 @@ class ProcessObserver:
     process_id: str
     name: str = "external"
 
-    async def observe_stream(
-        self, stream: asyncio.StreamReader
-    ) -> AsyncIterator[WireEvent]:
+    async def observe_stream(self, stream: asyncio.StreamReader) -> AsyncIterator[WireEvent]:
         """Convert stdout/stderr lines to WireEvents."""
         while True:
             line = await stream.readline()

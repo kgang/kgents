@@ -186,9 +186,20 @@ class LifecycleManager:
                 errors.append(f"Provider creation failed: {e}")
                 storage = await StorageProvider.create_minimal()
 
-            # Stage 5: Run migrations
+            # Stage 5: Run migrations (both instance tables AND SQLAlchemy model tables)
             try:
                 await storage.run_migrations()
+
+                # Also ensure SQLAlchemy model tables exist
+                # This unifies the two table creation paths into one bootstrap flow
+                try:
+                    from models.base import init_db
+
+                    await init_db()
+                except Exception as model_e:
+                    # Non-fatal: some deployments may not need all models
+                    errors.append(f"Model table creation warning: {model_e}")
+
                 # First-run messaging: tell user we created the DB
                 if not initial_global_db_exists:
                     self._signal_first_run(self._paths)
@@ -198,6 +209,13 @@ class LifecycleManager:
                 try:
                     await self._attempt_recovery(storage)
                     await storage.run_migrations()
+                    # Also try model tables in recovery path
+                    try:
+                        from models.base import init_db
+
+                        await init_db()
+                    except Exception:
+                        pass  # Swallow in recovery - we're already failing
                 except Exception as recovery_error:
                     errors.append(f"Recovery failed: {recovery_error}")
 

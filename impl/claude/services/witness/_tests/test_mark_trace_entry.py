@@ -186,9 +186,7 @@ class TestTraceEntryToMark:
             )
 
             mark = Mark.from_trace_entry(entry)
-            assert (
-                mark.proof.qualifier == expected_qualifier
-            ), f"Failed for value {value}"
+            assert mark.proof.qualifier == expected_qualifier, f"Failed for value {value}"
 
     def test_custom_origin_and_umwelt(self):
         """Test can specify custom origin and umwelt."""
@@ -214,9 +212,7 @@ class TestRoundTrip:
         original_mark = Mark(
             origin="test",
             stimulus=Stimulus(kind="test", content="state_A", source="test"),
-            response=Response(
-                kind="action", content="action_1", metadata={"state": "state_B"}
-            ),
+            response=Response(kind="action", content="action_1", metadata={"state": "state_B"}),
             proof=Proof.empirical(
                 data="test data",
                 warrant="test warrant",

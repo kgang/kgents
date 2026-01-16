@@ -99,8 +99,9 @@ def test_layer_assignment_logic(client: TestClient):
 
         assert response.status_code == 200
         data = response.json()
-        assert data["layer"] == 1, \
+        assert data["layer"] == 1, (
             f"FTUE declaration '{declaration}' should be L1 Axiom, got L{data['layer']}"
+        )
 
 
 def test_loss_computation(client: TestClient):

@@ -161,10 +161,7 @@ class PromptCrystal:
         """Deserialize from dict."""
         return cls(
             template=data["template"],
-            parameters={
-                k: PromptParam.from_dict(v)
-                for k, v in data["parameters"].items()
-            },
+            parameters={k: PromptParam.from_dict(v) for k, v in data["parameters"].items()},
             goal_statement=data["goal_statement"],
             derived_from=tuple(data["derived_from"]),
             version=data["version"],

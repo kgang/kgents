@@ -94,9 +94,7 @@ class SequentialProbe:
     right: ProbeProtocol
     gamma: float = 0.99  # Discount factor
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         """Run left probe, then right probe with left's result in context."""
         # Run left probe
         left_trace = await self.left.verify(target, context)
@@ -143,9 +141,7 @@ class ParallelProbe:
     left: ProbeProtocol
     right: ProbeProtocol
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         """Run both probes in parallel, take result with better status."""
         # Run both probes concurrently
         left_task = asyncio.create_task(self.left.verify(target, context))
@@ -160,9 +156,7 @@ class ParallelProbe:
             ProbeStatus.ERROR: 0,
         }
 
-        if status_priority[left_trace.value.status] >= status_priority[
-            right_trace.value.status
-        ]:
+        if status_priority[left_trace.value.status] >= status_priority[right_trace.value.status]:
             better_trace = left_trace
             worse_trace = right_trace
         else:
@@ -200,9 +194,7 @@ class BranchProbe:
     if_true: ProbeProtocol
     if_false: ProbeProtocol
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         """Run predicate, then appropriate branch based on result."""
         # Evaluate predicate
         pred_trace = await self.predicate.verify(target, context)
@@ -244,9 +236,7 @@ class FixedPointProbe:
     max_iterations: int = 10
     gamma: float = 0.99
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         """Iterate body until result stabilizes."""
         accumulated_log: tuple[TraceEntry, ...] = ()
         prev_status = None
@@ -308,9 +298,7 @@ class WitnessedProbe:
 
     inner: ProbeProtocol
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         """Run inner probe and ensure trace entry is emitted."""
         inner_trace = await self.inner.verify(target, context)
 
@@ -343,9 +331,7 @@ class NullProbe:
     This is the identity element for probe composition.
     """
 
-    async def verify(
-        self, target: Any, context: dict[str, Any]
-    ) -> PolicyTrace[ProbeResult]:
+    async def verify(self, target: Any, context: dict[str, Any]) -> PolicyTrace[ProbeResult]:
         """Return trivial passing result."""
         result = ProbeResult(
             name="null",
@@ -540,9 +526,7 @@ async def _verify_identity(p: ProbeProtocol) -> LawVerification:
         )
 
 
-async def _verify_trace_preservation(
-    p: ProbeProtocol, q: ProbeProtocol
-) -> LawVerification:
+async def _verify_trace_preservation(p: ProbeProtocol, q: ProbeProtocol) -> LawVerification:
     """
     Verify trace preservation: witness(p >> q) ≡ witness(p) >> witness(q).
 
@@ -588,7 +572,9 @@ async def _verify_trace_preservation(
 
 
 # Laws use sync wrappers for compatibility with operad interface
-def _verify_associativity_sync(p: ProbeProtocol, q: ProbeProtocol, r: ProbeProtocol, *args) -> LawVerification:
+def _verify_associativity_sync(
+    p: ProbeProtocol, q: ProbeProtocol, r: ProbeProtocol, *args
+) -> LawVerification:
     """Sync wrapper for associativity verification."""
     try:
         # Try to get running loop

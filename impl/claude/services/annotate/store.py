@@ -210,9 +210,7 @@ class AnnotationStore:
             row = _annotation_to_row(annotation)
             session.add(row)
             await session.commit()
-            logger.info(
-                f"Saved annotation {ann_id}: {spec_path} / {section} ({kind.value})"
-            )
+            logger.info(f"Saved annotation {ann_id}: {spec_path} / {section} ({kind.value})")
 
         return annotation
 

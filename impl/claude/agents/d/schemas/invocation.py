@@ -218,11 +218,7 @@ class LLMInvocationMark:
     @property
     def ripple_magnitude(self) -> int:
         """Magnitude of ripple effects (total state changes + crystals)."""
-        return (
-            len(self.state_changes) +
-            len(self.crystals_created) +
-            len(self.crystals_modified)
-        )
+        return len(self.state_changes) + len(self.crystals_created) + len(self.crystals_modified)
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to JSON-compatible dict."""
@@ -266,14 +262,14 @@ class LLMInvocationMark:
             response=data["response"],
             causal_parent_id=data.get("causal_parent_id"),
             triggered_by=data["triggered_by"],
-            state_changes=tuple(
-                StateChange.from_dict(sc) for sc in data.get("state_changes", [])
-            ),
+            state_changes=tuple(StateChange.from_dict(sc) for sc in data.get("state_changes", [])),
             crystals_created=tuple(data.get("crystals_created", [])),
             crystals_modified=tuple(data.get("crystals_modified", [])),
             galois_loss=data.get("galois_loss", 0.0),
             invocation_type=data["invocation_type"],
-            timestamp=datetime.fromisoformat(data["timestamp"]) if "timestamp" in data else datetime.now(UTC),
+            timestamp=datetime.fromisoformat(data["timestamp"])
+            if "timestamp" in data
+            else datetime.now(UTC),
             tags=frozenset(data.get("tags", [])),
         )
 
@@ -281,15 +277,9 @@ class LLMInvocationMark:
 # Schema registration for Universe
 from agents.d.universe import DataclassSchema
 
-STATE_CHANGE_SCHEMA = DataclassSchema(
-    name="llm.state_change",
-    type_cls=StateChange
-)
+STATE_CHANGE_SCHEMA = DataclassSchema(name="llm.state_change", type_cls=StateChange)
 
-LLM_INVOCATION_MARK_SCHEMA = DataclassSchema(
-    name="llm.invocation_mark",
-    type_cls=LLMInvocationMark
-)
+LLM_INVOCATION_MARK_SCHEMA = DataclassSchema(name="llm.invocation_mark", type_cls=LLMInvocationMark)
 
 
 __all__ = [

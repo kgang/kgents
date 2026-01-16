@@ -84,8 +84,7 @@ class VerificationResult:
             "path": self.path,
             "all_passed": self.all_passed,
             "checks": [
-                {"name": c.name, "passed": c.passed, "details": c.details}
-                for c in self.checks
+                {"name": c.name, "passed": c.passed, "details": c.details} for c in self.checks
             ],
             "errors": self.errors,
             "warnings": self.warnings,

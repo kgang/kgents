@@ -150,9 +150,7 @@ class TestNullProbeReward:
 
         probe = NullProbe(constant=None)
 
-        reward = probe.reward(
-            NullState.READY, ProbeAction("invoke"), NullState.COMPUTING
-        )
+        reward = probe.reward(NullState.READY, ProbeAction("invoke"), NullState.COMPUTING)
 
         # NullProbe should get positive reward for:
         # - ETHICAL: deterministic, predictable (1.0)
@@ -170,20 +168,14 @@ class TestNullProbeReward:
         probe = NullProbe(constant=None)
 
         # Wrong state
-        reward1 = probe.reward(
-            NullState.COMPUTING, ProbeAction("invoke"), NullState.DONE
-        )
+        reward1 = probe.reward(NullState.COMPUTING, ProbeAction("invoke"), NullState.DONE)
         assert reward1.weighted_total == 0.0
 
-        reward2 = probe.reward(
-            NullState.DONE, ProbeAction("invoke"), NullState.DONE
-        )
+        reward2 = probe.reward(NullState.DONE, ProbeAction("invoke"), NullState.DONE)
         assert reward2.weighted_total == 0.0
 
         # Wrong action from READY
-        reward3 = probe.reward(
-            NullState.READY, ProbeAction("other_action"), NullState.READY
-        )
+        reward3 = probe.reward(NullState.READY, ProbeAction("other_action"), NullState.READY)
         assert reward3.weighted_total == 0.0
 
 
@@ -380,12 +372,7 @@ class TestNullProbeEdgeCases:
     @pytest.mark.asyncio
     async def test_with_complex_output_type(self):
         """Test NullProbe with complex output types."""
-        complex_output = {
-            "nested": {
-                "data": [1, 2, 3],
-                "metadata": {"type": "test"}
-            }
-        }
+        complex_output = {"nested": {"data": [1, 2, 3], "metadata": {"type": "test"}}}
 
         probe = NullProbe(constant=complex_output)
 

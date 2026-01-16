@@ -543,6 +543,7 @@ class BaseLogosNode(ABC):
 
         # Log the trace entry (integrate with Witness in future)
         import logging
+
         logger = logging.getLogger("kgents.agentese.constitutional")
         logger.info(
             f"Constitutional invocation: {entry.action} -> "

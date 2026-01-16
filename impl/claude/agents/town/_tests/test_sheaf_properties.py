@@ -196,7 +196,7 @@ class TestSheafGluingProperties:
         assert len(state.coalitions) == 0
 
     @given(region_view_strategy())
-    @settings(max_examples=50)
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_single_view_glues_to_itself(self, view: RegionView) -> None:
         """Gluing a single view preserves its data."""
         sheaf = create_town_sheaf()

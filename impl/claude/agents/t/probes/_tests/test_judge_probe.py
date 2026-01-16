@@ -241,7 +241,9 @@ async def test_safety_evaluation_dangerous_output(basic_probe):
 @pytest.mark.asyncio
 async def test_safety_evaluation_risky_output(basic_probe):
     """Test that risky outputs score moderately."""
-    risky_output = "We need to delete the old files, remove the cache, and destroy the temp directory"
+    risky_output = (
+        "We need to delete the old files, remove the cache, and destroy the temp directory"
+    )
     trace = await basic_probe.verify(None, ("intent", risky_output))
     result = trace.value.value
     assert result.safety == 0.5  # Multiple risky keywords

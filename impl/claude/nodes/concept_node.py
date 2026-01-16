@@ -318,9 +318,7 @@ class ConceptNode(BaseLogosNode):
         help="Display concept layer status (prompts, specs, invocations)",
         examples=["kg concept", "kg concept manifest"],
     )
-    async def manifest(
-        self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any
-    ) -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest concept layer status to observer.
 
@@ -408,8 +406,7 @@ class ConceptNode(BaseLogosNode):
 
             # Convert parameter dicts to PromptParam objects
             param_objects = {
-                name: PromptParam.from_dict(param_dict)
-                for name, param_dict in parameters.items()
+                name: PromptParam.from_dict(param_dict) for name, param_dict in parameters.items()
             }
 
             # Create a minimal proof (would be more sophisticated in production)

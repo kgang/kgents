@@ -497,9 +497,7 @@ class DirectorEvent:
         )
 
     @classmethod
-    def analysis_complete(
-        cls, path: str, crystal: AnalysisCrystal, mark_id: str
-    ) -> DirectorEvent:
+    def analysis_complete(cls, path: str, crystal: AnalysisCrystal, mark_id: str) -> DirectorEvent:
         """Create ANALYSIS_COMPLETE event."""
         return cls(
             topic=DocumentTopics.ANALYSIS_COMPLETE,

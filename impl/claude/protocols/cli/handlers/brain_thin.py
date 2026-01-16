@@ -93,6 +93,7 @@ async def cmd_brain(args: list[str], ctx: "InvocationContext | None" = None) -> 
     in_daemon = os.environ.get("KGENTS_DAEMON_WORKER") is not None
     if in_daemon:
         from protocols.cli.projection import project_command_async
+
         return await project_command_async(path, args, ctx)
     return project_command(path, args, ctx)
 
@@ -453,6 +454,7 @@ async def _handle_extinct_async(args: list[str], ctx: "InvocationContext | None"
     except Exception as e:
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

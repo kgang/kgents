@@ -66,7 +66,9 @@ class CosmosRequest:
 
     offset: int = 0
     limit: int = 20
-    ranking: str = "chronological"  # chronological, loss-ascending, loss-descending, engagement, algorithmic
+    ranking: str = (
+        "chronological"  # chronological, loss-ascending, loss-descending, engagement, algorithmic
+    )
 
 
 @dataclass(frozen=True)

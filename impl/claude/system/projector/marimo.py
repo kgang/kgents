@@ -334,44 +334,52 @@ run_history, set_run_history = mo.state([])"""
 
         # Observable metrics functions
         if has_observable:
-            lines.extend([
-                "# Observable metrics",
-                "_start_time = None",
-                "",
-                "def start_metrics():",
-                "    global _start_time",
-                "    _start_time = time.time()",
-                "",
-                "def get_metrics():",
-                "    if _start_time is None:",
-                '        return {"latency_ms": 0}',
-                '    return {"latency_ms": (time.time() - _start_time) * 1000}',
-                "",
-            ])
+            lines.extend(
+                [
+                    "# Observable metrics",
+                    "_start_time = None",
+                    "",
+                    "def start_metrics():",
+                    "    global _start_time",
+                    "    _start_time = time.time()",
+                    "",
+                    "def get_metrics():",
+                    "    if _start_time is None:",
+                    '        return {"latency_ms": 0}',
+                    '    return {"latency_ms": (time.time() - _start_time) * 1000}',
+                    "",
+                ]
+            )
 
         # Agent instance
-        lines.extend([
-            "# Create agent instance",
-            f"_agent = {class_name}()",
-            "",
-        ])
+        lines.extend(
+            [
+                "# Create agent instance",
+                f"_agent = {class_name}()",
+                "",
+            ]
+        )
 
         # Input widget
-        lines.extend([
-            "# Input widget",
-            "user_input = mo.ui.text_area(",
-            '    placeholder="Enter input for the agent...",',
-            '    label="Input",',
-            ")",
-            "",
-        ])
+        lines.extend(
+            [
+                "# Input widget",
+                "user_input = mo.ui.text_area(",
+                '    placeholder="Enter input for the agent...",',
+                '    label="Input",',
+                ")",
+                "",
+            ]
+        )
 
         # Run button
-        lines.extend([
-            "# Run button",
-            'run_button = mo.ui.run_button(label="Run Agent")',
-            "",
-        ])
+        lines.extend(
+            [
+                "# Run button",
+                'run_button = mo.ui.run_button(label="Run Agent")',
+                "",
+            ]
+        )
 
         # run_agent function
         lines.append("async def run_agent():")
@@ -391,13 +399,15 @@ run_history, set_run_history = mo.state([])"""
             lines.append("        metrics = get_metrics()")
 
         if has_stateful:
-            lines.extend([
-                "        # Update run history",
-                "        set_run_history(lambda h: h + [{",
-                '            "input": user_input.value,',
-                '            "output": str(result),',
-                "        }])",
-            ])
+            lines.extend(
+                [
+                    "        # Update run history",
+                    "        set_run_history(lambda h: h + [{",
+                    '            "input": user_input.value,',
+                    '            "output": str(result),',
+                    "        }])",
+                ]
+            )
 
         # Build return statement
         lines.append("        output_parts = [")
@@ -406,7 +416,9 @@ run_history, set_run_history = mo.state([])"""
         lines.append("        ]")
 
         if has_observable:
-            lines.append('        output_parts.append(mo.callout(mo.md(f"Latency: {metrics[\'latency_ms\']:.2f}ms"), kind="info"))')
+            lines.append(
+                '        output_parts.append(mo.callout(mo.md(f"Latency: {metrics[\'latency_ms\']:.2f}ms"), kind="info"))'
+            )
 
         lines.append("        return mo.vstack(output_parts)")
         lines.append("    except Exception as e:")
@@ -432,7 +444,9 @@ run_history, set_run_history = mo.state([])"""
         lines.append("    user_input,")
         lines.append("    run_button,")
         lines.append('    mo.md("---"),')
-        lines.append('    asyncio.run(run_agent()) if run_button.value else mo.md("*Click Run to execute*"),')
+        lines.append(
+            '    asyncio.run(run_agent()) if run_button.value else mo.md("*Click Run to execute*"),'
+        )
         lines.append("])")
 
         return "\n".join(lines)

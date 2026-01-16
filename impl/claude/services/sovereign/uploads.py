@@ -381,9 +381,7 @@ class FileExplorerService:
                     if child_path.name.startswith("."):
                         continue
 
-                    child_entry = await self._build_tree(
-                        child_path, max_depth, current_depth + 1
-                    )
+                    child_entry = await self._build_tree(child_path, max_depth, current_depth + 1)
                     children.append(child_entry)
 
             except PermissionError:

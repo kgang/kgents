@@ -59,10 +59,10 @@ class PortalURI:
         'file'
     """
 
-    raw: str                    # Original URI string
-    resource_type: str          # "file", "chat", "mark", etc.
-    resource_path: str          # The path/identifier
-    fragment: str | None        # Optional fragment (#turn-5)
+    raw: str  # Original URI string
+    resource_type: str  # "file", "chat", "mark", etc.
+    resource_path: str  # The path/identifier
+    fragment: str | None  # Optional fragment (#turn-5)
 
     @classmethod
     def parse(cls, uri: str) -> PortalURI:

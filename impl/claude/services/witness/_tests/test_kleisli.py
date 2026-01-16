@@ -153,7 +153,7 @@ class TestKleisliComposition:
         """Chain multiple Kleisli arrows."""
         f = lambda x: Witnessed(value=x * 2, marks=[mock_mark("f")])
         g = lambda x: Witnessed(value=x + 1, marks=[mock_mark("g")])
-        h = lambda x: Witnessed(value=x ** 2, marks=[mock_mark("h")])
+        h = lambda x: Witnessed(value=x**2, marks=[mock_mark("h")])
 
         chained = kleisli_chain(f, g, h)
         result = chained(3)
@@ -219,7 +219,9 @@ class TestWitnessedOperations:
 
         assert result.value == "HELLO"
         assert len(result.marks) == 1
-        assert "Analyzed input of length 5" in result.marks[0].response.metadata.get("reasoning", "")
+        assert "Analyzed input of length 5" in result.marks[0].response.metadata.get(
+            "reasoning", ""
+        )
 
     @pytest.mark.asyncio
     async def test_witnessed_operation_with_principles(self):
@@ -243,7 +245,7 @@ class TestWitnessedOperations:
 
         @witnessed_sync(action="compute")
         def compute(x: int) -> int:
-            return x ** 2
+            return x**2
 
         result = compute(5)
 
@@ -452,8 +454,7 @@ class TestMonadLawsParametric:
     def test_composition_chain_length(self, n):
         """Kleisli chains of various lengths should work."""
         functions = [
-            lambda x: Witnessed(value=x + i, marks=[mock_mark(f"step{i}")])
-            for i in range(n)
+            lambda x: Witnessed(value=x + i, marks=[mock_mark(f"step{i}")]) for i in range(n)
         ]
 
         # Need to capture i properly

@@ -454,11 +454,18 @@ Three buses: DataBus (storage) → SynergyBus (cross-jewel) → EventBus (fan-ou
 Bridge pattern: DataBus → SynergyBus via wire_data_to_synergy()
 ```
 
-### Testing
+### Testing (See docs/skills/test-patterns.md)
 ```
 DI > mocking: set_soul() injection pattern beats patch()
 Property-based tests catch edge cases humans miss
 Performance baselines as assertions: `assert elapsed < 1.0`
+
+TIMING TESTS: Use preferred_backend="memory" to avoid Postgres lock contention
+HYPOTHESIS SLOW: Use suppress_health_check=[HealthCheck.too_slow] for categorical tests
+DOMAIN OPERADS: Add to DOMAIN_OPERADS list (they have their own vocabulary)
+HEURISTIC ASSERTIONS: Assert ranges (0 <= layer <= 7), not exact values
+LEGACY REMOVAL: Grep ALL downstream tests before removing from LEGACY_COMMANDS
+EXIT 137 = OOM: Reduce -n workers, not a test logic error
 ```
 
 ### Anti-Patterns (Avoid These)

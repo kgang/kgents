@@ -559,7 +559,9 @@ class BootstrapReport:
             "galois_loss": self.galois_loss,
             "fixed_point_verified": self.fixed_point_verified,
             "marks_created": self.marks_created,
-            "galois_verification": (self.galois_verification.to_dict() if self.galois_verification else None),
+            "galois_verification": (
+                self.galois_verification.to_dict() if self.galois_verification else None
+            ),
         }
 
 
@@ -637,7 +639,9 @@ async def retroactive_witness_bootstrap(
                     "bootstrap:retroactive",
                     "zero-seed",
                     "grounding-chain",
-                    "galois-verified" if galois_verification.is_fixed_point else "galois-unverified",
+                    "galois-verified"
+                    if galois_verification.is_fixed_point
+                    else "galois-unverified",
                 }
             ),
         )
@@ -748,9 +752,7 @@ class ZeroSeedPolynomial:
         def directions_fn(layer: Layer) -> frozenset[NodeKind]:
             return self.directions(layer)
 
-        def transition_fn(
-            layer: Layer, node_kind: NodeKind
-        ) -> tuple[Layer, dict[str, Any]]:
+        def transition_fn(layer: Layer, node_kind: NodeKind) -> tuple[Layer, dict[str, Any]]:
             """
             Transition function: create node at layer, move to next layer.
 
@@ -831,9 +833,7 @@ class StrangeLoopResolution:
         This is the main entry point for bootstrap verification.
         """
         # Verify fixed point
-        verification = await verify_zero_seed_fixed_point(
-            zero_seed_spec, galois, threshold=0.15
-        )
+        verification = await verify_zero_seed_fixed_point(zero_seed_spec, galois, threshold=0.15)
 
         # Verify convergence
         convergence = await verify_convergence(
@@ -843,9 +843,7 @@ class StrangeLoopResolution:
         # Check polynomial structure
         polynomial = ZeroSeedPolynomial()
         has_all_layers = polynomial.positions == frozenset(Layer)
-        has_valid_directions = all(
-            len(polynomial.directions(layer)) > 0 for layer in Layer
-        )
+        has_valid_directions = all(len(polynomial.directions(layer)) > 0 for layer in Layer)
 
         return cls(
             structural_isomorphism=verification.is_fixed_point,  # Approximation

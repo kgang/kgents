@@ -97,11 +97,11 @@ class WitnessState(Enum):
     - QUERYING -> OBSERVING: Results retrieved, resume
     """
 
-    IDLE = auto()           # Not actively witnessing
-    OBSERVING = auto()      # Watching for significant events
-    MARKING = auto()        # Recording a mark
+    IDLE = auto()  # Not actively witnessing
+    OBSERVING = auto()  # Watching for significant events
+    MARKING = auto()  # Recording a mark
     CRYSTALLIZING = auto()  # Promoting marks to crystal
-    QUERYING = auto()       # Retrieving past marks
+    QUERYING = auto()  # Retrieving past marks
 
     def __hash__(self) -> int:
         return hash(self.value)
@@ -124,11 +124,11 @@ class WitnessAction(Enum):
     - QUERY: Search for past context (medium cost, enables better decisions)
     """
 
-    OBSERVE = auto()        # Start/continue observation
-    MARK = auto()           # Emit a mark
-    SKIP = auto()           # Decide event not worth marking
-    CRYSTALLIZE = auto()    # Promote to crystal
-    QUERY = auto()          # Search past marks
+    OBSERVE = auto()  # Start/continue observation
+    MARK = auto()  # Emit a mark
+    SKIP = auto()  # Decide event not worth marking
+    CRYSTALLIZE = auto()  # Promote to crystal
+    QUERY = auto()  # Search past marks
 
     def __hash__(self) -> int:
         return hash(self.value)
@@ -231,28 +231,36 @@ def witness_available_actions(state: WitnessState) -> FrozenSet[WitnessAction]:
         return frozenset({WitnessAction.OBSERVE})
 
     elif state == WitnessState.OBSERVING:
-        return frozenset({
-            WitnessAction.MARK,
-            WitnessAction.SKIP,
-            WitnessAction.QUERY,
-            WitnessAction.OBSERVE,  # Continue observing
-        })
+        return frozenset(
+            {
+                WitnessAction.MARK,
+                WitnessAction.SKIP,
+                WitnessAction.QUERY,
+                WitnessAction.OBSERVE,  # Continue observing
+            }
+        )
 
     elif state == WitnessState.MARKING:
-        return frozenset({
-            WitnessAction.CRYSTALLIZE,
-            WitnessAction.OBSERVE,  # Return to observing
-        })
+        return frozenset(
+            {
+                WitnessAction.CRYSTALLIZE,
+                WitnessAction.OBSERVE,  # Return to observing
+            }
+        )
 
     elif state == WitnessState.CRYSTALLIZING:
-        return frozenset({
-            WitnessAction.OBSERVE,  # Return to observing after crystallization
-        })
+        return frozenset(
+            {
+                WitnessAction.OBSERVE,  # Return to observing after crystallization
+            }
+        )
 
     elif state == WitnessState.QUERYING:
-        return frozenset({
-            WitnessAction.OBSERVE,  # Return to observing with context
-        })
+        return frozenset(
+            {
+                WitnessAction.OBSERVE,  # Return to observing with context
+            }
+        )
 
     return frozenset()
 
@@ -382,9 +390,7 @@ def witness_reward(
         # Can't do much from IDLE except observe
         reward -= 1.0
 
-    logger.debug(
-        f"reward({state.name}, {action.name}, {next_state.name}) = {reward:.3f}"
-    )
+    logger.debug(f"reward({state.name}, {action.name}, {next_state.name}) = {reward:.3f}")
 
     return reward
 

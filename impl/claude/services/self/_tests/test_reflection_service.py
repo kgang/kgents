@@ -61,10 +61,11 @@ class TestGetConstitution:
 
     @pytest.mark.asyncio
     async def test_returns_constitutional_graph(self, service: SelfReflectionService) -> None:
-        """Returns a ConstitutionalGraph with the 22 K-Blocks."""
+        """Returns a ConstitutionalGraph with the 23 K-Blocks."""
         graph = await service.get_constitution()
         assert isinstance(graph, ConstitutionalGraph)
-        assert graph.total_blocks == 22
+        # 23 K-Blocks: 4 axioms + 7 kernel + 1 constitution + 7 principles + 4 architectural
+        assert graph.total_blocks == 23
 
     @pytest.mark.asyncio
     async def test_axioms_are_l0(self, service: SelfReflectionService) -> None:

@@ -124,11 +124,13 @@ class TestObserveSubprocess:
     async def test_observe_multiple_lines(self):
         """Test observing multiple output lines."""
         events = []
-        async for event in observe_subprocess([
-            "python",
-            "-c",
-            "print('line 1'); print('line 2'); print('line 3')",
-        ]):
+        async for event in observe_subprocess(
+            [
+                "python",
+                "-c",
+                "print('line 1'); print('line 2'); print('line 3')",
+            ]
+        ):
             events.append(event)
 
         # Should have events for each line

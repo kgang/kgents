@@ -128,7 +128,9 @@ async def test_file_strategy_groups_by_file(detector, sample_functions):
 
     # Check service.py candidate
     service_candidate = next(c for c in candidates if "service.py" in c.rationale)
-    assert len(service_candidate.function_ids) == 4  # ClassA.method1, ClassA.method2, ClassB.method1, helper
+    assert (
+        len(service_candidate.function_ids) == 4
+    )  # ClassA.method1, ClassA.method2, ClassB.method1, helper
     assert service_candidate.boundary_type == "FILE"
     assert service_candidate.confidence == 1.0
 
@@ -262,7 +264,10 @@ async def test_callgraph_strategy_finds_cycles(detector, sample_functions):
     # Find the SCC containing the cycle
     cycle_scc = None
     for c in candidates:
-        if "service.py:ClassA.method1" in c.function_ids and "service.py:ClassA.method2" in c.function_ids:
+        if (
+            "service.py:ClassA.method1" in c.function_ids
+            and "service.py:ClassA.method2" in c.function_ids
+        ):
             cycle_scc = c
             break
 
@@ -321,7 +326,10 @@ async def test_hybrid_respects_size_heuristics(detector):
                     id=f"big.py:Class{class_idx}.method{method_idx}",
                     name=f"method{method_idx}",
                     file_path="big.py",
-                    line_range=(class_idx * 200 + method_idx * 20, class_idx * 200 + method_idx * 20 + 18),
+                    line_range=(
+                        class_idx * 200 + method_idx * 20,
+                        class_idx * 200 + method_idx * 20 + 18,
+                    ),
                     signature=f"def method{method_idx}(self) -> None",
                     docstring="A" * 100,  # Large docstring
                     class_name=f"Class{class_idx}",

@@ -24,8 +24,10 @@ from typing import Any, Awaitable, Callable, Generic, TypeVar, Union
 from ..agents import (
     CheckpointAgent,
     ContradictorAgent,
+    GhostAnalysis,
     GhostAnalyzerAgent,
     MirrorTestResult,
+    ResurrectionCandidate,
     TasteVectorAgent,
 )
 from ..checkpoints import (
@@ -194,7 +196,7 @@ class MuseOrchestrator(Generic[T]):
         self.session: SessionState[T] | None = None
 
         # Event callbacks
-        self._event_handlers: dict[type, list[Callable]] = {}
+        self._event_handlers: dict[type, list[Callable[..., Any]]] = {}
 
         # Consecutive defense counter
         self._consecutive_defenses = 0
@@ -548,11 +550,11 @@ class MuseOrchestrator(Generic[T]):
             return ""
         return ITERATION_MILESTONES.get(self.session.iteration, "")
 
-    def get_ghost_analysis(self):
+    def get_ghost_analysis(self) -> GhostAnalysis:
         """Get analysis of session ghosts."""
         return self.ghost_analyzer.analyze(self.session)
 
-    def get_resurrection_candidates(self, limit: int = 5):
+    def get_resurrection_candidates(self, limit: int = 5) -> list[ResurrectionCandidate]:
         """Get ghosts worth resurrecting."""
         return self.ghost_analyzer.find_worth_resurrecting(self.session, limit)
 
@@ -586,7 +588,7 @@ class MuseOrchestrator(Generic[T]):
         self.session.phase = SessionPhase.WITNESS
 
         # Evolve taste based on selections
-        selection_records = []
+        selection_records: list[tuple[CreativeOption[Any], str]] = []
         for iteration, option_id in self.session.selections:
             # Find the option in ghosts (the ones NOT selected would be ghosts)
             # This is a simplified representation
@@ -616,7 +618,7 @@ class MuseOrchestrator(Generic[T]):
     # Event System
     # -------------------------------------------------------------------------
 
-    def on(self, event_type: type, handler: Callable) -> None:
+    def on(self, event_type: type, handler: Callable[..., Any]) -> None:
         """Register an event handler."""
         if event_type not in self._event_handlers:
             self._event_handlers[event_type] = []
@@ -649,21 +651,21 @@ def create_orchestrator(
     domain: str,
     config: OrchestratorConfig | None = None,
     taste: TasteVector | None = None,
-) -> MuseOrchestrator:
+) -> MuseOrchestrator[Any]:
     """Create a new orchestrator for a domain."""
     return MuseOrchestrator(domain, config, taste)
 
 
 def create_youtube_orchestrator(
     config: OrchestratorConfig | None = None,
-) -> MuseOrchestrator:
+) -> MuseOrchestrator[Any]:
     """Create an orchestrator for YouTube content."""
     return MuseOrchestrator("youtube", config)
 
 
 def create_little_kant_orchestrator(
     config: OrchestratorConfig | None = None,
-) -> MuseOrchestrator:
+) -> MuseOrchestrator[Any]:
     """Create an orchestrator for Little Kant episodes."""
     return MuseOrchestrator("little_kant", config)
 

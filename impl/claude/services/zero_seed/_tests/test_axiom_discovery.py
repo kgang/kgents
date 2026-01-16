@@ -138,9 +138,7 @@ class TestExtractCandidates:
     """Tests for extract_candidates function."""
 
     @pytest.mark.skip(reason="Requires Mark type from witness module")
-    def test_extracts_candidates_from_marks(
-        self, sample_decisions: list[str]
-    ) -> None:
+    def test_extracts_candidates_from_marks(self, sample_decisions: list[str]) -> None:
         """Should extract candidate axioms from marks."""
         # This test requires actual Mark objects
         pass
@@ -207,9 +205,7 @@ class TestAxiomDiscoveryService:
         assert 0.0 <= result.loss <= 1.0
 
     @pytest.mark.asyncio
-    async def test_validate_fixed_point_threshold(
-        self, service: AxiomDiscoveryService
-    ) -> None:
+    async def test_validate_fixed_point_threshold(self, service: AxiomDiscoveryService) -> None:
         """Should use custom threshold for validation."""
         result = await service.validate_fixed_point(
             "Test content",
@@ -220,9 +216,7 @@ class TestAxiomDiscoveryService:
         # Result should be validated against 0.1 threshold
 
     @pytest.mark.asyncio
-    async def test_empty_input_handling(
-        self, service: AxiomDiscoveryService
-    ) -> None:
+    async def test_empty_input_handling(self, service: AxiomDiscoveryService) -> None:
         """Should handle empty input gracefully."""
         report = await service.discover_from_text(
             texts=[],
@@ -384,9 +378,7 @@ class TestIntegration:
     """Integration tests for full discovery pipeline."""
 
     @pytest.mark.asyncio
-    async def test_full_discovery_pipeline(
-        self, sample_decisions: list[str]
-    ) -> None:
+    async def test_full_discovery_pipeline(self, sample_decisions: list[str]) -> None:
         """Full pipeline: decisions -> candidates -> validation -> axioms."""
         service = AxiomDiscoveryService()
 

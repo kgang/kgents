@@ -741,6 +741,7 @@ def threshold_law(
         ...     threshold=200.0,
         ... )
     """
+
     def predicate(**kw: Any) -> bool:
         value = kw.get(metric_field, 0.0)
         surfaced = kw.get(alert_field, True)

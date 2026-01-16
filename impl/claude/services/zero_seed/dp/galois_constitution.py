@@ -186,9 +186,7 @@ class GaloisConstitution(Constitution):
         principle_scores: list[PrincipleScore] = []
 
         # Compute Galois loss for each principle
-        principle_losses = await self._compute_all_principle_losses(
-            state, action, next_state
-        )
+        principle_losses = await self._compute_all_principle_losses(state, action, next_state)
 
         for principle in Principle:
             loss = principle_losses.get(principle.name, 0.5)
@@ -447,9 +445,7 @@ class GaloisValueFunction:
         result = best_value if best_value > -float("inf") else 0.0
         self._cache[cache_key] = result
 
-        logger.debug(
-            f"V({node.title}, depth={depth}) = {result:.3f}"
-        )
+        logger.debug(f"V({node.title}, depth={depth}) = {result:.3f}")
 
         return result
 

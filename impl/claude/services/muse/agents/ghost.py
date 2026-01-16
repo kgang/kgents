@@ -64,7 +64,7 @@ class AIDisagreement:
 class ResurrectionCandidate:
     """A ghost worth bringing back."""
 
-    ghost: Ghost
+    ghost: Ghost[Any]
     resurrection_reason: str
     confidence: float  # How confident in resurrection
     suggested_modifications: list[str] = field(default_factory=list)
@@ -100,9 +100,9 @@ class GhostAnalyzerAgent:
     4. Tracks AI-championed ghosts (where AI thought Kent was wrong)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ghost analyzer."""
-        self.all_ghosts: list[Ghost] = []
+        self.all_ghosts: list[Ghost[Any]] = []
         self.ai_disagreements: list[AIDisagreement] = []
         self.resurrected: list[str] = []  # Ghost IDs that were resurrected
 
@@ -112,13 +112,13 @@ class GhostAnalyzerAgent:
 
     def record_rejection(
         self,
-        option: CreativeOption,
+        option: CreativeOption[Any],
         rejection_reason: str,
         rejection_strength: float = 0.5,
         ai_championed: bool = False,
         ai_surprise: float = 0.5,
         iteration: int = 0,
-    ) -> Ghost:
+    ) -> Ghost[Any]:
         """
         Record a rejected option as a ghost.
 
@@ -157,7 +157,7 @@ class GhostAnalyzerAgent:
 
         return ghost
 
-    def analyze(self, session: SessionState | None = None) -> GhostAnalysis:
+    def analyze(self, session: SessionState[Any] | None = None) -> GhostAnalysis:
         """
         Analyze accumulated ghosts for patterns.
 
@@ -199,7 +199,7 @@ class GhostAnalyzerAgent:
 
     def find_worth_resurrecting(
         self,
-        session: SessionState | None = None,
+        session: SessionState[Any] | None = None,
         limit: int = 5,
     ) -> list[ResurrectionCandidate]:
         """
@@ -285,7 +285,7 @@ class GhostAnalyzerAgent:
     # Analysis Helpers
     # -------------------------------------------------------------------------
 
-    def _find_rejection_patterns(self, ghosts: list[Ghost]) -> list[RejectionPattern]:
+    def _find_rejection_patterns(self, ghosts: list[Ghost[Any]]) -> list[RejectionPattern]:
         """Find patterns in rejection reasons."""
         patterns: list[RejectionPattern] = []
 
@@ -342,7 +342,9 @@ class GhostAnalyzerAgent:
 
         return patterns
 
-    def _find_resurrection_candidates(self, ghosts: list[Ghost]) -> list[ResurrectionCandidate]:
+    def _find_resurrection_candidates(
+        self, ghosts: list[Ghost[Any]]
+    ) -> list[ResurrectionCandidate]:
         """Find ghosts worth resurrecting."""
         candidates = []
 
@@ -361,7 +363,7 @@ class GhostAnalyzerAgent:
 
     def _extract_taste_insights(
         self,
-        ghosts: list[Ghost],
+        ghosts: list[Ghost[Any]],
         patterns: list[RejectionPattern],
     ) -> dict[str, str]:
         """Extract taste insights from rejection patterns."""
@@ -389,7 +391,7 @@ class GhostAnalyzerAgent:
 
         return insights
 
-    def _explain_resurrection(self, ghost: Ghost) -> str:
+    def _explain_resurrection(self, ghost: Ghost[Any]) -> str:
         """Explain why a ghost is worth resurrecting."""
         reasons = []
 
@@ -407,7 +409,7 @@ class GhostAnalyzerAgent:
 
         return "; ".join(reasons) if reasons else "Worth reconsidering"
 
-    def _suggest_modifications(self, ghost: Ghost) -> list[str]:
+    def _suggest_modifications(self, ghost: Ghost[Any]) -> list[str]:
         """Suggest how to modify a ghost for resurrection."""
         suggestions = []
 

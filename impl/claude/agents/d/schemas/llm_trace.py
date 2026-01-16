@@ -341,9 +341,7 @@ class LLMInvocationMark:
             response=d["response"],
             causal_parent_id=d.get("causal_parent_id"),
             triggered_by=d.get("triggered_by", "unknown"),
-            state_changes=tuple(
-                StateChange.from_dict(sc) for sc in d.get("state_changes", [])
-            ),
+            state_changes=tuple(StateChange.from_dict(sc) for sc in d.get("state_changes", [])),
             crystals_created=tuple(d.get("crystals_created", [])),
             crystals_modified=tuple(d.get("crystals_modified", [])),
             edges_created=tuple(d.get("edges_created", [])),

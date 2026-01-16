@@ -405,7 +405,9 @@ class Experiment:
     """
 
     id: str = field(default_factory=generate_experiment_id)
-    config: ExperimentConfig = field(default_factory=lambda: ExperimentConfig(type=ExperimentType.GENERATE))
+    config: ExperimentConfig = field(
+        default_factory=lambda: ExperimentConfig(type=ExperimentType.GENERATE)
+    )
     status: ExperimentStatus = ExperimentStatus.PENDING
     trials: list[Trial] = field(default_factory=list)
     evidence: EvidenceBundle | None = None
@@ -450,8 +452,12 @@ class Experiment:
             trials=[Trial.from_dict(t) for t in data.get("trials", [])],
             evidence=EvidenceBundle.from_dict(data["evidence"]) if data.get("evidence") else None,
             mark_ids=data.get("mark_ids", []),
-            started_at=datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None,
-            completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,
+            started_at=datetime.fromisoformat(data["started_at"])
+            if data.get("started_at")
+            else None,
+            completed_at=datetime.fromisoformat(data["completed_at"])
+            if data.get("completed_at")
+            else None,
             created_at=datetime.fromisoformat(data["created_at"]),
         )
 

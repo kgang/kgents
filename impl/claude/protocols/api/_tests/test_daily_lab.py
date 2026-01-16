@@ -305,9 +305,7 @@ async def test_export_invalid_date(client: TestClient):
 @pytest.mark.asyncio
 async def test_export_specific_date(client: TestClient):
     """Test export for specific date."""
-    response = client.get(
-        "/api/witness/daily/export?target_date=2025-01-15&format=markdown"
-    )
+    response = client.get("/api/witness/daily/export?target_date=2025-01-15&format=markdown")
 
     assert response.status_code == 200
     data = response.json()
@@ -318,9 +316,7 @@ async def test_export_specific_date(client: TestClient):
 @pytest.mark.asyncio
 async def test_export_without_crystal(client: TestClient):
     """Test export without including crystal."""
-    response = client.get(
-        "/api/witness/daily/export?include_crystal=false&format=markdown"
-    )
+    response = client.get("/api/witness/daily/export?include_crystal=false&format=markdown")
 
     assert response.status_code == 200
     data = response.json()

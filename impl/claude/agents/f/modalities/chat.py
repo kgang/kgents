@@ -40,35 +40,45 @@ def chat_directions(state: FlowState) -> frozenset[str]:
         case FlowState.DORMANT:
             return frozenset(["start", "configure"])
         case FlowState.STREAMING:
-            return frozenset([
-                "message",           # User sends message
-                "fork",              # Create conversation branch
-                "rewind",            # Undo turns
-                "checkpoint",        # Save state
-                "stop",              # End conversation
-                "inject_context",    # Add context without turn
-            ])
+            return frozenset(
+                [
+                    "message",  # User sends message
+                    "fork",  # Create conversation branch
+                    "rewind",  # Undo turns
+                    "checkpoint",  # Save state
+                    "stop",  # End conversation
+                    "inject_context",  # Add context without turn
+                ]
+            )
         case FlowState.BRANCHING:
-            return frozenset([
-                "confirm_fork",      # Finalize fork operation
-                "cancel_fork",       # Abort fork
-            ])
+            return frozenset(
+                [
+                    "confirm_fork",  # Finalize fork operation
+                    "cancel_fork",  # Abort fork
+                ]
+            )
         case FlowState.CONVERGING:
-            return frozenset([
-                "confirm_merge",     # Finalize merge
-                "cancel_merge",      # Abort merge
-                "resolve_conflict",  # Handle merge conflicts
-            ])
+            return frozenset(
+                [
+                    "confirm_merge",  # Finalize merge
+                    "cancel_merge",  # Abort merge
+                    "resolve_conflict",  # Handle merge conflicts
+                ]
+            )
         case FlowState.DRAINING:
-            return frozenset([
-                "flush",             # Output remaining buffers
-                "crystallize",       # Save session permanently
-            ])
+            return frozenset(
+                [
+                    "flush",  # Output remaining buffers
+                    "crystallize",  # Save session permanently
+                ]
+            )
         case FlowState.COLLAPSED:
-            return frozenset([
-                "reset",             # Start fresh
-                "harvest",           # Extract metrics/artifacts
-            ])
+            return frozenset(
+                [
+                    "reset",  # Start fresh
+                    "harvest",  # Extract metrics/artifacts
+                ]
+            )
 
 
 def chat_transition(state: FlowState, input: str) -> tuple[FlowState, dict[str, Any]]:

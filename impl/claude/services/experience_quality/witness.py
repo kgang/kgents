@@ -137,9 +137,7 @@ class QualityMark:
             id=data.get("id", generate_quality_mark_id()),
             origin=data.get("origin", "experience-quality-operad"),
             quality=ExperienceQuality.from_dict(data.get("quality", {})),
-            contrast_detail=ContrastMeasurement.from_dict(
-                data.get("contrast_detail", {})
-            ),
+            contrast_detail=ContrastMeasurement.from_dict(data.get("contrast_detail", {})),
             arc_detail=ArcMeasurement.from_dict(data.get("arc_detail", {})),
             voice_detail=VoiceMeasurement.from_dict(data.get("voice_detail", {})),
             floor_detail=FloorMeasurement.from_dict(data.get("floor_detail", {})),
@@ -297,16 +295,12 @@ class QualityCrystal:
             arc_summary=data.get("arc_summary", ""),
             voice_summary=data.get("voice_summary", ""),
             floor_summary=data.get("floor_summary", ""),
-            quality_peaks=tuple(
-                QualityMoment.from_dict(p) for p in data.get("quality_peaks", [])
-            ),
+            quality_peaks=tuple(QualityMoment.from_dict(p) for p in data.get("quality_peaks", [])),
             quality_troughs=tuple(
                 QualityMoment.from_dict(t) for t in data.get("quality_troughs", [])
             ),
             primary_recommendation=data.get("primary_recommendation", ""),
-            secondary_recommendations=tuple(
-                data.get("secondary_recommendations", [])
-            ),
+            secondary_recommendations=tuple(data.get("secondary_recommendations", [])),
             source_mark_ids=tuple(data.get("source_mark_ids", [])),
             source_mark_count=data.get("source_mark_count", 0),
             compression_ratio=data.get("compression_ratio", 1.0),
@@ -516,9 +510,7 @@ def _summarize_contrast(contrasts: list[ContrastMeasurement]) -> str:
         dimension_scores["reward"].append(c.reward)
         dimension_scores["identity"].append(c.identity)
 
-    avg_scores = {
-        dim: sum(scores) / len(scores) for dim, scores in dimension_scores.items()
-    }
+    avg_scores = {dim: sum(scores) / len(scores) for dim, scores in dimension_scores.items()}
     weakest = min(avg_scores, key=lambda k: avg_scores[k])
 
     level = "High" if overall > 0.6 else ("Moderate" if overall > 0.3 else "Low")
@@ -621,9 +613,7 @@ def _generate_crystal_recommendations(
         return ("Quality is generally good - maintain current approach", ())
 
     # Sort by frequency
-    sorted_bottlenecks = sorted(
-        bottleneck_counts.keys(), key=lambda k: -bottleneck_counts[k]
-    )
+    sorted_bottlenecks = sorted(bottleneck_counts.keys(), key=lambda k: -bottleneck_counts[k])
 
     primary = generate_recommendation(sorted_bottlenecks[0])
     secondary = tuple(generate_recommendation(b) for b in sorted_bottlenecks[1:4])

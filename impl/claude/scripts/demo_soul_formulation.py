@@ -137,7 +137,9 @@ def main():
 
             print(f"  Step {step + 1}: {action.name}")
             print(f"    {output}")
-            print(f"    Attractor: {state.attractor_strength:.2f} → {next_state.attractor_strength:.2f}")
+            print(
+                f"    Attractor: {state.attractor_strength:.2f} → {next_state.attractor_strength:.2f}"
+            )
             print(f"    Resonance: {state.resonance_depth:.2f} → {next_state.resonance_depth:.2f}")
 
             state = next_state

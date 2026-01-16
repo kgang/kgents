@@ -66,9 +66,7 @@ class ContextEvent:
     paths: tuple[str, ...]  # Immutable sequence of paths
     reason: str  # Human-readable description
     depth: int  # Nesting depth in exploration
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Optional metadata for advanced use cases
     parent_path: str = ""  # What led to this context change

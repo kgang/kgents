@@ -10,6 +10,7 @@ Structure:
 - igent.py: I-gent integration (garden, whisper)
 - init.py: Workspace initialization
 - wipe.py: Database cleanup commands
+- reset.py: Unified reset command (wipe + scaffold + tables + genesis)
 - debug.py: Debug utilities
 - ghost.py: Living Filesystem projection (DevEx V4 Phase 2)
 - flinch.py: Test failure analysis (Trust Loop Integration)
@@ -21,6 +22,7 @@ Structure:
 - archaeology.py: Git history mining for priors and teachings
 - evidence.py: Evidence mining & ROI tracking (stratified evidence ladder)
 - analyze.py: Four-mode spec analysis (categorical, epistemic, dialectical, generative)
+- joy.py: Joy-inducing commands (oblique, surprise, yes-and, challenge, constrain)
 
 All handlers follow the signature:
     def cmd_<name>(args: list[str]) -> int
