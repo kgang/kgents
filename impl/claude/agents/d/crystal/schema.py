@@ -7,8 +7,8 @@ They are code, not database DDL. Frozen dataclasses are the contracts.
 Spec: spec/protocols/unified-data-crystal.md
 """
 
-from dataclasses import asdict, dataclass, field
-from typing import Any, Callable, Generic, TypeVar
+from dataclasses import asdict, dataclass, field, fields as dataclass_fields
+from typing import Any, Callable, Generic, TypeVar, cast
 
 T = TypeVar("T")
 
@@ -83,8 +83,11 @@ class Schema(Generic[T]):
         Raises:
             TypeError: If data doesn't match contract signature
         """
-        # Filter out metadata fields that aren't part of the contract
-        filtered = {k: v for k, v in data.items() if not k.startswith("_")}
+        # Get valid field names from the contract dataclass
+        # Cast to Any to satisfy mypy - contract is always a dataclass at runtime
+        valid_fields = {f.name for f in dataclass_fields(cast(Any, self.contract))}
+        # Filter to only valid fields (ignores unknown keys like 'context')
+        filtered = {k: v for k, v in data.items() if k in valid_fields}
         return self.contract(**filtered)
 
     def upgrade(self, old_version: int, data: dict[str, Any]) -> dict[str, Any]:
