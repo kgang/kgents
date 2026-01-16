@@ -1,0 +1,183 @@
+/**
+ * DiscoveryProgress Styles
+ *
+ * Warm, encouraging progress indicator.
+ * "Discovery should feel like self-reflection, not data mining."
+ */
+
+/* =============================================================================
+   Container
+   ============================================================================= */
+
+.discovery-progress {
+  position: relative;
+  padding: 24px;
+  background: rgba(45, 27, 20, 0.6); /* earth-soil */
+  border: 1px solid rgba(139, 111, 92, 0.2);
+  border-radius: 12px;
+}
+
+.discovery-progress.has-error {
+  border-color: rgba(192, 133, 82, 0.4); /* glow-copper */
+}
+
+/* =============================================================================
+   Stage Timeline
+   ============================================================================= */
+
+.stage-timeline {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.stage-indicator {
+  display: flex;
+  align-items: center;
+}
+
+.stage-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stage-connector {
+  width: 40px;
+  height: 2px;
+  margin: 0 4px;
+  transition: background-color 0.3s ease;
+}
+
+.stage-indicator.current .stage-dot {
+  box-shadow: 0 0 8px rgba(212, 165, 116, 0.5);
+}
+
+/* =============================================================================
+   Progress Bar
+   ============================================================================= */
+
+.progress-bar-container {
+  height: 6px;
+  background: rgba(139, 111, 92, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* =============================================================================
+   Message
+   ============================================================================= */
+
+.progress-message {
+  font-size: 15px;
+  color: #e8c4a0; /* glow-honey */
+  text-align: center;
+  margin: 0 0 12px;
+  min-height: 1.5em;
+}
+
+/* =============================================================================
+   Stats
+   ============================================================================= */
+
+.progress-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #f5e6d3; /* glow-lantern */
+  font-family: 'SF Mono', Menlo, monospace;
+}
+
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ab9080; /* earth-sand */
+}
+
+/* =============================================================================
+   Error State
+   ============================================================================= */
+
+.error-actions {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.error-detail {
+  font-size: 13px;
+  color: #c08552; /* glow-copper */
+  margin: 0 0 12px;
+}
+
+.retry-btn {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: 1px solid rgba(192, 133, 82, 0.4);
+  background: rgba(192, 133, 82, 0.15);
+  color: #d4a574; /* glow-amber */
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.retry-btn:hover {
+  background: rgba(192, 133, 82, 0.25);
+  border-color: rgba(192, 133, 82, 0.6);
+}
+
+/* =============================================================================
+   Loading Spinner
+   ============================================================================= */
+
+.loading-spinner {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 480px) {
+  .discovery-progress {
+    padding: 16px;
+  }
+
+  .stage-connector {
+    width: 24px;
+  }
+
+  .progress-stats {
+    gap: 24px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+}

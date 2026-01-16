@@ -1,0 +1,352 @@
+/**
+ * ContradictionAlert Styles
+ *
+ * Contradiction handling feels like opportunity, not problem.
+ * "Contradictions are invitations to deeper understanding."
+ */
+
+/* =============================================================================
+   Container
+   ============================================================================= */
+
+.contradiction-alert {
+  --severity-color: #d4a574;
+  position: relative;
+  background: rgba(45, 27, 20, 0.7);
+  border: 1px solid rgba(var(--severity-color), 0.3);
+  border-left: 3px solid var(--severity-color);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.contradiction-alert.expanded {
+  background: rgba(74, 55, 40, 0.8);
+}
+
+/* Severity variants */
+.contradiction-alert.severity-weak {
+  border-left-color: #e8c4a0; /* glow-honey */
+}
+
+.contradiction-alert.severity-moderate {
+  border-left-color: #d4a574; /* glow-amber */
+}
+
+.contradiction-alert.severity-strong {
+  border-left-color: #c08552; /* glow-copper */
+}
+
+.contradiction-alert.severity-irreconcilable {
+  border-left-color: #ef4444; /* red */
+  background: rgba(239, 68, 68, 0.05);
+}
+
+/* =============================================================================
+   Header
+   ============================================================================= */
+
+.contradiction-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.contradiction-icon {
+  flex-shrink: 0;
+}
+
+.contradiction-title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.severity-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--severity-color);
+}
+
+.contradiction-subtitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ab9080; /* earth-sand */
+}
+
+.strength-badge {
+  font-size: 12px;
+  font-family: 'SF Mono', Menlo, monospace;
+  color: var(--severity-color);
+  background: rgba(139, 111, 92, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* =============================================================================
+   Axiom Pair
+   ============================================================================= */
+
+.axiom-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.axiom-a,
+.axiom-b {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(26, 18, 16, 0.5);
+  border-radius: 6px;
+}
+
+.axiom-marker {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e8c4a0; /* glow-honey */
+  background: rgba(232, 196, 160, 0.15);
+  border-radius: 4px;
+}
+
+.axiom-content {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #f5e6d3; /* glow-lantern */
+  margin: 0;
+}
+
+.versus {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.versus span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ab9080; /* earth-sand */
+}
+
+/* =============================================================================
+   Severity Message
+   ============================================================================= */
+
+.severity-message {
+  font-size: 13px;
+  color: #ab9080; /* earth-sand */
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+/* =============================================================================
+   Expanded Details
+   ============================================================================= */
+
+.contradiction-details {
+  overflow: hidden;
+  padding-top: 12px;
+  border-top: 1px solid rgba(139, 111, 92, 0.2);
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #e8c4a0; /* glow-honey */
+  margin: 0 0 8px;
+}
+
+.section-desc {
+  font-size: 12px;
+  color: #ab9080;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+/* Loss Diagram */
+.loss-section {
+  margin-bottom: 16px;
+}
+
+.loss-diagram {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(26, 18, 16, 0.5);
+  border-radius: 6px;
+  font-family: 'SF Mono', Menlo, monospace;
+}
+
+.loss-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.loss-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  color: #ab9080;
+}
+
+.loss-value {
+  font-size: 13px;
+  color: #e8c4a0;
+}
+
+.loss-item.combined .loss-value {
+  color: var(--severity-color);
+}
+
+.loss-item.excess .excess-value {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.loss-operator {
+  font-size: 12px;
+  color: #ab9080;
+}
+
+/* Synthesis */
+.synthesis-section {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(107, 139, 107, 0.1);
+  border-radius: 6px;
+  border-left: 2px solid #6b8b6b; /* green-mint */
+}
+
+.synthesis-hint {
+  font-size: 13px;
+  color: #8bab8b; /* green-sprout */
+  margin: 0;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Opportunity */
+.opportunity-section {
+  padding: 12px;
+  background: rgba(212, 165, 116, 0.08);
+  border-radius: 6px;
+}
+
+.opportunity-message {
+  font-size: 13px;
+  color: #d4a574; /* glow-amber */
+  margin: 0;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* =============================================================================
+   Actions
+   ============================================================================= */
+
+.contradiction-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px solid rgba(139, 111, 92, 0.2);
+}
+
+.action-btn {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.action-btn.secondary {
+  background: rgba(139, 111, 92, 0.2);
+  color: #e8c4a0;
+}
+
+.action-btn.secondary:hover {
+  background: rgba(139, 111, 92, 0.4);
+}
+
+.action-btn.dismiss {
+  background: rgba(139, 111, 92, 0.15);
+  color: #ab9080;
+}
+
+.action-btn.dismiss:hover {
+  background: rgba(139, 111, 92, 0.3);
+  color: #e8c4a0;
+}
+
+.action-btn.fuse {
+  background: rgba(107, 139, 107, 0.25);
+  color: #8bab8b;
+}
+
+.action-btn.fuse:hover {
+  background: rgba(107, 139, 107, 0.4);
+  color: #fff;
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 480px) {
+  .contradiction-alert {
+    padding: 12px;
+  }
+
+  .loss-diagram {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .loss-operator {
+    display: none;
+  }
+
+  .loss-diagram .loss-item {
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .contradiction-actions {
+    flex-direction: column;
+  }
+
+  .action-btn {
+    width: 100%;
+  }
+}

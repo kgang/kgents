@@ -173,7 +173,8 @@ class PortalTool(Tool[PortalRequest, PortalEmission]):
             portal_id = str(uuid.uuid4())
 
             # Create preview (first N lines)
-            lines = content.split("\n")
+            # Use splitlines() for accurate line count (handles trailing newlines correctly)
+            lines = content.splitlines()
             preview_lines_list = lines[: request.preview_lines]
             preview = "\n".join(preview_lines_list)
 
