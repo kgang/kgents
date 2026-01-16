@@ -65,7 +65,11 @@ time_cmd() {
 
 format_duration() {
     local duration="$1"
-    # Handle bc output format
+    # Handle empty or invalid input
+    if [[ -z "$duration" || ! "$duration" =~ ^[0-9.]+$ ]]; then
+        duration="0"
+    fi
+    # Handle bc output format (e.g., ".123" -> "0.123")
     if [[ "$duration" == .* ]]; then
         duration="0$duration"
     fi
@@ -274,7 +278,6 @@ run_tests() {
         --tb=no \
         $quiet_flag \
         --dist=worksteal \
-        --cache-clear-failed \
         $extra_args \
         2>&1
 }
