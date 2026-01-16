@@ -21,6 +21,7 @@ from services.zero_seed.galois.layer_assignment import (
     LayerAssignment,
     assign_layer_absolute,
     assign_layer_relative,
+    load_calibration_corpus,
     validate_calibration,
 )
 
@@ -311,23 +312,33 @@ class TestCalibrationSet:
         assert 5 in layers
 
     def test_validate_calibration_with_mock(self) -> None:
-        """Validate calibration with mock loss computer."""
+        """Validate calibration with mock loss computer.
 
-        # Mock that returns loss based on expected layer
+        Uses the full calibration corpus from JSON file, not the legacy
+        CALIBRATION_CORPUS constant which only has 9 entries.
+        """
+        # Load the full calibration corpus to create a complete mock
+        full_corpus = load_calibration_corpus()
+
+        # Build lookup from content -> expected loss range midpoint
+        content_to_loss: dict[str, float] = {}
+        for entry in full_corpus:
+            low, high = entry["expected_loss_range"]
+            content_to_loss[entry["content"]] = (low + high) / 2
+
+        # Mock that returns loss based on expected layer from full corpus
         def mock_loss(content: str) -> float:
-            for cal_content, layer in CALIBRATION_CORPUS:
-                if content == cal_content:
-                    # Return loss in the expected layer's range
-                    low, high = LAYER_LOSS_BOUNDS[layer]
-                    return (low + high) / 2
+            if content in content_to_loss:
+                return content_to_loss[content]
+            # Fallback - should not happen if corpus is complete
             return 0.5
 
         all_passed, results = validate_calibration(mock_loss)
 
-        assert all_passed
-        assert len(results) == len(CALIBRATION_CORPUS)
+        assert all_passed, f"Failed entries: {[r for r in results if not r['passed']]}"
+        assert len(results) == len(full_corpus)
         for result in results:
-            assert result["passed"]
+            assert result["passed"], f"Failed: {result}"
 
 
 class TestConstants:

@@ -7,7 +7,13 @@ Tests the complete FTUE flow:
 3. Mark onboarding complete
 
 Validates that K-Blocks are properly persisted to PostgreSQL storage.
+
+NOTE: These tests require a running PostgreSQL test database container on port 5433.
+Start with: docker compose up -d postgres-test
+Skip reason: The onboarding API requires real database persistence for K-Blocks.
 """
+
+import socket
 
 import pytest
 
@@ -17,7 +23,25 @@ from fastapi.testclient import TestClient
 
 from protocols.api.app import create_app
 
-pytestmark = pytest.mark.tier2
+
+def _is_postgres_available() -> bool:
+    """Check if test Postgres container is reachable on port 5433."""
+    try:
+        with socket.create_connection(("localhost", 5433), timeout=1):
+            return True
+    except (OSError, socket.timeout):
+        return False
+
+
+POSTGRES_AVAILABLE = _is_postgres_available()
+
+pytestmark = [
+    pytest.mark.tier2,
+    pytest.mark.skipif(
+        not POSTGRES_AVAILABLE,
+        reason="PostgreSQL test container not available (port 5433). Run: docker compose up -d postgres-test",
+    ),
+]
 
 
 @pytest.fixture

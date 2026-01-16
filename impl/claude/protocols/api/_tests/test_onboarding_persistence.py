@@ -3,14 +3,35 @@ Test onboarding session persistence.
 
 Verifies that onboarding sessions are stored in Postgres and survive
 server restarts.
+
+NOTE: These tests require a running PostgreSQL test database container on port 5433.
+Start with: docker compose up -d postgres-test
 """
 
+import socket
 from datetime import datetime, timedelta
 
 import pytest
 
 from models import OnboardingSession
 from models.base import get_async_session
+
+
+def _is_postgres_available() -> bool:
+    """Check if test Postgres container is reachable on port 5433."""
+    try:
+        with socket.create_connection(("localhost", 5433), timeout=1):
+            return True
+    except (OSError, socket.timeout):
+        return False
+
+
+POSTGRES_AVAILABLE = _is_postgres_available()
+
+pytestmark = pytest.mark.skipif(
+    not POSTGRES_AVAILABLE,
+    reason="PostgreSQL test container not available (port 5433). Run: docker compose up -d postgres-test",
+)
 
 
 @pytest.mark.asyncio
