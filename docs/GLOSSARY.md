@@ -224,7 +224,7 @@ That's creating an audit record. The action and reasoning are being preserved.
 
 - **Want the full theory?** See `docs/theory/00-overture.md` for the mathematical foundations.
 - **Want the principles in depth?** See `spec/principles.md` for the seven core principles.
-- **Want practical patterns?** See `docs/skills/` for the 24 skills that cover common tasks.
+- **Want practical patterns?** See `docs/skills/` for the 30+ skills that cover common tasks.
 
 ---
 

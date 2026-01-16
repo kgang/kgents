@@ -1,46 +1,80 @@
 # Pilots
 
-> *"The run is the proof. The voice is the claim. The day is the witness."*
+> *"Every week validates infrastructure THROUGH a pilot, not in isolation."*
 
-Standalone canary experiences built on kgents systems. Each pilot is a compact, high-delight proof of system leverage—designed to be rebuilt, mutated, or retired quickly.
+Pilots are validation experiments for the kgents framework. Each is a compact, high-delight proof that the categorical foundation and witness layer actually work in real domains.
 
----
-
-## Philosophy
-
-These pilots share a common conviction: **actions are proofs, not just events**.
-
-Every pilot turns ordinary activity—playing a game, practicing freestyle, designing sprites, planning a trip, logging a day—into a chain of justified decisions. The witness layer doesn't slow things down; it makes them *feel* faster because indecision dissolves.
-
-### What Makes Pilots Different
-
-| Principle | How It Shows |
-|-----------|--------------|
-| **Composability** | Every pilot chains the same primitives: Mark → Trace → Crystal. Integration tables show exact flows. |
-| **Witness over Surveillance** | Systems feel like collaborators, not judges. Gaps are honored. Courage is protected. |
-| **Proof Language** | Actions are proofs. Sessions are traces. Crystals are claims. |
-| **Sensory Language** | How things *feel* matters: fast, warm, earned, rough, defended. |
-| **Anti-Success Sections** | Each pilot defines its failure modes—what would make it *wrong*, not just incomplete. |
+*"Tasteful > feature-complete"* applies here: pilots are intentionally small. A pilot that does one thing with depth beats one that does five things shallowly. *"Depth over breadth."*
 
 ---
 
-## Index
+## The Five Pilots
 
-| Pilot | Domain | Personality Tag | Tier |
-|-------|--------|-----------------|------|
-| **[Trail to Crystal](./trail-to-crystal-daily-lab/PROTO_SPEC.md)** | Daily action logging | *Honest gaps over concealment. Witness, not surveillance.* | Core |
-| **[Zero Seed Governance](./zero-seed-personal-governance-lab/PROTO_SPEC.md)** | Personal constitution | *Your axioms are not what you think. Galois loss reveals them.* | Core |
-| **[Wasm Survivors](./wasm-survivors-game/PROTO_SPEC.md)** | Arcade roguelike | *Failure is the clearest signal. Chaos is structure when witnessed.* | Domain |
-| **[Rap Coach](./rap-coach-flow-lab/PROTO_SPEC.md)** | Freestyle practice | *The rough voice, not the polished one. Witness, never judge.* | Domain |
-| **[Sprite Lab](./sprite-procedural-taste-lab/PROTO_SPEC.md)** | Procedural pixel art | *Artist's chaos over algorithmic cleanliness. Wild branches thrive.* | Domain |
-| **[Disney Portal](./disney-portal-planner/PROTO_SPEC.md)** | Trip planning | *Days should feel earned. Planning is adventure, not spreadsheet labor.* | Domain |
-| **[Categorical Foundation](./categorical-foundation-open-lab/PROTO_SPEC.md)** | Open-source infrastructure | *Category theory for the people. Power without prerequisites.* | Meta |
+| Pilot | Domain | Joy Type | Status |
+|-------|--------|----------|--------|
+| **[Trail to Crystal](./trail-to-crystal-daily-lab/PROTO_SPEC.md)** | Productivity | FLOW | Production |
+| **[Wasm Survivors](./wasm-survivors-game/PROTO_SPEC.md)** | Gaming | FLOW | Active |
+| **[Disney Portal](./disney-portal-planner/PROTO_SPEC.md)** | Consumer | WARMTH | Spec |
+| **[Rap Coach](./rap-coach-flow-lab/PROTO_SPEC.md)** | Creative | SURPRISE | Spec |
+| **[Sprite Lab](./sprite-procedural-taste-lab/PROTO_SPEC.md)** | Generative | SURPRISE | Spec |
 
-### Pilot Tiers
+### Joy Types
 
-- **Core**: Validates the fundamental thesis (Mark → Trace → Crystal)
-- **Domain**: Proves the pattern generalizes across verticals
-- **Meta**: Packages the patterns for external adoption
+- **FLOW**: The experience disappears into doing. Time dilates. Actions feel inevitable.
+- **WARMTH**: The experience feels earned, personal, worth sharing. Days feel whole.
+- **SURPRISE**: The experience delights through emergence. The system shows you something unexpected about yourself.
+
+---
+
+## The Wedge Pilot: Trail to Crystal
+
+Trail to Crystal is the **wedge**—the pilot that proves the core thesis before the others can build on it.
+
+The thesis: *actions are proofs, not just events.* Every mark captures intent. Every trace is immutable. Every crystal compresses meaning without losing it. If this works for daily productivity logging—the most mundane domain—it works anywhere.
+
+**Why productivity?** Because:
+- Everyone has days
+- Everyone makes choices
+- Everyone wonders where the time went
+
+If the witness layer can make *that* feel meaningful without adding friction, the categorical foundation is sound.
+
+---
+
+## Validation Philosophy
+
+Pilots are not products. They are **experiments** that stress-test infrastructure:
+
+```
+Week N: Pick a pilot
+        Build/extend with current infrastructure
+        Surface what's missing or broken
+        Fix infrastructure (not just the pilot)
+        Witness what worked
+```
+
+The goal is **validated leverage**. Each pilot should require less boilerplate than the last because the primitives are getting stronger.
+
+### What Pilots Prove
+
+| Primitive | How Pilots Validate |
+|-----------|---------------------|
+| **Mark** | Can decisions be captured without friction? |
+| **Trace** | Does immutability feel honest, not oppressive? |
+| **Crystal** | Does compression preserve meaning? |
+| **Galois** | Does drift surface clearly? |
+| **Ghost** | Do unchosen paths teach us anything? |
+
+---
+
+## Status Indicators
+
+| Status | Meaning |
+|--------|---------|
+| **Production** | Deployed, validated, daily driver |
+| **Active** | In development, core path works |
+| **Spec** | Spec complete, awaiting implementation |
+| **Incubating** | Exploring, not committed |
 
 ---
 
@@ -49,68 +83,22 @@ Every pilot turns ordinary activity—playing a game, practicing freestyle, desi
 All pilots compose the same kgents primitives:
 
 ```
-Mark      → captures decision with intent, weights, context
-Trace     → immutable history of marks
-Crystal   → compressive proof (meaning, not summary)
-Compass   → constitutional alignment visualization
-Trail     → navigation + evidence anchors
-Galois    → drift/coherence/loss signal
-Ghost     → unchosen alternatives (roads not taken)
-Contract  → API interface verified at CI time (see CONTRACT_COHERENCE.md)
+Mark      captures decision with intent, weights, context
+Trace     immutable history of marks
+Crystal   compressive proof (meaning, not summary)
+Compass   constitutional alignment visualization
+Trail     navigation + evidence anchors
+Galois    drift/coherence/loss signal
+Ghost     unchosen alternatives (roads not taken)
 ```
 
-The **Composition Chain** in each pilot shows exactly how these primitives flow for that domain.
-
-### Contract Coherence
-
-All pilots follow the [Contract Coherence Protocol](./CONTRACT_COHERENCE.md):
-- **L6**: API contracts have a single source of truth
-- **QA-5/6/7**: Contracts verified at test time, not runtime
-- **Anti-Success: Contract drift**: Users never see interface mismatches
-
-### Witnessed Regeneration
-
-Pilots are designed to be **dropped and regenerated** from specification. The protocol formalizes this as a 6-stage pipeline:
-
-```
-Spec → Archive >> Audit >> Sanity >> Generate >> Validate >> Learn → Spec'
-```
-
-| Stage | Purpose | Output |
-|-------|---------|--------|
-| **Archive** | Preserve current state | `runs/run-{N}/impl.archived/` |
-| **Audit** | Check contracts are sound | GO/NO-GO decision |
-| **Sanity** | Test API endpoints | PASS/FAIL |
-| **Generate** | Create from spec + contracts | Fresh implementation |
-| **Validate** | Test against qualitative assertions | PASS/FAIL |
-| **Learn** | Crystallize insights | Improved prompts for next run |
-
-**Meta-Prompt** (REQUIRED): [pilots/REGENERATE_META.md](./REGENERATE_META.md)
-
-The meta-prompt is the **single source of truth** for regeneration invocation. It derives from three axioms and composes with pilot-specific context. Always use it.
-
-**Skill Guide**: [docs/skills/witnessed-regeneration.md](../docs/skills/witnessed-regeneration.md)
-
-Each pilot's `runs/` directory contains the complete history of regeneration experiments—including failures. Failed runs teach us.
-
----
-
-## Canary Criteria
-
-Each pilot defines concrete success markers—not features, but *experiences*:
-
-- Can the user explain X using only the crystal and trail?
-- Does the system surface Y without judgment?
-- Does the ritual feel like closure, not obligation?
-- Does the user *want* to return?
-
-If a pilot can't pass its canary criteria, it hasn't earned its place.
+The Composition Chain in each pilot's PROTO_SPEC shows exactly how these flow.
 
 ---
 
 ## Anti-Success
 
-Every pilot includes a **failure mode section**—clinical diagnoses of what would make the experience *wrong*:
+Every pilot defines failure modes. These are not edge cases—they are the gravitational pull every system must resist:
 
 - **Surveillance creep**: witnessing adds drag, changes behavior
 - **Judgment leakage**: descriptive becomes evaluative
@@ -118,8 +106,8 @@ Every pilot includes a **failure mode section**—clinical diagnoses of what wou
 - **Coldness**: crystals read like reports
 - **Gap shame**: honest rest becomes invisible
 
-These are not edge cases. They are the gravitational pull every system must resist.
+If a pilot can't resist these, it hasn't earned its place.
 
 ---
 
-*Compiled: 2025-12-26 | Pilots are proofs, not products.*
+*Pilots are proofs, not products.*

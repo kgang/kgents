@@ -315,4 +315,4 @@ kgents/
 - Read [AGENTESE specification](../spec/protocols/agentese.md)
 - Check [systems reference](systems-reference.md) for built infrastructure
 - Visit the [Projection Gallery](http://localhost:3000/_/gallery) to see all widgets
-- Learn the 21 skills in [docs/skills/](skills/)
+- Learn the 30+ skills in [docs/skills/](skills/)

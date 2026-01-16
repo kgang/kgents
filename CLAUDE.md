@@ -196,7 +196,7 @@ These compositions are ready to use:
 
 ## 📚 SKILLS: Your First Stop
 
-> *"24 skills are necessary and sufficient to build any kgents component."*
+> *"30+ skills are necessary and sufficient to build any kgents component."*
 
 **Before doing ANYTHING, consult the relevant skill** in `docs/skills/`. Every task—from adding a state machine to building a responsive UI—has a corresponding skill that will save you hours.
 

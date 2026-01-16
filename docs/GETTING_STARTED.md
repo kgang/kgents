@@ -126,7 +126,7 @@ kgents/
 │       └── tests/
 │
 └── docs/
-    ├── skills/              # How-to guides (24 skills)
+    ├── skills/              # How-to guides (30+ skills)
     └── theory/              # Mathematical foundations (21 chapters)
 ```
 

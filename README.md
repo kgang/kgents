@@ -83,7 +83,7 @@ kgents/
 │   ├── theory/            # Mathematical foundations (21 chapters)
 │   │   ├── 00-overture.md # START HERE for the theory
 │   │   └── README.md      # Full chapter index
-│   ├── skills/            # Practical how-to guides (24 skills)
+│   ├── skills/            # Practical how-to guides (30+ skills)
 │   ├── GETTING_STARTED.md # Developer onboarding guide
 │   ├── ARCHITECTURE.md    # Visual architecture diagrams (Mermaid)
 │   └── GLOSSARY.md        # Plain-English definitions

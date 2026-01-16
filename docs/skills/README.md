@@ -4,7 +4,7 @@ context: self
 
 # Agent Skills Directory
 
-> *"24 skills are necessary and sufficient to build any kgents component."*
+> *"30+ skills are necessary and sufficient to build any kgents component."*
 
 **READ SKILLS FIRST.** Every task has a corresponding skill. Before writing code, find the right skill—it will save you hours.
 
@@ -119,4 +119,4 @@ Extended skills archived to `docs/_archive/2025-12-18-consolidation/`. Restore i
 
 ---
 
-*Consolidated: 2025-12-26 | Skills: 24 active | Docs Renaissance Edition*
+*Consolidated: 2025-12-26 | Skills: 31 active | Docs Renaissance Edition*

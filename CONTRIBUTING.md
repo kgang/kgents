@@ -276,7 +276,7 @@ Read `docs/skills/metaphysical-fullstack.md` for deep understanding.
 
 ### For Learning
 
-- **`docs/skills/`** — 24 skills covering every task
+- **`docs/skills/`** — 30+ skills covering every task
 - **`CLAUDE.md`** — Project philosophy and voice anchors
 - **`NOW.md`** — Current focus and recent progress
 

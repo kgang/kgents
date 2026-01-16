@@ -22,9 +22,9 @@ This map provides a comprehensive overview of kgents documentation structure, he
 
 ### Skills (AUTHORITATIVE - Read First)
 
-**Location**: `docs/skills/` (29 files)
+**Location**: `docs/skills/` (34 files, 31 skills + 3 index files)
 
-The 24+ practical skills are the most important documentation. Every task has a corresponding skill.
+The 30+ practical skills are the most important documentation. Every task has a corresponding skill.
 
 | Category | Skills |
 |----------|--------|
