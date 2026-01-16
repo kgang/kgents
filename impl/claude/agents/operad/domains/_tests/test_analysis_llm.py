@@ -207,9 +207,10 @@ async def test_categorical_llm_success(mock_categorical_report, temp_spec_file):
     # Mock the imports that happen inside the function
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service) as mock_service_cls, \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service) as mock_service_cls,
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_categorical_llm(temp_spec_file)
 
         # Verify service was instantiated with LLM
@@ -249,14 +250,13 @@ async def test_categorical_llm_import_error_fallback(temp_spec_file):
 async def test_categorical_llm_error_fallback(temp_spec_file):
     """Test fallback to structural when LLM raises error."""
     mock_service = MagicMock()
-    mock_service.analyze_categorical = AsyncMock(
-        side_effect=ValueError("LLM API error")
-    )
+    mock_service.analyze_categorical = AsyncMock(side_effect=ValueError("LLM API error"))
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_categorical_llm(temp_spec_file)
 
         # Should fall back to structural with error message
@@ -289,9 +289,10 @@ async def test_categorical_llm_file_not_found():
     mock_service.analyze_categorical = AsyncMock(return_value=error_report)
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_categorical_llm(nonexistent)
 
         assert isinstance(result, CategoricalReport)
@@ -313,9 +314,10 @@ async def test_epistemic_llm_success(mock_epistemic_report, temp_spec_file):
     mock_service.analyze_epistemic = AsyncMock(return_value=mock_epistemic_report)
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_epistemic_llm(temp_spec_file)
 
         mock_service.analyze_epistemic.assert_called_once_with(temp_spec_file)
@@ -345,9 +347,10 @@ async def test_epistemic_llm_error_fallback(temp_spec_file):
     mock_service.analyze_epistemic = AsyncMock(side_effect=RuntimeError("API timeout"))
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_epistemic_llm(temp_spec_file)
 
         assert isinstance(result, EpistemicReport)
@@ -367,9 +370,10 @@ async def test_dialectical_llm_success(mock_dialectical_report, temp_spec_file):
     mock_service.analyze_dialectical = AsyncMock(return_value=mock_dialectical_report)
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_dialectical_llm(temp_spec_file)
 
         mock_service.analyze_dialectical.assert_called_once_with(temp_spec_file)
@@ -397,14 +401,13 @@ async def test_dialectical_llm_import_error_fallback(temp_spec_file):
 async def test_dialectical_llm_error_fallback(temp_spec_file):
     """Test dialectical fallback to structural on LLM error."""
     mock_service = MagicMock()
-    mock_service.analyze_dialectical = AsyncMock(
-        side_effect=Exception("Rate limit exceeded")
-    )
+    mock_service.analyze_dialectical = AsyncMock(side_effect=Exception("Rate limit exceeded"))
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_dialectical_llm(temp_spec_file)
 
         assert isinstance(result, DialecticalReport)
@@ -424,9 +427,10 @@ async def test_generative_llm_success(mock_generative_report, temp_spec_file):
     mock_service.analyze_generative = AsyncMock(return_value=mock_generative_report)
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_generative_llm(temp_spec_file)
 
         mock_service.analyze_generative.assert_called_once_with(temp_spec_file)
@@ -454,14 +458,13 @@ async def test_generative_llm_import_error_fallback(temp_spec_file):
 async def test_generative_llm_error_fallback(temp_spec_file):
     """Test generative fallback to structural on LLM error."""
     mock_service = MagicMock()
-    mock_service.analyze_generative = AsyncMock(
-        side_effect=KeyError("Missing analysis key")
-    )
+    mock_service.analyze_generative = AsyncMock(side_effect=KeyError("Missing analysis key"))
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_generative_llm(temp_spec_file)
 
         assert isinstance(result, GenerativeReport)
@@ -481,9 +484,10 @@ async def test_full_llm_success(mock_full_report, temp_spec_file):
     mock_service.analyze_full = AsyncMock(return_value=mock_full_report)
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_full_llm(temp_spec_file)
 
         mock_service.analyze_full.assert_called_once_with(temp_spec_file)
@@ -518,9 +522,10 @@ async def test_full_llm_error_fallback(temp_spec_file):
     mock_service.analyze_full = AsyncMock(side_effect=ConnectionError("Network error"))
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_full_llm(temp_spec_file)
 
         assert isinstance(result, FullAnalysisReport)
@@ -554,7 +559,13 @@ async def test_full_llm_validation(temp_spec_file):
             target="spec/test.md",
             layer=4,
             toulmin=ToulminStructure(
-                claim="", grounds=(), warrant="", backing="", qualifier="", rebuttals=(), tier=EvidenceTier.EMPIRICAL
+                claim="",
+                grounds=(),
+                warrant="",
+                backing="",
+                qualifier="",
+                rebuttals=(),
+                tier=EvidenceTier.EMPIRICAL,
             ),
             grounding=GroundingChain(steps=(), terminates_at_axiom=True),
             bootstrap=None,
@@ -576,9 +587,10 @@ async def test_full_llm_validation(temp_spec_file):
     mock_service.analyze_full = AsyncMock(return_value=invalid_report)
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await analyze_full_llm(temp_spec_file)
 
         assert not result.is_valid  # Should be invalid due to violations
@@ -606,15 +618,17 @@ async def test_self_analyze_llm(mock_full_report):
     mock_service.analyze_full = AsyncMock(return_value=self_report)
     mock_llm = MagicMock()
 
-    with patch("services.analysis.AnalysisService", return_value=mock_service), \
-         patch("agents.k.soul.create_llm_client", return_value=mock_llm):
-
+    with (
+        patch("services.analysis.AnalysisService", return_value=mock_service),
+        patch("agents.k.soul.create_llm_client", return_value=mock_llm),
+    ):
         result = await self_analyze_llm()
 
-        # Should call analyze_full with the analysis operad spec
-        mock_service.analyze_full.assert_called_once_with(
-            "spec/theory/analysis-operad.md"
-        )
+        # Should call analyze_full with a path ending in the analysis operad spec
+        # (The actual path will be absolute based on the project root)
+        mock_service.analyze_full.assert_called_once()
+        call_args = mock_service.analyze_full.call_args[0][0]
+        assert call_args.endswith("spec/theory/analysis-operad.md")
 
         assert isinstance(result, FullAnalysisReport)
         assert result.target == "spec/theory/analysis-operad.md"
@@ -629,7 +643,9 @@ async def test_self_analyze_llm_fallback():
         assert isinstance(result, FullAnalysisReport)
         assert result.target == "spec/theory/analysis-operad.md"
         # Should use structural fallback
-        assert "structural" in result.synthesis.lower() or "construction" in result.synthesis.lower()
+        assert (
+            "structural" in result.synthesis.lower() or "construction" in result.synthesis.lower()
+        )
 
 
 # =============================================================================
@@ -662,7 +678,13 @@ def test_epistemic_report_properties():
         target="test.md",
         layer=4,
         toulmin=ToulminStructure(
-            claim="", grounds=(), warrant="", backing="", qualifier="", rebuttals=(), tier=EvidenceTier.CATEGORICAL
+            claim="",
+            grounds=(),
+            warrant="",
+            backing="",
+            qualifier="",
+            rebuttals=(),
+            tier=EvidenceTier.CATEGORICAL,
         ),
         grounding=GroundingChain(steps=(), terminates_at_axiom=True),
         bootstrap=BootstrapAnalysis(

@@ -120,6 +120,6 @@ def test_date_filtering():
     patterns = miner.mine_commit_patterns(since="2025-12-01T00:00:00+00:00")
     assert patterns.total_commits >= 0  # May be 0 if no recent commits
 
-    # Future date (should return 0 commits)
-    patterns = miner.mine_commit_patterns(since="2026-01-01T00:00:00+00:00")
+    # Far future date (should return 0 commits)
+    patterns = miner.mine_commit_patterns(since="2099-01-01T00:00:00+00:00")
     assert patterns.total_commits == 0
