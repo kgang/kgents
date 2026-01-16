@@ -95,13 +95,8 @@ def _discover_paths() -> list[str]:
     except ImportError:
         pass
 
-    # Non-thin handlers
-    try:
-        from protocols.cli.handlers.joy import JOY_SUBCOMMAND_MAP
-
-        paths.update(JOY_SUBCOMMAND_MAP.values())
-    except ImportError:
-        pass
+    # Joy handlers are discovered through handler registry, not AGENTESE paths
+    # (oblique, surprise, yes-and, challenge, constrain are CLI-only commands)
 
     # 2. From Crown Jewels registry (comprehensive path collection)
     try:
