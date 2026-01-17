@@ -84,6 +84,7 @@ if TYPE_CHECKING:
     from services.verification import VerificationPersistence
     from services.witness import WitnessPersistence
     from services.witness.bus import WitnessSynergyBus
+    from services.zero_seed.ashc_self_awareness import ASHCSelfAwareness
     from services.zero_seed.galois import GaloisLossComputer
 
 logger = logging.getLogger(__name__)
@@ -551,6 +552,34 @@ async def get_galois_service() -> "GaloisLossComputer":
     return GaloisLossComputer()
 
 
+async def get_ashc_self_awareness() -> "ASHCSelfAwareness":
+    """
+    Get the ASHCSelfAwareness service for Constitutional introspection.
+
+    ASHC Self-Awareness enables kgents to answer "Why does this file exist?"
+    by providing five introspection APIs:
+
+    1. am_i_grounded(block_id) - Returns bool + derivation path to L0
+    2. what_principle_justifies(action) - Returns principle + loss score
+    3. verify_self_consistency() - Returns consistency report
+    4. get_derivation_ancestors(block_id) - Returns full lineage to L0
+    5. get_downstream_impact(block_id) - Returns dependent blocks
+
+    Philosophy:
+        "The compiler that knows itself is the compiler that trusts itself."
+
+    Used by:
+    - Constitutional introspection queries
+    - ASHC derivation verification
+    - Self-reflective OS components
+
+    See: services/zero_seed/ashc_self_awareness.py
+    """
+    from services.zero_seed.ashc_self_awareness import get_ashc_self_awareness as get_service
+
+    return get_service()
+
+
 # =============================================================================
 # Fusion Crown Jewel (Symmetric Supersession)
 # =============================================================================
@@ -579,6 +608,35 @@ async def get_fusion_service() -> "FusionService":
         witness = None
 
     return FusionService(witness=witness)
+
+
+async def get_dialectic_service():
+    """
+    Get the DialecticalFusionService for Kent+Claude dialectical synthesis.
+
+    The dialectic service operationalizes Chapter 17 (Dialectical Fusion):
+    - thesis: Kent's position
+    - antithesis: Claude's position
+    - synthesis: A fusion better than either alone (categorical cocone)
+
+    The Emerging Constitution (7 articles) governs the fusion:
+        I.   Symmetric Agency
+        II.  Adversarial Cooperation
+        III. Supersession Rights
+        IV.  The Disgust Veto (Kent's absolute)
+        V.   Trust Accumulation
+        VI.  Fusion as Goal
+        VII. Amendment
+
+    Used by DialecticNode for self.dialectic.* AGENTESE paths.
+    Used by FusionConceptNode for concept.fusion.* AGENTESE paths.
+
+    See: docs/theory/17-dialectic.md
+    See: plans/theory-operationalization/05-co-engineering.md (E3)
+    """
+    from services.dialectic import DialecticalFusionService
+
+    return DialecticalFusionService()
 
 
 # =============================================================================
@@ -1163,6 +1221,88 @@ async def get_amendment_service():
 
 
 # =============================================================================
+# Skill Injection Crown Jewel (JIT Skill Surfacing)
+# =============================================================================
+
+
+async def get_skill_registry():
+    """
+    Get the SkillRegistry for JIT skill injection.
+
+    The SkillRegistry holds all available skills with their activation conditions.
+    Skills surface exactly when needed based on task context.
+
+    Philosophy:
+        "Skills surface exactly when needed, not before."
+        "Context-aware activation based on task patterns."
+
+    Example:
+        registry = await get_skill_registry()
+        skills = registry.list_skills()
+        match = registry.find_by_keywords(["agent", "state machine"])
+
+    See: services/skill_injection/registry.py
+    """
+    from services.skill_injection import get_skill_registry as get_registry
+
+    return get_registry()
+
+
+async def get_jit_injector():
+    """
+    Get the JITInjector for runtime skill content injection.
+
+    The JITInjector orchestrates:
+    - Skill activation based on task context
+    - Content injection with gotchas
+    - Usage outcome recording for learning
+
+    Philosophy:
+        "Learn from what worked, forget what didn't."
+
+    Example:
+        injector = await get_jit_injector()
+        result = await injector.inject_for_task(
+            task="Add a Crown Jewel service",
+            active_files=["services/foo/node.py"],
+        )
+
+    See: services/skill_injection/jit_injector.py
+    """
+    from services.skill_injection import get_jit_injector as get_injector
+
+    return get_injector()
+
+
+async def get_axiom_discovery_pipeline():
+    """
+    Get the AxiomDiscoveryPipeline for personal axiom discovery.
+
+    Discovers personal axioms from decision history:
+    - L < 0.05 fixed points Kent never violates
+    - Pattern extraction from decision marks
+    - Contradiction detection between axioms
+
+    Philosophy:
+        "Axioms are not stipulated but discovered.
+         They are the fixed points of your decision landscape."
+
+    Example:
+        pipeline = await get_axiom_discovery_pipeline()
+        result = await pipeline.discover_axioms(
+            user_id="kent",
+            days=30,
+            max_candidates=5,
+        )
+
+    See: services/zero_seed/axiom_discovery_pipeline.py
+    """
+    from services.zero_seed import AxiomDiscoveryPipeline
+
+    return AxiomDiscoveryPipeline()
+
+
+# =============================================================================
 # Setup Function
 # =============================================================================
 
@@ -1253,8 +1393,14 @@ async def setup_providers() -> None:
     # Zero Seed Crown Jewel (Galois-Grounded Constitutional Evaluation)
     container.register("galois_service", get_galois_service, singleton=True)
 
+    # ASHC Self-Awareness Crown Jewel (Constitutional Introspection)
+    container.register("ashc_self_awareness", get_ashc_self_awareness, singleton=True)
+
     # Fusion Crown Jewel (Symmetric Supersession)
     container.register("fusion_service", get_fusion_service, singleton=True)
+
+    # Dialectic Crown Jewel (Thesis-Antithesis-Synthesis)
+    container.register("dialectic_service", get_dialectic_service, singleton=True)
 
     # Trail Intelligence (Visual Trail Graph Session 3)
     container.register("embedder", get_embedder, singleton=True)
@@ -1307,8 +1453,15 @@ async def setup_providers() -> None:
     # Amendment Crown Jewel (Self-Reflective OS: Constitutional Evolution)
     container.register("amendment_service", get_amendment_service, singleton=True)
 
+    # Skill Injection Crown Jewel (JIT Skill Surfacing)
+    container.register("skill_registry", get_skill_registry, singleton=True)
+    container.register("jit_injector", get_jit_injector, singleton=True)
+
+    # Axiom Discovery Pipeline (Zero Seed Personal Governance)
+    container.register("axiom_discovery_pipeline", get_axiom_discovery_pipeline, singleton=True)
+
     logger.info(
-        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion + CLI Tool Use + Code + KGames + Pilots + Amendment)"
+        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + K-Block + ASHC + Fusion + CLI Tool Use + Code + KGames + Pilots + Amendment + Skill Injection + Axiom Discovery)"
     )
 
     # Import service nodes to trigger @node registration
@@ -1369,6 +1522,14 @@ async def setup_providers() -> None:
         logger.info("FusionNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"FusionNode not available: {e}")
+
+    # Dialectic Crown Jewel (Thesis-Antithesis-Synthesis)
+    try:
+        from services.dialectic.node import DialecticNode, FusionConceptNode  # noqa: F401
+
+        logger.info("DialecticNode + FusionConceptNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"Dialectic nodes not available: {e}")
 
     # Sovereign Crown Jewel (Inbound Sovereignty)
     try:
@@ -1463,6 +1624,22 @@ async def setup_providers() -> None:
         logger.info("AmendmentNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"AmendmentNode not available: {e}")
+
+    # Skill Injection Crown Jewel (JIT Skill Surfacing)
+    try:
+        from services.skill_injection import SkillNode  # noqa: F401
+
+        logger.info("SkillNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"SkillNode not available: {e}")
+
+    # Axiom Discovery Crown Jewel (Zero Seed Personal Governance)
+    try:
+        from services.zero_seed import AxiomNode  # noqa: F401
+
+        logger.info("AxiomNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"AxiomNode not available: {e}")
 
     # Wire KgentSoul to SoulNode
     try:
@@ -1569,8 +1746,12 @@ __all__ = [
     "get_lemma_database",
     # Zero Seed Crown Jewel
     "get_galois_service",
+    # ASHC Self-Awareness Crown Jewel
+    "get_ashc_self_awareness",
     # Fusion Crown Jewel
     "get_fusion_service",
+    # Dialectic Crown Jewel
+    "get_dialectic_service",
     # Trail Intelligence
     "get_embedder",
     # Sovereign Crown Jewel
@@ -1607,4 +1788,9 @@ __all__ = [
     "get_kgames_kernel",
     # Amendment Crown Jewel (Self-Reflective OS: Constitutional Evolution)
     "get_amendment_service",
+    # Skill Injection Crown Jewel
+    "get_skill_registry",
+    "get_jit_injector",
+    # Axiom Discovery Pipeline
+    "get_axiom_discovery_pipeline",
 ]

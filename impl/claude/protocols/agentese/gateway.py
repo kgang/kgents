@@ -267,6 +267,24 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (fusion): {e}")
 
+        # === Dialectic Crown Jewel (self.dialectic.*, concept.fusion.*) ===
+        try:
+            from services.dialectic import node as dialectic_node  # noqa: F401
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (dialectic): {e}")
+
+        # === Zero Seed Axiom Node (self.axiom.*) ===
+        try:
+            from services.zero_seed import axiom_node  # noqa: F401  # self.axiom.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (axiom_node): {e}")
+
+        # === Skill Injection Crown Jewel (self.skill.*) ===
+        try:
+            from services.skill_injection import node as skill_node  # noqa: F401  # self.skill.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (skill_injection): {e}")
+
         # === Foundry Crown Jewel (world.foundry.*) ===
         try:
             from services.foundry import node as foundry_node  # noqa: F401
