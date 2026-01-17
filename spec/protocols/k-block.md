@@ -1050,5 +1050,326 @@ The K-Block completes the vision of **transactional specification manipulation**
 
 ---
 
+## Genesis K-Block Definitions (Extracted 2026-01-17)
+
+> *"The proof IS the derivation. The mark IS the witness. The seed IS the garden."*
+
+This section documents the **Constitutional K-Blocks** that form the genesis of kgents. These K-Blocks are the ROOT of all derivation paths---every principle, every decision, every architectural choice traces back to these foundational nodes.
+
+---
+
+### The Complete 22 K-Block Table
+
+| ID | Layer | Title | Galois Loss | Purpose |
+|----|-------|-------|-------------|---------|
+| **L0: Zero Seed (4 Axioms)** |
+| `genesis:L0:entity` | 0 | A1: Entity | 0.000 | "There exist things"---objects in a category |
+| `genesis:L0:morphism` | 0 | A2: Morphism | 0.000 | "Things relate"---arrows between objects |
+| `genesis:L0:mirror` | 0 | A3: Mirror Test | 0.000 | "We judge by reflection"---Kent's somatic oracle |
+| `genesis:L0:galois` | 0 | G: Galois Ground | 0.000 | "Axioms are fixed points"---termination guarantee |
+| **L1: Minimal Kernel (7 Primitives)** |
+| `genesis:L1:compose` | 1 | Compose | 0.01-0.02 | Sequential combination: (f >> g)(x) = g(f(x)) |
+| `genesis:L1:judge` | 1 | Judge | 0.02 | Verdict generation: Claim -> Verdict |
+| `genesis:L1:ground` | 1 | Ground | 0.01 | Factual seed: Query -> grounded facts |
+| `genesis:L1:id` | 1 | Id (Identity) | 0.03-0.05 | Identity morphism: f >> Id = f = Id >> f |
+| `genesis:L1:contradict` | 1 | Contradict | 0.04-0.08 | Antithesis generation: Thesis -> Antithesis |
+| `genesis:L1:sublate` | 1 | Sublate | 0.05-0.12 | Synthesis: (Thesis, Antithesis) -> Synthesis |
+| `genesis:L1:fix` | 1 | Fix | 0.04-0.10 | Fixed-point iteration: Fix(f) = x where f(x) = x |
+| **L2: Design Principles (7 Principles)** |
+| `genesis:L2:tasteful` | 2 | TASTEFUL | 0.08 | Each agent serves a clear, justified purpose |
+| `genesis:L2:curated` | 2 | CURATED | 0.09 | Intentional selection over exhaustive cataloging |
+| `genesis:L2:ethical` | 2 | ETHICAL | 0.10 | Agents augment human capability, never replace judgment |
+| `genesis:L2:joy` | 2 | JOY_INDUCING | 0.12 | Delight in interaction; personality matters |
+| `genesis:L2:composable` | 2 | COMPOSABLE | 0.08 | Agents are morphisms in a category |
+| `genesis:L2:heterarchical` | 2 | HETERARCHICAL | 0.45 | Agents exist in flux, not fixed hierarchy |
+| `genesis:L2:generative` | 2 | GENERATIVE | 0.15 | Spec is compression; design generates implementation |
+| **L3: Architecture (4 Self-Descriptions)** |
+| `genesis:L3:ashc` | 3 | ASHC | 0.25 | The compiler is a trace accumulator |
+| `genesis:L3:metaphysical` | 3 | Metaphysical Fullstack | 0.30 | Every agent is a vertical slice |
+| `genesis:L3:hypergraph` | 3 | Hypergraph Editor | 0.35 | Six-mode modal editing for the Constitutional Graph |
+| `genesis:L3:crown-jewels` | 3 | Crown Jewels | 0.40 | Domain-specific categorical compositions |
+
+**Total: 22 K-Blocks** (4 + 7 + 7 + 4)
+
+---
+
+### The Derivation Graph Structure
+
+```
+                        L3: ARCHITECTURE
+                        +-------------------+
+                        | ASHC  Fullstack   |
+                        | Hypergraph  CJ    |
+                        +---------+---------+
+                                  |
+                                  | derives_from
+                                  v
+                        L2: PRINCIPLES
+        +-----------------------------------------------+
+        | TASTEFUL  CURATED  ETHICAL  JOY_INDUCING      |
+        | COMPOSABLE  HETERARCHICAL  GENERATIVE          |
+        +------------------------+----------------------+
+                                 |
+                                 | derives_from
+                                 v
+                        L1: MINIMAL KERNEL
+        +-----------------------------------------------+
+        | Compose  Judge  Ground  Id                     |
+        | Contradict  Sublate  Fix                       |
+        +------------------------+----------------------+
+                                 |
+                                 | derives_from
+                                 v
+                        L0: ZERO SEED
+        +-----------------------------------------------+
+        | A1:Entity  A2:Morphism  A3:Mirror  G:Galois   |
+        +-----------------------------------------------+
+```
+
+Every K-Block knows:
+1. **What it derives from** (`derivations_from`)
+2. **What derives from it** (`derivations_to`)
+3. **Its Galois loss** (distance from fixed point)
+4. **Its Toulmin proof** (for L1+)
+
+---
+
+### Layer Semantics
+
+**L0 Axioms**: These are the **irreducible bedrock**. They cannot be derived from anything simpler. They are *chosen*, not proven.
+
+- **A1 Entity**: Without entities, there is nothing to compose, judge, or ground
+- **A2 Morphism**: Without morphisms, entities are isolated atoms with no structure
+- **A3 Mirror**: Kent's somatic response IS the ultimate arbiter---cannot be algorithmized
+- **G Galois**: The guarantee that our axiom-finding process terminates
+
+**L1 Primitives**: These are the **operational forms** of the axioms.
+
+- **Compose**: How A2 (Morphism) becomes executable
+- **Judge**: How A3 (Mirror) becomes executable
+- **Ground**: How A1 (Entity) becomes executable
+- **Id**: Derived from Compose + Judge---the unit of composition
+- **Contradict**: Derived from Judge---recognizes when Judge rejects
+- **Sublate**: Derived from Compose + Judge + Contradict---Hegelian synthesis
+- **Fix**: Derived from Compose + Judge---finds stable configurations
+
+**L2 Principles**: These are **specialized applications** of Judge to different domains.
+
+- **TASTEFUL**: Judge applied to aesthetics via Mirror
+- **CURATED**: Judge applied to selection via Ground
+- **ETHICAL**: Judge applied to harm via Mirror
+- **JOY_INDUCING**: Judge applied to affect via Mirror
+- **COMPOSABLE**: Compose + Id as design principle (category laws)
+- **HETERARCHICAL**: Judge applied to hierarchy (categorical theorem)
+- **GENERATIVE**: Ground + Compose + Fix applied to regenerability
+
+**L3 Architecture**: These are **self-descriptions** that teach the system about itself.
+
+- **ASHC**: How the compiler works (evidence accumulation)
+- **Metaphysical Fullstack**: How agents are structured (vertical slices)
+- **Hypergraph Editor**: How navigation works (modal editing)
+- **Crown Jewels**: What domain compositions exist (Brain, Town, Witness, Atelier)
+
+---
+
+### Galois Loss Interpretation
+
+| Range | Interpretation |
+|-------|----------------|
+| L = 0.00 | Axiom (irreducible, chosen not derived) |
+| L = 0.01-0.05 | Near fixed-point (minimal operational loss) |
+| L = 0.05-0.15 | Categorical (clear derivation, verified laws) |
+| L = 0.15-0.30 | Elaborated (some contextual interpretation) |
+| L = 0.30-0.50 | Architectural (self-descriptive, higher abstraction) |
+
+**Why COMPOSABLE has lowest L2 loss (0.08)**: It is the most purely categorical---directly instantiates L0.2 (Morphism) without requiring L0.3 (Mirror). The laws are mathematical, not subjective.
+
+**Why HETERARCHICAL has highest L2 loss (0.45)**: Yet Kent rates it CATEGORICAL because he recognizes the theorem: in a category, no morphism has intrinsic privilege.
+
+---
+
+### The 6 Derivation DAG Invariants
+
+The Constitutional Graph MUST satisfy these laws:
+
+```python
+def verify_derivation_dag():
+    """The Constitutional Graph must satisfy these invariants."""
+
+    # L1: Unique Root
+    # Only L0 axioms have layer=0; they are the roots
+    roots = [b for b in blocks if b.layer == 0]
+    assert len(roots) == 4  # A1, A2, A3, G
+
+    # L2: No Orphan Parents
+    # Every derivation_from must reference an existing K-Block
+    for block in blocks:
+        for parent_id in block.derivations_from:
+            assert parent_id in block_ids
+
+    # L3: Layer Monotonicity
+    # Parents must be at strictly lower layers
+    for block in blocks:
+        for parent_id in block.derivations_from:
+            parent = get_block(parent_id)
+            assert parent.layer < block.layer
+
+    # L4: Acyclicity
+    # No cycles in the derivation graph
+    assert is_dag(derivation_graph)
+
+    # L5: L0 Has No Parents
+    # Axioms derive from nothing (they are irreducible)
+    for block in l0_blocks:
+        assert block.derivations_from == []
+
+    # L6: L1+ Has Parents
+    # Everything above L0 derives from something
+    for block in blocks:
+        if block.layer > 0:
+            assert len(block.derivations_from) > 0
+```
+
+| Law | Statement | Verification |
+|-----|-----------|--------------|
+| **L1: Unique Root** | Only L0 has layer=0 | `len([b for b in blocks if b.layer == 0]) == 4` |
+| **L2: No Orphan Parents** | All parent references exist | `all(p in block_ids for b in blocks for p in b.derivations_from)` |
+| **L3: Layer Monotonicity** | Parents at lower layers | `parent.layer < block.layer` |
+| **L4: Acyclicity** | No cycles in derivation graph | `is_dag(derivation_graph)` |
+| **L5: L0 Has No Parents** | Axioms derive from nothing | `all(b.derivations_from == [] for b in l0_blocks)` |
+| **L6: L1+ Has Parents** | Non-axioms have derivations | `all(len(b.derivations_from) > 0 for b in blocks if b.layer > 0)` |
+
+---
+
+### Genesis Bootstrap Order
+
+The Constitutional Graph seeds in layer order:
+
+```python
+async def bootstrap_constitutional_graph() -> BootstrapResult:
+    """Bootstrap the Constitutional Graph in correct order."""
+
+    # 1. Seed L0 (Zero Seed) - axioms have no parents
+    l0_blocks = await seed_layer_0()
+    for block in l0_blocks:
+        assert block.derivations_from == []
+        assert block.proof is None  # Axioms have no proof
+
+    # 2. Seed L1 (Minimal Kernel) - derive from L0
+    l1_blocks = await seed_layer_1(derives_from=l0_blocks)
+    for block in l1_blocks:
+        assert all(d.startswith("genesis:L0:") for d in block.derivations_from)
+        assert block.proof.galois_loss < 0.05
+
+    # 3. Seed L2 (Principles) - derive from L0 + L1
+    l2_blocks = await seed_layer_2(derives_from=l0_blocks + l1_blocks)
+    for block in l2_blocks:
+        assert block.proof.galois_loss < 0.50
+
+    # 4. Seed L3 (Architecture) - derive from L1 + L2
+    l3_blocks = await seed_layer_3(derives_from=l1_blocks + l2_blocks)
+    for block in l3_blocks:
+        assert block.proof.galois_loss < 0.50
+
+    # 5. Validate DAG structure
+    all_blocks = l0_blocks + l1_blocks + l2_blocks + l3_blocks
+    assert is_dag(build_derivation_graph(all_blocks))
+    assert len(all_blocks) == 22
+
+    return BootstrapResult(
+        constitution=ConstitutionalGraph(
+            nodes={b.id: b for b in all_blocks},
+            edges=extract_edges(all_blocks),
+        ),
+        verified=True,
+    )
+```
+
+**Seeding Order**:
+1. **L0 -> L1**: Axioms ground the Minimal Kernel
+2. **L1 -> L2**: Primitives operationalize into Principles
+3. **L2 -> L3**: Principles elaborate into Architecture
+
+Each layer must complete before the next begins. Derivation edges are validated at each step.
+
+---
+
+### Genesis K-Block Data Model
+
+```python
+@dataclass(frozen=True)
+class GenesisKBlock:
+    """A K-Block in the Genesis Constitutional Graph."""
+
+    id: str                                    # e.g., "genesis:L0:entity"
+    path: str                                  # AGENTESE path
+    layer: Literal[0, 1, 2, 3]                 # Genesis layer
+    title: str
+    content: str                               # Markdown
+    proof: GaloisWitnessedProof | None         # None for L0
+    confidence: float                          # 1 - galois_loss
+    color: str                                 # LIVING_EARTH hex
+    derivations_from: list[str]                # K-Block IDs
+    derivations_to: list[str]                  # K-Block IDs
+    tags: frozenset[str]
+
+
+@dataclass
+class ConstitutionalGraph:
+    """The seeded graph of Genesis K-Blocks."""
+
+    nodes: dict[str, GenesisKBlock]            # id -> K-Block
+    edges: list[tuple[str, str, str]]          # (source, target, edge_type)
+
+    def get_layer(self, layer: int) -> list[GenesisKBlock]: ...
+    def get_derivations(self, node_id: str) -> list[GenesisKBlock]: ...
+    def get_derived(self, node_id: str) -> list[GenesisKBlock]: ...
+```
+
+---
+
+### The Lawvere Fixed-Point
+
+The deepest mathematical insight: **The bootstrap IS a fixed point**.
+
+```
+Fix(Compose + Judge + Ground) = {Id, Compose, Judge, Ground, Contradict, Sublate, Fix}
+```
+
+This is not arbitrary. This is the structure that MUST exist for a self-describing system. Lawvere's fixed-point theorem guarantees convergence.
+
+ASHC instantiates this at the architectural level:
+
+```
+Constitution --derive--> ASHC --verify--> Constitution
+     |                                         ^
+     |                                         |
+     +--------------[fixed point]--------------+
+```
+
+---
+
+### Connection to K-Block Editing
+
+The K-Block as defined in this spec (transactional hyperdimensional editing) and the Genesis K-Blocks (constitutional nodes) share the same fundamental structure:
+
+| K-Block Property | Editing Use | Genesis Use |
+|-----------------|-------------|-------------|
+| **Monadic isolation** | Edit without cosmic effects | Axioms isolated from derivation |
+| **Witnessed operations** | Every edit traced | Every derivation witnessed |
+| **Multiple views** | Prose, Graph, Code, Diff | Content, Proof, Derivation |
+| **Transactional commit** | save() to cosmos | Bootstrap seeding order |
+| **Gluing axiom** | Views cohere | Layers cohere |
+
+The Constitutional Graph is the GENESIS K-Block---the first K-Block that seeds all others.
+
+---
+
+*Genesis K-Block definitions extracted: 2026-01-17*
+*Source: plans/genesis-overhaul/01-constitutional-kblocks.md, plans/genesis-overhaul/99-summary-walkthrough.md*
+
+---
+
 *Canonical specification written: 2025-12-22*
+*Genesis K-Blocks added: 2026-01-17*
 *Voice anchor: "Daring, bold, creative, opinionated but not gaudy"*
