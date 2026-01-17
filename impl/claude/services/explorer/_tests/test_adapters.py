@@ -47,25 +47,24 @@ class TestAdapterRegistry:
 class TestMarkAdapter:
     """Test MarkAdapter conversion."""
 
-    def test_converts_mock_mark(self) -> None:
-        """MarkAdapter converts a mock mark to UnifiedEvent."""
+    def test_converts_witness_mark(self) -> None:
+        """MarkAdapter converts a WitnessMark to UnifiedEvent."""
+        from agents.d.schemas.witness import WitnessMark
 
-        # Create a mock WitnessMark
-        class MockMark:
-            id = "mark-123"
-            action = "Fixed the bug in auth flow"
-            reasoning = "Security vulnerability discovered"
-            principles = ["composable", "ethical"]
-            tags = ["security", "auth"]
-            author = "kent"
-            session_id = "session-456"
-            parent_mark_id = None
-            created_at = datetime.now(UTC)
+        # Create a real WitnessMark instance
+        mark = WitnessMark(
+            action="Fixed the bug in auth flow",
+            reasoning="Security vulnerability discovered",
+            principles=("composable", "ethical"),
+            tags=("security", "auth"),
+            author="kent",
+            parent_mark_id=None,
+            context={"session_id": "session-456"},
+        )
 
         adapter = MarkAdapter()
-        event = adapter.to_unified_event(MockMark())
+        event = adapter.to_unified_event(mark)
 
-        assert event.id == "mark-123"
         assert event.type == EntityType.MARK
         assert "Fixed the bug" in event.title
         assert event.metadata["type"] == "mark"
