@@ -113,6 +113,22 @@ class WitnessTopics:
     DIRECTOR_PLACEHOLDER_RESOLVED = "witness.director.placeholder_resolved"
     DIRECTOR_STATUS_CHANGED = "witness.director.status_changed"
 
+    # Dialectic Fusion events (Kent+Claude synthesis)
+    DIALECTIC_THESIS = "witness.dialectic.thesis"
+    DIALECTIC_ANTITHESIS = "witness.dialectic.antithesis"
+    DIALECTIC_SYNTHESIS = "witness.dialectic.synthesis"
+    DIALECTIC_VETO = "witness.dialectic.veto"
+
+    # Axiom Discovery events (Personal axiom discovery)
+    AXIOM_DISCOVERED = "witness.axiom.discovered"
+    AXIOM_VALIDATED = "witness.axiom.validated"
+    AXIOM_CONTRADICTION = "witness.axiom.contradiction"
+
+    # Skill Injection events (JIT skill surfacing)
+    SKILL_INJECTED = "witness.skill.injected"
+    SKILL_OUTCOME_RECORDED = "witness.skill.outcome_recorded"
+    SKILL_COMPOSITION_SUGGESTED = "witness.skill.composition_suggested"
+
     # Wildcards
     ALL = "witness.*"
     MARK_ALL = "witness.mark.*"
@@ -127,6 +143,9 @@ class WitnessTopics:
     PROXY_ALL = "witness.proxy.*"
     SOVEREIGN_ALL = "witness.sovereign.*"
     DIRECTOR_ALL = "witness.director.*"
+    DIALECTIC_ALL = "witness.dialectic.*"
+    AXIOM_ALL = "witness.axiom.*"
+    SKILL_ALL = "witness.skill.*"
 
 
 # =============================================================================
@@ -168,6 +187,9 @@ class WitnessEventType(Enum):
     AGENTESE = "agentese"
     CONSTITUTIONAL = "constitutional"
     PROXY = "proxy"
+    DIALECTIC = "dialectic"
+    AXIOM = "axiom"
+    SKILL = "skill"
 
     # Lifecycle events (internal, may not need UI handler)
     DAEMON = "daemon"
@@ -241,6 +263,19 @@ TOPIC_TO_EVENT_TYPE: dict[str, WitnessEventType] = {
     WitnessTopics.DIRECTOR_EXECUTION_CAPTURED: WitnessEventType.DIRECTOR,
     WitnessTopics.DIRECTOR_PLACEHOLDER_RESOLVED: WitnessEventType.DIRECTOR,
     WitnessTopics.DIRECTOR_STATUS_CHANGED: WitnessEventType.DIRECTOR,
+    # Dialectic Fusion events → DIALECTIC
+    WitnessTopics.DIALECTIC_THESIS: WitnessEventType.DIALECTIC,
+    WitnessTopics.DIALECTIC_ANTITHESIS: WitnessEventType.DIALECTIC,
+    WitnessTopics.DIALECTIC_SYNTHESIS: WitnessEventType.DIALECTIC,
+    WitnessTopics.DIALECTIC_VETO: WitnessEventType.DIALECTIC,
+    # Axiom Discovery events → AXIOM
+    WitnessTopics.AXIOM_DISCOVERED: WitnessEventType.AXIOM,
+    WitnessTopics.AXIOM_VALIDATED: WitnessEventType.AXIOM,
+    WitnessTopics.AXIOM_CONTRADICTION: WitnessEventType.AXIOM,
+    # Skill Injection events → SKILL
+    WitnessTopics.SKILL_INJECTED: WitnessEventType.SKILL,
+    WitnessTopics.SKILL_OUTCOME_RECORDED: WitnessEventType.SKILL,
+    WitnessTopics.SKILL_COMPOSITION_SUGGESTED: WitnessEventType.SKILL,
 }
 
 

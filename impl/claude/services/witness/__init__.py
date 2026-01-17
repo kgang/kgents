@@ -67,6 +67,45 @@ from .crystal import (
 from .crystal_adapter import (
     WitnessCrystalAdapter,
 )
+
+# Crystal Compression (Trail-to-Crystal Wedge Pilot)
+from .crystal_compression import (
+    TARGET_COMPRESSION_RATIO,
+    CausalChainExtractor,
+    CausalLink,
+    CompressionResult,
+    CrystalCompressor,
+    DroppedReason,
+    GapDetector,
+    HonestGap,
+    RedundancyDetector,
+    get_crystal_compressor,
+    reset_crystal_compressor,
+)
+
+# Crystal Export (Shareable Artifacts)
+from .crystal_export import (
+    DEFAULT_HEIGHT,
+    DEFAULT_WIDTH,
+    CrystalExporter,
+    ExportedCrystal,
+    get_crystal_exporter,
+    reset_crystal_exporter,
+)
+
+# Crystal AGENTESE Nodes (time.crystal.*)
+from .crystal_nodes import (
+    CompressRequest,
+    CompressResponse,
+    CrystalManifestResponse,
+    ExportRequest,
+    ExportResponse,
+    HonestRequest,
+    HonestResponse,
+    TimeCrystalNode,
+    get_time_crystal_node,
+    reset_time_crystal_node,
+)
 from .crystal_store import (
     CrystalNotFoundError,
     CrystalQuery,
@@ -761,4 +800,34 @@ __all__ = [
     "TAG_FRIENDLY_NAMES",
     "get_honesty_calculator",
     "reset_honesty_calculator",
+    # Crystal Compression (Trail-to-Crystal Wedge Pilot)
+    "TARGET_COMPRESSION_RATIO",
+    "CausalChainExtractor",
+    "CausalLink",
+    "CompressionResult",
+    "CrystalCompressor",
+    "DroppedReason",
+    "GapDetector",
+    "HonestGap",
+    "RedundancyDetector",
+    "get_crystal_compressor",
+    "reset_crystal_compressor",
+    # Crystal Export (Shareable Artifacts)
+    "DEFAULT_HEIGHT",
+    "DEFAULT_WIDTH",
+    "CrystalExporter",
+    "ExportedCrystal",
+    "get_crystal_exporter",
+    "reset_crystal_exporter",
+    # Crystal AGENTESE Nodes (time.crystal.*)
+    "CompressRequest",
+    "CompressResponse",
+    "CrystalManifestResponse",
+    "ExportRequest",
+    "ExportResponse",
+    "HonestRequest",
+    "HonestResponse",
+    "TimeCrystalNode",
+    "get_time_crystal_node",
+    "reset_time_crystal_node",
 ]

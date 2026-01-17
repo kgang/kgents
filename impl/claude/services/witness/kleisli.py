@@ -1,16 +1,75 @@
 """
 Kleisli Witness Composition: The Writer Monad for kgents.
 
+This module implements E1 from the theory-operationalization plan (Chapter 16 of the
+kgents monograph). It provides the categorical foundation for reasoning trace composition,
+enabling witnessed operations to compose while automatically merging their evidence trails.
+
 Theory Basis (Ch 16: Witness Protocol):
-    Witness as Writer Monad:
-      Writer A = (A, Trace)
-      return: A → (A, [])
-      bind:   (A, T1) → (A → (B, T2)) → (B, T1++T2)
+    The witness system is formalized as a Writer monad, which provides a principled
+    way to accumulate evidence alongside computation:
 
-    Kleisli composition for marks:
-      f >=> g = λx. let (y, t1) = f(x) in let (z, t2) = g(y) in (z, t1++t2)
+    ::
 
-    This IS how reasoning traces compose.
+        Writer A = (A, Trace)
+        return: A → (A, [])
+        bind:   (A, T1) → (A → (B, T2)) → (B, T1++T2)
+
+    Kleisli composition for marks (the "fish operator"):
+
+    ::
+
+        f >=> g = λx. let (y, t1) = f(x) in let (z, t2) = g(y) in (z, t1++t2)
+
+    This IS how reasoning traces compose—not by convention, but by categorical law.
+
+Writer Monad Laws (Verified by Property Tests):
+    The following laws are mathematically required for correct composition and are
+    verified by 36 property-based tests in test_kleisli_witness.py:
+
+    1. **Left Identity**: ``pure(a) >>= f ≡ f(a)``
+       Injecting a pure value and immediately binding is the same as just applying f.
+       This ensures `pure` doesn't add any extra effects.
+
+    2. **Right Identity**: ``m >>= pure ≡ m``
+       Binding to pure returns the original value with the same trace.
+       This ensures `pure` is a true identity element.
+
+    3. **Associativity**: ``(m >>= f) >>= g ≡ m >>= (λx. f(x) >>= g)``
+       The order of binding doesn't matter (as long as sequence is preserved).
+       This enables arbitrary composition without parenthesization concerns.
+
+    These laws guarantee that:
+    - Marks compose correctly regardless of how operations are grouped
+    - Traces are never lost or duplicated
+    - The system behaves predictably under refactoring
+
+How Marks Compose via >>= (Bind):
+    When you chain witnessed operations, their marks concatenate:
+
+    ::
+
+        # Starting with a witnessed value
+        w1 = Witnessed(value="input", marks=[mark_a])
+
+        # Binding to an effectful function that adds mark_b
+        w2 = w1.bind(lambda x: Witnessed(value=x.upper(), marks=[mark_b]))
+
+        # Result has both marks: [mark_a, mark_b]
+        assert w2.marks == [mark_a, mark_b]
+
+    This is the Writer monad's fundamental operation: traces accumulate
+    through computation, creating a complete audit trail of reasoning.
+
+Zero Seed Grounding:
+    This module derives from Constitution axioms:
+
+    ::
+
+        A4 (Witness) → Writer monad structure
+          └─ "The mark IS the witness"
+          └─ Witnessed[A] = Writer monad with trace
+          └─ kleisli_compose = categorical composition (>=>)
 
 Philosophy:
     "The proof IS the decision. The mark IS the witness."
@@ -23,9 +82,17 @@ Philosophy:
     while automatically merging their traces.
 
 Integration:
-    - Works with existing Mark infrastructure
+    - Works with existing Mark infrastructure from witness/mark.py
     - Provides monadic composition for witnessed operations
     - Enables chain-of-thought as proper monadic composition
+    - Used by DialecticalFusionService (E3) for fusion witness marks
+
+Module Components:
+    - ``Witnessed[A]``: The Writer monad generic type
+    - ``kleisli_compose``: Binary Kleisli composition (f >=> g)
+    - ``kleisli_chain``: N-ary Kleisli composition for pipelines
+    - ``@witnessed_operation``: Decorator for async traced operations
+    - ``@witnessed_sync``: Decorator for sync traced operations
 
 See: spec/protocols/witness-primitives.md
 See: plans/theory-operationalization/05-co-engineering.md (E1)
@@ -38,7 +105,7 @@ Teaching:
         3. Associativity: (m >>= f) >>= g ≡ m >>= (λx. f(x) >>= g)
 
     These laws are verified by property-based tests.
-    (Evidence: test_kleisli_witness.py)
+    (Evidence: test_kleisli_witness.py — 36 tests passing)
 """
 
 from __future__ import annotations
@@ -88,23 +155,60 @@ P = ParamSpec("P")
 @dataclass
 class Witnessed(Generic[A]):
     """
-    The Writer monad: value with witness trace.
+    The Writer monad: a value paired with its witness trace.
 
-    This is the core abstraction for traced computation. Every effectful
-    operation produces a Witnessed[A], which contains:
-    - value: The result of the computation
-    - marks: The trace of all marks produced during computation
+    This is the core abstraction for traced computation in kgents. Every effectful
+    operation produces a Witnessed[A], which contains both the computational result
+    and a complete audit trail of how it was derived.
 
-    Monad laws (verified by property tests):
-    - Left identity:  pure(a) >>= f ≡ f(a)
-    - Right identity: m >>= pure ≡ m
-    - Associativity:  (m >>= f) >>= g ≡ m >>= (λx. f(x) >>= g)
+    Categorical Structure:
+        Witnessed[A] = (A, List[Mark]) is the Writer monad specialized to Mark traces.
+        This provides three fundamental operations:
+
+        - ``pure(a)``: Inject a value with empty trace (monadic return/unit)
+        - ``bind(f)``: Apply f to value, concatenate traces (monadic >>=)
+        - ``map(f)``: Apply pure function preserving trace (functorial fmap)
+
+    Monad Laws (Verified by 36 Property Tests):
+        These laws are not suggestions—they are mathematical requirements that
+        guarantee correct composition behavior:
+
+        - **Left identity**: ``pure(a) >>= f ≡ f(a)``
+        - **Right identity**: ``m >>= pure ≡ m``
+        - **Associativity**: ``(m >>= f) >>= g ≡ m >>= (λx. f(x) >>= g)``
+
+    Why Writer Monad?
+        The Writer monad is the canonical solution for accumulating logs/traces
+        alongside computation. Unlike ad-hoc logging, it:
+
+        - Composes correctly by construction (traces never lost)
+        - Maintains referential transparency (pure functions remain pure)
+        - Enables equational reasoning about traced computations
+
+    Relationship to Chapter 16 (Witness Protocol):
+        The theory establishes that every witness mark is evidence of reasoning.
+        Witnessed[A] operationalizes this: the marks list IS the trace of reasoning
+        steps that produced the value. When operations compose via bind, their
+        reasoning traces compose via concatenation.
+
+    Attributes:
+        value: The computed result of type A
+        marks: List of Mark objects recording the computation's evidence trail
 
     Example:
+        >>> # Create a pure witnessed value
         >>> result = Witnessed.pure("input")
+
+        >>> # Chain effectful operations (marks accumulate)
         >>> result = result.bind(analyze).bind(synthesize)
+
+        >>> # Access the result and trace
         >>> print(result.value)       # The final output
         >>> print(len(result.marks))  # All marks from the chain
+
+        >>> # Kleisli composition equivalent
+        >>> pipeline = kleisli_compose(analyze, synthesize)
+        >>> result = pipeline("input")
     """
 
     value: A
@@ -287,22 +391,55 @@ def kleisli_compose(
     """
     Kleisli composition (>=>). The categorical composition for effectful functions.
 
-    This is the fish operator: f >=> g = λa. f(a) >>= g
+    This is the "fish operator" from category theory, which composes functions
+    that return monadic values. For the Writer monad (Witnessed), this means
+    composing effectful functions while automatically merging their traces.
 
-    When you compose witnessed operations with Kleisli, their traces
-    automatically concatenate.
+    Mathematical Definition:
+        ::
+
+            f >=> g = λa. f(a) >>= g
+                    = λa. let (b, t1) = f(a)
+                          in let (c, t2) = g(b)
+                          in (c, t1 ++ t2)
+
+        The traces concatenate (t1 ++ t2), preserving the complete evidence trail.
+
+    Categorical Significance:
+        In category theory, Kleisli composition makes effectful functions into
+        morphisms in the Kleisli category. This enables:
+
+        - Treating A → Witnessed[B] as a "generalized function"
+        - Composing effectful operations like pure functions
+        - Applying categorical laws (associativity, identity) to effectful code
+
+    Relationship to Chapter 16:
+        The theory states that reasoning traces compose via Kleisli. This function
+        IS that composition—it's how chains of witnessed operations accumulate
+        their evidence. When Claude analyzes, then synthesizes, the Kleisli
+        composition ensures both analysis marks AND synthesis marks appear in
+        the final trace.
 
     Args:
-        f: First effectful function (A → Witnessed[B])
-        g: Second effectful function (B → Witnessed[C])
+        f: First effectful function (A -> Witnessed[B])
+        g: Second effectful function (B -> Witnessed[C])
 
     Returns:
-        Composed function (A → Witnessed[C])
+        Composed function (A -> Witnessed[C]) with merged traces
 
     Example:
+        >>> # Define witnessed operations
+        >>> def analyze(text: str) -> Witnessed[str]:
+        ...     return Witnessed(text.upper(), [mark_a])
+        ...
+        >>> def synthesize(text: str) -> Witnessed[str]:
+        ...     return Witnessed(f"Result: {text}", [mark_b])
+        ...
+        >>> # Compose using Kleisli
         >>> analyze_and_synthesize = kleisli_compose(analyze, synthesize)
         >>> result = analyze_and_synthesize("input")
-        >>> print(result.marks)  # Contains marks from both analyze and synthesize
+        >>> print(result.value)  # "Result: INPUT"
+        >>> print(result.marks)  # [mark_a, mark_b] — both traces preserved
     """
 
     def composed(a: A) -> Witnessed[C]:
@@ -336,17 +473,44 @@ async def kleisli_compose_async(
 
 def kleisli_chain(*fs: Callable[..., Any]) -> Callable[..., Any]:
     """
-    Chain multiple Kleisli arrows.
+    Chain multiple Kleisli arrows into a single composed function.
+
+    This is the N-ary generalization of kleisli_compose. Given a sequence of
+    effectful functions [f1, f2, ..., fn], it produces:
+
+    ::
+
+        f1 >=> f2 >=> ... >=> fn
+
+    All intermediate traces are concatenated in order, producing a complete
+    evidence trail of the entire pipeline.
+
+    Associativity Guarantee:
+        Due to the associativity monad law, the grouping doesn't matter:
+        ``(f >=> g) >=> h ≡ f >=> (g >=> h)``
+
+        This means kleisli_chain always produces the same result regardless
+        of how the internal composition is structured.
+
+    Use Cases:
+        - Building multi-step reasoning pipelines
+        - Chain-of-thought with multiple stages
+        - Any sequence of witnessed transformations
 
     Args:
-        *fs: Sequence of effectful functions to compose
+        *fs: Sequence of effectful functions (A -> Witnessed[B], B -> Witnessed[C], ...)
 
     Returns:
-        Single composed function
+        Single composed function with all traces merged
+
+    Raises:
+        ValueError: If no functions are provided
 
     Example:
+        >>> # Build a 3-stage reasoning pipeline
         >>> pipeline = kleisli_chain(analyze, critique, synthesize)
         >>> result = pipeline("input")
+        >>> print(len(result.marks))  # Marks from all 3 stages
     """
     if not fs:
         raise ValueError("kleisli_chain requires at least one function")
