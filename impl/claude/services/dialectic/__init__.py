@@ -16,6 +16,10 @@ Theory Basis (Ch 17: Dialectical Fusion):
       VI.  Fusion as Goal
       VII. Amendment
 
+AGENTESE Paths:
+    self.dialectic.*   - Self-reflective dialectical reasoning
+    concept.fusion.*   - Abstract fusion concepts (categorical cocone)
+
 Philosophy:
     "The goal is not Kent's decisions or AI's decisions.
      The goal is fused decisions better than either alone.
@@ -35,6 +39,10 @@ from .fusion import (
     get_fusion_store,
     reset_fusion_store,
 )
+from .node import (
+    DialecticNode,
+    FusionConceptNode,
+)
 
 __all__ = [
     # Core types
@@ -50,4 +58,7 @@ __all__ = [
     # Global store access
     "get_fusion_store",
     "reset_fusion_store",
+    # AGENTESE Nodes
+    "DialecticNode",
+    "FusionConceptNode",
 ]

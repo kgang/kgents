@@ -1,33 +1,91 @@
 """
-Dialectical Fusion Service: Kent + Claude → Synthesis.
+Dialectical Fusion Service: Kent + Claude -> Synthesis via Cocone Construction.
+
+This module implements E3 from the theory-operationalization plan (Chapter 17 of the
+kgents monograph). It provides the categorical machinery for transforming disagreement
+into constructive synthesis through dialectical fusion.
 
 Theory Basis (Ch 17: Dialectical Fusion):
-    Dialectical fusion operationalizes co-engineering:
-    - Kent and Claude each bring a position
-    - Positions are structured with evidence and principle alignment
-    - Synthesis attempts to preserve what's valid in both
-    - Trust accumulates through successful fusion
+    Dialectical fusion operationalizes co-engineering between human (Kent) and AI (Claude):
+
+    - **Kent and Claude each bring a Position**: Structured views with evidence and
+      principle alignment scores
+    - **Positions are evaluated**: Against the 7 Constitutional principles
+    - **Synthesis attempts cocone construction**: Finding a position that preserves
+      what's valid in both (though this is HEURISTIC, not categorical—see note below)
+    - **Trust accumulates**: Through successful fusion, per Article V
+
+Categorical Structure (Pushout/Cocone):
+    In category theory, a cocone over a diagram is an object with morphisms from each
+    diagram object that commute appropriately. For dialectical fusion:
+
+    ::
+
+        Kent's Position ──→ Synthesis ←── Claude's Position
+              ↑                               ↑
+              └──────── Common Ground ────────┘
+
+    The synthesis is the "apex" of the cocone, and the projections from each position
+    preserve the essential content of each view. A true categorical cocone would satisfy
+    a universal property (uniqueness), but our LLM-based synthesis is a HEURISTIC
+    approximation of this ideal.
+
+    **IMPORTANT**: This implementation uses "heuristic synthesis" NOT a formal cocone.
+    The type-level honesty principle (see Approximate[T] in 05-co-engineering.md) means
+    we do not claim categorical optimality—we acknowledge the approximation explicitly.
 
 The Emerging Constitution Articles:
-    I.   Symmetric Agency: All agents modeled identically
-    II.  Adversarial Cooperation: Challenge is structural, not hostile
-    III. Supersession Rights: Any agent may be superseded (with justification)
-    IV.  The Disgust Veto: Kent's somatic disgust is absolute veto
-    V.   Trust Accumulation: Earned through demonstrated alignment
-    VI.  Fusion as Goal: Fused decisions > individual decisions
-    VII. Amendment: Constitution evolves through dialectical process
+    This service implements the Emerging Constitution's governance framework:
+
+    I.   **Symmetric Agency**: All agents modeled identically (Kent ≅ Claude structurally)
+    II.  **Adversarial Cooperation**: Challenge is structural, not hostile
+    III. **Supersession Rights**: Any agent may be superseded (with justification)
+    IV.  **The Disgust Veto**: Kent's somatic disgust is absolute veto (ETHICAL floor)
+    V.   **Trust Accumulation**: Earned through demonstrated alignment
+    VI.  **Fusion as Goal**: Fused decisions > individual decisions
+    VII. **Amendment**: Constitution evolves through dialectical process
+
+How Kent-Claude Tensions Fuse into Synthesis:
+    1. **Position Structuring**: Raw views become Position objects with evidence,
+       reasoning, confidence, and principle alignment scores
+    2. **Consensus Check**: If positions fundamentally agree, immediate CONSENSUS result
+    3. **Synthesis Attempt**: LLM generates a position that preserves both views' insights
+    4. **Result Determination**: Apply Constitution rules (Article IV veto, Article VI
+       fusion preference, Article III supersession)
+    5. **Trust Delta**: Update trust based on outcome (synthesis builds most trust)
+    6. **Witness Mark**: Record the fusion decision via Kleisli composition
+
+Fusion Outcomes (FusionResult):
+    - **CONSENSUS**: Article VI — Both agree, no synthesis needed
+    - **SYNTHESIS**: Article VI — New position sublates both (best outcome)
+    - **KENT_PREVAILS**: Article IV — Kent's position wins (may be veto)
+    - **CLAUDE_PREVAILS**: Article III — Claude's position wins (with justification)
+    - **DEFERRED**: Article II — More adversarial cooperation needed
+    - **VETO**: Article IV — Kent's disgust veto (absolute, non-negotiable)
 
 Philosophy:
     "Authority derives from quality of justification."
     "Challenge is nominative (structural) not substantive (hostile)."
+    "Fusion is the goal; autonomy is earned."
 
 Integration:
-    - Uses Witness for recording fusion marks
+    - Uses Witness for recording fusion marks (via Kleisli composition from E1)
     - Uses TrustState from trust/gradient.py for trust tracking
-    - Emits Witnessed traces via Kleisli composition
+    - Emits Witnessed[Fusion] containing both the result and its evidence trail
+
+Zero Seed Grounding:
+    This module derives from Constitution axioms:
+
+    ::
+
+        Article VI (Fusion as Goal) → Dialectical Fusion (E3)
+          └─ "Fusion is the goal; autonomy is earned"
+          └─ DialecticalFusionService implements Kent+Claude synthesis
+          └─ Trust delta tracking honors Article V (Trust Gradient)
 
 See: docs/theory/17-dialectic.md
 See: plans/theory-operationalization/05-co-engineering.md (E3)
+See: spec/protocols/constitution.md
 """
 
 from __future__ import annotations
@@ -71,13 +129,39 @@ class FusionResult(Enum):
     """
     Outcomes of dialectical fusion.
 
-    These map to the Constitution's governance modes:
-    - CONSENSUS: Article VI — Fusion achieved, both agree
-    - SYNTHESIS: Article VI — New position that sublates both
-    - KENT_PREVAILS: Article IV — Kent's position wins (may be veto)
-    - CLAUDE_PREVAILS: Article III — Claude's position wins (with justification)
-    - DEFERRED: Article II — More adversarial cooperation needed
-    - VETO: Article IV — Kent's disgust veto (absolute)
+    Each outcome maps to a specific Article of the Emerging Constitution and
+    carries different trust implications. The outcomes form a hierarchy from
+    most collaborative (SYNTHESIS) to most adversarial (VETO).
+
+    Constitutional Mapping:
+        - **CONSENSUS** (Article VI): Fusion achieved, both agree from the start.
+          Trust delta: +0.10. This is agreement without conflict.
+
+        - **SYNTHESIS** (Article VI): New position that sublates (preserves and
+          transcends) both original positions. Trust delta: +0.15 (highest).
+          This is the GOAL of dialectical fusion—constructive disagreement.
+
+        - **KENT_PREVAILS** (Article IV): Kent's position wins, typically due to
+          higher confidence or principle alignment. Trust delta: +0.05.
+          Claude defers but learns from the decision.
+
+        - **CLAUDE_PREVAILS** (Article III): Claude's position wins with
+          justification. Trust delta: +0.08. Demonstrates Claude's reasoning
+          capability and builds trust through successful challenge.
+
+        - **DEFERRED** (Article II): Positions are too close to decide; more
+          adversarial cooperation needed. Trust delta: 0.0. Neither position
+          supersedes; the question remains open.
+
+        - **VETO** (Article IV): Kent's disgust veto—absolute and non-negotiable.
+          Trust delta: -0.10. This indicates significant misalignment and
+          triggers trust erosion. The ETHICAL floor was violated.
+
+    Trust Dynamics:
+        The trust deltas reflect the Constitution's values:
+        - Synthesis builds most trust (productive disagreement)
+        - Veto erodes trust (indicates Claude misread Kent's values)
+        - Prevailing builds moderate trust (successful competition)
     """
 
     CONSENSUS = "consensus"  # Agreement reached
@@ -96,14 +180,43 @@ class FusionResult(Enum):
 @dataclass
 class Position:
     """
-    A position in the dialectic.
+    A structured position in the dialectic.
 
-    Each position captures:
-    - content: The actual view/claim
-    - reasoning: Why this position is held
-    - confidence: How confident the holder is (0.0 - 1.0)
-    - evidence: Supporting evidence
-    - principle_alignment: How well it aligns with constitutional principles
+    In category theory terms, a Position is an object in the diagram that the
+    cocone (synthesis) must span. Each position is a fully structured view with:
+
+    - **Content**: The actual view/claim being advanced
+    - **Reasoning**: The justification for holding this position
+    - **Confidence**: Bayesian confidence in the position (0.0 - 1.0)
+    - **Evidence**: Supporting evidence for the claim
+    - **Principle Alignment**: Scores against the 7 Constitutional principles
+
+    Constitutional Grounding:
+        Positions are evaluated against the 7 principles:
+        - TASTEFUL, CURATED, ETHICAL, JOY_INDUCING
+        - COMPOSABLE, HETERARCHICAL, GENERATIVE
+
+        The ETHICAL score is particularly important: if it falls below 0.3,
+        this triggers potential veto consideration (Article IV).
+
+    Categorical Role:
+        In the cocone construction, each Position is a source object:
+
+        ::
+
+            Position_Kent ──projection──→ Synthesis
+            Position_Claude ──projection──→ Synthesis
+
+        The synthesis must "receive" both positions through projections that
+        preserve their essential content.
+
+    Attributes:
+        content: The actual claim or view being advanced
+        reasoning: Justification for the position
+        confidence: Bayesian confidence level (0.0-1.0, clamped in post_init)
+        evidence: List of supporting evidence strings
+        principle_alignment: Dict mapping principle names to alignment scores (0.0-1.0)
+        holder: Who holds this position ("kent", "claude", or "synthesis")
     """
 
     content: str
@@ -204,16 +317,48 @@ def create_position(
 @dataclass
 class Fusion:
     """
-    A dialectical fusion record.
+    A complete dialectical fusion record.
 
-    Captures the complete dialectic:
-    - topic: What's being decided
-    - kent_position: Kent's view
-    - claude_position: Claude's view
-    - synthesis: The fused position (if achieved)
-    - result: The outcome type
-    - reasoning: Why this outcome was reached
-    - trust_delta: How trust changed from this fusion
+    This is the primary output of the DialecticalFusionService. It captures the
+    entire dialectical process: both original positions, the attempted synthesis,
+    the outcome, and the trust implications.
+
+    Categorical Interpretation:
+        A Fusion record represents a completed cocone construction attempt:
+
+        ::
+
+            Kent_Position ──→ Synthesis ←── Claude_Position
+                   ↑                              ↑
+                   └──── reasoning (witness) ─────┘
+
+        The synthesis (if successful) is the apex of the cocone. The reasoning
+        field documents HOW the synthesis was reached (the witness of the process).
+
+    Constitutional Record:
+        Every Fusion is a decision that affects the Kent-Claude relationship:
+
+        - **Trust delta** changes cumulative trust (Article V)
+        - **Result** records which Constitutional article governed the outcome
+        - **Mark ID** links to the witness system for audit trail
+
+    Relationship to Chapter 17:
+        The theory describes dialectical fusion as the mechanism for resolving
+        human-AI tensions constructively. This dataclass IS that mechanism's
+        output—a complete record of how disagreement was transformed into
+        decision (or deferred for further discussion).
+
+    Attributes:
+        id: Unique fusion identifier (fusion-{hex})
+        topic: What's being decided
+        timestamp: When the fusion occurred
+        kent_position: Kent's structured view
+        claude_position: Claude's structured view
+        synthesis: The fused position (if CONSENSUS or SYNTHESIS achieved)
+        result: The FusionResult outcome
+        reasoning: Human-readable explanation of why this outcome was reached
+        trust_delta: How much trust changed from this fusion
+        mark_id: Link to witness mark for audit trail (set by _witness_fusion)
     """
 
     id: FusionId
@@ -346,24 +491,61 @@ class DialecticalFusionService:
     """
     Manages dialectical fusion between Kent and Claude.
 
-    This is the core E3 implementation. It:
-    1. Structures positions with principle alignment
-    2. Checks for immediate consensus
-    3. Attempts synthesis (NOT cocone — honest naming)
-    4. Determines outcome according to Constitution
-    5. Updates trust based on outcome
-    6. Records in witness
+    This is the core E3 implementation from the theory-operationalization plan.
+    It transforms disagreement into constructive synthesis by applying the
+    Emerging Constitution's governance framework.
 
-    Usage:
+    The Fusion Pipeline:
+        1. **Structure Positions**: Raw views become Position objects with evidence,
+           reasoning, confidence, and principle alignment scores
+        2. **Check Consensus**: If positions fundamentally agree, return CONSENSUS
+        3. **Attempt Synthesis**: Use LLM to generate a position that sublates both
+           (IMPORTANT: This is HEURISTIC synthesis, not a categorical cocone)
+        4. **Determine Result**: Apply Constitution rules in order:
+           - Article IV: Check ETHICAL floor (veto if violated)
+           - Article VI: Prefer synthesis if confidence exceeds both positions
+           - Article III: Higher confidence supersedes
+           - Article II: Defer if positions are equal
+        5. **Compute Trust Delta**: Update trust based on outcome
+        6. **Record Witness**: Create mark via Kleisli composition
+
+    Constitutional Governance:
+        The service implements the Constitution's decision-making framework:
+
+        - **Article IV** (Disgust Veto): If ETHICAL score < 0.3, VETO result
+        - **Article VI** (Fusion as Goal): Synthesis preferred when viable
+        - **Article III** (Supersession): Confidence > 0.1 difference decides
+        - **Article II** (Adversarial Cooperation): Defer when equal
+
+    Relationship to Chapter 17:
+        Chapter 17 of the monograph establishes that dialectical fusion is how
+        human-AI collaboration produces decisions superior to either party alone.
+        This service IS that fusion mechanism—it's where Kent's taste and Claude's
+        rigor meet to produce something neither would reach independently.
+
+    Honest Naming (Type-Level Honesty):
+        The _attempt_synthesis method produces HEURISTIC synthesis, NOT a
+        categorical cocone. We explicitly acknowledge this limitation rather
+        than claiming mathematical optimality. Future versions may wrap the
+        result in Approximate[Cocone] to encode this at the type level.
+
+    Attributes:
+        llm: Optional LLM provider for synthesis and scoring
+        store: FusionStore for persistence (default: global store)
+        PRINCIPLE_WEIGHTS: Constitutional principle weights (ETHICAL highest)
+        TRUST_DELTAS: Trust changes per outcome (SYNTHESIS highest positive)
+
+    Example:
         >>> service = DialecticalFusionService(llm=my_llm)
-        >>> fusion = await service.propose_fusion(
+        >>> witnessed_fusion = await service.propose_fusion(
         ...     topic="Database choice",
         ...     kent_view="Use Postgres",
         ...     kent_reasoning="Familiar, reliable",
         ...     claude_view="Use SQLite",
         ...     claude_reasoning="Simpler for prototyping",
         ... )
-        >>> print(fusion.result)  # FusionResult.SYNTHESIS
+        >>> print(witnessed_fusion.value.result)  # FusionResult.SYNTHESIS
+        >>> print(witnessed_fusion.marks)  # Witness mark for the fusion
     """
 
     llm: LLMProvider | None = None
@@ -590,10 +772,42 @@ Answer only "AGREE" or "DISAGREE":"""
         claude: Position,
     ) -> Position | None:
         """
-        Attempt to synthesize a new position.
+        Attempt to synthesize a new position from Kent's and Claude's views.
 
-        IMPORTANT: This is HEURISTIC synthesis, NOT a categorical cocone.
-        We make no claims of universality or optimality.
+        This implements the "heuristic cocone" construction from Chapter 17. The
+        goal is to find a position that:
+
+        1. Acknowledges the valid points in both positions
+        2. Resolves the tension between them
+        3. Preserves what's essential from each (sublation)
+        4. Explains what each side contributes
+
+        Type-Level Honesty Note:
+            This is HEURISTIC synthesis, NOT a categorical cocone. A true cocone
+            would satisfy the universal property: for any other cone over the same
+            diagram, there exists a unique morphism to this cocone.
+
+            We use LLM-based synthesis which is a practical approximation. The
+            theory document 05-co-engineering.md proposes Approximate[Cocone] to
+            encode this limitation at the type level. For now, we document it here.
+
+        Categorical Aspiration:
+            ::
+
+                Kent ──projection_k──→ Synthesis ←──projection_c── Claude
+                                          ↑
+                                    (apex of cocone)
+
+            The synthesis should "receive" both positions through projections
+            that preserve their essential content.
+
+        Args:
+            topic: The decision topic
+            kent: Kent's structured position
+            claude: Claude's structured position
+
+        Returns:
+            Position representing the synthesis, or None if synthesis fails
         """
         if not self.llm:
             # Without LLM, can't synthesize
