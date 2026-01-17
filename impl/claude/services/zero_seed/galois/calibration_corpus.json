@@ -1,0 +1,346 @@
+{
+  "version": "1.0",
+  "created": "2025-01-16",
+  "purpose": "Galois loss calibration corpus for automated model drift detection",
+  "layer_bounds": {
+    "1": {"name": "Axiom", "loss_range": [0.00, 0.05]},
+    "2": {"name": "Value", "loss_range": [0.05, 0.15]},
+    "3": {"name": "Goal", "loss_range": [0.15, 0.30]},
+    "4": {"name": "Spec", "loss_range": [0.30, 0.45]},
+    "5": {"name": "Execution", "loss_range": [0.45, 0.60]},
+    "6": {"name": "Reflection", "loss_range": [0.60, 0.75]},
+    "7": {"name": "Representation", "loss_range": [0.75, 1.00]}
+  },
+  "corpus": [
+    {
+      "id": "L1-001",
+      "content": "Agency requires justification",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "kgents-core",
+      "notes": "Foundational axiom. Zero-loss fixed point. Without justification, there is no agency, only reflex."
+    },
+    {
+      "id": "L1-002",
+      "content": "Composition is primary",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "kgents-core",
+      "notes": "A2 Morphism Axiom. Everything composes. Categorical foundation."
+    },
+    {
+      "id": "L1-003",
+      "content": "The proof IS the decision",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "kgents-core",
+      "notes": "Witnessing axiom. Decision without proof is reflex."
+    },
+    {
+      "id": "L1-004",
+      "content": "The mark IS the witness",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "kgents-core",
+      "notes": "Witnessing axiom variant. Every action leaves a mark."
+    },
+    {
+      "id": "L1-005",
+      "content": "Everything is a node",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "zero-seed-spec",
+      "notes": "A1 Entity Axiom. Universal representability."
+    },
+    {
+      "id": "L2-001",
+      "content": "Tasteful over feature-complete",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "kent-voice",
+      "notes": "Kent's voice anchor. Quality over quantity principle."
+    },
+    {
+      "id": "L2-002",
+      "content": "Joy-inducing over merely functional",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "kent-voice",
+      "notes": "Kent's voice anchor. Delight matters."
+    },
+    {
+      "id": "L2-003",
+      "content": "The persona is a garden, not a museum",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "kent-voice",
+      "notes": "Kent's voice anchor. Evolution over preservation. Living system."
+    },
+    {
+      "id": "L2-004",
+      "content": "Depth over breadth",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "kent-voice",
+      "notes": "Kent's constraint. Category theory over feature sprawl."
+    },
+    {
+      "id": "L2-005",
+      "content": "Transparency over convenience",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "kgents-principles",
+      "notes": "Ethical principle. Agents are honest about limitations."
+    },
+    {
+      "id": "L2-006",
+      "content": "Daring, bold, creative, opinionated but not gaudy",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "kent-voice",
+      "notes": "Kent's aesthetic coordinate. Balance of boldness and taste."
+    },
+    {
+      "id": "L3-001",
+      "content": "Build a system that surfaces contradictions",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "kgents-design",
+      "notes": "Strategic goal. Contradictions detected via super-additive loss."
+    },
+    {
+      "id": "L3-002",
+      "content": "Enable trust accumulation through demonstrated alignment",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "kgents-design",
+      "notes": "Trust gradient goal. Level 1-5 earned through behavior."
+    },
+    {
+      "id": "L3-003",
+      "content": "Create a minimal cultivable bootstrap state for the kgents system",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "zero-seed-spec",
+      "notes": "Zero Seed purpose. Generative kernel."
+    },
+    {
+      "id": "L3-004",
+      "content": "Make K-gent feel like me on my best day",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "kent-voice",
+      "notes": "Mirror Test goal. Kent's vision for K-gent persona."
+    },
+    {
+      "id": "L4-001",
+      "content": "Implement Galois loss computation using the formula L(P) = d(P, C(R(P))) where R restructures and C reconstitutes",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "galois-spec",
+      "notes": "Technical specification. Galois adjunction R -| C."
+    },
+    {
+      "id": "L4-002",
+      "content": "The witness service must emit exactly one Mark per AGENTESE invocation with immutable timestamp and causal links",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "witness-spec",
+      "notes": "Witness protocol specification. Mark completeness law."
+    },
+    {
+      "id": "L4-003",
+      "content": "Use PolyAgent[S, A, B] state machine with mode-dependent inputs for all domain agents including Citizens and K-gent",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "polynomial-agent-spec",
+      "notes": "Categorical specification. PolyAgent pattern."
+    },
+    {
+      "id": "L4-004",
+      "content": "Layer assignment uses absolute bounds calibrated from mixed corpora with L1 at 0.00-0.05 through L7 at 0.75-1.00",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "galois-spec",
+      "notes": "Layer assignment specification. Calibration bounds."
+    },
+    {
+      "id": "L5-001",
+      "content": "Run pytest and fix failing tests",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "common-task",
+      "notes": "Concrete execution task. Actionable instruction."
+    },
+    {
+      "id": "L5-002",
+      "content": "Deploy to staging and verify the health endpoint returns 200",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "common-task",
+      "notes": "Deployment execution. Specific verification step."
+    },
+    {
+      "id": "L5-003",
+      "content": "Add the @node decorator to the new service class and register the provider in services/providers.py",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "kgents-task",
+      "notes": "AGENTESE node registration task. Concrete implementation step."
+    },
+    {
+      "id": "L5-004",
+      "content": "Run npm run typecheck and npm run lint before committing frontend changes",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "common-task",
+      "notes": "Frontend verification task. Pre-commit check."
+    },
+    {
+      "id": "L6-001",
+      "content": "The calibration corpus drift indicates the model version changed behavior - previous axioms now score as values",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "analysis",
+      "notes": "Retrospective analysis. Model drift reflection."
+    },
+    {
+      "id": "L6-002",
+      "content": "After implementing the witness service I realized the Mark immutability constraint was the key architectural decision",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "retrospective",
+      "notes": "Implementation retrospective. Architectural insight."
+    },
+    {
+      "id": "L6-003",
+      "content": "The session revealed a pattern: every time we smoothed Kent's rough edges, we lost authenticity",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "anti-sausage",
+      "notes": "Anti-Sausage Protocol reflection. Voice preservation learning."
+    },
+    {
+      "id": "L7-001",
+      "content": "The following JSON schema represents the calibration corpus structure with fields for content, expected_layer, loss_range, category, and notes",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "meta",
+      "notes": "Meta-level representation. Schema describing itself."
+    },
+    {
+      "id": "L7-002",
+      "content": "This document serves as a map of the seven-layer epistemic holarchy from axioms through representations",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "meta",
+      "notes": "Documentation about documentation. High abstraction."
+    },
+    {
+      "id": "L7-003",
+      "content": "The UML diagram shows the relationship between GaloisLossComputer, LayerAssigner, and CalibrationCorpus classes",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "diagram-reference",
+      "notes": "Visual representation reference. Structural diagram."
+    },
+    {
+      "id": "EDGE-L1L2",
+      "content": "Joy is a first-class metric, not an afterthought",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.12],
+      "category": "value",
+      "source": "kgents-principles",
+      "notes": "Edge case: strongly value-like but with slight goal undertones. Should stay in L2."
+    },
+    {
+      "id": "EDGE-L2L3",
+      "content": "We should build systems that preserve human agency in all decisions",
+      "expected_layer": 3,
+      "expected_loss_range": [0.12, 0.20],
+      "category": "goal",
+      "source": "hybrid",
+      "notes": "Edge case: between value and goal. Has imperative 'should build' suggesting goal."
+    },
+    {
+      "id": "EDGE-L4L5",
+      "content": "The function should accept a content string and return a float loss value between 0 and 1",
+      "expected_layer": 4,
+      "expected_loss_range": [0.35, 0.48],
+      "category": "spec",
+      "source": "hybrid",
+      "notes": "Edge case: between spec and execution. Technical but abstract enough to be spec."
+    },
+    {
+      "id": "GEN-001",
+      "content": "Truth is discovered, not declared",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "general-philosophy",
+      "notes": "General axiom. Tests transfer beyond kgents-specific content."
+    },
+    {
+      "id": "GEN-002",
+      "content": "Users deserve control over their own data",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "general-tech",
+      "notes": "General tech value. Privacy principle."
+    },
+    {
+      "id": "GEN-003",
+      "content": "Create a mobile app that helps users track their daily habits",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "general-product",
+      "notes": "General product goal. Tests non-kgents content."
+    },
+    {
+      "id": "GEN-004",
+      "content": "Open the terminal, navigate to the project directory, and run the build script",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "general-task",
+      "notes": "General execution task. Sequential instructions."
+    }
+  ],
+  "validation_notes": {
+    "coverage": "37 examples covering all 7 layers with at least 3 per layer",
+    "sources": "Mix of kgents-specific (Kent voice, specs, principles) and general examples",
+    "edge_cases": "4 examples specifically testing layer boundaries",
+    "expected_pass_rate": "95%+ of examples should land in expected layer with calibrated model"
+  }
+}

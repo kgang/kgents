@@ -6,6 +6,7 @@ This test suite validates:
 2. Geometric mean property (symmetric, penalizes one-way entailment)
 3. CanonicalSemanticDistance fallback chain
 4. Edge cases (empty strings, identical strings)
+5. Default metric is now CanonicalSemanticDistance (Amendment B wiring)
 
 From: plans/enlightened-synthesis/01-theoretical-amendments.md (Amendment B)
 """
@@ -20,7 +21,9 @@ from services.zero_seed.galois.distance import (
     CanonicalSemanticDistance,
     CosineEmbeddingDistance,
     canonical_semantic_distance,
+    get_bertscore_metric,
     get_canonical_metric,
+    get_default_metric,
     get_entailment_metric,
 )
 
@@ -250,7 +253,7 @@ class TestFallbackChain:
             def distance(self, a: str, b: str) -> float:
                 raise RuntimeError("Intentionally broken")
 
-        metric._primary = BrokenEntailment()  # type: ignore
+        metric._primary = BrokenEntailment()  # type: ignore[attr-defined]
 
         # Should still work via fallback
         distance = metric.distance("test one", "test two")
@@ -265,9 +268,85 @@ class TestFallbackChain:
             def distance(self, a: str, b: str) -> float:
                 raise RuntimeError("Intentionally broken")
 
-        metric._primary = BrokenMetric()  # type: ignore
-        metric._bertscore = BrokenMetric()  # type: ignore
+        metric._primary = BrokenMetric()  # type: ignore[attr-defined]
+        metric._bertscore = BrokenMetric()  # type: ignore[attr-defined]
 
         # Should still work via cosine fallback
         distance = metric.distance("test one", "test two")
         assert 0.0 <= distance <= 1.0
+
+
+class TestAmendmentBWiring:
+    """
+    Tests for Amendment B wiring: canonical distance as default.
+
+    Amendment B specifies that the canonical semantic distance
+    (bidirectional entailment) should be the default metric used
+    throughout the Galois framework for layer assignment fidelity.
+
+    This test class verifies the wiring is correct.
+    """
+
+    def test_get_default_metric_returns_canonical(self) -> None:
+        """
+        CRITICAL: get_default_metric() must return CanonicalSemanticDistance.
+
+        This is the core wiring requirement of Amendment B.
+        """
+        metric = get_default_metric()
+        assert isinstance(metric, CanonicalSemanticDistance), (
+            f"Amendment B violation: get_default_metric() returned {type(metric).__name__}, "
+            "expected CanonicalSemanticDistance"
+        )
+
+    def test_get_bertscore_metric_returns_bertscore(self) -> None:
+        """get_bertscore_metric() should still return BERTScoreDistance."""
+        metric = get_bertscore_metric()
+        assert isinstance(metric, BERTScoreDistance)
+
+    def test_default_metric_has_canonical_name(self) -> None:
+        """Default metric should have canonical_semantic name."""
+        metric = get_default_metric()
+        assert metric.name == "canonical_semantic"
+
+    def test_default_metric_computes_valid_distance(self) -> None:
+        """Default metric should compute valid distances."""
+        metric = get_default_metric()
+
+        distance = metric.distance(
+            "The loss IS the layer.",
+            "Layer assignment depends on loss.",
+        )
+
+        assert 0.0 <= distance <= 1.0
+
+    def test_get_canonical_and_default_return_same_type(self) -> None:
+        """get_canonical_metric and get_default_metric should return same type."""
+        default = get_default_metric()
+        canonical = get_canonical_metric()
+
+        assert type(default) == type(canonical), (
+            f"Type mismatch: get_default_metric() -> {type(default).__name__}, "
+            f"get_canonical_metric() -> {type(canonical).__name__}"
+        )
+
+
+class TestGaloisLossComputerWiring:
+    """Tests for GaloisLossComputer using canonical distance."""
+
+    def test_galois_loss_computer_default_metric_is_canonical(self) -> None:
+        """GaloisLossComputer should use canonical metric by default."""
+        from services.zero_seed.galois.galois_loss import GaloisLossComputer
+
+        computer = GaloisLossComputer()
+        assert isinstance(computer.metric, CanonicalSemanticDistance), (
+            f"GaloisLossComputer uses {type(computer.metric).__name__}, "
+            "expected CanonicalSemanticDistance"
+        )
+
+    def test_galois_loss_computer_metric_name(self) -> None:
+        """GaloisLossComputer's metric should have canonical name."""
+        from services.zero_seed.galois.galois_loss import GaloisLossComputer
+
+        computer = GaloisLossComputer()
+        assert computer.metric.name == "canonical_semantic"

@@ -35,6 +35,37 @@ See: docs/skills/crown-jewel-patterns.md
 
 from __future__ import annotations
 
+# ASHC Self-Awareness: The system that knows why it exists
+from .ashc_self_awareness import (
+    ASHCSelfAwareness,
+    ConsistencyReport,
+    ConsistencyViolation,
+    EvidenceTier as ASHCEvidenceTier,  # Avoid conflict with core.EvidenceTier
+    GroundingResult,
+    JustificationResult,
+    create_ashc_self_awareness,
+    get_ashc_self_awareness,
+    reset_ashc_self_awareness,
+)
+
+# Axiom Discovery Pipeline: Personal axiom discovery from decisions
+from .axiom_discovery_pipeline import (
+    AxiomCandidate,
+    AxiomDiscoveryPipeline,
+    AxiomDiscoveryResult,
+    ContradictionPair,
+    DecisionPattern,
+    discover_personal_axioms,
+    validate_axiom_candidate,
+)
+
+# Axiom AGENTESE Node
+from .axiom_node import (
+    AxiomDiscoveryRendering,
+    AxiomManifestRendering,
+    AxiomNode,
+)
+
 # Core types
 from .core import (
     # Constants
@@ -205,4 +236,26 @@ __all__ = [
     # === Genesis K-Block Factory ===
     "GenesisKBlock",
     "GenesisKBlockFactory",
+    # === ASHC Self-Awareness ===
+    "ASHCSelfAwareness",
+    "GroundingResult",
+    "JustificationResult",
+    "ConsistencyReport",
+    "ConsistencyViolation",
+    "ASHCEvidenceTier",
+    "create_ashc_self_awareness",
+    "get_ashc_self_awareness",
+    "reset_ashc_self_awareness",
+    # === Axiom Discovery Pipeline ===
+    "AxiomCandidate",
+    "AxiomDiscoveryPipeline",
+    "AxiomDiscoveryResult",
+    "ContradictionPair",
+    "DecisionPattern",
+    "discover_personal_axioms",
+    "validate_axiom_candidate",
+    # === Axiom AGENTESE Node ===
+    "AxiomNode",
+    "AxiomManifestRendering",
+    "AxiomDiscoveryRendering",
 ]

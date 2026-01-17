@@ -479,16 +479,35 @@ class CompositeDistance:
 
 def get_default_metric() -> SemanticDistanceMetric:
     """
-    Get the recommended default metric (BERTScore).
+    Get the recommended default metric (Canonical Semantic Distance).
 
-    From spec: "Recommendation: BERTScore (balanced)"
+    Amendment B: The canonical distance L(x, y) = ||d̂(x) - d̂(y)||₁ is
+    implemented via bidirectional entailment with fallback chain.
+
+    This is the normative distance metric for Galois loss computation.
+    It uses bidirectional entailment as primary, falling back to
+    BERTScore and then cosine embedding if NLI models are unavailable.
+
+    From spec: Amendment B - "Canonical Semantic Distance"
     """
-    return BERTScoreDistance()
+    return CanonicalSemanticDistance()
 
 
 def get_fast_metric() -> SemanticDistanceMetric:
     """Get fastest metric (Cosine embedding)."""
     return CosineEmbeddingDistance()
+
+
+def get_bertscore_metric() -> SemanticDistanceMetric:
+    """
+    Get BERTScore metric (balanced precision/recall).
+
+    Use when you need BERTScore specifically, rather than the
+    canonical distance with fallback chain.
+
+    From spec: "BERTScore: r=0.72, time=45ms, stability=0.85"
+    """
+    return BERTScoreDistance()
 
 
 def get_accurate_metric() -> LLMJudgeDistance:
@@ -762,6 +781,7 @@ __all__ = [
     # Factory functions
     "get_default_metric",
     "get_fast_metric",
+    "get_bertscore_metric",
     "get_accurate_metric",
     "get_contradiction_metric",
     "get_canonical_metric",

@@ -20,14 +20,19 @@ See: spec/protocols/zero-seed1/galois.md Part I
 
 from __future__ import annotations
 
+import json
 import logging
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import TYPE_CHECKING, Sequence, TypedDict
 
 if TYPE_CHECKING:
     pass
 
 logger = logging.getLogger(__name__)
+
+# Path to calibration corpus JSON file
+CALIBRATION_CORPUS_PATH = Path(__file__).parent / "calibration_corpus.json"
 
 
 # -----------------------------------------------------------------------------
@@ -186,7 +191,7 @@ def assign_layer_relative(
     n = len(sorted_losses)
 
     # Find percentile of this loss in corpus
-    count_below = sum(1 for l in sorted_losses if l < loss)
+    count_below = sum(1 for corpus_loss in sorted_losses if corpus_loss < loss)
     percentile = count_below / n
 
     # Map percentile to layer (1-7)
@@ -307,36 +312,172 @@ class LayerAssigner:
             "max": sorted_losses[-1],
             "mean": sum(sorted_losses) / n,
             "median": sorted_losses[n // 2],
-            "count": n,
+            "count": float(n),
         }
 
 
 # -----------------------------------------------------------------------------
-# Calibration Set for Regression Testing
+# Calibration Corpus Types and Loading
 # -----------------------------------------------------------------------------
 
-# Anchor documents with known layer assignments
-# These should ALWAYS be assigned to their specified layer (using absolute)
+
+class CalibrationEntry(TypedDict):
+    """Type for a single calibration corpus entry."""
+
+    id: str
+    content: str
+    expected_layer: int
+    expected_loss_range: list[float]
+    category: str
+    source: str
+    notes: str
+
+
+class CalibrationCorpus(TypedDict):
+    """Type for the full calibration corpus JSON structure."""
+
+    version: str
+    created: str
+    purpose: str
+    layer_bounds: dict[str, dict[str, object]]
+    corpus: list[CalibrationEntry]
+    validation_notes: dict[str, str]
+
+
+def load_calibration_corpus(
+    path: Path | None = None,
+) -> list[CalibrationEntry]:
+    """
+    Load calibration corpus from JSON file.
+
+    Args:
+        path: Path to corpus JSON (defaults to bundled corpus)
+
+    Returns:
+        List of calibration entries
+
+    Raises:
+        FileNotFoundError: If corpus file not found
+        json.JSONDecodeError: If corpus file is invalid JSON
+    """
+    corpus_path = path or CALIBRATION_CORPUS_PATH
+
+    if not corpus_path.exists():
+        logger.warning(
+            f"Calibration corpus not found at {corpus_path}, falling back to legacy corpus"
+        )
+        return _get_legacy_corpus()
+
+    with corpus_path.open() as f:
+        data: CalibrationCorpus = json.load(f)
+
+    logger.info(
+        f"Loaded calibration corpus v{data.get('version', 'unknown')} "
+        f"with {len(data['corpus'])} entries"
+    )
+    return data["corpus"]
+
+
+def _get_legacy_corpus() -> list[CalibrationEntry]:
+    """
+    Return legacy hardcoded corpus for backwards compatibility.
+
+    This is the original 9-entry corpus before the JSON expansion.
+    """
+    legacy: list[tuple[str, int]] = [
+        ("Agency requires justification", 1),
+        ("Composition is primary", 1),
+        ("The proof IS the decision", 1),
+        ("We value transparency over convenience", 2),
+        ("Joy is a first-class metric", 2),
+        ("Build a system that surfaces contradictions", 3),
+        ("Enable trust accumulation through demonstrated alignment", 3),
+        ("Run pytest and fix failing tests", 5),
+        ("Deploy to staging and verify", 5),
+    ]
+
+    return [
+        CalibrationEntry(
+            id=f"LEGACY-{i:03d}",
+            content=content,
+            expected_layer=layer,
+            expected_loss_range=list(LAYER_LOSS_BOUNDS[layer]),
+            category=LAYER_NAMES[layer].lower(),
+            source="legacy",
+            notes="Legacy hardcoded entry",
+        )
+        for i, (content, layer) in enumerate(legacy)
+    ]
+
+
+# Legacy constant for backwards compatibility
+# Use load_calibration_corpus() for full functionality
 CALIBRATION_CORPUS: list[tuple[str, int]] = [
-    # L1 axioms (should always be 0.00-0.05)
-    ("Agency requires justification", 1),
-    ("Composition is primary", 1),
-    ("The proof IS the decision", 1),
-    # L2 values (should always be 0.05-0.15)
-    ("We value transparency over convenience", 2),
-    ("Joy is a first-class metric", 2),
-    # L3 goals (should always be 0.15-0.30)
-    ("Build a system that surfaces contradictions", 3),
-    ("Enable trust accumulation through demonstrated alignment", 3),
-    # L5 execution (should always be 0.45-0.60)
-    ("Run pytest and fix failing tests", 5),
-    ("Deploy to staging and verify", 5),
+    (entry["content"], entry["expected_layer"]) for entry in _get_legacy_corpus()
 ]
+
+
+# -----------------------------------------------------------------------------
+# Calibration Validation
+# -----------------------------------------------------------------------------
+
+
+@dataclass
+class CalibrationResult:
+    """Result of validating a single calibration entry."""
+
+    entry_id: str
+    content: str
+    expected_layer: int
+    actual_layer: int
+    expected_loss_range: tuple[float, float]
+    actual_loss: float
+    layer_match: bool
+    loss_in_range: bool
+
+    @property
+    def passed(self) -> bool:
+        """True if both layer and loss are correct."""
+        return self.layer_match and self.loss_in_range
+
+
+@dataclass
+class CalibrationReport:
+    """Full report from calibration validation."""
+
+    total: int
+    passed: int
+    failed: int
+    layer_mismatches: int
+    loss_out_of_range: int
+    results: list[CalibrationResult]
+    corpus_version: str
+
+    @property
+    def pass_rate(self) -> float:
+        """Percentage of entries that passed."""
+        return self.passed / self.total if self.total > 0 else 0.0
+
+    @property
+    def is_healthy(self) -> bool:
+        """True if pass rate meets minimum threshold (95%)."""
+        return self.pass_rate >= 0.95
+
+    def summary(self) -> str:
+        """Human-readable summary."""
+        status = "HEALTHY" if self.is_healthy else "DRIFT DETECTED"
+        return (
+            f"Calibration {status}: {self.passed}/{self.total} passed "
+            f"({self.pass_rate:.1%}), "
+            f"{self.layer_mismatches} layer mismatches, "
+            f"{self.loss_out_of_range} loss out of range"
+        )
 
 
 def validate_calibration(
     loss_computer: object,  # GaloisLossComputer or callable
     assigner: LayerAssigner | None = None,
+    corpus_path: Path | None = None,
 ) -> tuple[bool, list[dict[str, object]]]:
     """
     Verify layer assignment stability against calibration set.
@@ -347,23 +488,29 @@ def validate_calibration(
     Args:
         loss_computer: Function or object with compute_loss(content) -> float
         assigner: Optional LayerAssigner (uses absolute if None)
+        corpus_path: Optional path to calibration corpus JSON
 
     Returns:
         Tuple of (all_passed, list of results with content, expected, actual)
     """
+    corpus = load_calibration_corpus(corpus_path)
     results: list[dict[str, object]] = []
     all_passed = True
 
-    for content, expected_layer in CALIBRATION_CORPUS:
+    for entry in corpus:
+        content = entry["content"]
+        expected_layer = entry["expected_layer"]
+        loss_range = entry["expected_loss_range"]
+        expected_loss_range = (loss_range[0], loss_range[1])
+
         # Compute loss
         if callable(loss_computer):
             loss = loss_computer(content)
         elif hasattr(loss_computer, "compute_loss"):
-            # Assume sync wrapper around async
             import asyncio
 
             try:
-                loop = asyncio.get_running_loop()
+                asyncio.get_running_loop()
                 # Can't run in existing loop
                 loss = 0.5  # Default for async context
             except RuntimeError:
@@ -377,25 +524,127 @@ def validate_calibration(
         else:
             assignment = assign_layer_absolute(loss)
 
-        passed = assignment.layer == expected_layer
+        layer_match = assignment.layer == expected_layer
+        loss_in_range = expected_loss_range[0] <= loss <= expected_loss_range[1]
+        passed = layer_match  # Primary check is layer assignment
+
         if not passed:
             all_passed = False
             logger.warning(
-                f"Calibration drift: '{content[:30]}...' "
+                f"Calibration drift [{entry['id']}]: '{content[:30]}...' "
                 f"expected L{expected_layer}, got L{assignment.layer}"
+            )
+
+        if not loss_in_range:
+            logger.info(
+                f"Loss range note [{entry['id']}]: loss={loss:.3f}, expected {expected_loss_range}"
             )
 
         results.append(
             {
+                "id": entry["id"],
                 "content": content,
                 "expected_layer": expected_layer,
                 "actual_layer": assignment.layer,
+                "expected_loss_range": expected_loss_range,
                 "loss": loss,
+                "layer_match": layer_match,
+                "loss_in_range": loss_in_range,
                 "passed": passed,
+                "category": entry["category"],
             }
         )
 
     return all_passed, results
+
+
+def validate_calibration_full(
+    loss_computer: object,
+    assigner: LayerAssigner | None = None,
+    corpus_path: Path | None = None,
+) -> CalibrationReport:
+    """
+    Comprehensive calibration validation with detailed report.
+
+    Args:
+        loss_computer: Function or object with compute_loss(content) -> float
+        assigner: Optional LayerAssigner (uses absolute if None)
+        corpus_path: Optional path to calibration corpus JSON
+
+    Returns:
+        CalibrationReport with full details
+    """
+    corpus = load_calibration_corpus(corpus_path)
+    results: list[CalibrationResult] = []
+    layer_mismatches = 0
+    loss_out_of_range = 0
+
+    for entry in corpus:
+        content = entry["content"]
+        expected_layer = entry["expected_layer"]
+        loss_range = entry["expected_loss_range"]
+        expected_loss_range: tuple[float, float] = (loss_range[0], loss_range[1])
+
+        # Compute loss
+        if callable(loss_computer):
+            loss = loss_computer(content)
+        elif hasattr(loss_computer, "compute_loss"):
+            import asyncio
+
+            try:
+                asyncio.get_running_loop()
+                loss = 0.5
+            except RuntimeError:
+                loss = asyncio.run(loss_computer.compute_loss(content))
+        else:
+            raise TypeError("loss_computer must be callable or have compute_loss")
+
+        # Assign layer
+        if assigner:
+            assignment = assigner.assign(loss, use_corpus=False)
+        else:
+            assignment = assign_layer_absolute(loss)
+
+        layer_match = assignment.layer == expected_layer
+        loss_in_range = expected_loss_range[0] <= loss <= expected_loss_range[1]
+
+        if not layer_match:
+            layer_mismatches += 1
+        if not loss_in_range:
+            loss_out_of_range += 1
+
+        results.append(
+            CalibrationResult(
+                entry_id=entry["id"],
+                content=content,
+                expected_layer=expected_layer,
+                actual_layer=assignment.layer,
+                expected_loss_range=expected_loss_range,
+                actual_loss=loss,
+                layer_match=layer_match,
+                loss_in_range=loss_in_range,
+            )
+        )
+
+    passed = sum(1 for r in results if r.passed)
+
+    # Get corpus version
+    corpus_path_resolved = corpus_path or CALIBRATION_CORPUS_PATH
+    version = "unknown"
+    if corpus_path_resolved.exists():
+        with corpus_path_resolved.open() as f:
+            data = json.load(f)
+            version = data.get("version", "unknown")
+
+    return CalibrationReport(
+        total=len(results),
+        passed=passed,
+        failed=len(results) - passed,
+        layer_mismatches=layer_mismatches,
+        loss_out_of_range=loss_out_of_range,
+        results=results,
+        corpus_version=version,
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -407,6 +656,7 @@ __all__ = [
     "LAYER_NAMES",
     "LAYER_LOSS_BOUNDS",
     "MIN_CORPUS_SIZE",
+    "CALIBRATION_CORPUS_PATH",
     # Assignment result
     "LayerAssignment",
     # Assignment functions
@@ -414,7 +664,15 @@ __all__ = [
     "assign_layer_relative",
     # Assigner class
     "LayerAssigner",
-    # Calibration
-    "CALIBRATION_CORPUS",
+    # Calibration types
+    "CalibrationEntry",
+    "CalibrationCorpus",
+    "CalibrationResult",
+    "CalibrationReport",
+    # Calibration functions
+    "load_calibration_corpus",
     "validate_calibration",
+    "validate_calibration_full",
+    # Legacy (backwards compat)
+    "CALIBRATION_CORPUS",
 ]

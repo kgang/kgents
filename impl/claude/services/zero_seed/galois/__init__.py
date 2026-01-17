@@ -142,14 +142,21 @@ from .galois_loss import (  # type: ignore[assignment]
 # Layer Assignment (Amendment C)
 from .layer_assignment import (
     CALIBRATION_CORPUS,
+    CALIBRATION_CORPUS_PATH,
     LAYER_LOSS_BOUNDS,
     LAYER_NAMES,
     MIN_CORPUS_SIZE,
+    CalibrationCorpus,
+    CalibrationEntry,
+    CalibrationReport,
+    CalibrationResult,
     LayerAssigner,
     LayerAssignment,
     assign_layer_absolute,
     assign_layer_relative,
+    load_calibration_corpus,
     validate_calibration,
+    validate_calibration_full,
 )
 
 # Proof coherence: Toulmin proofs with Galois loss
@@ -250,11 +257,18 @@ __all__ = [
     "LAYER_LOSS_BOUNDS",
     "MIN_CORPUS_SIZE",
     "CALIBRATION_CORPUS",
+    "CALIBRATION_CORPUS_PATH",
     "LayerAssignment",
     "LayerAssigner",
     "assign_layer_absolute",
     "assign_layer_relative",
     "validate_calibration",
+    "validate_calibration_full",
+    "load_calibration_corpus",
+    "CalibrationEntry",
+    "CalibrationCorpus",
+    "CalibrationResult",
+    "CalibrationReport",
     # === Canonical Semantic Distance (Amendment B) ===
     "BidirectionalEntailmentDistance",
     "CanonicalSemanticDistance",

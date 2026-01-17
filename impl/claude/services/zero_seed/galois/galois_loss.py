@@ -30,7 +30,9 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from .distance import (
     BERTScoreDistance,
+    CanonicalSemanticDistance,
     SemanticDistanceMetric,
+    get_bertscore_metric,
     get_default_metric,
 )
 
@@ -462,7 +464,13 @@ class GaloisLossComputer:
 
     Implements L(P) = d(P, C(R(P))) for various content types.
 
+    Amendment B: Uses canonical semantic distance (bidirectional entailment)
+    as the default metric. The canonical distance L(x, y) = ||d̂(x) - d̂(y)||₁
+    is implemented via bidirectional entailment with graceful fallback to
+    BERTScore and cosine embedding.
+
     From spec Part II: "Galois Loss as THE Fundamental Metric"
+    From spec Amendment B: "Canonical Semantic Distance"
     """
 
     llm: LLMClientProtocol = field(default_factory=SimpleLLMClient)
@@ -1028,9 +1036,9 @@ async def compute_galois_loss_async(
         logger = logging.getLogger(__name__)
         logger.warning(f"LLM-based loss computation failed, using fallback: {e}")
 
-        # Try BERTScore first (most accurate fallback)
+        # Try BERTScore first (most accurate fallback after canonical)
         try:
-            metric = BERTScoreDistance()
+            metric = get_bertscore_metric()
             # For fallback, we can't do R o C, so we approximate
             # by comparing content to a simplified version
             simplified = _simplify_content(content)
