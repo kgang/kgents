@@ -98,6 +98,22 @@ const TangibleSurface = React.lazy(() =>
   import('../pages/Tangible').then((m) => ({ default: m.TangibleSurface }))
 );
 
+// 2026-01-16 Transformation: New AGENTESE-integrated pages
+// Personal Constitution Builder (self.constitution) - Axiom discovery
+const ConstitutionPage = React.lazy(() =>
+  import('../pages/ConstitutionPage').then((m) => ({ default: m.ConstitutionPage }))
+);
+
+// Fusion Ceremony (self.dialectic) - Kent+Claude synthesis
+const FusionPage = React.lazy(() =>
+  import('../pages/FusionPage').then((m) => ({ default: m.FusionPage }))
+);
+
+// Constitutional Graph (concept.constitution) - K-Block derivation visualization
+const ConstitutionalGraphPage = React.lazy(() =>
+  import('../pages/ConstitutionalGraphPage').then((m) => ({ default: m.ConstitutionalGraphPage }))
+);
+
 /**
  * AGENTESE path mappings.
  *
@@ -140,6 +156,32 @@ const PATH_MAPPINGS: PathMapping[] = [
     component: ContradictionWorkspacePage,
     shell: 'app',
     description: 'Contradiction Workspace — Focused dialectical resolution',
+  },
+
+  // === 2026-01-16 Transformation: New AGENTESE paths ===
+
+  // Self context — Personal Constitution (axiom discovery)
+  {
+    pattern: /^self\.constitution/,
+    component: ConstitutionPage,
+    shell: 'app',
+    description: 'Personal Constitution — Discover your personal axioms from decision history',
+  },
+
+  // Self context — Dialectical Fusion (Kent+Claude synthesis)
+  {
+    pattern: /^self\.dialectic/,
+    component: FusionPage,
+    shell: 'app',
+    description: 'Dialectical Fusion — Kent + Claude synthesis ceremony',
+  },
+
+  // Concept context — Constitutional Graph (K-Block derivation)
+  {
+    pattern: /^concept\.constitution/,
+    component: ConstitutionalGraphPage,
+    shell: 'app',
+    description: 'Constitutional Graph — K-Block L0→L1→L2→L3 derivation visualization',
   },
 
   // Deleted routes (no longer mapped):

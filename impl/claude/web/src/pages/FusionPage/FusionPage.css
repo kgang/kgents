@@ -1,0 +1,126 @@
+/**
+ * FusionPage Styles
+ *
+ * Minimal page-level styling that wraps FusionCeremony.
+ * STARK BIOME aesthetic: 90% steel, 10% earned glow.
+ *
+ * The FusionCeremony component handles its own styling.
+ * This file only handles page-level layout concerns.
+ */
+
+/* =============================================================================
+   Page Layout
+   ============================================================================= */
+
+.fusion-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--surface-canvas, #0a0a0c);
+}
+
+/* =============================================================================
+   Page Header
+   ============================================================================= */
+
+.fusion-page__header {
+  border-bottom: 1px solid var(--surface-3, #28282f);
+  background: var(--surface-0, #0a0a0c);
+}
+
+.fusion-page__header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-lg, 1.25rem) var(--space-xl, 1.75rem);
+}
+
+.fusion-page__title {
+  font-size: var(--font-size-2xl, 1.75rem);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--text-primary, #e5e7eb);
+  letter-spacing: 0.02em;
+  margin: 0 0 var(--space-xs, 0.2rem) 0;
+}
+
+.fusion-page__subtitle {
+  font-size: var(--font-size-sm, 0.75rem);
+  color: var(--text-secondary, #8a8a94);
+  margin: 0;
+}
+
+.fusion-page__context {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 0.4rem);
+  margin-top: var(--space-sm, 0.4rem);
+  font-size: var(--font-size-xs, 0.625rem);
+}
+
+.fusion-page__context-label {
+  color: var(--text-muted, #5a5a64);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fusion-page__context-path {
+  color: var(--text-secondary, #8a8a94);
+  background: var(--surface-2, #1c1c22);
+  padding: 2px 6px;
+  border-radius: var(--radius-bare, 2px);
+}
+
+/* =============================================================================
+   Main Content
+   ============================================================================= */
+
+.fusion-page__main {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.fusion-page__ceremony {
+  height: 100%;
+}
+
+/* =============================================================================
+   Page Footer
+   ============================================================================= */
+
+.fusion-page__footer {
+  border-top: 1px solid var(--surface-3, #28282f);
+  padding: var(--space-lg, 1.25rem);
+  text-align: center;
+}
+
+.fusion-page__quote {
+  font-size: var(--font-size-sm, 0.75rem);
+  color: var(--text-muted, #5a5a64);
+  font-style: italic;
+  margin: 0 0 var(--space-xs, 0.2rem) 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fusion-page__attribution {
+  font-size: var(--font-size-xs, 0.625rem);
+  color: var(--text-muted, #5a5a64);
+  margin: 0;
+}
+
+/* =============================================================================
+   Responsive Adjustments
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .fusion-page__header-content {
+    padding: var(--space-md, 0.85rem) var(--space-md, 0.85rem);
+  }
+
+  .fusion-page__title {
+    font-size: var(--font-size-xl, 1.5rem);
+  }
+}

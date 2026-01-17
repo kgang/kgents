@@ -50,3 +50,18 @@ export {
   getGroundingIcon,
   getGroundingStatusClass,
 } from './derivationStore';
+
+// Constitutional Graph Store - ASHC Self-Awareness visualization
+export {
+  useConstitutionalGraphStore,
+  // Selectors
+  selectBlockById,
+  selectBlocksByLayer,
+  selectIsOrphan,
+  selectIsHighlighted,
+  selectPosition,
+  selectConsistencyScore,
+  selectTotalBlocks,
+  // Types
+  type ConstitutionalGraphStore,
+} from './constitutionalGraphStore';

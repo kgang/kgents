@@ -1,0 +1,65 @@
+/**
+ * DerivationEdge Styles
+ *
+ * STARK BIOME: Subtle connections, earned emphasis
+ * "The frame is humble. The connection glows when earned."
+ */
+
+/* =============================================================================
+ * Base Edge
+ * ============================================================================= */
+
+.cge {
+  pointer-events: none;
+}
+
+.cge__path {
+  transition:
+    stroke-width 0.15s ease,
+    opacity 0.15s ease;
+}
+
+/* =============================================================================
+ * Highlighted State
+ * ============================================================================= */
+
+.cge--highlighted .cge__path {
+  stroke-width: 2;
+  opacity: 1;
+}
+
+.cge--highlighted .cge__arrow {
+  opacity: 1;
+}
+
+.cge__arrow {
+  transition: opacity 0.15s ease;
+  opacity: 0;
+}
+
+/* =============================================================================
+ * Reduced Motion
+ * ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .cge__path,
+  .cge__arrow {
+    transition: none;
+  }
+}
+
+/* =============================================================================
+ * Print Styles
+ * ============================================================================= */
+
+@media print {
+  .cge__path {
+    stroke: #666 !important;
+    opacity: 0.5 !important;
+  }
+
+  .cge--highlighted .cge__path {
+    stroke: #333 !important;
+    opacity: 1 !important;
+  }
+}

@@ -1,0 +1,118 @@
+/**
+ * ConstitutionPage Styles
+ *
+ * Minimal page wrapper for PersonalConstitutionBuilder.
+ * Follows Living Earth palette and kgents design system.
+ *
+ * "Tasteful > feature-complete; Joy-inducing > merely functional"
+ */
+
+/* =============================================================================
+   Page Container
+   ============================================================================= */
+
+.constitution-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: rgba(26, 18, 16, 0.98);
+  color: #f5e6d3; /* glow-lantern */
+}
+
+/* =============================================================================
+   Page Header
+   ============================================================================= */
+
+.constitution-page-header {
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(139, 111, 92, 0.15);
+  background: rgba(45, 27, 20, 0.5);
+}
+
+.header-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-breadcrumb {
+  font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.header-breadcrumb .context {
+  color: #6b8b6b; /* green-mint */
+}
+
+.header-breadcrumb .separator {
+  color: rgba(139, 111, 92, 0.5);
+}
+
+.header-breadcrumb .entity {
+  color: #d4a574; /* glow-amber */
+}
+
+.header-breadcrumb .aspect {
+  color: #ab9080; /* earth-sand */
+}
+
+.header-philosophy {
+  font-size: 12px;
+  font-style: italic;
+  color: #ab9080;
+  margin: 0;
+}
+
+/* =============================================================================
+   Main Content
+   ============================================================================= */
+
+.constitution-page-main {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* =============================================================================
+   Page Footer
+   ============================================================================= */
+
+.constitution-page-footer {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(139, 111, 92, 0.15);
+  padding: 16px 24px;
+  text-align: center;
+}
+
+.footer-quote {
+  font-size: 12px;
+  font-style: italic;
+  color: #ab9080;
+  margin: 0;
+}
+
+/* =============================================================================
+   Responsive
+   ============================================================================= */
+
+@media (max-width: 640px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 16px;
+  }
+
+  .header-philosophy {
+    display: none;
+  }
+
+  .constitution-page-footer {
+    padding: 12px 16px;
+  }
+}

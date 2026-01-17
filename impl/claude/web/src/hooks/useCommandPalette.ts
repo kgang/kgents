@@ -225,6 +225,37 @@ function createDefaultCommands(navigate: (path: string) => void): Command[] {
       keywords: ['growth', 'coherence', 'timeline', 'reflection', 'journey'],
     },
 
+    // 2026-01-16 Transformation: New AGENTESE-integrated navigation
+    {
+      id: 'nav-constitution',
+      label: 'Personal Constitution',
+      category: 'navigation',
+      shortcut: 'Shift+C',
+      icon: '\u2318', // ⌘
+      description: 'Discover personal axioms from decision history',
+      action: () => navigate('/self.constitution'),
+      keywords: ['axiom', 'constitution', 'personal', 'discover', 'values', 'principles'],
+    },
+    {
+      id: 'nav-dialectic',
+      label: 'Dialectical Fusion',
+      category: 'navigation',
+      shortcut: 'Shift+D',
+      icon: '\u221E', // ∞
+      description: 'Kent + Claude synthesis ceremony',
+      action: () => navigate('/self.dialectic'),
+      keywords: ['dialectic', 'fusion', 'synthesis', 'thesis', 'antithesis', 'kent', 'claude'],
+    },
+    {
+      id: 'nav-kblock-graph',
+      label: 'Constitutional Graph',
+      category: 'navigation',
+      icon: '\u25C6', // ◆
+      description: 'K-Block L0→L3 derivation visualization',
+      action: () => navigate('/concept.constitution'),
+      keywords: ['kblock', 'graph', 'derivation', 'layer', 'constitutional', 'visualization'],
+    },
+
     // Action commands
     {
       id: 'action-save',
