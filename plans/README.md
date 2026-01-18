@@ -57,12 +57,14 @@ cat plans/2026-01-16-transformation-qa.md
 
 ## Active Plan Sets
 
-| Plan Set | Items | Done | Progress | Next Milestone |
+| Plan Set | Items | Done | Progress | Remaining Work |
 |----------|-------|------|----------|----------------|
-| **enlightened-synthesis/** | 47 | 8+ | ~25% | Week 1: Core Pipeline ✅ |
-| **genesis-overhaul/** | 32 | 19+ | ~65% | ASHC Self-Awareness ✅ |
-| **ashc-consumer-integration/** | 28 | 7+ | ~30% | ConstitutionalGraphView ✅ |
-| **theory-operationalization/** | 44 | 15+ | ~40% | JIT Skill Injection ✅ |
+| **enlightened-synthesis/** | 47 | 8+ | ~25% | Master vision — 7 pilots, product strategy |
+| **ashc-consumer-integration/** | 28 | 10+ | ~35% | Orphan UX, project realization, full nav |
+| **theory-operationalization/** | 44 | 20+ | ~45% | E2 (Operad), E4 (Fusion Ceremony), Galois |
+
+**Archived (Complete)**:
+- `genesis-overhaul/` → `_archive/2026-01-17-genesis-complete/` (22 K-Blocks, ASHC APIs)
 
 ---
 
@@ -141,49 +143,53 @@ plans/
 ├── meta.md                            # Learnings (append only)
 │
 ├── enlightened-synthesis/             # Master vision (6 docs)
-│   ├── 00-master-synthesis.md
-│   ├── 01-theoretical-amendments.md
-│   ├── 02-execution-roadmap.md
-│   ├── 03-risk-mitigations.md
-│   ├── 04-joy-integration.md
-│   └── 05-product-strategy.md
+│   ├── 00-master-synthesis.md         # Core thesis, 5 L1 axioms
+│   ├── 01-theoretical-amendments.md   # 7 amendments
+│   ├── 02-execution-roadmap.md        # Pilot-driven implementation
+│   ├── 03-risk-mitigations.md         # 47 vulnerabilities
+│   ├── 04-joy-integration.md          # Joy calibration
+│   └── 05-product-strategy.md         # Market entry
 │
-├── genesis-overhaul/                  # K-Block foundation
-├── ashc-consumer-integration/         # UI for derivation
+├── ashc-consumer-integration/         # UI for Constitutional Graph
 ├── theory-operationalization/         # Theory → code bridge
+├── frontend-audit/                    # Design consolidation (NEW)
 │
 └── _archive/                          # Completed work
-    ├── 2026-01-16-completed/          # Previous archived items
-    └── 2026-01-17-extracted/          # Today's archived items
+    ├── 2026-01-16-completed/
+    ├── 2026-01-17-extracted/
+    └── 2026-01-17-genesis-complete/   # genesis-overhaul/ (capstone done)
 ```
 
 ---
 
-## Archiving Recommendations
+## What Remains
 
-### Ready to Archive (Superseded by New Work)
+### 4 Active Plan Sets
 
-| File/Directory | Reason | Action |
-|----------------|--------|--------|
-| `genesis-overhaul/ASHC_GAPS.md` | ASHC Self-Awareness implemented | Archive |
-| `theory-operationalization/JIT_*.md` | JIT Skill Injection complete | Archive |
-| `ashc-consumer-integration/UI_SPEC.md` | UI components built | Archive |
+| Plan Set | Why It Stays | Key Remaining Work |
+|----------|--------------|-------------------|
+| **enlightened-synthesis/** | Master vision | 7 pilots need validation, product strategy |
+| **ashc-consumer-integration/** | UI in progress | Orphan experience, project realization |
+| **theory-operationalization/** | Theory bridge | E2, E4, Galois calibration |
+| **frontend-audit/** | Design consolidation | Component sprawl, CSS fragmentation, state patterns |
 
-### Keep Active
+### Meta Files (Never Archive)
 
 | File | Reason |
 |------|--------|
-| `enlightened-synthesis/` | Master vision still guides execution |
-| `CURRENT_SESSION.md` | Active tracker, updated frequently |
-| `_focus.md` | Kent's intent, never archive |
-| `meta.md` | Learnings, append-only |
+| `_focus.md` | Kent's intent — sacred |
+| `meta.md` | Learnings — append-only |
+| `CURRENT_SESSION.md` | Active tracker |
+| `README.md` | Navigation |
 
-### Create New
+### Recently Archived
 
-| Recommended File | Purpose |
-|------------------|---------|
-| `2026-01-16-transformation-qa.md` | ✅ Created — QA guide |
-| `docs/skills/unified-agentese-nodes.md` | ✅ Created — Node documentation |
+| What | When | Where |
+|------|------|-------|
+| `genesis-overhaul/` | 2026-01-17 | `_archive/2026-01-17-genesis-complete/` |
+| Documentation transformation plan | 2026-01-17 | `_archive/2026-01-17-extracted/` |
+| FORGE_DEPRECATION.md | 2026-01-17 | `_archive/2026-01-17-extracted/` |
+| CRITICAL_ANALYSIS v1 | 2026-01-17 | `_archive/2026-01-17-extracted/` |
 
 ---
 

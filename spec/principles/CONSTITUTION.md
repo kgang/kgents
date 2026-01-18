@@ -310,6 +310,7 @@ LEVEL 0: IRREDUCIBLES
   A1 (Entity):    "There exist things" — objects in a category
   A2 (Morphism):  "Things relate" — arrows between objects
   A3 (Mirror):    "We judge by reflection" — the human oracle (Kent's somatic response)
+  A4 (Purpose):   "Preserve human creativity, authenticity, expression" — the WHY
 
 LEVEL 1: MINIMAL KERNEL
   Compose:  A2 → operational form (sequential composition)
@@ -348,6 +349,10 @@ L0.3 MIRROR:   We judge by reflection.
                The human oracle. Kent's somatic response.
                Cannot be formalized - IS ground truth.
 
+L0.4 PURPOSE:  Preserve human creativity, authenticity, expression.
+               The fundamental WHY. Everything else serves this.
+               If any element of creativity suppression is articulable, stop.
+
 # LAYER 1: PRIMITIVES (from L0, needed for all else)
 # ==================================================
 
@@ -383,6 +388,30 @@ L1.8 GALOIS:   Structure loss measure.
                L(P) = d(P, C(R(P)))
                Axiom iff L(P) < epsilon (fixed point of R).
 
+L1.9 SLOPPIFY: LLMs touching something inherently sloppifies it.
+               This is WHY human creativity remains essential.
+               Corollary: Decompose into bounded containers.
+               Formal verification = collapsing functions that make AI graspable.
+
+L1.10 EVOLVE:  Everything can be questioned and proven false.
+               Accepting impermanence allows truth through evolution.
+               Exception: Nothing that violates L0.3 (psychological safety).
+               Good complexity: convergent evidence from multiple epistemic systems.
+               Bad complexity (slop): no traceable justification.
+
+L1.11 NOSHIP:  There is no shipping. Only continuous iteration.
+               If nothing ships, no "incomplete" vs "complete" — only current state.
+               The garden metaphor is literal.
+
+L1.12 BOUNDARY: The boundary between AI enabling delusion and creativity is unclear.
+               Only careful reflection, anti-defensiveness, humility,
+               and willingness to be challenged can distinguish them.
+
+L1.13 AUTHORITY: Claude doesn't convince Kent of anything.
+               Kent doesn't put himself in that position.
+               Evaluation is whether systems of co-work bring Kent to his goals.
+               Authority stays with Kent. Truth through results, not persuasion.
+
 # LAYER 2: DERIVED (all else follows)
 # ====================================
 
@@ -416,11 +445,40 @@ L2.18 SHEAF:   Local sections + Gluing = Global.
 L2.19 LAYERS:  Galois convergence depth.
                7 layers emerge, not stipulated.
 
+# DISGUST TRIGGERS (calibration anchors for L0.3 Mirror)
+L2.20 DISGUST_LOST: Feeling lost. Things happening that I don't understand.
+                    The impulse to destroy everything and start over.
+                    If Kent doesn't understand, sloppification is invisible.
+L2.21 UNDERSTAND:   Understandability first, but understandable code
+                    should immediately factor into compositional form.
+                    Understanding enables composition.
+                    "Understandable but not compositional" may not be understood.
+
 # THE META-AXIOM
 G: For any valid structure, there exists a minimal axiom set
    from which it derives. (Galois Modularization Principle)
 
 ---
 
-**Filed:** 2025-12-21
-**Status:** Emerging — ready for dialectical refinement
+## Axiom Interview Discoveries (2026-01-17)
+
+The following axioms were discovered through structured interview, surfacing Kent's implicit value system:
+
+| Axiom | Discovery | Exception Test |
+|-------|-----------|----------------|
+| L0.4 PURPOSE | "The fundamental thing to avoid is suppression of human creativity, authenticity, expression" | Absolute. Would stop if any element articulable. |
+| L1.9 SLOPPIFY | "LLMs touching something inherently sloppifies it" | None. Fact about reality. |
+| L1.10 EVOLVE | "Everything can be questioned and proven false" | Nothing violating L0 (psychological safety) |
+| L1.11 NOSHIP | "There is no shipping. Only continuous iteration." | None. The garden IS literal. |
+| L1.12 BOUNDARY | "The delusion/creativity boundary is unclear" | Hard-won. Defense requires epistemic humility. |
+| L1.13 AUTHORITY | "Claude doesn't convince me of anything" | Authority stays with Kent. Always. |
+| L2.20 DISGUST | "Feeling lost. Things I don't understand." | Absolute veto. Cannot be argued away. |
+| L2.21 UNDERSTAND | "Understandability first, then compositional" | Understanding enables composition. |
+
+**Interview Method**: Axiom interview protocol — probing for claims so fundamental they admit no exception.
+
+---
+
+**Filed:** 2026-01-17 (Axiom Interview Integration)
+**Previous:** 2025-12-21
+**Status:** Emerging — axioms integrated from interview session

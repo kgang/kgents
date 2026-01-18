@@ -14,13 +14,10 @@ Read these files IN ORDER:
 # 1. Human intent (NEVER overwrite)
 cat plans/_focus.md
 
-# 2. Canopy view (auto-generated)
-cat plans/_forest.md
-
-# 3. Learnings (append only, 200-line cap)
+# 2. Learnings (append only, 250-line cap)
 cat plans/meta.md
 
-# 4. Project state (keep terse)
+# 3. Project state (keep terse)
 cat HYDRATE.md
 ```
 
@@ -28,7 +25,6 @@ cat HYDRATE.md
 | File | Agent May | Agent Must NOT |
 |------|-----------|----------------|
 | `_focus.md` | Read for direction | Overwrite (Kent's voice) |
-| `_forest.md` | Regenerate from plan headers | Add prose |
 | `meta.md` | Append atomic learnings | Add paragraphs (one line per insight) |
 | `HYDRATE.md` | Update stale facts | Bloat (compress, don't expand) |
 

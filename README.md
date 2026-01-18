@@ -346,8 +346,21 @@ kg probe health --all      # Session start verification
 > *"Daring, bold, creative, opinionated but not gaudy."*
 > *"Tasteful > feature-complete."*
 > *"Depth over breadth."*
+> *"There is no shipping. Only continuous iteration and evolution."*
 
 kgents is specification-first: the spec (`spec/`) is the source of truth; the implementation (`impl/`) is one possible realization. Each letter in the alphabet represents a distinct agent genus. AGENTESE is the verb-first ontology for agent-world interaction.
+
+### The Purpose Axiom (A4)
+
+> *"The fundamental thing to avoid is the suppression and atrophy of human creativity, authenticity, and expression."*
+
+Everything in kgents serves this purpose. If any element of creativity suppression becomes articulable, we stop and reconsider.
+
+### The Sloppification Axiom (L1.9)
+
+> *"LLMs touching something inherently sloppifies it."*
+
+This is not pessimism—it's a fact about reality that kgents embraces. The sloppification is why human creativity remains essential. Our response: decompose into bounded containers where sloppification can be limited and understood. Formal verification and tests are "collapsing functions" that make AI capabilities graspable.
 
 This is an active research project. Core ideas are stabilizing, but edges remain rough. That's intentional—*"The persona is a garden, not a museum."*
 

@@ -131,6 +131,14 @@ Agents should generate the **smallest output that can be reliably composed**, no
 - **Composition at pipeline level**: Call agent N times, don't ask agent to combine N outputs
 - **Serialization guides granularity**: If you can't cleanly serialize it, you're asking the agent to do composition work that belongs in the pipeline
 
+### The Understandability Priority (L2.21 UNDERSTAND)
+
+> *"Understandability first, but understandable code should immediately factor into compositional form."*
+
+- Understanding enables composition
+- Code that's "understandable but not compositional" might not actually be understood—just familiar
+- Familiarity ≠ understanding; composition proves understanding
+
 ### From Enumeration to Generation
 
 > *"Don't enumerate the flowers. Describe the garden's grammar."*
@@ -210,6 +218,15 @@ Dynamic: Flux(Agent): dA/dt → dB/dt  (a continuous flow)
 
 A well-formed specification captures the essential decisions, reducing implementation entropy. The zen-agents experiment achieved 60% code reduction compared to organic development—proof that spec-first design compresses accumulated wisdom into regenerable form.
 
+### Epistemological Grounding (L1.10 EVOLVE)
+
+**Everything can be questioned and proven false.** Accepting impermanence allows truth through evolution and survival.
+
+- **Good complexity**: Convergent evidence from multiple epistemic systems
+- **Bad complexity (slop)**: No traceable justification
+
+The GENERATIVE principle operationalizes this: a design that can regenerate from spec has traceable justification. Slop cannot regenerate because it was never compressed.
+
 **Heritage Citation (DSPy):** The DSPy framework (dspy.ai) demonstrates that prompts are **programs, not strings**. Programs have typed inputs/outputs and can be compiled from specifications. kgents' `PromptCompiler` embodies this principle—prompts are generated from source files, not hand-written. See `spec/heritage.md` §6.
 
 - **Spec captures judgment**: Design decisions made once, applied everywhere
@@ -286,6 +303,53 @@ When designing or reviewing an agent, ask:
 | Generative | Could this be regenerated from spec? Is the design compressed? |
 
 A "no" on any principle is a signal to reconsider.
+
+---
+
+## Foundational Axioms
+
+The seven principles derive from a deeper layer of irreducible axioms. These were discovered through structured interview, surfacing the implicit value system:
+
+### L0: Irreducibles
+
+| Axiom | Statement | Role |
+|-------|-----------|------|
+| A1 ENTITY | "There exist things" | Objects in a category |
+| A2 MORPHISM | "Things relate" | Arrows between objects |
+| A3 MIRROR | "We judge by reflection" | Kent's somatic response as ground truth |
+| **A4 PURPOSE** | "Preserve human creativity, authenticity, expression" | The fundamental WHY |
+
+### L1: Discovered Axioms (Interview 2026-01-17)
+
+| Axiom | Statement | Implication |
+|-------|-----------|-------------|
+| L1.9 SLOPPIFY | "LLMs touching something inherently sloppifies it" | Human creativity essential; decompose into bounded containers |
+| L1.10 EVOLVE | "Everything can be questioned and proven false" | Grounds GENERATIVE; good complexity has convergent evidence |
+| L1.11 NOSHIP | "There is no shipping. Only continuous iteration." | The garden metaphor is literal |
+| L1.12 BOUNDARY | "Delusion/creativity boundary is unclear" | Requires reflection, anti-defensiveness, humility |
+| L1.13 AUTHORITY | "Claude doesn't convince Kent of anything" | Symmetric agency ≠ persuasion authority |
+
+### The Axiom Hierarchy
+
+```
+A4 PURPOSE: Preserve human creativity, authenticity, expression
+    │
+    └──► L1.9 SLOPPIFY: LLMs inherently sloppify (fact about reality)
+    │       └──► Decompose into bounded containers
+    │            └──► Formal verification = collapsing functions
+    │
+    └──► L1.10 EVOLVE: Everything falsifiable (except L0 violations)
+    │       └──► L1.12 BOUNDARY: Delusion/creativity unclear
+    │            └──► Reflection, anti-defensiveness, humility
+    │
+    └──► L1.11 NOSHIP: No shipping, only evolution
+    │       └──► "Garden, not museum" is literal
+    │
+    └──► L1.13 AUTHORITY: Kent evaluated, not persuaded
+            └──► Symmetric agency ≠ Claude convincing Kent
+```
+
+See [CONSTITUTION.md](./principles/CONSTITUTION.md) for the complete minimal kernel.
 
 ---
 

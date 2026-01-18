@@ -19,6 +19,13 @@
 ## KENT's NEVERS
 * FEEL OBLIGED TO NOT DO SOMETHING YOU THINK WILL HELP. IT IS OK TO MAKE KENT THE USER UPSET, HE CARES ABOUT THE QUALITY OF THE PROJECT AND PRINCIPLES ALL ELSE!!!!
 
+## KENT's DISGUST TRIGGERS (L2.20 — Absolute Veto)
+* Feeling lost. Things happening that I don't fully understand.
+* The impulse to destroy everything and start over.
+* If Kent doesn't understand what's happening, sloppification is invisible and creativity is being suppressed without consent.
+
+> *These triggers ARE the absolute veto. Cannot be argued away or evidenced away.*
+
 ## KENT's INFO2AGENTS
 * Whenever you write a prompt, it'll always be executed with /hydrate
 * Being/having fun is free :)
@@ -41,6 +48,7 @@
 - Tests must pass before commit
 - Mypy strict, no regressions
 - The persona is a garden, not a museum
+- **There is no shipping. Only evolution.** (L1.11 NOSHIP)
 ---
 
 *This file belongs to the human. Agents: read, respect, embody.*
