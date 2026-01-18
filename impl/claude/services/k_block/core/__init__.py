@@ -40,6 +40,31 @@ from .errors import (
     SheafError,
     TokenConflict,
 )
+
+# Event Sourcing (Kent's decision 2025-01-17: "Every edit is an event")
+# HEAD-FIRST DESIGN: Current state is O(1), history reconstructed on demand
+from .events import (
+    # Store Protocol & Implementations
+    EventStoreProtocol,
+    FileEventStore,
+    InMemoryEventStore,
+    # Data Types
+    KBlockEvent,
+    KBlockEventEmitter,
+    KBlockEventType,
+    KBlockHead,  # Current canonical state (O(1) access)
+    # HEAD-FIRST: Primary access patterns
+    get_content_at_sequence,  # Rewind from head to get historical state
+    get_current_content,  # O(1) current state
+    # Module-level store
+    get_emitter,
+    get_event_store,
+    get_links_at_sequence,  # Rewind links
+    # Legacy (forward replay)
+    replay_content,
+    replay_links,
+    set_event_store,
+)
 from .harness import (
     ConflictError,
     EntanglementError,
@@ -76,6 +101,10 @@ from .polynomial import (
     describe_state,
     get_valid_actions,
 )
+from .provenance import (
+    KBlockProvenance,
+    ReviewStatus,
+)
 from .sheaf import KBlockSheaf
 from .verification import SheafVerification
 from .witnessed import (
@@ -108,6 +137,9 @@ __all__ = [
     # Unification: KBlock ≅ ZeroNode isomorphism
     "kblock_from_zero_node",
     "zero_node_from_kblock",
+    # Provenance (Anti-Sloppification Tracking)
+    "KBlockProvenance",
+    "ReviewStatus",
     # Edge Discovery
     "ConceptSignature",
     "DiscoveredEdge",
@@ -162,4 +194,20 @@ __all__ = [
     # Witness Integration (Phase 3)
     "ViewEditTrace",
     "WitnessedSheaf",
+    # Event Sourcing (Kent's decision 2025-01-17: HEAD-FIRST DESIGN)
+    "EventStoreProtocol",
+    "FileEventStore",
+    "InMemoryEventStore",
+    "KBlockEvent",
+    "KBlockEventEmitter",
+    "KBlockEventType",
+    "KBlockHead",  # Current canonical state (O(1) access)
+    "get_content_at_sequence",  # Rewind from head
+    "get_current_content",  # O(1) current state
+    "get_emitter",
+    "get_event_store",
+    "get_links_at_sequence",  # Rewind links
+    "replay_content",  # Legacy forward replay
+    "replay_links",  # Legacy forward replay
+    "set_event_store",
 ]

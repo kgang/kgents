@@ -431,6 +431,22 @@ def create_app(
         app.include_router(derivation_router)
         logger.info("Derivation API mounted at /api/derivation")
 
+    # === Collapse API (Unified K-Block verification state) ===
+    from .collapse import create_collapse_router
+
+    collapse_router = create_collapse_router()
+    if collapse_router is not None:
+        app.include_router(collapse_router)
+        logger.info("Collapse API mounted at /api/collapse")
+
+    # === Garden API (WitnessGarden lifecycle visualization) ===
+    from .garden import create_garden_router
+
+    garden_router = create_garden_router()
+    if garden_router is not None:
+        app.include_router(garden_router)
+        logger.info("Garden API mounted at /api/garden")
+
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
     # - GET/POST /agentese/world/codebase/{aspect}
@@ -806,6 +822,17 @@ def create_app(
                     "downstream": "GET /api/derivation/downstream/{kblock_id}",
                     "realize": "POST /api/derivation/realize",
                     "path": "GET /api/derivation/path/{kblock_id}",
+                },
+                "collapse": {
+                    "note": "Unified K-Block verification state for frontend badges",
+                    "state": "GET /api/collapse/{kblock_id}",
+                },
+                "garden": {
+                    "note": "WitnessGarden lifecycle visualization - specs as living plants",
+                    "state": "GET /api/garden/state",
+                    "items": "GET /api/garden/items",
+                    "tend": "POST /api/garden/items/{path}/tend",
+                    "compost": "POST /api/garden/items/{path}/compost",
                 },
                 "webhooks": {
                     "stripe": "/webhooks/stripe",

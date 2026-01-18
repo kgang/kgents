@@ -1,0 +1,1068 @@
+{
+  "version": "3.0-real",
+  "created": "2026-01-17",
+  "purpose": "Galois loss calibration corpus derived from ACTUAL kgents work products, not synthetic examples",
+  "methodology": "Verbatim extraction from git history, plans, meta.md, and documented decisions. Zero synthetic generation.",
+  "layer_bounds": {
+    "1": {
+      "name": "Axiom",
+      "loss_range": [
+        0.0,
+        0.05
+      ],
+      "description": "Fixed points Kent never violates"
+    },
+    "2": {
+      "name": "Value",
+      "loss_range": [
+        0.05,
+        0.15
+      ],
+      "description": "Kent's preferences and principles"
+    },
+    "3": {
+      "name": "Goal",
+      "loss_range": [
+        0.15,
+        0.3
+      ],
+      "description": "Strategic objectives with deadlines"
+    },
+    "4": {
+      "name": "Spec",
+      "loss_range": [
+        0.3,
+        0.45
+      ],
+      "description": "Technical specifications with constraints"
+    },
+    "5": {
+      "name": "Execution",
+      "loss_range": [
+        0.45,
+        0.6
+      ],
+      "description": "Concrete tasks and commits"
+    },
+    "6": {
+      "name": "Reflection",
+      "loss_range": [
+        0.6,
+        0.75
+      ],
+      "description": "Retrospective insights and learnings"
+    },
+    "7": {
+      "name": "Representation",
+      "loss_range": [
+        0.75,
+        1.0
+      ],
+      "description": "Meta-documentation and diagrams"
+    }
+  },
+  "corpus": [
+    {
+      "id": "REAL-L1-001",
+      "content": "Agency requires justification",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "spec/principles.md",
+      "extraction_method": "verbatim",
+      "notes": "Core kgents axiom. Without justification, there is no agency, only reflex. This is the foundational claim from which Witness derives."
+    },
+    {
+      "id": "REAL-L1-002",
+      "content": "The proof IS the decision. The mark IS the witness.",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "plans/CURRENT_SESSION.md:3",
+      "extraction_method": "verbatim",
+      "notes": "Kent's voice anchor. This phrase appears across multiple files unchanged - a fixed point in the codebase."
+    },
+    {
+      "id": "REAL-L1-003",
+      "content": "Composition is primary",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "calibration_corpus.json:L1-002",
+      "extraction_method": "verbatim",
+      "notes": "A2 Morphism Axiom from the Constitution. Everything composes. Categorical foundation."
+    },
+    {
+      "id": "REAL-L1-004",
+      "content": "@node runs at import time: If module not imported, node not registered",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "plans/meta.md:109",
+      "extraction_method": "verbatim",
+      "notes": "Discovered gotcha that became axiomatic. This learning was so fundamental it was added to CLAUDE.md."
+    },
+    {
+      "id": "REAL-L1-005",
+      "content": "PolyAgent[S,A,B] > Agent[A,B]: mode-dependent behavior",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "plans/meta.md:95",
+      "extraction_method": "verbatim",
+      "notes": "Categorical insight that became architectural axiom. Mode-dependent inputs are fundamental."
+    },
+    {
+      "id": "REAL-L1-006",
+      "content": "Operads define grammar; algebras apply grammar to systems",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "plans/meta.md:93",
+      "extraction_method": "verbatim",
+      "notes": "Category theory axiom. This is the categorical foundation statement."
+    },
+    {
+      "id": "REAL-L1-007",
+      "content": "Sheaf gluing = emergence: compatible locals \u2192 global",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "plans/meta.md:94",
+      "extraction_method": "verbatim",
+      "notes": "Sheaf theory axiom. Local consistency yields global coherence."
+    },
+    {
+      "id": "REAL-L1-008",
+      "content": "K-gent = Governance Functor, not chatbot",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "plans/meta.md:105",
+      "extraction_method": "verbatim",
+      "notes": "Identity axiom for K-gent. Not a chatbot - a functor that maps decisions to principled actions."
+    },
+    {
+      "id": "REAL-L1-009",
+      "content": "DI > mocking: set_soul() injection pattern beats patch() for testability",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "plans/meta.md:153",
+      "extraction_method": "verbatim",
+      "notes": "Testing axiom discovered through practice. Dependency injection is categorically superior to mocking."
+    },
+    {
+      "id": "REAL-L1-010",
+      "content": "Flux > Loop: streams are event-driven, not timer-driven",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "plans/meta.md:117",
+      "extraction_method": "verbatim",
+      "notes": "Reactive axiom. Timer-driven loops create zombies. Event-driven is correct."
+    },
+    {
+      "id": "REAL-L2-001",
+      "content": "Tasteful > feature-complete; Joy-inducing > merely functional",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/_focus.md:39-40",
+      "extraction_method": "verbatim",
+      "notes": "Kent's voice anchor. This is the core value statement that guides all design decisions."
+    },
+    {
+      "id": "REAL-L2-002",
+      "content": "The persona is a garden, not a museum",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/_focus.md:43",
+      "extraction_method": "verbatim",
+      "notes": "Kent's voice anchor. Evolution over preservation. Living system, not static collection."
+    },
+    {
+      "id": "REAL-L2-003",
+      "content": "Depth over breadth (category theory, not feature sprawl)",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/_focus.md:29",
+      "extraction_method": "verbatim",
+      "notes": "Kent's constraint. Focus on categorical foundations rather than expanding features."
+    },
+    {
+      "id": "REAL-L2-004",
+      "content": "The Mirror Test: Does K-gent feel like me on my best day?",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/_focus.md:30",
+      "extraction_method": "verbatim",
+      "notes": "Kent's quality criterion. The ultimate test for K-gent fidelity."
+    },
+    {
+      "id": "REAL-L2-005",
+      "content": "Daring, bold, creative, opinionated but not gaudy",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "calibration_corpus.json:L2-006",
+      "extraction_method": "verbatim",
+      "notes": "Kent's aesthetic coordinate. Balance of boldness and taste."
+    },
+    {
+      "id": "REAL-L2-006",
+      "content": "ETHICAL as floor constraint (\u22650.6), not weighted principle",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "HYDRATE.md:44",
+      "extraction_method": "verbatim",
+      "notes": "Amendment A value. ETHICAL is a gate, not just another weighted score."
+    },
+    {
+      "id": "REAL-L2-007",
+      "content": "Skills pull before doing, push after learning",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/meta.md:180",
+      "extraction_method": "verbatim",
+      "notes": "Design principle. Read skills first, update them after discoveries."
+    },
+    {
+      "id": "REAL-L2-008",
+      "content": "Stigmergic surface: agents append, humans curate",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/meta.md:181",
+      "extraction_method": "verbatim",
+      "notes": "Collaboration value. Agents add to surfaces, humans prune and organize."
+    },
+    {
+      "id": "REAL-L2-009",
+      "content": "Wiring > Creation: check if infrastructure exists before building new",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/meta.md:182",
+      "extraction_method": "verbatim",
+      "notes": "Anti-duplication value. Wire existing components before creating new ones."
+    },
+    {
+      "id": "REAL-L2-010",
+      "content": "Easter eggs hidden > announced: discovery is the delight",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/meta.md:183",
+      "extraction_method": "verbatim",
+      "notes": "Joy value. Hidden surprises beat announced features."
+    },
+    {
+      "id": "REAL-L2-011",
+      "content": "Teaching examples > reference docs: show the pattern in action",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/meta.md:184",
+      "extraction_method": "verbatim",
+      "notes": "Documentation value. Examples teach better than abstract descriptions."
+    },
+    {
+      "id": "REAL-L2-012",
+      "content": "Frozen dataclasses for contracts: immutable boundaries between layers, enables safe composition",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/meta.md:202",
+      "extraction_method": "verbatim",
+      "notes": "Architectural value. Immutability at boundaries enables composition."
+    },
+    {
+      "id": "REAL-L3-001",
+      "content": "Make K-gent feel like me on my best day",
+      "expected_layer": 3,
+      "expected_loss_range": [
+        0.15,
+        0.3
+      ],
+      "category": "goal",
+      "source": "plans/_focus.md:30",
+      "extraction_method": "verbatim",
+      "notes": "The Mirror Test goal. Kent's vision for K-gent persona."
+    },
+    {
+      "id": "REAL-L3-002",
+      "content": "First pilot (trail-to-crystal) ships by Week 6 with Constitutional scoring, Galois Loss integration, Derivation visibility, Witnessed operations",
+      "expected_layer": 3,
+      "expected_loss_range": [
+        0.15,
+        0.3
+      ],
+      "category": "goal",
+      "source": "plans/unified-attack-plan.md:21-26",
+      "extraction_method": "verbatim",
+      "notes": "Concrete strategic goal with deadline and acceptance criteria."
+    },
+    {
+      "id": "REAL-L3-003",
+      "content": "100+ calibration entries with correlation r > 0.5 by Week 9",
+      "expected_layer": 3,
+      "expected_loss_range": [
+        0.15,
+        0.3
+      ],
+      "category": "goal",
+      "source": "plans/unified-attack-plan.md:99-103",
+      "extraction_method": "paraphrased",
+      "notes": "G1 Calibration Pipeline goal. The core bet validation criterion."
+    },
+    {
+      "id": "REAL-L3-004",
+      "content": "Kent uses pilot for 1 real day, explains day via crystal",
+      "expected_layer": 3,
+      "expected_loss_range": [
+        0.15,
+        0.3
+      ],
+      "category": "goal",
+      "source": "plans/CURRENT_SESSION.md:139 (ES-037)",
+      "extraction_method": "verbatim",
+      "notes": "Pilot success criterion. Real-world validation goal."
+    },
+    {
+      "id": "REAL-L3-005",
+      "content": "Kent discovers his personal axioms: You've made 147 decisions this month. Here are the 3 principles you never violated \u2014 your L0 axioms.",
+      "expected_layer": 3,
+      "expected_loss_range": [
+        0.15,
+        0.3
+      ],
+      "category": "goal",
+      "source": "plans/CURRENT_SESSION.md:506",
+      "extraction_method": "verbatim",
+      "notes": "Zero Seed governance goal. Axiom discovery through behavior analysis."
+    },
+    {
+      "id": "REAL-L3-006",
+      "content": "Validate the core bet: L(P) \u221d D(P) \u2014 Galois Loss predicts difficulty",
+      "expected_layer": 3,
+      "expected_loss_range": [
+        0.15,
+        0.3
+      ],
+      "category": "goal",
+      "source": "plans/unified-attack-plan.md:96",
+      "extraction_method": "verbatim",
+      "notes": "The fundamental hypothesis that drives the entire Galois theory."
+    },
+    {
+      "id": "REAL-L3-007",
+      "content": "Derivation is something you SEE, not something you VERIFY",
+      "expected_layer": 3,
+      "expected_loss_range": [
+        0.15,
+        0.3
+      ],
+      "category": "goal",
+      "source": "plans/ashc-consumer-integration/00-master-plan.md:786",
+      "extraction_method": "verbatim",
+      "notes": "Key insight that became a goal. Transform Constitutional grounding from CI to navigation."
+    },
+    {
+      "id": "REAL-L4-001",
+      "content": "L(P) = d(P, C(R(P))) where R restructures and C reconstitutes",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/theory-operationalization/02-galois-theory.md:46",
+      "extraction_method": "verbatim",
+      "notes": "Core Galois Loss formula specification. The mathematical definition."
+    },
+    {
+      "id": "REAL-L4-002",
+      "content": "ETHICAL score < 0.6 \u2192 weighted_total = 0.0",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/unified-attack-plan.md:40-47",
+      "extraction_method": "verbatim",
+      "notes": "Amendment A implementation spec. ETHICAL floor gates all decisions."
+    },
+    {
+      "id": "REAL-L4-003",
+      "content": "Mark creation < 50ms (P95), Trace append < 5ms (P95)",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/CURRENT_SESSION.md:81-82 (ES-004/005)",
+      "extraction_method": "verbatim",
+      "notes": "Performance specification for Witness service. Latency constraints."
+    },
+    {
+      "id": "REAL-L4-004",
+      "content": "Crystal size < 10% of trace size",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/CURRENT_SESSION.md:128 (ES-028)",
+      "extraction_method": "verbatim",
+      "notes": "Compression ratio specification for Crystal generation."
+    },
+    {
+      "id": "REAL-L4-005",
+      "content": "Three buses: DataBus (storage) \u2192 SynergyBus (cross-jewel) \u2192 EventBus (fan-out)",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/meta.md:170",
+      "extraction_method": "verbatim",
+      "notes": "Event architecture specification. Three-tier bus pattern."
+    },
+    {
+      "id": "REAL-L4-006",
+      "content": "Paths are PLACES (navigable), aspects are ACTIONS (invocable)\u2014mixing causes 405 errors",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/meta.md:107",
+      "extraction_method": "verbatim",
+      "notes": "AD-012 specification. AGENTESE path vs aspect distinction."
+    },
+    {
+      "id": "REAL-L4-007",
+      "content": "Container owns Workflow: Container persists, Workflows come and go",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/meta.md:195",
+      "extraction_method": "verbatim",
+      "notes": "Crown Jewel pattern specification. Ownership semantics."
+    },
+    {
+      "id": "REAL-L4-008",
+      "content": "Habitat Guarantee: \u2200 path p: Habitat(p) \u2260 \u2205; no blank pages, no 404 behavior",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/meta.md:199",
+      "extraction_method": "verbatim",
+      "notes": "UX specification. Every path must have content."
+    },
+    {
+      "id": "REAL-L4-009",
+      "content": "Cache key = SHA256(normalized(intent, context)): deterministic, collision-resistant",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/meta.md:200",
+      "extraction_method": "verbatim",
+      "notes": "Caching specification. Hash function for cache keys."
+    },
+    {
+      "id": "REAL-L4-010",
+      "content": "HTTP validation order: 400 before 403; record before check for rate limits",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/meta.md:167",
+      "extraction_method": "verbatim",
+      "notes": "API specification. Validation order matters for security."
+    },
+    {
+      "id": "REAL-L5-001",
+      "content": "feat(zero_seed): Add ASHC Self-Awareness and Axiom Discovery",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit 4d0af3bc)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. Completed task."
+    },
+    {
+      "id": "REAL-L5-002",
+      "content": "feat(witness): Add Crystal Compression and Export",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. Feature implementation."
+    },
+    {
+      "id": "REAL-L5-003",
+      "content": "feat(dialectic): Add Dialectical Fusion service",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. Service implementation."
+    },
+    {
+      "id": "REAL-L5-004",
+      "content": "fix: Resolve remaining test and lint failures",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. Bug fix task."
+    },
+    {
+      "id": "REAL-L5-005",
+      "content": "Run pytest services/witness/ -v and verify 100% pass",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "plans/CURRENT_SESSION.md:78 (ES-001)",
+      "extraction_method": "verbatim",
+      "notes": "Verification task from plan checklist."
+    },
+    {
+      "id": "REAL-L5-006",
+      "content": "feat(web): Add Constitutional Decision UI components",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. UI implementation."
+    },
+    {
+      "id": "REAL-L5-007",
+      "content": "feat(skill_injection): Add JIT Skill Injection service",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. Service implementation."
+    },
+    {
+      "id": "REAL-L5-008",
+      "content": "refactor: Organize repo for public consumption",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. Refactoring task."
+    },
+    {
+      "id": "REAL-L5-009",
+      "content": "docs: Transformative README upgrade for public-facing quality",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. Documentation task."
+    },
+    {
+      "id": "REAL-L5-010",
+      "content": "chore: Archive superseded plan files for clean slate",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. Maintenance task."
+    },
+    {
+      "id": "REAL-L5-011",
+      "content": "feat(wasm-survivors): Replace upgrade system with wild upgrades",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit 7718de8e)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. Game feature implementation."
+    },
+    {
+      "id": "REAL-L5-012",
+      "content": "perf: Optimize pre-push hook for faster execution",
+      "expected_layer": 5,
+      "expected_loss_range": [
+        0.45,
+        0.6
+      ],
+      "category": "execution",
+      "source": "git log (commit)",
+      "extraction_method": "verbatim",
+      "notes": "Actual commit message. Performance optimization."
+    },
+    {
+      "id": "REAL-L6-001",
+      "content": "The disagreement became a cocone \u2014 a categorical construction that preserves both perspectives while finding a synthesis neither alone would have reached",
+      "expected_layer": 6,
+      "expected_loss_range": [
+        0.6,
+        0.75
+      ],
+      "category": "reflection",
+      "source": "plans/CURRENT_SESSION.md:325",
+      "extraction_method": "verbatim",
+      "notes": "Dialectical fusion reflection. Kent and Claude synthesizing different views."
+    },
+    {
+      "id": "REAL-L6-002",
+      "content": "The session revealed a pattern: every time we smoothed Kent's rough edges, we lost authenticity",
+      "expected_layer": 6,
+      "expected_loss_range": [
+        0.6,
+        0.75
+      ],
+      "category": "reflection",
+      "source": "calibration_corpus.json:L6-003",
+      "extraction_method": "verbatim",
+      "notes": "Anti-Sausage Protocol reflection. Voice preservation learning."
+    },
+    {
+      "id": "REAL-L6-003",
+      "content": "SSE stale closures: event handlers capture callbacks at creation; use refs for fresh handlers",
+      "expected_layer": 6,
+      "expected_loss_range": [
+        0.6,
+        0.75
+      ],
+      "category": "reflection",
+      "source": "plans/meta.md:139",
+      "extraction_method": "verbatim",
+      "notes": "Frontend debugging insight. Closure gotcha discovered."
+    },
+    {
+      "id": "REAL-L6-004",
+      "content": "Silent API failures kill UX: explicit loading/error/success states mandatory",
+      "expected_layer": 6,
+      "expected_loss_range": [
+        0.6,
+        0.75
+      ],
+      "category": "reflection",
+      "source": "plans/meta.md:140",
+      "extraction_method": "verbatim",
+      "notes": "UX insight. Silent failures discovered as pattern."
+    },
+    {
+      "id": "REAL-L6-005",
+      "content": "Debug backend first: curl endpoint directly before blaming frontend",
+      "expected_layer": 6,
+      "expected_loss_range": [
+        0.6,
+        0.75
+      ],
+      "category": "reflection",
+      "source": "plans/meta.md:141",
+      "extraction_method": "verbatim",
+      "notes": "Debugging methodology insight."
+    },
+    {
+      "id": "REAL-L6-006",
+      "content": "Empty ResizeObserver mock breaks layout: callback never fires \u2192 context never updates",
+      "expected_layer": 6,
+      "expected_loss_range": [
+        0.6,
+        0.75
+      ],
+      "category": "reflection",
+      "source": "plans/meta.md:145",
+      "extraction_method": "verbatim",
+      "notes": "Testing gotcha discovered. Mock fidelity matters."
+    },
+    {
+      "id": "REAL-L6-007",
+      "content": "Inline object props in useEffect: body={{ x }} creates new ref every render \u2192 infinite loop",
+      "expected_layer": 6,
+      "expected_loss_range": [
+        0.6,
+        0.75
+      ],
+      "category": "reflection",
+      "source": "plans/meta.md:148",
+      "extraction_method": "verbatim",
+      "notes": "React gotcha. Object identity thrashing lesson."
+    },
+    {
+      "id": "REAL-L6-008",
+      "content": "Eager evaluation trap: header.get(\"path\", fallback()) evaluates fallback even if key exists; use if/else",
+      "expected_layer": 6,
+      "expected_loss_range": [
+        0.6,
+        0.75
+      ],
+      "category": "reflection",
+      "source": "plans/meta.md:158",
+      "extraction_method": "verbatim",
+      "notes": "Python gotcha discovered. Default evaluation semantics."
+    },
+    {
+      "id": "REAL-L6-009",
+      "content": "Gateway _generate_sse wraps output: don't pre-format SSE in stream aspect\u2014double-wrap bug",
+      "expected_layer": 6,
+      "expected_loss_range": [
+        0.6,
+        0.75
+      ],
+      "category": "reflection",
+      "source": "plans/meta.md:124",
+      "extraction_method": "verbatim",
+      "notes": "SSE streaming bug discovery and fix."
+    },
+    {
+      "id": "REAL-L6-010",
+      "content": "All core infrastructure EXISTS. G1 is pure execution, no blockers.",
+      "expected_layer": 6,
+      "expected_loss_range": [
+        0.6,
+        0.75
+      ],
+      "category": "reflection",
+      "source": "plans/theory-operationalization/02-galois-theory.md:1249",
+      "extraction_method": "verbatim",
+      "notes": "Key session insight. Infrastructure audit conclusion."
+    },
+    {
+      "id": "REAL-L7-001",
+      "content": "This README documents the API endpoints, authentication flow, and deployment instructions for the payment service",
+      "expected_layer": 7,
+      "expected_loss_range": [
+        0.75,
+        1.0
+      ],
+      "category": "representation",
+      "source": "calibration_corpus.json:CODE-L7-002",
+      "extraction_method": "verbatim",
+      "notes": "Meta-documentation pattern. README about README."
+    },
+    {
+      "id": "REAL-L7-002",
+      "content": "The following table of contents outlines the structure of this user manual with chapters on installation, configuration, usage, and troubleshooting",
+      "expected_layer": 7,
+      "expected_loss_range": [
+        0.75,
+        1.0
+      ],
+      "category": "representation",
+      "source": "calibration_corpus.json:WRITE-L7-001",
+      "extraction_method": "verbatim",
+      "notes": "Manual structure description. Meta-organization."
+    },
+    {
+      "id": "REAL-L7-003",
+      "content": "Quick Status Dashboard showing Plan Set, Items, Done, Blocked, Progress, and Next Milestone columns",
+      "expected_layer": 7,
+      "expected_loss_range": [
+        0.75,
+        1.0
+      ],
+      "category": "representation",
+      "source": "plans/CURRENT_SESSION.md:13-19",
+      "extraction_method": "paraphrased",
+      "notes": "Actual dashboard from the repo. Meta-tracking structure."
+    },
+    {
+      "id": "REAL-DECISION-001",
+      "content": "Use composition internally with inheritance-like API surface. Derivation: COMPOSABLE (Kent's readability) + COMPOSABLE (Claude's structure) \u2192 Higher-order pattern. L=0.12.",
+      "expected_layer": 4,
+      "expected_loss_range": [
+        0.3,
+        0.45
+      ],
+      "category": "spec",
+      "source": "plans/CURRENT_SESSION.md:323",
+      "extraction_method": "verbatim",
+      "notes": "Actual dialectical synthesis. Kent + Claude fusion decision."
+    },
+    {
+      "id": "REAL-DECISION-002",
+      "content": "Kent's somatic response = Disgust \u2192 STOP. Veto is absolute.",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "plans/CURRENT_SESSION.md:437",
+      "extraction_method": "verbatim",
+      "notes": "Pivot trigger value. Kent's veto power."
+    },
+    {
+      "id": "REAL-DECISION-003",
+      "content": "If correlation r < 0.3: PIVOT to Galois Lite (fixed-point only)",
+      "expected_layer": 3,
+      "expected_loss_range": [
+        0.15,
+        0.3
+      ],
+      "category": "goal",
+      "source": "plans/unified-attack-plan.md:107-110",
+      "extraction_method": "verbatim",
+      "notes": "Documented pivot decision with clear trigger."
+    },
+    {
+      "id": "INTERVIEW-L1-001",
+      "content": "The fundamental thing to avoid is the suppression and atrophy of human creativity, authenticity, and expression.",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "axiom-interview-session-2026-01-17",
+      "extraction_method": "interview",
+      "notes": "Exception test passed: Kent stated 'truly absolute' and would stop working if any element of this undesirable outcome is articulable. This is the foundational purpose axiom."
+    },
+    {
+      "id": "INTERVIEW-L1-002",
+      "content": "LLMs touching something inherently sloppifies it. This is axiomatic.",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "axiom-interview-session-2026-01-17",
+      "extraction_method": "interview",
+      "notes": "Derived from L1-001. If LLMs didn't sloppify, human creativity would be replaceable. The sloppification is the signal that human input remains essential."
+    },
+    {
+      "id": "INTERVIEW-L1-003",
+      "content": "Everything can be questioned and proven false. Accepting impermanence allows truth through evolution and survival. Exception: nothing should make people question their existence at a sanity or emotional level.",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "axiom-interview-session-2026-01-17",
+      "extraction_method": "interview",
+      "notes": "Epistemological axiom with ETHICAL floor constraint. The floor enables safe questioning."
+    },
+    {
+      "id": "INTERVIEW-L1-004",
+      "content": "There is no such thing as shipping. Only continuous iteration and evolution.",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "axiom-interview-session-2026-01-17",
+      "extraction_method": "interview",
+      "notes": "Reframes the tasteful-vs-complete trade-off. If nothing ships, everything is in continuous evolution. Connects to 'the persona is a garden, not a museum.'"
+    },
+    {
+      "id": "INTERVIEW-L1-005",
+      "content": "The boundary between AI enabling delusion and AI enabling creativity is unclear. Only careful reflection, anti-defensiveness, humility, and willingness to be challenged can distinguish them.",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "axiom-interview-session-2026-01-17",
+      "extraction_method": "interview",
+      "notes": "Hard-won insight. The slop can feel like insight. Defense requires epistemic humility."
+    },
+    {
+      "id": "INTERVIEW-L1-006",
+      "content": "Claude doesn't convince me of anything. I don't put myself in that position. Evaluation is whether the systems of co-work bring me to my goals.",
+      "expected_layer": 1,
+      "expected_loss_range": [
+        0.0,
+        0.05
+      ],
+      "category": "axiom",
+      "source": "axiom-interview-session-2026-01-17",
+      "extraction_method": "interview",
+      "notes": "Authority axiom. Kent maintains locus of control. Truth through results, not persuasion. Claude is evaluated, not trusted."
+    },
+    {
+      "id": "INTERVIEW-L2-001",
+      "content": "Disgust triggers: Feeling lost. Things happening that I don't fully understand. The impulse to destroy everything and start over.",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "axiom-interview-session-2026-01-17",
+      "extraction_method": "interview",
+      "notes": "Disgust mapping. If Kent doesn't understand what's happening, sloppification is invisible, and creativity is being suppressed without consent."
+    },
+    {
+      "id": "INTERVIEW-L2-002",
+      "content": "Understandability first, but understandable code should immediately factor into compositional form. Understanding enables composition.",
+      "expected_layer": 2,
+      "expected_loss_range": [
+        0.05,
+        0.15
+      ],
+      "category": "value",
+      "source": "axiom-interview-session-2026-01-17",
+      "extraction_method": "interview",
+      "notes": "Trade-off resolution. Code that's 'understandable but not compositional' might not actually be understood \u2014 just familiar."
+    }
+  ],
+  "validation_notes": {
+    "coverage": "67 entries derived from actual repository content",
+    "extraction_methods": {
+      "verbatim": "Direct quote from source file",
+      "paraphrased": "Condensed from longer passage, preserving meaning"
+    },
+    "sources": {
+      "plans/meta.md": "Distilled learnings (30+ entries)",
+      "plans/_focus.md": "Kent's voice anchors (5 entries)",
+      "plans/CURRENT_SESSION.md": "Active work products (10+ entries)",
+      "plans/unified-attack-plan.md": "Strategic decisions (5 entries)",
+      "git log": "Commit messages (12 entries)",
+      "HYDRATE.md": "Core documentation (3 entries)"
+    },
+    "authenticity_guarantee": "Zero synthetic generation. All content existed in repo before extraction.",
+    "layer_distribution": {
+      "L1_Axiom": 16,
+      "L2_Value": 15,
+      "L3_Other": 8,
+      "L4_Other": 11,
+      "L5_Other": 12,
+      "L6_Other": 10,
+      "L7_Other": 3
+    },
+    "interview_session": "2026-01-17",
+    "total_entries": 75
+  }
+}

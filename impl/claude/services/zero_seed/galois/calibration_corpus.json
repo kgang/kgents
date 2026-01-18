@@ -1,6 +1,7 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "created": "2025-01-16",
+  "updated": "2025-01-17",
   "purpose": "Galois loss calibration corpus for automated model drift detection",
   "layer_bounds": {
     "1": {"name": "Axiom", "loss_range": [0.00, 0.05]},
@@ -335,12 +336,1007 @@
       "category": "execution",
       "source": "general-task",
       "notes": "General execution task. Sequential instructions."
+    },
+
+    {
+      "id": "CODE-L1-001",
+      "content": "A function must do one thing and do it well",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "coding-principles",
+      "notes": "Unix philosophy axiom. Single responsibility at its most fundamental."
+    },
+    {
+      "id": "CODE-L1-002",
+      "content": "Immutability prevents shared mutable state bugs",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "coding-principles",
+      "notes": "Functional programming axiom. Causality from immutability."
+    },
+    {
+      "id": "CODE-L1-003",
+      "content": "Types are propositions, programs are proofs",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "coding-theory",
+      "notes": "Curry-Howard correspondence. Foundational type theory axiom."
+    },
+    {
+      "id": "CODE-L2-001",
+      "content": "Readable code is better than clever code",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "coding-values",
+      "notes": "Maintainability value. Clarity over cleverness."
+    },
+    {
+      "id": "CODE-L2-002",
+      "content": "Tests are documentation that runs",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "coding-values",
+      "notes": "Testing philosophy. Executable documentation."
+    },
+    {
+      "id": "CODE-L2-003",
+      "content": "Premature optimization is the root of all evil",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "coding-values",
+      "notes": "Knuth's famous value statement. Correctness before speed."
+    },
+    {
+      "id": "CODE-L2-004",
+      "content": "Explicit is better than implicit",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "coding-values",
+      "notes": "Python zen value. Transparency in code."
+    },
+    {
+      "id": "CODE-L3-001",
+      "content": "Refactor the authentication module to use dependency injection",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "coding-goals",
+      "notes": "Architectural goal. Strategic refactoring target."
+    },
+    {
+      "id": "CODE-L3-002",
+      "content": "Achieve 90% test coverage on the core business logic",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "coding-goals",
+      "notes": "Quality goal. Measurable testing objective."
+    },
+    {
+      "id": "CODE-L3-003",
+      "content": "Migrate the legacy codebase from callbacks to async/await",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "coding-goals",
+      "notes": "Modernization goal. Async migration target."
+    },
+    {
+      "id": "CODE-L3-004",
+      "content": "Build a plugin architecture that allows third-party extensions",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "coding-goals",
+      "notes": "Extensibility goal. Platform thinking."
+    },
+    {
+      "id": "CODE-L4-001",
+      "content": "The repository pattern must expose async CRUD operations returning Optional[Entity] for single items and List[Entity] for collections",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "coding-spec",
+      "notes": "Repository pattern specification. Type-safe interface definition."
+    },
+    {
+      "id": "CODE-L4-002",
+      "content": "Use the Strategy pattern with a base interface defining execute(context: Context) -> Result and concrete implementations for each algorithm variant",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "coding-spec",
+      "notes": "Design pattern specification. Strategy pattern contract."
+    },
+    {
+      "id": "CODE-L4-003",
+      "content": "The event sourcing aggregate must validate commands before applying events, with events being immutable records containing aggregate_id, sequence_number, and payload",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "coding-spec",
+      "notes": "Event sourcing specification. Aggregate consistency rules."
+    },
+    {
+      "id": "CODE-L4-004",
+      "content": "Implement rate limiting using a token bucket algorithm with configurable bucket_size, refill_rate, and refill_interval parameters",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "coding-spec",
+      "notes": "Algorithm specification. Token bucket parameters."
+    },
+    {
+      "id": "CODE-L5-001",
+      "content": "Create a new branch, implement the UserService class with the create_user method, write unit tests, and submit a pull request",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "coding-execution",
+      "notes": "Development workflow execution. Concrete steps."
+    },
+    {
+      "id": "CODE-L5-002",
+      "content": "Add the @dataclass decorator to the User model and replace the __init__ method with field definitions including id: UUID, email: str, and created_at: datetime",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "coding-execution",
+      "notes": "Python implementation task. Dataclass migration."
+    },
+    {
+      "id": "CODE-L5-003",
+      "content": "Install mypy using pip install mypy, add type hints to the validate_input function, and run mypy src/ to verify",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "coding-execution",
+      "notes": "Type checking setup task. Concrete tooling steps."
+    },
+    {
+      "id": "CODE-L5-004",
+      "content": "Rename the variable x to user_count, update all 12 references in the file, and run the test suite to verify nothing broke",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "coding-execution",
+      "notes": "Refactoring execution. Variable rename task."
+    },
+    {
+      "id": "CODE-L6-001",
+      "content": "Looking back at this refactoring, the key insight was that extracting the validation logic into a separate module made the code testable in isolation",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "coding-reflection",
+      "notes": "Refactoring retrospective. Testability insight."
+    },
+    {
+      "id": "CODE-L6-002",
+      "content": "The performance regression we saw last week traced back to the N+1 query pattern I introduced when switching to lazy loading",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "coding-reflection",
+      "notes": "Post-mortem reflection. Performance debugging insight."
+    },
+    {
+      "id": "CODE-L6-003",
+      "content": "After three iterations, I realized that the Observer pattern was overkill for our use case and a simple callback would have sufficed",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "coding-reflection",
+      "notes": "Design reflection. Pattern overengineering lesson."
+    },
+    {
+      "id": "CODE-L7-001",
+      "content": "The class diagram above shows UserService depending on UserRepository through an interface, with PostgresUserRepository as the concrete implementation",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "coding-representation",
+      "notes": "UML diagram description. Dependency inversion representation."
+    },
+    {
+      "id": "CODE-L7-002",
+      "content": "This README documents the API endpoints, authentication flow, and deployment instructions for the payment service",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "coding-representation",
+      "notes": "Documentation meta-reference. README about README."
+    },
+    {
+      "id": "CODE-L7-003",
+      "content": "The sequence diagram illustrates the OAuth2 authorization code flow between Client, Authorization Server, and Resource Server",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "coding-representation",
+      "notes": "Protocol diagram description. OAuth flow representation."
+    },
+
+    {
+      "id": "WRITE-L1-001",
+      "content": "Show, don't tell",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "writing-principles",
+      "notes": "Fundamental writing axiom. Demonstration over declaration."
+    },
+    {
+      "id": "WRITE-L1-002",
+      "content": "Every word must earn its place",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "writing-principles",
+      "notes": "Concision axiom. No wasted words."
+    },
+    {
+      "id": "WRITE-L1-003",
+      "content": "The reader's time is sacred",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "writing-principles",
+      "notes": "Reader-centric axiom. Respect through clarity."
+    },
+    {
+      "id": "WRITE-L2-001",
+      "content": "Clarity serves truth better than complexity",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "writing-values",
+      "notes": "Technical writing value. Simplicity as service."
+    },
+    {
+      "id": "WRITE-L2-002",
+      "content": "Active voice creates momentum; passive voice diffuses responsibility",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "writing-values",
+      "notes": "Style value. Voice choice matters."
+    },
+    {
+      "id": "WRITE-L2-003",
+      "content": "Good documentation reduces support tickets",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "writing-values",
+      "notes": "Pragmatic documentation value. Business impact."
+    },
+    {
+      "id": "WRITE-L2-004",
+      "content": "Jargon excludes; plain language includes",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "writing-values",
+      "notes": "Accessibility value. Inclusive communication."
+    },
+    {
+      "id": "WRITE-L3-001",
+      "content": "Write a comprehensive API reference that enables developers to integrate without contacting support",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "writing-goals",
+      "notes": "Documentation goal. Self-service enablement."
+    },
+    {
+      "id": "WRITE-L3-002",
+      "content": "Create a tutorial series that takes beginners from zero to deploying their first application",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "writing-goals",
+      "notes": "Educational writing goal. Learning journey."
+    },
+    {
+      "id": "WRITE-L3-003",
+      "content": "Develop a style guide that ensures consistency across all company communications",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "writing-goals",
+      "notes": "Editorial goal. Brand consistency."
+    },
+    {
+      "id": "WRITE-L3-004",
+      "content": "Draft a whitepaper that positions our approach as the industry standard",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "writing-goals",
+      "notes": "Thought leadership goal. Market positioning."
+    },
+    {
+      "id": "WRITE-L4-001",
+      "content": "Each API endpoint documentation must include: HTTP method, URL path, request parameters with types, response schema, error codes, and a working code example in three languages",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "writing-spec",
+      "notes": "Documentation structure specification. API doc requirements."
+    },
+    {
+      "id": "WRITE-L4-002",
+      "content": "Tutorial sections must follow the pattern: learning objective, prerequisite knowledge, step-by-step instructions, expected outcome verification, and common troubleshooting",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "writing-spec",
+      "notes": "Tutorial structure specification. Pedagogical framework."
+    },
+    {
+      "id": "WRITE-L4-003",
+      "content": "Error messages must contain: error code, human-readable description, likely cause, and suggested resolution with link to documentation",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "writing-spec",
+      "notes": "Error message specification. User-friendly error design."
+    },
+    {
+      "id": "WRITE-L4-004",
+      "content": "Headlines must use sentence case, maximum 70 characters, include a strong verb, and avoid starting with articles",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "writing-spec",
+      "notes": "Headline style specification. Editorial rules."
+    },
+    {
+      "id": "WRITE-L5-001",
+      "content": "Open the documentation file, find the deprecated API section, update the version number to 3.0, add the deprecation notice, and submit for review",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "writing-execution",
+      "notes": "Documentation update task. Version bump procedure."
+    },
+    {
+      "id": "WRITE-L5-002",
+      "content": "Copy the press release template, replace the placeholders with the product launch details, have legal review, and schedule for Monday 9am release",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "writing-execution",
+      "notes": "PR writing task. Launch communication steps."
+    },
+    {
+      "id": "WRITE-L5-003",
+      "content": "Run the prose through Hemingway Editor, fix all hard-to-read sentences, reduce adverb count by half, and verify reading level is grade 8 or below",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "writing-execution",
+      "notes": "Editing workflow task. Readability improvement."
+    },
+    {
+      "id": "WRITE-L5-004",
+      "content": "Export the Notion page to Markdown, fix the broken image links, add front matter for Hugo, and publish to the blog staging environment",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "writing-execution",
+      "notes": "Content migration task. Blog publishing workflow."
+    },
+    {
+      "id": "WRITE-L6-001",
+      "content": "In retrospect, the decision to lead with the user story instead of the feature list doubled our conversion rate",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "writing-reflection",
+      "notes": "Marketing copy reflection. Narrative vs feature learning."
+    },
+    {
+      "id": "WRITE-L6-002",
+      "content": "After analyzing the support tickets, I discovered that users weren't finding the troubleshooting section because we buried it at the bottom",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "writing-reflection",
+      "notes": "Documentation UX reflection. Information architecture insight."
+    },
+    {
+      "id": "WRITE-L6-003",
+      "content": "The feedback revealed that our technical accuracy came at the cost of accessibility, and we had optimized for the wrong audience",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "writing-reflection",
+      "notes": "Audience analysis reflection. Accessibility vs precision tradeoff."
+    },
+    {
+      "id": "WRITE-L7-001",
+      "content": "The following table of contents outlines the structure of this user manual with chapters on installation, configuration, usage, and troubleshooting",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "writing-representation",
+      "notes": "Manual structure description. Meta-organization."
+    },
+    {
+      "id": "WRITE-L7-002",
+      "content": "This style guide document defines the standards for voice, tone, formatting, and terminology used across all product documentation",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "writing-representation",
+      "notes": "Style guide meta-description. Standards about standards."
+    },
+    {
+      "id": "WRITE-L7-003",
+      "content": "The index below maps concepts to page numbers, allowing readers to navigate directly to topics of interest",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "writing-representation",
+      "notes": "Index description. Navigation representation."
+    },
+
+    {
+      "id": "REASON-L1-001",
+      "content": "If A implies B and B implies C, then A implies C",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "reasoning-logic",
+      "notes": "Transitivity of implication. Fundamental logical axiom."
+    },
+    {
+      "id": "REASON-L1-002",
+      "content": "A statement and its negation cannot both be true",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "reasoning-logic",
+      "notes": "Law of non-contradiction. Foundational logic axiom."
+    },
+    {
+      "id": "REASON-L1-003",
+      "content": "Correlation does not imply causation",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "reasoning-statistics",
+      "notes": "Statistical reasoning axiom. Causal inference foundation."
+    },
+    {
+      "id": "REASON-L1-004",
+      "content": "The map is not the territory",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "reasoning-epistemology",
+      "notes": "Korzybski's axiom. Model-reality distinction."
+    },
+    {
+      "id": "REASON-L2-001",
+      "content": "Extraordinary claims require extraordinary evidence",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "reasoning-values",
+      "notes": "Sagan's value. Proportional skepticism."
+    },
+    {
+      "id": "REASON-L2-002",
+      "content": "The simplest explanation that fits the facts is most likely correct",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "reasoning-values",
+      "notes": "Occam's razor as value. Parsimony preference."
+    },
+    {
+      "id": "REASON-L2-003",
+      "content": "Update beliefs based on evidence, not convenience",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "reasoning-values",
+      "notes": "Bayesian value. Evidence-driven belief revision."
+    },
+    {
+      "id": "REASON-L2-004",
+      "content": "Steelman opposing arguments before critiquing them",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "reasoning-values",
+      "notes": "Intellectual honesty value. Charitable interpretation."
+    },
+    {
+      "id": "REASON-L3-001",
+      "content": "Prove that the algorithm terminates for all valid inputs",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "reasoning-goals",
+      "notes": "Formal verification goal. Termination proof objective."
+    },
+    {
+      "id": "REASON-L3-002",
+      "content": "Identify the logical fallacy in each argument presented in the debate transcript",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "reasoning-goals",
+      "notes": "Critical analysis goal. Fallacy detection objective."
+    },
+    {
+      "id": "REASON-L3-003",
+      "content": "Construct a valid counterexample to disprove the conjecture",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "reasoning-goals",
+      "notes": "Mathematical reasoning goal. Disproof objective."
+    },
+    {
+      "id": "REASON-L3-004",
+      "content": "Derive the optimal strategy through backward induction from the game's terminal states",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "reasoning-goals",
+      "notes": "Game theory goal. Strategic reasoning objective."
+    },
+    {
+      "id": "REASON-L4-001",
+      "content": "The proof must proceed by strong induction: establish base case P(0), then prove that P(k) for all k < n implies P(n)",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "reasoning-spec",
+      "notes": "Proof technique specification. Strong induction structure."
+    },
+    {
+      "id": "REASON-L4-002",
+      "content": "A valid syllogism requires: two premises sharing a middle term, a conclusion connecting the remaining terms, and no fallacy of distribution",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "reasoning-spec",
+      "notes": "Syllogism specification. Formal argument structure."
+    },
+    {
+      "id": "REASON-L4-003",
+      "content": "Apply Bayes' theorem: P(H|E) = P(E|H) * P(H) / P(E), where H is hypothesis, E is evidence, and P(E) = P(E|H)*P(H) + P(E|not H)*P(not H)",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "reasoning-spec",
+      "notes": "Bayesian inference specification. Probability formula."
+    },
+    {
+      "id": "REASON-L4-004",
+      "content": "For proof by contradiction, assume the negation of the statement, derive a logical contradiction, and conclude the original statement must be true",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "reasoning-spec",
+      "notes": "Proof by contradiction specification. Reductio ad absurdum structure."
+    },
+    {
+      "id": "REASON-L5-001",
+      "content": "Substitute n=1 into the formula, verify it equals 1, then assume true for n=k and prove for n=k+1 by algebraic manipulation",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "reasoning-execution",
+      "notes": "Induction proof execution. Step-by-step verification."
+    },
+    {
+      "id": "REASON-L5-002",
+      "content": "List all the premises, identify the conclusion, check each inference step for validity, and flag any gaps in the reasoning",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "reasoning-execution",
+      "notes": "Argument analysis execution. Logical audit procedure."
+    },
+    {
+      "id": "REASON-L5-003",
+      "content": "Calculate the prior probability from base rates, compute the likelihood ratio from the test sensitivity and specificity, and multiply to get the posterior",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "reasoning-execution",
+      "notes": "Bayesian calculation execution. Medical diagnosis example."
+    },
+    {
+      "id": "REASON-L5-004",
+      "content": "Draw the truth table with columns for p, q, p AND q, p OR q, and verify the tautology by checking all rows yield True",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "reasoning-execution",
+      "notes": "Truth table execution. Tautology verification."
+    },
+    {
+      "id": "REASON-L6-001",
+      "content": "The proof failed because I was trying to use weak induction where strong induction was required due to the recurrence relation's dependence on multiple prior terms",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "reasoning-reflection",
+      "notes": "Proof strategy reflection. Induction choice insight."
+    },
+    {
+      "id": "REASON-L6-002",
+      "content": "My initial intuition was wrong because I fell prey to base rate neglect, which is exactly why Bayes' theorem exists as a corrective tool",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "reasoning-reflection",
+      "notes": "Probability intuition reflection. Cognitive bias learning."
+    },
+    {
+      "id": "REASON-L6-003",
+      "content": "In hindsight, the argument seemed compelling only because it exploited ambiguity in the key term, which shifted meaning between premises",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "reasoning-reflection",
+      "notes": "Fallacy detection reflection. Equivocation recognition."
+    },
+    {
+      "id": "REASON-L7-001",
+      "content": "The following proof tree diagram represents the natural deduction derivation from premises to conclusion using introduction and elimination rules",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "reasoning-representation",
+      "notes": "Proof tree description. Formal derivation representation."
+    },
+    {
+      "id": "REASON-L7-002",
+      "content": "This Venn diagram illustrates the relationships between the three sets and their intersections to visualize the syllogism structure",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "reasoning-representation",
+      "notes": "Set diagram description. Syllogism visualization."
+    },
+    {
+      "id": "REASON-L7-003",
+      "content": "The decision tree below maps each possible action to its outcomes and assigns probabilities based on the available evidence",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "reasoning-representation",
+      "notes": "Decision tree description. Probabilistic reasoning visualization."
+    },
+
+    {
+      "id": "CREAT-L1-001",
+      "content": "Constraints enable creativity",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "creative-principles",
+      "notes": "Creative paradox axiom. Limitation as liberation."
+    },
+    {
+      "id": "CREAT-L1-002",
+      "content": "Originality is recombination",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "creative-principles",
+      "notes": "Combinatorial creativity axiom. Novel synthesis from existing elements."
+    },
+    {
+      "id": "CREAT-L1-003",
+      "content": "The muse visits those who show up",
+      "expected_layer": 1,
+      "expected_loss_range": [0.00, 0.05],
+      "category": "axiom",
+      "source": "creative-principles",
+      "notes": "Creative practice axiom. Inspiration through discipline."
+    },
+    {
+      "id": "CREAT-L2-001",
+      "content": "Embrace the weird; normal is forgettable",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "creative-values",
+      "notes": "Distinctiveness value. Memorability through strangeness."
+    },
+    {
+      "id": "CREAT-L2-002",
+      "content": "First drafts are for discovery, not perfection",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "creative-values",
+      "notes": "Process value. Permission to be imperfect."
+    },
+    {
+      "id": "CREAT-L2-003",
+      "content": "The specific is universal; the generic is forgettable",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "creative-values",
+      "notes": "Particularity value. Concrete detail over abstraction."
+    },
+    {
+      "id": "CREAT-L2-004",
+      "content": "Resonance matters more than novelty",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "creative-values",
+      "notes": "Connection value. Emotional truth over newness."
+    },
+    {
+      "id": "CREAT-L3-001",
+      "content": "Write a poem that captures the texture of grief without using the words sad, loss, or death",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "creative-goals",
+      "notes": "Constrained poetry goal. Oblique emotional expression."
+    },
+    {
+      "id": "CREAT-L3-002",
+      "content": "Design a character whose flaw is inseparable from their greatest strength",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "creative-goals",
+      "notes": "Character design goal. Unified trait conception."
+    },
+    {
+      "id": "CREAT-L3-003",
+      "content": "Compose a melody that evokes nostalgia for a place that never existed",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "creative-goals",
+      "notes": "Musical composition goal. Imagined memory evocation."
+    },
+    {
+      "id": "CREAT-L3-004",
+      "content": "Create a brand identity that feels both ancient and futuristic simultaneously",
+      "expected_layer": 3,
+      "expected_loss_range": [0.15, 0.30],
+      "category": "goal",
+      "source": "creative-goals",
+      "notes": "Design goal. Temporal paradox aesthetic."
+    },
+    {
+      "id": "CREAT-L4-001",
+      "content": "The sonnet must follow the Shakespearean form: three quatrains in ABAB CDCD EFEF rhyme scheme, followed by a concluding couplet GG, in iambic pentameter",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "creative-spec",
+      "notes": "Poetic form specification. Shakespearean sonnet structure."
+    },
+    {
+      "id": "CREAT-L4-002",
+      "content": "The story must employ the three-act structure: setup establishing character and stakes, confrontation escalating through complications, resolution providing cathartic closure",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "creative-spec",
+      "notes": "Narrative structure specification. Classical dramatic arc."
+    },
+    {
+      "id": "CREAT-L4-003",
+      "content": "Use the hero's journey template: ordinary world, call to adventure, refusal, meeting the mentor, crossing the threshold, tests and allies, ordeal, reward, return transformed",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "creative-spec",
+      "notes": "Mythic structure specification. Campbell's monomyth."
+    },
+    {
+      "id": "CREAT-L4-004",
+      "content": "The color palette must use complementary colors for tension and analogous colors for harmony, with a 60-30-10 distribution for visual balance",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "creative-spec",
+      "notes": "Visual design specification. Color theory rules."
+    },
+    {
+      "id": "CREAT-L5-001",
+      "content": "Start with a concrete image, introduce the central metaphor in line 3, develop the conceit through the middle section, and resolve with an unexpected turn in the final couplet",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "creative-execution",
+      "notes": "Poetry writing execution. Sonnet composition steps."
+    },
+    {
+      "id": "CREAT-L5-002",
+      "content": "Sketch twenty thumbnail variations, select the three strongest, develop each to rough concept stage, gather feedback, and refine the winner to final art",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "creative-execution",
+      "notes": "Design process execution. Iterative refinement workflow."
+    },
+    {
+      "id": "CREAT-L5-003",
+      "content": "Record the scratch vocal, layer the drums and bass, add the harmonic instruments, mix for balance, and master for consistent volume across playback systems",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "creative-execution",
+      "notes": "Music production execution. Recording workflow."
+    },
+    {
+      "id": "CREAT-L5-004",
+      "content": "Write the scene from the antagonist's perspective first, then rewrite from the protagonist's view, then find the tension point where both perspectives collide",
+      "expected_layer": 5,
+      "expected_loss_range": [0.45, 0.60],
+      "category": "execution",
+      "source": "creative-execution",
+      "notes": "Scene writing execution. Multi-perspective technique."
+    },
+    {
+      "id": "CREAT-L6-001",
+      "content": "The breakthrough came when I stopped trying to be original and started trying to be honest, which paradoxically produced something more distinctive",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "creative-reflection",
+      "notes": "Creative process reflection. Authenticity over originality."
+    },
+    {
+      "id": "CREAT-L6-002",
+      "content": "Looking back, the constraint I resented most turned out to be the source of my best idea because it forced me to think around the obvious solution",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "creative-reflection",
+      "notes": "Constraint reflection. Limitation as catalyst."
+    },
+    {
+      "id": "CREAT-L6-003",
+      "content": "The piece failed because I was showing off technique rather than serving the emotional truth of the subject",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "creative-reflection",
+      "notes": "Artistic failure reflection. Substance over style learning."
+    },
+    {
+      "id": "CREAT-L7-001",
+      "content": "This mood board collects the visual references, color swatches, typography samples, and texture inspirations that define the project's aesthetic direction",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "creative-representation",
+      "notes": "Design asset description. Mood board meta-reference."
+    },
+    {
+      "id": "CREAT-L7-002",
+      "content": "The storyboard below illustrates the key frames, camera angles, and transitions for the opening sequence",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "creative-representation",
+      "notes": "Visual narrative description. Storyboard meta-reference."
+    },
+    {
+      "id": "CREAT-L7-003",
+      "content": "This character sheet documents the protagonist's physical appearance, personality traits, backstory, motivations, and speech patterns for consistency across scenes",
+      "expected_layer": 7,
+      "expected_loss_range": [0.75, 1.00],
+      "category": "representation",
+      "source": "creative-representation",
+      "notes": "Character documentation description. Bible entry meta-reference."
+    },
+
+    {
+      "id": "EDGE-L3L4",
+      "content": "Design a caching layer that reduces database load by 50% while maintaining consistency guarantees",
+      "expected_layer": 3,
+      "expected_loss_range": [0.25, 0.35],
+      "category": "goal",
+      "source": "hybrid",
+      "notes": "Edge case: between goal and spec. Has measurable target but still strategic scope."
+    },
+    {
+      "id": "EDGE-L5L6",
+      "content": "After running the migration script, I noticed it took 4 hours instead of the expected 30 minutes because of an N+1 query pattern",
+      "expected_layer": 6,
+      "expected_loss_range": [0.55, 0.68],
+      "category": "reflection",
+      "source": "hybrid",
+      "notes": "Edge case: between execution and reflection. Contains both action and retrospective insight."
+    },
+    {
+      "id": "EDGE-L6L7",
+      "content": "This postmortem document analyzes what went wrong during the outage and proposes preventive measures",
+      "expected_layer": 7,
+      "expected_loss_range": [0.70, 0.82],
+      "category": "representation",
+      "source": "hybrid",
+      "notes": "Edge case: between reflection and representation. Describes reflective content."
+    },
+    {
+      "id": "CROSS-CODE-WRITE",
+      "content": "Write docstrings that explain the why, not just the what, using concrete examples that demonstrate edge cases",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "cross-domain",
+      "notes": "Cross-domain: coding meets writing. Documentation specification."
+    },
+    {
+      "id": "CROSS-REASON-CREAT",
+      "content": "The metaphor breaks down when pushed too far, revealing the limits of the comparison and the irreducible complexity of the original concept",
+      "expected_layer": 6,
+      "expected_loss_range": [0.60, 0.75],
+      "category": "reflection",
+      "source": "cross-domain",
+      "notes": "Cross-domain: reasoning meets creative. Metaphor analysis reflection."
+    },
+    {
+      "id": "CROSS-WRITE-REASON",
+      "content": "Structure the argument with claim first, then evidence, then warrant explaining why the evidence supports the claim",
+      "expected_layer": 4,
+      "expected_loss_range": [0.30, 0.45],
+      "category": "spec",
+      "source": "cross-domain",
+      "notes": "Cross-domain: writing meets reasoning. Persuasive structure specification."
+    },
+    {
+      "id": "CROSS-CREAT-CODE",
+      "content": "Generative algorithms can produce unexpected beauty by combining randomness with constraints, much like jazz improvisation within chord progressions",
+      "expected_layer": 2,
+      "expected_loss_range": [0.05, 0.15],
+      "category": "value",
+      "source": "cross-domain",
+      "notes": "Cross-domain: creative meets coding. Computational aesthetics value."
     }
   ],
   "validation_notes": {
-    "coverage": "37 examples covering all 7 layers with at least 3 per layer",
-    "sources": "Mix of kgents-specific (Kent voice, specs, principles) and general examples",
-    "edge_cases": "4 examples specifically testing layer boundaries",
+    "coverage": "144 total entries (36 original + 108 new) covering all 7 layers with comprehensive domain stratification",
+    "domains": {
+      "CODING": "25 entries covering function design, algorithms, design patterns, testing, and refactoring",
+      "WRITING": "25 entries covering documentation, prose, technical writing, and editorial processes",
+      "REASONING": "26 entries covering logic, proofs, fallacies, probability, and argumentation",
+      "CREATIVE": "25 entries covering poetry, narrative, design, music, and visual arts",
+      "GENERAL": "4 entries from original corpus testing cross-domain transfer",
+      "KGENTS": "29 entries from original corpus maintaining domain-specific anchors",
+      "EDGE_CROSS": "10 entries testing layer boundaries and cross-domain transfer"
+    },
+    "layer_distribution": {
+      "L1_Axiom": "19 entries (foundational truths across all domains)",
+      "L2_Value": "25 entries (principles and preferences)",
+      "L3_Goal": "23 entries (strategic objectives)",
+      "L4_Spec": "23 entries (technical specifications)",
+      "L5_Execution": "21 entries (concrete tasks)",
+      "L6_Reflection": "17 entries (retrospective insights)",
+      "L7_Representation": "16 entries (meta-level descriptions)"
+    },
+    "sources": "Mix of kgents-specific (Kent voice, specs, principles), domain-specific (coding, writing, reasoning, creative), and cross-domain examples",
+    "edge_cases": "10 examples specifically testing layer boundaries (EDGE-*) and cross-domain transfer (CROSS-*)",
     "expected_pass_rate": "95%+ of examples should land in expected layer with calibrated model"
   }
 }
