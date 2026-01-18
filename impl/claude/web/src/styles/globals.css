@@ -171,7 +171,7 @@
 
     /* =================================================================
      * Elastic System Custom Properties
-     * From: plans/web-refactor/elastic-primitives.md
+     * From: docs/skills/elastic-ui-patterns.md
      *
      * "Tight Frame, Breathing Content" — structure is compact,
      * content has room to glow. Reduced ~30% from original scale.
@@ -233,7 +233,7 @@
 
 /* =============================================================================
  * Elastic Grid System
- * From: plans/web-refactor/elastic-primitives.md
+ * From: docs/skills/elastic-ui-patterns.md
  * ============================================================================= */
 
 @layer components {
@@ -724,7 +724,7 @@
 
 /* =============================================================================
  * Historical Mode Visual Differentiation
- * From: plans/web-refactor/interaction-patterns.md
+ * From: spec/ui/axioms.md (A7: Disgust Prevention - show history)
  * ============================================================================= */
 
 .historical-mode {

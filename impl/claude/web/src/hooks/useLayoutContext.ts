@@ -1,40 +1,46 @@
 /**
  * useLayoutContext: Hook for tracking layout context in elastic containers.
  *
- * Provides responsive layout information to child components:
- * - Available width/height from ResizeObserver
- * - Density based on viewport size
- * - Constraint detection
- *
- * @see plans/web-refactor/elastic-primitives.md
+ * SEVERE STARK: Minimal responsive layout hook.
  */
 
 import { useState, useEffect, useRef, createContext, useContext, type RefObject } from 'react';
-import type { LayoutContext } from '@/reactive/types';
 
-// Breakpoints aligned with Layout Projection Functor spec
-// See: spec/protocols/projection.md (Layout Projection section)
-// - compact: < 768px (mobile)
-// - comfortable: 768-1024px (tablet)
-// - spacious: > 1024px (desktop)
+/**
+ * Density levels for SEVERE STARK.
+ * Default is 'spacious' (dense by Western standards).
+ */
+export type Density = 'compact' | 'comfortable' | 'spacious';
+
+/**
+ * Layout context for elastic containers.
+ */
+export interface LayoutContext {
+  availableWidth: number;
+  availableHeight: number;
+  depth: number;
+  parentLayout: 'stack' | 'split' | 'grid';
+  isConstrained: boolean;
+  density: Density;
+}
+
+// Breakpoints for density calculation
 const BREAKPOINTS = {
-  sm: 768,   // spec: compact threshold (was 640, now matches spec)
-  md: 768,   // kept for compatibility
-  lg: 1024,  // spec: comfortable → spacious transition
-  xl: 1280,  // not used by spec, kept for Tailwind compatibility
+  sm: 768, // compact threshold
+  lg: 1024, // spacious threshold
 };
 
 /**
- * Get density based on available width
+ * Get density based on available width.
  */
-function getDensity(width: number): LayoutContext['density'] {
+function getDensity(width: number): Density {
   if (width < BREAKPOINTS.sm) return 'compact';
   if (width < BREAKPOINTS.lg) return 'comfortable';
   return 'spacious';
 }
 
 /**
- * Default layout context for components outside a provider
+ * Default layout context for components outside a provider.
  */
 const DEFAULT_CONTEXT: LayoutContext = {
   availableWidth: typeof window !== 'undefined' ? window.innerWidth : 1024,
@@ -42,31 +48,30 @@ const DEFAULT_CONTEXT: LayoutContext = {
   depth: 0,
   parentLayout: 'stack',
   isConstrained: false,
-  density: 'comfortable',
+  density: 'spacious', // SEVERE STARK: default to dense
 };
 
 /**
- * React Context for layout information
+ * React Context for layout information.
  */
 const LayoutContextReact = createContext<LayoutContext>(DEFAULT_CONTEXT);
 
 /**
- * Hook to access layout context from a provider
+ * Hook to access layout context from a provider.
  */
 export function useLayoutContext(): LayoutContext {
   return useContext(LayoutContextReact);
 }
 
 /**
- * Hook to measure a container and provide layout context
- *
- * @param options Configuration options
- * @returns [ref to attach to container, current layout context]
+ * Hook to measure a container and provide layout context.
  */
-export function useLayoutMeasure(options: {
-  parentLayout?: LayoutContext['parentLayout'];
-  parentContext?: LayoutContext;
-} = {}): [RefObject<HTMLDivElement | null>, LayoutContext] {
+export function useLayoutMeasure(
+  options: {
+    parentLayout?: LayoutContext['parentLayout'];
+    parentContext?: LayoutContext;
+  } = {}
+): [RefObject<HTMLDivElement | null>, LayoutContext] {
   const { parentLayout = 'stack', parentContext } = options;
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -99,10 +104,8 @@ export function useLayoutMeasure(options: {
       });
     };
 
-    // Initial measurement
     updateContext();
 
-    // Watch for size changes
     const observer = new ResizeObserver(() => {
       updateContext();
     });
@@ -116,12 +119,12 @@ export function useLayoutMeasure(options: {
 }
 
 /**
- * Hook for window-level layout information
+ * Hook for window-level layout information.
  */
 export function useWindowLayout(): {
   width: number;
   height: number;
-  density: LayoutContext['density'];
+  density: Density;
   isMobile: boolean;
   isTablet: boolean;
   isDesktop: boolean;
@@ -153,9 +156,6 @@ export function useWindowLayout(): {
   };
 }
 
-/**
- * Provider component for layout context
- */
 export { LayoutContextReact as LayoutContextProvider };
 export { DEFAULT_CONTEXT as DEFAULT_LAYOUT_CONTEXT };
 

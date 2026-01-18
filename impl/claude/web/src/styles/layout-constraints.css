@@ -1,0 +1,355 @@
+/**
+ * CSS CONSTRAINT SYSTEM
+ *
+ * Kent's Decision #14: Define layout formally, verify constraints hold.
+ *
+ * Philosophy: The grid is the law. Content adapts, containers don't.
+ *
+ * INVARIANTS (these MUST hold):
+ * 1. Workspace grid proportions are fixed (10% | 15% | 1fr | 25%)
+ * 2. No content can cause horizontal overflow in its slot
+ * 3. No content can cause layout shift (CLS = 0)
+ * 4. Touch targets are always >= 44px on mobile
+ * 5. Text never goes below 14px readable size
+ *
+ * VERIFICATION:
+ * - Each constraint class declares explicit bounds
+ * - overflow: hidden on containers = invariant enforcement
+ * - min-height: 0 prevents grid blowout
+ */
+
+/* =============================================================================
+ * INVARIANT: Root Layout Never Changes
+ *
+ * The workspace is a 5-panel grid with FIXED proportions.
+ * Content fills available space; slots don't resize based on content.
+ * ============================================================================= */
+
+:root {
+  /* === SLOT PROPORTIONS (immutable) === */
+  --slot-navigation: 10%; /* Left: AGENTESE nav */
+  --slot-kblock-list: 15%; /* Left-center: K-Block graph */
+  --slot-editor: 1fr; /* Center: Main editor */
+  --slot-metadata: 25%; /* Right: Edge/constitutional panel */
+  --slot-status: auto; /* Bottom: Status line */
+
+  /* === MOBILE OVERRIDE (48px minimum slots) === */
+  --slot-min-mobile: 48px;
+
+  /* === TOUCH TARGETS (Kent's decision #1) === */
+  --touch-min: 44px; /* WCAG AA minimum touch target */
+  --touch-comfortable: 48px; /* Comfortable touch target */
+
+  /* === TEXT BOUNDS (Kent's decision #15) === */
+  --text-min-readable: 14px; /* Never go below this */
+  --text-max-prose: 72ch; /* Maximum line length */
+
+  /* === PANEL HEIGHTS (invariants) === */
+  --panel-header-height: 48px;
+  --panel-status-height: 32px;
+  --panel-tab-height: 48px; /* Bottom tab bar */
+
+  /* === GUTTER (never changes) === */
+  --gutter: 8px;
+  --gutter-mobile: 4px;
+}
+
+/* =============================================================================
+ * WORKSPACE GRID — THE LAW
+ *
+ * This grid definition is an INVARIANT. If you change it, you must update:
+ * 1. The design spec (spec/ui/design-decisions.md)
+ * 2. The verification tests (to be added)
+ * ============================================================================= */
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, var(--slot-navigation)) /* Nav: 10% but can shrink */
+    minmax(0, var(--slot-kblock-list)) /* K-Blocks: 15% but can shrink */
+    var(--slot-editor) /* Editor: flexible */
+    minmax(0, var(--slot-metadata)); /* Metadata: 25% but can shrink */
+  grid-template-rows:
+    var(--panel-header-height) /* Header: FIXED */
+    1fr /* Content: FLEXIBLE */
+    var(--panel-status-height); /* Status: FIXED */
+  grid-template-areas:
+    'header  header  header  header'
+    'nav     kblocks editor  meta'
+    'status  status  status  status';
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden; /* INVARIANT: no outer scroll */
+  gap: var(--gutter);
+}
+
+/* Tablet: Collapse nav, expand editor */
+@media (max-width: 1024px) {
+  .workspace-grid {
+    grid-template-columns:
+      minmax(0, 20%) /* K-Blocks expands */
+      1fr /* Editor */
+      minmax(0, 30%); /* Metadata */
+    grid-template-areas:
+      'header  header  header'
+      'kblocks editor  meta'
+      'status  status  status';
+  }
+}
+
+/* Mobile: Stack with bottom tab bar */
+@media (max-width: 768px) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows:
+      var(--panel-header-height)
+      1fr
+      var(--panel-tab-height)
+      var(--panel-status-height);
+    grid-template-areas:
+      'header'
+      'main'
+      'tabs'
+      'status';
+    gap: var(--gutter-mobile);
+  }
+}
+
+/* =============================================================================
+ * SLOT CONSTRAINTS
+ *
+ * Each slot enforces its invariants through overflow and min-height.
+ * Content that exceeds bounds scrolls within its slot.
+ * ============================================================================= */
+
+.slot {
+  min-height: 0; /* Prevent grid blowout */
+  min-width: 0; /* Prevent grid blowout */
+  overflow: hidden; /* Container boundary is LAW */
+  position: relative; /* For absolute positioning within */
+}
+
+.slot--scrollable {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.slot--header {
+  grid-area: header;
+}
+.slot--nav {
+  grid-area: nav;
+}
+.slot--kblocks {
+  grid-area: kblocks;
+}
+.slot--editor {
+  grid-area: editor;
+}
+.slot--meta {
+  grid-area: meta;
+}
+.slot--status {
+  grid-area: status;
+}
+.slot--main {
+  grid-area: main;
+} /* Mobile only */
+.slot--tabs {
+  grid-area: tabs;
+} /* Mobile only */
+
+/* =============================================================================
+ * CONTENT BOUNDS
+ *
+ * Text and interactive elements have explicit size constraints.
+ * ============================================================================= */
+
+/* Prose container — never wider than readable */
+.prose-bounds {
+  max-width: var(--text-max-prose);
+  font-size: max(var(--text-min-readable), 1em);
+}
+
+/* Touch target — always hittable */
+.touch-target {
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+  padding: calc((var(--touch-min) - 1em) / 2);
+}
+
+/* Mobile: enforce comfortable touch targets */
+@media (max-width: 768px) {
+  .touch-target {
+    min-height: var(--touch-comfortable);
+    min-width: var(--touch-comfortable);
+  }
+}
+
+/* =============================================================================
+ * NO-REFLOW CLASSES
+ *
+ * Elements that must NEVER cause layout shift.
+ * ============================================================================= */
+
+/* Fixed dimensions — content clips or scrolls */
+.no-reflow {
+  contain: layout size; /* CSS containment: isolate layout effects */
+  overflow: hidden;
+}
+
+/* Skeleton placeholder — exact size of content */
+.no-reflow-skeleton {
+  /* Apply to loading state with exact dimensions */
+  min-height: inherit;
+  height: 100%;
+}
+
+/* Image container — aspect ratio preserved */
+.no-reflow-image {
+  aspect-ratio: var(--aspect, 1);
+  width: 100%;
+  overflow: hidden;
+}
+
+.no-reflow-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* =============================================================================
+ * VERIFICATION CLASSES (for testing)
+ *
+ * Add these to verify constraint violations during development.
+ * In production, violations should log warnings, not break.
+ * ============================================================================= */
+
+/* Debug: Highlight constraint violations */
+.debug-constraints .slot {
+  outline: 1px dashed rgba(255, 0, 0, 0.3);
+}
+
+.debug-constraints .slot:has(> :not([class*='no-reflow'])) {
+  /* Children without no-reflow get warning outline */
+  outline: 2px solid rgba(255, 165, 0, 0.5);
+}
+
+/* Debug: Show touch target bounds */
+.debug-touch .touch-target {
+  outline: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.debug-touch .touch-target::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  border: 1px dashed rgba(0, 255, 0, 0.5);
+  pointer-events: none;
+}
+
+/* =============================================================================
+ * GLOW MOMENT EXCEPTION
+ *
+ * Kent's Decision #2: Earned glow for milestone celebrations.
+ * This is the ONLY animation permitted in the constraint system.
+ * ============================================================================= */
+
+@keyframes milestone-glow {
+  0% {
+    box-shadow: 0 0 0 0 var(--glow-color, rgba(196, 167, 125, 0.4));
+  }
+  50% {
+    box-shadow: 0 0 12px 4px var(--glow-color, rgba(196, 167, 125, 0.2));
+  }
+  100% {
+    box-shadow: 0 0 0 0 var(--glow-color, rgba(196, 167, 125, 0));
+  }
+}
+
+.milestone-glow {
+  /* This class is dynamically added on: K-Block commit, crystal creation, contradiction resolved */
+  animation: milestone-glow 2s ease-out forwards !important;
+}
+
+/* Glow colors by milestone type */
+.milestone-glow--commit {
+  --glow-color: rgba(74, 107, 74, 0.4);
+} /* Sage green */
+.milestone-glow--crystal {
+  --glow-color: rgba(139, 92, 246, 0.4);
+} /* Violet */
+.milestone-glow--resolve {
+  --glow-color: rgba(196, 167, 125, 0.4);
+} /* Gold */
+
+/* =============================================================================
+ * BOTTOM TAB BAR (Kent's Decision #4)
+ *
+ * iOS-style fixed navigation, always visible on mobile.
+ * ============================================================================= */
+
+.bottom-tabs {
+  display: none; /* Hidden on desktop */
+}
+
+@media (max-width: 768px) {
+  .bottom-tabs {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: var(--panel-tab-height);
+    background: var(--bg-surface, #141418);
+    border-top: 1px solid var(--border-default, #28282f);
+    padding-bottom: env(safe-area-inset-bottom); /* iOS safe area */
+  }
+
+  .bottom-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--touch-min);
+    color: var(--fg-secondary, #8a8a94);
+    font-size: 10px;
+    gap: 2px;
+  }
+
+  .bottom-tab--active {
+    color: var(--fg-intense, #ffffff);
+  }
+
+  .bottom-tab__icon {
+    font-size: 20px;
+  }
+}
+
+/* =============================================================================
+ * ASPECT KEYBOARD SHORTCUTS (Kent's Decision #6)
+ *
+ * Visual hint for single-letter shortcuts: m, w, t, f, d, s
+ * ============================================================================= */
+
+.shortcut-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  height: 1.5em;
+  padding: 0 0.25em;
+  background: var(--bg-elevated, #1c1c22);
+  border: 1px solid var(--border-default, #28282f);
+  border-radius: 2px;
+  font-family: var(--font-data, monospace);
+  font-size: 0.75em;
+  color: var(--fg-muted, #5a5a64);
+}
+
+.shortcut-hint--active {
+  background: var(--bg-highlight, #28282f);
+  color: var(--fg-intense, #ffffff);
+}

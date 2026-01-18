@@ -1,102 +1,53 @@
-/**
- * ErrorBoundary: Catches render errors in React component tree.
- *
- * Neutral error messaging — clear and direct.
- * Supports reset on route changes via resetKeys prop.
- */
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 
-import { Component, type ReactNode, type ErrorInfo } from 'react';
-import { AlertCircle } from 'lucide-react';
-
-// =============================================================================
-// Types
-// =============================================================================
-
-export interface ErrorBoundaryProps {
-  /** Child components to render */
+interface Props {
   children: ReactNode;
-  /** Custom fallback UI (optional) */
-  fallback?: ReactNode;
-  /** Callback when error is caught (for logging/telemetry) */
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  /** Reset boundary when any of these values change (e.g., route path) */
   resetKeys?: unknown[];
 }
 
-interface ErrorBoundaryState {
+interface State {
   hasError: boolean;
   error: Error | null;
 }
 
-// =============================================================================
-// Component
-// =============================================================================
-
 /**
- * Error boundary that catches render errors and displays a neutral fallback.
+ * Error Boundary - Required React infrastructure.
+ * Catches errors in child components and displays fallback.
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+export class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null,
+  };
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  public static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('[ErrorBoundary] Caught error:', error);
-    console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
-    this.props.onError?.(error, errorInfo);
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('ErrorBoundary caught:', error, errorInfo);
   }
 
-  componentDidUpdate(prevProps: ErrorBoundaryProps): void {
-    if (this.state.hasError && this.props.resetKeys) {
-      const hasKeyChanged = this.props.resetKeys.some(
-        (key, index) => key !== prevProps.resetKeys?.[index]
-      );
-      if (hasKeyChanged) {
-        this.reset();
-      }
+  public componentDidUpdate(prevProps: Props) {
+    if (this.state.hasError && prevProps.resetKeys !== this.props.resetKeys) {
+      this.setState({ hasError: false, error: null });
     }
   }
 
-  reset = (): void => {
-    this.setState({ hasError: false, error: null });
-  };
-
-  render(): ReactNode {
+  public render() {
     if (this.state.hasError) {
-      if (this.props.fallback !== undefined) {
-        return this.props.fallback;
-      }
-
-      // Neutral error UI — Lucide icon, not emoji
       return (
-        <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-gray-900">
-          <div className="max-w-md w-full text-center p-8">
-            <div className="flex justify-center mb-4">
-              <AlertCircle className="w-16 h-16 text-gray-500" strokeWidth={1.5} />
-            </div>
-            <h2 className="text-xl font-semibold mb-2 text-white">Component Error</h2>
-            <p className="text-gray-400 mb-6">{this.state.error?.message || 'An error occurred'}</p>
-            <button
-              onClick={this.reset}
-              className="px-6 py-2 rounded-lg font-medium transition-colors text-white"
-              style={{
-                background: 'var(--color-life-sage)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--color-life-mint)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--color-life-sage)';
-              }}
-            >
-              Try Again
-            </button>
-          </div>
+        <div className="min-h-screen bg-[#0a0a0c] text-[#8a8a94] p-4 font-mono text-[12px]">
+          <h1 className="text-[#c4a77d] text-[14px] mb-2">Error</h1>
+          <pre className="text-[#5a5a64] text-[10px] overflow-auto">
+            {this.state.error?.message}
+          </pre>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="mt-4 px-2 py-1 border border-[#28282f] hover:border-[#3a3a44]"
+          >
+            Retry
+          </button>
         </div>
       );
     }
@@ -104,5 +55,3 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return this.props.children;
   }
 }
-
-export { ErrorBoundary as default };

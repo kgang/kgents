@@ -1,0 +1,221 @@
+/**
+ * SEVERE STARK Design Tokens
+ *
+ * Grounded in: spec/ui/axioms.md, spec/ui/severe-stark.md, spec/ui/design-decisions.md
+ *
+ * Philosophy: "Every pixel contains information. Joy is absent. The glow is earned."
+ *
+ * Core Principles:
+ * - Yahoo Japan density (50+ links visible, 12px base)
+ * - Near-black steel (#0a0a0c, not pure black)
+ * - Rare earned glow (amber for 4 moments only)
+ * - Joy absent (no celebration, no animation)
+ * - Dual typography (mono for data, sans for prose)
+ * - WCAG AA compliant (12px minimum)
+ */
+
+:root {
+  /* =============================================================================
+   * TYPOGRAPHY — Dense but WCAG Compliant
+   *
+   * 12px base maintains WCAG AA while denser than typical Western (14-16px).
+   * Japanese-level density achieved through tight line-height and spacing.
+   * ============================================================================= */
+
+  /* Font Families */
+  --font-data: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  --font-prose: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Font Sizes (Dense Scale) */
+  --text-xs: 10px; /* Timestamps, metadata, counts */
+  --text-sm: 11px; /* Secondary labels, hints */
+  --text-base: 12px; /* Body text, DEFAULT (WCAG AA minimum) */
+  --text-md: 13px; /* Important body, nav links */
+  --text-lg: 14px; /* Section headers */
+  --text-xl: 15px; /* Page titles */
+  --text-2xl: 16px; /* Hero only (rare) */
+
+  /* Line Heights (Tight) */
+  --leading-none: 1; /* Single-line labels */
+  --leading-tight: 1.2; /* Body text, DEFAULT */
+  --leading-snug: 1.3; /* Multi-paragraph */
+  --leading-normal: 1.4; /* Long-form reading (rare) */
+
+  /* Font Weights */
+  --weight-normal: 400; /* Body text */
+  --weight-medium: 500; /* Emphasis within text */
+  --weight-bold: 700; /* Headers, navigation */
+
+  /* =============================================================================
+   * SPACING — 50% Reduction from typical
+   *
+   * Compressed spacing enables Yahoo Japan-level density.
+   * ============================================================================= */
+
+  --gap-0: 0px; /* Touching elements */
+  --gap-1: 2px; /* Micro separation */
+  --gap-2: 4px; /* Default between items */
+  --gap-3: 6px; /* Between groups */
+  --gap-4: 8px; /* Section separation */
+  --gap-5: 12px; /* Major sections */
+  --gap-6: 16px; /* Page-level only */
+
+  /* Padding (Compressed) */
+  --pad-0: 0px;
+  --pad-1: 2px; /* Inline elements */
+  --pad-2: 4px; /* Buttons, badges */
+  --pad-3: 6px; /* Cards, panels */
+  --pad-4: 8px; /* Containers */
+
+  /* =============================================================================
+   * COLORS — Monochrome + Rare Glow
+   *
+   * Steel-obsidian (#0a0a0c) is the void — textured, not nihilistic.
+   * Amber glow is EARNED — only for significant moments.
+   * ============================================================================= */
+
+  /* Backgrounds (Steel Scale) */
+  --bg-void: #0a0a0c; /* Deepest, page background */
+  --bg-surface: #0f0f12; /* Cards, panels */
+  --bg-elevated: #141418; /* Hover states, overlays */
+  --bg-highlight: #1c1c22; /* Selection background */
+
+  /* Foregrounds (Gray Scale) */
+  --fg-muted: #3a3a44; /* Disabled, hints */
+  --fg-secondary: #5a5a64; /* Metadata, timestamps */
+  --fg-primary: #8a8a94; /* Body text, DEFAULT */
+  --fg-strong: #b0b0b8; /* Emphasized text */
+  --fg-intense: #e0e0e8; /* Headers, active items */
+
+  /* Borders */
+  --border-subtle: #1c1c22; /* Faint separation */
+  --border-default: #28282f; /* Standard borders */
+  --border-strong: #3a3a44; /* Emphasized borders */
+
+  /* Accent — Earned Glow ONLY */
+  --glow-earned: #c4a77d; /* The amber glow */
+  --glow-earned-bright: #d4b88c; /* Intense moment */
+
+  /* Semantic */
+  --error: #8b4a4a; /* Muted red, not alarming */
+  --warning: #8b6b4a; /* Muted orange */
+  --success: #4a6b4a; /* Muted green (rare) */
+
+  /* =============================================================================
+   * PROVENANCE COLORS — Three Containers
+   *
+   * Visual encoding of authorship for anti-sloppification.
+   * ============================================================================= */
+
+  /* Human Container */
+  --human-fg: #e0e0e8; /* Full intensity */
+  --human-bg: #0a0a0c; /* Steel-obsidian */
+
+  /* Collaboration Container */
+  --fusion-fg: #e0e0e8; /* Full intensity */
+  --fusion-indicator: #8b6bc4; /* Purple fusion mark */
+
+  /* AI Container */
+  --ai-fg: #5a5a64; /* Low intensity */
+  --ai-border: #c4a77d; /* Amber "needs review" */
+  --ai-reviewed: #4a6b4a; /* Muted green "reviewed" */
+
+  /* =============================================================================
+   * LIFECYCLE COLORS — Garden States
+   *
+   * SEED → SPROUT → BLOOM → WITHER → COMPOST
+   * ============================================================================= */
+
+  --seed: #3a5a7a; /* Blue-gray (potential) */
+  --sprout: #5a7a5a; /* Green-gray (growing) */
+  --bloom: #e0e0e8; /* Full intensity (mature) */
+  --wither: #5a5a64; /* Fading (deprecated) */
+  --compost: #3a3a44; /* Nearly gone (deleting) */
+
+  /* =============================================================================
+   * COLLAPSING FUNCTION COLORS
+   *
+   * TypeScript, Tests, Constitution, Galois → Binary/Score feedback.
+   * ============================================================================= */
+
+  --collapse-pass: #4a6b4a; /* Muted green */
+  --collapse-fail: #8b4a4a; /* Muted red */
+  --collapse-partial: #8b6b4a; /* Muted orange */
+  --collapse-pending: #3a3a44; /* Gray */
+
+  /* =============================================================================
+   * TRANSITIONS — Almost None
+   *
+   * SEVERE STARK: No easing, no spring, no bounce.
+   * Only cursor blink, scroll, and panel open/close permitted.
+   * ============================================================================= */
+
+  --transition-instant: 0ms;
+  --transition-micro: 50ms linear;
+
+  /* =============================================================================
+   * LAYOUT
+   *
+   * Dense grid patterns for Yahoo Japan-level information density.
+   * ============================================================================= */
+
+  /* Grid columns by viewport */
+  --cols-mobile: 2;
+  --cols-tablet: 3;
+  --cols-desktop: 5;
+
+  /* Panel widths (percentage of viewport) */
+  --nav-width: 15%;
+  --editor-width: 60%;
+  --meta-width: 25%;
+
+  /* =============================================================================
+   * Z-INDEX
+   * ============================================================================= */
+
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-dropdown: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+
+  /* =============================================================================
+   * RADII — Bare Edge
+   *
+   * Sharp frames, minimal softening.
+   * ============================================================================= */
+
+  --radius-none: 0px;
+  --radius-bare: 1px;
+  --radius-subtle: 2px;
+}
+
+/* =============================================================================
+ * GLOW MOMENTS — The Only Permitted Animation
+ *
+ * Triggers (exhaustive):
+ * - Axiom grounded (derivation complete)
+ * - Contradiction resolved (synthesis achieved)
+ * - Crystal formed (memory crystallized)
+ * - Witness mark created
+ * ============================================================================= */
+
+@keyframes glow-fade {
+  0% {
+    color: var(--glow-earned);
+    text-shadow: 0 0 12px var(--glow-earned);
+  }
+  100% {
+    color: inherit;
+    text-shadow: none;
+  }
+}
+
+.glow-moment {
+  animation: glow-fade 2s ease-out forwards;
+}
+
+.glow-earned {
+  color: var(--glow-earned);
+  text-shadow: 0 0 8px var(--glow-earned);
+}

@@ -1,0 +1,548 @@
+/**
+ * SEVERE STARK Base Styles
+ *
+ * Grounded in: spec/ui/axioms.md — A4 (Joy Absent), A7 (Disgust Prevention), A8 (Understandability)
+ *
+ * Philosophy: No celebration. No decoration. The interface serves.
+ */
+
+@import '../design/severe-tokens.css';
+
+/* =============================================================================
+ * RESET — Kill All Unpermitted Motion
+ *
+ * A4 (Joy Absent): No confetti, shimmer, bounce, or celebration.
+ * Permitted: cursor blink, scroll, panel open/close (instant).
+ * ============================================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  /* Kill transitions by default */
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Exception: glow moments (earned) */
+.glow-moment {
+  animation: glow-fade 2s ease-out forwards !important;
+}
+
+/* Exception: panel transitions (micro only) */
+.panel-transition {
+  transition: transform var(--transition-micro) !important;
+}
+
+/* =============================================================================
+ * BASE TYPOGRAPHY
+ *
+ * Dual typography: mono for data, sans for prose.
+ * ============================================================================= */
+
+html {
+  font-size: var(--text-base);
+  line-height: var(--leading-tight);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-prose);
+  font-size: var(--text-base);
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-normal);
+  background: var(--bg-void);
+  color: var(--fg-primary);
+  min-height: 100vh;
+}
+
+/* Data contexts — monospace */
+code,
+pre,
+kbd,
+samp,
+.kblock,
+.path,
+.id,
+.number,
+.mono {
+  font-family: var(--font-data);
+}
+
+/* =============================================================================
+ * LINKS — No Color Change on Hover
+ *
+ * A4: Joy absent. Hover reveals underline, not color.
+ * ============================================================================= */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  /* NO color change, NO glow */
+}
+
+a:active {
+  opacity: 0.8;
+}
+
+/* =============================================================================
+ * SELECTION — Inverse Video
+ *
+ * Classic terminal aesthetic.
+ * ============================================================================= */
+
+::selection {
+  background: var(--fg-primary);
+  color: var(--bg-void);
+}
+
+/* =============================================================================
+ * FOCUS — Thin, Visible, No Glow
+ *
+ * WCAG compliant but minimal.
+ * ============================================================================= */
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 1px solid var(--fg-intense);
+  outline-offset: 1px;
+}
+
+/* =============================================================================
+ * BUTTONS — Instant State Changes
+ *
+ * No shadows, no transforms, no scale.
+ * ============================================================================= */
+
+button,
+[role='button'] {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  background: var(--bg-surface);
+  color: var(--fg-primary);
+  border: 1px solid var(--border-default);
+  padding: var(--pad-1) var(--pad-2);
+}
+
+button:hover,
+[role='button']:hover {
+  background: var(--bg-elevated);
+  /* NO shadow, NO transform */
+}
+
+button:active,
+[role='button']:active {
+  background: var(--bg-highlight);
+  /* Instant change, no transition */
+}
+
+button:disabled,
+[role='button']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+ * INPUTS — Minimal Styling
+ * ============================================================================= */
+
+input,
+textarea,
+select {
+  font-family: var(--font-data);
+  font-size: var(--text-base);
+  line-height: var(--leading-tight);
+  background: var(--bg-surface);
+  color: var(--fg-primary);
+  border: 1px solid var(--border-default);
+  padding: var(--pad-2);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--fg-secondary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--fg-muted);
+}
+
+/* =============================================================================
+ * HEADINGS — Weight, Not Size
+ *
+ * Hierarchy through weight, not decorative sizing.
+ * ============================================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--fg-intense);
+}
+
+h1 {
+  font-size: var(--text-xl);
+}
+h2 {
+  font-size: var(--text-lg);
+}
+h3 {
+  font-size: var(--text-md);
+}
+h4 {
+  font-size: var(--text-base);
+}
+h5 {
+  font-size: var(--text-sm);
+}
+h6 {
+  font-size: var(--text-xs);
+}
+
+/* =============================================================================
+ * LISTS — Dense
+ * ============================================================================= */
+
+ul,
+ol {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* =============================================================================
+ * TABLES — Dense
+ * ============================================================================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+th,
+td {
+  padding: var(--pad-1) var(--pad-2);
+  border: 1px solid var(--border-subtle);
+  text-align: left;
+}
+
+th {
+  background: var(--bg-surface);
+  font-weight: var(--weight-bold);
+}
+
+/* =============================================================================
+ * SCROLLBARS — Thin, Dark
+ * ============================================================================= */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-void);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: var(--radius-bare);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) var(--bg-void);
+}
+
+/* =============================================================================
+ * UTILITY CLASSES
+ * ============================================================================= */
+
+/* Text intensities */
+.text-muted {
+  color: var(--fg-muted);
+}
+.text-secondary {
+  color: var(--fg-secondary);
+}
+.text-primary {
+  color: var(--fg-primary);
+}
+.text-strong {
+  color: var(--fg-strong);
+}
+.text-intense {
+  color: var(--fg-intense);
+}
+
+/* Backgrounds */
+.bg-void {
+  background: var(--bg-void);
+}
+.bg-surface {
+  background: var(--bg-surface);
+}
+.bg-elevated {
+  background: var(--bg-elevated);
+}
+.bg-highlight {
+  background: var(--bg-highlight);
+}
+
+/* Borders */
+.border-subtle {
+  border-color: var(--border-subtle);
+}
+.border-default {
+  border-color: var(--border-default);
+}
+.border-strong {
+  border-color: var(--border-strong);
+}
+
+/* Font sizes */
+.text-xs {
+  font-size: var(--text-xs);
+}
+.text-sm {
+  font-size: var(--text-sm);
+}
+.text-base {
+  font-size: var(--text-base);
+}
+.text-md {
+  font-size: var(--text-md);
+}
+.text-lg {
+  font-size: var(--text-lg);
+}
+.text-xl {
+  font-size: var(--text-xl);
+}
+
+/* Font weights */
+.font-normal {
+  font-weight: var(--weight-normal);
+}
+.font-medium {
+  font-weight: var(--weight-medium);
+}
+.font-bold {
+  font-weight: var(--weight-bold);
+}
+
+/* Gaps */
+.gap-1 {
+  gap: var(--gap-1);
+}
+.gap-2 {
+  gap: var(--gap-2);
+}
+.gap-3 {
+  gap: var(--gap-3);
+}
+.gap-4 {
+  gap: var(--gap-4);
+}
+.gap-5 {
+  gap: var(--gap-5);
+}
+.gap-6 {
+  gap: var(--gap-6);
+}
+
+/* Padding */
+.p-1 {
+  padding: var(--pad-1);
+}
+.p-2 {
+  padding: var(--pad-2);
+}
+.p-3 {
+  padding: var(--pad-3);
+}
+.p-4 {
+  padding: var(--pad-4);
+}
+
+/* =============================================================================
+ * DENSE PATTERNS
+ *
+ * Yahoo Japan-level density components.
+ * ============================================================================= */
+
+/* Dense grid (5 columns desktop, 3 tablet, 2 mobile) */
+.grid-dense {
+  display: grid;
+  grid-template-columns: repeat(var(--cols-desktop), 1fr);
+  gap: var(--gap-2);
+}
+
+@media (max-width: 1024px) {
+  .grid-dense {
+    grid-template-columns: repeat(var(--cols-tablet), 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-dense {
+    grid-template-columns: repeat(var(--cols-mobile), 1fr);
+  }
+}
+
+/* Dense list (50+ items visible) */
+.list-dense {
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+}
+
+.list-dense li {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--pad-1) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.list-dense .meta {
+  color: var(--fg-secondary);
+  font-size: var(--text-xs);
+}
+
+/* Dense navigation (wrap, tight gaps) */
+.nav-dense {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-1);
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+}
+
+.nav-dense a {
+  padding: var(--pad-1) var(--pad-2);
+  white-space: nowrap;
+}
+
+/* Severe panel (no padding waste) */
+.panel-severe {
+  padding: var(--pad-3);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+
+.panel-severe h3 {
+  margin: 0 0 var(--gap-2) 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+}
+
+/* =============================================================================
+ * PROVENANCE INDICATORS
+ *
+ * A2: Sloppification visibility — AI touch always visible.
+ * ============================================================================= */
+
+/* Human authored — full intensity */
+.provenance-human {
+  color: var(--human-fg);
+}
+
+/* Fusion — full intensity with marker */
+.provenance-fusion {
+  color: var(--fusion-fg);
+}
+
+.provenance-fusion::before {
+  content: '⚡';
+  margin-right: var(--gap-1);
+  color: var(--fusion-indicator);
+}
+
+/* AI — low intensity */
+.provenance-ai {
+  color: var(--ai-fg);
+}
+
+/* AI unreviewed — amber border */
+.provenance-ai-unreviewed {
+  color: var(--ai-fg);
+  border-left: 2px solid var(--ai-border);
+  padding-left: var(--pad-2);
+}
+
+.provenance-ai-unreviewed::before {
+  content: '◆';
+  margin-right: var(--gap-1);
+  color: var(--ai-border);
+}
+
+/* AI reviewed */
+.provenance-ai-reviewed::before {
+  content: '◇';
+  margin-right: var(--gap-1);
+  color: var(--ai-reviewed);
+}
+
+/* =============================================================================
+ * LIFECYCLE BADGES
+ *
+ * Garden states: SEED → SPROUT → BLOOM → WITHER → COMPOST
+ * ============================================================================= */
+
+.lifecycle-seed {
+  color: var(--seed);
+}
+.lifecycle-sprout {
+  color: var(--sprout);
+}
+.lifecycle-bloom {
+  color: var(--bloom);
+}
+.lifecycle-wither {
+  color: var(--wither);
+}
+.lifecycle-compost {
+  color: var(--compost);
+}
+
+/* =============================================================================
+ * COLLAPSE STATUS
+ *
+ * Collapsing functions: TypeScript, Tests, Constitution, Galois
+ * ============================================================================= */
+
+.collapse-pass {
+  color: var(--collapse-pass);
+}
+.collapse-fail {
+  color: var(--collapse-fail);
+}
+.collapse-partial {
+  color: var(--collapse-partial);
+}
+.collapse-pending {
+  color: var(--collapse-pending);
+}
