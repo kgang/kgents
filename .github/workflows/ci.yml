@@ -1,10 +1,13 @@
 name: CI
 
+# CI disabled for automatic triggers - manual dispatch only
+# To re-enable: uncomment push/pull_request triggers below
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
 
 # =============================================================================
 # MULTI-AGENT COMPATIBLE CONCURRENCY

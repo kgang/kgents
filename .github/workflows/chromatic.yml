@@ -1,16 +1,19 @@
 name: Chromatic
 
+# CI disabled for automatic triggers - manual dispatch only
+# To re-enable: uncomment push/pull_request triggers below
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'impl/claude/web/**'
-      - '.github/workflows/chromatic.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'impl/claude/web/**'
-      - '.github/workflows/chromatic.yml'
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'impl/claude/web/**'
+  #     - '.github/workflows/chromatic.yml'
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - 'impl/claude/web/**'
+  #     - '.github/workflows/chromatic.yml'
 
 # =============================================================================
 # VISUAL REGRESSION TESTING WITH CHROMATIC
