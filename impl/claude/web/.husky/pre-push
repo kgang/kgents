@@ -140,13 +140,17 @@ run_js_track() {
             exit 1
         fi
 
-        # Unit tests
+        # Unit tests - SKIP if no test files exist
         echo "[2/3] Unit tests..."
-        if npm test -- --run --reporter=basic 2>&1; then
-            echo "✓ Unit tests passed"
+        if [ -d "tests" ] && find tests -name "*.test.*" -o -name "*.spec.*" 2>/dev/null | grep -q .; then
+            if npm test -- --run --reporter=basic 2>&1; then
+                echo "✓ Unit tests passed"
+            else
+                echo "✗ Unit tests failed"
+                exit 1
+            fi
         else
-            echo "✗ Unit tests failed"
-            exit 1
+            echo "⊘ No test files found in tests/ - skipping"
         fi
 
         # Build (conditional)

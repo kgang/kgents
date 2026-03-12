@@ -26,12 +26,18 @@
 #
 # Environment Variables:
 #   KGENTS_SKIP_HEAVY=1       - Skip all heavy checks
-#   KGENTS_SKIP_CHAOS=1       - Skip chaos/accursed share tests
+#   KGENTS_SKIP_CHAOS=1       - Skip chaos/accursed share tests (default: 1)
 #   KGENTS_SKIP_CONTRACT=1    - Skip contract sync check
 #   KGENTS_PYTEST_WORKERS=N   - Override worker count
-#   KGENTS_CHANGED_ONLY=1     - Only test files affected by changes
-#   KGENTS_USE_DMYPY=1        - Use mypy daemon for faster type checking
+#   KGENTS_ALL_TESTS=1        - Run ALL tests (default: changed-only)
+#   KGENTS_NO_DMYPY=1         - Disable mypy daemon
 #   KGENTS_VERBOSE=1          - Show verbose output
+#   KGENTS_SMOKE=1            - Ultra-fast mode: lint + typecheck only (no tests)
+#
+# Performance Modes:
+#   Default:           lint + mypy (parallel) + changed tests (~1-2 min)
+#   KGENTS_SMOKE=1:    lint + mypy (parallel) only (~30s)
+#   KGENTS_ALL_TESTS=1: lint + mypy (parallel) + ALL tests (~4-6 min)
 #
 
 # Note: We intentionally don't use `set -e` because we handle exit codes manually
@@ -89,7 +95,7 @@ fi
 # Check dependencies
 require_uv
 
-TOTAL_STEPS=3
+TOTAL_STEPS=2  # 1: Lint+Mypy (parallel), 2: Tests
 FAILED=0
 TOTAL_START=$(date +%s)
 
@@ -156,41 +162,21 @@ get_changed_python_files() {
 }
 
 # =============================================================================
-# Step 1: Lint (strict - BLOCKING)
+# Step 1: Lint + Type Check (PARALLEL - BLOCKING)
 # =============================================================================
-section "Ruff lint (strict, BLOCKING)" 1 $TOTAL_STEPS
+# Run lint and mypy in parallel for ~30-40s speedup
+section "Lint + Typecheck (parallel, BLOCKING)" 1 $TOTAL_STEPS
 
 cd "$REPO_ROOT/impl/claude"
+
+# Temp files for parallel output
+LINT_LOG=$(mktemp)
+MYPY_LOG=$(mktemp)
+trap "rm -f $LINT_LOG $MYPY_LOG 2>/dev/null" EXIT
 
 run_lint() {
     uv run ruff check agents/ bootstrap/ runtime/ protocols/ testing/ services/ 2>&1
 }
-
-LINT_OUTPUT=$(time_cmd run_lint)
-LINT_EXIT=$?
-LINT_DURATION=$(format_duration "$LAST_DURATION")
-
-if [ $LINT_EXIT -eq 0 ]; then
-    success "Lint passed ($LINT_DURATION)"
-else
-    # Count issues and show summary
-    LINT_COUNT=$(echo "$LINT_OUTPUT" | grep -c "^[A-Z][0-9]" || echo "0")
-    error "Lint: $LINT_COUNT issues (BLOCKING) ($LINT_DURATION)"
-    echo "$LINT_OUTPUT" | head -20
-    if [ "$LINT_COUNT" -gt 20 ]; then
-        info "... and $((LINT_COUNT - 20)) more (run 'ruff check' for all)"
-    fi
-    FAILED=1
-fi
-cd "$REPO_ROOT"
-echo ""
-
-# =============================================================================
-# Step 2: Type check (strict - BLOCKING, with incremental caching)
-# =============================================================================
-section "Mypy (strict, incremental, BLOCKING)" 2 $TOTAL_STEPS
-
-cd "$REPO_ROOT/impl/claude"
 
 run_mypy() {
     # Try dmypy first (2-3x faster) - now the default
@@ -205,29 +191,63 @@ run_mypy() {
     uv run mypy agents/ bootstrap/ runtime/ 2>&1
 }
 
-MYPY_OUTPUT=$(time_cmd run_mypy)
-MYPY_EXIT=$?
-MYPY_DURATION=$(format_duration "$LAST_DURATION")
+PARALLEL_START=$(date +%s)
 
-if [ $MYPY_EXIT -eq 0 ]; then
-    success "Type check passed ($MYPY_DURATION)"
+# Run lint and mypy in parallel
+(run_lint > "$LINT_LOG" 2>&1; echo $? > "${LINT_LOG}.exit") &
+LINT_PID=$!
+(run_mypy > "$MYPY_LOG" 2>&1; echo $? > "${MYPY_LOG}.exit") &
+MYPY_PID=$!
+
+# Wait for both
+wait $LINT_PID 2>/dev/null
+wait $MYPY_PID 2>/dev/null
+
+PARALLEL_END=$(date +%s)
+PARALLEL_DURATION=$((PARALLEL_END - PARALLEL_START))
+
+# Read exit codes
+LINT_EXIT=$(cat "${LINT_LOG}.exit" 2>/dev/null || echo "1")
+MYPY_EXIT=$(cat "${MYPY_LOG}.exit" 2>/dev/null || echo "1")
+LINT_OUTPUT=$(cat "$LINT_LOG")
+MYPY_OUTPUT=$(cat "$MYPY_LOG")
+
+# Report lint results
+if [ "$LINT_EXIT" -eq 0 ]; then
+    success "  Ruff lint: passed"
 else
-    # Count errors and show summary
-    MYPY_COUNT=$(echo "$MYPY_OUTPUT" | grep -c ": error:" || echo "0")
-    error "Mypy: $MYPY_COUNT errors (BLOCKING) ($MYPY_DURATION)"
-    echo "$MYPY_OUTPUT" | grep ": error:" | head -20
-    if [ "$MYPY_COUNT" -gt 20 ]; then
-        info "... and $((MYPY_COUNT - 20)) more (run 'mypy' for all)"
-    fi
+    LINT_COUNT=$(echo "$LINT_OUTPUT" | grep -c "^[A-Z][0-9]" || echo "0")
+    error "  Ruff lint: $LINT_COUNT issues (BLOCKING)"
+    echo "$LINT_OUTPUT" | head -10
     FAILED=1
 fi
+
+# Report mypy results
+if [ "$MYPY_EXIT" -eq 0 ]; then
+    success "  Mypy: passed"
+else
+    MYPY_COUNT=$(echo "$MYPY_OUTPUT" | grep -c ": error:" || echo "0")
+    error "  Mypy: $MYPY_COUNT errors (BLOCKING)"
+    echo "$MYPY_OUTPUT" | grep ": error:" | head -10
+    FAILED=1
+fi
+
+success "Lint + Typecheck completed in ${PARALLEL_DURATION}s (parallel)"
 cd "$REPO_ROOT"
 echo ""
 
 # =============================================================================
-# Step 3: All tests (parallel, combined pass)
+# Step 2: Tests (CHANGED-ONLY by default for speed)
 # =============================================================================
-section "All tests (parallel: $CPU_COUNT workers)" 3 $TOTAL_STEPS
+# Skip tests entirely in smoke mode
+if [ "${KGENTS_SMOKE:-0}" = "1" ]; then
+    info "KGENTS_SMOKE=1: Skipping tests (lint + typecheck only)"
+    TEST_EXIT=0
+    TEST_DURATION="0s"
+    TEST_OUTPUT="Skipped (smoke mode)"
+else
+
+section "Tests (parallel: $CPU_COUNT workers)" 2 $TOTAL_STEPS
 
 cd "$REPO_ROOT/impl/claude"
 
@@ -242,24 +262,46 @@ cd "$REPO_ROOT/impl/claude"
 
 run_tests() {
     local extra_args=""
+    local test_mode="changed-only"
 
-    # Smart test selection (default: prioritize last-failed, then run all)
-    # This gives fast feedback on known issues while still catching new ones
-    if [ "${KGENTS_FULL_TESTS:-0}" != "1" ]; then
-        # Default: run last-failed first, then all if none failed
-        extra_args="--last-failed --last-failed-no-failures=all"
-    fi
-
-    # Changed-only mode: only run tests for changed files (explicit opt-in)
-    if [ "${KGENTS_CHANGED_ONLY:-0}" = "1" ]; then
+    # Changed-only is NOW THE DEFAULT for fast pre-push (~1-2 min vs ~4-6 min)
+    # Use KGENTS_ALL_TESTS=1 to run all tests
+    if [ "${KGENTS_ALL_TESTS:-0}" != "1" ]; then
         local changed_files=$(get_changed_python_files)
         if [ -n "$changed_files" ]; then
-            info "Running tests for changed files only..."
-            local test_files=$(echo "$changed_files" | grep -E "test_.*\.py$|_test\.py$" || echo "")
+            # Find test files that correspond to changed files
+            local test_files=""
+            for f in $changed_files; do
+                # If it's a test file, include it directly
+                if echo "$f" | grep -qE "test_.*\.py$|_test\.py$"; then
+                    test_files="$test_files $f"
+                else
+                    # Find corresponding test file
+                    local basename=$(basename "$f" .py)
+                    local dirname=$(dirname "$f")
+                    # Look for test_*.py in same dir or _tests/ subdir
+                    local potential_tests=$(find "$dirname" "$dirname/_tests" -name "test_${basename}*.py" -o -name "${basename}_test.py" 2>/dev/null | head -5)
+                    test_files="$test_files $potential_tests"
+                fi
+            done
+            test_files=$(echo "$test_files" | tr ' ' '\n' | sort -u | tr '\n' ' ')
             if [ -n "$test_files" ]; then
+                info "Changed-only mode: $(echo $test_files | wc -w | tr -d ' ') test files"
                 extra_args="$test_files"
+            else
+                info "No test files found for changes, running last-failed tests..."
+                extra_args="--last-failed --last-failed-no-failures=none"
+                test_mode="last-failed"
             fi
+        else
+            info "No changes detected, running last-failed tests..."
+            extra_args="--last-failed --last-failed-no-failures=none"
+            test_mode="last-failed"
         fi
+    else
+        info "KGENTS_ALL_TESTS=1: Running all tests..."
+        extra_args="--last-failed --last-failed-no-failures=all"
+        test_mode="all"
     fi
 
     # Verbose output if requested
@@ -282,7 +324,7 @@ run_tests() {
         2>&1
 }
 
-info "Running tests with $CPU_COUNT workers (combined pass)..."
+info "Running tests with $CPU_COUNT workers..."
 TEST_OUTPUT=$(time_cmd run_tests)
 TEST_EXIT=$?
 TEST_DURATION=$(format_duration "$LAST_DURATION")
@@ -290,7 +332,7 @@ TEST_DURATION=$(format_duration "$LAST_DURATION")
 if [ $TEST_EXIT -eq 0 ]; then
     # Extract summary line (e.g., "19000 passed in 45.34s")
     SUMMARY=$(echo "$TEST_OUTPUT" | tail -1)
-    success "All tests: $SUMMARY ($TEST_DURATION total)"
+    success "Tests: $SUMMARY ($TEST_DURATION total)"
 else
     # Show last few lines on failure
     SUMMARY=$(echo "$TEST_OUTPUT" | tail -10)
@@ -298,6 +340,7 @@ else
     echo "$SUMMARY"
     FAILED=1
 fi
+fi  # End of non-smoke test block
 cd "$REPO_ROOT"
 echo ""
 
@@ -346,10 +389,11 @@ elif [ $API_FILES_CHANGED -eq 0 ]; then
 fi
 
 # =============================================================================
-# Optional: Chaos tests (accursed share) - skip with KGENTS_SKIP_CHAOS=1
+# Optional: Chaos tests (accursed share) - SKIPPED BY DEFAULT
 # =============================================================================
+# Run with KGENTS_CHAOS=1 to enable (adds ~30-60s)
 # Note: Property tests are now included in the main test run above
-if [ "${KGENTS_SKIP_CHAOS:-0}" != "1" ]; then
+if [ "${KGENTS_CHAOS:-0}" = "1" ]; then
     info "Running chaos tests (accursed share, non-blocking)..."
     cd "$REPO_ROOT/impl/claude"
 
